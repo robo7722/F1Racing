@@ -3336,8 +3336,10 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
       lamps.forEach((q, k) => { m4.makeTranslation(q.x, H - 0.1, q.z); lm.setMatrixAt(k, m4); lm.setColorAt(k, k % 2 === (seaS > 0 ? 1 : 0) ? cW : cC); }); trackGroup.add(lm);
       // Einfahrt: beiger Hotelbau über dem Portal, Lichterleiste an der Portaloberkante
       const e0 = trackAt(sA, 0), ent = trackAt(sA + 60, 0);
-      const fh = new THREE.Mesh(new THREE.BoxGeometry(46, 30, 130).translate(0, H + 15.4, 0), facadeMat({ wall: '#ddd3c2', frame: '#f4efe6', balcony: '#ffffff', glass: '#3a4a58', glassTop: '#a8bccc', litP: .3, emiI: .8, roof: '#8a8478', seed: 27, bays: 12, floors: 8, bayM: 5, floorM: 3.8, relief: 5 }));
-      fh.position.set(ent.x, 0, ent.z); fh.rotation.y = ent.h; trackGroup.add(fh); excl.push([ent.x, ent.z, 80]);
+      const fh = new THREE.Mesh(new THREE.BoxGeometry(46, 30, 130).translate(0, H + 15.4, 0), facadeMat({ wall: '#f4f2ee', frame: '#ffffff', balcony: '#ffffff', glass: '#56616c', glassTop: '#b9c6d2', litP: .25, emiI: .7, roof: '#d8d4cc', seed: 27, bays: 14, floors: 8, bayM: 4.6, floorM: 3.8, relief: 5 }));
+      fh.position.set(ent.x, 0, ent.z); fh.rotation.y = ent.h; trackGroup.add(fh);
+      { const bm = lam({ color: 0xffffff, emissive: new THREE.Color(0.18, 0.18, 0.18) }), bp = []; for (let f = 1; f <= 8; f++) for (const sx of [-1, 1]) { bp.push([box(1.4, 0.28, 130, sx * 23.6, H + 0.4 + f * 3.8 - 0.2, 0), null]); bp.push([box(48.6, 0.28, 1.4, 0, H + 0.4 + f * 3.8 - 0.2, sx * 65.6), null]); bp.push([box(48.6, 1.0, 0.12, 0, H + 0.4 + f * 3.8 + 0.3, sx * 66.25), null]); }   /* durchgehende weiße Balkonbänder wie am echten Fairmont */
+        const bb = new THREE.Mesh(mergeParts(bp), bm); bb.position.copy(fh.position); bb.rotation.y = ent.h; trackGroup.add(bb); } excl.push([ent.x, ent.z, 80]);
       const lint = []; for (let t = -Wd(sA, -1); t <= Wd(sA, 1); t += 0.9) { const q = trackAt(sA - 0.3, t); lint.push(q); }
       const ll = new THREE.InstancedMesh(new THREE.SphereGeometry(0.16, 6, 4), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 1.9, 1.4) }), lint.length); lint.forEach((q, k) => { m4.makeTranslation(q.x, H - 0.25, q.z); ll.setMatrixAt(k, m4); }); trackGroup.add(ll); }
     // Fürstenpalast auf dem Felsen (Monaco-Ville): steiler Felssporn, darauf der helle Palast mit Zinnen
