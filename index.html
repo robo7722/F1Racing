@@ -538,7 +538,7 @@ h1 b{background:linear-gradient(90deg,#ff3b2f,#ff7a45);-webkit-background-clip:t
         <button class="mbtn ghost hidden" id="install"><span class="ic steel"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span><span class="mt"><b>App installieren</b><small>Vollbild vom Startbildschirm</small></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
     </div>
-    <div class="tver">♪ Musik: freetouse.com · Version v52 · 05.11.2026</div>
+    <div class="tver">♪ Musik: freetouse.com · Version v53 · 05.11.2026</div>
   </section>
 
   <section class="scr" id="scrTrack">
@@ -609,7 +609,7 @@ h1 b{background:linear-gradient(90deg,#ff3b2f,#ff7a45);-webkit-background-clip:t
     <div class="msel" id="mSel"></div>
     <button class="mnext" id="mNext">Weiter <span>›</span></button>
   </footer>
-  <p class="hint mhint" id="hint">Handy quer halten · PC: Pfeiltasten/WASD, Leertaste = Bremse, Shift/E = Boost, C = Kamera, P = Pause · Controller: Stick lenken, RT Gas, LT Bremse, RB Boost, Y Kamera, rechter Stick Kamera drehen, Start Pause · Menü: Steuerkreuz + A · Streckendaten: TUM racetrack-database (LGPL-3.0), bacinger/f1-circuits (MIT) · Titelmusik: Alegend – Evermore · Rennmusik: Burgundy – All Night, Aylex – Back To Life / Blast / Okay Energy / Glorious, Walen – HEADPHONK (alle freetouse.com)</p>
+  <p class="hint mhint" id="hint">Handy quer halten · PC: Pfeiltasten/WASD, Leertaste = Bremse, Shift/E = Boost, C = Kamera, P = Pause · Controller: Stick lenken, RT Gas, LT Bremse, RB Boost, Y Kamera, rechter Stick Kamera drehen, Start Pause · Menü: Steuerkreuz + A · Streckendaten: TUM racetrack-database (LGPL-3.0), bacinger/f1-circuits (MIT) · Wahrzeichen-Lage: © OpenStreetMap-Mitwirkende (ODbL) · Titelmusik: Alegend – Evermore · Rennmusik: Burgundy – All Night, Aylex – Back To Life / Blast / Okay Energy / Glorious, Walen – HEADPHONK (alle freetouse.com)</p>
   <button id="go" class="hidden"></button>
 </div>
 
@@ -5772,7 +5772,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v52';
+const VERSION = 'v53';
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
