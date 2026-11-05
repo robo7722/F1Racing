@@ -2129,7 +2129,7 @@ function bankY(i, lat) { const b = BANK ? BANK[i] : 0; if (!b) return 0; const q
 function bankBreaks(i) { const qe = HW[i] + BK_IN; return [0, KSD * qe, KSD * (qe + BK_OUT)]; }   // Knickstellen (seitlich), dort werden Streifen unterteilt
 function bankAt(c) { if (!BANK) return 0; const f = modL(c.d) / DS, i0 = Math.floor(f) % N, i1 = (i0 + 1) % N, t = f - Math.floor(f); return bankY(i0, c.lat) * (1 - t) + bankY(i1, c.lat) * t; }
 const HOTEL_T = { value: 0 };
-let MJ = null, SPI = null, PAVEZ = null, KERBL = null, KERBR = null, REFNW = null, WTL = null, WTR = null, GOL = null, GOR = null, HILLW = null, RISE = null, ELEV, SLOPE, FLAT = true, ELMEAN = 0, HG = null, HW, NOWALL, TRK, TH, N, L, DS, PX, PZ, TX, TZ, RX, RZ, KS, KP, KR, RL, profBot = null, WL, WR, GRL, GRR, KERB, profP, profAI, inSign = 1, poleSide = 1, hotelRoof = null;
+let MC_ISL = null, MJ = null, SPI = null, PAVEZ = null, KERBL = null, KERBR = null, REFNW = null, WTL = null, WTR = null, GOL = null, GOR = null, HILLW = null, RISE = null, ELEV, SLOPE, FLAT = true, ELMEAN = 0, HG = null, HW, NOWALL, TRK, TH, N, L, DS, PX, PZ, TX, TZ, RX, RZ, KS, KP, KR, RL, profBot = null, WL, WR, GRL, GRR, KERB, profP, profAI, inSign = 1, poleSide = 1, hotelRoof = null;
 const trackGroup = new THREE.Group(); scene.add(trackGroup);
 const wrapL = x => x - L * Math.round(x / L);
 const modL = x => ((x % L) + L) % L;
@@ -2521,6 +2521,9 @@ function buildTrack(key) {
   }
   // Monza, erste Schikane (Rettifilo): keine Mauer, nur großes Kiesbett
   NOWALL = new Uint8Array(N); if (REFNW) NOWALL.set(REFNW);
+  MC_ISL = null; if (TRK.mc && TRK.mc.fairmont) { const [fx, fz] = TRK.mc.fairmont; let bi = -1, bk = 0; for (let i = 0; i < N; i++) { if (Math.hypot(PX[i] - fx, PZ[i] - fz) > 220) continue; if (Math.abs(KS[i]) > bk) { bk = Math.abs(KS[i]); bi = i; } }
+    if (bi >= 0 && bk > 1 / 40) { const sd = KS[bi] > 0 ? 1 : -1, c = trackAt(bi * DS, sd / bk); let R = 0; for (let r = 1.5; r <= 9; r += 0.5) { let ok = true; for (let a = 0; a < 6.28 && ok; a += 0.4) { const [d2, j] = spiNear(c.x + Math.cos(a) * r, c.z + Math.sin(a) * r); if (Math.sqrt(d2) < HW[j] + 1.4) ok = false; } if (!ok) break; R = r; }
+      if (R >= 2) { MC_ISL = { x: c.x, z: c.z, R }; for (let i = 0; i < N; i++) for (const [W, s, nb] of [[WL, -1, 1], [WR, 1, 2]]) { const x = PX[i] + RX[i] * W[i] * s, z = PZ[i] + RZ[i] * W[i] * s; if (Math.hypot(x - c.x, z - c.z) < R + 9) NOWALL[i] |= nb; } } } }   /* Fairmont-Haarnadel: Pflanzeninsel statt innerer Leitplanke */
   for (const [W, s, nb] of [[WL, -1, 1], [WR, 1, 2]]) for (let i = 0; i < N; i++) { const x = PX[i] + RX[i] * W[i] * s, z = PZ[i] + RZ[i] * W[i] * s, [d2, j] = spiNear(x, z); let dj = Math.abs(j - i); dj = Math.min(dj, N - dj); if (Math.sqrt(d2) < HW[j] + (dj * DS > 6 ? 1.5 : 0.8)) NOWALL[i] |= nb; }   /* in engen Haarnadeln faltet sich die innere Absperrung über die Fahrbahn: dort weglassen */
   PAVEZ = new Uint8Array(N);
   const noWall = (a, b, ext = 38, pave = false) => {
@@ -2787,7 +2790,7 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
     }
     // Büsche direkt hinter den Zäunen (Monza)
     if (TH.trees === 'forest') {
-      const bu = []; for (const [W, s] of [[WL, -1], [WR, 1]]) for (let i = 0; i < N; i += 2) { if (Math.random() < 0.5 || (NOWALL[i] & (s < 0 ? 1 : 2))) continue; const p = trackAt(i * DS, s * (W[i] + 3.6 + Math.random() * 4)); if (trackFree(p.x, p.z, 2.2) && !(TH.openInfield && Math.random() < .8)) bu.push([p.x, p.z]); }
+      const bu = []; for (const [W, s] of [[WL, -1], [WR, 1]]) for (let i = 0; i < N; i += 2) { if (Math.random() < 0.5 || (NOWALL[i] & (s < 0 ? 1 : 2))) continue; const p = trackAt(i * DS, s * (W[i] + 3.6 + Math.random() * 4)); if ([[0, 0], [2, 0], [-2, 0], [0, 2], [0, -2]].every(([u, v]) => trackFree(p.x + u, p.z + v, 1)) && !(TH.openInfield && Math.random() < .8)) bu.push([p.x, p.z]); }
       const bg = new THREE.IcosahedronGeometry(1, 2); { const p = bg.attributes.position; for (let k = 0; k < p.count; k++) { const x = p.getX(k), y = p.getY(k), z = p.getZ(k), f = 1 + 0.13 * Math.sin(x * 3.1 + 1) * Math.sin(y * 3.7) * Math.sin(z * 2.9 + 2); p.setXYZ(k, x * f, y * f, z * f); } bg.computeVertexNormals(); }
       const ib2 = new THREE.InstancedMesh(bg, lam({ map: TEX.leaf, normalMap: TEX.leafN, normalScale: new THREE.Vector2(2, 2), roughness: .85 }), bu.length);
       bu.forEach(([x, z], k) => { const s3 = 0.6 + Math.random() * 0.7; m4.compose(pv.set(x, s3 * 0.5, z), qq.setFromAxisAngle(_v2, Math.random() * 6), sc.set(s3 * 1.3, s3, s3 * 1.3)); ib2.setMatrixAt(k, m4); ib2.setColorAt(k, cc.setHSL(0.26 + Math.random() * .06, .5, .2 + Math.random() * .1)); }); sc.set(1, 1, 1);
@@ -3292,6 +3295,21 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
     const pHdp = place(M.hdp, 48); if (pHdp) { const [x, z] = pHdp, g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = 0.35; trackGroup.add(g);
       g.add(new THREE.Mesh(new THREE.BoxGeometry(90, 24, 28).translate(0, 12, 0), facadeMat({ wall: '#f2ead6', frame: '#fffaf0', balcony: '#ffffff', glass: '#3c3a36', glassTop: '#a8a090', litP: .45, emiI: 1, roof: '#4e5662', seed: 23, bays: 18, floors: 7, bayM: 5, floorM: 3.6 })));
       g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.01, 1, 1, 4, 1).rotateY(Math.PI / 4).scale(64, 8, 20).translate(0, 28, 0), lam({ color: 0x4e5662 }))); }
+    // Fairmont-Haarnadel (nach Fotos): kleine runde, erhöhte Pflanzeninsel im Kurveninneren mit rot-weißem Rand und Palmen
+    { if (MC_ISL) { const c = MC_ISL, R = MC_ISL.R; { const kerbT = canvasTex(256, 16, (g, w, h) => { for (let x = 0; x < w; x += 32) { g.fillStyle = (x / 32) % 2 ? '#f4f4f4' : '#d42a1e'; g.fillRect(x, 0, 32, h); } }); kerbT.userData.own = true; kerbT.wrapS = THREE.RepeatWrapping; kerbT.repeat.set(Math.max(2, Math.round(R * 1.2)), 1);
+          const ring = new THREE.Mesh(new THREE.CylinderGeometry(R, R + 0.15, 0.55, 40, 1, true), lam({ map: kerbT })); ring.position.set(c.x, 0.27, c.z); trackGroup.add(ring);
+          const top = new THREE.Mesh(new THREE.CircleGeometry(R, 40).rotateX(-Math.PI / 2), lam({ map: texRep(TEX.grassP, 2, 2), color: 0x9fb06a })); top.position.set(c.x, 0.55, c.z); trackGroup.add(top);
+          const PP = palmParts(), np = R > 4 ? 3 : 1, it = new THREE.InstancedMesh(PP.trunk, PP.trunkM, np), ic = new THREE.InstancedMesh(PP.crown, PP.crownM, np), m5 = new THREE.Matrix4(), q5 = new THREE.Quaternion();
+          for (let k = 0; k < np; k++) { const a = k * 2.1, rr = np > 1 ? R * 0.45 : 0, s5 = 0.55 + k * 0.08; q5.setFromAxisAngle(_v2, a * 1.7); m5.compose(new THREE.Vector3(c.x + Math.cos(a) * rr, 0.5, c.z + Math.sin(a) * rr), q5, new THREE.Vector3(s5, s5, s5)); it.setMatrixAt(k, m5); ic.setMatrixAt(k, m5); }
+          it.castShadow = ic.castShadow = true; trackGroup.add(it, ic); excl.push([c.x, c.z, R + 1]); } } }
+    // Beau Rivage (nach Fotos): Schirmpinien mit breiter, flacher Krone hinter den Leitplanken der Bergauf-Geraden
+    { const trunkG = new THREE.CylinderGeometry(0.28, 0.42, 1, 7).translate(0, 0.5, 0), parts = [];
+      for (const [ox, oy, oz, sx, sy] of [[0, 0, 0, 6.2, 1.6], [2.6, -0.4, 1.4, 3.6, 1.2], [-2.4, -0.3, -1.6, 3.8, 1.3], [0.6, 0.5, -2.6, 3.2, 1.0]]) parts.push([new THREE.IcosahedronGeometry(1, 1).scale(sx, sy, sx).translate(ox, oy, oz), null]);
+      const crownG = mergeParts(parts), cm = lam({ map: texRep(TEX.leaf, 3, 1), normalMap: texRep(TEX.leafN, 3, 1), color: 0x9cc070, emissive: new THREE.Color(0.06, 0.09, 0.04) }), tm = lam({ color: 0x6a5240 });
+      const pts = []; for (let s2 = 330; s2 <= 720; s2 += 22) for (const sd of [-1, 1]) { if (Math.random() < 0.45) continue; const i = Math.floor(modL(s2) / DS) % N, q = trackAt(s2, sd * (wallAt(i, sd) + 5 + Math.random() * 6)); if (trackFree(q.x, q.z, 4.5) && !inMarina(q.x, q.z) && !excl.some(e => (q.x - e[0]) ** 2 + (q.z - e[1]) ** 2 < e[2] ** 2)) pts.push([q.x, q.z, 9 + Math.random() * 4]); }
+      const it = new THREE.InstancedMesh(trunkG, tm, pts.length), ic = new THREE.InstancedMesh(crownG, cm, pts.length), m5 = new THREE.Matrix4(), q5 = new THREE.Quaternion();
+      pts.forEach(([x, z, h], k) => { q5.setFromAxisAngle(_v2, Math.random() * 6.28); m5.compose(new THREE.Vector3(x, 0, z), q5, new THREE.Vector3(1, h, 1)); it.setMatrixAt(k, m5); m5.compose(new THREE.Vector3(x, h + 0.6, z), q5, new THREE.Vector3(1, 1, 1)); ic.setMatrixAt(k, m5); excl.push([x, z, 7]); });
+      it.castShadow = ic.castShadow = true; trackGroup.add(it, ic); }
     // Tunnel unter dem Fairmont (nach Fotos): flache dunkle Decke, durchgehende kühlweiße Leuchtreihen an beiden Deckenkanten,
     // zur Meerseite offene Pfeilerreihe mit blauem Licht, zur Stadtseite helle geflieste Wand; über der Einfahrt der beige Hotelbau mit Lichterleiste
     { const sA = M.tun[0] * L, sB = M.tun[1] * L; window.__tun = [sA, sB];
@@ -3926,7 +3944,8 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
     }
     const nightC = TH.night ? 1 : 0;
     const gulf = TH.asph === 'yas';   // Golf: helle, moderne Wohnanlagen mit großen Glasflächen, abends warm beleuchtet
-    const resiM = gulf ? facadeMat({ wall: '#f3eee4', frame: '#fbf8f2', balcony: '#ffffff', glass: '#3f5f80', glassTop: '#a9c3dc', litP: .32, emiI: .95, roof: '#cfc6b6', seed: 5, bays: 12, floors: 24, bayM: 4.4, floorM: 3.4, relief: 4 }) : facadeMat({ wall: nightC ? '#d9cbb0' : '#ece2cf', frame: '#f6f0e4', balcony: '#faf6ee', glass: nightC ? '#2a2f36' : '#5d7286', glassTop: nightC ? '#6d7a88' : '#b7c8d6', litP: nightC ? (TH.cityLit ?? .5) : .14, emiI: nightC ? 1.2 : .55, roof: '#8a8478', seed: 3, bays: 16, floors: 24, bayM: 3.6, floorM: 3.2 });
+    const rivi = !!TRK.mc;   // Monaco (nach Fotos): warme Putzfassaden in Creme/Ocker/Lachsrosa, Terrakotta-Dächer, hellgraue Fensterläden
+    const resiM = rivi ? facadeMat({ wall: '#f1e4cc', frame: '#fbf5ea', balcony: '#fff9f0', glass: '#4c5966', glassTop: '#b0bfcc', litP: .14, emiI: .55, roof: '#a3705c', seed: 9, bays: 10, floors: 14, bayM: 4.2, floorM: 3.2, relief: 4 }) : gulf ? facadeMat({ wall: '#f3eee4', frame: '#fbf8f2', balcony: '#ffffff', glass: '#3f5f80', glassTop: '#a9c3dc', litP: .32, emiI: .95, roof: '#cfc6b6', seed: 5, bays: 12, floors: 24, bayM: 4.4, floorM: 3.4, relief: 4 }) : facadeMat({ wall: nightC ? '#d9cbb0' : '#ece2cf', frame: '#f6f0e4', balcony: '#faf6ee', glass: nightC ? '#2a2f36' : '#5d7286', glassTop: nightC ? '#6d7a88' : '#b7c8d6', litP: nightC ? (TH.cityLit ?? .5) : .14, emiI: nightC ? 1.2 : .55, roof: '#8a8478', seed: 3, bays: 16, floors: 24, bayM: 3.6, floorM: 3.2 });
     const towM = facadeMat({ pbr: true, style: 'curtain', wall: '#36414d', glass: nightC ? '#1d2a38' : '#3f5a74', glassTop: nightC ? '#7b98b4' : '#c3d6e6', frame: '#c8d2dc', litP: nightC ? (TH.cityLit ?? .55) : .12, emiI: nightC ? 1.3 : .5, roof: '#2a2e33', seed: 7, bays: 16, floors: 24, bayM: 3, floorM: 4 });
     const box1 = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0), lo = [], hiB = [], roofU = [];
     // abwechslungsreichere Silhouetten: Hochhäuser mit Sockelbau und Rücksprung, Dachaufbauten auf den flachen Häusern
@@ -3935,7 +3954,7 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
       if (h2 <= 45) { lo.push(b); continue; }   // Dachaufbau steckt bereits im Baukörper (Treppenhaus) – keine zusätzlichen Kästen, die sich durchdringen
       if (Math.random() < .5) lo.push([x, z, w * 1.5, 7 + Math.random() * 7, l * 1.5, r]);
       if (Math.random() < .45) { const h1 = h2 * (.55 + Math.random() * .2); hiB.push([x, z, w, h1, l, r], [x, z, w * .72, h2, l * .72, r]); } else hiB.push(b); }
-    const cols = TH.night ? [0xffffff, 0xf3ece0, 0xe9e2d6, 0xf6efe4, 0xe2ddd6, 0xfff6ea] : [0xe8eef8, 0xf2f0ee, 0xdfe6f0, 0xeef0f2, 0xe4e8ee, 0xf6f4f2], gcols = [0xffffff, 0xdfe8f2, 0xe8e4dc, 0xd8e2ea];
+    const cols = rivi ? [0xfff4e4, 0xffd9c0, 0xf6d6a8, 0xffe6cf, 0xffc9b4, 0xfbe9c8, 0xf3e0d0] : TH.night ? [0xffffff, 0xf3ece0, 0xe9e2d6, 0xf6efe4, 0xe2ddd6, 0xfff6ea] : [0xe8eef8, 0xf2f0ee, 0xdfe6f0, 0xeef0f2, 0xe4e8ee, 0xf6f4f2], gcols = rivi ? [0xfff0e0, 0xffd6c2, 0xf8e2c0, 0xffffff, 0xf0c8b0] : [0xffffff, 0xdfe8f2, 0xe8e4dc, 0xd8e2ea];
     // flache Häuser als gegliederter Baukörper statt Kiste: Eckpfeiler, umlaufende Brüstung, Geschossbänder vorn/hinten, Treppenhaus auf dem Dach
     // (Einheitsmaß 1×1×1; die Fassade rechnet ihre UV aus Position × Instanz-Skalierung, Fenster bleiben dadurch überall gleich groß)
     const kit = (() => { const P = [], B = (w, h, l, x, y, z) => P.push([new THREE.BoxGeometry(w, h, l).translate(x, y, z), null]);
