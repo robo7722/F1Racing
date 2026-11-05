@@ -538,7 +538,7 @@ h1 b{background:linear-gradient(90deg,#ff3b2f,#ff7a45);-webkit-background-clip:t
         <button class="mbtn ghost hidden" id="install"><span class="ic steel"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span><span class="mt"><b>App installieren</b><small>Vollbild vom Startbildschirm</small></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
     </div>
-    <div class="tver">♪ Musik: freetouse.com · Version v49 · 05.11.2026</div>
+    <div class="tver">♪ Musik: freetouse.com · Version v50 · 05.11.2026</div>
   </section>
 
   <section class="scr" id="scrTrack">
@@ -754,7 +754,7 @@ const SG_BAY = [[103.8538, 1.2858], [103.8546, 1.2869], [103.8556, 1.2884], [103
 const TRACKS = {
   mel: { name: 'Melbourne', full: 'Albert Park Circuit', land: 'Australien', km: '5,29 km', laps: 58, pts: TRACK_HD['au-1953'].pts.filter((_, k) => k % 3 === 0), hd: TRACK_HD['au-1953'], theme: 'mel', ref: MEL_REF, refTrees: true, lake: MEL_REF.lake, city: [-250, -3450], cityBelt: [1050, 1500, -1700, 500] },
   monza: { name: 'Monza', full: 'Autodromo Nazionale Monza', land: 'Italien', km: '5,793 km', laps: 53, pts: TRACK_PTS['it-1922'], hd: TRACK_HD['it-1922'], theme: 'monza', monza: true, ref: MONZA_REF },
-  yas: { name: 'Abu Dhabi', full: 'Yas Marina Circuit', land: 'VAE', km: '5,281 km', laps: 58, pts: TRACK_PTS['ae-2009'], hd: TRACK_HD['ae-2009'], theme: 'yas', pitOut: true, stands: [[-200, 190, 'opp', 46], [1230, 1400, 'out', 40], [2470, 2600, 'out', 40], [2700, 2960, 'out', 46], [3260, 3470, 'out', 46]], tower: true, hotel: [-232, 205], marina: [55, 125], dome: [183, -1586] },
+  yas: { name: 'Abu Dhabi', full: 'Yas Marina Circuit', land: 'VAE', km: '5,281 km', laps: 58, pts: TRACK_PTS['ae-2009'], hd: TRACK_HD['ae-2009'], theme: 'yas', pitOut: true, stands: [[-200, 190, 'opp', 46], [1230, 1400, 'out', 40], [2470, 2600, 'out', 40], [2700, 2960, 'out', 46], [3260, 3470, 'out', 46]], tower: true, hotel: [91.2, 212.3], hotelAx: [-0.9755, 0.2198], hotelLen: 275, hotelHead: 55, hotelBody: 220, marina: [55, 125], dome: [183, -1586] },
   spa: { name: 'Spa', full: 'Circuit de Spa-Francorchamps', land: 'Belgien', km: '7,004 km', laps: 44, pts: TRACK_PTS['be-1925'], hd: TRACK_HD['be-1925'], theme: 'spa', stands: [[-260, 150, 'opp', 44], [200, 300, 'out', 40], [380, 700, 'out', 44], [450, 650, 'in', 40], [860, 1000, 'out', 40], [860, 1000, 'in', 40], [2850, 3000, 'out', 40], [3150, 3250, 'out', 40], [3620, 3780, 'out', 40], [4290, 4420, 'in', 40], [5180, 5300, 'out', 40], [6400, 6650, 'out', 40]] },
   vegas: { name: 'Las Vegas', full: 'Las Vegas Strip Circuit', land: 'USA', km: '6,201 km', laps: 50, pts: TRACK_PTS['us-2023'], hd: TRACK_HD['us-2023'], theme: 'vegas', sphere: [342, -496], stripX: -560 },
   sgp: { name: 'Singapur', full: 'Marina Bay Street Circuit', land: 'Singapur', km: '4,940 km', laps: 62, pts: TRACK_PTS['sg-2023'], hd: TRACK_HD['sg-2023'], theme: 'sgp', sgp: SG0, lake: [SG_BAY], bay: true, flyer: [558, 108], flyerRot: 0, city: [-560, 880], citySp: [330, 300], cityMul: 0.7, cityBelt: [-1000, 300, -1250, -620],
@@ -884,9 +884,9 @@ const FinishShader = {
     float ghost(vec2 p, float size){ vec2 d = vUv - p; d.x *= uAspect; return smoothstep(size, size * 0.55, length(d)); }
     void main(){
       vec2 c = vUv - 0.5; float r = length(c);
-      float amt = min(uSpeed, 2.2) * 0.13 * smoothstep(0.08, 0.6, r);
+      float amt = min(uSpeed, 2.2) * 0.075 * smoothstep(0.18, 0.7, r) * mix(0.18, 1.0, smoothstep(0.42, 0.75, vUv.y));   // Fahrbahn, Linien und Curbs (untere Bildhälfte) bleiben scharf
       vec3 col = vec3(0.0); float tot = 0.0;
-      if (amt * r > 0.0006) { for (int i = 0; i < 11; i++) { float t = float(i) / 10.0, w = 1.0 - t * 0.55; col += texture2D(tDiffuse, vUv - c * amt * t).rgb * w; tot += w; } col /= tot; }
+      if (amt * r > 0.0012) { for (int i = 0; i < 7; i++) { float t = float(i) / 6.0, w = 1.0 - t * 0.55; col += texture2D(tDiffuse, vUv - c * amt * t).rgb * w; tot += w; } col /= tot; }
       else {
         col = texture2D(tDiffuse, vUv).rgb;
         if (uSharp > 0.01) {   // Nachschärfen (gleicht die niedrigere Renderauflösung aus), begrenzt gegen helle Säume
@@ -896,7 +896,7 @@ const FinishShader = {
       }
       if (uRays > 0.001) col += texture2D(tRays, vUv).rgb * uRays;   // Lichtstrahlen der tiefen Sonne
       // chromatische Aberration am Bildrand (stärker bei Tempo)
-      float ca = (0.0012 + min(uSpeed, 2.2) * 0.005) * smoothstep(0.2, 0.7, r);
+      float ca = (0.0004 + min(uSpeed, 2.2) * 0.0016) * smoothstep(0.35, 0.75, r);   // nur ganz am Rand, damit Curbs und Linien nicht farbig verschmieren
       if (ca > 0.00005) { col.r = mix(col.r, texture2D(tDiffuse, vUv + c * ca).r, 0.85); col.b = mix(col.b, texture2D(tDiffuse, vUv - c * ca).b, 0.85); }
       // Sonnenreflexe: nur wenn die Sonne wirklich sichtbar ist (helle Pixel an ihrer Position)
       if (uSunOn > 0.0) {
@@ -972,7 +972,7 @@ function buildComposer() {
     ao.blendIntensity = ultra ? 0.9 : 0.75; composer.addPass(ao);
   }
   bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth / (ultra ? 1 : 2), innerHeight / (ultra ? 1 : 2)), 0.5, 0.45, 0.9);
-  if (!ultra) { const bs = bloomPass.setSize.bind(bloomPass); bloomPass.setSize = (w, h) => bs(Math.max(64, w / 2), Math.max(64, h / 2)); }   // Leuchten in halber Auflösung
+  if (!ultra) { const bs = bloomPass.setSize.bind(bloomPass), f = isTouch ? 4 : 2; bloomPass.setSize = (w, h) => bs(Math.max(64, w / f), Math.max(64, h / f)); }   // Leuchten in halber (Handy: viertel) Auflösung   // Leuchten in halber Auflösung
   composer.addPass(bloomPass);
   raysPass = new SunRaysPass(0.5); composer.addPass(raysPass);
   finishPass = new ShaderPass(FinishShader); composer.addPass(finishPass);
@@ -3152,14 +3152,15 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
   if (TRK.hotel) {
     const [, hi0] = nearestDist(TRK.hotel[0], TRK.hotel[1]), s0 = hi0 * DS, c0 = trackAt(s0, 0);
     window.__hotelS = s0;
-    const Tx = Math.sin(c0.h), Tz = Math.cos(c0.h), Nx = -Tz, Nz = Tx;   // T: entlang der Strecke, N: quer dazu (Längsachse des Hotels)
+    // Längsachse aus dem echten OSM-Grundriss (TRK.hotelAx: Richtung vom Streckenkreuz zum langen Hauptbau), sonst quer zur Strecke
+    const HA = TRK.hotelAx, Nx = HA ? HA[0] : -Math.cos(c0.h), Nz = HA ? HA[1] : Math.sin(c0.h), Tx = Nz, Tz = -Nx;   // T: quer zur Hotelachse (≈ entlang der Strecke), N: Längsachse des Hotels
     window.__hotelPos = { x: c0.x, z: c0.z, N: [Nx, Nz], T: [Tx, Tz] };
-    const LEN = 217, UT = 0.29;                                         // Gesamtlänge des Dachs; Lage der Strecke unter der Taille (Anteil vom Kopf-Ende)
+    const LEN = TRK.hotelLen || 217, UT = 0.29;                               // Gesamtlänge des Dachs; Lage der Strecke unter der Taille (Anteil vom Kopf-Ende)
     // Seite wählen: der lange Körper dorthin, wo mehr Platz ist (keine anderen Streckenteile)
     const freeLen = sg => { const a0 = wallAt(c0.i, sg) + 4; let n = a0; for (let a = a0; a <= LEN; a += 6) { let ok = true; for (const t of [-10, 0, 10]) { const x = c0.x + Nx * a * sg + Tx * t, z = c0.z + Nz * a * sg + Tz * t; if (!trackFree(x, z, 1)) ok = false; } if (!ok) break; n = a; } return n; };   // ab hinter der Mauer messen
-    const fA = freeLen(1), fB = freeLen(-1), sg = fA >= fB ? 1 : -1, room = Math.max(fA, fB);
+    const fA = HA ? LEN : freeLen(1), fB = HA ? LEN : freeLen(-1), sg = HA ? 1 : fA >= fB ? 1 : -1, room = Math.max(fA, fB);   /* mit echten Geodaten: Seite und Länge stehen fest */
     // jede Seite für sich: Kopf-Seite (u < UT) und Körper-Seite (u > UT) werden nur so weit gekürzt, wie dort Platz ist
-    const Ka = clamp((sg > 0 ? fB : fA) / (LEN * UT), 0.55, 1), Kb = clamp(room / (LEN * (1 - UT)), 0.5, 1), K = (Ka * UT + Kb * (1 - UT));
+    const Ka = TRK.hotelHead ? TRK.hotelHead / (LEN * UT) : clamp((sg > 0 ? fB : fA) / (LEN * UT), 0.55, 1), Kb = TRK.hotelBody ? TRK.hotelBody / (LEN * (1 - UT)) : clamp(room / (LEN * (1 - UT)), 0.5, 1), K = (Ka * UT + Kb * (1 - UT));   /* echte Maße aus OSM: Kopf- und Hauptbau-Länge ab Streckenkreuz */
     window.__hotelPos.dbg = { fA, fB, Ka, Kb };
     const AX = u => (u - UT) * LEN * (u < UT ? Ka : Kb);
     const W2 = (u, t, y) => [c0.x + Nx * sg * AX(u) + Tx * t, y, c0.z + Nz * sg * AX(u) + Tz * t];
@@ -3265,9 +3266,7 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
       const main = new THREE.Mesh(new THREE.CylinderGeometry(38, 24, 36, 8, 1), cm); main.position.set(px, 20, pz); main.rotation.y = 0.39; main.castShadow = true; trackGroup.add(main);
       const top = new THREE.Mesh(new THREE.CylinderGeometry(30, 38, 6, 8, 1), lam({ color: 0xeeeeee })); top.position.set(px, 41, pz); top.rotation.y = 0.39; trackGroup.add(top);
       excl.push([px, pz, 70]);
-      const boxFree = (x, z) => { for (let u = -1; u <= 1; u += 0.5) for (let w = -1; w <= 1; w += 0.5) if (!trackFree(x + u * 23, z + w * 23, 4) || !pipI(x + u * 23, z + w * 23)) return false; return true; };
-      for (const [dx, dz] of [[62, 18], [-62, -18], [18, -62], [-18, 62], [70, -40], [-70, 40]]) if (boxFree(px + dx, pz + dz)) {   /* gläserner Würfel (ehem. Québec-Pavillon), nur wo er nicht auf der Strecke steht */
-        const ann = new THREE.Mesh(new THREE.BoxGeometry(46, 22, 46), new THREE.MeshStandardMaterial({ color: 0x9fb8c8, roughness: .1, metalness: .7, envMapIntensity: 1.3 })); ann.position.set(px + dx, 11, pz + dz); trackGroup.add(ann); excl.push([px + dx, pz + dz, 40]); break; } }
+ }
     // Biosphère: geodätische Kugel (76 m) aus einem feinen Dreiecks-Stabwerk auf der Nachbarinsel Sainte-Hélène
     { const bx2 = hx + 520, bz2 = hz - 420;
       const lat = canvasTex(512, 256, (g, w, h) => { g.clearRect(0, 0, w, h); g.strokeStyle = 'rgba(235,240,245,.95)'; g.lineWidth = 2.2; const st = 16;
@@ -5659,7 +5658,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v49';
+const VERSION = 'v50';
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -5686,7 +5685,7 @@ function dynRes(raw) {
   if (!running || paused || document.hidden || raw > 250) { DYN.acc = DYN.n = 0; return; }
   DYN.acc += raw; DYN.n++; if (DYN.acc < 1500) return;
   const avg = DYN.acc / DYN.n; DYN.acc = DYN.n = 0; let ns = DYN.scale;
-  if (avg > 21.5) { ns = Math.max(0.62, DYN.scale - (avg > 30 ? 0.12 : 0.07)); DYN.calm = 0; }
+  if (avg > 21.5) { ns = Math.max(0.8, DYN.scale - (avg > 30 ? 0.1 : 0.05));   /* nicht unter 80 %: sonst werden Linien und Curbs matschig */ DYN.calm = 0; }
   else if (avg < 17.6 && DYN.scale < 1) { if (++DYN.calm >= 4) { ns = Math.min(1, DYN.scale + 0.06); DYN.calm = 0; } }
   else DYN.calm = 0;
   if (Math.abs(ns - DYN.scale) > 0.01) { DYN.scale = ns; renderer.setPixelRatio(basePR() * ns); resize(); }
@@ -5742,7 +5741,9 @@ applyGfx();
 buildTrack(TRACKS[S.track] && (!TRACKS[S.track].extra || S.nos) ? S.track : (S.track = 'monza'));
 placeOnGrid(); buildMenu(); renderMenu();
 loading(false); $('#menu').classList.remove('hidden'); showScreen('title');
-window.__scene = () => scene;
+window.__scene = () => scene; window.__perf = (k = 20) => { const was = paused; paused = false; renderer.info.autoReset = false; renderer.info.reset(); let t = performance.now(); const t0 = t; for (let i = 0; i < k; i++) frame(t += 40); const gl = renderer.getContext(); gl.finish(); const ms = (performance.now() - t0) / k, r = renderer.info.render; const o = { calls: Math.round(r.calls / k), tris: Math.round(r.triangles / k), ms: +ms.toFixed(2), pr: renderer.getPixelRatio() }; renderer.info.autoReset = true; paused = was; return o; };   /* Test: Zeichenaufrufe/Bild und Zeit pro Bild (CPU+GPU, mit gl.finish) */
+window.__fx = () => ({ composer, bloomPass, raysPass, finishPass, renderer, scene });
+window.__ri = () => { const r = renderer.info.render; return { calls: r.calls, tris: r.triangles, geo: renderer.info.memory.geometries, tex: renderer.info.memory.textures, prog: renderer.info.programs.length, pr: renderer.getPixelRatio() }; }; window.__frame = (k = 3) => { let t = performance.now(); for (let i = 0; i < k; i++) frame(t += 40); };   /* Test: Bilder auch bei verstecktem Fenster zeichnen */
 window.__wAt = s2 => { const i = Math.floor(modL(s2) / DS) % N; return { hw: HW[i], wl: WL[i], wr: WR[i], k: KS[i] }; }; window.__tAt = (s2, lat = 0) => { const q = trackAt(s2, lat), e = FLAT ? 0 : ELEV[q.i] || 0; return [q.x, e, q.z, q.h]; };
 // Testhilfe: alle Objekte mit Bodenkontakt prüfen – liegt ein Bodenpunkt innerhalb der Absperrung (Fahrbahn/Auslauf), clippt das Objekt.
 // Flache Flächen (Fahrbahn, Auslauf, Wasser) und die Absperrung selbst zählen nicht. Ergebnis: Stellen (10-m-Raster) mit Anzahl und Objekthöhe.
