@@ -538,7 +538,7 @@ h1 b{background:linear-gradient(90deg,#ff3b2f,#ff7a45);-webkit-background-clip:t
         <button class="mbtn ghost hidden" id="install"><span class="ic steel"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span><span class="mt"><b>App installieren</b><small>Vollbild vom Startbildschirm</small></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
     </div>
-    <div class="tver">♪ Musik: freetouse.com · Version v50 · 05.11.2026</div>
+    <div class="tver">♪ Musik: freetouse.com · Version v51 · 05.11.2026</div>
   </section>
 
   <section class="scr" id="scrTrack">
@@ -2172,6 +2172,49 @@ function spiNear(x, z, i = -1, skip = 0, maxR = 40) {   // [Abstand², Index] de
 function clearance(x, z, i, skipM = 150) { return Math.sqrt(spiNear(x, z, i, Math.round(skipM / DS))[0]); }
 // liegt ein Punkt außerhalb aller Mauern (inkl. eigenem Streckenabschnitt)?
 // nahtloser Gebäudeabschnitt entlang der Strecke: Grundriss-Trapez von sA bis sB, seitlich von o0 bis o1 (je Ende eigene Abstände) -> Nachbarabschnitte stoßen exakt aneinander
+// Motorjacht (18 m, Bug zeigt nach +z): gerundeter Rumpf mit V-Kiel und Deckssprung, zwei Aufbaudecks mit Fensterbändern, Hardtop, Radarbügel, Badeplattform, Reling.
+// Eine gemeinsame Atlas-Textur (Lack, Rumpf mit Wasserpass, Glas, Teak) -> eine Instanz = ein Zeichenaufruf für alle Jachten; weit weg einfache Version (LOD)
+function yachtModel() {
+  const atlas = canvasTex(512, 128, (g, w, h) => {
+    g.fillStyle = '#e6e9ec'; g.fillRect(0, 0, 128, h); g.fillStyle = 'rgba(120,130,140,.22)'; for (let y = 16; y < h; y += 32) g.fillRect(0, y, 128, 1);   // Lack mit feinen Fugen
+    const hg = g.createLinearGradient(0, h, 0, 0); hg.addColorStop(0, '#7a2a22'); hg.addColorStop(0.17, '#8a3026'); hg.addColorStop(0.185, '#1d2f4f'); hg.addColorStop(0.27, '#1d2f4f'); hg.addColorStop(0.285, '#e9ecef'); hg.addColorStop(0.9, '#f1f3f5'); hg.addColorStop(0.93, '#c9ced4'); hg.addColorStop(1, '#eef1f4');
+    g.fillStyle = hg; g.fillRect(128, 0, 128, h);   // Rumpf: Antifouling, Wasserpass (Navy), weißer Lack, Scheuerleiste
+    for (let k = 0; k < 6; k++) { g.fillStyle = '#1b2a3a'; g.beginPath(); g.ellipse(150 + k * 17, h * 0.42, 3.2, 2.2, 0, 0, Math.PI * 2); g.fill(); }   // Bullaugen im Rumpf
+    const gg = g.createLinearGradient(0, 0, 0, h); gg.addColorStop(0, '#5f7d98'); gg.addColorStop(0.45, '#1c2a38'); gg.addColorStop(1, '#0d141c'); g.fillStyle = gg; g.fillRect(256, 0, 128, h);   // getöntes Glas mit Himmelsreflex
+    g.fillStyle = 'rgba(235,240,245,.85)'; for (let x = 256; x < 384; x += 21) g.fillRect(x, 0, 2, h); g.fillStyle = 'rgba(255,255,255,.12)'; g.beginPath(); g.moveTo(262, 0); g.lineTo(300, 0); g.lineTo(276, h); g.lineTo(256, h); g.fill();
+    g.fillStyle = '#b07a4a'; g.fillRect(384, 0, 128, h); for (let y = 0; y < h; y += 8) { g.fillStyle = 'rgba(40,25,10,.55)'; g.fillRect(384, y, 128, 1.2); g.fillStyle = `rgba(255,220,170,${0.05 + Math.random() * 0.08})`; g.fillRect(384, y + 2, 128, 4); }   // Teakdeck
+  }); atlas.userData.own = true; atlas.wrapS = atlas.wrapT = THREE.ClampToEdgeWrapping;
+  const R = { paint: [0.01, 0.24], hull: [0.26, 0.49], glass: [0.51, 0.74], teak: [0.76, 0.99] };
+  const remap = (geo, reg) => { const uv = geo.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, reg[0] + uv.getX(i) * (reg[1] - reg[0])); return geo; };
+  const bx = (w, h, l, x, y, z, reg) => remap(new THREE.BoxGeometry(w, h, l).translate(x, y, z), reg);
+  // Rumpf als Loft über Spanten
+  const NS = 12, hwD = t => t < 0.62 ? 2.15 + 0.08 * Math.sin(t / 0.62 * Math.PI / 2) : 2.23 * Math.sqrt(Math.max(0, 1 - Math.pow((t - 0.62) / 0.38, 2))), yD = t => 1.75 + 0.55 * t * t, kY = t => -0.55 + 1.6 * Math.pow(t, 4);
+  const sec = t => { const w = hwD(t), wc = w * 0.9, z = -9 + 18 * t; return [[-w, yD(t), z], [-wc, 0.3 + 0.4 * t * t, z], [0, kY(t), z], [wc, 0.3 + 0.4 * t * t, z], [w, yD(t), z]]; };
+  const S = []; for (let k = 0; k <= NS; k++) S.push(sec(k / NS));
+  const pos = [], uv = [], vOf = y => clamp((y + 0.55) / 2.85, 0, 1), U = (t, r) => r[0] + t * (r[1] - r[0]);
+  const tri = (P3, T3) => { for (const p3 of P3) pos.push(...p3); for (const t3 of T3) uv.push(...t3); };   // Eckpunkte gegen den Uhrzeigersinn von außen gesehen
+  for (let k = 0; k < NS; k++) for (let j = 0; j < 4; j++) { const A = S[k][j], B = S[k + 1][j], C = S[k + 1][j + 1], D = S[k][j + 1], ua = U(k / NS, R.hull), ub = U((k + 1) / NS, R.hull);
+    const tA = [ua, vOf(A[1])], tB = [ub, vOf(B[1])], tC = [ub, vOf(C[1])], tD = [ua, vOf(D[1])]; tri([A, D, C], [tA, tD, tC]); tri([A, C, B], [tA, tC, tB]); }   // Außenhaut
+  for (let k = 0; k < NS; k++) { const a = S[k][0], b = S[k + 1][0], c = S[k + 1][4], d = S[k][4], ua = U(k / NS, R.teak), ub = U((k + 1) / NS, R.teak);
+    tri([a, b, c], [[ua, 0.05], [ub, 0.05], [ub, 0.95]]); tri([a, c, d], [[ua, 0.05], [ub, 0.95], [ua, 0.95]]); }   // Teakdeck (Normale nach oben)
+  { const T = S[0]; for (const [i1, i2] of [[0, 1], [1, 2], [2, 3], [3, 4]]) { pos.push(0, yD(0), -9, ...T[i2], ...T[i1]); const u0 = U(0.5, R.hull); uv.push(u0, vOf(yD(0)), u0, vOf(T[i2][1]), u0, vOf(T[i1][1])); } }   // Spiegelheck
+  const hullG = new THREE.BufferGeometry(); hullG.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); hullG.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); hullG.computeVertexNormals();
+  const d0 = yD(0.35);
+  const parts = [[hullG, null],
+    [bx(3.7, 1.55, 9.2, 0, d0 + 0.77, -1.6, R.paint), null], [bx(3.76, 0.72, 8.6, 0, d0 + 0.85, -1.4, R.glass), null],            // Hauptdeck-Salon mit Fensterband
+    [bx(3.0, 1.1, 2.2, 0, d0 + 0.55, 3.9, R.paint), null], [bx(3.06, 0.5, 1.2, 0, d0 + 0.75, 4.7, R.glass), null],                  // Vorschiff-Aufbau mit Frontscheibe
+    [bx(3.2, 1.15, 6.0, 0, d0 + 2.12, -2.1, R.paint), null], [bx(3.26, 0.55, 5.4, 0, d0 + 2.2, -1.9, R.glass), null],              // Oberdeck mit Fensterband
+    [bx(3.5, 0.16, 7.0, 0, d0 + 2.78, -2.6, R.paint), null], [bx(3.3, 0.14, 4.6, 0, d0 + 4.3, -3.2, R.paint), null],              // Dachüberstand und Hardtop
+    [bx(0.18, 1.45, 0.18, -1.45, d0 + 3.55, -1.2, R.paint), null], [bx(0.18, 1.45, 0.18, 1.45, d0 + 3.55, -1.2, R.paint), null], [bx(0.18, 1.45, 0.18, -1.45, d0 + 3.55, -5.2, R.paint), null], [bx(0.18, 1.45, 0.18, 1.45, d0 + 3.55, -5.2, R.paint), null],   // Hardtop-Stützen
+    [bx(0.22, 1.2, 0.22, -0.9, d0 + 4.95, -2.4, R.paint), null], [bx(0.22, 1.2, 0.22, 0.9, d0 + 4.95, -2.4, R.paint), null], [bx(2.0, 0.2, 0.5, 0, d0 + 5.55, -2.4, R.paint), null],   // Radarbügel
+    [bx(1.4, 0.12, 0.5, 0, d0 + 5.72, -2.4, R.glass), null],                                                                        // Radarantenne
+    [bx(4.0, 0.16, 1.3, 0, 0.45, -9.6, R.teak), null],                                                                              // Badeplattform
+    [bx(0.05, 0.05, 6.5, -2.0, yD(0.8) + 0.85, 4.6, R.paint), null], [bx(0.05, 0.05, 6.5, 2.0, yD(0.8) + 0.85, 4.6, R.paint), null]]; // Reling am Vorschiff
+  const hi = mergeParts(parts, true);
+  const lo = mergeParts([[bx(4.3, 1.9, 17, 0, 0.95, 0, R.hull), null], [bx(3.6, 2.6, 9, 0, d0 + 1.3, -1.6, R.paint), null], [bx(3.66, 0.7, 8.4, 0, d0 + 0.85, -1.4, R.glass), null]], true);   // weit weg: drei Quader
+  hi.userData.lod = [[lo, 170], [null, 1400]];   // nah: Modell, ab 170 m drei Quader, ab 1,4 km ausgeblendet
+  return { geo: hi, mat: new THREE.MeshStandardMaterial({ map: atlas, roughness: .38, metalness: .1, envMapIntensity: 0.9 }) };
+}
 function trackPrism(sA, sB, sd, oA0, oA1, oB0, oB1, h, y0 = 0) {
   const A0 = trackAt(sA, sd * oA0), A1 = trackAt(sA, sd * oA1), B0 = trackAt(sB, sd * oB0), B1 = trackAt(sB, sd * oB1), cx = (A0.x + A1.x + B0.x + B1.x) / 4, cz = (A0.z + A1.z + B0.z + B1.z) / 4;
   const P = [[A0, y0], [A1, y0], [B1, y0], [B0, y0], [A0, y0 + h], [A1, y0 + h], [B1, y0 + h], [B0, y0 + h]].map(([t, y]) => [t.x - cx, y, t.z - cz]), F = [[0, 1, 2, 3], [7, 6, 5, 4], [0, 4, 5, 1], [1, 5, 6, 2], [2, 6, 7, 3], [3, 7, 4, 0]], pa = [], uv = [];
@@ -3316,19 +3359,23 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
       excl.push([q.x, q.z, 40]); }
     const harb = waterP, hc = [(f[0] + l[0]) / 2, (f[1] + l[1]) / 2];
     // Jachten dicht an den Kais (Port Hercule), weiter draußen vereinzelt
-    { const hull = mergeParts([[box(4.4, 1.8, 18, 0, 0.9, 0), col(0xf7f8fa)], [box(3.4, 1.6, 9, 0, 2.5, -1.5), col(0xffffff)], [box(3.2, 0.5, 8.6, 0, 3.0, -1.4), col(0x2a3644)], [box(2.6, 1.2, 5, 0, 3.9, -2.2), col(0xf4f6f8)]]);
+    { const YM = yachtModel(), hull = YM.geo;
       // Schwimmstege: weiße Holzstege, die vom Kai ins Hafenbecken ragen; Jachten liegen dicht an dicht mit dem Heck zu Kai und Steg
       const Y = [], pons = [], ponM = lam({ color: 0xeeeae2 });
-      for (let k = 6; k < shore.length - 6; k += 5) { const q = shore[k], [ex, ez] = oc(q, 1), dx = ex - q[0], dz = ez - q[1], ln = 70 + Math.random() * 70; if (!pip(waterP, q[0] + dx * (ln + 10), q[1] + dz * (ln + 10))) continue;
-        let okP = true; for (let t = 0; t <= ln + 8; t += 6) if (!trackFree(q[0] + dx * (8 + t), q[1] + dz * (8 + t), 4) || !pip(waterP, q[0] + dx * (8 + t), q[1] + dz * (8 + t))) okP = false; if (!okP) continue;
+      for (let k = 6; k < shore.length - 6; k += 5) { const q = shore[k], [ex, ez] = oc(q, 1), dx = ex - q[0], dz = ez - q[1], ln = 70 + Math.random() * 70; if (!MC_SEA(q[0] + dx * (ln + 10), q[1] + dz * (ln + 10))) continue;
+        let okP = true; for (let t = 0; t <= ln + 8; t += 6) if (!trackFree(q[0] + dx * (8 + t), q[1] + dz * (8 + t), 4) || !MC_SEA(q[0] + dx * (8 + t), q[1] + dz * (8 + t))) okP = false; if (!okP) continue;
         const a = Math.atan2(dx, dz); pons.push([q[0] + dx * (8 + ln / 2), q[1] + dz * (8 + ln / 2), a, ln]);
-        for (let t = 14; t < ln; t += 8.5) for (const sd of [-1, 1]) { const yx = q[0] + dx * (8 + t) + dz * sd * 10, yz = q[1] + dz * (8 + t) - dx * sd * 10; if (trackFree(yx, yz, 8) && pip(waterP, yx, yz)) Y.push([yx, yz, a + Math.PI / 2 * sd]); } }
+        for (let t = 14; t < ln; t += 8.5) for (const sd of [-1, 1]) { const yx = q[0] + dx * (8 + t) + dz * sd * 10, yz = q[1] + dz * (8 + t) - dx * sd * 10; if (trackFree(yx, yz, 8) && MC_SEA(yx, yz)) Y.push([yx, yz, a + Math.PI / 2 * sd]); } }
       for (const [x, z, a, ln] of pons) { const pm = new THREE.Mesh(new THREE.BoxGeometry(3, 0.6, ln), ponM); pm.position.set(x, 0.3, z); pm.rotation.y = a; trackGroup.add(pm); }
-      for (let k = 0; k < 6000 && Y.length < 420; k++) { const q = shore[Math.floor(Math.random() * shore.length)], [x, z] = oc(q, 13 + Math.pow(Math.random(), 1.6) * 320); if (pip(waterP, x, z) && trackFree(x, z, 8) && Y.every(([a, b]) => Math.hypot(a - x, b - z) > 11)) Y.push([x, z]); }
-      const ym = new THREE.InstancedMesh(hull, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .25, metalness: .2 }), Y.length), m4 = new THREE.Matrix4(), qq = new THREE.Quaternion(), pv = new THREE.Vector3();
+      for (let k = 0; k < 6000 && Y.length < 320; k++) { const q = shore[Math.floor(Math.random() * shore.length)], [x, z] = oc(q, 13 + Math.pow(Math.random(), 1.6) * 320); if (MC_SEA(x, z) && trackFree(x, z, 8) && Y.every(([a, b]) => Math.hypot(a - x, b - z) > 11)) Y.push([x, z]); }
+      const ym = new THREE.InstancedMesh(hull, YM.mat, Y.length), m4 = new THREE.Matrix4(), qq = new THREE.Quaternion(), pv = new THREE.Vector3();
+      // Grundriss jeder Jacht (Rumpf + Badeplattform, 0,4 m Luft) – keine Jacht steckt in einer anderen oder in einem Steg
+      const rect = (x, z, ang, hw, hl) => { const sa = Math.sin(ang), ca = Math.cos(ang); return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([u, v]) => [x + ca * u * hw + sa * v * hl, z - sa * u * hw + ca * v * hl]); };
+      const placed = pons.map(([x, z, a, ln]) => rect(x, z, a, 1.7, ln / 2 + 0.3)), tints = [0xffffff, 0xf2f2f0, 0xe9edf2, 0xf4efe6, 0xdfe3e8];
       Y.forEach(([x, z, a0], k) => { let sc2 = 0.7 + Math.random() * 1.1; const [, j] = nearestDist(x, z), ang = (a0 ?? Math.atan2(x - PX[j], z - PZ[j])) + (Math.random() - .5) * 0.12, sa = Math.sin(ang), ca = Math.cos(ang);
-        const fits = f => [-1, 1].every(e => { const hx = x + sa * e * 9.5 * f, hz = z + ca * e * 9.5 * f; return trackFree(hx, hz, 3) && pip(waterP, hx, hz); });   /* Bug und Heck dürfen nicht über die Strecke/den Kai ragen */
-        while (sc2 > 0.7 && !fits(sc2)) sc2 -= 0.15; if (!fits(sc2)) sc2 = 0.001; qq.setFromAxisAngle(_v2, ang); m4.compose(pv.set(x, 0, z), qq, new THREE.Vector3(sc2, sc2, sc2)); ym.setMatrixAt(k, m4); }); trackGroup.add(ym); }
+        const fits = f => [-1, 1].every(e => { const hx = x + sa * e * 9.5 * f, hz = z + ca * e * 9.5 * f; return trackFree(hx, hz, 3) && MC_SEA(hx, hz); }) && !placed.some(P => polyHit(P, rect(x - sa * 0.5 * f, z - ca * 0.5 * f, ang, 2.3 * f + 0.4, 10.2 * f + 0.4), 0));   /* nicht über Strecke/Kai, nicht in andere Jachten oder Stege */
+        while (sc2 > 0.7 && !fits(sc2)) sc2 -= 0.1; if (!fits(sc2)) sc2 = 0.001; else placed.push(rect(x - sa * 0.5 * sc2, z - ca * 0.5 * sc2, ang, 2.3 * sc2 + 0.4, 10.2 * sc2 + 0.4));
+        qq.setFromAxisAngle(_v2, ang); m4.compose(pv.set(x, 0, z), qq, new THREE.Vector3(sc2, sc2, sc2)); ym.setMatrixAt(k, m4); ym.setColorAt(k, new THREE.Color(tints[k % tints.length])); }); trackGroup.add(ym); }
     const cream = lam({ color: 0xeadfc6 }), copper = new THREE.MeshStandardMaterial({ color: 0x5f9c86, roughness: .55, metalness: .45 }), stone = lam({ color: 0xd8ccb2 });
     // nächstgelegene wirklich freie Stelle (Spirale bis 250 m) – sonst kein Gebäude, damit nichts in die Strecke ragt
     const place = (pt, r, need = 6) => { const [x0, z0] = pt; for (let d = 0; d <= 250; d += 6) for (let a = 0; a < Math.PI * 2; a += d ? 6 / d : 7) { const x = x0 + Math.cos(a) * d, z = z0 + Math.sin(a) * d;
@@ -3483,9 +3530,9 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
       // Yachten
       if (!TRK.lake) {
       const inner = [...cells].map(k => k.split(',').map(Number)).filter(([i, j]) => [[3, 0], [-3, 0], [0, 3], [0, -3], [0, 4], [0, -4], [3, 3], [-3, -3]].every(([u, v]) => cells.has((i + u) + ',' + (j + v))));
-      const hull = mergeParts([[box(4, 1.6, 15, 0, 0.8, 0), col(0xf7f8fa)], [new THREE.ConeGeometry(2, 4, 4).rotateX(Math.PI / 2).rotateZ(Math.PI / 4).scale(1, 0.4, 1).translate(0, 0.8, 9.4), col(0xf7f8fa)], [box(3, 1.6, 6, 0, 2.4, -1), col(0xffffff)], [box(3.05, 0.5, 5.6, 0, 2.5, -1), col(0x1a2a3a)], [box(4.05, 0.25, 15, 0, 0.4, 0), col(0x14304a)]]);
-      const nY = Math.min(36, inner.length), yachts = new THREE.InstancedMesh(hull, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .3, metalness: .2 }), nY);
-      const m4 = new THREE.Matrix4(), qq = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1), pv = new THREE.Vector3();
+      const YM = yachtModel(), hull = YM.geo;   // gleiche modellierte Jacht wie in Monaco (≈15 m: Maßstab 0,85)
+      const nY = Math.min(36, inner.length), yachts = new THREE.InstancedMesh(hull, YM.mat, nY);
+      const m4 = new THREE.Matrix4(), qq = new THREE.Quaternion(), one = new THREE.Vector3(0.85, 0.85, 0.85), pv = new THREE.Vector3();
       for (let k = 0; k < nY; k++) { const [i, j] = inner[Math.floor(Math.random() * inner.length)]; qq.setFromAxisAngle(_v2, Math.random() < .5 ? 0 : Math.PI / 2); m4.compose(pv.set(i * cell + cell / 2, 0, j * cell + cell / 2), qq, one); yachts.setMatrixAt(k, m4); }
       yachts.castShadow = true; trackGroup.add(yachts);
       }
@@ -5658,7 +5705,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v50';
+const VERSION = 'v51';
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
