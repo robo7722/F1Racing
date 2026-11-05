@@ -2171,6 +2171,27 @@ function spiNear(x, z, i = -1, skip = 0, maxR = 40) {   // [Abstand², Index] de
 // minimaler Abstand eines Punktes zu anderen Streckenteilen (nicht zum eigenen Abschnitt)
 function clearance(x, z, i, skipM = 150) { return Math.sqrt(spiNear(x, z, i, Math.round(skipM / DS))[0]); }
 // liegt ein Punkt außerhalb aller Mauern (inkl. eigenem Streckenabschnitt)?
+// nahtloser Gebäudeabschnitt entlang der Strecke: Grundriss-Trapez von sA bis sB, seitlich von o0 bis o1 (je Ende eigene Abstände) -> Nachbarabschnitte stoßen exakt aneinander
+function trackPrism(sA, sB, sd, oA0, oA1, oB0, oB1, h, y0 = 0) {
+  const A0 = trackAt(sA, sd * oA0), A1 = trackAt(sA, sd * oA1), B0 = trackAt(sB, sd * oB0), B1 = trackAt(sB, sd * oB1), cx = (A0.x + A1.x + B0.x + B1.x) / 4, cz = (A0.z + A1.z + B0.z + B1.z) / 4;
+  const P = [[A0, y0], [A1, y0], [B1, y0], [B0, y0], [A0, y0 + h], [A1, y0 + h], [B1, y0 + h], [B0, y0 + h]].map(([t, y]) => [t.x - cx, y, t.z - cz]), F = [[0, 1, 2, 3], [7, 6, 5, 4], [0, 4, 5, 1], [1, 5, 6, 2], [2, 6, 7, 3], [3, 7, 4, 0]], pa = [], uv = [];
+  const ar = (P[1][0] - P[0][0]) * (P[2][2] - P[0][2]) - (P[1][2] - P[0][2]) * (P[2][0] - P[0][0]), flip = ar < 0;
+  for (let [a, b, c, d] of F) { if (flip) [b, d] = [d, b]; for (const k of [a, b, c, a, c, d]) pa.push(...P[k]); uv.push(0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pa, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.computeVertexNormals(); return { g, cx, cz, poly: [A0, A1, B1, B0].map(t => [t.x, t.z]) };
+}
+// Grundrisse (konvexe Hülle in xz) aller bereits gebauten Einzelbauten ab 5 m Höhe – damit später gesetzte Häuser nicht hineinragen
+function builtFootprints(root) { const out = [], v = new THREE.Vector3(), bb = new THREE.Box3(); root.updateMatrixWorld(true);
+  const hull = P => { P.sort((a, b) => a[0] - b[0] || a[1] - b[1]); const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]), lo = [], up = []; for (const p of P) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); } for (let i = P.length - 1; i >= 0; i--) { const p = P[i]; while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); } return lo.slice(0, -1).concat(up.slice(0, -1)); };
+  root.traverse(o => { if (!o.isMesh || o.isInstancedMesh || !o.geometry || !o.geometry.attributes.position) return; if (o.userData.strip || o.userData.tile || o.userData.ground || o.userData.flat) return; const g = o.geometry; if (g.type === 'PlaneGeometry' || g.type === 'CircleGeometry') return;
+    if (o.position.lengthSq() < 1 && (!o.parent || o.parent === root || o.parent.position.lengthSq() < 1)) return; if (o.material.alphaTest > 0 || o.material.transparent) return;
+    if (!g.boundingBox) g.computeBoundingBox(); bb.copy(g.boundingBox).applyMatrix4(o.matrixWorld); if (bb.max.y - bb.min.y < 5) return;
+    const P = g.attributes.position, st = Math.max(1, Math.floor(P.count / 240)), pts = []; for (let i = 0; i < P.count; i += st) { v.fromBufferAttribute(P, i).applyMatrix4(o.matrixWorld); pts.push([v.x, v.z]); }
+    const H = hull(pts); if (H.length < 3) return; const cx = H.reduce((a, p) => a + p[0], 0) / H.length, cz = H.reduce((a, p) => a + p[1], 0) / H.length; out.push({ H, cx, cz, r: Math.max(...H.map(p => Math.hypot(p[0] - cx, p[1] - cz))) }); });
+  return out; }
+const convexPoly = P => { let sg = 0; for (let i = 0; i < P.length; i++) { const [x0, z0] = P[i], [x1, z1] = P[(i + 1) % P.length], [x2, z2] = P[(i + 2) % P.length], c = (x1 - x0) * (z2 - z1) - (z1 - z0) * (x2 - x1); if (Math.abs(c) < 1e-6) continue; if (sg && Math.sign(c) !== sg) return false; sg = Math.sign(c); } return true; };
+// konvexe Grundrisse (Trennachsen-Test, 0,3 m Toleranz): überschneiden sie sich?
+function polyHit(P, Q, tol = 0.3) { for (const R of [P, Q]) for (let i = 0; i < R.length; i++) { const [x1, z1] = R[i], [x2, z2] = R[(i + 1) % R.length], l = Math.hypot(x2 - x1, z2 - z1) || 1, ax = (z1 - z2) / l, az = (x2 - x1) / l;
+  let a0 = 1e9, a1 = -1e9, b0 = 1e9, b1 = -1e9; for (const [x, z] of P) { const t = x * ax + z * az; a0 = Math.min(a0, t); a1 = Math.max(a1, t); } for (const [x, z] of Q) { const t = x * ax + z * az; b0 = Math.min(b0, t); b1 = Math.max(b1, t); } if (a1 - tol < b0 || b1 - tol < a0) return false; } return true; }
 function trackFree(x, z, extra = 1) {
   const [m, mj] = spiNear(x, z);
   const lat = (x - PX[mj]) * RX[mj] + (z - PZ[mj]) * RZ[mj];
@@ -2278,6 +2299,7 @@ function chunkStrips(root, segLen = 900) {
 }
 // statische Gruppen (Tribünen, Gebäude, Brücken, Tafeln) je Material und 350-m-Kachel zu einem Mesh verschmelzen -> viel weniger Zeichenaufrufe
 function mergeGroups(root, cell = 350) {
+  if (window.__noMerge) return;   /* Testmodus: Gruppen einzeln lassen, damit der Überschneidungs-Test jeden Bau sieht */
   const buckets = new Map(), v = new THREE.Vector3(), nm = new THREE.Matrix3();
   for (const g of [...root.children]) {
     if (!g.userData.merge) continue; g.updateMatrixWorld(true);
@@ -2835,16 +2857,19 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
     const W = pitSide > 0 ? WR : WL;
     hStrip(i => pitSide * (W[i] + 0.2), i => pitSide * (W[i] + 11), .015, .015, lam({ map: TEX.runoff, ...po(-1) }), { mask: inPit, uScale: 12, vScale: 12 });
     hStrip(i => pitSide * (W[i] + 5.4), i => pitSide * (W[i] + 5.6), .02, .02, white, { mask: inPit });
-    const bMat = lam({ color: 0xeef1f4 }); let gk = 0;
-    for (let s = -290; s <= 150 && !TRK.ref; s += 30) {
+    const bMat = lam({ color: 0xeef1f4 }); let gk = 0; const pitP = [];
+    for (let s = -290; s <= 150 && !TRK.ref && !TRK.wing; s += 30) {
       const p = trackAt(s, 0), w = wallAt(p.i, pitSide), q = trackAt(s, pitSide * (w + 18));
+      { let kmax = 0; for (let ds = -15; ds <= 15; ds += 3) kmax = Math.max(kmax, Math.abs(KS[Math.floor(modL(s + ds) / DS) % N])); if (kmax > 1 / (w + 60)) continue; }   /* in engen Kurven würde sich der Abschnitt verdrehen */
       if (!footprintFree(q.x, q.z, q.h, -7, 7, 30, 0.5)) continue;
-      const b = new THREE.Mesh(new THREE.BoxGeometry(14, 9, 30.5), bMat); b.position.set(q.x, 4.5, q.z); b.rotation.y = q.h; b.castShadow = b.receiveShadow = true; trackGroup.add(b);
+      const wA = wallAt(Math.floor(modL(s - 15) / DS) % N, pitSide), wB = wallAt(Math.floor(modL(s + 15) / DS) % N, pitSide), pz = trackPrism(s - 15, s + 15, pitSide, wA + 11, wA + 25, wB + 11, wB + 25, 9);   /* nahtlose Abschnitte, nichts schiebt sich ineinander */
+      if (!convexPoly(pz.poly) || pitP.some(P => polyHit(P, pz.poly))) continue; pitP.push(pz.poly);
+      const b = new THREE.Mesh(pz.g, bMat); b.position.set(pz.cx, 0, pz.cz); b.castShadow = b.receiveShadow = true; trackGroup.add(b);
       const f = trackAt(s, pitSide * (w + 10.95)), nT = Object.keys(TEAMS).length, gt = TEX.garages.clone(); gt.needsUpdate = true; gt.repeat.set(2 / nT, 1); gt.offset.set(((gk++ * 2) % nT) / nT, 0); gt.userData.own = true;
       const fp = new THREE.Mesh(new THREE.PlaneGeometry(30.5, 7.6), lam({ map: gt })); fp.position.set(f.x, 3.8, f.z); fp.rotation.y = f.h + pitSide * Math.PI / 2; trackGroup.add(fp);
       const pw = trackAt(s + 8, pitSide * (w + 1.6)), st = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.6, 7), lam({ color: 0x2b3138 })); st.position.set(pw.x, 1.3, pw.z); st.rotation.y = pw.h; trackGroup.add(st);
       const sr = new THREE.Mesh(new THREE.BoxGeometry(3, 0.25, 7.6), lam({ color: 0xf2f2f2 })); sr.position.set(pw.x, 2.75, pw.z); sr.rotation.y = pw.h; trackGroup.add(sr);
-      if (TH.poles) { const r = new THREE.Mesh(new THREE.BoxGeometry(26, 0.6, 31), new THREE.MeshStandardMaterial({ color: 0xf6f8fa, roughness: .35, metalness: .3 })); r.position.set(q.x, 10.6, q.z); r.rotation.y = q.h; r.rotateZ(-pitSide * 0.12); r.castShadow = true; trackGroup.add(r); }
+      if (TH.poles) { const r = new THREE.Mesh(new THREE.BoxGeometry(26, 0.6, 29.6), new THREE.MeshStandardMaterial({ color: 0xf6f8fa, roughness: .35, metalness: .3 })); r.position.set(q.x, 10.6 + (gk % 2) * 0.05, q.z); r.rotation.y = q.h; r.rotateZ(-pitSide * 0.12); r.castShadow = true; trackGroup.add(r); }
       excl.push([q.x, q.z, 26]);
     }
   }
@@ -2889,6 +2914,7 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
     else if (hgt > 8) { const top = rh * rows, rf = new THREE.Mesh(new THREE.BoxGeometry(dep + 2, 0.35, len + 1), roofM); rf.position.set(dep / 2 - 0.4, Math.max(top + 4, hgt), 0); rf.rotation.z = -0.06; rf.castShadow = true; grp.add(rf);
       for (const z of [-len / 2 + 1, -len / 6, len / 6, len / 2 - 1]) { const pst = new THREE.Mesh(new THREE.BoxGeometry(0.35, Math.max(top + 4, hgt), 0.35), concM); pst.position.set(x0 + rd * rows + 0.3, Math.max(top + 4, hgt) / 2, z); grp.add(pst); } }
   };
+  const standP = [];
   const stand = (s, side, len, chain = false) => {
     const p = trackAt(s, 0), w = wallAt(p.i, side);
     const b = trackAt(s, side * (w + 4)), rot = side < 0 ? b.h : b.h + Math.PI;
@@ -2897,6 +2923,8 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
     { const c = Math.cos(rot), sn = Math.sin(rot), hit = [];   // tatsächliche Grundfläche prüfen (nicht Mittelpunkt + halbe Länge)
       for (const lx of [2, dep / 2, dep - 1]) for (let lz = -len / 2; lz <= len / 2 + 0.1; lz += len / 4) { const wx = b.x + lx * c + lz * sn, wz = b.z - lx * sn + lz * c; const e = excl.find(e => !e.st && (wx - e[0]) ** 2 + (wz - e[1]) ** 2 < e[2] * e[2]); if (e) hit.push(e); }
       if (hit.length) { window.__whyS = (window.__whyS || []).concat([[Math.round(s), side, 'excl', Math.round(hit[0][0]), Math.round(hit[0][1]), Math.round(hit[0][2])]]); return false; } }
+    { const c = Math.cos(rot), sn = Math.sin(rot), fp = L2 => [[-0.5, -L2 / 2 - 0.5], [dep + 0.5, -L2 / 2 - 0.5], [dep + 0.5, L2 / 2 + 0.5], [-0.5, L2 / 2 + 0.5]].map(([lx, lz]) => [b.x + lx * c + lz * sn, b.z - lx * sn + lz * c]);   /* Tribünen stecken nie ineinander (enge Kurven) */
+      let L3 = len; while (L3 >= len * 0.5 && standP.some(P => polyHit(P, fp(L3)))) L3 -= len * 0.125; if (L3 < len * 0.5) { window.__whyS = (window.__whyS || []).concat([[Math.round(s), side, 'stand']]); return false; } len = L3; standP.push(fp(len)); }
     const grp = new THREE.Group(); grp.position.set(b.x, 0, b.z); grp.rotation.y = rot; trackGroup.add(grp);
     buildStand(grp, len, dep, TRK.standDep ? 15 : 13);
     const c = trackAt(s, side * (w + 14)), ex = [c.x, c.z, len / 2 + 14]; ex.st = true; excl.push(ex); return true;
@@ -2942,14 +2970,19 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
     if (TRK.ref.bld) {
       const okFP = b => { const ca = Math.cos(b.a), sa = Math.sin(b.a); for (let u = -0.5; u <= 0.5; u += 0.25) for (let v = -0.5; v <= 0.5; v += 0.5) { const x = b.c[0] + ca * u * b.l - sa * v * b.w, z = b.c[1] + sa * u * b.l + ca * v * b.w, [d, j] = nearestDist(x, z); if (d < HW[j] + 3) return false; } return true; };
       const m4 = new THREE.Matrix4(), qq = new THREE.Quaternion(), sc = new THREE.Vector3(), pv = new THREE.Vector3(), cc = new THREE.Color(), box1 = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
-      const B = TRK.ref.bld.filter(okFP);
+      // Geodaten-Grundrisse als Rechtecke können sich überlappen: größere zuerst, überlappende kleinere weglassen (kein Ineinanderstecken)
+      const rP = (b, ax, az) => { const ca = Math.cos(b.a), sa = Math.sin(b.a); return Math.abs((b.l / 2 - 0.4) * (ca * ax + sa * az)) + Math.abs((b.w / 2 - 0.4) * (-sa * ax + ca * az)); };
+      const rHit = (P, Q) => { for (const r of [P, Q]) { const ca = Math.cos(r.a), sa = Math.sin(r.a); for (const [ax, az] of [[ca, sa], [-sa, ca]]) if (Math.abs((Q.c[0] - P.c[0]) * ax + (Q.c[1] - P.c[1]) * az) > rP(P, ax, az) + rP(Q, ax, az)) return false; } return true; };
+      const FPb = builtFootprints(trackGroup), bPoly = b => { const ca = Math.cos(b.a), sa = Math.sin(b.a); return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([u, v]) => [b.c[0] + ca * u * b.l / 2 - sa * v * b.w / 2, b.c[1] + sa * u * b.l / 2 + ca * v * b.w / 2]); }, freeOfBuilt = b => { const P = bPoly(b), r = Math.hypot(b.l, b.w) / 2; return !FPb.some(F => Math.hypot(F.cx - b.c[0], F.cz - b.c[1]) < F.r + r && polyHit(F.H, P)); };   /* nicht in schon gebaute Tribünen/Brücken */
+      const B = []; for (const b of TRK.ref.bld.filter(okFP).filter(freeOfBuilt).sort((p, q) => q.l * q.w - p.l * p.w)) if (!B.some(o => Math.hypot(o.c[0] - b.c[0], o.c[1] - b.c[1]) < (Math.hypot(o.l, o.w) + Math.hypot(b.l, b.w)) / 2 && rHit(o, b))) B.push(b);
       const bM = facadeMat({ wall: '#e6dfd2', frame: '#f6f1e8', balcony: '#f8f4ec', glass: '#4d6374', glassTop: '#a8bccb', litP: .08, emiI: .35, roof: '#7e786e', seed: 11, bays: 16, floors: 24, bayM: 4.4, floorM: 3.8 });
       const ib = new THREE.InstancedMesh(box1, bM, B.length), ir = new THREE.InstancedMesh(box1, lam({ color: 0x8c8d8f }), B.length), bc = [0xffffff, 0xece6dc, 0xdfe3e8, 0xf2ece2, 0xd9d4ca];
       B.forEach((b, k) => { const h = clamp(b.h, 4, 70); qq.setFromAxisAngle(_v2, -b.a); m4.compose(pv.set(b.c[0], 0, b.c[1]), qq, sc.set(b.l, h, b.w)); ib.setMatrixAt(k, m4); ib.setColorAt(k, cc.setHex(bc[k % bc.length]));
         m4.compose(pv.set(b.c[0], h, b.c[1]), qq, sc.set(b.l + 1.2, 0.6, b.w + 1.2)); ir.setMatrixAt(k, m4); excl.push([b.c[0], b.c[1], Math.hypot(b.l, b.w) / 2 + 3]); });
       ib.castShadow = ib.receiveShadow = ir.castShadow = true; trackGroup.add(ib, ir);
       // Festzelte: Planen mit Nähten, Fensterband und Satteldach (Textur im Meter-Maßstab, eine Zeichnung für alle Zelte)
-      const T = (TRK.ref.tents || []).filter(okFP), wallH = 3.0;
+      const T = []; for (const t of (TRK.ref.tents || []).filter(okFP).filter(freeOfBuilt)) if (!B.concat(T).some(o => Math.hypot(o.c[0] - t.c[0], o.c[1] - t.c[1]) < (Math.hypot(o.l, o.w) + Math.hypot(t.l, t.w)) / 2 && rHit(o, t))) T.push(t);   /* Zelte nicht in Gebäude oder ineinander */
+      const wallH = 3.0;
       const tentCols = ['#2e4f3f', '#283a5c', '#4a4f57', '#6b2730'];
       const tentTs = tentCols.map(tc => { const t = canvasTex(512, 128, (g, w, h) => { g.fillStyle = tc; g.fillRect(0, 0, w, h);
         for (let k = 0; k < 4; k++) { const x = k * w / 4; g.fillStyle = 'rgba(0,0,0,.08)'; g.fillRect(x, 0, 3, h); g.fillStyle = 'rgba(255,255,255,.6)'; g.fillRect(x + 3, 0, 2, h); }
@@ -3363,8 +3396,10 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
     for (let k = 0; k < NS; k++) for (let j = 0; j < NW; j++) { const a = k * (NW + 1) + j, b = a + NW + 1; ri.push(a, b, a + 1, b, b + 1, a + 1); }
     const rg = new THREE.BufferGeometry(); rg.setAttribute('position', new THREE.Float32BufferAttribute(rp, 3)); rg.setIndex(ri); rg.computeVertexNormals(); trackGroup.add(new THREE.Mesh(rg, roofM));
     // Baukörper darunter: Glasfront zur Strecke
-    for (let ds = -180; ds < 180; ds += 30) { const i = Math.floor(modL(ds) / DS) % N, o0 = wallAt(i, sd) + 13, q = trackAt(ds + 15, sd * (o0 + depth / 2 - 1));
-      const b = new THREE.Mesh(new THREE.BoxGeometry(31, 14, depth - 4).translate(0, 7, 0), glass); b.position.set(q.x, 0, q.z); b.rotation.y = q.h + Math.PI / 2; trackGroup.add(b); excl.push([q.x, q.z, 30]); }
+    const wingP = [];
+    for (let ds = -180; ds < 180; ds += 30) { const oA = wallAt(Math.floor(modL(ds) / DS) % N, sd) + 13, oB = wallAt(Math.floor(modL(ds + 30) / DS) % N, sd) + 13, pz = trackPrism(ds, ds + 30, sd, oA + 1, oA + depth - 3, oB + 1, oB + depth - 3, 14);   /* nahtlos entlang der Kurve */
+      if (!convexPoly(pz.poly) || wingP.some(P => polyHit(P, pz.poly))) continue; wingP.push(pz.poly);   /* in engen Kurven gefaltete Abschnitte weglassen */
+      const b = new THREE.Mesh(pz.g, glass); b.position.set(pz.cx, 0, pz.cz); trackGroup.add(b); excl.push([pz.cx, pz.cz, 30]); }
   }
   // Melbourne: Eureka Tower (297 m) in der Skyline – dunkles Glas, goldene Spitze, rotes Band
   if (TRK.theme === 'mel' && TRK.city) {
@@ -3644,8 +3679,11 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
       const emi = canvasTex(256, 256, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#202228'); gr.addColorStop(1, '#e8e4dc'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); emi.userData.own = true;
       const dm = new THREE.MeshStandardMaterial({ map: tex, emissiveMap: emi, emissive: new THREE.Color(0.2, 0.2, 0.23), roughness: .4, metalness: .7, flatShading: true });
       const [ex0, ez0] = ll(103.8556, 1.2896);
+      const domes = [];
       for (const [dx, dz, sx, sy, sz] of [[-62, 10, 52, 34, 44], [62, 18, 58, 30, 48]]) {
-        const [x, z] = clearOf(ex0 + dx, ez0 + dz, Math.max(sx, sz) + 6); const g = grp(x, z, 0.12);
+        const rr = Math.max(sx, sz) + 3; let [x, z] = clearOf(ex0 + dx, ez0 + dz, Math.max(sx, sz) + 6);
+        for (let t = 0; t < 8; t++) { const o = domes.find(([ox, oz, or]) => Math.hypot(x - ox, z - oz) < or + rr + 4); if (!o) break; const ux = (x - o[0]) || 1, uz = z - o[1], ul = Math.hypot(ux, uz); [x, z] = clearOf(o[0] + ux / ul * (o[2] + rr + 6), o[1] + uz / ul * (o[2] + rr + 6), Math.max(sx, sz) + 6); }   /* die zwei Kuppeln stehen nebeneinander, nicht ineinander */
+        domes.push([x, z, rr]); const g = grp(x, z, 0.12);
         const d = new THREE.Mesh(new THREE.SphereGeometry(1, 30, 10, 0, Math.PI * 2, 0, Math.PI / 2), dm); d.scale.set(sx, sy, sz); d.position.y = 3; g.add(d);
         const b = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 3, 48).translate(0, 1.5, 0), lam({ color: 0xb8b0a2 })); b.scale.set(sx + 3, 1, sz + 3); g.add(b);
         excl.push([x, z, Math.max(sx, sz) + 12]); } }
@@ -3918,7 +3956,7 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
   // Stadt im Hintergrund (Abu Dhabi): Wohnblöcke, Villen, Hochhäuser
   if (TH.trees === 'palms' || TH.city) {
     const m4 = new THREE.Matrix4(), qq = new THREE.Quaternion(), sc = new THREE.Vector3(), pv = new THREE.Vector3(), cc = new THREE.Color();
-    const blds = [], bGrid = new Map(); let tries = 0; const n = Math.round((S.gfx === 'ultra' ? 2000 : hi ? 1400 : 600) * (TH.vegas ? 1.3 : 1) * (TRK.cityMul ?? 1));
+    const blds = [], bGrid = new Map(), LMP = builtFootprints(trackGroup); window.__LMP = LMP; let tries = 0; const n = Math.round((S.gfx === 'ultra' ? 2000 : hi ? 1400 : 600) * (TH.vegas ? 1.3 : 1) * (TRK.cityMul ?? 1));
     while (blds.length < n && tries < n * 20) {
       tries++;
       const ang2 = Math.random() * Math.PI * 2, rad = 380 + Math.pow(Math.random(), 0.7) * 1500; let cxp = (minX + maxX) / 2 + Math.cos(ang2) * rad * 0.8, czp = (minZ + maxZ) / 2 + Math.sin(ang2) * rad;
@@ -3941,6 +3979,8 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
       const hit = R => !(sepAx(me, R, cr, -sr) || sepAx(me, R, sr, cr) || sepAx(me, R, R[4], -R[5]) || sepAx(me, R, R[5], R[4]));
       let ovl = false; for (let a = -2; a <= 2 && !ovl; a++) for (let b = -2; b <= 2 && !ovl; b++) { const L3 = bGrid.get(gk(gx + a, gz + b)); if (L3) for (const R of L3) if (hit(R)) { ovl = true; break; } }
       if (ovl) continue;
+      { const R2 = Math.hypot(fw, fl) + 1, poly = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([u, v]) => [cxp + u * (fw + 0.6) * cr + v * (fl + 0.6) * sr, czp - u * (fw + 0.6) * sr + v * (fl + 0.6) * cr]);
+        if (LMP.some(F => Math.hypot(F.cx - cxp, F.cz - czp) < F.r + R2 && polyHit(F.H, poly, 0))) continue; }   /* nicht in Wahrzeichen, Tribünen, Brücken */
       { const k3 = gk(gx, gz); let L3 = bGrid.get(k3); if (!L3) bGrid.set(k3, L3 = []); L3.push(me); }
       blds.push([cxp, czp, w, hgt, l, rot]);
     }
@@ -5703,6 +5743,33 @@ window.__clipAll = (margin = 0.8) => { const out = new Map(), v = new THREE.Vect
     if (o.isInstancedMesh) { for (let k = 0; k < o.count; k++) { o.getMatrixAt(k, m); m.premultiply(o.matrixWorld); for (const i of lowI) { v.fromBufferAttribute(P, i).applyMatrix4(m); test(v.x, v.y, v.z, H, tag); } } }
     else { const eM = FLAT ? 2.5 : Math.max(...ELEV) + 2.5; for (let i = 0; i < P.count; i += st) { v.fromBufferAttribute(P, i).applyMatrix4(o.matrixWorld); if (v.y <= eM) test(v.x, v.y, v.z, H, tag); } } });
   return [...out.values()].sort((a, b) => b.n - a.n); };
+window.__bldOverlap = (near = 80) => { const R = [], m = new THREE.Matrix4(), v = new THREE.Vector3(), bb = new THREE.Box3();
+  const hull = P => { P.sort((a, b) => a[0] - b[0] || a[1] - b[1]); const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]), lo = [], up = []; for (const p of P) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); } for (let i = P.length - 1; i >= 0; i--) { const p = P[i]; while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); } return lo.slice(0, -1).concat(up.slice(0, -1)); };
+  trackGroup.updateMatrixWorld(true);
+  trackGroup.traverse(o => { if (!o.isMesh || !o.geometry || !o.geometry.attributes.position || !o.visible) return; const g = o.geometry; if (!g.boundingBox) g.computeBoundingBox(); const b = g.boundingBox;
+    if (o.userData.strip || o.userData.tile || o.userData.ground || o.userData.flat || g.type === 'PlaneGeometry' || g.type === 'CircleGeometry') return;
+    const fac = !!(o.material.customProgramCacheKey && /facade/.test(o.material.customProgramCacheKey())), pc = g.attributes.position.count;
+    if (o.isInstancedMesh ? !(fac || pc === 24 || pc === 36) : (o.position.lengthSq() < 1 && (!o.parent || o.parent === trackGroup || o.parent.position.lengthSq() < 1))) return;   /* nur Einzelbauten */
+    if (o.material.alphaTest > 0 || o.material.transparent) return;
+    const n = o.isInstancedMesh ? o.count : 1, tag = (fac ? 'fac' : o.material.type) + ':' + pc, Pp = g.attributes.position, st = Math.max(1, Math.floor(pc / 240));
+    const loc = o.isInstancedMesh ? [[b.min.x, b.min.z], [b.max.x, b.min.z], [b.max.x, b.max.z], [b.min.x, b.max.z]].map(([x, z]) => new THREE.Vector3(x, 0, z)) : null;
+    for (let k = 0; k < n; k++) { if (o.isInstancedMesh) { o.getMatrixAt(k, m); m.premultiply(o.matrixWorld); } else m.copy(o.matrixWorld);
+      bb.copy(b).applyMatrix4(m); const h = bb.max.y - bb.min.y; if (h < 5) continue;
+      let pts; if (loc) pts = loc.map(p => { v.copy(p).applyMatrix4(m); return [v.x, v.z]; }); else { pts = []; for (let i = 0; i < pc; i += st) { v.fromBufferAttribute(Pp, i).applyMatrix4(m); pts.push([v.x, v.z]); } }
+      let H = hull(pts); if (H.length < 3) continue; const cx = H.reduce((a, p) => a + p[0], 0) / H.length, cz = H.reduce((a, p) => a + p[1], 0) / H.length;
+      const ext = Math.max(...H.map(p => Math.hypot(p[0] - cx, p[1] - cz))); if (ext < 2 || ext > 250) continue;
+      H = H.map(([x, z]) => { const d = Math.hypot(x - cx, z - cz) || 1; return [x - (x - cx) / d * 0.3, z - (z - cz) / d * 0.3]; });   /* 0,3 m Toleranz: Bauten dürfen sich berühren */
+      const [dd, j] = nearestDist(cx, cz); if (dd > Math.max(WL[j], WR[j]) + near + ext) continue;
+      R.push({ H, cx, cz, ext, y0: bb.min.y, y1: bb.max.y, tag, s: Math.round(j * DS), col: o.material.color && o.material.color.getHexString(), par: o.parent !== trackGroup ? o.parent : null }); } });
+  const proj = (H, ax, az) => { let a = 1e9, b = -1e9; for (const [x, z] of H) { const t = x * ax + z * az; if (t < a) a = t; if (t > b) b = t; } return [a, b]; };
+  const sep = (A, B) => { for (const P of [A.H, B.H]) for (let i = 0; i < P.length; i++) { const [x1, z1] = P[i], [x2, z2] = P[(i + 1) % P.length], ax = z1 - z2, az = x2 - x1; const [a0, a1] = proj(A.H, ax, az), [b0, b1] = proj(B.H, ax, az); if (a1 < b0 || b1 < a0) return true; } return false; };
+  const out = [], G = new Map(), key = (a, b) => a * 100003 + b; R.forEach((A, i) => { const k = key(Math.floor(A.cx / 80), Math.floor(A.cz / 80)); (G.get(k) || G.set(k, []).get(k)).push(i); });
+  R.forEach((A, i) => { const gx = Math.floor(A.cx / 80), gz = Math.floor(A.cz / 80); for (let u = -2; u <= 2; u++) for (let w = -2; w <= 2; w++) for (const jx of G.get(key(gx + u, gz + w)) || []) { if (jx <= i) continue; const B = R[jx];
+    if (Math.hypot(A.cx - B.cx, A.cz - B.cz) < 1.5) continue;   /* gleicher Bau (Sockel/Turm/Rücksprung) */
+    if (A.par && A.par === B.par) continue;   /* Teile desselben Wahrzeichens */
+    if (Math.hypot(A.cx - B.cx, A.cz - B.cz) > A.ext + B.ext) continue; if (A.y1 < B.y0 + 0.5 || B.y1 < A.y0 + 0.5) continue; if (sep(A, B)) continue;
+    out.push([A.tag, B.tag, A.s, Math.round(A.cx), Math.round(A.cz), Math.round(B.cx), Math.round(B.cz), Math.round(A.ext), Math.round(B.ext), A.col, B.col]); } });
+  return { n: R.length, overlaps: out.length, ex: out.slice(0, 10) }; };
 window.__clipCheck = () => { let bad = 0, n = 0; const v = new THREE.Vector3(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), m = new THREE.Matrix4();
   scene.traverse(o => { if (!o.isInstancedMesh || !o.material || !o.material.customProgramCacheKey || !/facade/.test(o.material.customProgramCacheKey())) return;
     for (let k = 0; k < o.count; k++) { o.getMatrixAt(k, m); m.decompose(v, q, sc); n++; const a = 2 * Math.atan2(q.y, q.w), c = Math.cos(a), s2 = Math.sin(a);
