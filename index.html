@@ -2521,7 +2521,7 @@ function buildTrack(key) {
   }
   // Monza, erste Schikane (Rettifilo): keine Mauer, nur großes Kiesbett
   NOWALL = new Uint8Array(N); if (REFNW) NOWALL.set(REFNW);
-  for (const [W, s, nb] of [[WL, -1, 1], [WR, 1, 2]]) for (let i = 0; i < N; i++) { const x = PX[i] + RX[i] * W[i] * s, z = PZ[i] + RZ[i] * W[i] * s, [d2, j] = spiNear(x, z); if (Math.sqrt(d2) < HW[j] + 0.8) NOWALL[i] |= nb; }   /* in engen Haarnadeln faltet sich die innere Absperrung über die Fahrbahn: dort weglassen */
+  for (const [W, s, nb] of [[WL, -1, 1], [WR, 1, 2]]) for (let i = 0; i < N; i++) { const x = PX[i] + RX[i] * W[i] * s, z = PZ[i] + RZ[i] * W[i] * s, [d2, j] = spiNear(x, z); let dj = Math.abs(j - i); dj = Math.min(dj, N - dj); if (Math.sqrt(d2) < HW[j] + (dj * DS > 6 ? 1.5 : 0.8)) NOWALL[i] |= nb; }   /* in engen Haarnadeln faltet sich die innere Absperrung über die Fahrbahn: dort weglassen */
   PAVEZ = new Uint8Array(N);
   const noWall = (a, b, ext = 38, pave = false) => {
     {
