@@ -3566,6 +3566,7 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
       const loc = (x, z) => [(x - O.x) * cX + (z - O.z) * cZ, (x - O.x) * tX + (z - O.z) * tZ];   /* lx: zur Stadtseite, lz: in Fahrtrichtung */
       let L0 = 1e9; for (let s2 = sA; s2 <= sA + 2 * FHZ; s2 += 2) { const q = trackAt(s2, seaS * (Wd(s2, seaS) + 0.9)); L0 = Math.min(L0, loc(q.x, q.z)[0]); }   /* Kante über der meerseitigen Tunnelwand */
       let L1 = 34; for (; L1 > 14; L1 -= 1) { let ok = true; for (let lz = -FHZ; lz <= FHZ && ok; lz += 4) for (let lx = L0; lx <= L1 && ok; lx += 2) { const x = O.x + cX * lx + tX * lz, z = O.z + cZ * lx + tZ * lz, [d2, j] = spiNear(x, z); let dj = Math.abs(j - iF); dj = Math.min(dj, N - dj); if (dj * DS > FHZ + 60 && Math.sqrt(d2) < Math.max(WL[j], WR[j]) + 2) ok = false; } if (ok) break; }   /* nicht in höher liegende Strecke (Mirabeau/Portier) hinein */
+      L0 -= 9;   /* Referenz: der Hotelbau steht ÜBER der ganzen Röhre und kragt zur Meerseite über die Säulen aus */
       const W2 = Math.max(4, Math.round((L1 - L0) / BAYF)) * BAYF / 2, mx = L0 + W2,   /* Breite auf ganze Fensterachsen: keine angeschnittenen Fenster an den Hauskanten */ rotY = Math.atan2(-cZ, cX), cen = [O.x + cX * mx, O.z + cZ * mx];
       const YT = H + 30.4, fm = facadeMat({ wall: '#e9e0cf', frame: '#ffffff', balcony: '#ffffff', glass: '#56616c', glassTop: '#b9c6d2', litP: .25, emiI: .7, roof: '#d8d4cc', seed: 27, bays: 12, floors: 8, bayM: BAYF, floorM: 3.8, relief: 5 });
       const fg = new THREE.BoxGeometry(2 * W2, YT - H - 0.4, 2 * FHZ).translate(0, (YT + H + 0.4) / 2, 0);
@@ -3586,6 +3587,20 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
         const A = trackAt(sA - 0.25, seaS * (Wd(sA, seaS) + 0.6)), B = trackAt(sA - 0.25, -seaS * (Wd(sA, -seaS) + 0.6)), L = seaS > 0 ? B : A, R = seaS > 0 ? A : B, y0 = entY + H + 0.6, y1 = entY + H + 3.0;
         const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute([L.x, y0, L.z, R.x, y0, R.z, R.x, y1, R.z, L.x, y0, L.z, R.x, y1, R.z, L.x, y1, L.z], 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1], 2)); g.computeVertexNormals();
         const bn = new THREE.Mesh(g, lam({ map: bt, side: THREE.DoubleSide, emissive: new THREE.Color(0.08, 0.02, 0.02) })); bn.userData.fixed = true; trackGroup.add(bn); }
+      { // rechts vor dem Portal (Referenzfotos): helles Gebäude mit waagrechten Lamellen direkt hinter der Leitplanke statt Hang – bis an die Portalwand
+        const sd = -seaS, s0 = sA - 95, D = 18, rows = [], lt = canvasTex(64, 64, (g, w, h) => { g.fillStyle = '#f3f3f1'; g.fillRect(0, 0, w, h); g.fillStyle = '#c9ccd0'; g.fillRect(0, h * .62, w, h * .38); g.fillStyle = 'rgba(0,0,0,.12)'; g.fillRect(0, h * .6, w, 3); }); lt.userData.own = true; lt.wrapS = lt.wrapT = THREE.RepeatWrapping;
+        for (let s2 = s0; s2 <= sA + 0.01; s2 += 3) { const i = Math.floor(modL(s2) / DS) % N, w = wallAt(i, sd) + 0.9; let hill = 0; for (let o = w; o <= w + D + 12; o += 3) { const q = trackAt(s2, sd * o); hill = Math.max(hill, surfH(q.x, q.z) - ELEV[i]); }
+          rows.push({ s2, e: ELEV[i], w, ht: clamp(hill + 3, H + 2, 40) }); }
+        for (let k = 0; k < rows.length; k++) { let m = 0, c = 0; for (let d = -2; d <= 2; d++) { const r = rows[k + d]; if (r) { m = Math.max(m, r.ht); c++; } } rows[k].hs = m; }
+        const P = [], U = [], quad = (A, B, C, Dd, ua, ub, va, vb) => { P.push(...A, ...B, ...C, ...A, ...C, ...Dd); U.push(ua, va, ub, va, ub, vb, ua, va, ub, vb, ua, vb); };
+        for (let k = 0; k + 1 < rows.length; k++) { const a = rows[k], b = rows[k + 1], ia = trackAt(a.s2, sd * a.w), ib = trackAt(b.s2, sd * b.w), oa = trackAt(a.s2, sd * (a.w + D)), ob = trackAt(b.s2, sd * (b.w + D)), ya = a.e + a.hs, yb = b.e + b.hs, u0 = a.s2 / 4, u1 = b.s2 / 4;
+          P.push(ia.x, a.e - 2, ia.z, ib.x, b.e - 2, ib.z, ib.x, yb, ib.z, ia.x, a.e - 2, ia.z, ib.x, yb, ib.z, ia.x, ya, ia.z); U.push(u0, (a.e - 2) / 1.3, u1, (b.e - 2) / 1.3, u1, yb / 1.3, u0, (a.e - 2) / 1.3, u1, yb / 1.3, u0, ya / 1.3);   /* Straßenfassade */
+          P.push(ia.x, ya, ia.z, ib.x, yb, ib.z, ob.x, yb, ob.z, ia.x, ya, ia.z, ob.x, yb, ob.z, oa.x, ya, oa.z); U.push(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);   /* Dach */
+          P.push(oa.x, a.e - 30, oa.z, ob.x, b.e - 30, ob.z, ob.x, yb, ob.z, oa.x, a.e - 30, oa.z, ob.x, yb, ob.z, oa.x, ya, oa.z); U.push(u0, 0, u1, 0, u1, yb / 1.3, u0, 0, u1, yb / 1.3, u0, ya / 1.3); }   /* Rückseite */
+        { const a = rows[0], ia = trackAt(a.s2, sd * a.w), oa = trackAt(a.s2, sd * (a.w + D)), ya = a.e + a.hs; P.push(ia.x, a.e - 30, ia.z, oa.x, a.e - 30, oa.z, oa.x, ya, oa.z, ia.x, a.e - 30, ia.z, oa.x, ya, oa.z, ia.x, ya, ia.z); U.push(0, 0, 4, 0, 4, ya / 1.3, 0, 0, 4, ya / 1.3, 0, ya / 1.3); }   /* Stirnseite */
+        const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.computeVertexNormals();
+        const bm = new THREE.Mesh(g, lam({ map: lt, roughness: .7, side: THREE.DoubleSide })); bm.userData.fixed = true; bm.castShadow = bm.receiveShadow = true; trackGroup.add(bm);
+        for (const r of rows) { const q = trackAt(r.s2, sd * (r.w + D / 2)); excl.push([q.x, q.z, D / 2 + 3]); } }
       excl.push([cen[0], cen[1], 50]);
       const lint = []; for (let t = -Wd(sA, -1); t <= Wd(sA, 1); t += 0.9) { const q = trackAt(sA - 0.3, t); lint.push(q); }
       const ll = new THREE.InstancedMesh(new THREE.SphereGeometry(0.16, 6, 4), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 1.9, 1.4) }), lint.length); lint.forEach((q, k) => { m4.makeTranslation(q.x, H - 0.25, q.z); ll.setMatrixAt(k, m4); }); trackGroup.add(ll); }
@@ -5950,7 +5965,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v58'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v59'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
