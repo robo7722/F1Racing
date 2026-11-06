@@ -3668,14 +3668,14 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         wp.push(A.x, ya - 2, A.z, B.x, yb - 2, B.z, B.x, yb + HM, B.z, A.x, ya - 2, A.z, B.x, yb + HM, B.z, A.x, ya + HM, A.z); const u0 = acc / 5, u1 = (acc + l) / 5, vv = (HM + 2) / 5; acc += l; wu.push(u0, 0, u1, 0, u1, vv, u0, 0, u1, vv, u0, vv);   /* senkrechte Mauer, 12 m (Fotos) */
         const ua = upper(s2), ub = upper(s3), C = trackAt(s3, sd * Math.max(o3 + 2, Math.min(ub.t - 2.5, o3 + 45))), Dd = trackAt(s2, sd * Math.max(o2 + 2, Math.min(ua.t - 2.5, o2 + 45)));
         tp.push(A.x, ya + HM, A.z, B.x, yb + HM, B.z, C.x, yb + HM, C.z, A.x, ya + HM, A.z, C.x, yb + HM, C.z, Dd.x, ya + HM, Dd.z);   /* Terrasse oben auf der Mauer bis an den oberen Straßenzug */
-        if (Math.random() < 0.85) { const q = trackAt(s2 + Math.random() * 2, sd * (o2 + 1.0)); rocks.push([q.x, q.z, ya, q.h]); } }
+        if (Math.random() < 0.85) { const q = trackAt(s2 + Math.random() * 2, sd * (o2 + 0.55)); rocks.push([q.x, q.z, ya, q.h]); } }
       if (wp.length) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(wp, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(wu, 2)); g.computeVertexNormals(); const m = new THREE.Mesh(g, wallM); m.userData.fixed = true; m.receiveShadow = true; trackGroup.add(m);
         const g2 = new THREE.BufferGeometry(); g2.setAttribute('position', new THREE.Float32BufferAttribute(tp, 3)); g2.computeVertexNormals(); { const P = g2.attributes.position, uv = []; for (let k = 0; k < P.count; k++) uv.push(P.getX(k) / 6, P.getZ(k) / 6); g2.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); }
         const m2 = new THREE.Mesh(g2, terM); m2.userData.fixed = true; trackGroup.add(m2);
         // Felsfuß der Mauer (Foto): grobe helle Kalkblöcke, halb in der Mauer
         const rg = new THREE.IcosahedronGeometry(1, 1); { const P = rg.attributes.position; for (let k = 0; k < P.count; k++) { const x = P.getX(k), y = P.getY(k), z = P.getZ(k), f = 1 + 0.18 * Math.sin(x * 4.1 + 1) * Math.sin(y * 3.3) * Math.sin(z * 3.7 + 2); P.setXYZ(k, x * f, y * f, z * f); } rg.computeVertexNormals(); }
         const ri = new THREE.InstancedMesh(rg, lam({ map: (t => (t.repeat.set(0.5, 0.5), t))(rubbleTex()), color: 0xe2d8c6, flatShading: true }), rocks.length), m4b = new THREE.Matrix4(), qb = new THREE.Quaternion(), sb = new THREE.Vector3(), pb = new THREE.Vector3();
-        rocks.forEach(([x, z, y, h], k) => { qb.setFromEuler(new THREE.Euler(Math.random() * 0.3 - 0.15, h + Math.random() * 0.4 - 0.2, Math.random() * 0.3 - 0.15)); m4b.compose(pb.set(x, y + 0.2, z), qb, sb.set(0.75 + Math.random() * 0.2, 1.1 + Math.random() * 1.3, 1.3 + Math.random() * 0.9));   /* längs der Mauer, ragen höchstens 0,8 m vor – nie über die Leitplanke */ ri.setMatrixAt(k, m4b); }); ri.userData.fixed = true; ri.castShadow = ri.receiveShadow = true; trackGroup.add(ri); }
+        rocks.forEach(([x, z, y, h], k) => { qb.setFromEuler(new THREE.Euler(Math.random() * 0.3 - 0.15, h + Math.random() * 0.4 - 0.2, Math.random() * 0.3 - 0.15)); m4b.compose(pb.set(x, y + 0.2, z), qb, sb.set(0.75, 1.1 + Math.random() * 1.3, 1.3 + Math.random() * 0.9));   /* längs der Mauer, ragen nur ~0,4 m aus der Mauerfläche – nie bis an Leitplanke oder Zaun */ ri.setMatrixAt(k, m4b); }); ri.userData.fixed = true; ri.castShadow = ri.receiveShadow = true; trackGroup.add(ri); }
       // Häuser: OSM-Grundrisse an ihrer echten Lage, Lücken mit Blöcken zwischen Hafenstraße und oberem Straßenzug gefüllt; Dächer über dem Beau-Rivage-Niveau
       const fA = facadeMat({ wall: '#efe2c8', frame: '#fbf5ea', balcony: '#fff9f0', glass: '#4c5966', glassTop: '#b0bfcc', litP: .14, emiI: .55, roof: '#a3705c', seed: 53, bays: 10, floors: 14, bayM: 4.2, floorM: 3.2, relief: 4 });
       const fB = facadeMat({ wall: '#f1d7c0', frame: '#fbf3ea', balcony: '#ffffff', glass: '#4f5a64', glassTop: '#b4c2ce', litP: .14, emiI: .55, roof: '#a3705c', seed: 57, bays: 10, floors: 14, bayM: 4.2, floorM: 3.2, relief: 4 }), roofB = lam({ color: 0xbdb4a6 });
@@ -4442,6 +4442,19 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       const it = new THREE.InstancedMesh(PP.trunk, PP.trunkM, pl.length), ic = new THREE.InstancedMesh(PP.crown, PP.crownM, pl.length);
       pl.forEach(([x, z], k) => { const s2 = 0.55 + Math.random() * 0.35; qq.setFromAxisAngle(_v2, Math.random() * 6.28); m4.compose(pv.set(x, 0, z), qq, sc.set(s2, s2, s2)); it.setMatrixAt(k, m4); ic.setMatrixAt(k, m4); });
       lawn.receiveShadow = true; trackGroup.add(lawn, it, ic); }
+    if (TRK.mc && mcDem()) { // Monaco (Fotos): die Hänge sind lückenlos bebaut – Häuser im dichten Raster auf dem echten Gelände (EU-DEM) bis ~270 m Höhe, kein nackter Boden zwischen den Häusern
+      const hs = [], SP = 23, R = 2300, c0x = (minX + maxX) / 2, c0z = (minZ + maxZ) / 2, rj = (a, b) => { const v = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453; return v - Math.floor(v); };
+      for (let gx = -R; gx <= R; gx += SP) for (let gz = -R; gz <= R; gz += SP) { const x = c0x + gx + (rj(gx, gz) - .5) * 5, z = c0z + gz + (rj(gz, gx) - .5) * 5, h = demH(x, z); if (h < 4 || h > 270 || inMarina(x, z)) continue;
+        const [d] = nearestDist(x, z); if (d < 42) continue;
+        const kx = Math.floor(x / 60), kz = Math.floor(z / 60); let hit = false; for (let a = -1; a <= 1 && !hit; a++) for (let b = -1; b <= 1 && !hit; b++) { const L3 = bGrid.get((kx + a + 512) * 4096 + kz + b + 512); if (L3) for (const Q of L3) if (Math.abs(Q[0] - x) < Q[2] + 13 && Math.abs(Q[1] - z) < Q[3] + 13) { hit = true; break; } }
+        if (hit || excl.some(e => (x - e[0]) ** 2 + (z - e[1]) ** 2 < (e[2] + 6) ** 2)) continue;
+        if (LMP.some(F => Math.hypot(F.cx - x, F.cz - z) < F.r + 14)) continue;
+        const gxD = demH(x + 8, z) - demH(x - 8, z), gzD = demH(x, z + 8) - demH(x, z - 8), slope = Math.hypot(gxD, gzD) / 16, rot = Math.atan2(gzD, -gxD) + (rj(x, z) - .5) * 0.2;   /* längs der Höhenlinie */
+        const w = 15 + rj(x, 1) * 6, l = 15 + rj(z, 2) * 6, hg = 10 + rj(x, z) * 16 + slope * Math.max(w, l);   /* bergseitig steckt das Haus im Hang */
+        if ([[-1, -1], [1, -1], [1, 1], [-1, 1]].some(([u, v]) => !trackFree(x + u * w * .55, z + v * l * .55, 3))) continue;
+        hs.push([x, z, w, hg, l, rot]); }
+      if (hs.length) { const ib = new THREE.InstancedMesh(box1, resiM, hs.length); hs.forEach(([x, z, w, h2, l, r], k) => { qq.setFromAxisAngle(_v2, r); m4.compose(pv.set(x, 0, z), qq, sc.set(w, h2, l)); ib.setMatrixAt(k, m4); ib.setColorAt(k, cc.setHex(cols[k % cols.length])); }); trackGroup.add(ib); }
+      window.__mcHang = hs.length; }
     const crowns = blds.filter(b => b[3] > 60);   // beleuchtete Dachkronen der Hochhäuser
     const ic = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 1.9, 1.4).multiplyScalar(TH.night ? 1 : 0.55) }), crowns.length);
     crowns.forEach(([x, z, w, h2, l, r], k) => { qq.setFromAxisAngle(_v2, r); m4.compose(pv.set(x, h2 + 1.5, z), qq, sc.set(w * 0.7, 3, l * 0.7)); ic.setMatrixAt(k, m4); });
@@ -6067,7 +6080,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v60'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v61'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
