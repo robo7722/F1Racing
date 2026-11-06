@@ -2179,7 +2179,7 @@ function bankY(i, lat) { const b = BANK ? BANK[i] : 0; if (!b) return 0; const q
 function bankBreaks(i) { const qe = HW[i] + BK_IN; return [0, KSD * qe, KSD * (qe + BK_OUT)]; }   // Knickstellen (seitlich), dort werden Streifen unterteilt
 function bankAt(c) { if (!BANK) return 0; const f = modL(c.d) / DS, i0 = Math.floor(f) % N, i1 = (i0 + 1) % N, t = f - Math.floor(f); return bankY(i0, c.lat) * (1 - t) + bankY(i1, c.lat) * t; }
 const HOTEL_T = { value: 0 };
-let MC_PADS = null, BANDW = null, HORIZ = null, BANDS = [], MC_SEA = null, MC_ISL = null, MJ = null, SPI = null, PAVEZ = null, KERBL = null, KERBR = null, REFNW = null, WTL = null, WTR = null, GOL = null, GOR = null, HILLW = null, RISE = null, ELEV, SLOPE, FLAT = true, ELMEAN = 0, HG = null, HW, NOWALL, TRK, TH, N, L, DS, PX, PZ, TX, TZ, RX, RZ, KS, KP, KR, RL, profBot = null, WL, WR, GRL, GRR, KERB, profP, profAI, inSign = 1, poleSide = 1, hotelRoof = null;
+let MC_TERR = [], MC_PADS = null, BANDW = null, HORIZ = null, BANDS = [], MC_SEA = null, MC_ISL = null, MJ = null, SPI = null, PAVEZ = null, KERBL = null, KERBR = null, REFNW = null, WTL = null, WTR = null, GOL = null, GOR = null, HILLW = null, RISE = null, ELEV, SLOPE, FLAT = true, ELMEAN = 0, HG = null, HW, NOWALL, TRK, TH, N, L, DS, PX, PZ, TX, TZ, RX, RZ, KS, KP, KR, RL, profBot = null, WL, WR, GRL, GRR, KERB, profP, profAI, inSign = 1, poleSide = 1, hotelRoof = null;
 const trackGroup = new THREE.Group(); scene.add(trackGroup);
 const wrapL = x => x - L * Math.round(x / L);
 const modL = x => ((x % L) + L) % L;
@@ -2372,16 +2372,31 @@ function sideW(t, x, z) { const j = t.j, lat = (x - PX[j]) * RX[j] + (z - PZ[j])
 // Monaco: Gelände als weich gewichtete Mischung der Höhen aller nahen Streckenpunkte (1/d⁴) – keine Zacken zwischen oberer und unterer Strecke
 function mcBase(x, z, fb) { const cx = Math.floor(x / 32), cz = Math.floor(z / 32); let ws = 0, hs = 0; for (let a = -5; a <= 5; a++) for (let b = -5; b <= 5; b++) { const L2 = SPI.get((cx + a + 4096) * 8192 + cz + b + 4096); if (!L2) continue; for (const j of L2) { const dx = x - PX[j], dz = z - PZ[j], d2 = dx * dx + dz * dz + 4, w = 1 / (d2 * d2); ws += w; hs += w * ELEV[j]; } } return ws ? hs / ws : fb; }
 function surfH(x, z, t) { if (FLAT) return 0; t = t || terr(x, z); const W = sideW(t, x, z), nb = TH.harmonic ? clamp((t.d - (W + 3)) / 22, 0, 1) : clamp((t.d - (W + 12)) / 50, 0, 1); let h = lerp(TRK.mc ? mcNear(x, z, t, W) : ELEV[t.j], t.h, nb * nb * (3 - 2 * nb)) + riseAt(x, z, t.d) + hillAt(x, z, t); if (MC_PADS) h = padH(x, z, h); return h; }
+// Monaco: Gelände nie höher als die tiefste nahe Straße plus sanfter Anstieg (30 %) – Plätze zwischen zwei Straßen liegen eben auf der unteren Höhe, die obere Straße steht auf ihrer Stützmauer (statt Buckel und Falten)
+function mcCone(x, z) { const cx = Math.floor(x / 32), cz = Math.floor(z / 32); let m = 1e9; const FM = TRK.mc.fairmont, fq = clamp((Math.hypot(x - FM[0], z - FM[1]) - 170) / 70, 0, 1), flat = 22 - 18 * fq * fq * (3 - 2 * fq), slope = 0.1 + 0.2 * fq * fq * (3 - 2 * fq);   /* ebene Zone hinter den Mauern nur im Haarnadel-Komplex, außen wie bisher */ for (let a = -3; a <= 3; a++) for (let b = -3; b <= 3; b++) { const L2 = SPI.get((cx + a + 4096) * 8192 + cz + b + 4096); if (!L2) continue; for (const j of L2) { const d = Math.hypot(x - PX[j], z - PZ[j]); if (d > 96) continue; const v = ELEV[j] + Math.max(0, d - Math.max(WL[j], WR[j]) - flat) * slope;   /* hinter jeder Mauer erst 22 m eben, dann sanft ansteigend */ if (v < m) m = v; } } return m; }
 // Monaco: direkt neben der Strecke liegt der Boden auf der eigenen Streckenhöhe und steigt erst hinter der Mauer an (sonst ragt der Mischboden zwischen zwei Ästen über die tiefere Fahrbahn)
-function mcNear(x, z, t, W) { const b = mcBase(x, z, ELEV[t.j]); let g = clamp((t.d - W - 1) / 12, 0, 1); g = g * g * (3 - 2 * g); return lerp(Math.min(b, ELEV[t.j]), b, g); }
+function mcNear(x, z, t, W) { const b = Math.min(mcBase(x, z, ELEV[t.j]), mcCone(x, z)); let g = clamp((t.d - W - 1) / 12, 0, 1); g = g * g * (3 - 2 * g); return lerp(Math.min(b, ELEV[t.j]), b, g); }
 // Tribünen-Grundfläche (Monaco): innerhalb eben auf Streckenhöhe, außen über 16 m weich in den Hang
 function padH(x, z, h) { for (const P of MC_PADS) { const dx = x - P.x, dz = z - P.z; if (dx * dx + dz * dz > P.r * P.r) continue; const lx = dx * P.c - dz * P.s, lz = dx * P.s + dz * P.c, ox = Math.max(-2 - lx, lx - (P.dep + 3), 0), oz = Math.max(Math.abs(lz) - P.len / 2 - 2, 0), d = Math.hypot(ox, oz); if (d >= 16) continue; let f = 1 - d / 16; f = f * f * (3 - 2 * f); if (h > P.y) h = lerp(h, P.y, f); } return h; }
-function groundY(x, z) { if (FLAT) return 0; if (MC_SEA && MC_SEA(x, z)) return -3;   /* Meeresboden unter dem Hafen */ const t = terr(x, z), j = t.j, latS = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j], W = latS < 0 ? WL[j] : WR[j], bw = BANDW ? BANDW[latS < 0 ? 0 : 1][j] : BAND, f = clamp((t.d - (W + Math.min(BAND, bw + 4) - 32)) / 30, 0, 1);   /* nur absenken, wo ein Geländeband darüber liegt – sonst schweben Kies und Bäume über einer Senke */ let y = surfH(x, z, t) - 4 * (1 - f * f * (3 - 2 * f)); if (TRK.mc && t.d < 60) y = Math.min(y, mcLow(x, z) - 3); return y; }
+function groundY(x, z) { if (FLAT) return 0; if (MC_SEA && MC_SEA(x, z)) return -3;   /* Meeresboden unter dem Hafen */ const t = terr(x, z), j = t.j, latS = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j], W = latS < 0 ? WL[j] : WR[j], bw = BANDW ? BANDW[latS < 0 ? 0 : 1][j] : BAND, f = clamp((t.d - (W + Math.min(BAND, bw + 4) - 32)) / 30, 0, 1);   /* nur absenken, wo ein Geländeband darüber liegt – sonst schweben Kies und Bäume über einer Senke */ let y = surfH(x, z, t) - 4 * (1 - f * f * (3 - 2 * f)); if (TRK.mc && t.d < W + 30) { let g = clamp((t.d - W - 4) / 26, 0, 1); g = g * g * (3 - 2 * g); y = lerp(Math.min(y, mcLow(x, z) - 3), y, g); } return y; }   /* nur direkt hinter den Mauern absenken, weich auslaufend – sonst Falten im Boden zwischen den Streckenteilen */
+// Monaco: Stützmauer an der Außenkante der Geländebänder – nur wo das Gelände dahinter wirklich tiefer liegt und nie am/im Wasser (Hafen, Meer)
+function mcTerraceWalls(inMarina) {
+  const pos = [], uv = [];
+  for (const [A, B, ox, oz, i] of MC_TERR) {
+    const M = [(A[0] + B[0]) / 2, (A[2] + B[2]) / 2], y = (A[1] + B[1]) / 2;
+    if (inMarina(M[0], M[1]) || inMarina(M[0] + ox * 6, M[1] + oz * 6) || inMarina(M[0] + ox * 20, M[1] + oz * 20)) continue;
+    if (groundY(M[0] + ox * 4, M[1] + oz * 4) > y - 0.6) continue;   /* dahinter kein Absatz: keine Mauer nötig */
+    const u0 = i * DS / 6, u1 = (i + 1) * DS / 6;
+    pos.push(A[0], A[1] - 16, A[2], B[0], B[1] - 16, B[2], B[0], B[1], B[2], A[0], A[1] - 16, A[2], B[0], B[1], B[2], A[0], A[1], A[2]); uv.push(u0, 0, u1, 0, u1, 16 / 6, u0, 0, u1, 16 / 6, u0, 16 / 6);
+  }
+  if (!pos.length) return; const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.computeVertexNormals();
+  const t = STONE_T(1); t.repeat.set(1, 1); const m = new THREE.Mesh(g, lam({ map: t, color: TH.bandStone, side: THREE.DoubleSide })); m.receiveShadow = true; m.userData.strip = true; trackGroup.add(m);
+}
 // Monaco: liegt ein Punkt im Umkreis von 90 m um die Strecke nach dem Tunnel (Ausfahrt bis Tabac)? Dort stehen keine Bäume im Hang
 function nearAfterTun(x, z) { if (!TRK.mc || !TRK.mc.tun) return false; const b = TRK.mc.tun[1] * L; for (let s2 = b - 20; s2 <= b + 520; s2 += 10) { const i = Math.floor(modL(s2) / DS) % N; if ((x - PX[i]) ** 2 + (z - PZ[i]) ** 2 < 90 * 90) return true; } return false; }
 // Monaco: tiefste Streckenhöhe im Umkreis von 36 m – der grobe Boden (Gitter ~15 m) darf nicht von einem höheren Ast über die Fahrbahn eines tieferen spannen
 function mcLow(x, z) { const cx = Math.floor(x / 32), cz = Math.floor(z / 32); let m = 1e9; for (let a = -2; a <= 2; a++) for (let b = -2; b <= 2; b++) { const L2 = SPI.get((cx + a + 4096) * 8192 + cz + b + 4096); if (!L2) continue; for (const j of L2) { const dx = x - PX[j], dz = z - PZ[j]; if (dx * dx + dz * dz < 1296 && ELEV[j] < m) m = ELEV[j]; } } return m; }
-function placeY(x, z) { if (FLAT) return 0; if (MC_SEA && MC_SEA(x, z)) return 0;   /* Jachten, Stege: Meereshöhe */ return surfH(x, z); }
+function placeY(x, z) { if (FLAT) return 0; if (MC_SEA && MC_SEA(x, z)) return 0;   /* Jachten, Stege: Meereshöhe */ if (TRK.mc) { const [d2, j] = spiNear(x, z), d = Math.sqrt(d2); if (d <= Math.max(WL[j], WR[j]) + 6) return ELEV[j]; }   /* Monaco: alles direkt an der Strecke (Insel, Pfosten, Tafeln) steht auf Streckenhöhe, nicht auf dem tiefer liegenden Platz */ return surfH(x, z); }
 // Boden in Kacheln (gemeinsame Vertex-Daten -> keine Nähte), damit nur Sichtbares gezeichnet wird
 function tileGround(root, T = 6) {
   for (const ch of [...root.children]) {
@@ -2586,7 +2601,7 @@ function buildTrack(key) {
     const hp = TRK.hd.pts, hw = TRK.hd.hw, el = TRK.hd.el, m = hp.length; let j = 0; HW = new Float32Array(N); ELEV = new Float32Array(N); MJ = new Int32Array(N);
     for (let i = 0; i < N; i++) { let best = 1e18, bj = j; for (let k = -6; k <= 14; k++) { const q = (j + k + m) % m, dx = PX[i] - hp[q][0], dz = PZ[i] - hp[q][1], d = dx * dx + dz * dz; if (d < best) { best = d; bj = q; } } j = bj; HW[i] = Math.max(3.8, hw[j]); if (el) ELEV[i] = el[j]; MJ[i] = j; }
     HW = filt(HW, 8, 'avg'); FLAT = !el; if (el) ELEV = filt(filt(ELEV, 6, 'avg'), 6, 'avg');
-    MC_SEA = null; BANDS = []; HORIZ = null; BANDW = null;
+    MC_SEA = null; BANDS = []; HORIZ = null; BANDW = null; MC_TERR = [];
     if (!el && TRK.mc) {   // Monaco: echtes Höhenprofil – vom Hafen (2–3 m) die Beau-Rivage-Steigung hinauf zum Casino (~45 m), über Mirabeau und Fairmont hinab zum Portier, durch den Tunnel zurück ans Meer
       const M = TRK.mc, sAt = p => spiNear(p[0], p[1])[1] * DS, sc = L / 3337, sCas = sAt(M.casino), sFai = sAt(M.fairmont), tA = M.tun[0] * L, tB = M.tun[1] * L, pl = M.pool || [0.73, 0.785], sRa = (M.rasc ?? 0.9) * L;
       const K = [[0, 2.5], [150 * sc, 3], [260 * sc, 4.5], [sCas - 230, 36], [sCas - 110, 43], [sCas, 45], [sCas + 120, 44], [(sCas + sFai) / 2, 37], [sFai, 27], [tA - 70, 13], [tA, 10], [(tA + tB) / 2, 8], [tB, 5], [tB + 120, 3], [pl[0] * L - 150, 2.5], [pl[0] * L, 2.5], [pl[1] * L, 2.5], [sRa, 2.5], [(sRa + L) / 2, 2.5], [L, 2.5]].sort((a, b) => a[0] - b[0]);
@@ -2687,7 +2702,7 @@ function buildTrack(key) {
       for (let t = HW[i] + 0.4; t < (nw ? 26 : W[i] + 1); t += 0.25) { const x = PX[i] + RX[i] * t * s, z = PZ[i] + RZ[i] * t * s, [d2, j] = spiNear(x, z); let dj = Math.abs(j - i); dj = Math.min(dj, N - dj); if (dj * DS < 25) continue;
         if (t >= HW[i] + 0.9 && !(MC_ISL && Math.hypot(x - MC_ISL.x, z - MC_ISL.z) < MC_ISL.R + 1.5)) { MID[i] = t; ok[i] = 1; } break; } }
     { const o2 = filt(filt(ok, 2, 'max'), 2, 'min'); for (let i = 0; i < N; i++) if (o2[i] > 0.5 && !ok[i] && (NOWALL[i] & nb)) { let a2 = 0, c = 0; for (let k = -4; k <= 4; k++) { const j = (i + k + N) % N; if (ok[j]) { a2 += MID[j]; c++; } } if (c) { MID[i] = a2 / c; ok[i] = 2; } } }   /* einzelne Lücken schließen */
-    for (let i = 0; i < N; i++) if (ok[i]) { let a2 = 0, c = 0; for (let k = -3; k <= 3; k++) { const j = (i + k + N) % N; if (ok[j]) { a2 += Math.min(MID[j], MID[i] + 1); c++; } } const m = Math.max(HW[i] + 0.5, a2 / c - 0.35); W[i] = (NOWALL[i] & nb) ? m : Math.min(W[i], m); NOWALL[i] &= ~nb; }   /* auch normale Mauern nie über die Mittellinie zum Nachbarast */
+    for (let i = 0; i < N; i++) if (ok[i]) { let a2 = 0, c = 0; for (let k = -3; k <= 3; k++) { const j = (i + k + N) % N; if (ok[j]) { a2 += Math.min(MID[j], MID[i] + 1); c++; } } const m = Math.max(HW[i] + 0.5, a2 / c - 0.9);   /* je Ast 0,9 m vor der Mittellinie: Zaun des einen und Stützmauer des anderen kreuzen sich nie */ W[i] = (NOWALL[i] & nb) ? m : Math.min(W[i], m); NOWALL[i] &= ~nb; }   /* auch normale Mauern nie über die Mittellinie zum Nachbarast */
   }
   PAVEZ = new Uint8Array(N);
   const noWall = (a, b, ext = 38, pave = false) => {
@@ -2783,17 +2798,14 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
       const bw = new Float32Array(N);
       for (let i = 0; i < N; i++) { let w = 0; for (let o = 4; o <= BAND; o += 4) { const oo = W[i] + o, x = PX[i] + RX[i] * oo * sg, z = PZ[i] + RZ[i] * oo * sg; const [dd, jj] = nearestDist(x, z); if (dd < oo - 2.5) break; if (TRK.mc) { let dj = Math.abs(jj - i); dj = Math.min(dj, N - dj); if (dj * DS > 30 && dd < Math.max(WL[jj], WR[jj]) + 6) break; }   /* Monaco: Band nie über den ummauerten Bereich eines anderen Asts (sonst fällt es als Hügel auf dessen Fahrbahn ab) */ w = o; } bw[i] = w ? Math.min(BAND, w + 4) : 0; }
       const bws = filt(filt(bw, 3, 'min'), 3, 'avg'), H = []; (BANDW || (BANDW = [null, null]))[sg < 0 ? 0 : 1] = filt(bws, 6, 'max');
-      for (let k = 0; k <= K; k++) { const a = new Float32Array(N); for (let i = 0; i < N; i++) { const o = W[i] + bws[i] * k / K, x = PX[i] + RX[i] * o * sg, z = PZ[i] + RZ[i] * o * sg, f = clamp((o - W[i]) / 12, 0, 1); a[i] = (surfH(x, z) - ELEV[i]) * f * f * (3 - 2 * f); } H.push(a); }
+      for (let k = 0; k <= K; k++) { const a = new Float32Array(N); for (let i = 0; i < N; i++) { const o = W[i] + bws[i] * k / K, x = PX[i] + RX[i] * o * sg, z = PZ[i] + RZ[i] * o * sg, dh = surfH(x, z) - ELEV[i], f = clamp((o - W[i]) / (TRK.mc && dh < 0 ? 1.5 : 12), 0, 1); a[i] = dh * f * f * (3 - 2 * f); }   /* Monaco: tiefer liegendes Gelände direkt hinter der Mauer (die Steinschürze deckt den Absatz) statt Böschung */ H.push(a); }
       for (let k = 0; k < K; k++) {
         const o0 = i => W[i] + bws[i] * k / K, o1 = i => W[i] + bws[i] * (k + 1) / K, msk = i => bws[i] > 0.5;
         BANDS.push(sg < 0 ? hStrip(i => -o1(i), i => -o0(i), 0.004, 0.004, shm, { uScale: 14, vScale: 14, yL: H[k + 1], yR: H[k], mask: msk }) : hStrip(o0, o1, 0.004, 0.004, shm, { uScale: 14, vScale: 14, yL: H[k], yR: H[k + 1], mask: msk }));
       }
-      if (TRK.mc) { // Monaco: Terrassenkante – am äußeren Ende des Bandes eine Stützmauer nach unten, sonst schwebt die Kante über tieferem Gelände (Blick auf den Unterboden)
-        const pos = [], uv = [], HK = H[K], pt = i => { const o = W[i] + bws[i]; return [PX[i] + RX[i] * o * sg, ELEV[i] + HK[i] + 0.004, PZ[i] + RZ[i] * o * sg]; };
-        for (let i = 0; i < N; i++) { const j = (i + 1) % N; if (bws[i] < 0.5 || bws[j] < 0.5) continue; const A = pt(i), B = pt(j), u0 = i * DS / 6, u1 = (i + 1) * DS / 6;
-          pos.push(A[0], A[1] - 16, A[2], B[0], B[1] - 16, B[2], B[0], B[1], B[2], A[0], A[1] - 16, A[2], B[0], B[1], B[2], A[0], A[1], A[2]); uv.push(u0, 0, u1, 0, u1, 16 / 6, u0, 0, u1, 16 / 6, u0, 16 / 6); }
-        if (pos.length) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.computeVertexNormals();
-          const t = STONE_T(1); t.repeat.set(1, 1); const m = new THREE.Mesh(g, lam({ map: t, color: TH.bandStone, side: THREE.DoubleSide })); m.receiveShadow = true; m.userData.strip = true; trackGroup.add(m); } }
+      if (TRK.mc) { // Monaco: Terrassenkante – Kantenpunkte merken; die Stützmauer wird erst gebaut, wenn Meer und Gelände feststehen (siehe mcTerraceWalls)
+        const HK = H[K]; for (let i = 0; i < N; i++) { const j = (i + 1) % N; if (bws[i] < 0.5 || bws[j] < 0.5) continue; const pt = q => { const o = W[q] + bws[q]; return [PX[q] + RX[q] * o * sg, ELEV[q] + HK[q] + 0.004, PZ[q] + RZ[q] * o * sg]; };
+          MC_TERR.push([pt(i), pt(j), RX[i] * sg, RZ[i] * sg, i]); } }
     }
   }
 
@@ -3459,12 +3471,14 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
     const pA = (M.pool ?? [0.73, 0.785])[0] * L, pB = (M.pool ?? [0.73, 0.785])[1] * L, bump = s2 => { const t = Math.min(1, Math.max(0, Math.min(s2 - pA + 40, pB + 40 - s2) / 40)); return t * t * (3 - 2 * t) * 62; };   // an der Piscine: Land mit Schwimmbad zwischen Strecke und Hafen
     const shore = [], seaPts = []; for (let s2 = sA0; s2 <= sR; s2 += 10) { const sd = outS(s2), i = Math.floor(modL(s2) / DS) % N, q = trackAt(s2, sd * (wallAt(i, sd) + 4 + bump(s2))); shore.push([q.x, q.z, sd, i]); }   /* Hafenmauer direkt hinter der Absperrung (nach Fotos) */
     const f = shore[0], l = shore[shore.length - 1], oc = (q, d) => { const [, j] = nearestDist(q[0], q[1]); return [q[0] + (q[0] - PX[j]) / (Math.hypot(q[0] - PX[j], q[1] - PZ[j]) || 1) * d, q[1] + (q[1] - PZ[j]) / (Math.hypot(q[0] - PX[j], q[1] - PZ[j]) || 1) * d]; };
-    const waterP = [...shore.map(q => [q[0], q[1]]), oc(l, 900), oc([(f[0] + l[0]) / 2, (f[1] + l[1]) / 2], 2600), oc(f, 900)];
+    const dLF = (() => { const dx = f[0] - l[0], dz = f[1] - l[1], n = Math.hypot(dx, dz) || 1; return [dx / n, dz / n]; })(), fo = oc(f, 1600);
+    const waterP = [...shore.map(q => [q[0], q[1]]), oc(l, 900), oc([(f[0] + l[0]) / 2, (f[1] + l[1]) / 2], 7000), [fo[0] + dLF[0] * 6000, fo[1] + dLF[1] * 6000], oc(f, 700)];   /* östlich des Tunnels offenes Meer bis zum Horizont (keine Küste, keine Berge) */
     const addWater = (P, y) => { const g = new THREE.ShapeGeometry(new THREE.Shape(P.map(([x, z]) => new THREE.Vector2(x, -z))), 2).rotateX(-Math.PI / 2).translate(0, y, 0); const m = new THREE.Mesh(g, waterM); m.receiveShadow = true; m.userData.fixed = true; trackGroup.add(m); };   /* Wasser bleibt auf Meereshöhe */
     addWater(waterP, 0.05);
     window.__shore = shore;
     const dropBands = () => { for (const m of BANDS) { if (!m) continue; const P = m.geometry.attributes.position; let ch = false; for (let k = 0; k < P.count; k++) { const x = P.getX(k), z = P.getZ(k); if (MC_SEA(x, z)) { P.setY(k, -3); ch = true; } } if (ch) { P.needsUpdate = true; m.geometry.computeVertexNormals(); m.geometry.computeBoundingSphere(); } } };   /* Geländebänder enden an der Kaimauer, das Wasser liegt frei */
     inMarina = (x, z) => pip(waterP, x, z); MC_SEA = (x, z) => { if (!inMarina(x, z)) return false; const [d, j] = nearestDist(x, z), lat = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j]; return Math.abs(lat) > wallAt(j, lat >= 0 ? 1 : -1) + 2.5 && d > HW[j] + 4; }; dropBands();   /* Meeresboden nur mit Abstand zu jeder Straße – keine Wasserrinne zwischen zwei Streckenteilen */
+    mcTerraceWalls(inMarina);
     { const qp = [], qm = lam({ color: 0xcfc6b2, side: THREE.DoubleSide });   // Kaimauer: senkrechte Steinwand vom Wasser bis auf Straßenhöhe
       for (let k = 0; k < shore.length - 1; k++) { const [x1, z1, , i1] = shore[k], [x2, z2, , i2] = shore[k + 1]; if (Math.hypot(x2 - x1, z2 - z1) > 25) continue; if ([[x1, z1, i1], [x2, z2, i2]].some(([x, z, io]) => { const [d, j] = nearestDist(x, z); let dj = Math.abs(j - io); dj = Math.min(dj, N - dj); return dj * DS > 60 && d < Math.max(WL[j], WR[j]) + 12; })) continue;   /* kein Kai zwischen zwei Streckenteilen */ const y1 = FLAT ? 0.6 : ELEV[i1] - 0.6, y2 = FLAT ? 0.6 : ELEV[i2] - 0.6; qp.push(x1, -1, z1, x2, -1, z2, x2, y2, z2, x1, -1, z1, x2, y2, z2, x1, y1, z1); }
       const qg = new THREE.BufferGeometry(); qg.setAttribute('position', new THREE.Float32BufferAttribute(qp, 3)); qg.computeVertexNormals(); const qw = new THREE.Mesh(qg, qm); qw.userData.fixed = true; trackGroup.add(qw); }
@@ -3546,32 +3560,33 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
       const lm = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.32, 0.32, 0.12, 10), new THREE.MeshBasicMaterial({ color: 0xffffff }), lamps.length), m4 = new THREE.Matrix4(), cW = new THREE.Color(2.2, 1.7, 1.05), cC = new THREE.Color(1.6, 1.8, 2.1);
       lamps.forEach((q, k) => { m4.makeTranslation(q.x, H - 0.1, q.z); lm.setMatrixAt(k, m4); lm.setColorAt(k, k % 2 === (seaS > 0 ? 1 : 0) ? cW : cC); }); trackGroup.add(lm);
       // Einfahrt: beiger Hotelbau über dem Portal, Lichterleiste an der Portaloberkante
-      const FHX = 10, FHZ = 55, FS = sA + 70;   /* Hotelbau 20 × 110 m: schmal genug, dass er neben der Röhre unter der höheren Strecke (Mirabeau) Platz hat */
-      const ent = (() => { for (let o = FHX + 6; o < 90; o += 1) { const q = trackAt(FS, -seaS * o), c = Math.cos(q.h), sn = Math.sin(q.h); let ok = true;   /* Hotel nur rechts neben dem Tunnel (Stadtseite), zur Meerseite bleibt alles frei */
-          for (let lz = -FHZ; lz <= FHZ && ok; lz += 5) for (let lx = -FHX; lx <= FHX && ok; lx += 2) { const x = q.x + lx * c + lz * sn, z = q.z - lx * sn + lz * c, [d2, j] = spiNear(x, z); if (Math.sqrt(d2) < Math.max(WL[j], WR[j]) + 1.5) ok = false; }
-          if (ok) return q; } return trackAt(FS, -seaS * 90); })(), entY = ELEV[Math.floor(modL(FS) / DS) % N];   /* Fassade steht auf Straßenhöhe direkt neben der Röhre, nicht oben am Hang */
-      const fh = new THREE.Mesh(new THREE.BoxGeometry(2 * FHX, 30, 2 * FHZ).translate(0, H + 15.4, 0), facadeMat({ wall: '#f4f2ee', frame: '#ffffff', balcony: '#ffffff', glass: '#56616c', glassTop: '#b9c6d2', litP: .25, emiI: .7, roof: '#d8d4cc', seed: 27, bays: 14, floors: 8, bayM: 4.6, floorM: 3.8, relief: 5 }));
-      fh.position.set(ent.x, entY, ent.z); fh.rotation.y = ent.h; fh.userData.fixed = true; trackGroup.add(fh);
-      { // Sockel: der Hotelbau steht auf dem Hang – geschlossene Steinwände vom Boden bis unter den Bau, nur die Tunnelröhre bleibt offen (sonst Blick unter den schwebenden Bau)
-        const ch = Math.cos(ent.h), sh = Math.sin(ent.h), toW = (lx, lz) => [ent.x + lx * ch + lz * sh, ent.z - lx * sh + lz * ch];
-        const iA = Math.floor(modL(sA - 40) / DS), iB = Math.floor(modL(sB + 40) / DS), inTube = (x, z) => { for (let i = iA; i !== iB; i = (i + 1) % N) { const lat = (x - PX[i]) * RX[i] + (z - PZ[i]) * RZ[i], lon = (x - PX[i]) * TX[i] + (z - PZ[i]) * TZ[i]; if (Math.abs(lon) < DS && lat > -(wallAt(i, -1) + 1.2) && lat < wallAt(i, 1) + 1.2) return true; } return false; };
-        const per = [], hx = FHX, hz = FHZ; for (const [x0, z0, x1, z1] of [[-hx, -hz, hx, -hz], [hx, -hz, hx, hz], [hx, hz, -hx, hz], [-hx, hz, -hx, -hz]]) { const n = Math.ceil(Math.hypot(x1 - x0, z1 - z0)); for (let k = 0; k < n; k++) per.push([x0 + (x1 - x0) * k / n, z0 + (z1 - z0) * k / n]); }
-        const pos = [], uv = [], y0 = -26, y1 = H + 0.45; let u = 0;
-        for (let k = 0; k < per.length; k++) { const a = per[k], b = per[(k + 1) % per.length], A = toW(...a), B = toW(...b), du = Math.hypot(b[0] - a[0], b[1] - a[1]);
-          const Mi = [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2], [, mj] = spiNear(...Mi), city = ((Mi[0] - PX[mj]) * RX[mj] + (Mi[1] - PZ[mj]) * RZ[mj]) * seaS < 0;   /* nur Stadtseite: zur Meerseite bleibt der Bau offen */
-          if (city && !inTube(...A) && !inTube(...B) && !inTube(...Mi)) { pos.push(a[0], y0, a[1], b[0], y0, b[1], b[0], y1, b[1], a[0], y0, a[1], b[0], y1, b[1], a[0], y1, a[1]); uv.push(u / 6, y0 / 6, (u + du) / 6, y0 / 6, (u + du) / 6, y1 / 6, u / 6, y0 / 6, (u + du) / 6, y1 / 6, u / 6, y1 / 6); }
-          u += du; }
-        const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.computeVertexNormals();
-        const putz = lam({ color: 0xe3d6bf, roughness: .85, side: THREE.DoubleSide }), bm = new THREE.Mesh(g, putz);   /* heller Putz wie die Hotelfassade (Foto) */
-        bm.position.copy(fh.position); bm.rotation.y = ent.h; bm.receiveShadow = true; bm.userData.fixed = true; trackGroup.add(bm);
-        { // Portalwand zwischen Tunnelröhre und Hotelfassade (rechts neben der Einfahrt), damit kein Spalt zum Hang bleibt
-          const c0 = trackAt(FS, 0), oE = Math.hypot(ent.x - c0.x, ent.z - c0.z) - FHX + 2, i0 = Math.floor(modL(sA) / DS) % N, e = ELEV[i0], P = [], w0 = Wd(sA, -seaS) - 0.2;
-          for (let s2 = sA; s2 < FS - FHZ + 2; s2 += 2) { const a = trackAt(s2, -seaS * w0), b = trackAt(s2, -seaS * Math.max(w0 + 1, oE)), a2 = trackAt(s2 + 2, -seaS * w0), b2 = trackAt(s2 + 2, -seaS * Math.max(w0 + 1, oE)); if (s2 === sA) P.push(a.x, e - 4, a.z, b.x, e - 4, b.z, b.x, e + H + 0.45, b.z, a.x, e - 4, a.z, b.x, e + H + 0.45, b.z, a.x, e + H + 0.45, a.z);
-            P.push(a.x, e + H + 0.45, a.z, b.x, e + H + 0.45, b.z, b2.x, e + H + 0.45, b2.z, a.x, e + H + 0.45, a.z, b2.x, e + H + 0.45, b2.z, a2.x, e + H + 0.45, a2.z); }   /* Stirnwand + Deckel bis zur Fassade */
-          const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); pg.computeVertexNormals(); const pm = new THREE.Mesh(pg, putz); pm.userData.fixed = true; pm.receiveShadow = true; trackGroup.add(pm); }
- }
-      { const bm = lam({ color: 0xffffff, emissive: new THREE.Color(0.18, 0.18, 0.18) }), bp = []; for (let f = 1; f <= 8; f++) for (const sx of [-1, 1]) { bp.push([box(1.4, 0.28, 2 * FHZ, sx * (FHX + 0.6), H + 0.4 + f * 3.8 - 0.2, 0), null]); bp.push([box(2 * FHX + 2.6, 0.28, 1.4, 0, H + 0.4 + f * 3.8 - 0.2, sx * (FHZ + 0.6)), null]); bp.push([box(2 * FHX + 2.6, 1.0, 0.12, 0, H + 0.4 + f * 3.8 + 0.3, sx * (FHZ + 1.25)), null]); }   /* durchgehende weiße Balkonbänder wie am echten Fairmont */
-        const bb = new THREE.Mesh(mergeParts(bp), bm); bb.position.copy(fh.position); bb.rotation.y = ent.h; bb.userData.fixed = true; trackGroup.add(bb); } excl.push([ent.x, ent.z, 80]);
+      // Hotel über der Einfahrt (nach Referenzfotos): das Portal ist eine dunkle Öffnung in der hellen Hotelfassade, rotes Banner darüber.
+      // Der Bau reicht von der meerseitigen Tunnelwand zur Stadtseite; rechts neben der Röhre ist die Fassade bis zum Boden geschlossen, zur Meerseite bleibt alles offen.
+      const BAYF = 4.6, FHZ = 13 * BAYF / 2, FS = sA + FHZ, iF = Math.floor(modL(FS) / DS) % N, entY = ELEV[iF], cX = -seaS * RX[iF], cZ = -seaS * RZ[iF], tX = TX[iF], tZ = TZ[iF], O = trackAt(FS, 0);
+      const loc = (x, z) => [(x - O.x) * cX + (z - O.z) * cZ, (x - O.x) * tX + (z - O.z) * tZ];   /* lx: zur Stadtseite, lz: in Fahrtrichtung */
+      let L0 = 1e9; for (let s2 = sA; s2 <= sA + 2 * FHZ; s2 += 2) { const q = trackAt(s2, seaS * (Wd(s2, seaS) + 0.9)); L0 = Math.min(L0, loc(q.x, q.z)[0]); }   /* Kante über der meerseitigen Tunnelwand */
+      let L1 = 34; for (; L1 > 14; L1 -= 1) { let ok = true; for (let lz = -FHZ; lz <= FHZ && ok; lz += 4) for (let lx = L0; lx <= L1 && ok; lx += 2) { const x = O.x + cX * lx + tX * lz, z = O.z + cZ * lx + tZ * lz, [d2, j] = spiNear(x, z); let dj = Math.abs(j - iF); dj = Math.min(dj, N - dj); if (dj * DS > FHZ + 60 && Math.sqrt(d2) < Math.max(WL[j], WR[j]) + 2) ok = false; } if (ok) break; }   /* nicht in höher liegende Strecke (Mirabeau/Portier) hinein */
+      const W2 = Math.max(4, Math.round((L1 - L0) / BAYF)) * BAYF / 2, mx = L0 + W2,   /* Breite auf ganze Fensterachsen: keine angeschnittenen Fenster an den Hauskanten */ rotY = Math.atan2(-cZ, cX), cen = [O.x + cX * mx, O.z + cZ * mx];
+      const YT = H + 30.4, fm = facadeMat({ wall: '#e9e0cf', frame: '#ffffff', balcony: '#ffffff', glass: '#56616c', glassTop: '#b9c6d2', litP: .25, emiI: .7, roof: '#d8d4cc', seed: 27, bays: 12, floors: 8, bayM: BAYF, floorM: 3.8, relief: 5 });
+      const fg = new THREE.BoxGeometry(2 * W2, YT - H - 0.4, 2 * FHZ).translate(0, (YT + H + 0.4) / 2, 0);
+      { const P = fg.attributes.position, Nn = fg.attributes.normal, fu = new Float32Array(P.count * 3); for (let k = 0; k < P.count; k++) { fu[k * 3] = Math.abs(Nn.getX(k)) > 0.5 ? P.getZ(k) + FHZ : P.getX(k) + W2; fu[k * 3 + 1] = P.getY(k) - H - 0.4; fu[k * 3 + 2] = 7; } fg.setAttribute('facUV', new THREE.BufferAttribute(fu, 3)); }   /* Fassade beginnt an jeder Kante mit einer vollen Fensterachse */
+      const fh = new THREE.Mesh(fg, fm); fh.position.set(cen[0], entY, cen[1]); fh.rotation.y = rotY; fh.userData.fixed = true; trackGroup.add(fh);
+      { const bm = lam({ color: 0xffffff, emissive: new THREE.Color(0.18, 0.18, 0.18) }), bp = []; for (let f = 1; f <= 8; f++) for (const sx of [-1, 1]) { const y = H + 0.4 + f * 3.8; bp.push([box(1.4, 0.28, 2 * FHZ, sx * (W2 + 0.6), y - 0.2, 0), null]); bp.push([box(2 * W2 + 2.6, 0.28, 1.4, 0, y - 0.2, sx * (FHZ + 0.6)), null]); bp.push([box(2 * W2 + 2.6, 1.0, 0.12, 0, y + 0.3, sx * (FHZ + 1.25)), null]); }   /* durchgehende weiße Balkonbänder */
+        const bb = new THREE.Mesh(mergeParts(bp), bm); bb.position.copy(fh.position); bb.rotation.y = rotY; bb.userData.fixed = true; trackGroup.add(bb); }
+      { // Erdgeschoss: geschlossene helle Wände vom Boden bis unter den Bau – nur auf der Stadtseite und nie in der Tunnelröhre
+        const iA = Math.floor(modL(sA - 20) / DS), iB = Math.floor(modL(sB + 20) / DS), inTube = (x, z) => { for (let i = iA; i !== iB; i = (i + 1) % N) { const lat = (x - PX[i]) * RX[i] + (z - PZ[i]) * RZ[i], lon = (x - PX[i]) * TX[i] + (z - PZ[i]) * TZ[i]; if (Math.abs(lon) < DS && lat > -(wallAt(i, -1) + 1.0) && lat < wallAt(i, 1) + 1.0) return true; } return false; };
+        const wpt = (lx, lz) => [O.x + cX * lx + tX * lz, O.z + cZ * lx + tZ * lz], per = []; for (const [x0, z0, x1, z1] of [[L0, -FHZ, L1, -FHZ], [L1, -FHZ, L1, FHZ], [L1, FHZ, L0, FHZ]]) { const n = Math.ceil(Math.hypot(x1 - x0, z1 - z0)); for (let k = 0; k < n; k++) per.push([x0 + (x1 - x0) * k / n, z0 + (z1 - z0) * k / n, x0 + (x1 - x0) * (k + 1) / n, z0 + (z1 - z0) * (k + 1) / n]); }
+        const P = [], e = entY, y0 = e - 22, y1 = e + H + 0.45;
+        for (const [ax, az, bx, bz] of per) { const A = wpt(ax, az), B = wpt(bx, bz), M2 = wpt((ax + bx) / 2, (az + bz) / 2); if (inTube(...A) || inTube(...B) || inTube(...M2)) continue; const [, mj] = spiNear(...M2); if (((M2[0] - PX[mj]) * RX[mj] + (M2[1] - PZ[mj]) * RZ[mj]) * seaS > 0) continue;
+          P.push(A[0], y0, A[1], B[0], y0, B[1], B[0], y1, B[1], A[0], y0, A[1], B[0], y1, B[1], A[0], y1, A[1]); }
+        { const wC = Wd(sA, -seaS) - 0.1, A = trackAt(sA - 0.2, -seaS * wC), B = trackAt(sA - 0.2, -seaS * (wC + 4)); P.push(A.x, y0, A.z, B.x, y0, B.z, B.x, y1, B.z, A.x, y0, A.z, B.x, y1, B.z, A.x, y1, A.z); }   /* Portalwange: Fassade schließt bündig an die Tunnelwand an (kein Spalt) */
+        const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); pg.computeVertexNormals(); const pm = new THREE.Mesh(pg, lam({ color: 0xe6dccb, roughness: .85, side: THREE.DoubleSide })); pm.userData.fixed = true; pm.receiveShadow = true; trackGroup.add(pm); }
+      { // rotes Banner über der Portalöffnung (Referenz: „MONTE-CARLO“-Schriftzug an der Fassade)
+        const bt = canvasTex(1024, 128, (g, w, h) => { g.fillStyle = '#c8102e'; g.fillRect(0, 0, w, h); g.fillStyle = '#ffffff'; g.font = 'bold 86px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('MONTE-CARLO', w / 2, h / 2 + 4); }); bt.userData.own = true;
+        const A = trackAt(sA - 0.25, seaS * (Wd(sA, seaS) + 0.6)), B = trackAt(sA - 0.25, -seaS * (Wd(sA, -seaS) + 0.6)), L = seaS > 0 ? B : A, R = seaS > 0 ? A : B, y0 = entY + H + 0.6, y1 = entY + H + 3.0;
+        const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute([L.x, y0, L.z, R.x, y0, R.z, R.x, y1, R.z, L.x, y0, L.z, R.x, y1, R.z, L.x, y1, L.z], 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1], 2)); g.computeVertexNormals();
+        const bn = new THREE.Mesh(g, lam({ map: bt, side: THREE.DoubleSide, emissive: new THREE.Color(0.08, 0.02, 0.02) })); bn.userData.fixed = true; trackGroup.add(bn); }
+      excl.push([cen[0], cen[1], 50]);
       const lint = []; for (let t = -Wd(sA, -1); t <= Wd(sA, 1); t += 0.9) { const q = trackAt(sA - 0.3, t); lint.push(q); }
       const ll = new THREE.InstancedMesh(new THREE.SphereGeometry(0.16, 6, 4), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 1.9, 1.4) }), lint.length); lint.forEach((q, k) => { m4.makeTranslation(q.x, H - 0.25, q.z); ll.setMatrixAt(k, m4); }); trackGroup.add(ll); }
     // Fürstenpalast auf dem Felsen (Monaco-Ville): steiler Felssporn, darauf der helle Palast mit Zinnen
@@ -4225,6 +4240,26 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
   if (TH.trees === 'palms' || TH.city) {
     const m4 = new THREE.Matrix4(), qq = new THREE.Quaternion(), sc = new THREE.Vector3(), pv = new THREE.Vector3(), cc = new THREE.Color();
     const blds = [], bGrid = new Map(), LMP = builtFootprints(trackGroup); window.__LMP = LMP; let tries = 0; const n = Math.round((S.gfx === 'ultra' ? 2000 : hi ? 1400 : 600) * (TH.vegas ? 1.3 : 1) * (TRK.cityMul ?? 1));
+    if (TRK.mc && TRK.mc.tun) { // Monaco: die Plätze zwischen Haarnadel, Mirabeau, Portier und Tunnelanfahrt sind dicht bebaut (statt Hang mit Wellen) – größte freie Rechtecke werden zu Häuserblöcken
+      const sT = TRK.mc.tun[0] * L, hp = []; for (let s2 = sT - 380; s2 <= sT + 20; s2 += 6) { const q = trackAt(s2, 0); hp.push([q.x, q.z]); }
+      hp.sort((a, b) => a[0] - b[0] || a[1] - b[1]); const cr2 = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]), lo2 = [], up2 = [];
+      for (const p of hp) { while (lo2.length >= 2 && cr2(lo2[lo2.length - 2], lo2[lo2.length - 1], p) <= 0) lo2.pop(); lo2.push(p); }
+      for (const p of hp.slice().reverse()) { while (up2.length >= 2 && cr2(up2[up2.length - 2], up2[up2.length - 1], p) <= 0) up2.pop(); up2.push(p); }
+      const hull = [...lo2.slice(0, -1), ...up2.slice(0, -1)];
+      const inPoly = (P, x, z) => { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const [xi, zi] = P[i], [xj, zj] = P[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };
+      let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (const [x, z] of hull) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z); }
+      const C = 3, gw = Math.ceil((x1 - x0) / C), gh = Math.ceil((z1 - z0) / C), F = new Uint8Array(gw * gh), E = new Float32Array(gw * gh);
+      for (let b = 0; b < gh; b++) for (let a = 0; a < gw; a++) { const x = x0 + (a + 0.5) * C, z = z0 + (b + 0.5) * C; if (!inPoly(hull, x, z) || inMarina(x, z)) continue; const [d2, j] = spiNear(x, z); if (Math.sqrt(d2) < Math.max(WL[j], WR[j]) + 2.5) continue; if (excl.some(e2 => (x - e2[0]) ** 2 + (z - e2[1]) ** 2 < e2[2] * e2[2])) continue; F[b * gw + a] = 1; E[b * gw + a] = ELEV[j]; }
+      for (let it = 0; it < 24; it++) {   // größtes freies Rechteck (Histogramm-Verfahren), dann belegen
+        const Hh = new Int32Array(gw); let best = null;
+        for (let b = 0; b < gh; b++) { for (let a = 0; a < gw; a++) Hh[a] = F[b * gw + a] ? Hh[a] + 1 : 0;
+          for (let a = 0; a < gw; a++) { let mh = 1e9; for (let a2 = a; a2 < gw && Hh[a2] > 0; a2++) { mh = Math.min(mh, Hh[a2]); const wc = a2 - a + 1, area = wc * mh; if (wc >= 3 && mh >= 3 && (!best || area > best.area)) best = { area, a, a2, b1: b - mh + 1, b2: b }; } } }
+        if (!best || best.area < 12) break;
+        let eMin = 1e9, eMax = -1e9; for (let b = best.b1; b <= best.b2; b++) for (let a = best.a; a <= best.a2; a++) { const k = b * gw + a; F[k] = 0; eMin = Math.min(eMin, E[k]); eMax = Math.max(eMax, E[k]); }
+        for (let b = Math.max(0, best.b1 - 1); b <= Math.min(gh - 1, best.b2 + 1); b++) for (let a = Math.max(0, best.a - 1); a <= Math.min(gw - 1, best.a2 + 1); a++) F[b * gw + a] = 0;   /* 3 m Gasse zum nächsten Block */
+        const w = (best.a2 - best.a + 1) * C, l = (best.b2 - best.b1 + 1) * C, cx = x0 + best.a * C + w / 2, cz = z0 + best.b1 * C + l / 2, hgt = (eMax - eMin) + 12 + Math.random() * 14;
+        blds.push([cx, cz, w, hgt, l, 0]); const k3 = (Math.floor(cx / 60) + 512) * 4096 + Math.floor(cz / 60) + 512; let L3 = bGrid.get(k3); if (!L3) bGrid.set(k3, L3 = []); L3.push([cx, cz, w / 2 + 0.6, l / 2 + 0.6, 1, 0]); excl.push([cx, cz, Math.hypot(w, l) / 2]); }
+    }
     while (blds.length < n && tries < n * 20) {
       tries++;
       const ang2 = Math.random() * Math.PI * 2, rad = 380 + Math.pow(Math.random(), 0.7) * 1500; let cxp = (minX + maxX) / 2 + Math.cos(ang2) * rad * 0.8, czp = (minZ + maxZ) / 2 + Math.sin(ang2) * rad;
@@ -4307,11 +4342,13 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
     const ridge = a => { let v = 0, w = 0; for (const [f, p, am] of harm) { v += am * (0.5 + 0.5 * Math.sin(a * f + p)); w += am; } v = Math.pow(v / w, 1.5); for (const [f, p, am] of pk) { const r = 1 - Math.abs(Math.sin(a * f * 0.5 + p)); v += am * r * r * (0.4 + v); } return v / 1.12; };
     const n2 = (a, b) => Math.sin(a * 12.9898 + b * 78.233) * 0.5 + Math.sin(a * 39.3468 + b * 11.135) * 0.5;
     const ring = (R0, depth, Hbase, Hamp, rows, seg, pale) => {
-      const pos = [], colr = [], idx = [], hrel = [], uvr = [];
+      const pos = [], colr = [], idx = [], hrel = [], uvr = [], sea0 = new Float32Array(seg + 1);
+      if (TRK.mc) for (let k = 0; k <= seg; k++) { const a = k / seg * Math.PI * 2; let c = 0; for (const f of [0, 0.3, 0.7]) { const rad = R0 + f * depth; if (inMarina(cxm + Math.cos(a) * rad, czm + Math.sin(a) * rad)) c++; } sea0[k] = c / 3; }
+      const seaW = new Float32Array(seg + 1); for (let k = 0; k <= seg; k++) { let m = 0; for (let d = -12; d <= 12; d++) m += sea0[(k + d + seg) % seg]; m /= 25; seaW[k] = Math.min(1, m * 1.6); }   /* Monaco: über dem Meer keine Hügel (Blick aufs offene Meer) */
       for (let k = 0; k <= seg; k++) { const a = k / seg * Math.PI * 2;
         for (let r = 0; r < rows; r++) { const t = r / (rows - 1), rad = R0 + t * depth, gxv = cxm + Math.cos(a) * rad, gzv = czm + Math.sin(a) * rad, rb = RISE ? surfH(gxv, gzv) - (ELMEAN - 10) : 0, prof = Math.sin(Math.min(1, t / 0.6) * Math.PI * 0.5) * (1 - 0.18 * Math.max(0, (t - 0.6) / 0.4));
           const H = TH.mountains ? Hbase + Hamp * ridge(a + t * 0.04 + (pale ? 1.7 : 0)) : TH.hills.h + TH.hills.v * ridge(a * 0.7) + 15 * n2(a * 5, t);
-          pos.push(gxv, ELMEAN - 10 + rb + H * prof + (RISE ? 0.5 : 0), gzv); colr.push(0, 0, 0); hrel.push(H * prof - 10); uvr.push(a * R0 / 70, (rad - R0 + H * prof) / 70); } }
+          pos.push(gxv, ELMEAN - 10 + rb + H * prof * (1 - seaW[k]) - 140 * seaW[k] + (RISE ? 0.5 : 0), gzv); colr.push(0, 0, 0); hrel.push(H * prof - 10); uvr.push(a * R0 / 70, (rad - R0 + H * prof) / 70); } }
       for (let k = 0; k < seg; k++) for (let r = 0; r < rows - 1; r++) { const a = k * rows + r, b2 = a + rows; idx.push(a, b2, a + 1, b2, b2 + 1, a + 1); }
       const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(colr, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uvr, 2)); g.setIndex(idx); g.computeVertexNormals();
       const P = g.attributes.position, Nn = g.attributes.normal, C = g.attributes.color, maxH = TH.mountains ? Hbase + Hamp : TH.hills.h + TH.hills.v;
@@ -5913,7 +5950,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v57'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v58'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
