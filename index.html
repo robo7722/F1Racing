@@ -2384,7 +2384,7 @@ function mcAir(x, z, i) { return !!(TRK && TRK.mc) && !FLAT && surfH(x, z) < ELE
 // Monaco: Bodenfarbe nach Höhe und Neigung – unten Stadt (Stein), oberhalb Macchia, steile Hänge heller Kalkfels
 function mcGroundTint(ch) { const p = ch.geometry.attributes.position, n = ch.geometry.attributes.normal, c = new Float32Array(p.count * 3);
   for (let k = 0; k < p.count; k++) { const y = p.getY(k), ny = n.getY(k), f = clamp((y - 70) / 160, 0, 1), rock = clamp((0.72 - ny) / 0.2, 0, 1) * clamp((y - 60) / 80, 0, 1);
-    let r = lerp(1, 0.42, f), g = lerp(1, 0.52, f), b = lerp(1, 0.34, f); r = lerp(r, 0.84, rock); g = lerp(g, 0.81, rock); b = lerp(b, 0.74, rock); c[k * 3] = r; c[k * 3 + 1] = g; c[k * 3 + 2] = b; }
+    let r = lerp(0.62, 0.42, f), g = lerp(0.61, 0.52, f), b = lerp(0.6, 0.34, f);   /* Stadt: graue Straßen und Plätze */ r = lerp(r, 0.84, rock); g = lerp(g, 0.81, rock); b = lerp(b, 0.74, rock); c[k * 3] = r; c[k * 3 + 1] = g; c[k * 3 + 2] = b; }
   ch.geometry.setAttribute('color', new THREE.BufferAttribute(c, 3)); ch.material.vertexColors = true; ch.material.needsUpdate = true; }
 // Monaco: Berge hinter der Stadt aus dem echten Höhenraster (Tête de Chien, Mont Agel, Hänge von Beausoleil und Cap-d'Ail) bis 8 km – über dem Meer nichts
 function mcMountains(cx, cz) {
@@ -2393,7 +2393,7 @@ function mcMountains(cx, cz) {
   for (let k = 0; k < seg; k++) for (let r = 0; r < rows - 1; r++) { const a = k * rows + r, b = a + rows; idx.push(a, b, a + 1, b, b + 1, a + 1); }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
   const P = g.attributes.position, Nn = g.attributes.normal; for (let i = 0; i < P.count; i++) { const y = P.getY(i), ny = Nn.getY(i), nz = Math.sin(P.getX(i) * 0.013) * Math.sin(P.getZ(i) * 0.011);
-    let r = .78, gg = .72, b = .62;   // unten: helle Hangstädte (Beausoleil, Cap-d'Ail, Roquebrune)
+    let r = .66, gg = .55, b = .47;   // unten: dicht bebaute Hangstädte (Dächer) (Beausoleil, Cap-d'Ail, Roquebrune)
     const f = clamp((y - 110) / 220, 0, 1); r = lerp(r, .31 + nz * .03, f); gg = lerp(gg, .37 + nz * .03, f); b = lerp(b, .25, f);   // darüber Macchia
     const rock = clamp((0.74 - ny) / 0.2, 0, 1) * clamp((y - 150) / 120, 0, 1); r = lerp(r, .66, rock); gg = lerp(gg, .64, rock); b = lerp(b, .59, rock);   // Kalkfelsen der Steilwände
     col.push(r, gg, b); }
@@ -2435,7 +2435,7 @@ function mcTerraceWalls(inMarina) {
 function nearAfterTun(x, z) { if (!TRK.mc || !TRK.mc.tun) return false; const b = TRK.mc.tun[1] * L; for (let s2 = b - 20; s2 <= b + 520; s2 += 10) { const i = Math.floor(modL(s2) / DS) % N; if ((x - PX[i]) ** 2 + (z - PZ[i]) ** 2 < 90 * 90) return true; } return false; }
 // Monaco: tiefste Streckenhöhe im Umkreis von 36 m – der grobe Boden (Gitter ~15 m) darf nicht von einem höheren Ast über die Fahrbahn eines tieferen spannen
 function mcLow(x, z) { const cx = Math.floor(x / 32), cz = Math.floor(z / 32); let m = 1e9; for (let a = -2; a <= 2; a++) for (let b = -2; b <= 2; b++) { const L2 = SPI.get((cx + a + 4096) * 8192 + cz + b + 4096); if (!L2) continue; for (const j of L2) { const dx = x - PX[j], dz = z - PZ[j]; if (dx * dx + dz * dz < 1296 && ELEV[j] < m) m = ELEV[j]; } } return m; }
-function placeY(x, z) { if (FLAT) return 0; if (MC_SEA && MC_SEA(x, z)) return 0;   /* Jachten, Stege: Meereshöhe */ if (TRK.mc) { const [d2, j] = spiNear(x, z), d = Math.sqrt(d2); if (d <= Math.max(WL[j], WR[j]) + 6) return ELEV[j]; }   /* Monaco: alles direkt an der Strecke (Insel, Pfosten, Tafeln) steht auf Streckenhöhe, nicht auf dem tiefer liegenden Platz */ return surfH(x, z); }
+function placeY(x, z) { if (FLAT) return 0; if (MC_SEA && MC_SEA(x, z)) return 0;   /* Jachten, Stege: Meereshöhe */ if (TRK.mc) { const [d2, j] = spiNear(x, z, -1, 0, 1), d = Math.sqrt(d2);   /* nur Nachbarzellen absuchen: weit draußen am Hang sonst sehr teuer */ if (d <= Math.max(WL[j], WR[j]) + 6) return ELEV[j]; }   /* Monaco: alles direkt an der Strecke (Insel, Pfosten, Tafeln) steht auf Streckenhöhe, nicht auf dem tiefer liegenden Platz */ return surfH(x, z); }
 // Boden in Kacheln (gemeinsame Vertex-Daten -> keine Nähte), damit nur Sichtbares gezeichnet wird
 function tileGround(root, T = 6) {
   for (const ch of [...root.children]) {
@@ -3680,20 +3680,26 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       const fA = facadeMat({ wall: '#efe2c8', frame: '#fbf5ea', balcony: '#fff9f0', glass: '#4c5966', glassTop: '#b0bfcc', litP: .14, emiI: .55, roof: '#a3705c', seed: 53, bays: 10, floors: 14, bayM: 4.2, floorM: 3.2, relief: 4 });
       const fB = facadeMat({ wall: '#f1d7c0', frame: '#fbf3ea', balcony: '#ffffff', glass: '#4f5a64', glassTop: '#b4c2ce', litP: .14, emiI: .55, roof: '#a3705c', seed: 57, bays: 10, floors: 14, bayM: 4.2, floorM: 3.2, relief: 4 }), roofB = lam({ color: 0xbdb4a6 });
       let nb = 0; const occ = [];   /* [s, lat] aller OSM-Ecken: dahinter/daneben füllen die Blöcke */
-      const addB = (R, y0, top) => { const g = osmExtrude(R, top - y0, nb++ % 2 ? fB : fA, roofB, y0, 4.2, 3.2); g.userData.fixed = true; trackGroup.add(g); const cx = R.reduce((a2, q) => a2 + q[0], 0) / R.length, cz = R.reduce((a2, q) => a2 + q[1], 0) / R.length; excl.push([cx, cz, Math.max(...R.map(q => Math.hypot(q[0] - cx, q[1] - cz))) + 2]); };
+      const addB = (R, y0, top) => { const g = osmExtrude(R, top - y0, nb++ % 2 ? fB : fA, roofB, y0, 4.2, 3.2); g.userData.fixed = true; trackGroup.add(g); const cx = R.reduce((a2, q) => a2 + q[0], 0) / R.length, cz = R.reduce((a2, q) => a2 + q[1], 0) / R.length; excl.push([cx, cz, Math.max(...R.map(q => Math.hypot(q[0] - cx, q[1] - cz))) + 2, R]); };   /* Grundriss mitgeben: die Hangbebauung prüft genau statt mit dem Kreis */
       const jit = k => (Math.sin(k * 12.9898) * 43758.5453 % 1 + 1) % 1;
       for (const b of MC_OSM.b) { const R = pushOut(b.r, 1.6), cx = R.reduce((a2, q) => a2 + q[0], 0) / R.length, cz = R.reduce((a2, q) => a2 + q[1], 0) / R.length, c = nearLow(cx, cz); if (c.lat * sd < 0) continue;
-        const pr = R.map(([x, z]) => nearLow(x, z)); pr.forEach(q => occ.push([q.s, q.lat * sd])); const terr = c.s < cA, e = ELEV[c.i], up = upper(c.s);
+        const pr = R.map(([x, z]) => nearLow(x, z)); occ.push([Math.min(...pr.map(q => q.s)), Math.max(...pr.map(q => q.s)), Math.max(...pr.map(q => q.lat * sd))]); const terr = c.s < cA, e = ELEV[c.i], up = upper(c.s);
         let top = Math.max(up.e + 7, e + (terr ? HM + 9 : 16)) + jit(nb + 3) * 7; if (/portobello|castellara/.test(b.n)) top = Math.max(top, e + 42);   /* 13 Geschosse (Fotos) */
         addB(R, e - (terr ? 2 : 4), top); }
-      const fill = (sa0, sb0, front, base) => { for (let s2 = sa0; s2 < sb0 - 8; ) { const s3 = Math.min(sb0, s2 + 22 + jit(s2) * 8), i2 = Math.floor(modL(s2) / DS) % N, i3 = Math.floor(modL(s3) / DS) % N, ua = upper(s2), ub = upper(s3);
-          let fa = wallAt(i2, sd) + front, fb = wallAt(i3, sd) + front; for (const [os, ol] of occ) if (os > s2 - 3 && os < s3 + 3) { fa = Math.max(fa, ol + 2); fb = Math.max(fb, ol + 2); }   /* hinter OSM-Häusern */
+      const fill = (sa0, sb0, front, base) => { for (let s2 = sa0; s2 < sb0 - 8; ) { let s3 = Math.min(sb0, s2 + 22 + jit(s2) * 8); for (const [o0] of occ) if (o0 > s2 + 6 && o0 < s3 + 3) s3 = Math.min(s3, o0 - 0.5);   /* bis direkt an das nächste OSM-Haus, keine Gasse */ const i2 = Math.floor(modL(s2) / DS) % N, i3 = Math.floor(modL(s3) / DS) % N, ua = upper(s2), ub = upper(s3);
+          let fa = wallAt(i2, sd) + front, fb = wallAt(i3, sd) + front; for (const [o0, o1, ol] of occ) if (o1 > s2 && o0 < s3) { fa = Math.max(fa, ol + 1); fb = Math.max(fb, ol + 1); }   /* hinter OSM-Häusern */
           const ba = Math.min(ua.t - 3, fa + 60), bb = Math.min(ub.t - 3, fb + 60);
-          if (ba - fa > 7 && bb - fb > 7) { const P = [trackAt(s2, sd * fa), trackAt(s3, sd * fb), trackAt(s3, sd * bb), trackAt(s2, sd * ba)].map(q => [q.x, q.z]);
+          if (ba - fa > 5 && bb - fb > 5) { const P = [trackAt(s2, sd * fa), trackAt(s3, sd * fb), trackAt(s3, sd * bb), trackAt(s2, sd * ba)].map(q => [q.x, q.z]);
             if (convexPoly(P) && P.every(([x, z]) => trackFree(x, z, 1.5))) { const e = Math.min(ELEV[i2], ELEV[i3]), y0 = base(e), top = Math.max(Math.max(ua.e, ub.e) + 7, y0 + 18) + jit(s2 + 1) * 8; addB(P, y0, top); } }
-          s2 = s3 + 1.5; } };
+          s2 = s3 + 0.5; } };
       fill(sW0 + 2, sW1, 4, e => e + HM - 0.5);   /* auf der Terrasse */
       fill(cB + 8, sTab - 12, 7, e => e - 4);     /* Hafenstraße bis zum Tabac */
+      // durchgehender Sockelbau im ganzen Streifen bis knapp unter den oberen Straßenzug: zwischen den Häusern bleibt kein Pflaster/Hang sichtbar
+      const podM = facadeMat({ wall: '#eadcc3', frame: '#faf4ea', balcony: '#fff8ee', glass: '#4c5966', glassTop: '#b0bfcc', litP: .12, emiI: .5, roof: '#9d958a', seed: 61, bays: 10, floors: 14, bayM: 4.2, floorM: 3.2, relief: 4 }), podR = lam({ color: 0x9d958a });
+      for (const [pa, pb, front, terr] of [[sW0 + 1, sW1, 1.15, true], [cB + 8, sTab - 12, 7, false]]) for (let s2 = pa; s2 < pb - 2; s2 += 8.4) { const s3 = Math.min(pb, s2 + 8.4), i2 = Math.floor(modL(s2) / DS) % N, i3 = Math.floor(modL(s3) / DS) % N, ua = upper(s2), ub = upper(s3);
+        const fa = wallAt(i2, sd) + front, fb = wallAt(i3, sd) + front, ba = ua.t - 2.5, bb = ub.t - 2.5; if (ba - fa < 3 || bb - fb < 3) continue;
+        const P = [trackAt(s2, sd * fa), trackAt(s3, sd * fb), trackAt(s3, sd * bb), trackAt(s2, sd * ba)].map(q => [q.x, q.z]); if (!convexPoly(P)) continue;
+        const e = Math.min(ELEV[i2], ELEV[i3]), y0 = e - 4, top = Math.max(Math.min(ua.e, ub.e) - 1.5, e + (terr ? HM + 4 : 12)), g = osmExtrude(P, top - y0, podM, podR, y0, 4.2, 3.2); g.userData.fixed = true; trackGroup.add(g); }
       // Yacht Club de Monaco (OSM, Fotos): vier Decks wie ein Schiff, hellgraue waagrechte Lamellen vor dunklem Glas, weiße Deckskanten, Masten auf dem Dach
       if (YC) { let e0 = 1e9; for (const [x, z] of YC) { const [, j] = spiNear(x, z); e0 = Math.min(e0, ELEV[j]); }
         const lamT = canvasTex(64, 64, (g, w, h) => { g.fillStyle = '#3b4650'; g.fillRect(0, 0, w, h); g.fillStyle = '#d9dcdf'; for (let y = 8; y < h - 4; y += 7) g.fillRect(0, y, w, 4); g.fillStyle = 'rgba(0,0,0,.25)'; for (let x = 0; x < w; x += 32) g.fillRect(x, 0, 2, h); }); lamT.userData.own = true; lamT.wrapS = lamT.wrapT = THREE.RepeatWrapping;
@@ -4443,18 +4449,26 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       pl.forEach(([x, z], k) => { const s2 = 0.55 + Math.random() * 0.35; qq.setFromAxisAngle(_v2, Math.random() * 6.28); m4.compose(pv.set(x, 0, z), qq, sc.set(s2, s2, s2)); it.setMatrixAt(k, m4); ic.setMatrixAt(k, m4); });
       lawn.receiveShadow = true; trackGroup.add(lawn, it, ic); }
     if (TRK.mc && mcDem()) { // Monaco (Fotos): die Hänge sind lückenlos bebaut – Häuser im dichten Raster auf dem echten Gelände (EU-DEM) bis ~270 m Höhe, kein nackter Boden zwischen den Häusern
-      const hs = [], SP = 23, R = 2300, c0x = (minX + maxX) / 2, c0z = (minZ + maxZ) / 2, rj = (a, b) => { const v = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453; return v - Math.floor(v); };
-      for (let gx = -R; gx <= R; gx += SP) for (let gz = -R; gz <= R; gz += SP) { const x = c0x + gx + (rj(gx, gz) - .5) * 5, z = c0z + gz + (rj(gz, gx) - .5) * 5, h = demH(x, z); if (h < 4 || h > 270 || inMarina(x, z)) continue;
-        const [d] = nearestDist(x, z); if (d < 42) continue;
-        const kx = Math.floor(x / 60), kz = Math.floor(z / 60); let hit = false; for (let a = -1; a <= 1 && !hit; a++) for (let b = -1; b <= 1 && !hit; b++) { const L3 = bGrid.get((kx + a + 512) * 4096 + kz + b + 512); if (L3) for (const Q of L3) if (Math.abs(Q[0] - x) < Q[2] + 13 && Math.abs(Q[1] - z) < Q[3] + 13) { hit = true; break; } }
-        if (hit || excl.some(e => (x - e[0]) ** 2 + (z - e[1]) ** 2 < (e[2] + 6) ** 2)) continue;
-        if (LMP.some(F => Math.hypot(F.cx - x, F.cz - z) < F.r + 14)) continue;
-        const gxD = demH(x + 8, z) - demH(x - 8, z), gzD = demH(x, z + 8) - demH(x, z - 8), slope = Math.hypot(gxD, gzD) / 16, rot = Math.atan2(gzD, -gxD) + (rj(x, z) - .5) * 0.2;   /* längs der Höhenlinie */
-        const w = 15 + rj(x, 1) * 6, l = 15 + rj(z, 2) * 6, hg = 10 + rj(x, z) * 16 + slope * Math.max(w, l);   /* bergseitig steckt das Haus im Hang */
-        if ([[-1, -1], [1, -1], [1, 1], [-1, 1]].some(([u, v]) => !trackFree(x + u * w * .55, z + v * l * .55, 3))) continue;
+      const tH0 = performance.now(), hs = [], SP = 22, R = 2800, c0x = (minX + maxX) / 2, c0z = (minZ + maxZ) / 2, rj = (a, b) => { const v = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453; return v - Math.floor(v); };
+      // Nachschlage-Raster (20 m): nur Zellen nahe der Strecke brauchen die teuren Abstandsprüfungen; Sperrkreise und Bauten je Zelle vorsortiert
+      const nearT = new Set(), ck = (x, z) => Math.floor(x / 20) * 65536 + Math.floor(z / 20); for (let i = 0; i < N; i++) { const r = Math.max(WL[i], WR[i]) + 40; for (let a = -r; a <= r; a += 20) for (let b = -r; b <= r; b += 20) nearT.add(ck(PX[i] + a, PZ[i] + b)); }
+      const pipM = (P, x, z) => { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const [xi, zi] = P[i], [xj, zj] = P[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; }, xH = new Map(), addH = (x, z, r, v) => { for (let a = Math.floor((x - r) / 20); a <= Math.floor((x + r) / 20); a++) for (let b = Math.floor((z - r) / 20); b <= Math.floor((z + r) / 20); b++) { const k = a * 65536 + b; let L4 = xH.get(k); if (!L4) xH.set(k, L4 = []); L4.push(v); } };
+      for (const e of excl) addH(e[0], e[1], e[2] + 14, e[3] ? { P: e[3] } : [e[0], e[1], e[2] + 2]); for (const F of LMP) addH(F.cx, F.cz, F.r + 16, [F.cx, F.cz, F.r + 4]);   /* je Zelle alles, was ein Haus mit 11 m Halbmaß berühren kann */
+      for (let gx = -R; gx <= R; gx += SP) for (let gz = -R; gz <= R; gz += SP) { const x = c0x + gx + (rj(gx, gz) - .5) * 5, z = c0z + gz + (rj(gz, gx) - .5) * 5, h = demH(x, z); if (h < 1 || h > 380 || inMarina(x, z) || (MC_SEA && MC_SEA(x, z))) continue;
+        const near = nearT.has(ck(x, z)); if (near) { const [d] = nearestDist(x, z); if (d < 14) continue; }
+        const kx = Math.floor(x / 60), kz = Math.floor(z / 60); let hit = false; for (let a = -1; a <= 1 && !hit; a++) for (let b = -1; b <= 1 && !hit; b++) { const L3 = bGrid.get((kx + a + 512) * 4096 + kz + b + 512); if (L3) for (const Q of L3) if (Math.abs(Q[0] - x) < Q[2] + 10 && Math.abs(Q[1] - z) < Q[3] + 10) { hit = true; break; } }
+        if (hit) continue;
+        const gxD = demH(x + 8, z) - demH(x - 8, z), gzD = demH(x, z + 8) - demH(x, z - 8), slope = Math.hypot(gxD, gzD) / 16, rot = Math.atan2(gzD, -gxD) + (rj(x, z) - .5) * 0.2, cr = Math.cos(rot), sr = Math.sin(rot);   /* längs der Höhenlinie */
+        let w = 16 + rj(x, 1) * 4.5, l = 16 + rj(z, 2) * 4.5, ok = false; const L4 = xH.get(ck(x, z));
+        for (const f of [1, 0.7, 0.5]) { const pts = [[0, 0], [-1, -1], [1, -1], [1, 1], [-1, 1], [0, -1], [0, 1], [-1, 0], [1, 0]].map(([u, v]) => [x + u * (w * f / 2 + 0.8) * cr + v * (l * f / 2 + 0.8) * sr, z - u * (w * f / 2 + 0.8) * sr + v * (l * f / 2 + 0.8) * cr]);   /* Grundriss des Hauses in seiner Größe */
+          if (L4 && L4.some(e => e.P ? pts.some(([px, pz]) => pipM(e.P, px, pz)) : pts.some(([px, pz]) => (px - e[0]) ** 2 + (pz - e[1]) ** 2 < e[2] * e[2]))) continue;
+          if (near && !pts.every(([px, pz]) => trackFree(px, pz, 1.5))) continue;
+          w *= f; l *= f; ok = true; break; }
+        if (!ok) continue;   /* in Lücken zwischen Bauten und Straßen: kleinere Häuser statt nacktem Boden */
+        const hg = 10 + rj(x, z) * 16 + slope * Math.max(w, l);   /* bergseitig steckt das Haus im Hang */
         hs.push([x, z, w, hg, l, rot]); }
       if (hs.length) { const ib = new THREE.InstancedMesh(box1, resiM, hs.length); hs.forEach(([x, z, w, h2, l, r], k) => { qq.setFromAxisAngle(_v2, r); m4.compose(pv.set(x, 0, z), qq, sc.set(w, h2, l)); ib.setMatrixAt(k, m4); ib.setColorAt(k, cc.setHex(cols[k % cols.length])); }); trackGroup.add(ib); }
-      window.__mcHang = hs.length; }
+      window.__mcHang = [hs.length, Math.round(performance.now() - tH0)]; }
     const crowns = blds.filter(b => b[3] > 60);   // beleuchtete Dachkronen der Hochhäuser
     const ic = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 1.9, 1.4).multiplyScalar(TH.night ? 1 : 0.55) }), crowns.length);
     crowns.forEach(([x, z, w, h2, l, r], k) => { qq.setFromAxisAngle(_v2, r); m4.compose(pv.set(x, h2 + 1.5, z), qq, sc.set(w * 0.7, 3, l * 0.7)); ic.setMatrixAt(k, m4); });
@@ -6080,7 +6094,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v61'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v62'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
