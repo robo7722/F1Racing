@@ -765,7 +765,7 @@ const TRACKS = {
   nos: { name: 'Nordschleife', full: 'Nürburgring Nordschleife', land: 'Deutschland', km: '20,832 km', laps: 3, pts: TRACK_PTS['ns-1927'], hd: TRACK_HD['ns-1927'], theme: 'nos', nos: NS_DATA, extra: true, noPit: true, noStands: true, bakeRes: 512, bakeCell: 256 },
   rbr: { bull: [-70.1, 18.6], name: 'Red Bull Ring', full: 'Spielberg, Steiermark', land: 'Österreich', km: '4,318 km', laps: 71, pts: TRACK_PTS['at-1969'], hd: TRACK_HD['at-1969'], theme: 'rbr', stands: [[-380, 150, 'opp', 46], [240, 340, 'out', 40], [420, 900, 'L', 46], [2040, 2240, 'out', 40], [3790, 3920, 'out', 40]] },
   sil: { name: 'Silverstone', osm: OSM_LM.sil, full: 'Silverstone Circuit', land: 'Großbritannien', km: '5,891 km', laps: 52, pts: TRACK_HD['gb-1948'].pts.filter((_, k) => k % 3 === 0), hd: TRACK_HD['gb-1948'], theme: 'sil', wing: true, stands: [[-250, -50, 'opp', 44], [40, 230, 'opp', 44], [320, 440, 'out', 40], [560, 700, 'out', 40], [840, 960, 'out', 40], [2080, 2300, 'out', 40], [2420, 2600, 'out', 40], [2650, 2850, 'out', 44], [2990, 3180, 'out', 40], [3800, 4000, 'out', 44], [4950, 5160, 'out', 40], [5440, 5540, 'out', 40], [5560, 5800, 'out', 40]] },
-  mc: { name: 'Monaco', full: 'Circuit de Monaco', land: 'Monaco', km: '3,337 km', laps: 78, pts: TRACK_HD['mc-1929'].pts.filter((_, k) => k % 3 === 0), hd: TRACK_HD['mc-1929'], theme: 'mc', standDep: 12, stands: [[-160, 120, 'opp', 40], [2150, 2650, 'in', 40]], mc: MC_LM, city: MC_LM.city, citySp: [520, 340], cityMul: 1.5, cityMinD: 26, cityH: [22, 115], resiTall: true },
+  mc: { name: 'Monaco', full: 'Circuit de Monaco', land: 'Monaco', km: '3,337 km', laps: 78, pts: TRACK_HD['mc-1929'].pts.filter((_, k) => k % 3 === 0), hd: TRACK_HD['mc-1929'], theme: 'mc', standDep: 12, stands: [[-160, 120, 'opp', 40], [2150, 2650, 'in', 40]], standSkip: [[2140, 2200]] /* Tribüne nach dem Tunnel (Tabac-Seite) steckte im Hang: entfernt */, mc: MC_LM, city: MC_LM.city, citySp: [520, 340], cityMul: 1.5, cityMinD: 26, cityH: [22, 115], resiTall: true },
   mtl: { name: 'Montréal', full: 'Circuit Gilles Villeneuve', land: 'Kanada', km: '4,361 km', laps: 70, pts: TRACK_HD['ca-1978'].pts.filter((_, k) => k % 3 === 0), hd: TRACK_HD['ca-1978'], theme: 'mtl', mtl: { hp: [-401, -1567], sa: [-214, -1086], sb: [-70, -452], c: [-275, -564], osm: OSM_LM.mtl } },
 };
 const THEMES = {
@@ -2179,7 +2179,7 @@ function bankY(i, lat) { const b = BANK ? BANK[i] : 0; if (!b) return 0; const q
 function bankBreaks(i) { const qe = HW[i] + BK_IN; return [0, KSD * qe, KSD * (qe + BK_OUT)]; }   // Knickstellen (seitlich), dort werden Streifen unterteilt
 function bankAt(c) { if (!BANK) return 0; const f = modL(c.d) / DS, i0 = Math.floor(f) % N, i1 = (i0 + 1) % N, t = f - Math.floor(f); return bankY(i0, c.lat) * (1 - t) + bankY(i1, c.lat) * t; }
 const HOTEL_T = { value: 0 };
-let BANDW = null, HORIZ = null, BANDS = [], MC_SEA = null, MC_ISL = null, MJ = null, SPI = null, PAVEZ = null, KERBL = null, KERBR = null, REFNW = null, WTL = null, WTR = null, GOL = null, GOR = null, HILLW = null, RISE = null, ELEV, SLOPE, FLAT = true, ELMEAN = 0, HG = null, HW, NOWALL, TRK, TH, N, L, DS, PX, PZ, TX, TZ, RX, RZ, KS, KP, KR, RL, profBot = null, WL, WR, GRL, GRR, KERB, profP, profAI, inSign = 1, poleSide = 1, hotelRoof = null;
+let MC_PADS = null, BANDW = null, HORIZ = null, BANDS = [], MC_SEA = null, MC_ISL = null, MJ = null, SPI = null, PAVEZ = null, KERBL = null, KERBR = null, REFNW = null, WTL = null, WTR = null, GOL = null, GOR = null, HILLW = null, RISE = null, ELEV, SLOPE, FLAT = true, ELMEAN = 0, HG = null, HW, NOWALL, TRK, TH, N, L, DS, PX, PZ, TX, TZ, RX, RZ, KS, KP, KR, RL, profBot = null, WL, WR, GRL, GRR, KERB, profP, profAI, inSign = 1, poleSide = 1, hotelRoof = null;
 const trackGroup = new THREE.Group(); scene.add(trackGroup);
 const wrapL = x => x - L * Math.round(x / L);
 const modL = x => ((x % L) + L) % L;
@@ -2371,8 +2371,14 @@ const BAND = 70;
 function sideW(t, x, z) { const j = t.j, lat = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j]; return lat < 0 ? WL[j] : WR[j]; }
 // Monaco: Gelände als weich gewichtete Mischung der Höhen aller nahen Streckenpunkte (1/d⁴) – keine Zacken zwischen oberer und unterer Strecke
 function mcBase(x, z, fb) { const cx = Math.floor(x / 32), cz = Math.floor(z / 32); let ws = 0, hs = 0; for (let a = -5; a <= 5; a++) for (let b = -5; b <= 5; b++) { const L2 = SPI.get((cx + a + 4096) * 8192 + cz + b + 4096); if (!L2) continue; for (const j of L2) { const dx = x - PX[j], dz = z - PZ[j], d2 = dx * dx + dz * dz + 4, w = 1 / (d2 * d2); ws += w; hs += w * ELEV[j]; } } return ws ? hs / ws : fb; }
-function surfH(x, z, t) { if (FLAT) return 0; t = t || terr(x, z); const W = sideW(t, x, z), nb = TH.harmonic ? clamp((t.d - (W + 3)) / 22, 0, 1) : clamp((t.d - (W + 12)) / 50, 0, 1); return lerp(TRK.mc ? mcBase(x, z, ELEV[t.j]) : ELEV[t.j], t.h, nb * nb * (3 - 2 * nb)) + riseAt(x, z, t.d) + hillAt(x, z, t); }
-function groundY(x, z) { if (FLAT) return 0; if (MC_SEA && MC_SEA(x, z)) return -3;   /* Meeresboden unter dem Hafen */ const t = terr(x, z), j = t.j, latS = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j], W = latS < 0 ? WL[j] : WR[j], bw = BANDW ? BANDW[latS < 0 ? 0 : 1][j] : BAND, f = clamp((t.d - (W + Math.min(BAND, bw + 4) - 32)) / 30, 0, 1);   /* nur absenken, wo ein Geländeband darüber liegt – sonst schweben Kies und Bäume über einer Senke */ return surfH(x, z, t) - 4 * (1 - f * f * (3 - 2 * f)); }
+function surfH(x, z, t) { if (FLAT) return 0; t = t || terr(x, z); const W = sideW(t, x, z), nb = TH.harmonic ? clamp((t.d - (W + 3)) / 22, 0, 1) : clamp((t.d - (W + 12)) / 50, 0, 1); let h = lerp(TRK.mc ? mcNear(x, z, t, W) : ELEV[t.j], t.h, nb * nb * (3 - 2 * nb)) + riseAt(x, z, t.d) + hillAt(x, z, t); if (MC_PADS) h = padH(x, z, h); return h; }
+// Monaco: direkt neben der Strecke liegt der Boden auf der eigenen Streckenhöhe und steigt erst hinter der Mauer an (sonst ragt der Mischboden zwischen zwei Ästen über die tiefere Fahrbahn)
+function mcNear(x, z, t, W) { const b = mcBase(x, z, ELEV[t.j]); let g = clamp((t.d - W - 1) / 12, 0, 1); g = g * g * (3 - 2 * g); return lerp(Math.min(b, ELEV[t.j]), b, g); }
+// Tribünen-Grundfläche (Monaco): innerhalb eben auf Streckenhöhe, außen über 16 m weich in den Hang
+function padH(x, z, h) { for (const P of MC_PADS) { const dx = x - P.x, dz = z - P.z; if (dx * dx + dz * dz > P.r * P.r) continue; const lx = dx * P.c - dz * P.s, lz = dx * P.s + dz * P.c, ox = Math.max(-2 - lx, lx - (P.dep + 3), 0), oz = Math.max(Math.abs(lz) - P.len / 2 - 2, 0), d = Math.hypot(ox, oz); if (d >= 16) continue; let f = 1 - d / 16; f = f * f * (3 - 2 * f); if (h > P.y) h = lerp(h, P.y, f); } return h; }
+function groundY(x, z) { if (FLAT) return 0; if (MC_SEA && MC_SEA(x, z)) return -3;   /* Meeresboden unter dem Hafen */ const t = terr(x, z), j = t.j, latS = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j], W = latS < 0 ? WL[j] : WR[j], bw = BANDW ? BANDW[latS < 0 ? 0 : 1][j] : BAND, f = clamp((t.d - (W + Math.min(BAND, bw + 4) - 32)) / 30, 0, 1);   /* nur absenken, wo ein Geländeband darüber liegt – sonst schweben Kies und Bäume über einer Senke */ let y = surfH(x, z, t) - 4 * (1 - f * f * (3 - 2 * f)); if (TRK.mc && t.d < 60) y = Math.min(y, mcLow(x, z) - 3); return y; }
+// Monaco: tiefste Streckenhöhe im Umkreis von 36 m – der grobe Boden (Gitter ~15 m) darf nicht von einem höheren Ast über die Fahrbahn eines tieferen spannen
+function mcLow(x, z) { const cx = Math.floor(x / 32), cz = Math.floor(z / 32); let m = 1e9; for (let a = -2; a <= 2; a++) for (let b = -2; b <= 2; b++) { const L2 = SPI.get((cx + a + 4096) * 8192 + cz + b + 4096); if (!L2) continue; for (const j of L2) { const dx = x - PX[j], dz = z - PZ[j]; if (dx * dx + dz * dz < 1296 && ELEV[j] < m) m = ELEV[j]; } } return m; }
 function placeY(x, z) { if (FLAT) return 0; if (MC_SEA && MC_SEA(x, z)) return 0;   /* Jachten, Stege: Meereshöhe */ return surfH(x, z); }
 // Boden in Kacheln (gemeinsame Vertex-Daten -> keine Nähte), damit nur Sichtbares gezeichnet wird
 function tileGround(root, T = 6) {
@@ -2671,6 +2677,16 @@ function buildTrack(key) {
     if (bi >= 0 && bk > 1 / 40) { const sd = KS[bi] > 0 ? 1 : -1, c = trackAt(bi * DS, sd / bk); let R = 0; for (let r = 1.5; r <= 9; r += 0.5) { let ok = true; for (let a = 0; a < 6.28 && ok; a += 0.4) { const [d2, j] = spiNear(c.x + Math.cos(a) * r, c.z + Math.sin(a) * r); if (Math.sqrt(d2) < HW[j] + 1.4) ok = false; } if (!ok) break; R = r; }
       if (R >= 2) { MC_ISL = { x: c.x, z: c.z, R }; for (let i = 0; i < N; i++) for (const [W, s, nb] of [[WL, -1, 1], [WR, 1, 2]]) { const x = PX[i] + RX[i] * W[i] * s, z = PZ[i] + RZ[i] * W[i] * s; if (Math.hypot(x - c.x, z - c.z) < R + 9) NOWALL[i] |= nb; } } } }   /* Fairmont-Haarnadel: Pflanzeninsel statt innerer Leitplanke */
   for (const [W, s, nb] of [[WL, -1, 1], [WR, 1, 2]]) for (let i = 0; i < N; i++) { const x = PX[i] + RX[i] * W[i] * s, z = PZ[i] + RZ[i] * W[i] * s, [d2, j] = spiNear(x, z); let dj = Math.abs(j - i); dj = Math.min(dj, N - dj); if (Math.sqrt(d2) < HW[j] + (dj * DS > 6 ? 1.5 : 0.8)) NOWALL[i] |= nb; }   /* in engen Haarnadeln faltet sich die innere Absperrung über die Fahrbahn: dort weglassen */
+  // Monaco: wo sich zwei Fahrbahnäste berühren (Fairmont-Haarnadel, Mirabeau), steht jeder Ast mit eigener Leitplanke, Fangzaun und Steinschürze
+  // auf der Mittellinie zwischen den Ästen – auf seiner eigenen Höhe. So ist der Höhenunterschied eine Stützmauer statt eines Hangs, in dem die Planke versinkt.
+  if (TRK.mc) for (const [W, s, nb] of [[WL, -1, 1], [WR, 1, 2]]) {
+    const MID = new Float32Array(N), ok = new Uint8Array(N);
+    for (let i = 0; i < N; i++) { const nw = NOWALL[i] & nb;
+      for (let t = HW[i] + 0.4; t < (nw ? 26 : W[i] + 1); t += 0.25) { const x = PX[i] + RX[i] * t * s, z = PZ[i] + RZ[i] * t * s, [d2, j] = spiNear(x, z); let dj = Math.abs(j - i); dj = Math.min(dj, N - dj); if (dj * DS < 25) continue;
+        if (t >= HW[i] + 0.9 && !(MC_ISL && Math.hypot(x - MC_ISL.x, z - MC_ISL.z) < MC_ISL.R + 1.5)) { MID[i] = t; ok[i] = 1; } break; } }
+    { const o2 = filt(filt(ok, 2, 'max'), 2, 'min'); for (let i = 0; i < N; i++) if (o2[i] > 0.5 && !ok[i] && (NOWALL[i] & nb)) { let a2 = 0, c = 0; for (let k = -4; k <= 4; k++) { const j = (i + k + N) % N; if (ok[j]) { a2 += MID[j]; c++; } } if (c) { MID[i] = a2 / c; ok[i] = 2; } } }   /* einzelne Lücken schließen */
+    for (let i = 0; i < N; i++) if (ok[i]) { let a2 = 0, c = 0; for (let k = -3; k <= 3; k++) { const j = (i + k + N) % N; if (ok[j]) { a2 += Math.min(MID[j], MID[i] + 1); c++; } } const m = Math.max(HW[i] + 0.5, a2 / c - 0.35); W[i] = (NOWALL[i] & nb) ? m : Math.min(W[i], m); NOWALL[i] &= ~nb; }   /* auch normale Mauern nie über die Mittellinie zum Nachbarast */
+  }
   PAVEZ = new Uint8Array(N);
   const noWall = (a, b, ext = 38, pave = false) => {
     {
@@ -2742,6 +2758,13 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
       Object.assign(RISE, { mask: M, mx, mz, mw, mh });
     }
   }
+  // Monaco: Grundflächen der Tribünen (nach dem Tribünenplan) vorab auf Streckenhöhe einebnen – sonst steckt die Tribüne im ansteigenden Hang hinter der Mauer
+  MC_PADS = null; if (TRK.mc && TRK.stands && !FLAT) { MC_PADS = []; const loop = []; for (let i = 0; i < N; i += 4) loop.push([PX[i], PZ[i]]);
+    const pip = (x, z) => { let c = false; for (let i = 0, j = loop.length - 1; i < loop.length; j = i++) { const [xi, zi] = loop[i], [xj, zj] = loop[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };
+    const dep = TRK.standDep || 21;
+    for (const [a, b, sd, len = 44] of TRK.stands) for (let s2 = a; s2 <= b + 0.1; s2 += len + 2) { if (TRK.standSkip && TRK.standSkip.some(([u, v]) => s2 >= u && s2 <= v)) continue; let side; if (sd === 'opp') side = -(TRK.pitOut ? -inSign : inSign); else if (sd === 'L') side = -1; else if (sd === 'R') side = 1; else { const q = trackAt(s2, 40), ins = pip(q.x, q.z) ? 1 : -1; side = sd === 'in' ? ins : -ins; }
+      const p = trackAt(s2, 0), w = wallAt(p.i, side), q = trackAt(s2, side * (w + 4)), rot = side < 0 ? q.h : q.h + Math.PI;
+      MC_PADS.push({ x: q.x, z: q.z, c: Math.cos(rot), s: Math.sin(rot), dep, len, y: ELEV[p.i], r: Math.max(dep, len) / 2 + 40 }); } }
   const gsz0 = Math.max(maxX - minX, maxZ - minZ) + 3200, gsz = FLAT ? gs : gsz0 + (TH.bigGround || 0), gRep = FLAT ? gs / 16 : gs / 16 * gsz / gsz0;
   const gSeg = FLAT ? 90 : TH.bigGround ? 360 : 300, ground = new THREE.Mesh(new THREE.PlaneGeometry(gsz, gsz, gSeg, gSeg).rotateX(-Math.PI / 2), lam({ map: TH.bandStone ? STONE_T(gRep * 1.6) : texRep(TH.ground === 'grass' ? (TH.dryGrass ? DRY_GRASS() : TEX.grassP) : TH.ground === 'city' ? TEX.runoff : TEX.sand, gRep, gRep), color: TH.mainTint ?? 0xffffff, normalMap: texRep(TH.ground === 'grass' ? TEX.grassN : TH.ground === 'city' ? TEX.runoffN : TEX.sandN, gRep, gRep), normalScale: new THREE.Vector2(1.4, 1.4), color: TH.groundTint ?? 0xffffff, side: THREE.DoubleSide }));
   ground.material.map.userData.own = true; ground.material.polygonOffset = true; ground.material.polygonOffsetFactor = 4; ground.material.polygonOffsetUnits = 4;
@@ -2756,7 +2779,7 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
     const K = 8;
     for (const [W, sg] of [[WL, -1], [WR, 1]]) {
       const bw = new Float32Array(N);
-      for (let i = 0; i < N; i++) { let w = 0; for (let o = 4; o <= BAND; o += 4) { const oo = W[i] + o, x = PX[i] + RX[i] * oo * sg, z = PZ[i] + RZ[i] * oo * sg; if (nearestDist(x, z)[0] < oo - 2.5) break; w = o; } bw[i] = w ? Math.min(BAND, w + 4) : 0; }
+      for (let i = 0; i < N; i++) { let w = 0; for (let o = 4; o <= BAND; o += 4) { const oo = W[i] + o, x = PX[i] + RX[i] * oo * sg, z = PZ[i] + RZ[i] * oo * sg; const [dd, jj] = nearestDist(x, z); if (dd < oo - 2.5) break; if (TRK.mc) { let dj = Math.abs(jj - i); dj = Math.min(dj, N - dj); if (dj * DS > 30 && dd < Math.max(WL[jj], WR[jj]) + 6) break; }   /* Monaco: Band nie über den ummauerten Bereich eines anderen Asts (sonst fällt es als Hügel auf dessen Fahrbahn ab) */ w = o; } bw[i] = w ? Math.min(BAND, w + 4) : 0; }
       const bws = filt(filt(bw, 3, 'min'), 3, 'avg'), H = []; (BANDW || (BANDW = [null, null]))[sg < 0 ? 0 : 1] = filt(bws, 6, 'max');
       for (let k = 0; k <= K; k++) { const a = new Float32Array(N); for (let i = 0; i < N; i++) { const o = W[i] + bws[i] * k / K, x = PX[i] + RX[i] * o * sg, z = PZ[i] + RZ[i] * o * sg, f = clamp((o - W[i]) / 12, 0, 1); a[i] = (surfH(x, z) - ELEV[i]) * f * f * (3 - 2 * f); } H.push(a); }
       for (let k = 0; k < K; k++) {
@@ -2891,18 +2914,6 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
     vStrip(i => s * W[i], 0, wH, adMat, { mask: i => adMask[i] && !(NOWALL[i] & nb) && !(WT && WT[i] === 2), vScale: 64, cast: true, flip: s > 0 });
     vStrip(i => s * W[i], TH.bandStone ? -14 : -3.6, 0.02, skirtM, { mask: i => !(NOWALL[i] & nb), vScale: TH.bandStone ? 6 : undefined });
     if (hi) vStrip(i => s * W[i], wH, wH + 3.2, lam({ map: TEX.fence, alphaTest: 0.35, alphaToCoverage: true, side: THREE.DoubleSide, metalness: .6, roughness: .45 })   /* Alpha-to-Coverage: deckend gezeichnet (schnell, keine Sortierung), Drahtkanten über die Kantenglättung weich */, { mask: i => !(NOWALL[i] & nb) && fenceAt(i, s), vScale: 4 });
-  }
-
-  // Monaco: wo sich zwei Fahrbahnäste berühren (Fairmont-Haarnadel), steht wie im Original eine Leitplanke mit Fangzaun genau auf der Mittellinie zwischen den Ästen
-  if (TRK.mc) for (const s of [-1, 1]) {
-    const nb = s < 0 ? 1 : 2, MID = new Float32Array(N), ok = new Uint8Array(N);
-    for (let i = 0; i < N; i++) { if (!(NOWALL[i] & nb)) continue;
-      for (let t = HW[i] + 0.4; t < 22; t += 0.25) { const x = PX[i] + RX[i] * t * s, z = PZ[i] + RZ[i] * t * s, [d2, j] = spiNear(x, z); let dj = Math.abs(j - i); dj = Math.min(dj, N - dj); if (dj * DS < 25) continue;
-        if ((j - i + N) % N < N / 2 && Math.sqrt(d2) >= HW[j] + 0.4 && t >= HW[i] + 0.6 && !(MC_ISL && Math.hypot(x - MC_ISL.x, z - MC_ISL.z) < MC_ISL.R + 1.5)) { MID[i] = t; ok[i] = 1; } break; } }
-    const SM = new Float32Array(N); for (let i = 0; i < N; i++) if (ok[i]) { let a2 = 0, c = 0; for (let k = -3; k <= 3; k++) { const j = (i + k + N) % N; if (ok[j]) { a2 += MID[j]; c++; } } SM[i] = a2 / c; }
-    const msk = i => ok[i] && ok[(i + 1) % N];
-    vStrip(i => s * SM[i], -0.3, wH, wallMat, { mask: msk, vScale: 4, cast: true });
-    if (hi) vStrip(i => s * SM[i], wH, wH + 3.2, lam({ map: TEX.fence, alphaTest: 0.35, alphaToCoverage: true, side: THREE.DoubleSide, metalness: .6, roughness: .45 }), { mask: msk, vScale: 4 });
   }
 
   // ---- Streckenrand-Details ----
@@ -3163,7 +3174,7 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
     const loop = []; for (let i = 0; i < N; i += 4) loop.push([PX[i], PZ[i]]);
     const pipL = (x, z) => { let c = false; for (let i = 0, j = loop.length - 1; i < loop.length; j = i++) { const [xi, zi] = loop[i], [xj, zj] = loop[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };
     const sideOf = (s2, sd) => { if (sd === 'opp') return -pitSide; if (sd === 'L') return -1; if (sd === 'R') return 1; /* positiver Seitenwert = rechts vom Fahrer */ const q = trackAt(s2, 40), inside = pipL(q.x, q.z) ? 1 : -1; return sd === 'in' ? inside : -inside; };
-    window.__stands = []; for (const [a, b, sd, len = 44] of TRK.stands) for (let s2 = a; s2 <= b + 0.1; s2 += len + 2) { const sg = sideOf(s2, sd); window.__stands.push([Math.round(s2), sg, stand(s2, sg, len)]); }
+    window.__stands = []; for (const [a, b, sd, len = 44] of TRK.stands) for (let s2 = a; s2 <= b + 0.1; s2 += len + 2) { if (TRK.standSkip && TRK.standSkip.some(([u, v]) => s2 >= u && s2 <= v)) continue; const sg = sideOf(s2, sd); window.__stands.push([Math.round(s2), sg, stand(s2, sg, len)]); }
   } else if (!TRK.noStands) for (let s = -330; s <= 130; s += 50) stand(s, -pitSide, 46);
   if (!TRK.ref && !TRK.noStands && !TRK.stands) { // langsamste Kurven
     const mins = [];
@@ -3530,6 +3541,29 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
       const e0 = trackAt(sA, 0), ent = trackAt(sA + 60, 0);
       const fh = new THREE.Mesh(new THREE.BoxGeometry(46, 30, 130).translate(0, H + 15.4, 0), facadeMat({ wall: '#f4f2ee', frame: '#ffffff', balcony: '#ffffff', glass: '#56616c', glassTop: '#b9c6d2', litP: .25, emiI: .7, roof: '#d8d4cc', seed: 27, bays: 14, floors: 8, bayM: 4.6, floorM: 3.8, relief: 5 }));
       fh.position.set(ent.x, 0, ent.z); fh.rotation.y = ent.h; trackGroup.add(fh);
+      { // Sockel: der Hotelbau steht auf dem Hang – geschlossene Steinwände vom Boden bis unter den Bau, nur die Tunnelröhre bleibt offen (sonst Blick unter den schwebenden Bau)
+        const ch = Math.cos(ent.h), sh = Math.sin(ent.h), toW = (lx, lz) => [ent.x + lx * ch + lz * sh, ent.z - lx * sh + lz * ch];
+        const iA = Math.floor(modL(sA - 40) / DS), iB = Math.floor(modL(sB + 40) / DS), inTube = (x, z) => { for (let i = iA; i !== iB; i = (i + 1) % N) { const lat = (x - PX[i]) * RX[i] + (z - PZ[i]) * RZ[i], lon = (x - PX[i]) * TX[i] + (z - PZ[i]) * TZ[i]; if (Math.abs(lon) < DS && lat > -(wallAt(i, -1) + 1.2) && lat < wallAt(i, 1) + 1.2) return true; } return false; };
+        const per = [], hx = 23, hz = 65; for (const [x0, z0, x1, z1] of [[-hx, -hz, hx, -hz], [hx, -hz, hx, hz], [hx, hz, -hx, hz], [-hx, hz, -hx, -hz]]) { const n = Math.ceil(Math.hypot(x1 - x0, z1 - z0)); for (let k = 0; k < n; k++) per.push([x0 + (x1 - x0) * k / n, z0 + (z1 - z0) * k / n]); }
+        const pos = [], uv = [], y0 = -26, y1 = H + 0.45; let u = 0;
+        for (let k = 0; k < per.length; k++) { const a = per[k], b = per[(k + 1) % per.length], A = toW(...a), B = toW(...b), du = Math.hypot(b[0] - a[0], b[1] - a[1]);
+          const Mi = [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2], [, mj] = spiNear(...Mi), city = ((Mi[0] - PX[mj]) * RX[mj] + (Mi[1] - PZ[mj]) * RZ[mj]) * seaS < 0;   /* nur Stadtseite: zur Meerseite bleibt der Bau offen */
+          if (city && !inTube(...A) && !inTube(...B) && !inTube(...Mi)) { pos.push(a[0], y0, a[1], b[0], y0, b[1], b[0], y1, b[1], a[0], y0, a[1], b[0], y1, b[1], a[0], y1, a[1]); uv.push(u / 6, y0 / 6, (u + du) / 6, y0 / 6, (u + du) / 6, y1 / 6, u / 6, y0 / 6, (u + du) / 6, y1 / 6, u / 6, y1 / 6); }
+          u += du; }
+        const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.computeVertexNormals();
+        const putz = lam({ color: 0xe3d6bf, roughness: .85, side: THREE.DoubleSide }), bm = new THREE.Mesh(g, putz);   /* heller Putz wie die Hotelfassade (Foto) */
+        bm.position.copy(fh.position); bm.rotation.y = ent.h; bm.receiveShadow = true; trackGroup.add(bm);
+        // Meerseite: der Bau steht auf runden Stützen im Wasser (offen, Blick aufs Meer)
+        const cols = []; for (let lz = -58; lz <= 58; lz += 14.5) for (const lx of [-hx + 2.5, -hx + 11, hx - 11, hx - 2.5]) { const [x, z] = toW(lx, lz), [d2, j] = spiNear(x, z), lat = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j];
+          if (lat * seaS <= 0 || Math.sqrt(d2) < wallAt(j, seaS) + 3.5 || inTube(x, z)) continue; cols.push([new THREE.CylinderGeometry(1.1, 1.1, H + 26.5, 14).translate(lx, (H + 0.45 - 26) / 2, lz), null]); }
+        if (cols.length) { const cm2 = new THREE.Mesh(mergeParts(cols), putz); cm2.position.copy(fh.position); cm2.rotation.y = ent.h; cm2.castShadow = true; trackGroup.add(cm2); } }
+      { // Stadtseite vor dem Portal: große weiße, segelförmige Schale, die zum Portal hin ansteigt (Foto)
+        const pos = [], s0 = sA - 48, NA = 12, rows = [];
+        for (let s2 = s0; s2 <= sA + 2; s2 += 2) { const i = Math.floor(modL(s2) / DS) % N, f = clamp((s2 - s0) / (sA - s0), 0, 1), hg = 3 + (H + 15) * Math.pow(f, 1.4), w0 = wallAt(i, -seaS) + 1.1, D = 2 + 7 * f, row = [];
+          for (let k = 0; k <= NA; k++) { const a = k / NA * Math.PI / 2, q = trackAt(s2, -seaS * (w0 + D * (1 - Math.cos(a)))); row.push([q.x, ELEV[i] - 2 + (hg + 2) * Math.sin(a), q.z]); } rows.push(row); }
+        for (let r = 0; r + 1 < rows.length; r++) for (let k = 0; k < NA; k++) { const A = rows[r][k], B = rows[r + 1][k], C = rows[r + 1][k + 1], Dd = rows[r][k + 1]; pos.push(...A, ...B, ...C, ...A, ...C, ...Dd); }
+        const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.computeVertexNormals();
+        const sail = new THREE.Mesh(g, lam({ color: 0xf4f4f2, roughness: .6, side: THREE.DoubleSide })); sail.userData.fixed = true; sail.castShadow = sail.receiveShadow = true; trackGroup.add(sail); }
       { const bm = lam({ color: 0xffffff, emissive: new THREE.Color(0.18, 0.18, 0.18) }), bp = []; for (let f = 1; f <= 8; f++) for (const sx of [-1, 1]) { bp.push([box(1.4, 0.28, 130, sx * 23.6, H + 0.4 + f * 3.8 - 0.2, 0), null]); bp.push([box(48.6, 0.28, 1.4, 0, H + 0.4 + f * 3.8 - 0.2, sx * 65.6), null]); bp.push([box(48.6, 1.0, 0.12, 0, H + 0.4 + f * 3.8 + 0.3, sx * 66.25), null]); }   /* durchgehende weiße Balkonbänder wie am echten Fairmont */
         const bb = new THREE.Mesh(mergeParts(bp), bm); bb.position.copy(fh.position); bb.rotation.y = ent.h; trackGroup.add(bb); } excl.push([ent.x, ent.z, 80]);
       const lint = []; for (let t = -Wd(sA, -1); t <= Wd(sA, 1); t += 0.9) { const q = trackAt(sA - 0.3, t); lint.push(q); }
@@ -5872,7 +5906,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v56'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v57'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
