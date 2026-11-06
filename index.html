@@ -2377,6 +2377,8 @@ function mcNear(x, z, t, W) { const b = mcBase(x, z, ELEV[t.j]); let g = clamp((
 // Tribünen-Grundfläche (Monaco): innerhalb eben auf Streckenhöhe, außen über 16 m weich in den Hang
 function padH(x, z, h) { for (const P of MC_PADS) { const dx = x - P.x, dz = z - P.z; if (dx * dx + dz * dz > P.r * P.r) continue; const lx = dx * P.c - dz * P.s, lz = dx * P.s + dz * P.c, ox = Math.max(-2 - lx, lx - (P.dep + 3), 0), oz = Math.max(Math.abs(lz) - P.len / 2 - 2, 0), d = Math.hypot(ox, oz); if (d >= 16) continue; let f = 1 - d / 16; f = f * f * (3 - 2 * f); if (h > P.y) h = lerp(h, P.y, f); } return h; }
 function groundY(x, z) { if (FLAT) return 0; if (MC_SEA && MC_SEA(x, z)) return -3;   /* Meeresboden unter dem Hafen */ const t = terr(x, z), j = t.j, latS = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j], W = latS < 0 ? WL[j] : WR[j], bw = BANDW ? BANDW[latS < 0 ? 0 : 1][j] : BAND, f = clamp((t.d - (W + Math.min(BAND, bw + 4) - 32)) / 30, 0, 1);   /* nur absenken, wo ein Geländeband darüber liegt – sonst schweben Kies und Bäume über einer Senke */ let y = surfH(x, z, t) - 4 * (1 - f * f * (3 - 2 * f)); if (TRK.mc && t.d < 60) y = Math.min(y, mcLow(x, z) - 3); return y; }
+// Monaco: liegt ein Punkt im Umkreis von 90 m um die Strecke nach dem Tunnel (Ausfahrt bis Tabac)? Dort stehen keine Bäume im Hang
+function nearAfterTun(x, z) { if (!TRK.mc || !TRK.mc.tun) return false; const b = TRK.mc.tun[1] * L; for (let s2 = b - 20; s2 <= b + 520; s2 += 10) { const i = Math.floor(modL(s2) / DS) % N; if ((x - PX[i]) ** 2 + (z - PZ[i]) ** 2 < 90 * 90) return true; } return false; }
 // Monaco: tiefste Streckenhöhe im Umkreis von 36 m – der grobe Boden (Gitter ~15 m) darf nicht von einem höheren Ast über die Fahrbahn eines tieferen spannen
 function mcLow(x, z) { const cx = Math.floor(x / 32), cz = Math.floor(z / 32); let m = 1e9; for (let a = -2; a <= 2; a++) for (let b = -2; b <= 2; b++) { const L2 = SPI.get((cx + a + 4096) * 8192 + cz + b + 4096); if (!L2) continue; for (const j of L2) { const dx = x - PX[j], dz = z - PZ[j]; if (dx * dx + dz * dz < 1296 && ELEV[j] < m) m = ELEV[j]; } } return m; }
 function placeY(x, z) { if (FLAT) return 0; if (MC_SEA && MC_SEA(x, z)) return 0;   /* Jachten, Stege: Meereshöhe */ return surfH(x, z); }
@@ -2786,6 +2788,12 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
         const o0 = i => W[i] + bws[i] * k / K, o1 = i => W[i] + bws[i] * (k + 1) / K, msk = i => bws[i] > 0.5;
         BANDS.push(sg < 0 ? hStrip(i => -o1(i), i => -o0(i), 0.004, 0.004, shm, { uScale: 14, vScale: 14, yL: H[k + 1], yR: H[k], mask: msk }) : hStrip(o0, o1, 0.004, 0.004, shm, { uScale: 14, vScale: 14, yL: H[k], yR: H[k + 1], mask: msk }));
       }
+      if (TRK.mc) { // Monaco: Terrassenkante – am äußeren Ende des Bandes eine Stützmauer nach unten, sonst schwebt die Kante über tieferem Gelände (Blick auf den Unterboden)
+        const pos = [], uv = [], HK = H[K], pt = i => { const o = W[i] + bws[i]; return [PX[i] + RX[i] * o * sg, ELEV[i] + HK[i] + 0.004, PZ[i] + RZ[i] * o * sg]; };
+        for (let i = 0; i < N; i++) { const j = (i + 1) % N; if (bws[i] < 0.5 || bws[j] < 0.5) continue; const A = pt(i), B = pt(j), u0 = i * DS / 6, u1 = (i + 1) * DS / 6;
+          pos.push(A[0], A[1] - 16, A[2], B[0], B[1] - 16, B[2], B[0], B[1], B[2], A[0], A[1] - 16, A[2], B[0], B[1], B[2], A[0], A[1], A[2]); uv.push(u0, 0, u1, 0, u1, 16 / 6, u0, 0, u1, 16 / 6, u0, 16 / 6); }
+        if (pos.length) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.computeVertexNormals();
+          const t = STONE_T(1); t.repeat.set(1, 1); const m = new THREE.Mesh(g, lam({ map: t, color: TH.bandStone, side: THREE.DoubleSide })); m.receiveShadow = true; m.userData.strip = true; trackGroup.add(m); } }
     }
   }
 
@@ -3509,7 +3517,7 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
     { const trunkG = new THREE.CylinderGeometry(0.28, 0.42, 1, 7).translate(0, 0.5, 0), parts = [];
       for (const [ox, oy, oz, sx, sy] of [[0, 0, 0, 6.2, 1.6], [2.6, -0.4, 1.4, 3.6, 1.2], [-2.4, -0.3, -1.6, 3.8, 1.3], [0.6, 0.5, -2.6, 3.2, 1.0]]) parts.push([new THREE.IcosahedronGeometry(1, 1).scale(sx, sy, sx).translate(ox, oy, oz), null]);
       const crownG = mergeParts(parts), cm = lam({ map: texRep(TEX.leaf, 3, 1), normalMap: texRep(TEX.leafN, 3, 1), color: 0x9cc070, emissive: new THREE.Color(0.06, 0.09, 0.04) }), tm = lam({ color: 0x6a5240 });
-      const pts = []; for (let s2 = 330; s2 <= 720; s2 += 22) for (const sd of [-1, 1]) { if (Math.random() < 0.45) continue; const i = Math.floor(modL(s2) / DS) % N, q = trackAt(s2, sd * (wallAt(i, sd) + 8 + Math.random() * 6)); if (trackFree(q.x, q.z, 7.5) && !inMarina(q.x, q.z) && !excl.some(e => (q.x - e[0]) ** 2 + (q.z - e[1]) ** 2 < e[2] ** 2)) pts.push([q.x, q.z, 9 + Math.random() * 4]); }
+      const pts = []; for (let s2 = 330; s2 <= 720; s2 += 22) for (const sd of [-1, 1]) { if (Math.random() < 0.45) continue; const i = Math.floor(modL(s2) / DS) % N, q = trackAt(s2, sd * (wallAt(i, sd) + 8 + Math.random() * 6)); if (trackFree(q.x, q.z, 7.5) && !inMarina(q.x, q.z) && !nearAfterTun(q.x, q.z) && !excl.some(e => (q.x - e[0]) ** 2 + (q.z - e[1]) ** 2 < e[2] ** 2)) pts.push([q.x, q.z, 9 + Math.random() * 4]); }
       const it = new THREE.InstancedMesh(trunkG, tm, pts.length), ic = new THREE.InstancedMesh(crownG, cm, pts.length), m5 = new THREE.Matrix4(), q5 = new THREE.Quaternion();
       pts.forEach(([x, z, h], k) => { q5.setFromAxisAngle(_v2, Math.random() * 6.28); m5.compose(new THREE.Vector3(x, 0, z), q5, new THREE.Vector3(1, h, 1)); it.setMatrixAt(k, m5); m5.compose(new THREE.Vector3(x, h + 0.6, z), q5, new THREE.Vector3(1, 1, 1)); ic.setMatrixAt(k, m5); excl.push([x, z, 7]); });
       it.castShadow = ic.castShadow = true; trackGroup.add(it, ic); }
@@ -4346,7 +4354,7 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
       if (d < need || (TH.trees === 'palms' && d > need + 120)) continue;
       if (inMarina(x, z) || ovalPts.some(o => (x - o[0]) ** 2 + (z - o[1]) ** 2 < 20 * 20)) continue;
       if (excl.some(e => (x - e[0]) ** 2 + (z - e[1]) ** 2 < e[2] * e[2])) continue;
-      if (TRK.mc && TRK.mc.tun && j * DS > TRK.mc.tun[1] * L - 20 && j * DS < TRK.mc.tun[1] * L + 320) continue;   /* Monaco: direkt nach dem Tunnel keine Palmen */
+      if (nearAfterTun(x, z)) continue;   /* Monaco: am Hang rechts nach dem Tunnel keine Bäume/Palmen */
       place.push([x, z]);
     }
     const palmPl = [];
