@@ -3538,13 +3538,16 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
       const lm = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.32, 0.32, 0.12, 10), new THREE.MeshBasicMaterial({ color: 0xffffff }), lamps.length), m4 = new THREE.Matrix4(), cW = new THREE.Color(2.2, 1.7, 1.05), cC = new THREE.Color(1.6, 1.8, 2.1);
       lamps.forEach((q, k) => { m4.makeTranslation(q.x, H - 0.1, q.z); lm.setMatrixAt(k, m4); lm.setColorAt(k, k % 2 === (seaS > 0 ? 1 : 0) ? cW : cC); }); trackGroup.add(lm);
       // Einfahrt: beiger Hotelbau über dem Portal, Lichterleiste an der Portaloberkante
-      const e0 = trackAt(sA, 0), ent = trackAt(sA + 60, 0);
-      const fh = new THREE.Mesh(new THREE.BoxGeometry(46, 30, 130).translate(0, H + 15.4, 0), facadeMat({ wall: '#f4f2ee', frame: '#ffffff', balcony: '#ffffff', glass: '#56616c', glassTop: '#b9c6d2', litP: .25, emiI: .7, roof: '#d8d4cc', seed: 27, bays: 14, floors: 8, bayM: 4.6, floorM: 3.8, relief: 5 }));
-      fh.position.set(ent.x, 0, ent.z); fh.rotation.y = ent.h; trackGroup.add(fh);
+      const FHX = 10, FHZ = 55, FS = sA + 70;   /* Hotelbau 20 × 110 m: schmal genug, dass er neben der Röhre unter der höheren Strecke (Mirabeau) Platz hat */
+      const ent = (() => { for (let o = FHX + 6; o < 90; o += 1) { const q = trackAt(FS, -seaS * o), c = Math.cos(q.h), sn = Math.sin(q.h); let ok = true;   /* Hotel nur rechts neben dem Tunnel (Stadtseite), zur Meerseite bleibt alles frei */
+          for (let lz = -FHZ; lz <= FHZ && ok; lz += 5) for (let lx = -FHX; lx <= FHX && ok; lx += 2) { const x = q.x + lx * c + lz * sn, z = q.z - lx * sn + lz * c, [d2, j] = spiNear(x, z); if (Math.sqrt(d2) < Math.max(WL[j], WR[j]) + 1.5) ok = false; }
+          if (ok) return q; } return trackAt(FS, -seaS * 90); })(), entY = ELEV[Math.floor(modL(FS) / DS) % N];   /* Fassade steht auf Straßenhöhe direkt neben der Röhre, nicht oben am Hang */
+      const fh = new THREE.Mesh(new THREE.BoxGeometry(2 * FHX, 30, 2 * FHZ).translate(0, H + 15.4, 0), facadeMat({ wall: '#f4f2ee', frame: '#ffffff', balcony: '#ffffff', glass: '#56616c', glassTop: '#b9c6d2', litP: .25, emiI: .7, roof: '#d8d4cc', seed: 27, bays: 14, floors: 8, bayM: 4.6, floorM: 3.8, relief: 5 }));
+      fh.position.set(ent.x, entY, ent.z); fh.rotation.y = ent.h; fh.userData.fixed = true; trackGroup.add(fh);
       { // Sockel: der Hotelbau steht auf dem Hang – geschlossene Steinwände vom Boden bis unter den Bau, nur die Tunnelröhre bleibt offen (sonst Blick unter den schwebenden Bau)
         const ch = Math.cos(ent.h), sh = Math.sin(ent.h), toW = (lx, lz) => [ent.x + lx * ch + lz * sh, ent.z - lx * sh + lz * ch];
         const iA = Math.floor(modL(sA - 40) / DS), iB = Math.floor(modL(sB + 40) / DS), inTube = (x, z) => { for (let i = iA; i !== iB; i = (i + 1) % N) { const lat = (x - PX[i]) * RX[i] + (z - PZ[i]) * RZ[i], lon = (x - PX[i]) * TX[i] + (z - PZ[i]) * TZ[i]; if (Math.abs(lon) < DS && lat > -(wallAt(i, -1) + 1.2) && lat < wallAt(i, 1) + 1.2) return true; } return false; };
-        const per = [], hx = 23, hz = 65; for (const [x0, z0, x1, z1] of [[-hx, -hz, hx, -hz], [hx, -hz, hx, hz], [hx, hz, -hx, hz], [-hx, hz, -hx, -hz]]) { const n = Math.ceil(Math.hypot(x1 - x0, z1 - z0)); for (let k = 0; k < n; k++) per.push([x0 + (x1 - x0) * k / n, z0 + (z1 - z0) * k / n]); }
+        const per = [], hx = FHX, hz = FHZ; for (const [x0, z0, x1, z1] of [[-hx, -hz, hx, -hz], [hx, -hz, hx, hz], [hx, hz, -hx, hz], [-hx, hz, -hx, -hz]]) { const n = Math.ceil(Math.hypot(x1 - x0, z1 - z0)); for (let k = 0; k < n; k++) per.push([x0 + (x1 - x0) * k / n, z0 + (z1 - z0) * k / n]); }
         const pos = [], uv = [], y0 = -26, y1 = H + 0.45; let u = 0;
         for (let k = 0; k < per.length; k++) { const a = per[k], b = per[(k + 1) % per.length], A = toW(...a), B = toW(...b), du = Math.hypot(b[0] - a[0], b[1] - a[1]);
           const Mi = [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2], [, mj] = spiNear(...Mi), city = ((Mi[0] - PX[mj]) * RX[mj] + (Mi[1] - PZ[mj]) * RZ[mj]) * seaS < 0;   /* nur Stadtseite: zur Meerseite bleibt der Bau offen */
@@ -3552,20 +3555,15 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
           u += du; }
         const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.computeVertexNormals();
         const putz = lam({ color: 0xe3d6bf, roughness: .85, side: THREE.DoubleSide }), bm = new THREE.Mesh(g, putz);   /* heller Putz wie die Hotelfassade (Foto) */
-        bm.position.copy(fh.position); bm.rotation.y = ent.h; bm.receiveShadow = true; trackGroup.add(bm);
-        // Meerseite: der Bau steht auf runden Stützen im Wasser (offen, Blick aufs Meer)
-        const cols = []; for (let lz = -58; lz <= 58; lz += 14.5) for (const lx of [-hx + 2.5, -hx + 11, hx - 11, hx - 2.5]) { const [x, z] = toW(lx, lz), [d2, j] = spiNear(x, z), lat = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j];
-          if (lat * seaS <= 0 || Math.sqrt(d2) < wallAt(j, seaS) + 3.5 || inTube(x, z)) continue; cols.push([new THREE.CylinderGeometry(1.1, 1.1, H + 26.5, 14).translate(lx, (H + 0.45 - 26) / 2, lz), null]); }
-        if (cols.length) { const cm2 = new THREE.Mesh(mergeParts(cols), putz); cm2.position.copy(fh.position); cm2.rotation.y = ent.h; cm2.castShadow = true; trackGroup.add(cm2); } }
-      { // Stadtseite vor dem Portal: große weiße, segelförmige Schale, die zum Portal hin ansteigt (Foto)
-        const pos = [], s0 = sA - 48, NA = 12, rows = [];
-        for (let s2 = s0; s2 <= sA + 2; s2 += 2) { const i = Math.floor(modL(s2) / DS) % N, f = clamp((s2 - s0) / (sA - s0), 0, 1), hg = 3 + (H + 15) * Math.pow(f, 1.4), w0 = wallAt(i, -seaS) + 1.1, D = 2 + 7 * f, row = [];
-          for (let k = 0; k <= NA; k++) { const a = k / NA * Math.PI / 2, q = trackAt(s2, -seaS * (w0 + D * (1 - Math.cos(a)))); row.push([q.x, ELEV[i] - 2 + (hg + 2) * Math.sin(a), q.z]); } rows.push(row); }
-        for (let r = 0; r + 1 < rows.length; r++) for (let k = 0; k < NA; k++) { const A = rows[r][k], B = rows[r + 1][k], C = rows[r + 1][k + 1], Dd = rows[r][k + 1]; pos.push(...A, ...B, ...C, ...A, ...C, ...Dd); }
-        const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.computeVertexNormals();
-        const sail = new THREE.Mesh(g, lam({ color: 0xf4f4f2, roughness: .6, side: THREE.DoubleSide })); sail.userData.fixed = true; sail.castShadow = sail.receiveShadow = true; trackGroup.add(sail); }
-      { const bm = lam({ color: 0xffffff, emissive: new THREE.Color(0.18, 0.18, 0.18) }), bp = []; for (let f = 1; f <= 8; f++) for (const sx of [-1, 1]) { bp.push([box(1.4, 0.28, 130, sx * 23.6, H + 0.4 + f * 3.8 - 0.2, 0), null]); bp.push([box(48.6, 0.28, 1.4, 0, H + 0.4 + f * 3.8 - 0.2, sx * 65.6), null]); bp.push([box(48.6, 1.0, 0.12, 0, H + 0.4 + f * 3.8 + 0.3, sx * 66.25), null]); }   /* durchgehende weiße Balkonbänder wie am echten Fairmont */
-        const bb = new THREE.Mesh(mergeParts(bp), bm); bb.position.copy(fh.position); bb.rotation.y = ent.h; trackGroup.add(bb); } excl.push([ent.x, ent.z, 80]);
+        bm.position.copy(fh.position); bm.rotation.y = ent.h; bm.receiveShadow = true; bm.userData.fixed = true; trackGroup.add(bm);
+        { // Portalwand zwischen Tunnelröhre und Hotelfassade (rechts neben der Einfahrt), damit kein Spalt zum Hang bleibt
+          const c0 = trackAt(FS, 0), oE = Math.hypot(ent.x - c0.x, ent.z - c0.z) - FHX + 2, i0 = Math.floor(modL(sA) / DS) % N, e = ELEV[i0], P = [], w0 = Wd(sA, -seaS) - 0.2;
+          for (let s2 = sA; s2 < FS - FHZ + 2; s2 += 2) { const a = trackAt(s2, -seaS * w0), b = trackAt(s2, -seaS * Math.max(w0 + 1, oE)), a2 = trackAt(s2 + 2, -seaS * w0), b2 = trackAt(s2 + 2, -seaS * Math.max(w0 + 1, oE)); if (s2 === sA) P.push(a.x, e - 4, a.z, b.x, e - 4, b.z, b.x, e + H + 0.45, b.z, a.x, e - 4, a.z, b.x, e + H + 0.45, b.z, a.x, e + H + 0.45, a.z);
+            P.push(a.x, e + H + 0.45, a.z, b.x, e + H + 0.45, b.z, b2.x, e + H + 0.45, b2.z, a.x, e + H + 0.45, a.z, b2.x, e + H + 0.45, b2.z, a2.x, e + H + 0.45, a2.z); }   /* Stirnwand + Deckel bis zur Fassade */
+          const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); pg.computeVertexNormals(); const pm = new THREE.Mesh(pg, putz); pm.userData.fixed = true; pm.receiveShadow = true; trackGroup.add(pm); }
+ }
+      { const bm = lam({ color: 0xffffff, emissive: new THREE.Color(0.18, 0.18, 0.18) }), bp = []; for (let f = 1; f <= 8; f++) for (const sx of [-1, 1]) { bp.push([box(1.4, 0.28, 2 * FHZ, sx * (FHX + 0.6), H + 0.4 + f * 3.8 - 0.2, 0), null]); bp.push([box(2 * FHX + 2.6, 0.28, 1.4, 0, H + 0.4 + f * 3.8 - 0.2, sx * (FHZ + 0.6)), null]); bp.push([box(2 * FHX + 2.6, 1.0, 0.12, 0, H + 0.4 + f * 3.8 + 0.3, sx * (FHZ + 1.25)), null]); }   /* durchgehende weiße Balkonbänder wie am echten Fairmont */
+        const bb = new THREE.Mesh(mergeParts(bp), bm); bb.position.copy(fh.position); bb.rotation.y = ent.h; bb.userData.fixed = true; trackGroup.add(bb); } excl.push([ent.x, ent.z, 80]);
       const lint = []; for (let t = -Wd(sA, -1); t <= Wd(sA, 1); t += 0.9) { const q = trackAt(sA - 0.3, t); lint.push(q); }
       const ll = new THREE.InstancedMesh(new THREE.SphereGeometry(0.16, 6, 4), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 1.9, 1.4) }), lint.length); lint.forEach((q, k) => { m4.makeTranslation(q.x, H - 0.25, q.z); ll.setMatrixAt(k, m4); }); trackGroup.add(ll); }
     // Fürstenpalast auf dem Felsen (Monaco-Ville): steiler Felssporn, darauf der helle Palast mit Zinnen
@@ -4348,6 +4346,7 @@ const fenceAt = (i, s) => !inTunMC(i) && (!TRK.nos || i * DS < 320 || i * DS > L
       if (d < need || (TH.trees === 'palms' && d > need + 120)) continue;
       if (inMarina(x, z) || ovalPts.some(o => (x - o[0]) ** 2 + (z - o[1]) ** 2 < 20 * 20)) continue;
       if (excl.some(e => (x - e[0]) ** 2 + (z - e[1]) ** 2 < e[2] * e[2])) continue;
+      if (TRK.mc && TRK.mc.tun && j * DS > TRK.mc.tun[1] * L - 20 && j * DS < TRK.mc.tun[1] * L + 320) continue;   /* Monaco: direkt nach dem Tunnel keine Palmen */
       place.push([x, z]);
     }
     const palmPl = [];
