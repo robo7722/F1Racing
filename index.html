@@ -765,7 +765,7 @@ const TRACKS = {
   sgp: { name: 'Singapur', full: 'Marina Bay Street Circuit', land: 'Singapur', km: '4,940 km', laps: 62, pts: TRACK_PTS['sg-2023'], hd: TRACK_HD['sg-2023'], theme: 'sgp', sgp: SG0, lake: [SG_BAY], bay: true, flyer: [558, 108], flyerRot: 0, city: [-560, 880], citySp: [330, 300], cityMul: 0.7, cityBelt: [-1000, 300, -1250, -620],
     parks: [[103.8519, 1.2915, 210, 130, 0.1], [103.8560, 1.2900, 260, 60, 0.15], [103.8652, 1.2826, 420, 300, 0.4], [103.8530, 1.2892, 120, 70, 0.1], [103.8618, 1.2905, 160, 110, 0]] },
   nos: { name: 'Nordschleife', full: 'Nürburgring Nordschleife', land: 'Deutschland', km: '20,832 km', laps: 3, pts: TRACK_PTS['ns-1927'], hd: TRACK_HD['ns-1927'], theme: 'nos', nos: NS_DATA, extra: true, noPit: true, noStands: true, bakeRes: 512, bakeCell: 256 },
-  rbr: { bull: [-70.1, 18.6], name: 'Red Bull Ring', full: 'Spielberg, Steiermark', land: 'Österreich', km: '4,318 km', laps: 71, pts: TRACK_PTS['at-1969'], hd: TRACK_HD['at-1969'], theme: 'rbr', stands: [[-380, 150, 'opp', 46], [240, 340, 'out', 40], [420, 900, 'L', 46], [2040, 2240, 'out', 40], [3790, 3920, 'out', 40]] },
+  rbr: { bull: [-70.1, 18.6], name: 'Red Bull Ring', full: 'Spielberg, Steiermark', land: 'Österreich', km: '4,318 km', laps: 71, pts: TRACK_PTS['at-1969'], hd: TRACK_HD['at-1969'], theme: 'rbr', bullU: [2380, 2740, 3120], stands: [[-380, 150, 'opp', 46], [240, 340, 'out', 40], [420, 900, 'L', 46], [3790, 3920, 'out', 40]] },   /* Kurve 3 (Schlossgold): dort gibt es keine Tribünen */
   sil: { name: 'Silverstone', osm: OSM_LM.sil, full: 'Silverstone Circuit', land: 'Großbritannien', km: '5,891 km', laps: 52, pts: TRACK_HD['gb-1948'].pts.filter((_, k) => k % 3 === 0), hd: TRACK_HD['gb-1948'], theme: 'sil', wing: true, stands: [[-250, -50, 'opp', 44], [40, 230, 'opp', 44], [320, 440, 'out', 40], [560, 700, 'out', 40], [840, 960, 'out', 40], [2080, 2300, 'out', 40], [2420, 2600, 'out', 40], [2650, 2850, 'out', 44], [2990, 3180, 'out', 40], [3800, 4000, 'out', 44], [4950, 5160, 'out', 40], [5440, 5540, 'out', 40], [5560, 5800, 'out', 40]] },
   mc: { name: 'Monaco', full: 'Circuit de Monaco', land: 'Monaco', km: '3,337 km', laps: 78, pts: TRACK_HD['mc-1929'].pts.filter((_, k) => k % 3 === 0), hd: TRACK_HD['mc-1929'], theme: 'mc', standDep: 12, stands: [[-160, 120, 'opp', 40], [2150, 2650, 'in', 40]], standSkip: [[2140, 2200]] /* Tribüne nach dem Tunnel (Tabac-Seite) steckte im Hang: entfernt */, mc: MC_LM, city: MC_LM.city, citySp: [520, 340], cityMul: 1.5, cityMinD: 26, cityH: [14, 34], resiTall: true, noTall: true },
   mtl: { name: 'Montréal', full: 'Circuit Gilles Villeneuve', land: 'Kanada', km: '4,361 km', laps: 70, pts: TRACK_HD['ca-1978'].pts.filter((_, k) => k % 3 === 0), hd: TRACK_HD['ca-1978'], theme: 'mtl', mtl: { hp: [-401, -1567], sa: [-214, -1086], sb: [-70, -452], c: [-275, -564], osm: OSM_LM.mtl } },
@@ -1035,7 +1035,9 @@ function applyLook() {
   const u = finishPass.uniforms; u.uSat.value = L.sat ?? 1.1; u.uCon.value = L.con ?? 1.08; u.uVig.value = L.vig ?? .38;
   u.uTint.value.set(...(L.tint || [1, 1, 1])); u.uLift.value.set(...(L.lift || [0, 0, 0])); u.uWarm.value = L.warm ?? 0; u.uFade.value.set(...(L.fade || [0, 0, 0])); u.uGrain.value = L.grain ?? 0.012; u.uBloom.value = 0; u.uSh.value.set(...(L.sh || [0.97, 0.99, 1.04])); u.uHi.value.set(...(L.hi || [1.03, 1.0, 0.96]));
 }
-function basePR() { const hi = S.gfx !== 'low', ultra = S.gfx === 'ultra'; return Math.min(devicePixelRatio || 1, ultra ? (isTouch ? 2.25 : 2.5) : hi ? (isTouch ? 1 : 1.25) : 1); }   /* Hoch: auf hochauflösenden Displays mit geringerer Renderauflösung + Nachschärfen (jeder Vollbild-Durchgang kostet auf Handy-/Laptop-GPUs viel) – Ultra rendert in voller Auflösung */
+function basePR() { const dpr = devicePixelRatio || 1; if (S.gfx === 'low') return Math.min(dpr, 1); if (S.gfx === 'ultra') return Math.min(dpr, isTouch ? 2.25 : 2.5);
+  // Hoch: nach Pixelbudget statt fester Stufe – Handy ~0,9 MP (z. B. S26 Ultra ≈ 1,55×), großes Laptop-/Monitorbild ~2,4 MP; jeder Vollbild-Durchgang kostet je Pixel
+  const budget = isTouch ? 0.9e6 : 2.4e6; return Math.min(dpr, 1.75, Math.max(1, Math.sqrt(budget / Math.max(1, innerWidth * innerHeight)))); }   /* Hoch: auf hochauflösenden Displays mit geringerer Renderauflösung + Nachschärfen (jeder Vollbild-Durchgang kostet auf Handy-/Laptop-GPUs viel) – Ultra rendert in voller Auflösung */
 function applyGfx() {
   const hi = S.gfx !== 'low', ultra = S.gfx === 'ultra';
   renderer.setPixelRatio(basePR() * (typeof DYN !== 'undefined' ? DYN.scale : 1));
@@ -2454,9 +2456,13 @@ function demH(x, z) { const D = mcDem(); if (!D) return 0; const fx = (x - D.x0)
 // Monaco: hinter der Mauer fällt das Gelände (Beau-Rivage-Anstieg, Hafen) ab – dort keine Tafeln, Posten oder Türme, sonst schweben sie
 function mcAir(x, z, i) { return !!(TRK && TRK.mc) && !FLAT && surfH(x, z) < ELEV[i] - 2; }
 // Monaco: Bodenfarbe nach Höhe und Neigung – unten Stadt (Stein), oberhalb Macchia, steile Hänge heller Kalkfels
-function mcGroundTint(ch) { const p = ch.geometry.attributes.position, n = ch.geometry.attributes.normal, c = new Float32Array(p.count * 3);
-  for (let k = 0; k < p.count; k++) { const y = p.getY(k), ny = n.getY(k), f = clamp((y - 70) / 160, 0, 1), rock = clamp((0.72 - ny) / 0.2, 0, 1) * clamp((y - 60) / 80, 0, 1);
-    let r = lerp(0.62, 0.42, f), g = lerp(0.61, 0.52, f), b = lerp(0.6, 0.34, f);   /* Stadt: graue Straßen und Plätze */ r = lerp(r, 0.84, rock); g = lerp(g, 0.81, rock); b = lerp(b, 0.74, rock); c[k * 3] = r; c[k * 3 + 1] = g; c[k * 3 + 2] = b; }
+// Stadtgrenze am Hang (Monaco/Beausoleil): unregelmäßig zwischen ~150 und ~190 m – darüber Macchia statt Häuser (spart ~6000 Häuser)
+function mcCityTop(x, z) { return 170 + 20 * Math.sin(x * 0.0061 + z * 0.0023) * Math.cos(z * 0.0049 - x * 0.0017); }
+function mcGroundTint(ch) { const p = ch.geometry.attributes.position, n = ch.geometry.attributes.normal, c = new Float32Array(p.count * 3), ox = ch.position.x, oz = ch.position.z;
+  for (let k = 0; k < p.count; k++) { const x = p.getX(k) + ox, z = p.getZ(k) + oz, y = p.getY(k), ny = n.getY(k), top = mcCityTop(x, z), f = clamp((y - top + 25) / 40, 0, 1), rock = clamp((0.74 - ny) / 0.2, 0, 1) * clamp((y - 60) / 80, 0, 1);
+    const nz = Math.sin(x * 0.043 + Math.sin(z * 0.031) * 2) * Math.sin(z * 0.047 + Math.sin(x * 0.029) * 2), dry = clamp(0.5 + nz * 0.9, 0, 1);   /* Flecken: dunkle Steineichen/Pinien und trockene, olivbraune Macchia */
+    let r = lerp(0.62, lerp(0.045, 0.17, dry), f), g = lerp(0.61, lerp(0.085, 0.15, dry), f), b = lerp(0.6, lerp(0.03, 0.065, dry), f);   /* Macchia-Farben linear (sRGB ≈ dunkelgrün bis olivbraun) */   /* unten Stadt: graue Straßen und Plätze */
+    r = lerp(r, 0.8, rock); g = lerp(g, 0.77, rock); b = lerp(b, 0.7, rock); c[k * 3] = r; c[k * 3 + 1] = g; c[k * 3 + 2] = b; }
   ch.geometry.setAttribute('color', new THREE.BufferAttribute(c, 3)); ch.material.vertexColors = true; ch.material.needsUpdate = true; }
 // Monaco: Berge hinter der Stadt aus dem echten Höhenraster (Tête de Chien, Mont Agel, Hänge von Beausoleil und Cap-d'Ail) bis 8 km – über dem Meer nichts
 function mcMountains(cx, cz) {
@@ -2465,12 +2471,13 @@ function mcMountains(cx, cz) {
   for (let k = 0; k < seg; k++) for (let r = 0; r < rows - 1; r++) { const a = k * rows + r, b = a + rows; idx.push(a, b, a + 1, b, b + 1, a + 1); }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
   const P = g.attributes.position, Nn = g.attributes.normal; for (let i = 0; i < P.count; i++) { const y = P.getY(i), ny = Nn.getY(i), nz = Math.sin(P.getX(i) * 0.013) * Math.sin(P.getZ(i) * 0.011);
-    let r = .66, gg = .55, b = .47;   // unten: dicht bebaute Hangstädte (Dächer) (Beausoleil, Cap-d'Ail, Roquebrune)
-    const f = clamp((y - 110) / 220, 0, 1); r = lerp(r, .31 + nz * .03, f); gg = lerp(gg, .37 + nz * .03, f); b = lerp(b, .25, f);   // darüber Macchia
-    const rock = clamp((0.74 - ny) / 0.2, 0, 1) * clamp((y - 150) / 120, 0, 1); r = lerp(r, .66, rock); gg = lerp(gg, .64, rock); b = lerp(b, .59, rock);   // Kalkfelsen der Steilwände
+    let r = .66, gg = .55, b = .47;   // unten: bebaute Hangstädte (Dächer) bis zur Stadtgrenze (Beausoleil, Cap-d'Ail, Roquebrune)
+    const x = P.getX(i), z = P.getZ(i), dry = clamp(0.5 + Math.sin(x * 0.011 + Math.sin(z * 0.008) * 2) * Math.sin(z * 0.012 + Math.sin(x * 0.007) * 2) * 0.9, 0, 1);
+    const f = clamp((y - mcCityTop(x, z) + 20) / 50, 0, 1); r = lerp(r, lerp(.045, .17, dry) + nz * .01, f); gg = lerp(gg, lerp(.085, .15, dry) + nz * .01, f); b = lerp(b, lerp(.03, .065, dry), f);   // darüber Macchia: dunkle Steineichen/Pinien, olivbraune Flächen
+    const rock = clamp((0.6 - ny) / 0.2, 0, 1) * clamp((y - 250) / 120, 0, 1); r = lerp(r, .62, rock); gg = lerp(gg, .6, rock); b = lerp(b, .54, rock);   // Kalkfelsen nur an den wirklich steilen, hohen Wänden
     col.push(r, gg, b); }
   g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
-  const fc = new THREE.Color(TH.fog), C = g.attributes.color; for (let i = 0; i < P.count; i++) { const f = clamp((Math.hypot(P.getX(i) - cx, P.getZ(i) - cz) - 1500) / 11000, 0, 0.5); C.setXYZ(i, lerp(C.getX(i), fc.r, f), lerp(C.getY(i), fc.g, f), lerp(C.getZ(i), fc.b, f)); }   /* leichter Dunst eingebacken – der Szenennebel würde die Berge fast weiß färben */
+  const fc = new THREE.Color(TH.fog), C = g.attributes.color; for (let i = 0; i < P.count; i++) { const f = clamp((Math.hypot(P.getX(i) - cx, P.getZ(i) - cz) - 2500) / 12000, 0, 0.35); C.setXYZ(i, lerp(C.getX(i), fc.r, f), lerp(C.getY(i), fc.g, f), lerp(C.getZ(i), fc.b, f)); }   /* leichter Dunst eingebacken – der Szenennebel würde die Berge fast weiß färben */
   const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .95, side: THREE.DoubleSide, fog: false })); m.userData.fixed = true; trackGroup.add(m); }
 // Naturstein-Mauerwerk (Monaco, Fotos): unregelmäßige helle Kalksteine in Lagen, dunkle Fugen
 let RUB_C = null; const rubbleTex = () => { if (!RUB_C) RUB_C = canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#6f675b'; g.fillRect(0, 0, w, h); let y = 0;
@@ -4402,8 +4409,12 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         for (const [x, z] of P) excl.push([x, z, 6]); } }
   }
   // Red Bull Ring: „Der Bulle vom Spielberg“ (Lage aus OSM; Maße laut Wikipedia: Stier 14,6 m, mit Bogen 17,2 m; nach Foto: weißer Stahlbogen, darunter steigender rostbrauner Stier mit goldenen Hörnern, Blick zur Strecke)
-  if (TRK.bull) { let [x, z] = TRK.bull; for (let t = 0; t < 30 && !trackFree(x, z, 16); t++) { const [, j] = nearestDist(x, z), dx = x - PX[j], dz = z - PZ[j], l = Math.hypot(dx, dz) || 1; x += dx / l * 3; z += dz / l * 3; }
-    const [, j] = nearestDist(x, z), g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = Math.atan2(PX[j] - x, PZ[j] - z); trackGroup.add(g);
+  if (TRK.bull) { let [x, z] = TRK.bull, face = null;
+    if (TRK.bullU) { // mittig in der U-Form des Infields (Arm nach Kurve 3 – Scheitel – Arm zurück), auf der Achse vom Scheitel zur Öffnung, Blick in die Mitte des U
+      const [sa, sc2, sb] = TRK.bullU, A = trackAt(sa, 0), B = trackAt(sb, 0), C = trackAt(sc2, 0), mx = (A.x + B.x) / 2, mz = (A.z + B.z) / 2;
+      x = C.x + (mx - C.x) * 0.4; z = C.z + (mz - C.z) * 0.4; face = Math.atan2(mx - x, mz - z); }
+    for (let t = 0; t < 30 && !trackFree(x, z, 16); t++) { const [, j] = nearestDist(x, z), dx = x - PX[j], dz = z - PZ[j], l = Math.hypot(dx, dz) || 1; x += dx / l * 3; z += dz / l * 3; }
+    const [, j] = nearestDist(x, z), g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = face ?? Math.atan2(PX[j] - x, PZ[j] - z); trackGroup.add(g);
     const archM = new THREE.MeshStandardMaterial({ color: 0xeef1f4, roughness: .35, metalness: .6 }), cor = new THREE.MeshStandardMaterial({ color: 0x7a3f24, roughness: .75, metalness: .35 }), goldM = new THREE.MeshStandardMaterial({ color: 0xd9b04a, roughness: .25, metalness: .95, emissive: new THREE.Color(0.2, 0.14, 0.03) });
     const ap = []; for (let k = 0; k <= 32; k++) { const u = k / 32 * 2 - 1; ap.push(new THREE.Vector3(u * 15, 17.2 * (1 - u * u), -2)); } g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(ap), 64, 0.55, 10), archM));   // Bogen
     const add = (geo, m, x2, y2, z2, rx = 0, ry = 0, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x2, y2, z2); o.rotation.set(rx, ry, rz); o.castShadow = true; g.add(o); return o; };
@@ -4544,7 +4555,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       const nearT = new Set(), ck = (x, z) => Math.floor(x / 20) * 65536 + Math.floor(z / 20); for (let i = 0; i < N; i++) { const r = Math.max(WL[i], WR[i]) + 40; for (let a = -r; a <= r; a += 20) for (let b = -r; b <= r; b += 20) nearT.add(ck(PX[i] + a, PZ[i] + b)); }
       const pipM = (P, x, z) => { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const [xi, zi] = P[i], [xj, zj] = P[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; }, xH = new Map(), addH = (x, z, r, v) => { for (let a = Math.floor((x - r) / 20); a <= Math.floor((x + r) / 20); a++) for (let b = Math.floor((z - r) / 20); b <= Math.floor((z + r) / 20); b++) { const k = a * 65536 + b; let L4 = xH.get(k); if (!L4) xH.set(k, L4 = []); L4.push(v); } };
       for (const e of excl) addH(e[0], e[1], e[2] + 14, e[3] ? { P: e[3] } : [e[0], e[1], e[2] + 2]); for (const F of LMP) addH(F.cx, F.cz, F.r + 16, [F.cx, F.cz, F.r + 4]);   /* je Zelle alles, was ein Haus mit 11 m Halbmaß berühren kann */
-      for (let gx = -R; gx <= R; gx += SP) for (let gz = -R; gz <= R; gz += SP) { const x = c0x + gx + (rj(gx, gz) - .5) * 5, z = c0z + gz + (rj(gz, gx) - .5) * 5, h = demH(x, z); if (h < 1 || h > 380 || inMarina(x, z) || (MC_SEA && MC_SEA(x, z))) continue;
+      for (let gx = -R; gx <= R; gx += SP) for (let gz = -R; gz <= R; gz += SP) { const x = c0x + gx + (rj(gx, gz) - .5) * 5, z = c0z + gz + (rj(gz, gx) - .5) * 5, h = demH(x, z); if (h < 1 || h > mcCityTop(x, z) || inMarina(x, z) || (MC_SEA && MC_SEA(x, z))) continue;
         const near = nearT.has(ck(x, z)); if (near) { const [d] = nearestDist(x, z); if (d < 14) continue; }
         const kx = Math.floor(x / 60), kz = Math.floor(z / 60); let hit = false; for (let a = -1; a <= 1 && !hit; a++) for (let b = -1; b <= 1 && !hit; b++) { const L3 = bGrid.get((kx + a + 512) * 4096 + kz + b + 512); if (L3) for (const Q of L3) if (Math.abs(Q[0] - x) < Q[2] + 10 && Math.abs(Q[1] - z) < Q[3] + 10) { hit = true; break; } }
         if (hit) continue;
@@ -5318,10 +5329,12 @@ function placeOnGrid() {
   if (pl.mesh && pl.mesh.road && S.rmode !== 'f1') { pl.street = true; pl.topMul = STREET.vmax / VTOP; pl.brkMul = STREET.brk / BRAKE; pl.gripMul = STREET.lat / GRIP; pl.accMul = 1; }   // Roadster Straßenversion
   order = cars.slice();
 }
+// Alle Shader vorab übersetzen (auch für Objekte, die gerade nicht im Bild sind) – sonst kompiliert der Browser sie mitten im Rennen, sobald sie zum ersten Mal auftauchen (Ruckler)
+function precompile() { try { const prev = renderer.getRenderTarget(); if (composer) renderer.setRenderTarget(composer.renderTarget1); renderer.compile(scene, camera); renderer.setRenderTarget(prev); } catch (e) { console.warn('precompile', e); } }
 function startRace() {
   diff = DIFF[S.diff] || DIFF.mid;
   profAI = buildProfile(diff.aLat, VTOP * Math.max(1, diff.top), diff.brake, KR);
-  placeOnGrid();
+  placeOnGrid(); precompile();
   raceSongPick(false);
   running = true; paused = false; resultsShown = false; raceState = 'lights'; lightsT = 0; lightsOut = 5 + Math.random() * 1.4;
   raceTime = 0; leaderFinished = false; fastest = null; tiltCheckT = 0;
@@ -5808,6 +5821,7 @@ const _fd = new THREE.Vector3(0.25, 1, 0.3).normalize(), _ht = new THREE.Vector3
 function fmt(t) { if (!t) return '–'; const m = Math.floor(t / 60), s = t - m * 60; return m + ':' + (s < 10 ? '0' : '') + s.toFixed(3); }
 function showMsg(t, dur) { const el = $('#msg'); el.textContent = t; el.classList.add('show'); msgT = dur; }
 let gaugeT = 0, hudBat = -1, hudBoost = null;
+const HUDC = {};
 function updateHUD(dt) {
   if (msgT > 0) { msgT -= dt; if (msgT <= 0) $('#msg').classList.remove('show'); }
   if (!running) return;
@@ -5816,16 +5830,17 @@ function updateHUD(dt) {
   if (pl.wrongT > 1 && msgT <= 0) showMsg('FALSCHE RICHTUNG', 0.5);
   hudT -= dt; if (hudT > 0) return; hudT = 0.12;
   const pos = order.indexOf(pl) + 1;
-  $('#pos').innerHTML = 'P' + pos + '<span>/' + cars.length + '</span>';
-  $('#lap').textContent = 'Runde ' + clamp(pl.lapsDone + 1, 1, S.laps) + '/' + S.laps;
+  const setH = (id, v) => { if (HUDC[id] !== v) { HUDC[id] = v; $(id).innerHTML = v; } }, setT = (id, v) => { if (HUDC[id] !== v) { HUDC[id] = v; $(id).textContent = v; } };   // nur ändern, was sich ändert (spart Layout-Arbeit)
+  setH('#pos', 'P' + pos + '<span>/' + cars.length + '</span>');
+  setT('#lap', 'Runde ' + clamp(pl.lapsDone + 1, 1, S.laps) + '/' + S.laps);
   const cur = raceState === 'race' && pl.lapsDone >= 0 && !pl.finished ? raceTime - pl.lapStart : 0;
-  $('#ltime').textContent = cur ? fmt(cur) : '0:00.000';
-  $('#lsub').textContent = 'Letzte ' + fmt(pl.last) + ' · Beste ' + fmt(pl.best);
+  setT('#ltime', cur ? fmt(cur) : '0:00.000');
+  setT('#lsub', 'Letzte ' + fmt(pl.last) + ' · Beste ' + fmt(pl.best));
   const ahead = order[pos - 2], behind = order[pos];
   let gh = '';
   if (ahead && !ahead.finished) gh += '▲ ' + ahead.code + ' +' + (Math.abs(ahead.d - pl.d) / Math.max(pl.v, 25)).toFixed(1) + 's<br>';
   if (behind) gh += '▼ ' + behind.code + ' −' + (Math.abs(pl.d - behind.d) / Math.max(behind.v, 25)).toFixed(1) + 's';
-  $('#gaps').innerHTML = raceState === 'race' ? gh : '';
+  setH('#gaps', raceState === 'race' ? gh : '');
   const show = new Set((pos <= 3 ? [0, 1, 2, 3] : [0, pos - 2, pos - 1, pos]).filter(i => i >= 0 && i < order.length));
   let h = '', prev = -1;
   [...show].sort((a, b) => a - b).forEach(i => {
@@ -5834,7 +5849,7 @@ function updateHUD(dt) {
     h += '<div class="r' + (c === pl ? ' me' : '') + '"><span class="p">' + (i + 1) + '</span><i style="background:' + hex(uiCol(TEAMS[c.team])) + '"></i>' + c.code + '</div>';
     prev = i;
   });
-  $('#board').innerHTML = h;
+  setH('#board', h);
   drawMap();
 }
 function showResults() {
@@ -6187,7 +6202,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v63'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v64'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -6205,19 +6220,21 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
 
 /* ======================= Loop ======================= */
 let pauseDrawn = 0;
-function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); if (composer) { composer.setPixelRatio(renderer.getPixelRatio()); composer.setSize(w, h); finishPass.uniforms.uTexel.value.set(1 / (w * renderer.getPixelRatio()), 1 / (h * renderer.getPixelRatio())); } pauseDrawn = 0; }
+function resize() { const w = innerWidth, h = innerHeight, pr = basePR() * DYN.scale; if (Math.abs(renderer.getPixelRatio() - pr) > 0.001) renderer.setPixelRatio(pr); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); if (composer) { composer.setPixelRatio(renderer.getPixelRatio()); composer.setSize(w, h); finishPass.uniforms.uTexel.value.set(1 / (w * renderer.getPixelRatio()), 1 / (h * renderer.getPixelRatio())); } pauseDrawn = 0; }
 addEventListener('resize', resize);
 let last = performance.now();
 const _sv = new THREE.Vector3(), _cd = new THREE.Vector3(), _v2b = new THREE.Vector2();
-const DYN = { acc: 0, n: 0, scale: 1, calm: 0 };
+const DYN = { acc: 0, n: 0, scale: 1, calm: 0, bad: 0, tChg: 0 };
 function dynRes(raw) {
   if (!running || paused || document.hidden || raw > 250) { DYN.acc = DYN.n = 0; return; }
   DYN.acc += raw; DYN.n++; if (DYN.acc < 1500) return;
   const avg = DYN.acc / DYN.n; DYN.acc = DYN.n = 0; let ns = DYN.scale;
-  if (avg > 21.5) { ns = Math.max(0.8, DYN.scale - (avg > 30 ? 0.1 : 0.05));   /* nicht unter 80 %: sonst werden Linien und Curbs matschig */ DYN.calm = 0; }
-  else if (avg < 17.6 && DYN.scale < 1) { if (++DYN.calm >= 4) { ns = Math.min(1, DYN.scale + 0.06); DYN.calm = 0; } }
-  else DYN.calm = 0;
-  if (Math.abs(ns - DYN.scale) > 0.01) { DYN.scale = ns; renderer.setPixelRatio(basePR() * ns); resize(); }
+  // Jede Änderung legt alle Render-Ziele neu an (kurzer Hänger) – deshalb nur selten: runter erst nach 2 langsamen Fenstern (3 s), rauf erst nach 12 ruhigen (18 s), dann mindestens 10 s Pause
+  const tNow = performance.now(); if (tNow - (DYN.tChg || 0) < 10000) return;
+  if (avg > 21.5) { DYN.calm = 0; if (++DYN.bad >= 2) { ns = Math.max(0.8, DYN.scale - (avg > 30 ? 0.1 : 0.05)); DYN.bad = 0; } }   /* nicht unter 80 %: sonst werden Linien und Curbs matschig */
+  else if (avg < 16.8 && DYN.scale < 1) { DYN.bad = 0; if (++DYN.calm >= 12) { ns = Math.min(1, DYN.scale + 0.05); DYN.calm = 0; } }
+  else { DYN.calm = 0; DYN.bad = 0; }
+  if (Math.abs(ns - DYN.scale) > 0.01) { DYN.scale = ns; DYN.tChg = tNow; resize(); }
 }
 const SPHERE = { cv: null, tex: null, t: 0, acc: 0 }, WHEEL_ROT = { obj: null, rim: null }, FOUNT = { jets: null, t: 0 }, FLYER = { obj: null }, SGT = { list: [] };
 function vegasTick(dt) {
