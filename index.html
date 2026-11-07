@@ -4412,7 +4412,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   if (TRK.bull) { let [x, z] = TRK.bull, face = null;
     if (TRK.bullU) { // mittig in der U-Form des Infields (Arm nach Kurve 3 – Scheitel – Arm zurück), auf der Achse vom Scheitel zur Öffnung, Blick in die Mitte des U
       const [sa, sc2, sb] = TRK.bullU, A = trackAt(sa, 0), B = trackAt(sb, 0), C = trackAt(sc2, 0), mx = (A.x + B.x) / 2, mz = (A.z + B.z) / 2;
-      x = C.x + (mx - C.x) * 0.4; z = C.z + (mz - C.z) * 0.4; face = Math.atan2(mx - x, mz - z); }
+      x = C.x + (mx - C.x) * 0.4; z = C.z + (mz - C.z) * 0.4; face = Math.atan2(C.x - x, C.z - z); }   /* Blick zum Scheitel des U (in die Kurve hinein) */
     for (let t = 0; t < 30 && !trackFree(x, z, 16); t++) { const [, j] = nearestDist(x, z), dx = x - PX[j], dz = z - PZ[j], l = Math.hypot(dx, dz) || 1; x += dx / l * 3; z += dz / l * 3; }
     const [, j] = nearestDist(x, z), g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = face ?? Math.atan2(PX[j] - x, PZ[j] - z); trackGroup.add(g);
     const archM = new THREE.MeshStandardMaterial({ color: 0xeef1f4, roughness: .35, metalness: .6 }), cor = new THREE.MeshStandardMaterial({ color: 0x7a3f24, roughness: .75, metalness: .35 }), goldM = new THREE.MeshStandardMaterial({ color: 0xd9b04a, roughness: .25, metalness: .95, emissive: new THREE.Color(0.2, 0.14, 0.03) });
@@ -6202,7 +6202,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v64'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v65'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
