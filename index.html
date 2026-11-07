@@ -775,58 +775,58 @@ const THEMES = {
     hemi: [0xd2e2f5, 0x6a6050, 0.42], flood: 0, exposure: 0.95, ground: 'sand', mainTint: 0xc9c6bf, groundTint: 0xc9c6bf, bandStone: 0xd8cdb8, wall: 8.6, runoff: 6, wallH: 1.0, wallKind: 'armco', runoffKind: 'asphalt', plainWalls: true,
     ads: ['MONTE-CARLO', 'MONACO GP', 'CASINO', 'SAINTE DÉVOTE', 'RASCASSE', 'PORTIER', 'TABAC', 'LOEWS'], adCols: ['#ce1126', '#ffffff', '#111111', '#d4af37', '#0b3a8a', '#00857c'],
     trees: 'palms', city: true, hills: { h: 160, v: 140, col: [0x55604a, 0x6b7258] }, kerb: [0xd42a1e, 0xf4f4f4], belt: ['#ce1126', '#f2f2f2'], flare: .8,
-    look: { sh: [1.0, 0.97, 1.05], hi: [1.08, 1.02, 0.93], sat: 1.1, con: 1.0, vig: .24, tint: [1.03, 1.0, .97], lift: [.012, .009, .006], bloom: .32, thr: .95, rad: .4 } },
+    look: { sh: [1.0, 0.97, 1.05], hi: [1.08, 1.02, 0.93], sat: 1.1, con: 1.0, vig: .24, tint: [1.03, 1.0, .97], lift: [.012, .009, .006], bloom: .32, thr: .95, rad: .4, warm: .32, fade: [.008, .005, .012], grain: .012 } },
   sil: { asph: 'sil', phys: { turb: 4.5, ray: 1.2, mie: .005, g: .8, gain: .5 }, sky: [0x3a6aa8, 0x92b4d6, 0xdfe6ec], fog: 0xc4ceda, fogNear: 420, fogFar: 5200, camFar: 9000, sunDir: [0.42, 0.5, 0.45], sunCol: 0xfff2e2, sunI: 3.0, clouds: [1.05, 0.46, 0.85, 0],
     hemi: [0xc8d6e6, 0x46552e, 0.42], flood: 0, exposure: 0.95, ground: 'grass', groundTint: 0xe8efd8, wall: 14, runoff: 22, wallH: 1.0, wallKind: 'armco', runoffKind: 'gravel',
     ads: ['SILVERSTONE', 'BRITISH GP', 'COPSE', 'MAGGOTTS', 'BECKETTS', 'STOWE', 'NORTHAMPTONSHIRE'], adCols: ['#012169', '#ffffff', '#c8102e', '#111111', '#0b6e3a', '#f2c200'],
     trees: 'forest', conifer: .18, treeMul: .55, treeMinD: 40, treeBand: 380, treeExt: 1200, kerb: [0xd42a1e, 0xf4f4f4], belt: ['#012169', '#f2f2f2'], flare: .7,
-    look: { sh: [0.93, 1.0, 1.07], hi: [0.98, 1.02, 1.05], sat: .9, con: 1.04, vig: .32, tint: [.97, 1.01, 1.04], lift: [0, .004, .008], bloom: .3, thr: .95, rad: .4 } },
+    look: { sh: [0.93, 1.0, 1.07], hi: [0.98, 1.02, 1.05], sat: .9, con: 1.04, vig: .32, tint: [.97, 1.01, 1.04], lift: [0, .004, .008], bloom: .3, thr: .95, rad: .4, warm: -.22, fade: [0, .004, .01], grain: .014 } },
   mtl: { asph: 'mtl', phys: { turb: 2.6, ray: 1.0, mie: .004, g: .8, gain: .5 }, sky: [0x2a6cc8, 0x8fc0ec, 0xe0ecf6], fog: 0xc4d4e2, fogNear: 700, fogFar: 7500, camFar: 9000, sunDir: [-0.4, 0.55, 0.5], sunCol: 0xfff1dc, sunI: 3.3, clouds: [0.6, 0.5, 0.85, 0],
     hemi: [0xcfe0f5, 0x4a5a30, 0.38], flood: 0, exposure: 0.95, ground: 'grass', groundTint: 0xd8e6c4, wall: 9, runoff: 8, wallH: 1.1, wallKind: 'concrete', runoffKind: 'paved',
     ads: ['MONTRÉAL', 'CANADIAN GP', 'ÎLE NOTRE-DAME', 'WALL OF CHAMPIONS', 'QUÉBEC', 'ST. LAWRENCE', 'BIODÔME'], adCols: ['#d80621', '#ffffff', '#111111', '#0b3a8a', '#f2c200', '#0b6e3a'],
     trees: 'forest', conifer: .25, treeMul: .9, treeMinD: 8, treeBand: 140, treeExt: 500, kerb: [0xd42a1e, 0xf4f4f4], belt: ['#d80621', '#f2f2f2'], flare: .8,
-    look: { sh: [0.92, 1.0, 1.09], hi: [1.02, 1.04, 0.98], sat: 1.07, con: 1.06, vig: .28, tint: [.98, 1.02, 1.03], lift: [0, .004, .006], bloom: .32, thr: .95, rad: .4 } },
+    look: { sh: [0.92, 1.0, 1.09], hi: [1.02, 1.04, 0.98], sat: 1.07, con: 1.06, vig: .28, tint: [.98, 1.02, 1.03], lift: [0, .004, .006], bloom: .32, thr: .95, rad: .4, warm: -.08, fade: [0, .003, .008], grain: .012 } },
   mel: { asph: 'mel', phys: { turb: 2.6, ray: 1.0, mie: .004, g: .8, gain: .5 }, sky: [0x2a6cc8, 0x8fc0ec, 0xe0ecf6], fog: 0xc9d8e6, fogNear: 450, fogFar: 6500, camFar: 9000, sunDir: [-0.45, 0.48, -0.6], sunCol: 0xfff1dc, sunI: 3.4, clouds: [0.55, 0.5, 0.85, 0], cloudCol: 0xf4f6fa,
     hemi: [0xcfe0f5, 0x4a5a30, 0.38], flood: 0, exposure: 0.95, ground: 'grass', groundTint: 0xe6d8a2, dryGrass: true, wall: 9, runoff: 16, lakePalms: true, wallH: 1.1, wallKind: 'concrete', runoffKind: 'gravel',
     ads: ['MELBOURNE', 'ALBERT PARK', 'AUSTRALIAN GP', 'VICTORIA', 'LAKESIDE', 'SOUTHBANK', 'DOWN UNDER'], adCols: ['#00843d', '#ffcd00', '#ffffff', '#0b3a8a', '#111111', '#c8102e'],
     trees: 'forest', conifer: .12, city: true, kerb: [0xd42a1e, 0xf4f4f4], belt: ['#00843d', '#ffcd00'], flare: .8,
-    look: { sh: [0.96, 0.99, 1.07], hi: [1.09, 1.05, 0.88], sat: 1.09, con: 1.13, vig: .26, tint: [1.03, 1.01, .94], lift: [0, 0, 0], bloom: .32, thr: .95, rad: .4 } },
+    look: { sh: [0.96, 0.99, 1.07], hi: [1.09, 1.05, 0.88], sat: 1.09, con: 1.13, vig: .26, tint: [1.03, 1.01, .94], lift: [0, 0, 0], bloom: .32, thr: .95, rad: .4, warm: .14, fade: [.004, .004, 0], grain: .011 } },
   vegas: { asph: 'vegas', fireworks: true, phys: { turb: 2, ray: 0.4, mie: .002, g: .7, gain: .025 }, sky: [0x02030a, 0x0a0f2a, 0x2a1840], fog: 0x1a1230, fogNear: 350, fogFar: 3000, sunDir: [0.35, 0.55, -0.45], sunCol: 0x9fb4ff, sunI: 0.3, floodCol: 0xfff4e6, clouds: [0, .6, 1, 0], cloudCol: 0x222244,
     hemi: [0x8a8cb0, 0x3a2c22, 0.7], flood: 4.4, exposure: 1.1, ground: 'sand', groundTint: 0x2c2a30, wall: 8, runoff: 9, wallH: 1.2, wallKind: 'concrete', runoffKind: 'asphalt', noBlue: true, night: true, vegas: true,
     ads: ['LAS VEGAS', 'THE STRIP', 'NEON NIGHTS', 'GRAND PRIX', 'JACKPOT', 'DESERT RACE', 'HIGH ROLLER'], adCols: ['#0b3a8a', '#ffffff', '#c8102e', '#111111', '#d4af37', '#1d1d24'],
     trees: 'palms', kerb: [0xd42a1e, 0xf4f4f4], belt: ['#ff2bd6', '#111111'], poles: true,
-    flare: 0, look: { sh: [0.84, 0.88, 1.2], hi: [1.13, 0.95, 1.07], sat: 1.22, con: 1.2, vig: .4, tint: [1.02, .97, 1.04], lift: [.004, 0, .012], bloom: .42, thr: 1.05, rad: .45 } },
+    flare: 0, look: { sh: [0.84, 0.88, 1.2], hi: [1.13, 0.95, 1.07], sat: 1.22, con: 1.2, vig: .4, tint: [1.02, .97, 1.04], lift: [.004, 0, .012], bloom: .42, thr: 1.05, rad: .45, warm: -.18, fade: [.012, 0, .022], grain: .018 } },
   sgp: { asph: 'sgp', fireworks: true, phys: { turb: 2, ray: 0.5, mie: .003, g: .7, gain: .03 }, sky: [0x03060f, 0x0b1428, 0x22263a], fog: 0x161c2a, fogNear: 380, fogFar: 3200, sunDir: [-0.3, 0.6, 0.4], sunCol: 0xa8b8ff, sunI: 0.3, floodCol: 0xf4f6ff, clouds: [0.25, .6, 1, 0], cloudCol: 0x2a2e40,
     hemi: [0x8a94b8, 0x3a3226, 0.7], flood: 4.6, exposure: 1.1, ground: 'city', groundTint: 0x7a7c84, cityLit: .38, wall: 8, runoff: 9, wallH: 1.2, wallKind: 'concrete', runoffKind: 'asphalt', noBlue: true, night: true,
     ads: ['SINGAPORE', 'MARINA BAY', 'NIGHT RACE', 'LION CITY', 'GRAND PRIX', 'ESPLANADE', 'RAFFLES'], adCols: ['#c8102e', '#ffffff', '#111111', '#0b3a8a', '#d4af37', '#1d1d24'],
     trees: 'palms', kerb: [0xd42a1e, 0xf4f4f4], belt: ['#c8102e', '#f2f2f2'], poles: true,
-    flare: 0, look: { sh: [0.85, 1.03, 1.1], hi: [1.11, 1.01, 0.85], sat: 1.12, con: 1.16, vig: .36, tint: [1.0, 1.02, .98], lift: [0, .006, .008], bloom: .4, thr: 1.05, rad: .45 } },
+    flare: 0, look: { sh: [0.85, 1.03, 1.1], hi: [1.11, 1.01, 0.85], sat: 1.12, con: 1.16, vig: .36, tint: [1.0, 1.02, .98], lift: [0, .006, .008], bloom: .4, thr: 1.05, rad: .45, warm: .12, fade: [0, .006, .016], grain: .016 } },
   nos: { asph: 'nos', phys: { turb: 4.2, ray: 1.2, mie: .005, g: .8, gain: .5 }, sky: [0x2c66b8, 0x8ab6e0, 0xd8e6f0], fog: 0xb4c2cc, fogNear: 420, fogFar: 4800, camFar: 9000, sunDir: [-0.4, 0.5, 0.55], sunCol: 0xfff0dc, sunI: 3.1, clouds: [1.0, 0.5, 0.85, 0], cloudCol: 0xedf0f4,
     hemi: [0xc8d6e6, 0x46552e, 0.42], flood: 0, exposure: 0.95, ground: 'grass', groundTint: 0xb8c4a0, wall: 9, runoff: 0, wallH: 1.0, wallKind: 'armco', runoffKind: 'grass', harmonic: true, bigGround: 1600,
     ads: ['NORDSCHLEIFE', 'GRÜNE HÖLLE', 'EIFEL', 'NÜRBURG', 'ADENAU', '20.832 KM', 'RING'], adCols: ['#0b6e3a', '#ffffff', '#111111', '#f2c200', '#0b3a8a', '#c8102e'],
     trees: 'forest', conifer: .62, treeMul: 2.3, treeMinD: 4, treeBand: 200, treeExt: 900, hills: { h: 80, v: 90, col: [0x2c4a26, 0x3a5a2e] }, kerb: [0xd8231b, 0xf4f4f4], belt: ['#0b6e3a', '#f2f2f2'], flare: .7,
-    look: { sh: [0.92, 0.98, 1.06], hi: [0.98, 1.0, 1.03], sat: .8, con: 1.07, vig: .38, tint: [.96, 1.0, 1.03], lift: [.006, .008, .012], bloom: .3, thr: .95, rad: .4 } },
-  spa: { asph: 'spa', phys: { turb: 5.5, ray: 1.3, mie: .006, g: .82, gain: .5 }, sky: [0x2a68c0, 0x86b8e8, 0xdbe9f3], fog: 0xb7c2cc, fogNear: 250, fogFar: 3200, sunDir: [-0.45, 0.42, 0.55], sunCol: 0xfff0dc, sunI: 3.0, clouds: [1.0, 0.44, 0.85, 0], cloudCol: 0xe9edf2,
-    hemi: [0xc8d6e6, 0x46552e, 0.4], flood: 0, exposure: 0.95, ground: 'grass', wall: 12, runoff: 20, wallH: 1.0, wallKind: 'armco', runoffKind: 'gravel',
+    look: { sh: [0.92, 0.98, 1.06], hi: [0.98, 1.0, 1.03], sat: .8, con: 1.07, vig: .38, tint: [.96, 1.0, 1.03], lift: [.006, .008, .012], bloom: .3, thr: .95, rad: .4, warm: -.14, fade: [.01, .013, .012], grain: .015 } },
+  spa: { asph: 'spa', phys: { turb: 2.4, ray: 1.05, mie: .0035, g: .8, gain: .55 }, sky: [0x2468c8, 0x84bcec, 0xe2eef8], fog: 0xc6d6e6, fogNear: 550, fogFar: 5200, sunDir: [-0.45, 0.6, 0.55], sunCol: 0xfff4e2, sunI: 3.4, clouds: [0.6, 0.53, 0.8, 0], cloudCol: 0xffffff,   /* Spa bei schönem Wetter: klarer Himmel, Schönwetterwolken, weite Sicht */
+    hemi: [0xd2e2f4, 0x4c5c30, 0.46], flood: 0, exposure: 0.97, ground: 'grass', wall: 12, runoff: 20, wallH: 1.0, wallKind: 'armco', runoffKind: 'gravel',
     ads: ['SPA-FRANCORCHAMPS', 'EAU ROUGE', 'RAIDILLON', 'LA SOURCE', 'BLANCHIMONT', 'ARDENNES', 'STAVELOT'], adCols: ['#f2c200', '#111111', '#c8102e', '#ffffff', '#0b3a8a', '#0b6e3a'],
     trees: 'forest', conifer: .6, treeMul: 1.1, hills: { h: 90, v: 70, col: [0x2c4a26, 0x3a5a2e] }, kerb: [0xd8231b, 0xf5c518], belt: ['#c8102e', '#f5c518'], flare: .7, paint: [[840, 1135]],
-    look: { sh: [0.88, 1.0, 1.05], hi: [1.02, 1.04, 0.97], sat: .94, con: 1.1, vig: .36, tint: [.97, 1.03, 1.0], lift: [.006, .012, .012], bloom: .33, thr: .95, rad: .4 } },
+    look: { sh: [0.92, 1.0, 1.06], hi: [1.05, 1.03, 0.95], sat: 1.08, con: 1.08, vig: .3, tint: [1.0, 1.02, .98], lift: [.003, .006, .006], bloom: .34, thr: .95, rad: .4, warm: .22, fade: [.004, .006, .004], grain: .011 } },
   rbr: { asph: 'rbr', phys: { turb: 2.4, ray: 0.9, mie: .004, g: .8, gain: .55 }, sky: [0x2a68c0, 0x86b8e8, 0xdbe9f3], fog: 0xc6d6e6, fogNear: 500, fogFar: 7500, camFar: 9500, sunDir: [0.4, 0.5, -0.5], sunCol: 0xfff3e0, sunI: 3.3, clouds: [0.7, 0.5, 0.8, 0], cloudCol: 0xf4f6fa,
     hemi: [0xcfe0f5, 0x4a5a30, 0.38], flood: 0, exposure: 0.95, ground: 'grass', wall: 12, runoff: 24, wallH: 1.0, wallKind: 'armco', runoffKind: 'paved',
     groundTint: 0xc9cfb2, rise: { d0: 300, base: 0.03, k: 0.15, max: 330, soft: 420 }, hill: { a: 0.49, b: 0.70, h: 6 }, harmonic: true, elevScale: 0.5, bigGround: 5000, openInfield: true, treeMinD: 45, treeBand: 420, treeExt: 1500,
     ads: ['SPIELBERG', 'STEIERMARK', 'MURTAL', 'ÖSTERREICH', 'RENNSTRECKE', 'ALPEN'], adCols: ['#c8102e', '#ffffff', '#0b3a8a', '#111111', '#f2c200', '#0b6e3a'],
     trees: 'forest', conifer: .8, treeMul: .75, mountains: true, kerb: [0xd42a1e, 0xf4f4f4], belt: ['#c8102e', '#f2f2f2'], flare: .8,
-    look: { sh: [0.94, 1.0, 1.1], hi: [1.03, 1.03, 0.96], sat: 1.16, con: 1.12, vig: .26, tint: [1.0, 1.02, 1.02], lift: [0, 0, .004], bloom: .3, thr: .95, rad: .4 } },
+    look: { sh: [0.94, 1.0, 1.1], hi: [1.03, 1.03, 0.96], sat: 1.16, con: 1.12, vig: .26, tint: [1.0, 1.02, 1.02], lift: [0, 0, .004], bloom: .3, thr: .95, rad: .4, warm: .04, fade: [0, .004, .008], grain: .011 } },
   monza: { asph: 'monza', phys: { turb: 3.2, ray: 1.1, mie: .004, g: .82, gain: .55 }, sky: [0x2a68c0, 0x86b8e8, 0xdbe9f3], fog: 0xbfd2e2, fogNear: 300, fogFar: 2600, sunDir: [0.55, 0.32, 0.45], sunCol: 0xfff1dc, sunI: 3.6, clouds: [0.85, 0.52, 0.9, 0], cloudCol: 0xf4f6fa,
     hemi: [0xcfe0f5, 0x4a5a30, 0.35], flood: 0, exposure: 0.95, ground: 'grass', wall: 12, runoff: 20, wallH: 1.0, wallKind: 'armco', runoffKind: 'gravel',
     ads: ['MONZA', "GRAN PREMIO D'ITALIA", 'AUTODROMO', 'TEMPIO DELLA VELOCITÀ', 'PARABOLICA', 'LESMO', 'ASCARI'], adCols: ['#c8102e', '#ffffff', '#0b6e3a', '#111111', '#f2c200', '#0b3a8a'],
     trees: 'forest', kerb: [0xd42a1e, 0xf4f4f4], belt: ['#c8102e', '#f2f2f2'],
-    flare: .8, look: { sh: [0.98, 0.96, 1.02], hi: [1.11, 1.03, 0.87], sat: 1.13, con: 1.09, vig: .3, tint: [1.04, 1.0, .93], lift: [.004, .002, 0], bloom: .35, thr: .95, rad: .4 } },
+    flare: .8, look: { sh: [0.98, 0.96, 1.02], hi: [1.11, 1.03, 0.87], sat: 1.13, con: 1.09, vig: .3, tint: [1.04, 1.0, .93], lift: [.004, .002, 0], bloom: .35, thr: .95, rad: .4, warm: .38, fade: [.012, .008, 0], grain: .012 } },
   yas: { asph: 'yas', phys: { turb: 12, ray: 3.4, mie: .0045, g: .962, gain: .4 }, sky: [0x0d1236, 0x46367a, 0xef8a4e], fog: 0xb07e6a, fogNear: 260, fogFar: 2300, haze: .62, hazeCol: 0xd8865e, fireworks: true, sunDir: [-0.75, 0.05, 0.45], sunCol: 0xff7a30, lightCol: 0xffbe86, sunI: 1.1, sunCos: 0.9999965, sunExp: 9000, clouds: [0.55, 0.58, 0.6, 0], cloudCol: 0xb06a8a,
     hemi: [0xb4bcd8, 0x5a4a3c, 0.62], flood: 1.8, exposure: 1.0, ground: 'sand', wall: 11, runoff: 18, wallH: 1.2, wallKind: 'concrete', runoffKind: 'asphalt',
     ads: ['YAS MARINA', 'ABU DHABI GP', 'YAS ISLAND', 'TWILIGHT RACE', 'SAADIYAT', 'CORNICHE'], adCols: ['#0a3d91', '#d4af37', '#ffffff', '#c8102e', '#111111', '#00857c'],
     trees: 'palms', kerb: [0xd42a1e, 0xf4f4f4], belt: ['#1450b4', '#f2f2f2'], poles: true, tents: true, runoffCol: 0x2ec9cc, noBlue: true,
-    flare: .9, rays: .7, look: { sh: [0.88, 0.86, 1.14], hi: [1.12, 0.97, 0.88], sat: 1.14, con: 1.1, vig: .42, tint: [1.08, .96, .92], lift: [.012, .004, .01], bloom: .4, thr: .92, rad: .42 } },
+    flare: .9, rays: .7, look: { sh: [0.88, 0.86, 1.14], hi: [1.12, 0.97, 0.88], sat: 1.14, con: 1.1, vig: .42, tint: [1.08, .96, .92], lift: [.012, .004, .01], bloom: .4, thr: .92, rad: .42, warm: .26, fade: [.012, 0, .016], grain: .013 } },
 };
 
 /* ======================= Konstanten ======================= */
@@ -882,27 +882,35 @@ for (const l of [sun, flood]) {
 const FinishShader = {
   uniforms: { tDiffuse: { value: null }, uSpeed: { value: 0 }, uVig: { value: 0.38 }, uSat: { value: 1.12 }, uCon: { value: 1.08 }, uTint: { value: new THREE.Vector3(1, 1, 1) }, uLift: { value: new THREE.Vector3(0, 0, 0) },
     uSun: { value: new THREE.Vector2(0.5, 0.5) }, uSunOn: { value: 0 }, uAspect: { value: 1 }, uSunCol: { value: new THREE.Vector3(1, .9, .7) },
-    tRays: { value: null }, uRays: { value: 0 }, uSh: { value: new THREE.Vector3(0.97, 0.99, 1.04) }, uHi: { value: new THREE.Vector3(1.03, 1.0, 0.96) }, tSunVis: { value: null }, uSharp: { value: 0 }, uTexel: { value: new THREE.Vector2(1 / 1024, 1 / 1024) } },
+    tRays: { value: null }, uRays: { value: 0 }, uSh: { value: new THREE.Vector3(0.97, 0.99, 1.04) }, uHi: { value: new THREE.Vector3(1.03, 1.0, 0.96) }, tSunVis: { value: null }, uSharp: { value: 0 }, uTexel: { value: new THREE.Vector2(1 / 1024, 1 / 1024) },
+    tBloom: { value: null }, uBloom: { value: 0 }, uTime: { value: 0 }, uWarm: { value: 0 }, uFade: { value: new THREE.Vector3(0, 0, 0) }, uGrain: { value: 0.012 }, uBoost: { value: 0 } },
   vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-  fragmentShader: `uniform sampler2D tDiffuse, tRays, tSunVis; uniform float uSpeed, uVig, uSat, uCon, uSunOn, uAspect, uRays, uSharp; uniform vec3 uTint, uLift, uSunCol, uSh, uHi; uniform vec2 uSun, uTexel; varying vec2 vUv;
-    float lum(vec3 c){ return dot(c, vec3(0.2126, 0.7152, 0.0722)); }
+  // Ein einziger Vollbild-Durchgang: Bloom und Lichtstrahlen dazu, Tempo-Effekte, Farbgebung je Strecke, Vignette, Filmkorn
+  fragmentShader: `uniform sampler2D tDiffuse, tRays, tSunVis, tBloom; uniform float uSpeed, uVig, uSat, uCon, uSunOn, uAspect, uRays, uSharp, uBloom, uTime, uWarm, uGrain, uBoost; uniform vec3 uTint, uLift, uSunCol, uSh, uHi, uFade; uniform vec2 uSun, uTexel; varying vec2 vUv;
     float ghost(vec2 p, float size){ vec2 d = vUv - p; d.x *= uAspect; return smoothstep(size, size * 0.55, length(d)); }
+    float hash12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
     void main(){
-      vec2 c = vUv - 0.5; float r = length(c);
-      float amt = min(uSpeed, 2.2) * 0.075 * smoothstep(0.18, 0.7, r) * mix(0.18, 1.0, smoothstep(0.42, 0.75, vUv.y));   // Fahrbahn, Linien und Curbs (untere Bildhälfte) bleiben scharf
-      vec3 col = vec3(0.0); float tot = 0.0;
-      if (amt * r > 0.0012) { for (int i = 0; i < 7; i++) { float t = float(i) / 6.0, w = 1.0 - t * 0.55; col += texture2D(tDiffuse, vUv - c * amt * t).rgb * w; tot += w; } col /= tot; }
+      float sp = min(uSpeed, 2.2);
+      vec2 c0 = vUv - 0.5; float r0 = length(c0 * vec2(uAspect, 1.0)) / max(uAspect, 1.0) * 1.4142;
+      // Tempo: der Bildrand wird leicht nach außen gezogen (wirkt wie ein weiteres Sichtfeld) – die Bildmitte bleibt unverändert
+      vec2 uv = 0.5 + c0 * (1.0 - sp * 0.022 * r0 * r0);
+      vec2 c = uv - 0.5; float r = length(c);
+      float amt = sp * 0.08 * smoothstep(0.16, 0.7, r) * mix(0.18, 1.0, smoothstep(0.42, 0.75, uv.y)) + uBoost * 0.03 * smoothstep(0.1, 0.6, r);   // Fahrbahn, Linien und Curbs (untere Bildhälfte) bleiben scharf
+      vec3 col;
+      if (amt * r > 0.0012) { float j = hash12(gl_FragCoord.xy + fract(uTime) * 61.0); vec3 acc = vec3(0.0); float tot = 0.0;   // Radialunschärfe mit zufälligem Versatz je Pixel: weich statt Doppelbilder
+        for (int i = 0; i < 6; i++) { float t = (float(i) + j) / 6.0, w = 1.0 - t * 0.5; acc += texture2D(tDiffuse, uv - c * amt * t).rgb * w; tot += w; } col = acc / tot; }
       else {
-        col = texture2D(tDiffuse, vUv).rgb;
+        col = texture2D(tDiffuse, uv).rgb;
         if (uSharp > 0.01) {   // Nachschärfen (gleicht die niedrigere Renderauflösung aus), begrenzt gegen helle Säume
-          vec3 nb = texture2D(tDiffuse, vUv + vec2(uTexel.x, 0.0)).rgb + texture2D(tDiffuse, vUv - vec2(uTexel.x, 0.0)).rgb + texture2D(tDiffuse, vUv + vec2(0.0, uTexel.y)).rgb + texture2D(tDiffuse, vUv - vec2(0.0, uTexel.y)).rgb;
-          col += clamp((col - nb * 0.25) * uSharp, -col * 0.4, col * 0.4);
+          vec3 nb = texture2D(tDiffuse, uv + vec2(uTexel.x, 0.0)).rgb + texture2D(tDiffuse, uv - vec2(uTexel.x, 0.0)).rgb + texture2D(tDiffuse, uv + vec2(0.0, uTexel.y)).rgb + texture2D(tDiffuse, uv - vec2(0.0, uTexel.y)).rgb;
+          col += clamp((col - nb * 0.25) * uSharp, -col * 0.3, col * 0.3);
         }
       }
-      if (uRays > 0.001) col += texture2D(tRays, vUv).rgb * uRays;   // Lichtstrahlen der tiefen Sonne
       // chromatische Aberration am Bildrand (stärker bei Tempo)
-      float ca = (0.0004 + min(uSpeed, 2.2) * 0.0016) * smoothstep(0.35, 0.75, r);   // nur ganz am Rand, damit Curbs und Linien nicht farbig verschmieren
-      if (ca > 0.00005) { col.r = mix(col.r, texture2D(tDiffuse, vUv + c * ca).r, 0.85); col.b = mix(col.b, texture2D(tDiffuse, vUv - c * ca).b, 0.85); }
+      float ca = (0.0004 + sp * 0.0018 + uBoost * 0.002) * smoothstep(0.35, 0.75, r);   // nur ganz am Rand, damit Curbs und Linien nicht farbig verschmieren
+      if (ca > 0.00005) { col.r = mix(col.r, texture2D(tDiffuse, uv + c * ca).r, 0.85); col.b = mix(col.b, texture2D(tDiffuse, uv - c * ca).b, 0.85); }
+      if (uBloom > 0.0) col += texture2D(tBloom, uv).rgb * uBloom;   // Leuchten (in Viertelauflösung berechnet)
+      if (uRays > 0.001) col += texture2D(tRays, uv).rgb * uRays;   // Lichtstrahlen der tiefen Sonne
       // Sonnenreflexe: nur wenn die Sonne wirklich sichtbar ist (helle Pixel an ihrer Position)
       if (uSunOn > 0.0) {
         float vis = texture2D(tSunVis, vec2(0.5)).r * uSunOn;   // einmal pro Bild im 1×1-Durchgang gemessen
@@ -916,17 +924,21 @@ const FinishShader = {
         fl += vec3(0.6, 0.9, 1.0) * ghost(uSun + ax * 2.0, 0.17) * 0.04;
         col += fl * vis;
       }
+      // Farbgebung je Strecke: Weißabgleich, Sättigung, Kontrast um Mittelgrau, Tönung, Schatten-/Lichterfarbe, angehobene Schwärzen
+      col *= vec3(1.0 + uWarm * 0.07, 1.0 + uWarm * 0.01, 1.0 - uWarm * 0.08);
       float l = dot(col, vec3(0.2126, 0.7152, 0.0722));
       col = mix(vec3(l), col, uSat);
       col = max((col - 0.18) * uCon + 0.18, 0.0);
       col = col * uTint + uLift;
       float ll = dot(col, vec3(0.2126, 0.7152, 0.0722));
-      col *= mix(uSh, uHi, smoothstep(0.15, 0.9, ll));   // Farbstimmung je Strecke: Schatten- und Lichterfarbe
+      col *= mix(uSh, uHi, smoothstep(0.15, 0.9, ll));
+      col += uFade * (1.0 - smoothstep(0.0, 0.35, ll));
       col = col / (1.0 + col * 0.04);
       col *= 1.0 - clamp(uVig, 0.0, 0.97) * smoothstep(0.18, 0.8, r);
       gl_FragColor = vec4(col, 1.0);
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
+      gl_FragColor.rgb += (hash12(gl_FragCoord.xy + fract(uTime * 7.31) * 113.0) - 0.5) * uGrain;   // feines Filmkorn (gegen Farbstufen im Himmel)
     }`,
 };
 // Lichtstrahlen + Sonnen-Sichtbarkeit: der helle Himmel um die Sonne wird radial zur Sonne hin verwischt (Viertelauflösung);
@@ -964,8 +976,8 @@ class SoftBloomPass extends Pass {
     renderer.setRenderTarget(D[0]); if (this.fresh) { const cc0 = renderer.getClearColor(new THREE.Color()), ca0 = renderer.getClearAlpha(); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.setClearColor(cc0, ca0); this.pre.blending = THREE.NoBlending; } q.render(renderer); if (this.fresh) { this.pre.blending = THREE.NormalBlending; this.fresh = false; }   // erstes Bild: Speicher leeren und voll schreiben
     q.material = this.dn; for (let i = 1; i < n; i++) { this.dn.uniforms.tSrc.value = D[i - 1].texture; this.dn.uniforms.uTex.value.set(1 / D[i - 1].width, 1 / D[i - 1].height); renderer.setRenderTarget(D[i]); renderer.clear(); q.render(renderer); }
     q.material = this.upM; let low = D[n - 1]; for (let i = n - 2; i >= 0; i--) { const u = this.upM.uniforms; u.tLow.value = low.texture; u.tCur.value = D[i].texture; u.uTex.value.set(1 / low.width, 1 / low.height); u.uRad.value = 0.55 + this.radius; renderer.setRenderTarget(U[i]); renderer.clear(); q.render(renderer); low = U[i]; }
-    q.material = this.comp; this.comp.uniforms.tSrc.value = low.texture; this.comp.uniforms.uStr.value = this.strength * 0.55; renderer.setRenderTarget(readBuffer); q.render(renderer);
-    renderer.autoClear = ac; }
+    if (finishPass) { finishPass.uniforms.tBloom.value = low.texture; finishPass.uniforms.uBloom.value = this.strength * 0.55; }   // kein Zurückschreiben ins (MSAA-)Bild: der Finish-Shader addiert das Leuchten
+    renderer.setRenderTarget(readBuffer); renderer.autoClear = ac; }
 }
 class SunRaysPass extends Pass {
   constructor(scale) {
@@ -974,12 +986,12 @@ class SunRaysPass extends Pass {
     this.vis = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, depthBuffer: false });
     this.mat = new THREE.ShaderMaterial({ uniforms: { tDiffuse: { value: null }, uSun: { value: new THREE.Vector2() }, uAspect: { value: 1 }, uJit: { value: 0 } }, vertexShader: RAYS_V, depthTest: false, depthWrite: false, transparent: true,
       fragmentShader: `uniform sampler2D tDiffuse; uniform vec2 uSun; uniform float uAspect, uJit; varying vec2 vUv;
-        const int N = 28;
+        const int N = 20;
         void main(){
           vec2 d = uSun - vUv; float dist = length(d * vec2(uAspect, 1.0)); vec2 st = d * (0.92 / float(N));
           vec2 uv = vUv + st * 0.5; vec3 acc = vec3(0.0); float w = 1.0;
           for (int i = 0; i < N; i++) { vec3 c = texture2D(tDiffuse, uv).rgb; float l = dot(c, vec3(0.2126, 0.7152, 0.0722)); vec2 q = (uv - uSun) * vec2(uAspect, 1.0);
-            acc += min(c, vec3(5.0)) * smoothstep(0.9, 2.2, l) * exp(-dot(q, q) * 9.0) * w; w *= 0.965; uv += st; }
+            acc += min(c, vec3(5.0)) * smoothstep(0.9, 2.2, l) * exp(-dot(q, q) * 9.0) * w; w *= 0.952; uv += st; }
           gl_FragColor = vec4(acc / float(N) * smoothstep(1.3, 0.05, dist), 0.25);   // 25 % neu, 75 % vom letzten Bild
         }` });
     this.vmat = new THREE.ShaderMaterial({ uniforms: { tDiffuse: { value: null }, uSun: { value: new THREE.Vector2() } }, vertexShader: RAYS_V, depthTest: false, depthWrite: false, transparent: true,
@@ -1011,9 +1023,9 @@ function buildComposer() {
     ao.updateGtaoMaterial({ radius: 1.6, distanceExponent: 1.6, thickness: 2.5, scale: 1.1, samples: ultra ? 16 : 8 }); ao.updatePdMaterial({ radius: ultra ? 6 : 5, rings: 2, samples: ultra ? 12 : 8 });
     ao.blendIntensity = ultra ? 0.9 : 0.75; composer.addPass(ao);
   }
-  bloomPass = new SoftBloomPass(ultra ? 6 : 5); bloomPass.scale = isTouch ? 0.33 : 0.5;   // weicher Bloom statt UnrealBloom (pixelig, flackernd)
+  bloomPass = new SoftBloomPass(ultra ? 5 : 4); bloomPass.scale = 0.25;   // Viertelauflösung reicht (das Leuchten ist ohnehin weich)   // weicher Bloom statt UnrealBloom (pixelig, flackernd)
   composer.addPass(bloomPass);
-  raysPass = new SunRaysPass(0.5); composer.addPass(raysPass);
+  raysPass = new SunRaysPass(0.25); composer.addPass(raysPass);
   finishPass = new ShaderPass(FinishShader); composer.addPass(finishPass);
   applyLook();
 }
@@ -1021,9 +1033,9 @@ function applyLook() {
   if (!composer || !TH) return;
   const L = TH.look || {}; bloomPass.strength = L.bloom ?? .5; bloomPass.threshold = L.thr ?? .9; bloomPass.radius = L.rad ?? .45;
   const u = finishPass.uniforms; u.uSat.value = L.sat ?? 1.1; u.uCon.value = L.con ?? 1.08; u.uVig.value = L.vig ?? .38;
-  u.uTint.value.set(...(L.tint || [1, 1, 1])); u.uLift.value.set(...(L.lift || [0, 0, 0])); u.uSh.value.set(...(L.sh || [0.97, 0.99, 1.04])); u.uHi.value.set(...(L.hi || [1.03, 1.0, 0.96]));
+  u.uTint.value.set(...(L.tint || [1, 1, 1])); u.uLift.value.set(...(L.lift || [0, 0, 0])); u.uWarm.value = L.warm ?? 0; u.uFade.value.set(...(L.fade || [0, 0, 0])); u.uGrain.value = L.grain ?? 0.012; u.uBloom.value = 0; u.uSh.value.set(...(L.sh || [0.97, 0.99, 1.04])); u.uHi.value.set(...(L.hi || [1.03, 1.0, 0.96]));
 }
-function basePR() { const hi = S.gfx !== 'low', ultra = S.gfx === 'ultra'; return Math.min(devicePixelRatio || 1, ultra ? (isTouch ? 2.25 : 2.5) : hi ? (isTouch ? 1.5 : 1.75) : 1); }
+function basePR() { const hi = S.gfx !== 'low', ultra = S.gfx === 'ultra'; return Math.min(devicePixelRatio || 1, ultra ? (isTouch ? 2.25 : 2.5) : hi ? (isTouch ? 1 : 1.25) : 1); }   /* Hoch: auf hochauflösenden Displays mit geringerer Renderauflösung + Nachschärfen (jeder Vollbild-Durchgang kostet auf Handy-/Laptop-GPUs viel) – Ultra rendert in voller Auflösung */
 function applyGfx() {
   const hi = S.gfx !== 'low', ultra = S.gfx === 'ultra';
   renderer.setPixelRatio(basePR() * (typeof DYN !== 'undefined' ? DYN.scale : 1));
@@ -1048,7 +1060,7 @@ const skyMat = new THREE.ShaderMaterial({
     float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
     uniform sampler2D tNoise;
     float noise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return texture2D(tNoise, (i + f + 0.5) / 256.0).r; }
-    float fbm(vec2 p){ float v = 0.0, a = 0.5; for (int i = 0; i < 5; i++) { v += a * noise(p); p *= 2.03; a *= 0.5; } return v; }
+    float fbm(vec2 p){ float v = 0.0, a = 0.5; for (int i = 0; i < 6; i++) { v += a * noise(p); p *= 2.03; a *= 0.5; } return v; }
     float fbm3(vec2 p){ float v = 0.0, a = 0.5; for (int i = 0; i < 3; i++) { v += a * noise(p); p *= 2.03; a *= 0.5; } return v + 0.06; }
     void main(){ vec3 d = normalize(vW - cameraPosition); float h = d.y; vec3 c;
       if (h > 0.0) { c = mix(hor, mid, smoothstep(0.0, 0.22, h)); c = mix(c, top, smoothstep(0.18, 0.85, h)); }
@@ -1063,8 +1075,11 @@ const skyMat = new THREE.ShaderMaterial({
       c += sunCol * (pow(s, sunExp) * 6.0 + pow(s, 10.0) * 0.35);
       gl_FragColor = vec4(c, 1.0);
       if (overlay > 0.5) { float a = 0.0; vec3 cc2 = vec3(0.0);
-        if (h > 0.0 && cloud.x > 0.0) { vec2 uv = d.xz / (h + 0.08) * cloud.z + vec2(cloud.w, cloud.w * 0.3); vec2 wq = vec2(fbm3(uv * 0.6 + 3.1), fbm3(uv * 0.6 + 7.7)); float n = fbm(uv + wq * 0.9); float n2 = fbm(uv + wq * 0.9 + normalize(sunDir.xz + 1e-4) * 0.12);
-          a = smoothstep(cloud.y, cloud.y + 0.28, n) * smoothstep(0.0, 0.14, h) * cloud.x; float lit = clamp((n - n2) * 4.0 + 0.7, 0.35, 1.35); cc2 = cloudCol * lit * (0.82 + 0.3 * n) + sunCol * pow(s, 5.0) * 0.5 * lit; }
+        if (h > 0.0 && cloud.x > 0.0) { vec2 uv = d.xz / (h + 0.08) * cloud.z + vec2(cloud.w, cloud.w * 0.3); vec2 wq = vec2(fbm3(uv * 0.6 + 3.1), fbm3(uv * 0.6 + 7.7)); vec2 q = uv + wq * 0.9; float n = fbm(q);
+          vec2 sd2 = normalize(sunDir.xz + 1e-4) * 0.07; float oc = 0.0; for (int k = 1; k <= 4; k++) oc += max(fbm(q + sd2 * float(k)) - cloud.y, 0.0) * (1.0 - float(k) * 0.15);   // Licht: Dichte auf dem Weg zur Sonne (einmal je Strecke gebacken, darf aufwendig sein)
+          a = smoothstep(cloud.y, cloud.y + 0.24, n) * smoothstep(0.0, 0.14, h) * cloud.x; float lit = clamp(1.3 - oc * 2.6, 0.42, 1.3);
+          float edge = 1.0 - smoothstep(cloud.y, cloud.y + 0.16, n);   // dünne Ränder leuchten im Gegenlicht (Silberrand)
+          cc2 = cloudCol * lit * (0.86 + 0.24 * n) + sunCol * pow(s, 5.0) * 0.45 * lit + sunCol * pow(s, 14.0) * edge * 1.6 + hor * 0.08; }
         if (haze > 0.0) { float hz = clamp(haze * exp(-abs(h) * 7.5) * (0.5 + 1.1 * pow(s, 3.0)), 0.0, 0.95); vec3 hc = mix(hazeCol, sunCol * 1.4, pow(s, 8.0));
           float na = a + hz * (1.0 - a); cc2 = (cc2 * a + hc * hz * (1.0 - a)) / max(na, 1e-4); a = na; }
         gl_FragColor = vec4(cc2, a); }
@@ -1080,15 +1095,32 @@ skyPB.material.uniforms.skyGain = { value: 1 }; skyPB.material.uniforms.sunCosU 
 skyPB.material.fragmentShader = skyPB.material.fragmentShader.replace(/const float sunAngularDiameterCos = [0-9.]+;/, 'uniform float sunCosU;').replace(/sunAngularDiameterCos/g, 'sunCosU');
 skyPB.material.fragmentShader = skyPB.material.fragmentShader.replace('uniform vec3 up;', 'uniform vec3 up;\nuniform float skyGain;').replace('gl_FragColor = vec4( retColor, 1.0 );', 'gl_FragColor = vec4( retColor * skyGain, 1.0 );');
 const skyScene = new THREE.Scene(); scene.remove(sky, skyPB); skyScene.add(skyPB, sky); sky.position.set(0, 0, 0); skyPB.position.set(0, 0, 0);
-const SKYC = { rt: new THREE.WebGLCubeRenderTarget(768, { type: THREE.HalfFloatType, generateMipmaps: false, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter }), face: 0, t: 0 };
-SKYC.cam = new THREE.CubeCamera(1, 6000, SKYC.rt); skyScene.add(SKYC.cam);
-function bakeSky(face) {
-  const prev = renderer.getRenderTarget(), pa = renderer.autoClear; renderer.autoClear = true;
-  if (face === undefined) SKYC.cam.update(renderer, skyScene);
-  else { SKYC.cam.updateMatrixWorld(); renderer.setRenderTarget(SKYC.rt, face); renderer.render(skyScene, SKYC.cam.children[face]); }
-  renderer.setRenderTarget(prev); renderer.autoClear = pa; scene.background = SKYC.rt.texture;
+// Himmel wird einmal je Strecke in zwei Cubemaps gebacken: Grundhimmel (Streuung, Sonne, Dunst) und Wolkenebene (vormultipliziert, mit Deckkraft).
+// Im Bild zeichnet ein Würfel um die Kamera beide – NACH der Szene mit Tiefentest, d. h. nur dort, wo wirklich Himmel zu sehen ist.
+// Die Wolken drehen sich gleichmäßig um den Zenit (statt alle 3 s eine Würfelseite neu zu rendern: das ruckelte und kostete Zeit).
+const SKYRES = isTouch ? 768 : 1024, cubeOpt = t => ({ type: t, generateMipmaps: false, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+const SKYC = { rt: new THREE.WebGLCubeRenderTarget(SKYRES, cubeOpt(THREE.HalfFloatType)), cl: new THREE.WebGLCubeRenderTarget(SKYRES, cubeOpt(THREE.HalfFloatType)), rot: 0 };
+SKYC.cam = new THREE.CubeCamera(1, 6000, SKYC.rt); SKYC.clCam = new THREE.CubeCamera(1, 6000, SKYC.cl); skyScene.add(SKYC.cam, SKYC.clCam);
+const skyBox = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.ShaderMaterial({
+  uniforms: { tSky: { value: SKYC.rt.texture }, tCl: { value: SKYC.cl.texture }, uRot: { value: 0 } },
+  vertexShader: 'varying vec3 vDir; void main(){ vDir = position; vec4 p = projectionMatrix * vec4(mat3(viewMatrix) * position, 1.0); gl_Position = vec4(p.xy, p.w * 0.99999, p.w); }',
+  fragmentShader: `uniform samplerCube tSky, tCl; uniform float uRot; varying vec3 vDir;
+    void main(){ vec3 d = normalize(vDir); vec3 c = textureCube(tSky, d).rgb; float cr = cos(uRot), sr = sin(uRot);
+      vec4 k = textureCube(tCl, vec3(cr * d.x - sr * d.z, d.y, sr * d.x + cr * d.z)); c = c * (1.0 - k.a) + k.rgb;
+      gl_FragColor = vec4(c, 1.0);
+      #include <tonemapping_fragment>
+      #include <colorspace_fragment>
+    }`,
+  side: THREE.BackSide, depthWrite: false, fog: false }));
+skyBox.frustumCulled = false; skyBox.renderOrder = 1e6; scene.add(skyBox);
+function bakeSky() {
+  const prev = renderer.getRenderTarget(), pa = renderer.autoClear, cc = renderer.getClearColor(new THREE.Color()), ca = renderer.getClearAlpha(), U = skyMat.uniforms, cl0 = U.cloud.value.x, hz0 = U.haze.value;
+  renderer.autoClear = true;
+  U.cloud.value.x = 0; SKYC.cam.update(renderer, skyScene); U.cloud.value.x = cl0;   // Grundhimmel mit Dunst, ohne Wolken
+  skyPB.visible = false; U.haze.value = 0; renderer.setClearColor(0x000000, 0); SKYC.clCam.update(renderer, skyScene); skyPB.visible = true; U.haze.value = hz0;   // nur Wolken
+  renderer.setClearColor(cc, ca); renderer.setRenderTarget(prev); renderer.autoClear = pa; scene.background = null;
 }
-function skyTick(dt) { SKYC.t += dt; if (SKYC.t > 3) { SKYC.t = 0; bakeSky(SKYC.face); SKYC.face = (SKYC.face + 1) % 6; } }
+function skyTick(dt) { SKYC.rot += dt * 0.0022; skyBox.material.uniforms.uRot.value = SKYC.rot; }
 function applySky() {
   const u = skyPB.material.uniforms, P = TH.phys || {};
   u.turbidity.value = P.turb ?? 4; u.rayleigh.value = P.ray ?? 1.5; u.mieCoefficient.value = P.mie ?? .005; u.mieDirectionalG.value = P.g ?? .8; u.skyGain.value = P.gain ?? 1;
@@ -1512,6 +1544,12 @@ function palmParts() {
     g.rotateX(dead ? -2.2 - Math.random() * 0.3 : -0.75 - (k % 3) * 0.28 - Math.random() * 0.1).rotateY((k + (dead ? 0.5 : 0)) * Math.PI * 2 / (dead ? 4 : NF) + Math.random() * 0.2).translate(0.66, 11, 0);
     fr.push([g, dead ? col(0xa08a5a) : col(FOL.frond ? (k % 2 ? 0xe6f0d8 : 0xffffff) : (k % 2 ? 0x3d6e2a : 0x4c7d31))]); }
   const crown = mergeParts(fr, true);
+  // Detailstufen: weiter weg 7 Wedel mit 2 Abschnitten statt 17 mit 6, Stamm fünfeckig – aus der Entfernung gleich, ein Bruchteil der Dreiecke
+  const frL = []; for (let k = 0; k < 7; k++) { const g = new THREE.PlaneGeometry(FOL.frond ? 3.0 : 1.3, 5.0, 1, 2).translate(0, 2.5, 0), fp = g.attributes.position;
+    for (let v = 0; v < fp.count; v++) { const y = fp.getY(v); fp.setZ(v, -0.12 * y * y); if (!FOL.frond) fp.setX(v, fp.getX(v) * (1 - y / 5.4)); }
+    g.rotateX(-0.8 - (k % 3) * 0.28).rotateY(k * Math.PI * 2 / 7).translate(0.66, 11, 0); frL.push([g, col(FOL.frond ? (k % 2 ? 0xe6f0d8 : 0xffffff) : (k % 2 ? 0x3d6e2a : 0x4c7d31))]); }
+  const crownLo = mergeParts(frL, true), trunkLo = new THREE.CylinderGeometry(0.26, 0.42, 11, 5, 2, true).translate(0, 5.5, 0), tl = trunkLo.attributes.position; for (let k = 0; k < tl.count; k++) { const y = tl.getY(k); tl.setX(k, tl.getX(k) + 0.012 * y * y); }
+  crown.userData.lod = [[crownLo, 120], [null, 1100]]; crownLo.userData.lod = [[null, 1100]]; trunk.userData.lod = [[trunkLo, 110], [null, 1100]];
   return { trunk, crown, trunkM: lam({ map: FOL.palmBark, color: 0xffffff }), crownM: FOL.frond ? lam({ map: FOL.frond, vertexColors: true, alphaTest: 0.45, side: THREE.DoubleSide, roughness: .75 }) : lam({ vertexColors: true, side: THREE.DoubleSide }) };
 }
 // Materialfarbe, die die Foto-Textur im Mittel auf den Ziel-Farbton (sRGB 0–255) bringt
@@ -2208,16 +2246,50 @@ function filt(a, w, mode) {
   return o;
 }
 // Raumraster über alle Streckenpunkte: nächster Punkt in O(1) statt Suche über die ganze Runde (wichtig für lange Strecken)
-function buildSPI() { SPI = new Map(); for (let i = 0; i < N; i++) { const k = (Math.floor(PX[i] / 32) + 4096) * 8192 + Math.floor(PZ[i] / 32) + 4096; let a = SPI.get(k); if (!a) SPI.set(k, a = []); a.push(i); } }
-function spiNear(x, z, i = -1, skip = 0, maxR = 40) {   // [Abstand², Index] des nächsten Streckenpunkts (optional ohne den eigenen Abschnitt ±skip)
+function buildSPI() { SPI = new Map(); SPC = new Map(); SPS = [new Map(), new Map()]; let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+  for (let i = 0; i < N; i++) { const gx = Math.floor(PX[i] / 32), gz = Math.floor(PZ[i] / 32), k = (gx + 4096) * 8192 + gz + 4096; let a = SPI.get(k); if (!a) SPI.set(k, a = []); a.push(i); x0 = Math.min(x0, gx); x1 = Math.max(x1, gx); z0 = Math.min(z0, gz); z1 = Math.max(z1, gz); }
+  const w = x1 - x0 + 1, h = z1 - z0 + 1, T = new Uint32Array((w + 1) * (h + 1));   // Summentabelle der belegten Zellen: "irgendein Punkt in 40 Ringen?" in O(1)
+  for (const k of SPI.keys()) { const gx = Math.floor(k / 8192) - 4096 - x0, gz = (k % 8192) - 4096 - z0; T[(gz + 1) * (w + 1) + gx + 1] = 1; }
+  for (let z = 1; z <= h; z++) for (let x = 1; x <= w; x++) T[z * (w + 1) + x] += T[(z - 1) * (w + 1) + x] + T[z * (w + 1) + x - 1] - T[(z - 1) * (w + 1) + x - 1];
+  SPO = { x0, z0, w, h, T }; }
+// Zellen-Cache für die Suche ohne Ausschluss: je 32-m-Zelle einmal alle Punkte sammeln, die für irgendeinen Ort in der Zelle der nächste sein können
+// (Abstand zur Zellmitte ≤ kürzester Abstand + Zelldiagonale). Die Kandidaten kommen aus 256-m-Superzellen (gleiche Regel, größerer Rand) –
+// gleiches Ergebnis wie die Ringsuche, aber ohne tausende Rasterzugriffe pro Aufruf.
+let SPC = new Map(), SPS = [new Map(), new Map()], SPO = null;
+function spoAny(cx, cz, r) { const O = SPO, a0 = Math.max(0, cx - r - O.x0), a1 = Math.min(O.w - 1, cx + r - O.x0), b0 = Math.max(0, cz - r - O.z0), b1 = Math.min(O.h - 1, cz + r - O.z0);
+  if (a0 > a1 || b0 > b1) return false; const W = O.w + 1, T = O.T; return T[(b1 + 1) * W + a1 + 1] - T[b0 * W + a1 + 1] - T[(b1 + 1) * W + a0] + T[b0 * W + a0] > 0; }
+function spsCell(sx, sz, st) { const px = PX, pz = PZ, n = N;
+  const M = SPS[st === 1 ? 0 : 1], key = (sx + 4096) * 8192 + sz + 4096; let C = M.get(key); if (C) return C;
+  const mx = (sx + 0.5) * 256, mz = (sz + 0.5) * 256; let m = 1e18; for (let j = 0; j < n; j += st) { const dx = mx - px[j], dz = mz - pz[j], d = dx * dx + dz * dz; if (d < m) m = d; }
+  const R = Math.sqrt(m) + 410, R2 = R * R, list = []; for (let j = 0; j < n; j += st) { const dx = mx - px[j], dz = mz - pz[j]; if (dx * dx + dz * dz <= R2) list.push(j); }
+  C = Int32Array.from(list); M.set(key, C); return C;
+}
+function spcCell(cx, cz) { const px = PX, pz = PZ;
+  const key = (cx + 4096) * 8192 + cz + 4096; let C = SPC.get(key); if (C) return C;
+  const far = !spoAny(cx, cz, 40), S = spsCell(Math.floor(cx / 8), Math.floor(cz / 8), far ? 4 : 1), mx = (cx + 0.5) * 32, mz = (cz + 0.5) * 32;   // far: nichts in 40 Ringen -> wie bisher grobe Suche über jeden 4. Punkt
+  let m = 1e18; for (let k = 0; k < S.length; k++) { const j = S[k], dx = mx - px[j], dz = mz - pz[j], d = dx * dx + dz * dz; if (d < m) m = d; }
+  const R = Math.sqrt(m) + 45.26, R2 = R * R, list = []; for (let k = 0; k < S.length; k++) { const j = S[k], dx = mx - px[j], dz = mz - pz[j]; if (dx * dx + dz * dz <= R2) list.push(j); }
+  C = { far, list: Int32Array.from(list) }; SPC.set(key, C); return C;
+}
+function spiNear(x, z, i = -1, skip = 0, maxR = 40) { const px = PX, pz = PZ;
+  if (i >= 0) return spiNear0(x, z, i, skip, maxR);
+  const cx = Math.floor(x / 32), cz = Math.floor(z / 32), C = spcCell(cx, cz);
+  if (C.far && maxR < 40) return [1e12, 0];   // begrenzte Suche findet dort nichts
+  let best = 1e18, bj = -1; const Ls = C.list;
+  for (let k = 0; k < Ls.length; k++) { const j = Ls[k], dx = x - px[j], dz = z - pz[j], d = dx * dx + dz * dz; if (d < best) { best = d; bj = j; } }
+  if (maxR < 40 && (Math.abs(Math.floor(px[bj] / 32) - cx) > maxR || Math.abs(Math.floor(pz[bj] / 32) - cz) > maxR)) return spiNear0(x, z, i, skip, maxR);   // begrenzte Suche: nächster Punkt liegt außerhalb -> alte Logik
+  return [best, bj];
+}
+function spiNear0(x, z, i = -1, skip = 0, maxR = 40, noLin = false) { const px = PX, pz = PZ, n = N, spi = SPI;   // [Abstand², Index] des nächsten Streckenpunkts (optional ohne den eigenen Abschnitt ±skip)
   const cx = Math.floor(x / 32), cz = Math.floor(z / 32); let best = 1e18, bj = -1;
   for (let r = 0; r <= maxR; r++) {
-    for (let a = -r; a <= r; a++) for (let b = -r; b <= r; b++) { if (a !== -r && a !== r && b !== -r && b !== r) continue; const L2 = SPI.get((cx + a + 4096) * 8192 + cz + b + 4096); if (!L2) continue;
-      for (const j of L2) { if (i >= 0) { let dj = Math.abs(j - i); dj = Math.min(dj, N - dj); if (dj < skip) continue; } const dx = x - PX[j], dz = z - PZ[j], d = dx * dx + dz * dz; if (d < best) { best = d; bj = j; } } }
+    for (let a = -r; a <= r; a++) for (let b = -r; b <= r; b++) { if (a !== -r && a !== r && b !== -r && b !== r) continue; const L2 = spi.get((cx + a + 4096) * 8192 + cz + b + 4096); if (!L2) continue;
+      for (const j of L2) { if (i >= 0) { let dj = Math.abs(j - i); dj = Math.min(dj, n - dj); if (dj < skip) continue; } const dx = x - px[j], dz = z - pz[j], d = dx * dx + dz * dz; if (d < best) { best = d; bj = j; } } }
     if (bj >= 0 && best <= (r * 32) * (r * 32)) return [best, bj];
   }
   if (bj < 0 && maxR < 40) return [1e12, 0];
-  if (bj < 0) for (let j = 0; j < N; j += 4) { if (i >= 0) { let dj = Math.abs(j - i); dj = Math.min(dj, N - dj); if (dj < skip) continue; } const dx = x - PX[j], dz = z - PZ[j], d = dx * dx + dz * dz; if (d < best) { best = d; bj = j; } }
+  if (bj < 0 && noLin) return [1e18, 0];
+  if (bj < 0) for (let j = 0; j < n; j += 4) { if (i >= 0) { let dj = Math.abs(j - i); dj = Math.min(dj, n - dj); if (dj < skip) continue; } const dx = x - px[j], dz = z - pz[j], d = dx * dx + dz * dz; if (d < best) { best = d; bj = j; } }
   return [best, Math.max(0, bj)];
 }
 // minimaler Abstand eines Punktes zu anderen Streckenteilen (nicht zum eigenen Abschnitt)
@@ -2301,10 +2373,10 @@ const convexPoly = P => { let sg = 0; for (let i = 0; i < P.length; i++) { const
 // konvexe Grundrisse (Trennachsen-Test, 0,3 m Toleranz): überschneiden sie sich?
 function polyHit(P, Q, tol = 0.3) { for (const R of [P, Q]) for (let i = 0; i < R.length; i++) { const [x1, z1] = R[i], [x2, z2] = R[(i + 1) % R.length], l = Math.hypot(x2 - x1, z2 - z1) || 1, ax = (z1 - z2) / l, az = (x2 - x1) / l;
   let a0 = 1e9, a1 = -1e9, b0 = 1e9, b1 = -1e9; for (const [x, z] of P) { const t = x * ax + z * az; a0 = Math.min(a0, t); a1 = Math.max(a1, t); } for (const [x, z] of Q) { const t = x * ax + z * az; b0 = Math.min(b0, t); b1 = Math.max(b1, t); } if (a1 - tol < b0 || b1 - tol < a0) return false; } return true; }
-function trackFree(x, z, extra = 1) {
+function trackFree(x, z, extra = 1) { const px = PX, pz = PZ, rx = RX, rz = RZ, hw = HW;
   const [m, mj] = spiNear(x, z);
-  const lat = (x - PX[mj]) * RX[mj] + (z - PZ[mj]) * RZ[mj];
-  return Math.abs(lat) >= wallAt(mj, lat >= 0 ? 1 : -1) + extra && Math.sqrt(m) >= HW[mj] + 3 + extra;
+  const lat = (x - px[mj]) * rx[mj] + (z - pz[mj]) * rz[mj];
+  return Math.abs(lat) >= wallAt(mj, lat >= 0 ? 1 : -1) + extra && Math.sqrt(m) >= hw[mj] + 3 + extra;
 }
 // Grundfläche eines gedrehten Rechtecks prüfen (lokal x: 0..dx bzw. -dx/2..dx/2, z: -len/2..len/2)
 function footprintFree(px, pz, rot, x0, x1, len, extra = 1) {
@@ -2315,17 +2387,17 @@ function footprintFree(px, pz, rot, x0, x1, len, extra = 1) {
   return true;
 }
 // Gelände: Höhe aus den Streckenpunkten in der Umgebung (räumliches Raster für schnelle Suche)
-function buildHGrid() { HG = new Map(); for (let i = 0; i < N; i += 2) { const k = Math.floor(PX[i] / 40) + ',' + Math.floor(PZ[i] / 40); (HG.get(k) || HG.set(k, []).get(k)).push(i); } }
-function terr(x, z) {
+function buildHGrid() { HG = new Map(); for (let i = 0; i < N; i += 2) { const k = (Math.floor(PX[i] / 40) + 4096) * 8192 + Math.floor(PZ[i] / 40) + 4096; (HG.get(k) || HG.set(k, []).get(k)).push(i); } }
+function terr(x, z) { const px = PX, pz = PZ, elev = ELEV, n = N, hg = HG;
   if (HFLD && HFLD.full) {   // vorberechnetes Gelände: überall aus dem Höhenfeld, am Rand sanft zum Mittel auslaufend
     const [m2, j] = spiNear(x, z, -1, 0, 8), F = HFLD, fx = clamp((x - F.x0) / F.c, 0, F.w - 1.001), fz = clamp((z - F.z0) / F.c, 0, F.h - 1.001), ix = Math.floor(fx), iz = Math.floor(fz), u = fx - ix, v = fz - iz, A = F.a, w = F.w, k = iz * w + ix;
     let h = (A[k] * (1 - u) + A[k + 1] * u) * (1 - v) + (A[k + w] * (1 - u) + A[k + w + 1] * u) * v;
     const out = Math.max(0, F.x0 - x, x - (F.x0 + (F.w - 1) * F.c), F.z0 - z, z - (F.z0 + (F.h - 1) * F.c)); if (out > 0) h = lerp(h, ELMEAN, clamp(out / 1500, 0, 1));
     return { h, d: Math.sqrt(m2), j }; }
   const cx = Math.floor(x / 40), cz = Math.floor(z / 40); let sw = 0, sh = 0, md = 1e18, mj = -1;
-  for (let a = -4; a <= 4; a++) for (let b = -4; b <= 4; b++) { const L2 = HG.get((cx + a) + ',' + (cz + b)); if (!L2) continue;
-    for (const i of L2) { const dx = x - PX[i], dz = z - PZ[i], d2 = dx * dx + dz * dz, w = 1 / ((d2 + 100) * (d2 + 100)); sw += w; sh += w * ELEV[i]; if (d2 < md) { md = d2; mj = i; } } }
-  if (mj < 0) { for (let i = 0; i < N; i += 8) { const dx = x - PX[i], dz = z - PZ[i], d2 = dx * dx + dz * dz; if (d2 < md) { md = d2; mj = i; } } const d = Math.sqrt(md), f = Math.exp(-(d - 160) / 500); return { h: ELEV[mj] * f + ELMEAN * (1 - f), d, j: mj }; }
+  for (let a = -4; a <= 4; a++) for (let b = -4; b <= 4; b++) { const L2 = hg.get((cx + a + 4096) * 8192 + cz + b + 4096); if (!L2) continue;
+    for (const i of L2) { const dx = x - px[i], dz = z - pz[i], d2 = dx * dx + dz * dz, w = 1 / ((d2 + 100) * (d2 + 100)); sw += w; sh += w * elev[i]; if (d2 < md) { md = d2; mj = i; } } }
+  if (mj < 0) { for (let i = 0; i < n; i += 8) { const dx = x - px[i], dz = z - pz[i], d2 = dx * dx + dz * dz; if (d2 < md) { md = d2; mj = i; } } const d = Math.sqrt(md), f = Math.exp(-(d - 160) / 500); return { h: elev[mj] * f + ELMEAN * (1 - f), d, j: mj }; }
   let h = sh / sw;
   if (HFLD) { const fx = (x - HFLD.x0) / HFLD.c, fz = (z - HFLD.z0) / HFLD.c;
     if (fx >= 0 && fz >= 0 && fx < HFLD.w - 1 && fz < HFLD.h - 1) { const ix = Math.floor(fx), iz = Math.floor(fz), u = fx - ix, v = fz - iz, A = HFLD.a, w = HFLD.w, k = iz * w + ix;
@@ -2359,20 +2431,20 @@ function projPt(G, x, z) {
   for (let a = -3; a <= 3; a++) for (let b = -3; b <= 3; b++) { const L2 = G.get((cx + a) + ',' + (cz + b)); if (!L2) continue; for (const i of L2) { const dx = x - PX[i], dz = z - PZ[i], d = dx * dx + dz * dz; if (d < bd) { bd = d; bi = i; } } }
   return bi < 0 ? null : { i: bi, lat: (x - PX[bi]) * RX[bi] + (z - PZ[bi]) * RZ[bi], d: Math.sqrt(bd) };
 }
-function hillAt(x, z, t) {
+function hillAt(x, z, t) { const px = PX, pz = PZ, rx = RX, rz = RZ, hg = HG, wl = WL, wr = WR;
   if (!HILLW) return 0; const j = t.j, w = HILLW[j]; if (w <= 0) return 0;
-  const lat = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j]; if (lat > 0) return 0;
-  let a = clamp((-lat - WL[j] - 22) / 60, 0, 1); a = a * a * (3 - 2 * a); if (a <= 0) return 0;
+  const lat = (x - px[j]) * rx[j] + (z - pz[j]) * rz[j]; if (lat > 0) return 0;
+  let a = clamp((-lat - wl[j] - 22) / 60, 0, 1); a = a * a * (3 - 2 * a); if (a <= 0) return 0;
   // auch zu allen anderen Streckenteilen (ohne Hügel) sanft auslaufen -> keine Kante, unter die man schauen kann
   const cx = Math.floor(x / 40), cz = Math.floor(z / 40); let md = 1e18, mj = -1;
-  for (let p = -4; p <= 4; p++) for (let q = -4; q <= 4; q++) { const L2 = HG.get((cx + p) + ',' + (cz + q)); if (!L2) continue; for (const i of L2) { if (HILLW[i] > 0.05) continue; const dx = x - PX[i], dz = z - PZ[i], d2 = dx * dx + dz * dz; if (d2 < md) { md = d2; mj = i; } } }
-  let b = 1; if (mj >= 0) { b = clamp((Math.sqrt(md) - Math.max(WL[mj], WR[mj]) - 10) / 70, 0, 1); b = b * b * (3 - 2 * b); }
-  return w * TH.hill.h * a * b * (1 - 0.4 * clamp((-lat - WL[j] - 160) / 120, 0, 1));
+  for (let p = -4; p <= 4; p++) for (let q = -4; q <= 4; q++) { const L2 = hg.get((cx + p + 4096) * 8192 + cz + q + 4096); if (!L2) continue; for (const i of L2) { if (HILLW[i] > 0.05) continue; const dx = x - px[i], dz = z - pz[i], d2 = dx * dx + dz * dz; if (d2 < md) { md = d2; mj = i; } } }
+  let b = 1; if (mj >= 0) { b = clamp((Math.sqrt(md) - Math.max(wl[mj], wr[mj]) - 10) / 70, 0, 1); b = b * b * (3 - 2 * b); }
+  return w * TH.hill.h * a * b * (1 - 0.4 * clamp((-lat - wl[j] - 160) / 120, 0, 1));
 }
 const BAND = 70;
 function sideW(t, x, z) { const j = t.j, lat = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j]; return lat < 0 ? WL[j] : WR[j]; }
 // Monaco: Gelände als weich gewichtete Mischung der Höhen aller nahen Streckenpunkte (1/d⁴) – keine Zacken zwischen oberer und unterer Strecke
-function mcBase(x, z, fb) { const cx = Math.floor(x / 32), cz = Math.floor(z / 32); let ws = 0, hs = 0; for (let a = -5; a <= 5; a++) for (let b = -5; b <= 5; b++) { const L2 = SPI.get((cx + a + 4096) * 8192 + cz + b + 4096); if (!L2) continue; for (const j of L2) { const dx = x - PX[j], dz = z - PZ[j], d2 = dx * dx + dz * dz + 4, w = 1 / (d2 * d2); ws += w; hs += w * ELEV[j]; } } return ws ? hs / ws : fb; }
+function mcBase(x, z, fb) { const px = PX, pz = PZ, elev = ELEV, spi = SPI; const cx = Math.floor(x / 32), cz = Math.floor(z / 32); let ws = 0, hs = 0; for (let a = -5; a <= 5; a++) for (let b = -5; b <= 5; b++) { const L2 = spi.get((cx + a + 4096) * 8192 + cz + b + 4096); if (!L2) continue; for (const j of L2) { const dx = x - px[j], dz = z - pz[j], d2 = dx * dx + dz * dz + 4, w = 1 / (d2 * d2); ws += w; hs += w * elev[j]; } } return ws ? hs / ws : fb; }
 // Monaco: echtes Geländeraster (EU-DEM, 200 m) – Hang und Berge hinter der Stadt; einmal aus Base64 entpackt, Catmull-Rom-Interpolation (keine Knicke an den Rasterlinien)
 function mcDem() { if (!MC_DEM && typeof MC_DEMD !== 'undefined') { const b = atob(MC_DEMD.b64), A = new Float32Array(b.length / 2); for (let k = 0; k < A.length; k++) { const v = b.charCodeAt(2 * k) | (b.charCodeAt(2 * k + 1) << 8); A[k] = v > 32767 ? v - 65536 : v; } MC_DEM = { ...MC_DEMD, a: A }; } return MC_DEM; }
 function demH(x, z) { const D = mcDem(); if (!D) return 0; const fx = (x - D.x0) / D.c, fz = (z - D.z0) / D.c; if (fx < 0 || fz < 0 || fx > D.w - 1 || fz > D.h - 1) return 0;
@@ -2410,14 +2482,14 @@ let RUB_C = null; const rubbleTex = () => { if (!RUB_C) RUB_C = canvasTex(256, 2
 const offsetPoly = (R, d) => { let A = 0; for (let i = 0; i < R.length; i++) { const [x1, z1] = R[i], [x2, z2] = R[(i + 1) % R.length]; A += x1 * z2 - x2 * z1; } const sg = A > 0 ? 1 : -1, n = R.length;
   return R.map((p, i) => { const a = R[(i - 1 + n) % n], b = R[(i + 1) % n], e1x = p[0] - a[0], e1z = p[1] - a[1], e2x = b[0] - p[0], e2z = b[1] - p[1], l1 = Math.hypot(e1x, e1z) || 1, l2 = Math.hypot(e2x, e2z) || 1,
     n1x = e1z / l1 * sg, n1z = -e1x / l1 * sg, n2x = e2z / l2 * sg, n2z = -e2x / l2 * sg, mx = n1x + n2x, mz = n1z + n2z, ml = Math.hypot(mx, mz) || 1, k = d / Math.max(0.35, (mx * n1x + mz * n1z) / ml); return [p[0] + mx / ml * k, p[1] + mz / ml * k]; }); };
-function surfH(x, z, t) { if (FLAT) return 0; t = t || terr(x, z); const W = sideW(t, x, z), nb = TH.harmonic ? clamp((t.d - (W + 3)) / 22, 0, 1) : clamp((t.d - (W + 12)) / 50, 0, 1); let h = lerp(TRK.mc ? mcNear(x, z, t, W) : ELEV[t.j], t.h, nb * nb * (3 - 2 * nb)) + riseAt(x, z, t.d) + hillAt(x, z, t); if (TRK.mc && t.d > 140) { let w = clamp((t.d - 140) / 260, 0, 1); w = w * w * (3 - 2 * w); h = Math.max(h, demH(x, z) * w); }   /* Monaco: weiter weg echter Hang (EU-DEM) */ if (MC_PADS) h = padH(x, z, h); return h; }
+function surfH(x, z, t) { const elev = ELEV; if (FLAT) return 0; t = t || terr(x, z); const W = sideW(t, x, z), nb = TH.harmonic ? clamp((t.d - (W + 3)) / 22, 0, 1) : clamp((t.d - (W + 12)) / 50, 0, 1); let h = lerp(TRK.mc ? mcNear(x, z, t, W) : elev[t.j], t.h, nb * nb * (3 - 2 * nb)) + riseAt(x, z, t.d) + hillAt(x, z, t); if (TRK.mc && t.d > 140) { let w = clamp((t.d - 140) / 260, 0, 1); w = w * w * (3 - 2 * w); h = Math.max(h, demH(x, z) * w); }   /* Monaco: weiter weg echter Hang (EU-DEM) */ if (MC_PADS) h = padH(x, z, h); return h; }
 // Monaco: Gelände nie höher als die tiefste nahe Straße plus sanfter Anstieg (30 %) – Plätze zwischen zwei Straßen liegen eben auf der unteren Höhe, die obere Straße steht auf ihrer Stützmauer (statt Buckel und Falten)
-function mcCone(x, z) { const cx = Math.floor(x / 32), cz = Math.floor(z / 32); let m = 1e9; const FM = TRK.mc.fairmont, fq = clamp((Math.hypot(x - FM[0], z - FM[1]) - 170) / 70, 0, 1), flat = 22 - 18 * fq * fq * (3 - 2 * fq), slope = 0.1 + 0.2 * fq * fq * (3 - 2 * fq);   /* ebene Zone hinter den Mauern nur im Haarnadel-Komplex, außen wie bisher */ for (let a = -3; a <= 3; a++) for (let b = -3; b <= 3; b++) { const L2 = SPI.get((cx + a + 4096) * 8192 + cz + b + 4096); if (!L2) continue; for (const j of L2) { const d = Math.hypot(x - PX[j], z - PZ[j]); if (d > 96) continue; const v = ELEV[j] + Math.max(0, d - Math.max(WL[j], WR[j]) - flat) * slope;   /* hinter jeder Mauer erst 22 m eben, dann sanft ansteigend */ if (v < m) m = v; } } return m; }
+function mcCone(x, z) { const px = PX, pz = PZ, elev = ELEV, spi = SPI, wl = WL, wr = WR; const cx = Math.floor(x / 32), cz = Math.floor(z / 32); let m = 1e9; const FM = TRK.mc.fairmont, fq = clamp((Math.hypot(x - FM[0], z - FM[1]) - 170) / 70, 0, 1), flat = 22 - 18 * fq * fq * (3 - 2 * fq), slope = 0.1 + 0.2 * fq * fq * (3 - 2 * fq);   /* ebene Zone hinter den Mauern nur im Haarnadel-Komplex, außen wie bisher */ for (let a = -3; a <= 3; a++) for (let b = -3; b <= 3; b++) { const L2 = spi.get((cx + a + 4096) * 8192 + cz + b + 4096); if (!L2) continue; for (const j of L2) { const d = Math.hypot(x - px[j], z - pz[j]); if (d > 96) continue; const v = elev[j] + Math.max(0, d - Math.max(wl[j], wr[j]) - flat) * slope;   /* hinter jeder Mauer erst 22 m eben, dann sanft ansteigend */ if (v < m) m = v; } } return m; }
 // Monaco: direkt neben der Strecke liegt der Boden auf der eigenen Streckenhöhe und steigt erst hinter der Mauer an (sonst ragt der Mischboden zwischen zwei Ästen über die tiefere Fahrbahn)
 function mcNear(x, z, t, W) { const b = Math.min(mcBase(x, z, ELEV[t.j]), mcCone(x, z)); let g = clamp((t.d - W - 1) / 12, 0, 1); g = g * g * (3 - 2 * g); return lerp(Math.min(b, ELEV[t.j]), b, g); }
 // Tribünen-Grundfläche (Monaco): innerhalb eben auf Streckenhöhe, außen über 16 m weich in den Hang
 function padH(x, z, h) { for (const P of MC_PADS) { const dx = x - P.x, dz = z - P.z; if (dx * dx + dz * dz > P.r * P.r) continue; const lx = dx * P.c - dz * P.s, lz = dx * P.s + dz * P.c, ox = Math.max(-2 - lx, lx - (P.dep + 3), 0), oz = Math.max(Math.abs(lz) - P.len / 2 - 2, 0), d = Math.hypot(ox, oz); if (d >= 16) continue; let f = 1 - d / 16; f = f * f * (3 - 2 * f); if (h > P.y) h = lerp(h, P.y, f); } return h; }
-function groundY(x, z) { if (FLAT) return 0; if (MC_SEA && MC_SEA(x, z)) return -3;   /* Meeresboden unter dem Hafen */ const t = terr(x, z), j = t.j, latS = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j], W = latS < 0 ? WL[j] : WR[j], bw = BANDW ? BANDW[latS < 0 ? 0 : 1][j] : BAND, f = clamp((t.d - (W + Math.min(BAND, bw + 4) - 32)) / 30, 0, 1);   /* nur absenken, wo ein Geländeband darüber liegt – sonst schweben Kies und Bäume über einer Senke */ let y = surfH(x, z, t) - 4 * (1 - f * f * (3 - 2 * f)); if (TRK.mc && t.d < W + 30) { let g = clamp((t.d - W - 4) / 26, 0, 1); g = g * g * (3 - 2 * g); y = lerp(Math.min(y, mcLow(x, z) - 3), y, g); } return y; }   /* nur direkt hinter den Mauern absenken, weich auslaufend – sonst Falten im Boden zwischen den Streckenteilen */
+function groundY(x, z) { const px = PX, pz = PZ, rx = RX, rz = RZ, wl = WL, wr = WR; if (FLAT) return 0; if (MC_SEA && MC_SEA(x, z)) return -3;   /* Meeresboden unter dem Hafen */ const t = terr(x, z), j = t.j, latS = (x - px[j]) * rx[j] + (z - pz[j]) * rz[j], W = latS < 0 ? wl[j] : wr[j], bw = BANDW ? BANDW[latS < 0 ? 0 : 1][j] : BAND, f = clamp((t.d - (W + Math.min(BAND, bw + 4) - 32)) / 30, 0, 1);   /* nur absenken, wo ein Geländeband darüber liegt – sonst schweben Kies und Bäume über einer Senke */ let y = surfH(x, z, t) - 4 * (1 - f * f * (3 - 2 * f)); if (TRK.mc && t.d < W + 30) { let g = clamp((t.d - W - 4) / 26, 0, 1); g = g * g * (3 - 2 * g); y = lerp(Math.min(y, mcLow(x, z) - 3), y, g); } return y; }   /* nur direkt hinter den Mauern absenken, weich auslaufend – sonst Falten im Boden zwischen den Streckenteilen */
 // Monaco: Stützmauer an der Außenkante der Geländebänder – nur wo das Gelände dahinter wirklich tiefer liegt und nie am/im Wasser (Hafen, Meer)
 function mcTerraceWalls(inMarina) {
   const pos = [], uv = [];
@@ -2434,8 +2506,8 @@ function mcTerraceWalls(inMarina) {
 // Monaco: liegt ein Punkt im Umkreis von 90 m um die Strecke nach dem Tunnel (Ausfahrt bis Tabac)? Dort stehen keine Bäume im Hang
 function nearAfterTun(x, z) { if (!TRK.mc || !TRK.mc.tun) return false; const b = TRK.mc.tun[1] * L; for (let s2 = b - 20; s2 <= b + 520; s2 += 10) { const i = Math.floor(modL(s2) / DS) % N; if ((x - PX[i]) ** 2 + (z - PZ[i]) ** 2 < 90 * 90) return true; } return false; }
 // Monaco: tiefste Streckenhöhe im Umkreis von 36 m – der grobe Boden (Gitter ~15 m) darf nicht von einem höheren Ast über die Fahrbahn eines tieferen spannen
-function mcLow(x, z) { const cx = Math.floor(x / 32), cz = Math.floor(z / 32); let m = 1e9; for (let a = -2; a <= 2; a++) for (let b = -2; b <= 2; b++) { const L2 = SPI.get((cx + a + 4096) * 8192 + cz + b + 4096); if (!L2) continue; for (const j of L2) { const dx = x - PX[j], dz = z - PZ[j]; if (dx * dx + dz * dz < 1296 && ELEV[j] < m) m = ELEV[j]; } } return m; }
-function placeY(x, z) { if (FLAT) return 0; if (MC_SEA && MC_SEA(x, z)) return 0;   /* Jachten, Stege: Meereshöhe */ if (TRK.mc) { const [d2, j] = spiNear(x, z, -1, 0, 1), d = Math.sqrt(d2);   /* nur Nachbarzellen absuchen: weit draußen am Hang sonst sehr teuer */ if (d <= Math.max(WL[j], WR[j]) + 6) return ELEV[j]; }   /* Monaco: alles direkt an der Strecke (Insel, Pfosten, Tafeln) steht auf Streckenhöhe, nicht auf dem tiefer liegenden Platz */ return surfH(x, z); }
+function mcLow(x, z) { const px = PX, pz = PZ, elev = ELEV, spi = SPI; const cx = Math.floor(x / 32), cz = Math.floor(z / 32); let m = 1e9; for (let a = -2; a <= 2; a++) for (let b = -2; b <= 2; b++) { const L2 = spi.get((cx + a + 4096) * 8192 + cz + b + 4096); if (!L2) continue; for (const j of L2) { const dx = x - px[j], dz = z - pz[j]; if (dx * dx + dz * dz < 1296 && elev[j] < m) m = elev[j]; } } return m; }
+function placeY(x, z) { const elev = ELEV, wl = WL, wr = WR; if (FLAT) return 0; if (MC_SEA && MC_SEA(x, z)) return 0;   /* Jachten, Stege: Meereshöhe */ if (TRK.mc) { const [d2, j] = spiNear(x, z, -1, 0, 1), d = Math.sqrt(d2);   /* nur Nachbarzellen absuchen: weit draußen am Hang sonst sehr teuer */ if (d <= Math.max(wl[j], wr[j]) + 6) return elev[j]; }   /* Monaco: alles direkt an der Strecke (Insel, Pfosten, Tafeln) steht auf Streckenhöhe, nicht auf dem tiefer liegenden Platz */ return surfH(x, z); }
 // Boden in Kacheln (gemeinsame Vertex-Daten -> keine Nähte), damit nur Sichtbares gezeichnet wird
 function tileGround(root, T = 6) {
   for (const ch of [...root.children]) {
@@ -2520,7 +2592,7 @@ function chunkInstances(root, cell = 260, minCount = 120) {
   for (const ch of [...root.children]) {
     if (!ch.isInstancedMesh || ch.count < minCount || ch.userData.noChunk) continue;
     const cells = new Map();
-    const gt = ch.geometry, ntri = (gt.index ? gt.index.count : gt.attributes.position.count) / 3, cl = ntri < 40 ? cell * 2 : gt.userData.lod ? cell * 1.4 : cell;   // kleine Objekte: größere Kacheln -> weniger Zeichenaufrufe
+    const gt = ch.geometry, ntri = (gt.index ? gt.index.count : gt.attributes.position.count) / 3, cl = ntri < 40 ? cell * 2 : gt.userData.lod ? (ntri > 150 ? cell * 0.6 : cell * 1.4) : cell;   // detailreiche Modelle mit LOD (Jachten, Palmen, Laubbäume): kleinere Kacheln, damit die Fernstufe auch greift   // kleine Objekte: größere Kacheln -> weniger Zeichenaufrufe
     if (!gt.boundingSphere) gt.computeBoundingSphere();
     for (let k = 0; k < ch.count; k++) { ch.getMatrixAt(k, m4); const key = Math.floor(m4.elements[12] / cl) + ',' + Math.floor(m4.elements[14] / cl); (cells.get(key) || cells.set(key, []).get(key)).push(k); }
     if (cells.size < 2) continue;
@@ -2615,6 +2687,28 @@ const lam = (o) => new THREE.MeshStandardMaterial({ roughness: .9, metalness: 0,
 const po = n => ({ polygonOffset: true, polygonOffsetFactor: n, polygonOffsetUnits: n, side: THREE.DoubleSide });
 function texRep(t, rx, ry) { const c = t.clone(); c.needsUpdate = true; c.repeat.set(rx, ry); return c; }
 
+// Auslaufzonen (Spa): Höhenfeld vorbelegen und glätten – eigene Funktionen, damit der JIT sie optimiert
+function zoneSeed(Y, FX, SEG, near, x0, z0, bw, bh) { const G1 = SEG + 1, px = PX, pz = PZ, hw = HW, el = ELEV;
+  for (let iz = 0; iz < G1; iz++) for (let ix = 0; ix < G1; ix++) { const x = x0 + ix * bw / SEG, z = z0 + iz * bh / SEG, k = iz * G1 + ix; let bd = 1e18, bj = near[0], under = 1e9;
+    for (const i of near) { const d = (x - px[i]) ** 2 + (z - pz[i]) ** 2; if (d < bd) { bd = d; bj = i; } if (d < (hw[i] + 1.5) ** 2) under = Math.min(under, el[i]); }
+    if (FLAT) { Y[k] = -0.07; FX[k] = 1; } else if (under < 1e8) { Y[k] = under - 0.07; FX[k] = 1; } else Y[k] = el[bj] - 0.07; } }
+function relaxZone(Y, FX, SEG) { const G1 = SEG + 1;
+  for (let it = 0; it < 700; it++) for (let iz = 0; iz < G1; iz++) for (let ix = 0; ix < G1; ix++) { const k = iz * G1 + ix; if (FX[k]) continue;
+    const a = Y[ix > 0 ? k - 1 : k + 1], b = Y[ix < SEG ? k + 1 : k - 1], c = Y[iz > 0 ? k - G1 : k + G1], d = Y[iz < SEG ? k + G1 : k - G1]; Y[k] += 1.85 * ((a + b + c + d) * 0.25 - Y[k]); } }
+// Ideallinie als gespanntes Seil (eigene kleine Funktion, damit der JIT sie optimiert)
+function ropeLine(lat, LIM) {
+  const n = N, px = PX, pz = PZ, rx = RX, rz = RZ;
+  for (const [k, iters] of [[30, 60], [16, 80], [8, 100], [4, 120], [2, 60]]) for (let it = 0; it < iters; it++) {
+    const nl = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      const a = (i - k + n) % n, b = (i + k) % n;
+      const mx = (px[a] + rx[a] * lat[a] + px[b] + rx[b] * lat[b]) / 2 - px[i], mz = (pz[a] + rz[a] * lat[a] + pz[b] + rz[b] * lat[b]) / 2 - pz[i];
+      const v = lat[i] + (mx * rx[i] + mz * rz[i] - lat[i]) * 0.5, lm = LIM[i]; nl[i] = v < -lm ? -lm : v > lm ? lm : v;
+    }
+    lat = nl;
+  }
+  return lat;
+}
 function buildTrack(key) {
   const _bt0 = performance.now(); TRK = TRACKS[key]; TH = THEMES[TRK.theme];
   trackGroup.traverse(o => {
@@ -2666,15 +2760,7 @@ function buildTrack(key) {
   }
   { // Ideallinie wie ein gespanntes Seil innerhalb der Fahrbahn (inkl. Kerbs) -> minimale Krümmung
     let lat = new Float32Array(N); const LIM = new Float32Array(N); for (let i = 0; i < N; i++) LIM[i] = KERB[i] ? HW[i] + 0.2 : HW[i] - 1.15;
-    for (const [k, iters] of [[30, 60], [16, 80], [8, 100], [4, 120], [2, 60]]) for (let it = 0; it < iters; it++) {
-      const nl = new Float32Array(N);
-      for (let i = 0; i < N; i++) {
-        const a = (i - k + N) % N, b = (i + k) % N;
-        const mx = (PX[a] + RX[a] * lat[a] + PX[b] + RX[b] * lat[b]) / 2 - PX[i], mz = (PZ[a] + RZ[a] * lat[a] + PZ[b] + RZ[b] * lat[b]) / 2 - PZ[i];
-        nl[i] = clamp(lat[i] + (mx * RX[i] + mz * RZ[i] - lat[i]) * 0.5, -LIM[i], LIM[i]);
-      }
-      lat = nl;
-    }
+    lat = ropeLine(lat, LIM);   // eigene Funktion: in der riesigen buildTrack-Funktion würde die Schleife nicht optimiert
     RL = filt(lat, 3, 'avg');
     const QX = new Float32Array(N), QZ = new Float32Array(N); for (let i = 0; i < N; i++) { QX[i] = PX[i] + RX[i] * RL[i]; QZ[i] = PZ[i] + RZ[i] * RL[i]; }
     const kr = new Float32Array(N);
@@ -2947,11 +3033,8 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       // Höhenfeld der Fläche: unter jeder Fahrbahn fest 7 cm tiefer, dazwischen glatt (harmonisch) – dasselbe Feld nutzen die Autos abseits der Fahrbahn
       const G1 = SEG + 1, Y = new Float32Array(G1 * G1), FX = new Uint8Array(G1 * G1), near = [];
       for (let i = 0; i < N; i++) if (PX[i] > x0 - 25 && PX[i] < x1 + 25 && PZ[i] > z0 - 25 && PZ[i] < z1 + 25) near.push(i);
-      for (let iz = 0; iz < G1; iz++) for (let ix = 0; ix < G1; ix++) { const x = x0 + ix * bw / SEG, z = z0 + iz * bh / SEG, k = iz * G1 + ix; let bd = 1e18, bj = near[0], under = 1e9;
-        for (const i of near) { const d = (x - PX[i]) ** 2 + (z - PZ[i]) ** 2; if (d < bd) { bd = d; bj = i; } if (d < (HW[i] + 1.5) ** 2) under = Math.min(under, ELEV[i]); }
-        if (FLAT) { Y[k] = -0.07; FX[k] = 1; } else if (under < 1e8) { Y[k] = under - 0.07; FX[k] = 1; } else Y[k] = ELEV[bj] - 0.07; }
-      if (!FLAT) for (let it = 0; it < 700; it++) for (let iz = 0; iz < G1; iz++) for (let ix = 0; ix < G1; ix++) { const k = iz * G1 + ix; if (FX[k]) continue;
-        const a = Y[ix > 0 ? k - 1 : k + 1], b = Y[ix < SEG ? k + 1 : k - 1], c = Y[iz > 0 ? k - G1 : k + G1], d = Y[iz < SEG ? k + G1 : k - G1]; Y[k] += 1.85 * ((a + b + c + d) * 0.25 - Y[k]); }
+      zoneSeed(Y, FX, SEG, near, x0, z0, bw, bh);
+      if (!FLAT) relaxZone(Y, FX, SEG);
       for (let v = 0; v < P.count; v++) { const x = P.getX(v) + x0 + bw / 2, z = P.getZ(v) + z0 + bh / 2, ix = Math.round((x - x0) / bw * SEG), iz = Math.round((z - z0) / bh * SEG);
         P.setXYZ(v, x, Y[clamp(iz, 0, SEG) * G1 + clamp(ix, 0, SEG)], z); U.setXY(v, (x - x0) / bw, 1 - (z - z0) / bh); }
       ZONEH.push({ x0, z0, bw, bh, SEG, Y });
@@ -3683,6 +3766,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       const addB = (R, y0, top) => { const g = osmExtrude(R, top - y0, nb++ % 2 ? fB : fA, roofB, y0, 4.2, 3.2); g.userData.fixed = true; trackGroup.add(g); const cx = R.reduce((a2, q) => a2 + q[0], 0) / R.length, cz = R.reduce((a2, q) => a2 + q[1], 0) / R.length; excl.push([cx, cz, Math.max(...R.map(q => Math.hypot(q[0] - cx, q[1] - cz))) + 2, R]); };   /* Grundriss mitgeben: die Hangbebauung prüft genau statt mit dem Kreis */
       const jit = k => (Math.sin(k * 12.9898) * 43758.5453 % 1 + 1) % 1;
       for (const b of MC_OSM.b) { const R = pushOut(b.r, 1.6), cx = R.reduce((a2, q) => a2 + q[0], 0) / R.length, cz = R.reduce((a2, q) => a2 + q[1], 0) / R.length, c = nearLow(cx, cz); if (c.lat * sd < 0) continue;
+        if (spiNear(cx, cz)[1] * DS < 450) continue;   /* die zwei schmalen OSM-Bauten an Sainte-Dévote gehören nicht zum Boulevard: dort standen sie als 6 m flache Fassadenscheibe (wirkte wie ein 2D-Bild) */
         const pr = R.map(([x, z]) => nearLow(x, z)); occ.push([Math.min(...pr.map(q => q.s)), Math.max(...pr.map(q => q.s)), Math.max(...pr.map(q => q.lat * sd))]); const terr = c.s < cA, e = ELEV[c.i], up = upper(c.s);
         let top = Math.max(up.e + 7, e + (terr ? HM + 9 : 16)) + jit(nb + 3) * 7; if (/portobello|castellara/.test(b.n)) top = Math.max(top, e + 42);   /* 13 Geschosse (Fotos) */
         addB(R, e - (terr ? 2 : 4), top); }
@@ -3711,10 +3795,13 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         grp.traverse(o => { if (o.isMesh) o.castShadow = o.receiveShadow = true; }); trackGroup.add(grp); excl.push([cx, cz, 30]); }
     }
     // Fürstenpalast auf dem Felsen (Monaco-Ville): steiler Felssporn, darauf der helle Palast mit Zinnen
-    { const [x, z] = M.rock, rock = new THREE.Mesh(new THREE.CylinderGeometry(150, 200, 60, 20, 3), lam({ map: texRep(MTN_TEX(), 4, 2), color: 0x9a8c74 })); rock.position.set(x, 30, z); rock.scale.set(1.6, 1, 0.9); trackGroup.add(rock);
-      const [px, pz] = M.palace, pal = new THREE.Mesh(new THREE.BoxGeometry(90, 18, 50).translate(0, 69, 0), facadeMat({ wall: '#efe3c6', frame: '#fff6e2', glass: '#4a4234', glassTop: '#b9a985', litP: .3, emiI: .9, roof: '#b8754a', seed: 31, bays: 14, floors: 4, bayM: 5, floorM: 4.5 })); pal.position.set(px, 0, pz); trackGroup.add(pal);
-      for (let k = 0; k < 14; k++) { const t = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.6, 2.4), cream); t.position.set(px - 42 + k * 6.4, 79.3, pz - 25); trackGroup.add(t); }
-      excl.push([x, z, 260]); }
+    // Fels, Palast und Zinnen bilden EINE Gruppe: sie wird als Ganzes ans Gelände gesetzt (vorher bekam jedes Teil die Bodenhöhe seines eigenen Standorts – der Palast schwebte 8 m über dem Fels).
+    // Der Fels reicht 25 m unter seinen Fußpunkt, damit er auch zur Meerseite und in Mulden bis in den Boden geht.
+    { const [x, z] = M.rock, castle = new THREE.Group(); castle.position.set(x, 0, z);
+      const rock = new THREE.Mesh(new THREE.CylinderGeometry(165, 228, 85, 24, 4).translate(0, 17.5, 0), lam({ map: texRep(MTN_TEX(), 4, 2), color: 0x9a8c74 })); rock.scale.set(1.6, 1, 0.9); castle.add(rock);
+      const [px, pz] = M.palace, pal = new THREE.Mesh(new THREE.BoxGeometry(90, 18, 50).translate(0, 69, 0), facadeMat({ wall: '#efe3c6', frame: '#fff6e2', glass: '#4a4234', glassTop: '#b9a985', litP: .3, emiI: .9, roof: '#b8754a', seed: 31, bays: 14, floors: 4, bayM: 5, floorM: 4.5 })); pal.position.set(px - x, 0, pz - z); castle.add(pal);
+      for (let k = 0; k < 14; k++) { const t = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.6, 2.4), cream); t.position.set(px - x - 42 + k * 6.4, 79.3, pz - z - 25); castle.add(t); }
+      trackGroup.add(castle); excl.push([x, z, 260]); }
   }
   // Silverstone: „The Wing“ – lang gestrecktes Boxen-/Fahrerlagergebäude an der Start-Ziel-Geraden mit flügelförmig geschwungenem Dach
   if (TRK.wing) {
@@ -4430,7 +4517,10 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       for (const y of [0.34, 0.67]) { B(1.0, 0.016, 0.05, 0, y, 0.52); B(1.0, 0.016, 0.05, 0, y, -0.52); }
       B(0.22, 0.11, 0.18, 0.27, 1.055, -0.24);
       const g = mergeParts(P), n = g.attributes.position.count, ar = new Float32Array(n); for (let i = 36 * 5; i < n; i++) ar[i] = 1;   // Brüstung, Gesimse, Dachaufbau: Putzfarbe statt Fenster
-      g.setAttribute('aRoof', new THREE.BufferAttribute(ar, 1)); return g; })();
+      g.setAttribute('aRoof', new THREE.BufferAttribute(ar, 1));
+      const lo = mergeParts([[new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0), null]]); lo.setAttribute('aRoof', new THREE.BufferAttribute(new Float32Array(lo.attributes.position.count), 1));
+      g.userData.lod = [[lo, 150]];   // weiter weg: schlichter Quader (12 statt 168 Dreiecke) – Pfeiler und Gesimse sind dort kleiner als ein Pixel
+      return g; })();
     for (const [L2, M2, C2] of [[lo, resiM, cols], [hiB, TRK.resiTall ? resiM : towM, gcols]]) { if (!L2.length) continue; const bay = M2.userData.bay || 4, flo = M2.userData.flo || 3.5; for (const b of L2) { b[2] = Math.max(bay * 2, Math.floor(b[2] / bay) * bay); b[4] = Math.max(bay * 2, Math.floor(b[4] / bay) * bay); b[3] = Math.max(flo * 2, Math.round(b[3] / flo) * flo + 0.6); }   /* ganze Fensterachsen und Geschosse */
       const ib = new THREE.InstancedMesh(L2 === lo ? kit : box1, M2, L2.length);
       L2.forEach(([x, z, w, h2, l, r], k) => { qq.setFromAxisAngle(_v2, r); m4.compose(pv.set(x, 0, z), qq, sc.set(w, h2, l)); ib.setMatrixAt(k, m4); ib.setColorAt(k, cc.setHex(C2[k % C2.length])); }); trackGroup.add(ib); }
@@ -4618,6 +4708,9 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   chunkInstances(trackGroup, TRK.nos ? 480 : 360);   /* größere Kacheln: weniger Zeichenaufrufe */
   if (TRK.nos) for (const ch of trackGroup.children) if (ch.userData.part && ch.geometry.boundingSphere) { ch.boundingSphere = ch.geometry.boundingSphere; ch.userData.lodHi = ch.geometry; ch.userData.lodSteps = [[null, 1800]]; LODS.push(ch); }   // lange Strecke: weit entfernte Streckenteile (hinter Wald und Hügeln) nicht zeichnen
   camera.far = Math.min(TH.camFar || 4000, (TH.fogFar || 4000) * 1.08 + 250);   /* hinter dem Nebelende ist nichts sichtbar: nicht zeichnen (schneller, genauerer Tiefenpuffer) */ camera.updateProjectionMatrix();
+  { // Horizont-Geometrie ohne Nebel (Monaco: echte Berge bis 8 km) darf nicht an der Sichtweite abgeschnitten werden – sonst „clippt“ die Bergkette vor dem Himmel
+    const c0 = new THREE.Vector3((minX + maxX) / 2, 0, (minZ + maxZ) / 2); let hz = 0; for (const ch of trackGroup.children) if (ch.isMesh && ch.material && ch.material.fog === false && ch.userData.fixed && ch.geometry.boundingSphere) { const bs = ch.geometry.boundingSphere; hz = Math.max(hz, bs.center.distanceTo(c0) + bs.radius); }
+    const reach = hz + Math.max(maxX - minX, maxZ - minZ) / 2 + 200;   /* auch vom entferntesten Streckenpunkt aus */ if (hz && reach > camera.far) { camera.far = Math.min(reach, 14000); camera.updateProjectionMatrix(); } }
   applySky();
   buildEnv(TH.night ? 0x141218 : TH.ground === 'grass' ? 0x44582c : 0x8a7658);
   applyLook();
@@ -6018,7 +6111,7 @@ function renderMenu() {
   $('#songChips').innerHTML = RACE_SONGS.map(sg => '<button disabled style="opacity:.85;cursor:default">' + escH((sg.artist ? sg.artist + ' – ' : '') + sg.name) + '</button>').join('');
   $('#songName').textContent = '(zufällige Reihenfolge)';
   for (const k of ['volMusic', 'volCar']) { const v = Math.round((S[k] ?? 0.8) * 100); $('#' + k).value = v; $('#' + k).style.setProperty('--p', v + '%'); $('#' + k + 'V').textContent = v + ' %'; }
-  $('#gfxInfo').textContent = { low: 'Ohne Schatten und Nachbearbeitung – für ältere Handys.', high: 'Schatten, Umgebungsverdeckung (AO), Bloom, Sonnenreflexe und Tempo-Effekte.', ultra: 'Wie „Schön“, dazu feinere Umgebungsverdeckung, schärfere Schatten, volle Auflösung, mehr Bäume und Gebäude. Braucht ein starkes Gerät.' }[S.gfx] || '';
+  $('#gfxInfo').textContent = { low: 'Ohne Schatten und Nachbearbeitung – für ältere Handys.', high: 'Schatten, Umgebungsverdeckung (AO), Bloom, Sonnenreflexe und Tempo-Effekte. Auf hochauflösenden Displays mit angepasster Renderauflösung und Nachschärfen für flüssige Bildraten.', ultra: 'Wie „Schön“, dazu feinere Umgebungsverdeckung, schärfere Schatten, volle Auflösung, mehr Bäume und Gebäude. Braucht ein starkes Gerät.' }[S.gfx] || '';
   $$('.seg').forEach(seg => seg.querySelectorAll('button').forEach(b => b.classList.toggle('on', S[seg.dataset.key] === b.dataset.v)));
   $$('.sw').forEach(b => b.classList.toggle('on', !!S[b.dataset.tog]));
   const go = gridOrder(), j = S.grid - 1, nm = x => x ? '<b>' + x[1] + '</b> (' + TEAMS[x[3]].name + ')' : '–';
@@ -6094,7 +6187,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v62'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v63'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -6146,20 +6239,21 @@ function frame(now) {
   pollPad(dt); updateCamera(dt); lodTick(dt); wakeTick(dt); drawWheel(dt); if (running) updateLine(dt); updateHUD(dt); sphereTick(dt); vegasTick(dt); updateAudio(pl.thr || 0); musicTick();
   if (finishPass) {
     const fu = finishPass.uniforms; fu.uSpeed.value = running && !paused ? clamp((pl.v - 50) / 42, 0, 1.2) ** 1.5 * 1.25 + (pl.boostFx || 0) * 1.05 : 0;
+    fu.uTime.value = now / 1000; fu.uBoost.value = running && !paused ? (pl.boostFx || 0) : 0;
     if (bloomPass) bloomPass.strength = (TH.look?.bloom ?? .5) + (pl.boostFx || 0) * 0.3; fu.uSat.value = (TH.look?.sat ?? 1.1) * (1 - (pl.boostFx || 0) * 0.4); fu.uVig.value = (TH.look?.vig ?? .38) + clamp((pl.v - 65) / 30, 0, 1) * 0.32 + (pl.boostFx || 0) * 0.6;
     _sv.copy(skyMat.uniforms.sunDir.value).multiplyScalar(1000).add(camera.position).project(camera);
     camera.getWorldDirection(_cd);
     const front = _cd.dot(skyMat.uniforms.sunDir.value) > 0, sx = (_sv.x + 1) / 2, sy = (_sv.y + 1) / 2;
     fu.uSun.value.set(sx, sy); fu.uAspect.value = camera.aspect;
     fu.uSunOn.value = front ? clamp(1.25 - Math.max(Math.abs(sx - 0.5), Math.abs(sy - 0.5)) * 1.6, 0, 1) * (TH.flare ?? 0.8) : 0;
-    fu.uRays.value = TH.night ? 0 : fu.uSunOn.value * (TH.rays ?? 0.6); fu.uSharp.value = 0;   // kein Nachschärfen: es ließ Zäune, Masten und Kanten flimmern
+    fu.uRays.value = TH.night ? 0 : fu.uSunOn.value * (TH.rays ?? 0.6); fu.uSharp.value = (devicePixelRatio || 1) / renderer.getPixelRatio() > 1.2 ? 0.22 : 0;   // nur leicht und nur, wenn das Bild hochskaliert wird (stärker ließ es Zäune flimmern)
     fu.uSunCol.value.set(skyMat.uniforms.sunCol.value.r, skyMat.uniforms.sunCol.value.g, skyMat.uniforms.sunCol.value.b);
   }
   const ps = renderer.getDrawingBufferSize(_v2b).y / (2 * Math.tan(camera.fov * Math.PI / 360));
   sparks.mat.uniforms.uScale.value = dust.mat.uniforms.uScale.value = fwP.mat.uniforms.uScale.value = ps;
   if (!paused) { sparks.update(dt); dust.update(dt); fireworksTick(dt); fwP.update(dt); }
   updateStreaks(dt);
-  skyMat.uniforms.cloud.value.w += dt * 0.004; skyTick(dt);
+  skyTick(dt);
   if (HORIZ) { HORIZ.position.x = camera.position.x; HORIZ.position.z = camera.position.z; }
   if (window.__camFix) { const f = window.__camFix; camera.position.set(...f.p); camera.lookAt(...f.t); camera.updateMatrixWorld(); }   // Testansicht
   // Pause: das Bild steht still, also nur zwei Bilder zeichnen und dann die Grafikkarte schonen
