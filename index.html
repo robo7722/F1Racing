@@ -895,10 +895,10 @@ const FinishShader = {
       // Tempo: der Bildrand wird leicht nach außen gezogen (wirkt wie ein weiteres Sichtfeld) – die Bildmitte bleibt unverändert
       vec2 uv = 0.5 + c0 * (1.0 - sp * 0.022 * r0 * r0);
       vec2 c = uv - 0.5; float r = length(c);
-      float amt = sp * 0.08 * smoothstep(0.16, 0.7, r) * mix(0.18, 1.0, smoothstep(0.42, 0.75, uv.y)) + uBoost * 0.03 * smoothstep(0.1, 0.6, r);   // Fahrbahn, Linien und Curbs (untere Bildhälfte) bleiben scharf
+      float top = smoothstep(0.9, 1.5, sp); float amt = (sp * 0.085 + top * top * 0.07) * smoothstep(0.12, 0.7, r) * mix(0.2 + top * 0.15, 1.0, smoothstep(0.42, 0.75, uv.y)) + uBoost * 0.075 * smoothstep(0.08, 0.6, r);   // nahe Höchstgeschwindigkeit und bei Boost deutlich mehr Radialunschärfe   // Fahrbahn, Linien und Curbs (untere Bildhälfte) bleiben scharf
       vec3 col;
       if (amt * r > 0.0012) { float j = hash12(gl_FragCoord.xy + fract(uTime) * 61.0); vec3 acc = vec3(0.0); float tot = 0.0;   // Radialunschärfe mit zufälligem Versatz je Pixel: weich statt Doppelbilder
-        for (int i = 0; i < 6; i++) { float t = (float(i) + j) / 6.0, w = 1.0 - t * 0.5; acc += texture2D(tDiffuse, uv - c * amt * t).rgb * w; tot += w; } col = acc / tot; }
+        for (int i = 0; i < 8; i++) { float t = (float(i) + j) / 8.0, w = 1.0 - t * 0.5; acc += texture2D(tDiffuse, uv - c * amt * t).rgb * w; tot += w; } col = acc / tot; }
       else {
         col = texture2D(tDiffuse, uv).rgb;
         if (uSharp > 0.01) {   // Nachschärfen (gleicht die niedrigere Renderauflösung aus), begrenzt gegen helle Säume
@@ -2586,7 +2586,7 @@ function buildEvict(root) {
 }
 function evictTick() {
   for (const e of EVICT) { const d = camera.position.distanceTo(e.c) - e.r;
-    if (!e.ev && d > e.D) { e.m.geometry.dispose(); e.m.visible = false; e.ev = true; }
+    if (!e.ev && d > e.D) { if (TRK.nos) e.m.geometry.dispose(); e.m.visible = false; e.ev = true; }   /* Speicher nur auf der 20-km-Nordschleife freigeben – neu Hochladen beim Wiederkommen ruckelte */
     else if (e.ev && d < e.D - 150) { e.ev = false; e.m.visible = true; } }
 }
 function lodTick(dt) {
@@ -3904,17 +3904,26 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       }
     }
   }
-  if (TRK.dome) { // großer Freizeitpark mit rotem Kuppeldach nördlich der Strecke
-    const [x, z] = TRK.dome, red = new THREE.MeshStandardMaterial({ color: 0xc8161d, roughness: .45, metalness: .2 });
-    // Grundriss mit drei weit ausgestellten Flügeln, Dach steigt flach zur Mitte an, Ränder als dünne Kante
-    const NA = 120, NR = 16, pos = [], idx = [], R0 = 300, rad = a => R0 * (0.58 + 0.42 * Math.pow(0.5 + 0.5 * Math.cos(3 * a), 1.6));
-    for (let i = 0; i <= NR; i++) for (let k = 0; k <= NA; k++) { const a = k / NA * Math.PI * 2, t = i / NR, r = rad(a) * t, y = 6 + 40 * Math.pow(1 - t * t, 0.9) + 3 * Math.sin(a * 6) * t * (1 - t); pos.push(x + Math.cos(a) * r, y, z + Math.sin(a) * r); }
+  if (TRK.dome) { // Ferrari World: flaches rotes Dach mit drei weit ausgestellten Flügeln, darunter Glasfassade, in der Mitte der gläserne Trichter
+    const [x, z] = TRK.dome, red = new THREE.MeshStandardMaterial({ color: 0xc8161d, roughness: .4, metalness: .25 });
+    // Dachrand: an den Flügelspitzen fast am Boden, zwischen den Flügeln angehoben (dort sieht man die Glasfassade darunter); Dach steigt weich zur Mitte an
+    const NA = 120, NR = 16, pos = [], idx = [], R0 = 300, rad = a => R0 * (0.58 + 0.42 * Math.pow(0.5 + 0.5 * Math.cos(3 * a), 1.6)), eh = a => 3 + 13 * Math.pow(0.5 - 0.5 * Math.cos(3 * a), 1.3);
+    for (let i = 0; i <= NR; i++) for (let k = 0; k <= NA; k++) { const a = k / NA * Math.PI * 2, t = i / NR, r = rad(a) * t, e = eh(a), y = e + (46 - e) * Math.pow(1 - t * t, 0.85) + 2.5 * Math.sin(a * 6) * t * (1 - t); pos.push(x + Math.cos(a) * r, y, z + Math.sin(a) * r); }
     for (let i = 0; i < NR; i++) for (let k = 0; k < NA; k++) { const p0 = i * (NA + 1) + k, p1 = p0 + NA + 1; idx.push(p0, p0 + 1, p1, p1, p0 + 1, p1 + 1); }
     const rg = new THREE.BufferGeometry(); rg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); rg.setIndex(idx); rg.computeVertexNormals();
     trackGroup.add(new THREE.Mesh(rg, red));
-    const rim = []; for (let k = 0; k <= NA; k++) { const a = k / NA * Math.PI * 2, r = rad(a); rim.push(new THREE.Vector3(x + Math.cos(a) * r, 5, z + Math.sin(a) * r)); }
-    trackGroup.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rim, true), 240, 3, 6, true), lam({ color: 0xe8e8e8 })));
-    const funnel = new THREE.Mesh(new THREE.CylinderGeometry(22, 55, 46, 32, 1, true), new THREE.MeshStandardMaterial({ color: 0xdfe8ef, roughness: .15, metalness: .6, side: THREE.DoubleSide })); funnel.position.set(x, 62, z); trackGroup.add(funnel);
+    // Glasfassade unter dem Dachrand (dunkles, spiegelndes Glas mit hellen Pfosten)
+    const glassT = canvasTex(256, 64, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#5d7f9c'); gr.addColorStop(1, '#162330'); g.fillStyle = gr; g.fillRect(0, 0, w, h); g.fillStyle = 'rgba(230,236,240,.85)'; for (let k = 0; k < w; k += 32) g.fillRect(k, 0, 3, h); g.fillRect(0, 0, w, 3); });
+    glassT.userData.own = true; glassT.wrapS = THREE.RepeatWrapping; glassT.repeat.set(80, 1);
+    const wp = [], wu = [], wi = []; for (let k = 0; k <= NA; k++) { const a = k / NA * Math.PI * 2, r = rad(a) * 0.985, e = eh(a), px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r; wp.push(px, 0, pz, px, e + 0.5, pz); wu.push(k / NA, 0, k / NA, 1); }
+    for (let k = 0; k < NA; k++) { const p = k * 2; wi.push(p, p + 2, p + 1, p + 1, p + 2, p + 3); }
+    const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute(wp, 3)); wg.setAttribute('uv', new THREE.Float32BufferAttribute(wu, 2)); wg.setIndex(wi); wg.computeVertexNormals();
+    trackGroup.add(new THREE.Mesh(wg, new THREE.MeshStandardMaterial({ map: glassT, roughness: .12, metalness: .7, side: THREE.DoubleSide, emissive: new THREE.Color(0.02, 0.03, 0.04) })));
+    const rim = []; for (let k = 0; k <= NA; k++) { const a = k / NA * Math.PI * 2, r = rad(a); rim.push(new THREE.Vector3(x + Math.cos(a) * r, eh(a), z + Math.sin(a) * r)); }
+    trackGroup.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rim, true), 240, 1.4, 6, true), lam({ color: 0xe8e8e8 })));
+    // gläserner Trichter: oben weit offen im Dach, verjüngt sich nach unten ins Gebäude (vorher stand er als spitzer Kegel verkehrt herum auf dem Dach)
+    const funnel = new THREE.Mesh(new THREE.CylinderGeometry(60, 16, 34, 40, 1, true), new THREE.MeshStandardMaterial({ color: 0xcfdbe4, roughness: .1, metalness: .75, side: THREE.DoubleSide })); funnel.position.set(x, 38, z); trackGroup.add(funnel);
+    const lip = new THREE.Mesh(new THREE.TorusGeometry(60, 1.6, 8, 64).rotateX(Math.PI / 2), lam({ color: 0xeef2f5 })); lip.position.set(x, 55, z); trackGroup.add(lip);
     excl.push([x, z, 330]);
   }
 
@@ -3926,18 +3935,32 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     if (TRK.sphere) {
       let [sx, sz] = TRK.sphere; const R = 78; { const [d, j] = nearestDist(sx, sz); if (d < R + 30) { const dx = sx - PX[j], dz = sz - PZ[j], l = Math.hypot(dx, dz) || 1; sx = PX[j] + dx / l * (R + 32); sz = PZ[j] + dz / l * (R + 32); } }
       // LED-Bildschirm als Shader: Motive pro Pixel auf der Grafikkarte berechnet – flüssig mit voller Bildrate, in jeder Entfernung scharf, mit feinem LED-Raster
-      const sphM = new THREE.ShaderMaterial({ uniforms: { uT: { value: 0 } }, vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-        fragmentShader: `uniform float uT; varying vec2 vUv;
+      const sphM = new THREE.ShaderMaterial({ uniforms: { uT: { value: 0 }, uS: { value: new THREE.Vector3(3, 3, 0) }, uE: { value: new THREE.Vector4() }, uP: { value: new THREE.Vector4() }, uM: { value: new THREE.Vector4(0, 1, 0, 1) } }, vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+        fragmentShader: `uniform float uT; uniform vec3 uS; uniform vec4 uE, uP, uM; varying vec2 vUv;
           vec3 motif(int m, float u, float v, float t) {
             if (m == 0) { float p = sin(u * 3.0 + t * 0.8) + sin(v * 9.0 - t * 1.1) + sin((u + v * 4.0) * 2.0 + t * 0.6); return vec3(128.0 + 127.0 * sin(p + t * 0.3), 60.0 + 60.0 * sin(p * 1.3 + 2.0), 160.0 + 95.0 * sin(p * 0.7 + 4.0)) / 255.0; }
             if (m == 1) { float lon = u + t * 0.25, n = sin(lon * 3.0) * sin(v * 11.0) + sin(lon * 7.0 + 1.0) * 0.5 * cos(v * 17.0), land = smoothstep(0.2, 0.3, n);
               vec3 c = mix(vec3(10.0, 50.0 + 40.0 * v, 140.0 + 80.0 * (1.0 - v)), vec3(60.0 + 60.0 * n, 120.0 + 70.0 * n, 40.0), land) / 255.0; return mix(vec3(0.92), c, smoothstep(0.08, 0.12, v)); }
+            if (m == 3) {   // Sphere-Emoji (nach Fotos): ganze Kugel gelb, kleines Gesicht unten auf der Vorderseite – weiße Augen, wandernde Pupillen, Lider, dicke Brauen, kleiner Mund
+              float lat = v * 2.4504 - 1.5708, X = (u - 3.14159) * cos(lat), Y = lat, aa = max(fwidth(X), fwidth(Y)) * 1.2;
+              vec3 ink = vec3(0.17, 0.09, 0.04), c = mix(vec3(1.0, 0.86, 0.22), vec3(1.0, 0.7, 0.03), smoothstep(-1.2, 0.6, Y)); c *= 1.0 - 0.18 * smoothstep(0.9, 1.5, abs(X));
+              for (int k = 0; k < 2; k++) { float sx = k == 0 ? -1.0 : 1.0, ex = sx * 0.16, ey = 0.06, rx = 0.115, ry = 0.13;
+                vec2 q = vec2((X - ex) / rx, (Y - ey) / ry); float de = (length(q) - 1.0) * min(rx, ry);
+                float lidY = ey - ry + (k == 0 ? uP.z : uP.w) * 2.0 * ry, inEye = (1.0 - smoothstep(-aa, aa, de)) * smoothstep(lidY - aa, lidY + aa, Y);
+                vec2 pc = vec2(ex + uP.x * rx * 0.5, ey + uP.y * ry * 0.45); float pu = 1.0 - smoothstep(0.058 - aa, 0.058 + aa, length(vec2(X, Y) - pc));
+                vec3 eyeC = mix(vec3(0.97, 0.96, 0.95), vec3(0.12, 0.07, 0.04), pu); c = mix(c, eyeC, inEye);
+                float lidLine = (1.0 - smoothstep(0.004, 0.004 + aa, abs(Y - lidY))) * step(de, 0.0) * step(0.02, k == 0 ? uP.z : uP.w); c = mix(c, ink * 1.6, lidLine * 0.6);   // Lidkante
+                float by = ey - ry - 0.06 - (k == 0 ? uE.x : uE.z), tl = (k == 0 ? uE.y : uE.w) * sx; vec2 bd = vec2(X - ex, Y - by); bd = vec2(bd.x * cos(tl) + bd.y * sin(tl), -bd.x * sin(tl) + bd.y * cos(tl));
+                float bc = bd.y + bd.x * bd.x * 0.9; vec2 bq = vec2(max(abs(bd.x) - 0.1, 0.0), bc); float br = 1.0 - smoothstep(0.026 - aa, 0.026 + aa, length(bq)); c = mix(c, ink, br); }   // Braue: leicht gewölbter, dicker Balken
+              vec2 mp = vec2(X - (0.02 + uM.z), Y - 0.27); float sm = abs(length(mp - vec2(0.0, -0.09 * uM.y)) - 0.09 * uM.y) ; float smile = (1.0 - smoothstep(0.012 - aa, 0.012 + aa, sm)) * step(-0.09 * uM.y + 0.06 * uM.y, mp.y + 0.0) * step(abs(mp.x), 0.075 * uM.y + 0.001);
+              float oh = 1.0 - smoothstep(0.04 * uM.w - aa, 0.04 * uM.w + aa, length(mp * vec2(1.0, 0.85)));
+              c = mix(c, ink, max(smile * (1.0 - uM.x), oh * uM.x)); return c; }
             float du = min(abs(u - 3.14159), 9.0) * 0.55, dv = (v - 0.48) * 2.2, rr = length(vec2(du, dv)), a = atan(dv, du);
             vec3 white = vec3(245.0 - rr * 40.0, 238.0 - rr * 50.0, 232.0 - rr * 50.0) / 255.0, iris = vec3(40.0 + 30.0 * sin(a * 12.0), 110.0 + 60.0 * sin(a * 9.0 + 1.0) - rr * 80.0, 170.0 - rr * 90.0) / 255.0;
             vec3 c = mix(iris, white, smoothstep(0.48, 0.52, rr)); c = mix(vec3(0.03), c, smoothstep(0.16, 0.2, rr));
             float closed = step(mod(t, 5.0), 0.18) * step(0.05, abs(dv)); return mix(c, vec3(230.0, 200.0, 185.0) / 255.0, closed); }   // Lidschlag alle 5 s
-          void main() { float u = vUv.x * 6.28318, v = 1.0 - vUv.y, t = uT, ph = mod(t, 14.0); int m = int(mod(floor(t / 14.0), 3.0)), m2 = int(mod(floor(t / 14.0) + 1.0, 3.0));
-            vec3 c = mix(motif(m, u, v, t), motif(m2, u, v, t), smoothstep(13.0, 14.0, ph));   // weicher Übergang zwischen den Motiven
+          void main() { float u = vUv.x * 6.28318, v = 1.0 - vUv.y, t = uT; int m = int(uS.x + 0.5), m2 = int(uS.y + 0.5);   /* 0 Plasma, 1 Planet, 2 Auge, 3 Emoji – Ablauf aus dem Spiel */
+            vec3 c = uS.z < 0.001 ? motif(m, u, v, t) : mix(motif(m, u, v, t), motif(m2, u, v, t), uS.z);   // weicher Übergang zwischen den Motiven
             vec2 g = fract(vec2(vUv.x * 900.0, vUv.y * 360.0)) - 0.5, fw = fwidth(vec2(vUv.x * 900.0, vUv.y * 360.0)); float led = 1.0 - smoothstep(0.32, 0.32 + max(fw.x, fw.y), length(g)) ;
             float k = mix(1.0, 0.55 + 0.45 * led, clamp(1.0 - max(fw.x, fw.y), 0.0, 1.0));   // LED-Punkte nur, wo sie auflösbar sind (kein Flimmern in der Ferne)
             gl_FragColor = vec4(pow(c, vec3(2.2)) * 1.5 * k, 1.0);
@@ -3946,6 +3969,9 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
           }` });
       const sph = new THREE.Mesh(new THREE.SphereGeometry(R, 96, 64, 0, Math.PI * 2, 0, Math.PI * 0.78), sphM); const tex = sphM, cv = true;
       sph.position.set(sx, R * 0.42, sz); trackGroup.add(sph);
+      { // Motivmitte (lokal +x) dorthin drehen, wo man frontal auf die Kugel zufährt: Streckenpunkt 150–800 m davor mit der Fahrtrichtung am genauesten auf die Kugel
+        let best = -1, bi = 0; for (let i = 0; i < N; i++) { const dx = sx - PX[i], dz = sz - PZ[i], d = Math.hypot(dx, dz); if (d < 150 || d > 800) continue; const a = (TX[i] * dx + TZ[i] * dz) / d - d / 4000; if (a > best) { best = a; bi = i; } }
+        sph.rotation.y = Math.atan2(-(PZ[bi] - sz), PX[bi] - sx); }
       const base = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.66, R * 0.7, 8, 64), lam({ color: 0x1b1d24 })); base.position.set(sx, 4, sz); trackGroup.add(base);
       SPHERE.cv = cv; SPHERE.tex = tex; SPHERE.t = 0; excl.push([sx, sz, R + 25]);
     } else SPHERE.cv = null;
@@ -5330,7 +5356,17 @@ function placeOnGrid() {
   order = cars.slice();
 }
 // Alle Shader vorab übersetzen (auch für Objekte, die gerade nicht im Bild sind) – sonst kompiliert der Browser sie mitten im Rennen, sobald sie zum ersten Mal auftauchen (Ruckler)
-function precompile() { try { const prev = renderer.getRenderTarget(); if (composer) renderer.setRenderTarget(composer.renderTarget1); renderer.compile(scene, camera); renderer.setRenderTarget(prev); } catch (e) { console.warn('precompile', e); } }
+const WARM = { rt: null };
+function precompile() { try { const prev = renderer.getRenderTarget(); if (composer) renderer.setRenderTarget(composer.renderTarget1); renderer.compile(scene, camera); renderer.setRenderTarget(prev); } catch (e) { console.warn('precompile', e); }
+  // Alles einmal winzig (4×4 Pixel) zeichnen – ohne Sichtfeld-Prüfung und mit jeder Detailstufe: lädt jede Geometrie, Instanzliste und Textur JETZT auf die Grafikkarte,
+  // statt beim ersten Auftauchen mitten im Rennen (das waren die kurzen Lade-Ruckler kurz nach dem Start, v. a. in den großen Stadtkursen Vegas und Singapur)
+  try { if (!WARM.rt) WARM.rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType });
+    const prev = renderer.getRenderTarget(), fc = [], vis = [], geo = LODS.map(m => m.geometry); scene.traverse(o => { if (o.frustumCulled) { fc.push(o); o.frustumCulled = false; } });
+    for (const m of LODS) if (!m.visible && !(m.userData.evRef && m.userData.evRef.ev)) { vis.push(m); m.visible = true; }
+    renderer.setRenderTarget(WARM.rt); renderer.render(scene, camera);
+    const steps = Math.max(0, ...LODS.map(m => m.userData.lodSteps.length));
+    for (let k = 0; k < steps; k++) { let any = false; for (const m of LODS) { const st = m.userData.lodSteps[k]; if (st && st[0] && m.geometry !== st[0]) { m.geometry = st[0]; any = true; } } if (any) renderer.render(scene, camera); }
+    LODS.forEach((m, i) => m.geometry = geo[i]); vis.forEach(m => m.visible = false); fc.forEach(o => o.frustumCulled = true); renderer.setRenderTarget(prev); } catch (e) { console.warn('warm', e); } }
 function startRace() {
   diff = DIFF[S.diff] || DIFF.mid;
   profAI = buildProfile(diff.aLat, VTOP * Math.max(1, diff.top), diff.brake, KR);
@@ -5715,10 +5751,51 @@ function roadDashTick(dt) {
   c.textAlign = 'right'; c.fillStyle = 'rgba(8,12,18,.8)'; c.fillRect(W - 142, H - 44, 132, 34); c.fillStyle = '#fff'; c.fillText('Runde ' + Math.max(1, Math.min(S.laps, pl.lapsDone + 1)) + '/' + S.laps, W - 20, H - 27);
   D.st.needsUpdate = true;
 }
+// Fahrerhände in der Cockpit-Ansicht: Handschuhe am Lenkrad, Unterarme (Rennanzug in Teamfarbe) zu festen Ellbogenpunkten
+const _ay = new THREE.Vector3(0, 1, 0), _ad = new THREE.Vector3();
+function makeArms(overlay) {
+  const g = new THREE.Group(), mat = c => { const m = new THREE.MeshStandardMaterial({ color: c, roughness: .8, metalness: 0 }); if (overlay) { m.depthTest = false; m.depthWrite = false; } return m; };
+  const suit = mat(0xffffff), glove = mat(0xeceef1), fing = mat(0x2a2d33), cuff = mat(0x30343a), side = [];   // helle Rennhandschuhe (auf dem schwarzen Lenkrad sichtbar), dunkle Fingerbesätze
+  for (const sx of [-1, 1]) {
+    const fore = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.048, 1, 12, 1).translate(0, 0.5, 0), suit);   // Unterarm: Länge über scale.y
+    const hand = new THREE.Group(), palm = new THREE.Mesh(new THREE.CapsuleGeometry(0.031, 0.055, 4, 12), glove);   // Handschuh um den Griff
+    const knuck = new THREE.Mesh(new THREE.CapsuleGeometry(0.016, 0.05, 3, 8), fing); knuck.position.set(-sx * 0.012, 0.0, -0.022);   // Finger, um den Griff gelegt
+    const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(0.012, 0.035, 3, 8), glove); thumb.position.set(-sx * 0.028, 0.028, 0.012); thumb.rotation.z = sx * 0.9;
+    const wrist = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.034, 0.03, 12), cuff); wrist.position.set(0, -0.045, 0.02);   // Bündchen
+    hand.add(palm, knuck, thumb, wrist); g.add(fore, hand);
+    for (const [o, ro] of [[fore, 64], [wrist, 65], [palm, 66], [knuck, 66], [thumb, 67]]) { o.renderOrder = overlay ? ro : 0; o.frustumCulled = false; }
+    side.push({ sx, fore, hand });
+  }
+  return { g, side, suit, glove };
+}
+// Griffpunkt (im nicht mitdrehenden Lenkrad-Rahmen) setzen und Unterarm vom Ellbogen dorthin ausrichten
+function poseArm(a, gx, gy, gz, rz, ex, ey, ez) {
+  a.hand.position.set(gx, gy, gz); a.hand.rotation.set(0, 0, rz);
+  _ad.set(gx - ex, gy - 0.04 - ey, gz + 0.02 - ez); const L = _ad.length(); a.fore.position.set(ex, ey, ez); a.fore.scale.set(1, Math.max(0.01, L), 1); a.fore.quaternion.setFromUnitVectors(_ay, _ad.normalize());
+}
+const ARMS = { f1: null, road: null };
+function armsTick() {
+  const cock = running && S.cam === 2 && !!(pl && pl.mesh), road = !!(pl && pl.mesh && pl.mesh.road), col = pl && TEAMS[pl.team] ? uiCol(TEAMS[pl.team]) : 0xffffff;
+  if (ARMS.f1) ARMS.f1.g.visible = cock && !road; if (ARMS.road) ARMS.road.g.visible = cock && road;
+  if (!cock) return;
+  const steer = pl.steer || 0;
+  if (!road) {   // F1: Lenkrad dreht max. ~70°, die Hände bleiben an den Griffen
+    const A = ARMS.f1 ||= makeArms(true); A.suit.color.setHex(col);
+    if (A.g.parent !== pl.mesh.g) { pl.mesh.g.add(A.g); A.g.position.copy(SW.g.position); }
+    A.g.rotation.set(0.45, Math.PI, 0); const ang = -steer * 1.25, c = Math.cos(ang), s2 = Math.sin(ang);
+    for (const a of A.side) { const x0 = a.sx * 0.2, y0 = -0.01; poseArm(a, x0 * c - y0 * s2, x0 * s2 + y0 * c, 0.035, ang, a.sx * 0.3, -0.24, 0.42); }
+  } else if (pl.mesh.swSpin && pl.mesh.swSpin.parent) {   // Roadster (rundes Lenkrad): Hände auf 9 und 3 Uhr, wandern mit dem Einschlag am Kranz entlang
+    const A = ARMS.road ||= makeArms(false), piv = pl.mesh.swSpin.parent; A.suit.color.setHex(0x2b3442);   // Straßenauto: Jackenärmel statt Rennanzug
+    if (A.g.parent !== piv) piv.add(A.g);
+    const spin = -steer * 1.6, R = 0.188;
+    for (const a of A.side) { const ang = (a.sx < 0 ? Math.PI : 0) + spin; poseArm(a, Math.cos(ang) * R, Math.sin(ang) * R, 0.02, ang - (a.sx < 0 ? Math.PI : 0), a.sx * 0.27, -0.25, 0.36); }
+  }
+}
 function drawWheel(dt) {
   SW.g.visible = running && S.cam === 2 && !pl.mesh.road;   // Roadster hat sein eigenes Lenkrad im Modell
   document.body.classList.toggle('cockpit', running && S.cam === 2);
   if (running && S.cam === 2 && pl.mesh.road) roadDashTick(dt);
+  armsTick();
   if (!SW.g.visible) return;
   if (SW.g.parent !== pl.mesh.g) pl.mesh.g.add(SW.g); // Lenkrad sitzt fest im Auto und bewegt/wackelt mit ihm
   SW.g.rotation.set(0.45, Math.PI, -(pl.steer || 0) * 1.25);
@@ -5804,7 +5881,7 @@ function updateCamera(dt) {
     }
     if (sh > 0 && !paused && S.cam !== 2) { camera.position.x += (Math.random() - .5) * sh; camera.position.y += (Math.random() - .5) * sh; }
     { const on = running && isTouch && effCtrl === 'tilt' && S.level !== false, tg = on ? clamp(tiltAngle - tiltZero, -40, 40) * Math.PI / 180 : 0; levelR += (tg - levelR) * Math.min(1, dt * 12); if (Math.abs(levelR) > 1e-4) camera.rotateZ(-levelR); }   // Neigen: Bild dreht gegen, Horizont bleibt waagerecht
-    const fov = 60 + clamp(p.v / VTOP, 0, 0.6) * 15 + (p.boostFx || 0) * 6;
+    const fov = 60 + Math.pow(clamp(p.v / VTOP, 0, 1.15), 1.4) * 17 + (p.boostFx || 0) * 9;   // Sichtfeld weitet sich bis zur Höchstgeschwindigkeit (vorher ab 57 m/s gedeckelt), Boost zusätzlich
     camera.fov += (fov - camera.fov) * Math.min(1, dt * 2.5); camera.updateProjectionMatrix();
     for (const c of ais) { const d2 = (c.x - camera.position.x) ** 2 + (c.z - camera.position.z) ** 2; c.mesh.label.visible = d2 > 14 * 14 && d2 < 160 * 160; }
     pl.mesh.helm.visible = S.cam !== 2; if (pl.mesh.halo) pl.mesh.halo.visible = S.cam !== 2;
@@ -6202,7 +6279,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v65'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v66'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -6242,9 +6319,25 @@ function vegasTick(dt) {
   if (WHEEL_ROT.obj && WHEEL_ROT.obj.parent) { WHEEL_ROT.obj.rotation.z += dt * 0.02; WHEEL_ROT.rim.color.setHSL((performance.now() / 9000) % 1, .85, .62).multiplyScalar(2.2); }
   if (FOUNT.jets && FOUNT.jets[0].parent) { FOUNT.t += dt; const t = FOUNT.t % 24, on = t < 12; FOUNT.jets.forEach((j, k) => { const h = on ? Math.max(0.01, (Math.sin(t * 2.2 + k * 0.45) * 0.5 + 0.5) * 34 * Math.min(1, t / 1.5, (12 - t) / 1.5)) : 0.01; j.scale.y = h; }); }
 }
-function sphereTick(dt) { // Bildschirm der LED-Kugel: wechselnde Motive (Plasma, Planet, Auge) – im Shader, hier nur die Zeit
-  if (!SPHERE.cv) return; SPHERE.t += dt; SPHERE.tex.uniforms.uT.value = SPHERE.t; return;
+// Sphere-Emoji: Gefühlslagen nach Fotos/Videos – [Braue L hoch, Neigung L, Braue R hoch, Neigung R, Pupille x, Pupille y, Lid L, Lid R, Mund: 0 Lächeln/1 "o", Lächelbreite, Versatz]
+const EMO = [
+  [0, 0, 0, 0, 0, 0.2, 0, 0, 0, 0.8, 0],          // freundlich, schaut her
+  [0.05, 0.25, -0.02, -0.12, 0.75, 0.1, 0.1, 0.1, 0, 0.5, 0.03],   // skeptisch, schaut zur Seite, Schmunzeln
+  [0.06, -0.1, 0.06, -0.1, 0, 0.1, 0, 0, 1, 1, 0],   // überrascht: Brauen hoch, kleines "o"
+  [-0.02, 0, -0.02, 0, 0.2, 0.35, 0.5, 0.5, 0, 0.6, -0.02],   // gelangweilt/zufrieden: halbe Lider
+  [0.03, 0.2, 0, -0.1, -0.7, 0.4, 0.05, 0.05, 0, 0.45, -0.03],  // misstrauisch, Blick nach links unten
+  [0.02, -0.25, 0.02, -0.25, 0.6, -0.2, 0, 0, 1, 0.8, 0.02]];  // nachdenklich, Blick nach oben, "o"
+const EMS = { k: 0, n: 1, t: 0, blink: 3, cur: EMO[0].slice() };
+function sphereTick(dt) { // Bildschirm der LED-Kugel: meist das Emoji mit wechselnden Gefühlen, zwischendurch Plasma, Planet und Auge
+  if (!SPHERE.cv) return; SPHERE.t += dt; const U = SPHERE.tex.uniforms; U.uT.value = SPHERE.t;
+  const cyc = SPHERE.t % 132, seg = [[3, 40], [0, 12], [3, 40], [1, 12], [3, 16], [2, 12]]; let acc = 0, i = 0; for (; i < seg.length; i++) { if (cyc < acc + seg[i][1]) break; acc += seg[i][1]; }
+  const ph = cyc - acc, len = seg[i][1], nx = seg[(i + 1) % seg.length][0]; U.uS.value.set(seg[i][0], nx, clamp((ph - (len - 1)) / 1, 0, 1));
+  EMS.t += dt; if (EMS.t > 3.2 + (EMS.k % 3)) { EMS.t = 0; EMS.k = EMS.n; EMS.n = (EMS.n + 1 + (Math.random() * 3 | 0)) % EMO.length; }
+  const tgt = EMO[EMS.k], f = 1 - Math.exp(-dt * 6); for (let k = 0; k < tgt.length; k++) EMS.cur[k] += (tgt[k] - EMS.cur[k]) * f;
+  EMS.blink -= dt; let bl = 0; if (EMS.blink < 0) { bl = clamp(1 - Math.abs(EMS.blink + 0.09) / 0.09, 0, 1); if (EMS.blink < -0.18) EMS.blink = 2.5 + Math.random() * 3; }   // Blinzeln
+  const e = EMS.cur; U.uE.value.set(e[0], e[1], e[2], e[3]); U.uP.value.set(e[4], e[5], Math.max(e[6], bl), Math.max(e[7], bl)); U.uM.value.set(e[8], e[9], e[10], 0.5 + e[9] * 0.5);
 }
+
 let fpsAcc = 0, fpsPrev = 0;
 function frame(now) {
   requestAnimationFrame(frame);
@@ -6349,7 +6442,7 @@ window.__clipCheck = () => { let bad = 0, n = 0; const v = new THREE.Vector3(), 
       for (const [u, w] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { const x = v.x + u * sc.x / 2 * c + w * sc.z / 2 * s2, z = v.z - u * sc.x / 2 * s2 + w * sc.z / 2 * c; if (!trackFree(x, z, 0.5)) { bad++; break; } } } });
   return { buildings: n, clipping: bad }; };
 window.__sim = (sec, dt = 1 / 60) => { for (let t = 0; t < sec; t += dt) { if (running && !paused) step(dt); updateMeshes(dt); } return window.__dbg(); };   /* Test: Simulation ohne Bildausgabe vorspulen */
-window.__dbg = () => ({ L, N, raceState, raceTime, plD: pl.d, plV: pl.v, plLat: pl.lat, order: order.map(c => c.code), best: pl.best, fastest, resultsShown, aiBest: ais.slice(0, 5).map(a => a.code + ':' + (a.best || 0).toFixed(1)) });
+window.__dbg = () => ({ L, N, raceState, running, paused, lightsT, raceTime, plD: pl.d, plV: pl.v, plLat: pl.lat, order: order.map(c => c.code), best: pl.best, fastest, resultsShown, aiBest: ais.slice(0, 5).map(a => a.code + ':' + (a.best || 0).toFixed(1)) });
 requestAnimationFrame(frame);
 </script>
 </body>
