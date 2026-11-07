@@ -6306,7 +6306,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v67'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v68'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -6360,8 +6360,7 @@ function sphereTick(dt) { // Bildschirm der LED-Kugel: meist das Emoji mit wechs
   { const m = SPHERE.mesh; if (m && m.parent) {   // Gesicht (lokal +x) schaut immer zur Kamera – weich nachgeführt
     const tg = Math.atan2(-(camera.position.z - m.position.z), camera.position.x - m.position.x); let d = tg - m.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d));
     m.rotation.y += d * Math.min(1, dt * 4); m.updateMatrix(); m.matrixWorld.multiplyMatrices(m.parent.matrixWorld, m.matrix); } }
-  const cyc = SPHERE.t % 132, seg = [[3, 40], [0, 12], [3, 40], [1, 12], [3, 16], [2, 12]]; let acc = 0, i = 0; for (; i < seg.length; i++) { if (cyc < acc + seg[i][1]) break; acc += seg[i][1]; }
-  const ph = cyc - acc, len = seg[i][1], nx = seg[(i + 1) % seg.length][0]; U.uS.value.set(seg[i][0], nx, clamp((ph - (len - 1)) / 1, 0, 1));
+  U.uS.value.set(3, 3, 0);   // nur noch das Emoji (Wunsch: keine anderen Motive)
   EMS.t += dt; if (EMS.t > 3.2 + (EMS.k % 3)) { EMS.t = 0; EMS.k = EMS.n; EMS.n = (EMS.n + 1 + (Math.random() * 3 | 0)) % EMO.length; }
   const tgt = EMO[EMS.k], f = 1 - Math.exp(-dt * 6); for (let k = 0; k < tgt.length; k++) EMS.cur[k] += (tgt[k] - EMS.cur[k]) * f;
   EMS.blink -= dt; let bl = 0; if (EMS.blink < 0) { bl = clamp(1 - Math.abs(EMS.blink + 0.09) / 0.09, 0, 1); if (EMS.blink < -0.18) EMS.blink = 2.5 + Math.random() * 3; }   // Blinzeln
