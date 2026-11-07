@@ -3055,7 +3055,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
 
   // Leitplanken / Mauern, Werbung, Reifenstapel, Fangzäune
   const hi = S.gfx !== 'low', wH = TH.wallH;
-  const wallMat = TH.wallKind === 'armco' ? new THREE.MeshStandardMaterial({ map: TEX.armcoP, normalMap: TEX.armcoN, metalness: .75, roughness: .38, envMapIntensity: 1.2, side: THREE.DoubleSide }) : lam({ map: TEX.concrete, normalMap: TEX.concreteN, normalScale: new THREE.Vector2(0.45, 0.45), side: THREE.DoubleSide });   /* schwächere Rauschen-Normalen: unter Flutlicht sonst flimmernde Glanzpunkte */
+  const wallMat = TH.wallKind === 'armco' ? new THREE.MeshStandardMaterial({ map: TEX.armcoP, normalMap: TEX.armcoN, metalness: .75, roughness: .38, envMapIntensity: 1.2, side: THREE.DoubleSide }) : lam({ map: TEX.concrete, roughness: .92, side: THREE.DoubleSide });   /* Betonmauer glatt (ohne Relief-Normalen: wirkte wie grobe Bumpmap und glitzerte unter Flutlicht) */
   const ads = adsTex(TH); ads.userData.own = true; const adMat = lam({ map: ads, side: THREE.DoubleSide }), skirtM = TH.bandStone ? lam({ map: (t => (t.repeat.set(1, 14 / 6), t))(STONE_T(1)), color: TH.bandStone, side: THREE.DoubleSide }) : lam({ color: 0x30353b, side: THREE.DoubleSide });   /* Monaco: Stützmauern aus Naturstein statt schwarzer Schürze */
   let tricolM = null, neonM = null;
   if (TH.vegas) { const nt = canvasTex(256, 4, (g, w, h) => { const cs = ['#ff2bd6', '#00e5ff', '#ffd400', '#7c3aed', '#ff6a00', '#39ff88']; for (let k = 0; k < 6; k++) { g.fillStyle = cs[k]; g.fillRect(k * w / 6, 0, w / 6, h); } }); nt.userData.own = true;
@@ -3064,7 +3064,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     const tt = canvasTex(768, 96, (g, w, h) => { const cols = ['#e9e9e4', '#1f7a3a', '#e9e9e4', '#c8231e']; for (let k = 0; k < 4; k++) { g.fillStyle = cols[k]; g.fillRect(k * w / 4, 0, w / 4, h); }
       for (let k = 0; k < 2600; k++) { g.fillStyle = 'rgba(' + (Math.random() < .5 ? '0,0,0' : '255,255,255') + ',' + (Math.random() * .08) + ')'; g.fillRect(Math.random() * w, Math.random() * h, 1 + Math.random() * 4, 1 + Math.random() * 3); }
       g.fillStyle = 'rgba(40,36,30,.25)'; g.fillRect(0, h * .86, w, h * .14); g.fillStyle = 'rgba(0,0,0,.35)'; for (let k = 0; k <= 8; k++) g.fillRect(k * w / 8 - 1, 0, 2, h); });
-    tt.userData.own = true; tricolM = lam({ map: tt, normalMap: TEX.concreteN, roughness: .85, side: THREE.DoubleSide });
+    tt.userData.own = true; tricolM = lam({ map: tt, roughness: .85, side: THREE.DoubleSide });   /* glatt, ohne Relief */
   }
   for (const [W, s] of [[WL, -1], [WR, 1]]) {
     const nb = s < 0 ? 1 : 2;
@@ -3973,7 +3973,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         let best = -1, bi = 0; for (let i = 0; i < N; i++) { const dx = sx - PX[i], dz = sz - PZ[i], d = Math.hypot(dx, dz); if (d < 150 || d > 800) continue; const a = (TX[i] * dx + TZ[i] * dz) / d - d / 4000; if (a > best) { best = a; bi = i; } }
         sph.rotation.y = Math.atan2(-(PZ[bi] - sz), PX[bi] - sx); }
       const base = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.66, R * 0.7, 8, 64), lam({ color: 0x1b1d24 })); base.position.set(sx, 4, sz); trackGroup.add(base);
-      SPHERE.cv = cv; SPHERE.tex = tex; SPHERE.t = 0; excl.push([sx, sz, R + 25]);
+      SPHERE.cv = cv; SPHERE.tex = tex; SPHERE.t = 0; SPHERE.mesh = sph; excl.push([sx, sz, R + 25]);
     } else SPHERE.cv = null;
     // ===== Strip-Bebauung nach Referenz (eigene, vereinfachte Formen an den echten Positionen) =====
     // Fassaden nach Typ (nach Nachtfotos des Strips): Hotelscheiben mit dichten kleinen Zimmerfenstern, nur ein Teil erleuchtet; Glas- und Bronzetürme spiegelnd und dunkel
@@ -5685,11 +5685,12 @@ function updateMeshes(dt) {
 /* ======================= Cockpit-Lenkrad ======================= */
 const SW = (() => {
   const g = new THREE.Group(); g.position.set(0, 0.56, 1.0); g.visible = false;
-  const mk = (geo, mat, ro) => { mat.depthTest = false; mat.depthWrite = false; const m = new THREE.Mesh(geo, mat); m.renderOrder = ro; m.frustumCulled = false; g.add(m); return m; };
+  // Lenkrad und Hände: nach der Szene, mit eigenem Tiefenpuffer (Tiefe wird vor dem ersten Teil geleert) – so liegen sie über dem Auto, verdecken sich aber untereinander richtig
+  const mk = (geo, mat, ro) => { const m = new THREE.Mesh(geo, mat); m.renderOrder = 2e6 - 100 + ro; m.frustumCulled = false; g.add(m); return m; };
   // Schmetterlings-Form
   const sh = new THREE.Shape(); sh.moveTo(-0.13, 0.085); sh.lineTo(0.13, 0.085); sh.quadraticCurveTo(0.2, 0.08, 0.21, 0.02); sh.lineTo(0.2, -0.07); sh.quadraticCurveTo(0.18, -0.1, 0.12, -0.085); sh.lineTo(0.06, -0.06); sh.lineTo(-0.06, -0.06); sh.lineTo(-0.12, -0.085); sh.quadraticCurveTo(-0.18, -0.1, -0.2, -0.07); sh.lineTo(-0.21, 0.02); sh.quadraticCurveTo(-0.2, 0.08, -0.13, 0.085);
   const body = new THREE.ExtrudeGeometry(sh, { depth: 0.03, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.006, bevelSegments: 2 });
-  mk(body, new THREE.MeshStandardMaterial({ color: 0x0b0c0e, roughness: .55, metalness: .15 }), 60);
+  mk(body, new THREE.MeshStandardMaterial({ color: 0x0b0c0e, roughness: .55, metalness: .15 }), 60).onBeforeRender = r => { r.state.buffers.depth.setMask(true); r.clearDepth(); };   /* Maske an, sonst leert gl.clear die Tiefe nicht (der Himmel davor schreibt keine Tiefe) */
   for (const s2 of [-1, 1]) { const gr = new THREE.CapsuleGeometry(0.032, 0.11, 4, 10); gr.translate(s2 * 0.2, -0.01, 0.02); mk(gr, new THREE.MeshStandardMaterial({ color: 0x1a1b1d, roughness: .95 }), 61); }
   const cols = [0xe11d48, 0xfacc15, 0x22c55e, 0x3b82f6, 0xf97316, 0xffffff];
   [[-0.15, 0.05], [0.15, 0.05], [-0.155, -0.02], [0.155, -0.02], [-0.1, -0.045], [0.1, -0.045]].forEach(([x, y], k) => { const b = new THREE.CylinderGeometry(0.011, 0.011, 0.012, 14).rotateX(Math.PI / 2).translate(x, y, 0.04); mk(b, new THREE.MeshStandardMaterial({ color: cols[k], roughness: .4, emissive: cols[k], emissiveIntensity: .12 }), 62); });
@@ -5751,27 +5752,53 @@ function roadDashTick(dt) {
   c.textAlign = 'right'; c.fillStyle = 'rgba(8,12,18,.8)'; c.fillRect(W - 142, H - 44, 132, 34); c.fillStyle = '#fff'; c.fillText('Runde ' + Math.max(1, Math.min(S.laps, pl.lapsDone + 1)) + '/' + S.laps, W - 20, H - 27);
   D.st.needsUpdate = true;
 }
-// Fahrerhände in der Cockpit-Ansicht: Handschuhe am Lenkrad, Unterarme (Rennanzug in Teamfarbe) zu festen Ellbogenpunkten
-const _ay = new THREE.Vector3(0, 1, 0), _ad = new THREE.Vector3();
-function makeArms(overlay) {
-  const g = new THREE.Group(), mat = c => { const m = new THREE.MeshStandardMaterial({ color: c, roughness: .8, metalness: 0 }); if (overlay) { m.depthTest = false; m.depthWrite = false; } return m; };
-  const suit = mat(0xffffff), glove = mat(0xeceef1), fing = mat(0x2a2d33), cuff = mat(0x30343a), side = [];   // helle Rennhandschuhe (auf dem schwarzen Lenkrad sichtbar), dunkle Fingerbesätze
-  for (const sx of [-1, 1]) {
-    const fore = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.048, 1, 12, 1).translate(0, 0.5, 0), suit);   // Unterarm: Länge über scale.y
-    const hand = new THREE.Group(), palm = new THREE.Mesh(new THREE.CapsuleGeometry(0.031, 0.055, 4, 12), glove);   // Handschuh um den Griff
-    const knuck = new THREE.Mesh(new THREE.CapsuleGeometry(0.016, 0.05, 3, 8), fing); knuck.position.set(-sx * 0.012, 0.0, -0.022);   // Finger, um den Griff gelegt
-    const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(0.012, 0.035, 3, 8), glove); thumb.position.set(-sx * 0.028, 0.028, 0.012); thumb.rotation.z = sx * 0.9;
-    const wrist = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.034, 0.03, 12), cuff); wrist.position.set(0, -0.045, 0.02);   // Bündchen
-    hand.add(palm, knuck, thumb, wrist); g.add(fore, hand);
-    for (const [o, ro] of [[fore, 64], [wrist, 65], [palm, 66], [knuck, 66], [thumb, 67]]) { o.renderOrder = overlay ? ro : 0; o.frustumCulled = false; }
-    side.push({ sx, fore, hand });
-  }
-  return { g, side, suit, glove };
+// Fahrerhände in der Cockpit-Ansicht: anatomischer Rennhandschuh um den Griff (Finger in je drei Gliedern, Daumen vorn), Stulpe mit Klettband, Ärmel zum Ellbogen
+// Handrahmen: Griffachse = y, Griffmitte = Ursprung, +z zum Fahrer, Außenseite = sx·x. rg = Griff- bzw. Kranzradius.
+const _ay = new THREE.Vector3(0, 1, 0), _ad = new THREE.Vector3(), _aw = new THREE.Vector3();
+function capsBetween(a, b, r, col) { const d = new THREE.Vector3().subVectors(b, a), L = d.length(), g = new THREE.CapsuleGeometry(r, Math.max(0.001, L), 5, 12);
+  g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(_ay, d.normalize())); g.translate((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2); return [g, col]; }
+function handGeo(sx, rgReal, k = 1.3, road = false) {   // k: Handschuhgröße relativ zu einer Hand am dünnen Griff – gebaut am Griff rg/k, dann um die Griffachse mit k skaliert (Finger liegen wieder auf dem echten Griff)
+  const rg = rgReal / k, P = [], V = (x, y, z) => new THREE.Vector3(x, y, z), glove = col(road ? 0x2c2624 : 0xd7dadf), grip = col(road ? 0x1c1817 : 0x4a4f57), band = col(road ? 0x3b3330 : 0x23262b), seam = col(road ? 0x8a7660 : 0xb9bec5);   // Roadster: dunkle Leder-Fahrhandschuhe
+  const d2r = Math.PI / 180, arc = (R, ph, y) => V(sx * R * Math.cos(ph * d2r), y, R * Math.sin(ph * d2r));   // φ: 0 = außen, +90 = zum Fahrer, -90 = von ihm weg
+  // vier Finger: Knöchel außen-hinten am Griff, Glieder legen sich um die Rückseite nach innen (vom Fahrer aus großteils verdeckt)
+  [[0.03, 0.0112, 1], [0.0085, 0.0118, 1.05], [-0.0125, 0.0112, 0.98], [-0.032, 0.0098, 0.86]].forEach(([y, r, ln]) => {
+    const R = rg + r * 1.02, ph = [-2, -58, -104 - 22 * (ln - 0.9), -146 - 30 * (ln - 0.9)], pts = ph.map((p, k) => arc(R + (k === 0 ? 0.01 : 0), p, y - k * 0.002));
+    P.push(capsBetween(pts[0], pts[1], r, glove), capsBetween(pts[1], pts[2], r * 0.95, grip), capsBetween(pts[2], pts[3], r * 0.88, grip)); });
+  // Handrücken aus vier Mittelhandknochen, die vom Handgelenk (fahrerseitig unten) zu den Knöcheln (außen am Griff) fächern, darunter Volumen
+  const ky = [0.03, 0.0085, -0.0125, -0.032];
+  ky.forEach((y, i) => { const w0 = arc(rg + 0.017, 54, -0.05 + (y * 0.25)), k0 = arc(rg + 0.019, -1, y); P.push(capsBetween(w0, k0, 0.0118 - i * 0.0006, glove)); });
+  const vol = new THREE.SphereGeometry(1, 20, 14), vc = arc(rg + 0.008, 30, -0.012); vol.scale(0.02, 0.046, 0.034); vol.rotateY(Math.atan2(-Math.sin(30 * d2r), sx * Math.cos(30 * d2r))); vol.translate(vc.x, vc.y, vc.z); P.push([vol, glove]);
+  P.push(capsBetween(arc(rg + 0.031, 4, 0.036), arc(rg + 0.031, 4, -0.038), 0.0085, band));   // Knöchelschutz-Polster quer über die Knöchel
+  P.push(capsBetween(arc(rg + 0.03, 40, 0.024), arc(rg + 0.03, 50, -0.048), 0.0024, seam));   // Ziernaht
+  // Daumen: kräftig, vom Ballen über die Fahrerseite des Griffs nach innen Richtung Tasten (Kuppe mit Griffbesatz)
+  const t0 = arc(rg + 0.012, 62, -0.048), t1 = arc(rg + 0.012, 94, -0.03), t2 = arc(rg + 0.011, 122, -0.016), t3 = arc(rg + 0.01, 146, -0.006);
+  P.push(capsBetween(t0, t1, 0.015, glove), capsBetween(t1, t2, 0.0128, glove), capsBetween(t2, t3, 0.0114, glove));
+  const tip = new THREE.SphereGeometry(1, 12, 8); tip.scale(0.008, 0.011, 0.006); const tc = arc(rg + 0.004, 146, -0.006); tip.translate(tc.x, tc.y, tc.z); P.push([tip, grip]);
+  const ball = new THREE.SphereGeometry(1, 18, 12); ball.scale(0.022, 0.028, 0.022); const ballC = arc(rg + 0.008, 64, -0.042); ball.translate(ballC.x, ballC.y, ballC.z); P.push([ball, glove]);   // Daumenballen
+  const g = mergeParts(P); g.scale(k, k, k); return g;
 }
-// Griffpunkt (im nicht mitdrehenden Lenkrad-Rahmen) setzen und Unterarm vom Ellbogen dorthin ausrichten
+const HAND_W = rg => [(rg / 1.3 + 0.017) * Math.cos(58 * Math.PI / 180) * 1.3, -0.068, (rg / 1.3 + 0.017) * Math.sin(58 * Math.PI / 180) * 1.3 + 0.012];   // Handgelenk: außen-fahrerseitig unter dem Handrücken   // Handgelenk (Handrahmen, rechte Hand; x wird mit sx gespiegelt)
+function makeArms(overlay, rg, road = false) {
+  const g = new THREE.Group(), side = [], hm = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .9, metalness: 0 });
+  const suit = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .88 }), cuffM = new THREE.MeshStandardMaterial({ color: road ? 0x2c2624 : 0xd7dadf, roughness: road ? .6 : .85 }), strapM = new THREE.MeshStandardMaterial({ color: 0x23262b, roughness: .7 });
+  for (const sx of [-1, 1]) {
+    const hand = new THREE.Mesh(handGeo(sx, rg, 1.3, road), hm);
+    const fore = new THREE.Mesh(new THREE.CylinderGeometry(0.037, 0.047, 1, 18, 1).translate(0, 0.5, 0), suit);   // Ärmel: Länge über scale.y
+    const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.037, 0.043, 0.09, 18, 1, true).translate(0, 0.045, 0), cuffM);   // Handschuh-Stulpe über dem Ärmel
+    const strap = new THREE.Mesh(new THREE.CylinderGeometry(0.044, 0.044, 0.018, 18, 1, true).translate(0, 0.05, 0), strapM);   // Klettband
+    cuffM.side = strapM.side = THREE.DoubleSide; g.add(fore, cuff, strap, hand);
+    for (const [o, ro] of [[fore, 1], [cuff, 2], [strap, 3], [hand, 4]]) { o.frustumCulled = false; if (overlay) o.renderOrder = 2e6 + ro; }
+    side.push({ sx, fore, cuff, strap, hand, w: HAND_W(rg) });
+  }
+  return { g, side, suit };
+}
+// Hand an den Griffpunkt (nicht mitdrehender Lenkradrahmen) setzen, um rz gedreht; Stulpe und Ärmel vom Handgelenk zum Ellbogen
 function poseArm(a, gx, gy, gz, rz, ex, ey, ez) {
   a.hand.position.set(gx, gy, gz); a.hand.rotation.set(0, 0, rz);
-  _ad.set(gx - ex, gy - 0.04 - ey, gz + 0.02 - ez); const L = _ad.length(); a.fore.position.set(ex, ey, ez); a.fore.scale.set(1, Math.max(0.01, L), 1); a.fore.quaternion.setFromUnitVectors(_ay, _ad.normalize());
+  const c = Math.cos(rz), s2 = Math.sin(rz), wx = a.sx * a.w[0], wy = a.w[1]; _aw.set(gx + wx * c - wy * s2, gy + wx * s2 + wy * c, gz + a.w[2]);
+  _ad.set(ex - _aw.x, ey - _aw.y, ez - _aw.z); const L = _ad.length(); _ad.normalize();
+  for (const o of [a.fore, a.cuff, a.strap]) { o.position.copy(_aw); o.quaternion.setFromUnitVectors(_ay, _ad); }
+  a.fore.scale.set(1, Math.max(0.01, L), 1);
 }
 const ARMS = { f1: null, road: null };
 function armsTick() {
@@ -5780,15 +5807,15 @@ function armsTick() {
   if (!cock) return;
   const steer = pl.steer || 0;
   if (!road) {   // F1: Lenkrad dreht max. ~70°, die Hände bleiben an den Griffen
-    const A = ARMS.f1 ||= makeArms(true); A.suit.color.setHex(col);
+    const A = ARMS.f1 ||= makeArms(true, 0.033); A.suit.color.setHex(col);
     if (A.g.parent !== pl.mesh.g) { pl.mesh.g.add(A.g); A.g.position.copy(SW.g.position); }
     A.g.rotation.set(0.45, Math.PI, 0); const ang = -steer * 1.25, c = Math.cos(ang), s2 = Math.sin(ang);
-    for (const a of A.side) { const x0 = a.sx * 0.2, y0 = -0.01; poseArm(a, x0 * c - y0 * s2, x0 * s2 + y0 * c, 0.035, ang, a.sx * 0.3, -0.24, 0.42); }
+    for (const a of A.side) { const x0 = a.sx * 0.2, y0 = -0.01; poseArm(a, x0 * c - y0 * s2, x0 * s2 + y0 * c, 0.02, ang, a.sx * 0.34, -0.33, 0.42); }
   } else if (pl.mesh.swSpin && pl.mesh.swSpin.parent) {   // Roadster (rundes Lenkrad): Hände auf 9 und 3 Uhr, wandern mit dem Einschlag am Kranz entlang
-    const A = ARMS.road ||= makeArms(false), piv = pl.mesh.swSpin.parent; A.suit.color.setHex(0x2b3442);   // Straßenauto: Jackenärmel statt Rennanzug
+    const A = ARMS.road ||= makeArms(false, 0.023, true), piv = pl.mesh.swSpin.parent; A.suit.color.setHex(0x2b3442);   // Straßenauto: Jackenärmel statt Rennanzug
     if (A.g.parent !== piv) piv.add(A.g);
     const spin = -steer * 1.6, R = 0.188;
-    for (const a of A.side) { const ang = (a.sx < 0 ? Math.PI : 0) + spin; poseArm(a, Math.cos(ang) * R, Math.sin(ang) * R, 0.02, ang - (a.sx < 0 ? Math.PI : 0), a.sx * 0.27, -0.25, 0.36); }
+    for (const a of A.side) { const ang = (a.sx < 0 ? Math.PI : 0) + spin; poseArm(a, Math.cos(ang) * R, Math.sin(ang) * R, 0, ang - (a.sx < 0 ? Math.PI : 0), a.sx * 0.27, -0.27, 0.38); }
   }
 }
 function drawWheel(dt) {
@@ -6279,7 +6306,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v66'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v67'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -6330,6 +6357,9 @@ const EMO = [
 const EMS = { k: 0, n: 1, t: 0, blink: 3, cur: EMO[0].slice() };
 function sphereTick(dt) { // Bildschirm der LED-Kugel: meist das Emoji mit wechselnden Gefühlen, zwischendurch Plasma, Planet und Auge
   if (!SPHERE.cv) return; SPHERE.t += dt; const U = SPHERE.tex.uniforms; U.uT.value = SPHERE.t;
+  { const m = SPHERE.mesh; if (m && m.parent) {   // Gesicht (lokal +x) schaut immer zur Kamera – weich nachgeführt
+    const tg = Math.atan2(-(camera.position.z - m.position.z), camera.position.x - m.position.x); let d = tg - m.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d));
+    m.rotation.y += d * Math.min(1, dt * 4); m.updateMatrix(); m.matrixWorld.multiplyMatrices(m.parent.matrixWorld, m.matrix); } }
   const cyc = SPHERE.t % 132, seg = [[3, 40], [0, 12], [3, 40], [1, 12], [3, 16], [2, 12]]; let acc = 0, i = 0; for (; i < seg.length; i++) { if (cyc < acc + seg[i][1]) break; acc += seg[i][1]; }
   const ph = cyc - acc, len = seg[i][1], nx = seg[(i + 1) % seg.length][0]; U.uS.value.set(seg[i][0], nx, clamp((ph - (len - 1)) / 1, 0, 1));
   EMS.t += dt; if (EMS.t > 3.2 + (EMS.k % 3)) { EMS.t = 0; EMS.k = EMS.n; EMS.n = (EMS.n + 1 + (Math.random() * 3 | 0)) % EMO.length; }
@@ -6385,7 +6415,7 @@ window.__race = async name => { await window.__go(name); for (let k = 0; k < 10 
 window.__view = (s, lat, h, s2, lat2, h2) => { const a = window.__tAt(s, lat), b = window.__tAt(s2, lat2); window.__camFix = { p: [a[0], a[1] + h, a[2]], t: [b[0], b[1] + h2, b[2]] }; };
 window.__shot = async () => { window.__frame(3); await W8(1200); window.__frame(3); };
 window.__gY = (x, z) => [+groundY(x, z).toFixed(2), !!(MC_SEA && MC_SEA(x, z)), +placeY(x, z).toFixed(2)];
-window.__fx = () => ({ composer, bloomPass, raysPass, finishPass, renderer, scene, BAKE });
+window.__fx = () => ({ composer, bloomPass, raysPass, finishPass, renderer, scene, BAKE }); window.__hands = () => ({ THREE, makeArms, poseArm, SW, roadSteeringWheel, hemi, sun });   /* Test: Hände isoliert ansehen */
 window.__ri = () => { const r = renderer.info.render; return { calls: r.calls, tris: r.triangles, geo: renderer.info.memory.geometries, tex: renderer.info.memory.textures, prog: renderer.info.programs.length, pr: renderer.getPixelRatio() }; }; window.__frame = (k = 3) => { let t = performance.now(); for (let i = 0; i < k; i++) frame(t += 40); };   /* Test: Bilder auch bei verstecktem Fenster zeichnen */
 window.__wAt = s2 => { const i = Math.floor(modL(s2) / DS) % N; return { hw: HW[i], wl: WL[i], wr: WR[i], k: KS[i] }; }; window.__tAt = (s2, lat = 0) => { const q = trackAt(s2, lat), e = FLAT ? 0 : ELEV[q.i] || 0; return [q.x, e, q.z, q.h]; };
 // Testhilfe: alle Objekte mit Bodenkontakt prüfen – liegt ein Bodenpunkt innerhalb der Absperrung (Fahrbahn/Auslauf), clippt das Objekt.
