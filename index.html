@@ -1802,7 +1802,7 @@ const LIVERY = {
     if (c > 0.5 && c < 1.5) col = mix(K, T, band(p.y, 0.98, 1.02)); if (c > 1.5 && c < 2.5) col = K; return col;`,
   // Ferrari SF-26: Rot; großes weißes Feld oben auf Motorabdeckung und Airbox vom Cockpit bis übers Seitenkasten-Ende; dunkel unten; schwarze Flügel
   FER: `vec3 R = ${lc(0xc90f0f)}, W = ${lc(0xf3f3f1)}, K = ${lc(0x141416)};
-    vec3 col = R; float wt = aaS(p.y - 0.64 - 0.06 * clamp(p.z + 1.0, 0.0, 1.0)) * band(p.z + 0.4 * (p.y - 0.64), -1.05, 0.42);
+    vec3 col = R; float wt = aaS(p.y - 0.57 - 0.05 * clamp(p.z + 1.0, 0.0, 1.0)) * band(p.z + 0.5 * (p.y - 0.6), -1.0, 0.38);   /* weißes Feld bis ~60 % der Seitenhöhe hinunter */
     col = mix(col, W, wt); col = mix(col, K, 1.0 - aaS(p.y - 0.2));
     col = mix(col, K, (1.0 - aaS(p.y - 0.38)) * band(p.z, 0.75, 1.55) * aaS(abs(p.x) - 0.3));   // dunkler Seitenkasten-Einlass
     if (c > 0.5 && c < 1.5) col = K; return col;`,
@@ -1840,7 +1840,7 @@ const LIVERY = {
   // Alpine A526: helles Alpine-Blau; pinker Schrägbalken über die hintere Motorabdeckung, pinke Nasenfront und Frontflügel, pinker Heckflügel; schwarzes Heck unten
   ALP: `vec3 B = ${lc(0x2a7fd9)}, Pk = ${lc(0xff78c4)}, K = ${lc(0x101216)};
     vec3 col = B; col = mix(col, K, (1.0 - aaS(p.y - 0.45 - 0.2 * clamp(-1.0 - p.z, 0.0, 1.0))) * (1.0 - aaS(p.z + 0.9)));
-    col = mix(col, Pk, band(p.z + 1.1 * (p.y - 0.6), -1.75, -1.35) * aaS(p.y - 0.5));
+    col = mix(col, Pk, band(p.z + 0.8 * (p.y - 0.6), -1.2, -0.62) * aaS(p.y - 0.42));   /* großer pinker Schrägbalken mitten auf der hinteren Motorabdeckung */
     col = mix(col, Pk, aaS(p.z - 2.45) * (1.0 - aaS(p.y - 0.36))); col = mix(col, K, 1.0 - aaS(p.y - 0.15));
     if (c > 0.5 && c < 1.5) col = Pk; if (c > 1.5 && c < 2.5) col = Pk; if (c > 6.5) col = Pk; return col;`,
   // Haas VF-26: fast ganz weiß; rotes Feld oben auf der Motorabdeckung, rote Linie längs über Seitenkasten und Cockpit-Seite; dunkler Unterboden
@@ -6387,7 +6387,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v70'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v71'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
