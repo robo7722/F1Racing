@@ -605,7 +605,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
         </div>
       </div>
     </div>
-    <div class="tver">Version <span id="verNo">0.92</span></div>
+    <div class="tver">Version <span id="verNo">0.93</span></div>
   </section>
 
   <section class="scr" id="scrTrack">
@@ -914,7 +914,7 @@ const KART_DRIVERS = [
 ];
 // ph: Fahrzeugleistung gegenüber dem F1-Basismodell (Topspeed, Kurvengrip, Bremse, Beschleunigung); laps: Renndauer im Karrieremodus
 const SERIES = {
-  kart: { id: 'kart', name: 'GoKart', sub: 'Rennkart · Sprint-Rennen', teams: KART_TEAMS, drivers: KART_DRIVERS, ph: { top: 0.5, grip: 0.5, brk: 0.5, acc: 1.12 }, laps: 3, cal: ['monza', 'spa', 'sil'], noBoost: true, cl: 2.3, cw: 1.55, hw: 0.85 },
+  kart: { id: 'kart', name: 'GoKart', sub: 'Rennkart · Sprint-Rennen', teams: KART_TEAMS, drivers: KART_DRIVERS, ph: { top: 0.5, grip: 0.5, brk: 0.5, acc: 1.12 }, laps: 3, cal: ['genk', 'wack', 'sil'], noBoost: true, cl: 2.3, cw: 1.55, hw: 0.85 },
   f2:   { id: 'f2',   name: 'Formula 2', sub: 'FIA Formula 2 · Saison 2026', teams: F2_TEAMS, drivers: F2_DRIVERS, ph: { top: 0.93, grip: 0.9, brk: 0.92, acc: 0.9 }, laps: 4, cal: ['mel', 'mtl', 'mc', 'rbr', 'sil', 'spa', 'monza', 'yas'], noBoost: true, cl: 4.9, cw: 1.78, hw: 0.98 },
   f1:   { id: 'f1',   name: 'Formula 1', sub: 'FIA Formula 1 · Saison 2026', teams: F1_TEAMS, drivers: F1_DRIVERS, ph: { top: 1, grip: 1, brk: 1, acc: 1 }, laps: 3, cal: null, noBoost: false },
 };
@@ -949,6 +949,8 @@ const SG0 = [103.85795653043478, 1.2906749130434783, 0.99947];   // Singapur: Be
 const sgLL = (lon, lat) => [(lon - SG0[0]) * 111194.93 * Math.cos(SG0[1] * Math.PI / 180) * SG0[2], -(lat - SG0[1]) * 111194.93 * SG0[2]];
 const SG_BAY = [[103.8538, 1.2858], [103.8546, 1.2869], [103.8556, 1.2884], [103.8575, 1.2888], [103.8592, 1.2888], [103.8606, 1.2887], [103.8625, 1.2880], [103.8645, 1.2862], [103.8650, 1.2852], [103.8638, 1.2850], [103.8615, 1.2866], [103.8598, 1.2871], [103.8588, 1.2864],
   [103.8590, 1.2845], [103.8584, 1.2825], [103.8572, 1.2805], [103.8555, 1.2805], [103.8540, 1.2822], [103.8533, 1.2843]].map(p => sgLL(p[0], p[1]));
+// Kartbahnen: Streckenverlauf aus OpenStreetMap (© OpenStreetMap-Mitwirkende, ODbL) – Karting Genk (Pro Circuit) und ProKart Raceland Wackersdorf, Meter, z = Süden
+Object.assign(TRACK_HD, {"kart-genk":{"pts":[[-1.01,-98.44],[2.77,-95.16],[6.56,-91.87],[10.34,-88.59],[14.12,-85.31],[17.91,-82.03],[21.69,-78.75],[25.47,-75.47],[29.26,-72.18],[33.04,-68.9],[36.82,-65.62],[40.61,-62.34],[44.39,-59.06],[48.17,-55.78],[51.96,-52.49],[55.74,-49.21],[59.36,-45.81],[62.6,-42.14],[65.38,-38.17],[67.64,-33.9],[69.11,-29.28],[69.94,-24.43],[70.36,-19.5],[70.44,-14.54],[70.04,-9.57],[69.1,-4.87],[67.28,-0.83],[64.5,2.15],[61.07,3.42],[57.4,2.88],[54.11,0.63],[51.53,-2.95],[49.66,-7.42],[48.09,-12.1],[46.38,-16.71],[44.13,-21.01],[41.33,-25.0],[38.08,-28.71],[34.47,-32.16],[30.75,-35.51],[26.89,-38.67],[22.83,-41.11],[18.85,-42.13],[14.98,-41.71],[11.21,-39.86],[7.67,-36.76],[4.44,-32.94],[1.21,-29.11],[-1.94,-25.23],[-4.57,-21.16],[-6.35,-16.87],[-7.15,-12.41],[-6.71,-7.93],[-4.94,-3.6],[-2.31,0.43],[0.88,4.14],[4.47,7.59],[8.21,10.91],[11.96,14.24],[15.7,17.57],[19.44,20.89],[23.19,24.22],[26.93,27.55],[30.67,30.88],[34.42,34.2],[38.28,37.33],[42.35,40.09],[46.66,42.35],[51.21,43.96],[56.01,44.79],[60.87,44.79],[65.67,44.04],[70.26,42.5],[74.61,40.28],[78.73,37.53],[82.69,34.5],[86.51,31.26],[90.32,28.01],[94.13,24.76],[97.94,21.51],[101.75,18.26],[105.65,15.18],[109.77,12.62],[114.09,10.94],[118.48,10.45],[122.63,11.45],[126.22,13.9],[128.6,17.42],[129.55,21.59],[128.92,25.89],[127.01,30.02],[124.07,33.85],[120.59,37.38],[116.84,40.7],[113.09,44.01],[109.33,47.33],[105.58,50.64],[101.83,53.96],[98.07,57.27],[94.32,60.59],[90.56,63.9],[86.81,67.22],[83.06,70.53],[79.3,73.85],[75.55,77.16],[71.79,80.48],[68.04,83.79],[64.29,87.11],[60.53,90.42],[56.78,93.74],[53.02,97.05],[49.27,100.37],[45.52,103.68],[41.76,107.0],[38.01,110.31],[34.26,113.63],[30.5,116.94],[26.75,120.26],[22.99,123.57],[19.14,126.64],[15.04,129.09],[10.69,130.75],[6.28,131.23],[2.3,130.09],[-1.2,127.6],[-4.08,124.15],[-6.54,120.01],[-8.99,115.9],[-12.11,112.68],[-15.86,110.45],[-20.24,109.21],[-25.02,108.57],[-29.87,108.0],[-34.38,106.74],[-38.32,104.52],[-41.56,101.29],[-44.02,97.29],[-45.5,92.72],[-46.08,87.94],[-45.81,83.13],[-44.84,78.37],[-43.26,73.68],[-41.36,69.08],[-39.12,64.63],[-36.56,60.41],[-33.52,56.72],[-29.91,53.93],[-25.83,52.47],[-21.57,52.45],[-17.29,53.77],[-13.15,56.14],[-9.25,59.19],[-5.47,62.48],[-1.72,65.79],[2.04,69.11],[5.8,72.42],[9.55,75.73],[13.39,78.87],[17.47,81.46],[21.76,83.15],[26.16,83.68],[30.38,82.78],[33.98,80.43],[36.5,76.98],[37.6,72.87],[37.18,68.52],[35.44,64.28],[32.72,60.34],[29.34,56.74],[25.67,53.36],[21.9,50.06],[18.13,46.76],[14.36,43.46],[10.6,40.16],[6.83,36.87],[3.06,33.57],[-0.71,30.27],[-4.48,26.97],[-8.25,23.68],[-12.02,20.38],[-15.79,17.08],[-19.56,13.78],[-23.33,10.49],[-27.1,7.19],[-30.87,3.89],[-34.64,0.59],[-38.4,-2.71],[-42.17,-6.0],[-45.84,-9.37],[-49.07,-13.02],[-51.57,-17.02],[-53.04,-21.28],[-53.07,-25.51],[-51.46,-29.15],[-48.54,-31.89],[-44.64,-33.86],[-40.13,-35.37],[-35.57,-36.94],[-31.34,-39.1],[-27.47,-42.01],[-23.93,-45.45],[-20.64,-49.21],[-17.67,-53.2],[-15.29,-57.4],[-13.84,-61.76],[-13.61,-66.14],[-14.78,-70.39],[-17.12,-74.38],[-20.31,-78.05],[-23.97,-81.43],[-27.8,-84.66],[-31.62,-87.89],[-35.45,-91.12],[-39.28,-94.35],[-43.13,-97.54],[-47.08,-100.61],[-51.15,-103.47],[-55.4,-106.03],[-59.82,-108.29],[-64.4,-110.26],[-69.08,-112.02],[-73.84,-113.57],[-78.63,-114.98],[-83.47,-116.24],[-88.35,-117.35],[-93.25,-118.38],[-98.11,-119.51],[-102.9,-120.87],[-107.54,-122.58],[-111.77,-124.91],[-115.42,-127.93],[-118.36,-131.6],[-119.96,-135.71],[-120.19,-140.11],[-118.94,-144.11],[-116.36,-147.6],[-112.58,-150.35],[-108.27,-152.46],[-103.52,-153.96],[-98.7,-155.3],[-93.83,-156.45],[-88.93,-157.41],[-84.01,-158.09],[-79.14,-158.19],[-74.41,-157.51],[-69.9,-155.95],[-65.64,-153.7],[-61.61,-150.84],[-57.76,-147.66],[-53.97,-144.38],[-50.19,-141.1],[-46.41,-137.82],[-42.62,-134.54],[-38.84,-131.26],[-35.06,-127.97],[-31.27,-124.69],[-27.49,-121.41],[-23.71,-118.13],[-19.92,-114.85],[-16.14,-111.57],[-12.36,-108.28],[-8.57,-105.0],[-4.79,-101.72]],"hw":[4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2]},"kart-wack":{"pts":[[-57.51,7.43],[-62.42,8.36],[-67.33,9.28],[-72.24,10.18],[-77.16,11.07],[-82.08,11.95],[-86.99,12.85],[-91.9,13.76],[-96.81,14.7],[-101.65,15.83],[-106.39,17.26],[-110.93,19.09],[-115.05,21.56],[-118.5,24.76],[-120.91,28.58],[-121.87,32.75],[-121.3,36.95],[-119.23,40.54],[-115.85,43.15],[-111.61,44.61],[-106.97,44.98],[-102.11,44.43],[-97.27,43.35],[-92.47,41.98],[-87.71,40.47],[-82.97,38.9],[-78.25,37.29],[-73.52,35.66],[-68.8,34.03],[-64.08,32.4],[-59.36,30.77],[-54.63,29.14],[-49.91,27.52],[-45.18,25.9],[-40.46,24.27],[-35.75,22.61],[-31.01,21.08],[-26.25,20.08],[-21.61,19.94],[-17.53,21.02],[-14.54,23.44],[-13.06,26.88],[-13.29,30.77],[-15.19,34.64],[-18.42,37.95],[-22.43,40.64],[-26.87,42.73],[-31.53,44.4],[-36.32,45.78],[-41.16,47.0],[-46.04,48.07],[-50.92,49.1],[-55.82,50.1],[-60.72,51.07],[-65.62,52.05],[-70.52,53.02],[-75.42,53.97],[-80.34,54.87],[-85.26,55.72],[-90.18,56.54],[-95.12,57.31],[-100.06,58.07],[-105.0,58.82],[-109.94,59.52],[-114.88,59.97],[-119.81,60.04],[-124.68,59.58],[-129.41,58.46],[-133.93,56.63],[-138.01,54.08],[-141.41,50.79],[-143.91,46.9],[-145.48,42.52],[-146.0,37.8],[-145.49,33.04],[-144.13,28.4],[-142.16,23.94],[-139.61,19.73],[-136.65,15.75],[-133.4,11.99],[-129.87,8.52],[-126.04,5.42],[-121.91,2.81],[-117.47,0.71],[-112.84,-0.99],[-108.06,-2.37],[-103.2,-3.53],[-98.33,-4.67],[-93.47,-5.8],[-88.6,-6.9],[-83.72,-7.98],[-78.84,-9.04],[-73.95,-10.07],[-69.06,-11.08],[-64.16,-12.09],[-59.27,-13.09],[-54.38,-14.1],[-49.48,-15.11],[-44.6,-16.17],[-39.73,-17.28],[-34.87,-18.43],[-30.03,-19.65],[-25.26,-21.08],[-20.65,-22.84],[-16.19,-24.95],[-12.06,-27.57],[-8.27,-30.7],[-4.75,-34.19],[-1.42,-37.87],[1.73,-41.75],[4.88,-45.61],[8.19,-49.33],[11.64,-52.9],[15.27,-56.29],[19.19,-59.28],[23.38,-61.91],[27.72,-64.3],[32.22,-66.38],[36.87,-68.2],[41.55,-69.96],[46.25,-71.63],[50.99,-73.22],[55.73,-74.78],[60.51,-76.18],[65.34,-77.32],[70.22,-78.22],[75.1,-78.58],[79.94,-78.24],[84.67,-77.25],[89.25,-75.67],[93.42,-73.23],[97.21,-70.19],[100.62,-66.71],[103.68,-62.87],[106.41,-58.69],[109.03,-54.45],[111.57,-50.14],[114.06,-45.81],[116.51,-41.46],[118.93,-37.09],[121.4,-32.75],[123.93,-28.45],[126.52,-24.17],[129.09,-19.9],[131.59,-15.59],[133.67,-11.15],[134.8,-6.67],[134.58,-2.5],[132.9,0.73],[129.89,2.69],[125.95,3.1],[121.74,1.91],[117.79,-0.64],[114.28,-3.98],[111.22,-7.82],[108.68,-12.06],[106.54,-16.51],[104.65,-21.1],[102.95,-25.77],[101.22,-30.43],[99.23,-34.97],[96.88,-39.31],[94.0,-43.23],[90.55,-46.6],[86.63,-49.39],[82.28,-51.27],[77.58,-52.3],[72.73,-52.62],[67.87,-52.21],[63.03,-51.15],[58.25,-49.82],[53.54,-48.22],[48.87,-46.43],[44.21,-44.64],[39.54,-42.86],[34.87,-41.08],[30.22,-39.27],[25.82,-37.1],[22.15,-34.34],[19.72,-31.0],[18.99,-27.4],[20.15,-24.0],[22.97,-21.47],[26.9,-20.31],[31.42,-20.5],[36.09,-21.73],[40.7,-23.56],[45.24,-25.63],[49.81,-27.65],[54.46,-29.35],[59.18,-30.52],[63.93,-30.94],[68.49,-30.32],[72.52,-28.41],[75.85,-25.45],[78.49,-21.63],[80.5,-17.2],[82.06,-12.46],[83.45,-7.67],[84.68,-2.84],[85.65,2.03],[86.15,6.91],[85.85,11.67],[84.58,16.1],[82.22,19.84],[78.84,22.78],[74.65,24.91],[69.98,26.37],[65.09,27.36],[60.17,28.21],[55.24,29.04],[50.32,29.89],[45.4,30.77],[40.48,31.57],[35.55,32.17],[30.64,32.35],[25.87,31.81],[21.51,30.27],[18.04,27.66],[15.67,24.09],[14.4,19.79],[14.04,15.02],[13.9,10.12],[13.26,5.45],[11.63,1.36],[8.87,-1.82],[5.04,-4.01],[0.58,-5.09],[-4.23,-5.15],[-9.12,-4.47],[-13.95,-3.38],[-18.74,-2.03],[-23.52,-0.59],[-28.3,0.86],[-33.1,2.2],[-37.95,3.39],[-42.82,4.51],[-47.7,5.55],[-52.6,6.51]],"hw":[4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2,4.2]}});
 const TRACKS = {
   mel: { name: 'Melbourne', osm: OSM_LM.mel, full: 'Albert Park Circuit', land: 'Australien', km: '5,29 km', laps: 58, pts: TRACK_HD['au-1953'].pts.filter((_, k) => k % 3 === 0), hd: TRACK_HD['au-1953'], theme: 'mel', ref: MEL_REF, refTrees: true, lake: MEL_REF.lake, city: [-250, -3450], cityBelt: [1050, 1500, -1700, 500] },
   monza: { name: 'Monza', osm: OSM_LM.monza, full: 'Autodromo Nazionale Monza', land: 'Italien', km: '5,793 km', laps: 53, pts: TRACK_PTS['it-1922'], hd: TRACK_HD['it-1922'], theme: 'monza', monza: true, ref: MONZA_REF },
@@ -963,6 +965,10 @@ const TRACKS = {
   mc: { name: 'Monaco', full: 'Circuit de Monaco', land: 'Monaco', km: '3,337 km', laps: 78, pts: TRACK_HD['mc-1929'].pts.filter((_, k) => k % 3 === 0), hd: TRACK_HD['mc-1929'], theme: 'mc', standDep: 12, stands: [[-160, 120, 'opp', 40], [2150, 2650, 'in', 40]], standSkip: [[2140, 2200]] /* Tribüne nach dem Tunnel (Tabac-Seite) steckte im Hang: entfernt */, mc: MC_LM, city: MC_LM.city, citySp: [520, 340], cityMul: 1.5, cityMinD: 26, cityH: [14, 34], resiTall: true, noTall: true },
   mtl: { name: 'Montréal', full: 'Circuit Gilles Villeneuve', land: 'Kanada', km: '4,361 km', laps: 70, pts: TRACK_HD['ca-1978'].pts.filter((_, k) => k % 3 === 0), hd: TRACK_HD['ca-1978'], theme: 'mtl', mtl: { hp: [-401, -1567], sa: [-214, -1086], sb: [-70, -452], c: [-275, -564], osm: OSM_LM.mtl } },
 };
+Object.assign(TRACKS, {   // Kartbahnen (nur in der Kart-Klasse): kurz, kurvig, ohne Boxengasse und Tribünen
+  genk: { name: 'Genk', full: 'Karting Genk · Pro Circuit', land: 'Belgien', km: '1,32 km', laps: 15, kartLaps: 8, kartOnly: true, noPit: true, noStands: true, pts: TRACK_HD['kart-genk'].pts.filter((_, k) => k % 2 === 0), hd: TRACK_HD['kart-genk'], theme: 'genk' },
+  wack: { name: 'Wackersdorf', full: 'ProKart Raceland Wackersdorf', land: 'Deutschland', km: '1,19 km', laps: 15, kartLaps: 8, kartOnly: true, noPit: true, noStands: true, pts: TRACK_HD['kart-wack'].pts.filter((_, k) => k % 2 === 0), hd: TRACK_HD['kart-wack'], theme: 'wack' },
+});
 const THEMES = {
   mc: { asph: 'mc', phys: { turb: 2.2, ray: 0.9, mie: .004, g: .8, gain: .55 }, sky: [0x2468c4, 0x86bfee, 0xe6f0f8], fog: 0xcad8e6, fogNear: 600, fogFar: 6000, camFar: 8000, sunDir: [0.3, 0.6, 0.55], sunCol: 0xfff0d8, sunI: 3.4, clouds: [0.4, 0.5, 0.85, 0],
     hemi: [0xd2e2f5, 0x6a6050, 0.42], flood: 0, exposure: 0.95, ground: 'sand', mainTint: 0xc9c6bf, groundTint: 0xc9c6bf, bandStone: 0xd8cdb8, wall: 8.6, runoff: 6, wallH: 1.0, wallKind: 'armco', runoffKind: 'asphalt', plainWalls: true,
@@ -1021,6 +1027,10 @@ const THEMES = {
     trees: 'palms', kerb: [0xd42a1e, 0xf4f4f4], belt: ['#1450b4', '#f2f2f2'], poles: true, tents: true, runoffCol: 0x2ec9cc, noBlue: true,
     flare: .9, rays: .7, look: { sh: [0.88, 0.86, 1.14], hi: [1.12, 0.97, 0.88], sat: 1.14, con: 1.1, vig: .42, tint: [1.08, .96, .92], lift: [.012, .004, .01], bloom: .4, thr: .92, rad: .42, warm: .26, fade: [.012, 0, .016], grain: .013 } },
 };
+Object.assign(THEMES, {   // Kartbahnen: wie Silverstone-Look, aber enge Auslaufzonen, kleine Bande, Wald am Rand
+  genk: { ...THEMES.sil, wall: 10, runoff: 6, wallH: .8, runoffKind: 'asphalt', groundTint: 0xdbe6c8, ads: ['GENK', 'KARTING', 'PRO CIRCUIT', 'BELGIEN', 'LIMBURG', 'RACING'], adCols: ['#111111', '#fdda24', '#ef3340', '#ffffff', '#0b3a8a'], treeMul: .8, treeMinD: 14, treeBand: 120, treeExt: 500, fogNear: 300, fogFar: 3200, camFar: 6000 },
+  wack: { ...THEMES.sil, wall: 10, runoff: 6, wallH: .8, runoffKind: 'asphalt', groundTint: 0xd6e0c0, ads: ['WACKERSDORF', 'PROKART', 'RACELAND', 'BAYERN', 'OBERPFALZ', 'RACING'], adCols: ['#111111', '#dd0000', '#ffce00', '#ffffff', '#0b3a8a'], conifer: .55, treeMul: 1.0, treeMinD: 14, treeBand: 130, treeExt: 500, fogNear: 300, fogFar: 3200, camFar: 6000 },
+});
 
 /* ======================= Konstanten ======================= */
 const VTOP = 95, BRAKE = 44, GRIP = 46, HALF = 7;
@@ -2069,6 +2079,7 @@ const LIVERY = {
     col = mix(col, G, aaS(p.z - 2.0) * (1.0 - aaS(p.y - 0.5)));
     if (c > 0.5 && c < 1.5) col = mix(G, W, aaS(p.y - 0.4)); if (c > 1.5 && c < 2.5) col = G; return col;`,
 };
+let haloFlatOn = false;   // TV-Kamera aktiv: Halos aller Autos einfarbig (siehe Kamera-Update)
 function liveryMat(tk, gloss) { const code = LIVERY[tk]; if (!code) return gloss;
   gloss.onBeforeCompile = sh => {
     sh.vertexShader = 'attribute float aCls; varying float vCls; varying vec3 vLP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vLP = position; vCls = aCls;');
@@ -2082,7 +2093,8 @@ function teamTemplate(tk) {
     const T = T0, isF2 = T.kind === 'f2', cB = col(T.body), cA = col(T.acc), cT = col(T.tip), cLow = col(T.low ?? T.body), cC = col(0x4a4f57), cD = col(0x16181b);
     const pc = (k, x, y, z, o) => isF2 && k === 7 ? o.copy(cD) : isF2 && k === 0 && (z > 2.55 || (z > 2.15 && y < 0.36) || (z < -1.9 && y > 0.6)) ? o.copy(z > 2.55 ? cT : cA) : o.copy(k === 1 ? cA : k === 2 ? cT : k === 3 ? cC : k === 4 ? cD : (T.low !== undefined && y < T.split ? cLow : cB));
     const gloss = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .3, metalness: T.metal * 0.7, clearcoat: 1, clearcoatRoughness: .06, envMapIntensity: 1.25, side: THREE.DoubleSide });
-    return (TPL[tk] = { model: true, M: MD, lods: MD.C.lods.map(L => ({ gloss: paintGeo(L.gloss, pc), matte: paintGeo(L.matte, pc) })), halo: paintGeo(MD.C.halo, pc), glossMat: liveryMat(tk, gloss) });
+    const haloMat = gloss.clone();   // Halo in der TV-Kamera: einfarbig in der Fahrzeugfarbe, ohne Lackierungs-Verlauf (Material vor dem Livery-Shader kopieren)
+    return (TPL[tk] = { model: true, M: MD, lods: MD.C.lods.map(L => ({ gloss: paintGeo(L.gloss, pc), matte: paintGeo(L.matte, pc) })), halo: paintGeo(MD.C.halo, pc), haloFlat: paintGeo(MD.C.halo, (k, x, y, z, o) => o.copy(cB)), haloMat, glossMat: liveryMat(tk, gloss) });
   }
   const T = TEAMS[tk];
   const cB = col(T.body), cA = col(T.acc), cT = col(T.tip), cLow = col(T.low ?? T.body), cC = col(0x5a6068), cD = col(0x16181b), cL = col(0xff1a0a), cW = col(0xe9ecef);
@@ -2530,7 +2542,7 @@ function makeCar0(d) {
   const tp = teamTemplate(d.liv || d.team), g = new THREE.Group(); g.rotation.order = 'YXZ';
   if (tp.model) {
     const MD = tp.M, L = tp.lods[0], W = MD.W[0], fw = MD.C.fw;
-    const body = new THREE.Mesh(L.gloss, tp.glossMat), matte = new THREE.Mesh(L.matte, MATTE), halo = new THREE.Mesh(tp.halo, tp.glossMat);
+    const body = new THREE.Mesh(L.gloss, tp.glossMat), matte = new THREE.Mesh(L.matte, MATTE), halo = new THREE.Mesh(haloFlatOn ? tp.haloFlat : tp.halo, haloFlatOn ? tp.haloMat : tp.glossMat);
     for (const m of [body, matte, halo]) { m.castShadow = true; g.add(m); }
     if (MD.C.lods[0].mirror) g.add(new THREE.Mesh(MD.C.lods[0].mirror, MIRMAT));   // Spiegelglas: verspiegelt die Umgebung (Skybox) statt Carbon
     const helm = mergeParts([[new THREE.SphereGeometry(0.15, 32, 24).scale(1, 0.97, 1.1).translate(0, MD.helm[0], MD.helm[1]), col(d.helmet)], [new THREE.SphereGeometry(0.1512, 32, 8, 0, Math.PI * 2, 0, 0.5).scale(1, 0.97, 1.1).translate(0, MD.helm[0], MD.helm[1]), col(T.acc)], [new THREE.SphereGeometry(0.1513, 32, 4, 0, Math.PI * 2, 0.62, 0.1).scale(1, 0.97, 1.1).translate(0, MD.helm[0], MD.helm[1]), col(T.acc)], [new THREE.SphereGeometry(0.1521, 24, 8, Math.PI / 2 - 0.95, 1.9, 1.22, 0.4).scale(1, 0.97, 1.1).translate(0, MD.helm[0], MD.helm[1]), col(0x0a0c10)]]);
@@ -6313,6 +6325,7 @@ function updateCamera(dt) {
     camera.fov += (fov - camera.fov) * Math.min(1, dt * 2.5); camera.updateProjectionMatrix();
     for (const c of ais) { const d2 = (c.x - camera.position.x) ** 2 + (c.z - camera.position.z) ** 2; c.mesh.label.visible = d2 > 14 * 14 && d2 < 160 * 160; }
     pl.mesh.helm.visible = S.cam !== 2; if (pl.mesh.halo) pl.mesh.halo.visible = S.cam !== 2;
+    { const flat = S.cam === 3; if (flat !== haloFlatOn) { haloFlatOn = flat; for (const c of ALL) { const m = c.mesh; if (m && m.tp && m.tp.haloFlat && m.halo) { m.halo.geometry = flat ? m.tp.haloFlat : m.tp.halo; m.halo.material = flat ? m.tp.haloMat : m.tp.glossMat; } } } }   // TV-Kamera: Halo einfarbig in Fahrzeugfarbe, ohne Verlauf
     if (pl.mesh.tp) pl.mesh.helm.position.set(0, S.cam === 3 ? -0.03 : 0, S.cam === 3 ? 0.06 : 0);   // TV-Kamera: Helm leicht nach vorn/unten versetzt – bleibt sichtbar, ohne an der Kamera anzuschneiden
     pl.mesh.label.visible = false;
   }
@@ -6444,7 +6457,11 @@ let CAL = CAL_F1;
 const calFor = ser => ser === 'f1' ? CAL_F1 : SERIES[ser].cal.map((k, i) => [k, ser === 'f2' ? F2_DATES[k] : 'Lauf ' + (i + 1)]);
 const PTS = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1], QPTS = [5, 3, 1];   // Punkte nach FIA-Regeln; Qualifying-Bonus nur für Upgrade-Punkte (F1)
 let CHP = null, RESULT = [], QL = false;
-const loadChamp = () => { try { const c = JSON.parse(localStorage.getItem('f1champ') || 'null'); return c && c.v === 2 && c.career ? c : null; } catch (e) { return null; } };
+const loadChamp = () => { try { const c = JSON.parse(localStorage.getItem('f1champ') || 'null'); if (!(c && c.v === 2 && c.career)) return null;
+  if (!c.done && Array.isArray(c.races) && c.races.some(r => !r.q)) {   // Reparatur: ein Schnelles Rennen wurde fälschlich als Karriere-Rennen gezählt (Start P0 → Ziel P0)
+    const bad = c.races.filter(r => !r.q).length; c.races = c.races.filter(r => r.q); c.round = Math.max(0, c.round - bad); c.doneRound = c.round - 1; c.phase = 'quali'; c.grid = null; c.qpos = 0;
+    c.pts = {}; c.races.forEach(r => r.res.forEach(x => { c.pts[x[0]] = (c.pts[x[0]] || 0) + (x[2] || 0); })); try { localStorage.setItem('f1champ', JSON.stringify(c)); } catch (e) {} }
+  return c; } catch (e) { return null; } };
 const saveChamp = () => { try { if (CHP) localStorage.setItem('f1champ', JSON.stringify(CHP)); } catch (e) {} };
 const carDef = () => ({ v: 1, name: '', helmet: 0xe10600, unlock: { f2: false, f1: false }, best: {}, slot: {}, up: { lv: {}, earned: 0, spent: 0 }, seasons: { kart: 0, f2: 0, f1: 0 } });
 let CAREER = (() => { try { const c = JSON.parse(localStorage.getItem('f1career') || 'null'); return c && c.v === 1 ? c : null; } catch (e) { return null; } })();
@@ -6527,7 +6544,7 @@ function setupCareerRace(laps) {
   if (TRK !== TRACKS[S.track]) { loading(true); setTimeout(() => { buildTrack(S.track); loading(false); go(); }, 30); } else go();
 }
 function careerStartQuali() { if (!CHP || CHP.round >= CAL.length) return; QL = true; CHP.phase = 'quali'; setupCareerRace(1); }
-function careerStartRace() { if (!CHP || CHP.round >= CAL.length) return; QL = false; setupCareerRace(CHP.laps); }
+function careerStartRace() { if (!CHP || CHP.round >= CAL.length) return; QL = false; setupCareerRace(TRACKS[CAL[CHP.round][0]].kartLaps || CHP.laps); }
 const QF = 1.04;   // KI-Rundenzeit im Qualifying = Profilzeit / Fahrerform × QF (Beschleunigungsverluste, Fahrfehler)
 function qualiResults() {
   resultsShown = true; QL = false;
@@ -6616,6 +6633,7 @@ function careerContinue() {   // zurück ins Menü auf die Saisonübersicht (Ren
 }
 const MENU = { scr: 'title', team: null, mode: 'quick' };
 const TRACK_INFO = { mc: { turns: 19, col: '#e5e7eb' }, sil: { turns: 18, col: '#818cf8' }, mtl: { turns: 14, col: '#06b6d4' }, nos: { turns: 73, col: '#84cc16' }, sgp: { turns: 19, col: '#a855f7' }, mel: { turns: 16, col: '#3b82f6' }, vegas: { turns: 17, col: '#f472b6' }, monza: { turns: 11, col: '#10b981' }, yas: { turns: 16, col: '#f97316' }, spa: { turns: 19, col: '#eab308' }, rbr: { turns: 10, col: '#ef4444' } };
+Object.assign(TRACK_INFO, { genk: { turns: 14, col: '#fdda24' }, wack: { turns: 13, col: '#ff3b30' } });
 const FLAG_OLD = { mc: ['#ce1126', '#ffffff', '#ffffff'], sil: ['#012169', '#ffffff', '#c8102e'], mtl: ['#d80621', '#ffffff', '#d80621'], nos: ['#000000', '#dd0000', '#ffce00'], sgp: ['#ef3340', '#ffffff', '#ef3340'], mel: ['#012169', '#ffffff', '#e4002b'], vegas: ['#b22234', '#ffffff', '#3c3b6e'], monza: ['#009246', '#ffffff', '#ce2b37'], yas: ['#00732f', '#ffffff', '#000000'], spa: ['#000000', '#fdda24', '#ef3340'], rbr: ['#ed2939', '#ffffff', '#ed2939'] };
 // eigene Team-Embleme (keine echten Logos): Form + Farben + Kürzel
 function teamBadge(k) {
@@ -6640,6 +6658,8 @@ function flagSVG(k) {
   else if (k === 'mc') b = r(0, 0, w, h / 2, '#ce1126') + r(0, h / 2, w, h / 2, '#fff');
   else if (k === 'mtl') b = r(0, 0, w, h, '#fff') + r(0, 0, 5.2, h, '#d80621') + r(15.8, 0, 5.2, h, '#d80621') + '<path d="M10.5 2.6l1 2 1.2-.6-.4 2.6 1.6-1.4.3 1 1.5-.3-.6 1.7.6.3-2.6 2 .3 1-2.4-.4V13h-1v-2.1l-2.4.4.3-1-2.6-2 .6-.3-.6-1.7 1.5.3.3-1 1.6 1.4-.4-2.6 1.2.6z" fill="#d80621"/>';
   else if (k === 'nos') b = r(0, 0, w, h / 3, '#000') + r(0, h / 3, w, h / 3, '#dd0000') + r(0, 2 * h / 3, w, h / 3, '#ffce00');
+  else if (k === 'genk') b = r(0, 0, 7, h, '#000') + r(7, 0, 7, h, '#fdda24') + r(14, 0, 7, h, '#ef3340');
+  else if (k === 'wack') b = r(0, 0, w, h / 3, '#000') + r(0, h / 3, w, h / 3, '#dd0000') + r(0, 2 * h / 3, w, h / 3, '#ffce00');
   else if (k === 'sgp') { b = r(0, 0, w, h / 2, '#ef3340') + r(0, h / 2, w, h / 2, '#fff') + '<circle cx="4.6" cy="3.5" r="2.5" fill="#fff"/><circle cx="5.6" cy="3.5" r="2.3" fill="#ef3340"/>';
     for (const [cx, cy] of [[7.8, 1.6], [9.6, 2.9], [9, 5], [6.6, 5], [6, 2.9]]) b += '<circle cx="' + cx + '" cy="' + cy + '" r=".55" fill="#fff"/>'; }
   else if (k === 'yas') b = r(0, 0, w, h / 3, '#00732f') + r(0, h / 3, w, h / 3, '#fff') + r(0, 2 * h / 3, w, h / 3, '#000') + r(0, 0, 6, h, '#ff0000');
@@ -6648,7 +6668,7 @@ function flagSVG(k) {
 }
 const contrast = n => { const c = new THREE.Color(n); return .3 * c.r + .59 * c.g + .11 * c.b > .5 ? '#06080c' : '#ffffff'; };
 function showScreen(k) {
-  if (k === 'title') { setMode('quick'); }
+  if (k === 'title') { setMode('quick'); CHP = null; }   // geladene Saison nicht in Schnelle Rennen mitnehmen (sonst zählt ein Schnelles Rennen als Karriere-Rennen)
   MENU.scr = k; $('#menu').dataset.scr = k;
   $$('#menu .scr').forEach(e => e.classList.toggle('on', e.id === 'scr' + k[0].toUpperCase() + k.slice(1)));
   const idx = SCR.indexOf(k); $$('#mSteps i').forEach((e, n) => { e.classList.toggle('on', n + 1 === idx); e.classList.toggle('done', n + 1 < idx); });
@@ -6658,6 +6678,7 @@ function showScreen(k) {
   nb.classList.toggle('start', k === 'race' || k === 'name' || k === 'season');
   nb.innerHTML = (k === 'race' ? (MENU.mode === 'tt' ? 'Zeitrennen starten' : 'Rennen starten') : k === 'name' ? 'Karriere starten' : k === 'season' ? seasonNextLabel() : car && k === 'driver' ? 'Saison starten' : 'Weiter') + ' <span>›</span>';
   renderMenu();
+  if (k === 'track') { renderTracks(); renderMenu(); }   // Streckenliste je nach Klasse (Kartbahnen nur beim Kart)
   if (k === 'title') renderTitle(); else if (k === 'series') { setSeries(SER, true); renderSeriesCards(); } else if (k === 'career') renderCareer(); else if (k === 'season') renderSeason(); else if (k === 'upgrade') renderUpgrade(); else if (k === 'name') renderName();
 }
 function menuNext() {
@@ -6717,7 +6738,7 @@ function renderCareer() {
     if (c && c.ser === t) return c.done ? 'Saison beendet: Platz ' + c.finalPos : 'Rennen ' + (c.round + 1) + '/' + calFor(t).length + ' · ' + (c.pts[c.driver] || 0) + ' Pkt';
     return (t === 'kart' ? 'Neue Saison starten' : 'Team wählen & Saison starten') + (bestTxt ? ' · ' + bestTxt : '');
   };
-  const sub = { kart: '3 Rennen · Monza, Spa, Silverstone', f2: calFor('f2').length + ' Rennen · Kalender 2026', f1: calFor('f1').length + ' Rennen · Upgrades' };
+  const sub = { kart: '3 Rennen · Genk, Wackersdorf, Silverstone', f2: calFor('f2').length + ' Rennen · Kalender 2026', f1: calFor('f1').length + ' Rennen · Upgrades' };
   $('#carCards').innerHTML = ['kart', 'f2', 'f1'].map(t => '<button class="tcard scard' + (lk[t] ? ' locked' : '') + '" data-tier="' + t + '" style="--tc:' + TIER_COL[t] + '"><div class="sbig">' + (t === 'kart' ? 'Karts' : t === 'f2' ? 'F2' : 'F1') + (lk[t] ? ' 🔒' : '') + '</div><div class="tn">' + (t === 'kart' ? 'Kart-Meisterschaft' : t === 'f2' ? 'Formula 2' : 'Formula 1') + '</div><div class="tf">' + sub[t] + '</div><div class="cst">' + txt(t) + '</div></button>').join('');
   $$('#carCards .scard').forEach(b => b.addEventListener('click', () => careerEnter(b.dataset.tier)));
 }
@@ -6793,11 +6814,11 @@ function renderTeams() {
 }
 function buildMenu() { renderTracks(); buildMenu2(); }
 function renderTracks() {
-  if (TRACKS[S.track] && TRACKS[S.track].extra && !S.nos) S.track = 'monza';
-  $('#tracks').innerHTML = Object.entries(TRACKS).filter(([k, t]) => !t.extra || S.nos).map(([k, t]) => { const ti = TRACK_INFO[k] || { turns: '–', col: '#e10600' };
+  if (TRACKS[S.track] && ((TRACKS[S.track].extra && !S.nos) || (TRACKS[S.track].kartOnly && SER !== 'kart'))) S.track = 'monza';
+  $('#tracks').innerHTML = Object.entries(TRACKS).filter(([k, t]) => (!t.extra || S.nos) && (!t.kartOnly || SER === 'kart')).map(([k, t]) => { const ti = TRACK_INFO[k] || { turns: '–', col: '#e10600' };
     return '<button class="tcard" data-trk="' + k + '" style="--tc:' + ti.col + '"><span class="chk">✓</span><div class="tn">' + t.name + '</div><div class="tf">' + t.full + ' · ' + t.land + '' + flagSVG(k) + '</div><canvas width="300" height="190"></canvas>'
       + '<div class="ts"><div><b>' + t.km + '</b><small>Länge</small></div><div><b>' + ti.turns + '</b><small>Kurven</small></div><div><b>' + t.laps + '</b><small>Runden</small></div></div></button>'; }).join('');
-  $$('.tcard').forEach(b => {
+  $$('#tracks .tcard').forEach(b => {
     const t = TRACKS[b.dataset.trk], cv = b.querySelector('canvas'), g = cv.getContext('2d'), col2 = getComputedStyle(b).getPropertyValue('--tc') || '#e10600';
     const W2 = cv.width, H2 = cv.height; let a = 1e9, bb = -1e9, c = 1e9, d = -1e9; for (const p of t.pts) { a = Math.min(a, p[0]); bb = Math.max(bb, p[0]); c = Math.min(c, p[1]); d = Math.max(d, p[1]); }
     const sc = Math.min((W2 - 30) / (bb - a), (H2 - 30) / (d - c)), ox = (W2 - (bb - a) * sc) / 2, oz = (H2 - (d - c) * sc) / 2, fx = x => ox + (x - a) * sc, fz = z => oz + (z - c) * sc;
@@ -6810,13 +6831,13 @@ function renderTracks() {
 }
 function buildMenu2() {
   renderTeams();
-  $('#qPlay').addEventListener('click', () => { setMode('quick'); showScreen('series'); });
-  $('#tPlay').addEventListener('click', () => { setMode('tt'); showScreen('series'); });
+  $('#qPlay').addEventListener('click', () => { setMode('quick'); CHP = null; showScreen('series'); });
+  $('#tPlay').addEventListener('click', () => { setMode('tt'); CHP = null; showScreen('series'); });
   $('#cPlay').addEventListener('click', () => { setMode('career'); if (!CAREER) return showScreen('name'); const c = loadChamp(); if (c && !c.done) { CHP = c; return careerOpenSeason(); } showScreen('career'); });
   $('#saveExp').addEventListener('click', () => { try { $('#saveCode').value = btoa(unescape(encodeURIComponent(JSON.stringify({ v: 1, career: CAREER, champ: loadChamp() })))); $('#saveCode').select(); try { navigator.clipboard.writeText($('#saveCode').value); } catch (e) {} toast(CAREER ? 'Spielstand exportiert (in der Zwischenablage)' : 'Noch keine Karriere vorhanden'); } catch (e) { toast('Export fehlgeschlagen'); } });
   $('#saveImp').addEventListener('click', () => { try { const o = JSON.parse(decodeURIComponent(escape(atob($('#saveCode').value.trim())))); if (!o || o.v !== 1 || !o.career || o.career.v !== 1) throw 0; CAREER = o.career; saveCar(); if (o.champ) { CHP = o.champ; saveChamp(); } CHP = null; SERIES._dirty = true; toast('Spielstand importiert: ' + CAREER.name); } catch (e) { toast('Ungültiger Exportcode'); } });
   $('#careerReset').addEventListener('click', e => { const b = e.currentTarget; if (b.dataset.arm) { b.dataset.arm = ''; b.textContent = 'Karriere zurücksetzen'; resetCareer(); toast('Karriere zurückgesetzt'); } else { b.dataset.arm = '1'; b.textContent = 'Wirklich löschen? Nochmal tippen'; setTimeout(() => { b.dataset.arm = ''; b.textContent = 'Karriere zurücksetzen'; }, 4000); } });
-  $('#cName').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') careerCreate(); });
+  $('#cName').addEventListener('keydown', e => { e.stopPropagation(); });   // Enter springt nicht mehr weiter: Karriere startet nur per Klick auf den Button
   $('#champLaps').addEventListener('input', e => { S.champLaps = +e.target.value; save(); renderMenu(); });
   $('#tSettings').addEventListener('click', () => openSettings('menu'));
   $('#mGear').addEventListener('click', () => openSettings('menu'));
@@ -6853,7 +6874,7 @@ function renderMenu() {
   { const cl = S.champLaps || 3, el = $('#champLaps'); el.value = cl; el.style.setProperty('--p', ((cl - 1) / 9 * 100) + '%'); $('#champLapsV').textContent = cl + (cl === 1 ? ' Runde' : ' Runden') + ' pro Rennen';
     $('#champCal').innerHTML = CAL.map(([k, d], i) => '<div class="' + (i === 0 ? 'next' : '') + '"><b>' + (i + 1) + '</b>' + TRACKS[k].name + flagSVG(k) + '<small>' + d + '</small></div>').join(''); }
   const full = tr.laps;
-  $('#lapChips').innerHTML = (tr.extra ? [1, 2, 3, 5] : [3, 5, 10, 20, full]).map(n => '<button data-l="' + n + '" class="' + (n === S.laps ? 'on' : '') + '">' + (n === full && !tr.extra ? n + ' (voll)' : n) + '</button>').join('');
+  $('#lapChips').innerHTML = (tr.extra ? [1, 2, 3, 5] : tr.kartOnly ? [3, 5, 8, 12, full] : [3, 5, 10, 20, full]).map(n => '<button data-l="' + n + '" class="' + (n === S.laps ? 'on' : '') + '">' + (n === full && !tr.extra ? n + ' (voll)' : n) + '</button>').join('');
   $$('#lapChips button').forEach(b => b.addEventListener('click', () => { S.laps = +b.dataset.l; save(); renderMenu(); }));
   $('#creditSongs').textContent = RACE_SONGS.map(sg => (sg.artist ? sg.artist + ' – ' : '') + sg.name).join(' · ');
   for (const k of ['volMusic', 'volCar']) { const v = Math.round((S[k] ?? 0.8) * 100); $('#' + k).value = v; $('#' + k).style.setProperty('--p', v + '%'); $('#' + k + 'V').textContent = v + ' %'; }
@@ -6933,7 +6954,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '0.92'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '0.93'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -7027,7 +7048,7 @@ function frame(now) {
   if (!window.__norender) { if (SHOW.on && !running && !$('#menu').classList.contains('hidden')) { showroomFrame(dt); const bo = BAKE.u.bakeOn.value; BAKE.u.bakeOn.value = 0; renderer.render(SHOW.scene, SHOW.cam); BAKE.u.bakeOn.value = bo; } else if (composer) { syncAoCam(); composer.render(dt); } else renderer.render(scene, camera); }
 }
 applyGfx();
-buildTrack(TRACKS[S.track] && (!TRACKS[S.track].extra || S.nos) ? S.track : (S.track = 'monza'));
+buildTrack(TRACKS[S.track] && (!TRACKS[S.track].extra || S.nos) && !TRACKS[S.track].kartOnly ? S.track : (S.track = 'monza'));
 placeOnGrid(); buildMenu(); renderMenu();
 loading(false); $('#menu').classList.remove('hidden'); showScreen('title');
 window.__scene = () => scene; window.__cam = () => camera; window.__perf = (k = 20) => { const was = paused; paused = false; renderer.info.autoReset = false; renderer.info.reset(); let t = performance.now(); const t0 = t; for (let i = 0; i < k; i++) frame(t += 40); const gl = renderer.getContext(); gl.finish(); const ms = (performance.now() - t0) / k, r = renderer.info.render; const o = { calls: Math.round(r.calls / k), tris: Math.round(r.triangles / k), ms: +ms.toFixed(2), pr: renderer.getPixelRatio() }; renderer.info.autoReset = true; paused = was; return o; };   /* Test: Zeichenaufrufe/Bild und Zeit pro Bild (CPU+GPU, mit gl.finish) */
