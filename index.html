@@ -486,7 +486,7 @@ h1 b{background:linear-gradient(90deg,#ff3b2f,#ff7a45);-webkit-background-clip:t
 #menu[data-m=career] .msteps{display:none}
 #cName{width:100%;height:48px;border-radius:6px;border:1px solid rgba(255,255,255,.22);background:#15151e;color:#fff;font:700 19px system-ui,sans-serif;padding:0 14px;user-select:text;-webkit-user-select:text;touch-action:auto;outline:0}
 #cName:focus{border-color:#e10600}
-.swatches{display:flex;gap:10px;flex-wrap:wrap}.sw2{width:40px;height:40px;border-radius:50%;border:3px solid transparent;box-shadow:0 0 0 1px rgba(255,255,255,.28)}.sw2.on{border-color:#fff}
+.swatches{display:grid;grid-template-columns:repeat(7,40px);gap:10px}.sw2{width:40px;height:40px;border-radius:50%;border:3px solid transparent;box-shadow:0 0 0 1px rgba(255,255,255,.28)}.sw2.on{border-color:#fff}
 #serCards,#carCards{justify-content:center;align-items:stretch}
 #serCards .tcard,#carCards .tcard{flex:1 1 0;max-width:340px}
 .scard{justify-content:flex-start;gap:4px}
@@ -599,7 +599,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
         </div>
       </div>
     </div>
-    <div class="tver">♪ Musik: freetouse.com · Version <span id="verNo">v78</span></div>
+    <div class="tver">♪ Musik: freetouse.com · Version <span id="verNo">v79</span></div>
   </section>
 
   <section class="scr" id="scrTrack">
@@ -6672,7 +6672,7 @@ function renderTitle() {
 }
 function renderName() {
   const nm = $('#cName'); if (CAREER && !nm.value) nm.value = CAREER.name || '';
-  const cols = [0xe10600, 0xffd400, 0x1d6fb8, 0x1c9a4a, 0xf0f0f0, 0xff6a00, 0x8a2be2, 0x16181b], cur = (CAREER && CAREER.helmet) || MENU.helm || cols[0];
+  const cols = [0xe10600, 0xffd400, 0x1d6fb8, 0x1c9a4a, 0xf0f0f0, 0xff6a00, 0x8a2be2, 0xe0007a, 0x19c8ff, 0x102a6b, 0x8fd12a, 0xb7bcc2, 0x7a5b47, 0x16181b], cur = (CAREER && CAREER.helmet) || MENU.helm || cols[0];
   MENU.helm = cur;
   $('#cHelm').innerHTML = cols.map(c => '<button class="sw2' + (c === cur ? ' on' : '') + '" data-c="' + c + '" style="background:' + hex(c) + '" aria-label="Helmfarbe"></button>').join('');
   $$('#cHelm .sw2').forEach(b => b.addEventListener('click', () => { MENU.helm = +b.dataset.c; $$('#cHelm .sw2').forEach(x => x.classList.toggle('on', x === b)); }));
@@ -6905,7 +6905,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v78'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v79'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
