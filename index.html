@@ -605,7 +605,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
         </div>
       </div>
     </div>
-    <div class="tver">Version <span id="verNo">v89</span></div>
+    <div class="tver">Version <span id="verNo">v90</span></div>
   </section>
 
   <section class="scr" id="scrTrack">
@@ -5638,11 +5638,11 @@ function raceSongPick(play) {
   if (pl && pl.code === 'VER' && !maxMissing) {   // Max Verstappen: eigener Titel (max.mp3), läuft nur bei ihm
     if (rpVol[rpCur] > 0.01) rpCur ^= 1; raceIdx = -2; const a = RP[rpCur]; rpVol[rpCur] = 0; a.volume = 0; a.loop = true; a.src = './' + MAX_FILES[maxTry]; a.currentTime = 0; if (play) a.play().catch(() => {}); return;   // Dauerschleife
   }
-  // Zufall, aber ein gespielter Titel ist für die nächsten 4 Lieder gesperrt (frühestens als 5. wieder dran)
-  const hist = (Array.isArray(S.songHist) ? S.songHist : []).filter(f => RACE_SONGS.some(x => x.file === f)).slice(-Math.min(4, RACE_SONGS.length - 1));
+  // Zufall, aber ein gespielter Titel ist für die nächsten 25 Lieder gesperrt (frühestens als 26. wieder dran; bei weniger Liedern: alle außer dem letzten)
+  const hist = (Array.isArray(S.songHist) ? S.songHist : []).filter(f => RACE_SONGS.some(x => x.file === f)).slice(-Math.min(25, RACE_SONGS.length - 1));
   const free = RACE_SONGS.map((x, i) => i).filter(i => !hist.includes(RACE_SONGS[i].file));
   const k = free[Math.floor(Math.random() * free.length)];
-  raceIdx = k; S.songHist = [...hist, RACE_SONGS[k].file].slice(-4); try { save(); } catch (e) {}
+  raceIdx = k; S.songHist = [...hist, RACE_SONGS[k].file].slice(-25); try { save(); } catch (e) {}
   if (rpVol[rpCur] > 0.01) rpCur ^= 1;            // laufender Titel blendet auf dem anderen Player aus
   const a = RP[rpCur]; rpVol[rpCur] = 0; a.volume = 0; a.loop = false; a.src = './' + RACE_SONGS[k].file.split('/').map(encodeURIComponent).join('/'); a.currentTime = 0;
   if (play) a.play().catch(() => {});
