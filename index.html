@@ -599,7 +599,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
         </div>
       </div>
     </div>
-    <div class="tver">Version <span id="verNo">v84</span></div>
+    <div class="tver">Version <span id="verNo">v85</span></div>
   </section>
 
   <section class="scr" id="scrTrack">
@@ -908,8 +908,8 @@ const KART_DRIVERS = [
 ];
 // ph: Fahrzeugleistung gegenüber dem F1-Basismodell (Topspeed, Kurvengrip, Bremse, Beschleunigung); laps: Renndauer im Karrieremodus
 const SERIES = {
-  kart: { id: 'kart', name: 'GoKart', sub: 'Rennkart · Sprint-Rennen', teams: KART_TEAMS, drivers: KART_DRIVERS, ph: { top: 0.5, grip: 0.5, brk: 0.5, acc: 1.12 }, laps: 3, cal: ['monza', 'spa', 'sil'], noBoost: true },
-  f2:   { id: 'f2',   name: 'Formula 2', sub: 'FIA Formula 2 · Saison 2026', teams: F2_TEAMS, drivers: F2_DRIVERS, ph: { top: 0.93, grip: 0.9, brk: 0.92, acc: 0.9 }, laps: 4, cal: ['mel', 'mtl', 'mc', 'rbr', 'sil', 'spa', 'monza', 'yas'], noBoost: true },
+  kart: { id: 'kart', name: 'GoKart', sub: 'Rennkart · Sprint-Rennen', teams: KART_TEAMS, drivers: KART_DRIVERS, ph: { top: 0.5, grip: 0.5, brk: 0.5, acc: 1.12 }, laps: 3, cal: ['monza', 'spa', 'sil'], noBoost: true, cl: 2.3, cw: 1.55, hw: 0.85 },
+  f2:   { id: 'f2',   name: 'Formula 2', sub: 'FIA Formula 2 · Saison 2026', teams: F2_TEAMS, drivers: F2_DRIVERS, ph: { top: 0.93, grip: 0.9, brk: 0.92, acc: 0.9 }, laps: 4, cal: ['mel', 'mtl', 'mc', 'rbr', 'sil', 'spa', 'monza', 'yas'], noBoost: true, cl: 4.9, cw: 1.78, hw: 0.98 },
   f1:   { id: 'f1',   name: 'Formula 1', sub: 'FIA Formula 1 · Saison 2026', teams: F1_TEAMS, drivers: F1_DRIVERS, ph: { top: 1, grip: 1, brk: 1, acc: 1 }, laps: 3, cal: null, noBoost: false },
 };
 const LIVS = {}; for (const k in LIV) LIVS['F2_' + k] = { kind: 'f2', ...LIV[k] };
@@ -1017,7 +1017,8 @@ const THEMES = {
 };
 
 /* ======================= Konstanten ======================= */
-const VTOP = 95, BRAKE = 44, GRIP = 46, HALF = 7, CL = 5.4, CW = 1.95;
+const VTOP = 95, BRAKE = 44, GRIP = 46, HALF = 7;
+let CL = 5.4, CW = 1.95, CARHW = 1.1;   // Kollisionsmaße (Länge/Breite) und halbe Breite für die Bande – je Klasse (Kart kleiner)
 const DIFF = { easy: { aLat: 36, brake: 40, top: .99 }, mid: { aLat: 44, brake: 44, top: 1 }, hard: { aLat: 47.5, brake: 46, top: 1.015, grip: 1.07, brk: 1.05, acc: 1.04 },
   pro: { aLat: 58, brake: 56, top: 1.065, grip: 1.3, brk: 1.3, acc: 1.28 }, leg: { aLat: 65, brake: 62, top: 1.1, grip: 1.45, brk: 1.42, acc: 1.4 } };
 const accel = (v, vmax = VTOP) => Math.max(0, 11.5 * (1 - Math.pow(v / vmax, 2.2)));
@@ -2578,7 +2579,7 @@ function setSeries(k, quiet) {
   SERIES._dirty = false;
   for (const c of ALL) { scene.remove(c.mesh.g); if (c.mesh.label && c.mesh.label.material.map) c.mesh.label.material.map.dispose(); }
   if (SER && SER !== k) { (S.drv ||= {})[SER] = S.driver; }
-  const prevSer = SER; SER = k; const SD = SERIES[k]; TEAMS = SD.teams; SERPH = SD.ph;
+  const prevSer = SER; SER = k; const SD = SERIES[k]; TEAMS = SD.teams; SERPH = SD.ph; CL = SD.cl || 5.4; CW = SD.cw || 1.95; CARHW = SD.hw || 1.1;
   DRIVERS = SD.drivers.map(x => x.slice()); if (typeof applyCareerSlot === 'function') applyCareerSlot(k, DRIVERS);
   ALL = buildAll(); cars.length = 0; ais = [];
   const want = k === prevSer ? S.driver : (S.drv || {})[k]; S.driver = ALL.find(c => c.code === want) ? want : ALL[0].code;
@@ -5883,7 +5884,7 @@ function carStep(c, thr, brk, dt, limit) {
 }
 function wallCheck(c, dt) {
   c.wallCd -= dt;
-  const side = c.lat >= 0 ? 1 : -1, lim = wallAt(c.idx, side) - 1.1;
+  const side = c.lat >= 0 ? 1 : -1, lim = wallAt(c.idx, side) - CARHW;
   if (Math.abs(c.lat) > lim) {
     const i = c.idx, push = Math.abs(c.lat) - lim;
     c.x -= RX[i] * side * push; c.z -= RZ[i] * side * push;
@@ -6913,7 +6914,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v84'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v85'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
