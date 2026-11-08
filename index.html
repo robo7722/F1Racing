@@ -535,6 +535,11 @@ h1 b{background:linear-gradient(90deg,#ff3b2f,#ff7a45);-webkit-background-clip:t
 .hbtn.hidden{display:none}
 #saveCode{width:100%;height:70px;margin-top:8px;border-radius:6px;border:1px solid rgba(255,255,255,.22);background:#15151e;color:#cfd3da;font:11px/1.3 monospace;padding:8px;resize:none;user-select:text;-webkit-user-select:text;touch-action:auto}
 body.noBoost #bBoost,body.noBoost #bat{display:none!important}
+
+.diffbar{display:flex;align-items:center;gap:14px;margin:0 0 10px;padding:8px 14px;border-radius:6px;background:rgba(21,21,30,.92);border:1px solid rgba(255,255,255,.14);border-left:4px solid #e10600}
+.diffbar>span{font:italic 900 15px system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.diffbar .seg{flex:1;max-width:560px}.diffbar .seg button{height:40px;font-size:14px;font-weight:900}
+#scrSeason .rgrid{height:calc(100% - 112px)}
 </style>
 </head>
 <body>
@@ -600,7 +605,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
         </div>
       </div>
     </div>
-    <div class="tver">Version <span id="verNo">v87</span></div>
+    <div class="tver">Version <span id="verNo">v88</span></div>
   </section>
 
   <section class="scr" id="scrTrack">
@@ -665,6 +670,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
 
   <section class="scr" id="scrSeason">
     <h2 class="mh" id="seHead"></h2>
+    <div class="diffbar"><span>Schwierigkeit</span><div class="seg" id="seDiff"></div></div>
     <div class="rgrid">
       <div class="rpanel"><div class="field"><label>Kalender</label><div class="ccal" id="seCal"></div></div></div>
       <div class="rpanel"><div class="field"><label>Meisterschaftsstand</label><div id="seTbl"></div></div><div id="seBtns"></div></div>
@@ -6742,7 +6748,8 @@ function renderSeason() {
     return '<tr class="' + (r.c.code === me ? 'me' : '') + '"><td class="num">' + (i + 1) + '</td><td class="bar"><i style="background:' + hex(uiCol(Tm)) + '"></i></td><td>' + r.c.name + '</td><td class="pts">' + r.pts + '</td></tr>'; }).join('') + '</table>';
   const avail = CAREER.up.earned - CAREER.up.spent;
   const DN = { easy: 'Leicht', mid: 'Mittel', hard: 'Schwer', pro: 'Profi', leg: 'Legende' };
-  let b = '<div class="field"><label>Schwierigkeit <span>jederzeit änderbar</span></label><div class="seg" id="seDiff">' + Object.keys(DN).map(k => '<button data-v="' + k + '" class="' + (CHP.diff === k ? 'on' : '') + '">' + DN[k] + '</button>').join('') + '</div></div>';
+  $('#seDiff').innerHTML = Object.keys(DN).map(k => '<button data-v="' + k + '" class="' + (CHP.diff === k ? 'on' : '') + '">' + DN[k] + '</button>').join('');
+  let b = '';
   if (CHP.done) b += '<p class="seMsg">' + (CHP.finalPos === 1 ? '🏆 Meister! ' : 'Saison beendet – Platz ' + CHP.finalPos + '. ') + (CHP.endMsg || '') + '</p>';
   if (CHP.ser === 'f1') b += '<button class="mbtn" id="seUp"><span class="mt"><b>Upgrades</b><small>' + avail + ' Punkte verfügbar</small></span></button>';
   if (CHP.done && CHP.ser !== 'kart') b += '<button class="mbtn" id="seTeam"><span class="mt"><b>Team wechseln</b><small>Neues Team und anderen Teamkollegen wählen</small></span></button>';
@@ -6917,7 +6924,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v87'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v88'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
