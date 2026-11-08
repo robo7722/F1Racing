@@ -605,7 +605,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
         </div>
       </div>
     </div>
-    <div class="tver">Version <span id="verNo">v88</span></div>
+    <div class="tver">Version <span id="verNo">v89</span></div>
   </section>
 
   <section class="scr" id="scrTrack">
@@ -6465,7 +6465,14 @@ function mkSlot(tier, team, mate) {
 }
 // F1: benötigter F2-Endplatz je Team (Top-Teams Platz 1, Mittelfeld Platz 2, übrige Platz 3)
 const f1Need = k => ['MER', 'RBR', 'FER', 'MCL'].includes(k) ? 1 : ['WIL', 'RB', 'ALP', 'HAA'].includes(k) ? 2 : 3;
-const teamOpen = k => !(MENU.mode === 'career' && SER === 'f1') || (CAREER && (CAREER.best.f2 || 99) <= f1Need(k));
+const f1Rank = () => CAREER && CAREER.f1Rank;   // { order: Teams nach Konstrukteurswertung der letzten F1-Saison, mine: dein Team }
+const teamOpen = k => {
+  if (!(MENU.mode === 'career' && SER === 'f1')) return true;
+  const R = f1Rank();
+  if (R) { const mine = R.order.indexOf(R.mine), r = R.order.indexOf(k); return r < 0 || r >= mine - 1; }   // höchstens 1 Platz besser als dein Team, sonst beliebig schlechter
+  return CAREER && (CAREER.best.f2 || 99) <= f1Need(k);
+};
+const lockMsg = k => { const R = f1Rank(); return R ? 'Gesperrt · im Vorjahr P' + (R.order.indexOf(k) + 1) + ' (zu stark)' : 'Gesperrt · F2-Platz ' + f1Need(k) + ' nötig'; };
 // ===== Upgrades (F1) =====
 const UPG = [
   { id: 'engine', name: 'Motor', desc: 'Mehr Leistung und Drehmoment', fx: { top: .012, acc: .02 } },
@@ -6559,7 +6566,11 @@ function careerSeasonEnd(myPos) {
   let msg = '';
   if (t === 'kart') { if (myPos <= 3) { if (!CAREER.unlock.f2) msg = 'Formula 2 freigeschaltet!'; CAREER.unlock.f2 = true; } else msg = 'Für die Formula 2 brauchst du einen Platz unter den Top 3.'; }
   if (t === 'f2') { if (myPos <= 3) { if (!CAREER.unlock.f1) msg = 'Formula 1 freigeschaltet!'; CAREER.unlock.f1 = true; msg += (msg ? ' ' : '') + (myPos === 1 ? 'Alle F1-Teams stehen dir offen.' : myPos === 2 ? 'Mittelfeld- und Hinterbänkler-Teams stehen dir offen.' : 'Cadillac, Aston Martin und Audi stehen dir offen.'); } else msg = 'Für die Formula 1 brauchst du einen Platz unter den Top 3.'; }
-  if (t === 'f1') msg = 'F1-Saison beendet – du kannst sie wiederholen, um die letzten Upgrades zu kaufen.';
+  if (t === 'f1') {
+    const order = teamStandings().map(r => r.k), rk = order.indexOf(CHP.team) + 1;
+    CAREER.f1Rank = { order, mine: CHP.team }; CAREER.up = { lv: {}, earned: 0, spent: 0 };
+    msg = TEAMS[CHP.team].name + ' wurde Konstrukteurs-' + rk + '. Die Upgrades am Auto wurden zurückgesetzt. Du kannst die Saison wiederholen oder das Team wechseln (Teams, die höchstens 1 Platz besser waren, oder schlechtere).';
+  }
   CHP.endMsg = msg; saveCar(); saveChamp();
 }
 function champTable(kind) {
@@ -6752,7 +6763,7 @@ function renderSeason() {
   let b = '';
   if (CHP.done) b += '<p class="seMsg">' + (CHP.finalPos === 1 ? '🏆 Meister! ' : 'Saison beendet – Platz ' + CHP.finalPos + '. ') + (CHP.endMsg || '') + '</p>';
   if (CHP.ser === 'f1') b += '<button class="mbtn" id="seUp"><span class="mt"><b>Upgrades</b><small>' + avail + ' Punkte verfügbar</small></span></button>';
-  if (CHP.done && CHP.ser !== 'kart') b += '<button class="mbtn" id="seTeam"><span class="mt"><b>Team wechseln</b><small>Neues Team und anderen Teamkollegen wählen</small></span></button>';
+  if (CHP.done && CHP.ser !== 'kart') b += '<button class="mbtn" id="seTeam"><span class="mt"><b>Team wechseln</b><small>' + (CHP.ser === 'f1' ? 'Höchstens 1 Platz bessere Teams oder schlechtere' : 'Neues Team und anderen Teamkollegen wählen') + '</small></span></button>';
   $('#seBtns').innerHTML = b;
   $$('#seDiff button').forEach(bt => bt.addEventListener('click', () => { CHP.diff = bt.dataset.v; CAREER.diffPref = bt.dataset.v; saveChamp(); saveCar(); $$('#seDiff button').forEach(x => x.classList.toggle('on', x === bt)); }));
   const u = $('#seUp'); if (u) u.addEventListener('click', () => showScreen('upgrade'));
@@ -6777,8 +6788,8 @@ function renderTeams() {
   if (!S.rone && MENU.team && TEAMS[MENU.team] && TEAMS[MENU.team].playerOnly) MENU.team = 'MER';
   $('#teams').innerHTML = Object.keys(TEAMS).filter(k => !TEAMS[k].playerOnly || S.rone).map(k => { const T = TEAMS[k], ds = ALL.filter(c => c.team === k);
     return '<button class="tm" data-team="' + k + '" style="--c1:' + hex(uiCol(T)) + '">' + teamBadge(k) + '<span><b>' + T.name + '</b><small>' + ds.map(c => c.code).join(' · ') + '</small></span></button>'; }).join('');
-  $$('.tm').forEach(b => { const k = b.dataset.team, open = teamOpen(k); b.classList.toggle('locked', !open); if (!open) b.querySelector('small').textContent = 'Gesperrt · F2-Platz ' + f1Need(k) + ' nötig';
-    b.addEventListener('click', () => { if (!teamOpen(k)) { toast('Dafür brauchst du in der F2 mindestens Platz ' + f1Need(k)); return; } MENU.team = k; showroomTeam(MENU.team); renderMenu(); }); });
+  $$('.tm').forEach(b => { const k = b.dataset.team, open = teamOpen(k); b.classList.toggle('locked', !open); if (!open) b.querySelector('small').textContent = lockMsg(k);
+    b.addEventListener('click', () => { if (!teamOpen(k)) { toast(f1Rank() ? 'Dieses Team war im Vorjahr mehr als 1 Platz besser als dein Team' : 'Dafür brauchst du in der F2 mindestens Platz ' + f1Need(k)); return; } MENU.team = k; showroomTeam(MENU.team); renderMenu(); }); });
   MENU.roneShown = !!S.rone;
 }
 function buildMenu() { renderTracks(); buildMenu2(); }
@@ -6924,7 +6935,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v88'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v89'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
