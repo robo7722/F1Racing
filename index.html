@@ -605,7 +605,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
         </div>
       </div>
     </div>
-    <div class="tver">Version <span id="verNo">v90</span></div>
+    <div class="tver">Version <span id="verNo">v92</span></div>
   </section>
 
   <section class="scr" id="scrTrack">
@@ -724,7 +724,6 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
   <div class="ppane on" id="sAudio"><section class="panel" id="setAudio">
     <div class="slider"><span>Musik</span><input type="range" min="0" max="100" step="1" id="volMusic"><b id="volMusicV"></b></div>
     <div class="slider"><span>Motor &amp; Autos</span><input type="range" min="0" max="100" step="1" id="volCar"><b id="volCarV"></b></div>
-    <div class="field"><label>Musiktitel im Rennen <span id="songName"></span></label><div class="chips" id="songChips"></div></div>
     <button class="big alt" id="nextSong">⏭ Nächstes Lied</button>
   </section></div>
   <div class="ppane" id="sGfx"><section class="panel" id="setGfx">
@@ -745,15 +744,15 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
     <p class="hint left">Schaltet das Team RONE Racing mit Robert Nemec in der Teamauswahl frei. Es fährt nur, wenn du es selbst wählst.</p>
     <div class="tog"><span>Nordschleife freischalten</span><button class="sw" data-tog="nos" aria-label="Nordschleife freischalten"></button></div>
     <p class="hint left">Die komplette Nürburgring-Nordschleife (20,8 km) als Zusatzstrecke im schnellen Spiel und Zeitrennen. In der Karriere fährt sie nicht mit.</p>
-    <div class="field" style="margin-top:12px"><label>Credits</label>
-      <p class="hint left">Musik: freetouse.com · Titelmusik: Alegend – Evermore · Rennmusik: Burgundy – All Night, Aylex – Back To Life / Blast / Okay Energy / Glorious, Walen – HEADPHONK (alle freetouse.com)</p>
-      <p class="hint left">Streckendaten: TUM racetrack-database (LGPL-3.0), bacinger/f1-circuits (MIT) · Wahrzeichen-Lage: © OpenStreetMap-Mitwirkende (ODbL)</p></div>
     <button class="big alt danger" id="careerReset" style="margin-top:10px">Karriere zurücksetzen</button>
     <p class="hint left">Löscht Namen, Freischaltungen, Upgrades und die laufende Saison der Karriere.</p>
     <div class="field" style="margin-top:12px"><label>Spielstand sichern <span>automatisch gespeichert</span></label>
       <div class="row2"><button class="big alt" id="saveExp">Exportieren</button><button class="big alt" id="saveImp">Importieren</button></div>
       <textarea id="saveCode" spellcheck="false" placeholder="Exportcode hier einfügen und auf Importieren tippen"></textarea>
       <p class="hint left">Die Karriere wird nach jedem Qualifying, Rennen und Upgrade im Browser gespeichert. Mit dem Exportcode kannst du den Spielstand sichern oder auf ein anderes Gerät übertragen.</p></div>
+    <div class="field" style="margin-top:12px"><label>Credits</label>
+      <p class="hint left">Titelmusik: Alegend – Evermore (freetouse.com) · Rennmusik (alle Titel): <span id="creditSongs"></span></p>
+      <p class="hint left">Streckendaten: TUM racetrack-database (LGPL-3.0), bacinger/f1-circuits (MIT) · Wahrzeichen-Lage: © OpenStreetMap-Mitwirkende (ODbL)</p></div>
   </section></div>
   <button class="big" id="settingsDone">Fertig</button>
 </div></div>
@@ -5629,7 +5628,7 @@ async function loadPlaylist() {
   try { const r = await fetch('music/playlist.json', { cache: 'no-store' }); if (r.ok) { const L = await r.json(); if (Array.isArray(L) && set(L.map(f => /\//.test(f) ? f : 'music/' + f))) return; } } catch (e) {}
   try { const L = JSON.parse(localStorage.getItem('f1rennen.playlist') || 'null'); if (Array.isArray(L)) set(L); } catch (e) {}
 }
-loadPlaylist().then(() => { const el = $('#songChips'); if (el && typeof renderMenu === 'function') try { renderMenu(); } catch (e) {} });
+loadPlaylist().then(() => { const el = $('#creditSongs'); if (el && typeof renderMenu === 'function') try { renderMenu(); } catch (e) {} });
 const RP = [new Audio(), new Audio()]; RP.forEach(a => { a.preload = 'auto'; a.volume = 0; });
 let rpCur = 0, raceIdx = -1;
 let maxMissing = false, maxTry = 0;
@@ -6856,8 +6855,7 @@ function renderMenu() {
   const full = tr.laps;
   $('#lapChips').innerHTML = (tr.extra ? [1, 2, 3, 5] : [3, 5, 10, 20, full]).map(n => '<button data-l="' + n + '" class="' + (n === S.laps ? 'on' : '') + '">' + (n === full && !tr.extra ? n + ' (voll)' : n) + '</button>').join('');
   $$('#lapChips button').forEach(b => b.addEventListener('click', () => { S.laps = +b.dataset.l; save(); renderMenu(); }));
-  $('#songChips').innerHTML = RACE_SONGS.map(sg => '<button disabled style="opacity:.85;cursor:default">' + escH((sg.artist ? sg.artist + ' – ' : '') + sg.name) + '</button>').join('');
-  $('#songName').textContent = '(zufällige Reihenfolge)';
+  $('#creditSongs').textContent = RACE_SONGS.map(sg => (sg.artist ? sg.artist + ' – ' : '') + sg.name).join(' · ');
   for (const k of ['volMusic', 'volCar']) { const v = Math.round((S[k] ?? 0.8) * 100); $('#' + k).value = v; $('#' + k).style.setProperty('--p', v + '%'); $('#' + k + 'V').textContent = v + ' %'; }
   $('#gfxInfo').textContent = { low: 'Ohne Schatten und Nachbearbeitung – für ältere Handys.', high: 'Schatten, Umgebungsverdeckung (AO), Bloom, Sonnenreflexe und Tempo-Effekte. Auf hochauflösenden Displays mit angepasster Renderauflösung und Nachschärfen für flüssige Bildraten.', ultra: 'Wie „Schön“, dazu feinere Umgebungsverdeckung, schärfere Schatten, volle Auflösung, mehr Bäume und Gebäude. Braucht ein starkes Gerät.' }[S.gfx] || '';
   $$('.seg').forEach(seg => seg.querySelectorAll('button').forEach(b => b.classList.toggle('on', S[seg.dataset.key] === b.dataset.v)));
