@@ -599,7 +599,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
         </div>
       </div>
     </div>
-    <div class="tver">♪ Musik: freetouse.com · Version <span id="verNo">v72</span></div>
+    <div class="tver">♪ Musik: freetouse.com · Version <span id="verNo">v73</span></div>
   </section>
 
   <section class="scr" id="scrTrack">
@@ -2043,14 +2043,20 @@ const LIVERY = {
     vec3 col = mix(K, Ti, aaS(p.z + 0.2)); float red = band(p.z, -1.1, -0.2) * aaS(p.y - 0.15) * (1.0 - aaS(p.y - 0.65 + 0.12 * clamp(-0.6 - p.z, 0.0, 1.0))) * aaS(abs(p.x) - 0.15);
     col = mix(col, Ar, red); col = mix(col, K, 1.0 - aaS(p.y - 0.15));
     if (c > 0.5 && c < 1.5) col = K; return col;`,
-  // Cadillac MAC-26: rechte Seite schwarz mit grauem Pixel-Verlauf hinten an Seitenkasten/Motorabdeckung, linke Seite weiß mit schwarzem Pixel-Verlauf; Nase und Frontflügel silbergrau, Heckflügel-Endplatten silber
-  CAD: `vec3 K = ${lc(0x0f0f10)}, W = ${lc(0xf0f0f0)}, G = ${lc(0x8f9399)};
-    float side = aaS(p.x); vec3 col = mix(K, W, side);
-    vec2 cell = floor(vec2(p.z, p.y) / 0.07); float rnd = fract(sin(dot(cell, vec2(12.9898, 78.233))) * 43758.5453);
-    float fadeB = smoothstep(-0.4, -1.8, p.z) * aaS(p.y - 0.4) * (1.0 - side), fadeW = smoothstep(-0.2, -1.6, p.z) * aaS(p.y - 0.4) * side;
-    col = mix(col, G, step(rnd, fadeB)); col = mix(col, mix(G, K, 0.5), step(rnd, fadeW * 0.8));
+  // Cadillac MAC-26 (offizielles Seitenbild, links und rechts gleich): Nase/Frontflügel silber-chrom, Vorderwagen schwarz, Cockpit/Airbox/Motorabdeckung weiß, weißer Schwung im Seitenkasten,
+  // schwarze Pixelstreifen und schwarze Finne am Heck, Heckflügel weiß mit silbernen Endplatten, Unterboden/Diffusor schwarz
+  CAD: `vec3 K = ${lc(0x0d0e10)}, W = ${lc(0xf2f2f2)}, G = ${lc(0xc9ced4)};
+    vec3 col = K;
+    float up = aaS(p.y - 0.43) * (1.0 - aaS(p.z - 0.85));
+    float lowW = (1.0 - aaS(p.z - (0.55 - (0.43 - p.y) * 1.6))) * aaS(p.y - 0.14);
+    col = mix(col, W, max(up, lowW));
+    vec2 cell = floor(vec2(p.z, p.y) / vec2(0.13, 0.06)); float rnd = fract(sin(dot(cell, vec2(12.9898, 78.233))) * 43758.5453);
+    float fade = smoothstep(-0.5, -1.9, p.z) * aaS(p.y - 0.45) * (1.0 - aaS(p.y - 0.92));
+    col = mix(col, K, step(rnd, fade * 0.75));
+    col = mix(col, K, aaS(p.y - 0.9) * (1.0 - aaS(p.z + 0.4)));
+    col = mix(col, K, (1.0 - aaS(p.y - 0.3)) * (1.0 - aaS(p.z + 1.9)));
     col = mix(col, G, aaS(p.z - 2.0) * (1.0 - aaS(p.y - 0.5)));
-    if (c > 0.5 && c < 1.5) col = mix(G, mix(K, W, side), aaS(p.y - 0.4)); if (c > 1.5 && c < 2.5) col = G; return col;`,
+    if (c > 0.5 && c < 1.5) col = mix(G, W, aaS(p.y - 0.4)); if (c > 1.5 && c < 2.5) col = G; return col;`,
 };
 function liveryMat(tk, gloss) { const code = LIVERY[tk]; if (!code) return gloss;
   gloss.onBeforeCompile = sh => {
@@ -6885,7 +6891,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v72'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v73'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
