@@ -599,7 +599,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
         </div>
       </div>
     </div>
-    <div class="tver">♪ Musik: freetouse.com · Version <span id="verNo">v73</span></div>
+    <div class="tver">♪ Musik: freetouse.com · Version <span id="verNo">v74</span></div>
   </section>
 
   <section class="scr" id="scrTrack">
@@ -1924,7 +1924,7 @@ const mkWheelM = C => C ? C.lods.map((L, l) => {
   return { L: v(L.wheelL, hf), R: v(L.wheelR, hf), RL: v(L.rwheelL, hr), RR: v(L.rwheelR, hr) };
 }) : null;
 const WHEELM = mkWheelM(CARM), WHEELM2 = mkWheelM(CARM2);
-const MODELS = { f1: CARM ? { C: CARM, W: WHEELM, helm: [0.79, 0.27], rl: [0.315, -2.335] } : null, f2: CARM2 ? { C: CARM2, W: WHEELM2, helm: [0.80, 0.30], rl: [0.31, -2.4] } : null };
+const MODELS = { f1: CARM ? { C: CARM, W: WHEELM, helm: [0.79, 0.27], rl: [0.315, -2.335] } : null, f2: CARM2 ? { C: CARM2, W: WHEELM2, helm: [0.80, 0.30], rl: [0.31, -2.4], swPos: [0, 0.62, 0.68], cam: [0, 0.80, 0.26, 0.30] } : null };
 const COMPOUNDS = COMPOUNDS_;
 const WMAT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .88, metalness: .05, side: THREE.DoubleSide });
 const MATTE = new THREE.MeshStandardMaterial({ vertexColors: true, map: TEX.carbon, normalMap: TEX.carbonN, normalScale: new THREE.Vector2(.5, .5), roughness: .42, metalness: .35, side: THREE.DoubleSide });
@@ -2486,6 +2486,16 @@ function kartDriver(d, T) {
   g.add(helm);
   return g;
 }
+function kartSteeringWheel(T) {   // rundes Kart-Lenkrad: schwarzer Kranz mit Markierung oben, drei Speichen, flache Nabe
+  const g = new THREE.Group(), rub = new THREE.MeshStandardMaterial({ color: 0x141518, roughness: .75 }), met = new THREE.MeshStandardMaterial({ color: 0x9aa1aa, metalness: .85, roughness: .3 }), acc = new THREE.MeshStandardMaterial({ color: T.acc === 0x16181b ? T.body : T.acc, roughness: .4 });
+  const add = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; g.add(m); return m; };
+  add(new THREE.TorusGeometry(0.188, 0.021, 14, 44), rub);
+  const mk = add(new THREE.TorusGeometry(0.188, 0.0225, 10, 10, 0.34), acc); mk.rotation.z = Math.PI / 2 - 0.17;   // Markierung bei 12 Uhr
+  for (const a of [0, Math.PI, -Math.PI / 2]) { const sp = add(new THREE.BoxGeometry(0.17, 0.026, 0.014), met); sp.position.set(Math.cos(a) * 0.09, Math.sin(a) * 0.09, 0); sp.rotation.z = a; }
+  add(new THREE.CylinderGeometry(0.052, 0.058, 0.03, 28).rotateX(Math.PI / 2), rub);
+  add(new THREE.CylinderGeometry(0.03, 0.03, 0.034, 20).rotateX(Math.PI / 2), met);
+  return g;
+}
 function makeKart(d, T) {
   const K = KART, tk = d.team, g = new THREE.Group(); g.rotation.order = 'YXZ'; kartTex();
   const mat = kartMat(tk, T), mm = (n, mt) => { const m = new THREE.Mesh(K.parts[n], mt); m.castShadow = true; m.receiveShadow = true; return m; };
@@ -2496,8 +2506,10 @@ function makeKart(d, T) {
   const wfl = mm('wfR', wm), wfr = mm('wfL', wm), wrl = mm('wrL', wm), wrr = mm('wrR', wm);
   fl.add(wfl); fr.add(wfr); wrl.position.x = W.rL[0]; wrr.position.x = W.rR[0]; rr.add(wrl, wrr); g.add(fl, fr, rr);
   const drv = kartDriver(d, T); g.add(drv);
+  const swPivot = new THREE.Group(), swSpin = new THREE.Group(), az = new THREE.Vector3(0, 29, -36).normalize(), axx = new THREE.Vector3(-1, 0, 0), ay = new THREE.Vector3().crossVectors(az, axx);
+  swPivot.position.set(0, 0.5005, 0.1235); swPivot.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(axx, ay, az)); swPivot.add(swSpin); swSpin.add(kartSteeringWheel(T)); g.add(swPivot);
   const rl = new THREE.Object3D(), label = carLabel(d, T); label.position.y = 1.35; g.add(label); scene.add(g);
-  return { g, fl, fr, wfl, wfr, rr, label, helm: drv, rl, kart: true, wr: 0.2, cam: [0, 0.72, -0.05, 0.3], camS: 0.72 };
+  return { g, fl, fr, wfl, wfr, rr, label, helm: drv, rl, kart: true, wr: 0.2, swSpin, cam: [0, 0.74, -0.5, 0.3], camS: 0.72 };
 }
 function envAll(o) { o.traverse(m => { if (m.material) (Array.isArray(m.material) ? m.material : [m.material]).forEach(x => { x.userData.env = true; }); }); return o; }   // Autos behalten volle Spiegelungen
 function makeCar(d) { const r = makeCar0(d); envAll(r.g || r); return r; }
@@ -2517,7 +2529,7 @@ function makeCar0(d) {
     const wrl = new THREE.Mesh(W.RL[1], WMAT), wrr = new THREE.Mesh(W.RR[1], WMAT); wrl.position.x = -rw[0]; wrr.position.x = rw[0]; wrl.castShadow = wrr.castShadow = true; rr.add(wrl, wrr);
     
     const label = carLabel(d, T); g.add(label); scene.add(g);
-    return { g, fl, fr, wfl, wfr, rr, wrl, wrr, label, helm: hm, rl, body, matte, halo, tp, lod: 0, comp: 1 };
+    return { g, fl, fr, wfl, wfr, rr, wrl, wrr, label, helm: hm, rl, body, matte, halo, tp, lod: 0, comp: 1, cam: MD.cam };
   }
   const body = new THREE.Mesh(tp.gloss, tp.glossMat), matte = new THREE.Mesh(tp.matte, MATTE);
   body.castShadow = matte.castShadow = true; g.add(body, matte);
@@ -5711,7 +5723,7 @@ function placeOnGrid() {
       lapsDone: -1, lapStart: 0, last: 0, best: 0, lapTimes: [], finished: false, finishTime: 0, finishLaps: 0, grid: j + 1,
       react: 0.05 + Math.random() * 0.15, phase: Math.random() * 6.28, thrS: 0, brkS: 0, slip: 0, slipS: 0, blkPrev: null, ovr: null, lineK: 0.85 + Math.random() * 0.15, idx: p.i, x: p.x, z: p.z, h: p.h, steer: 0, brk: 0, sPrev: modL(s), wallCd: 0, stuckT: 0, wrongT: 0, thr: 0, spin: 0 });
     const comp = c === pl ? 1 : Math.floor(Math.random() * 3);
-    if (c.mesh.road) { } else if (c.mesh.tp) { c.mesh.comp = comp; setLod(c.mesh, 0, true); c.mesh.halo.visible = true; } else { c.mesh.wfl.geometry = WHEEL.f[comp]; c.mesh.wfr.geometry = WHEEL.f[comp]; c.mesh.rr.geometry = WHEEL.r[comp]; }
+    if (c.mesh.road || c.mesh.kart) { } else if (c.mesh.tp) { c.mesh.comp = comp; setLod(c.mesh, 0, true); c.mesh.halo.visible = true; } else { c.mesh.wfl.geometry = WHEEL.f[comp]; c.mesh.wfr.geometry = WHEEL.f[comp]; c.mesh.rr.geometry = WHEEL.r[comp]; }
     c.mesh.g.visible = true; c.mesh.g.position.set(p.x, 0, p.z); c.mesh.g.rotation.y = p.h; c.mesh.label.visible = c !== pl; c.mesh.helm.visible = true;
     cars.push(c);
   });
@@ -6047,7 +6059,7 @@ function updateMeshes(dt) {
     m.g.position.set(c.x, c.ey, c.z); m.g.rotation.set(FLAT ? 0 : -Math.atan(SLOPE[c.idx] * fw), c.h, roll);
     m.fl.rotation.y = m.fr.rotation.y = -c.steer * 0.35;
     c.spin = (c.spin + Math.min((c.v || 0) * dt / (m.wr || 0.36), 0.55)) % (Math.PI * 2);
-    if (m.road && m.swSpin) m.swSpin.rotation.z = -(c.steer || 0) * 1.6;
+    if ((m.road || m.kart) && m.swSpin) m.swSpin.rotation.z = -(c.steer || 0) * 1.6;
     if (m.road) m.brakeMat.emissiveIntensity = running && c.brk > 0.1 ? 4 : 0.15;
     else m.rl.visible = running && c.v > 25 && ((c.thr || 0) < 0.6 || c.brk > 0.1) && ((performance.now() / 110) | 0) % 2 === 0;
     m.wfl.rotation.x = m.wfr.rotation.x = m.rr.rotation.x = c.spin;
@@ -6175,24 +6187,25 @@ function poseArm(a, gx, gy, gz, rz, ex, ey, ez) {
 }
 const ARMS = { f1: null, road: null };
 function armsTick() {
-  const cock = running && S.cam === 2 && !!(pl && pl.mesh), road = !!(pl && pl.mesh && pl.mesh.road), col = pl && TEAMS[pl.team] ? uiCol(TEAMS[pl.team]) : 0xffffff;
+  const cock = running && S.cam === 2 && !!(pl && pl.mesh), road = !!(pl && pl.mesh && (pl.mesh.road || pl.mesh.kart)), col = pl && TEAMS[pl.team] ? uiCol(TEAMS[pl.team]) : 0xffffff;
   if (ARMS.f1) ARMS.f1.g.visible = cock && !road; if (ARMS.road) ARMS.road.g.visible = cock && road;
   if (!cock) return;
   const steer = pl.steer || 0;
   if (!road) {   // F1: Lenkrad dreht max. ~70°, die Hände bleiben an den Griffen
     const A = ARMS.f1 ||= makeArms(true, 0.033); A.suit.color.setHex(col);
-    if (A.g.parent !== pl.mesh.g) { pl.mesh.g.add(A.g); A.g.position.copy(SW.g.position); }
+    if (A.g.parent !== pl.mesh.g) pl.mesh.g.add(A.g); A.g.position.copy(SW.g.position);
     A.g.rotation.set(0.45, Math.PI, 0); const ang = -steer * 1.25, c = Math.cos(ang), s2 = Math.sin(ang);
     for (const a of A.side) { const x0 = a.sx * 0.2, y0 = -0.01; poseArm(a, x0 * c - y0 * s2, x0 * s2 + y0 * c, 0.02, ang, a.sx * 0.34, -0.33, 0.42); }
   } else if (pl.mesh.swSpin && pl.mesh.swSpin.parent) {   // Roadster (rundes Lenkrad): Hände auf 9 und 3 Uhr, wandern mit dem Einschlag am Kranz entlang
-    const A = ARMS.road ||= makeArms(false, 0.023, true), piv = pl.mesh.swSpin.parent; A.suit.color.setHex(0x2b3442);   // Straßenauto: Jackenärmel statt Rennanzug
+    const A = ARMS.road ||= makeArms(false, 0.023, true), piv = pl.mesh.swSpin.parent; A.suit.color.setHex(pl.mesh.kart ? col : 0x2b3442);   // Straßenauto: Jackenärmel statt Rennanzug
     if (A.g.parent !== piv) piv.add(A.g);
     const spin = -steer * 1.6, R = 0.188;
     for (const a of A.side) { const ang = (a.sx < 0 ? Math.PI : 0) + spin; poseArm(a, Math.cos(ang) * R, Math.sin(ang) * R, 0, ang - (a.sx < 0 ? Math.PI : 0), a.sx * 0.27, -0.27, 0.38); }
   }
 }
 function drawWheel(dt) {
-  SW.g.visible = running && S.cam === 2 && !pl.mesh.road;   // Roadster hat sein eigenes Lenkrad im Modell
+  SW.g.visible = running && S.cam === 2 && !pl.mesh.road && !pl.mesh.kart;   // Roadster und Kart haben ihr eigenes rundes Lenkrad am Auto
+  if (pl.mesh.tp) SW.g.position.set(...(pl.mesh.tp.M.swPos || [0, 0.56, 1.0]));   // Lenkradposition je Modell (F2 sitzt weiter hinten und tiefer)
   document.body.classList.toggle('cockpit', running && S.cam === 2);
   if (running && S.cam === 2 && pl.mesh.road) roadDashTick(dt);
   armsTick();
@@ -6782,7 +6795,7 @@ function buildMenu2() {
 function renderDrivers() {
   const T = TEAMS[MENU.team], ds = ALL.filter(c => c.team === MENU.team), c1 = hex(uiCol(T)), c2 = hex(T.acc), c3 = contrast(uiCol(T));
   const mx = Math.max(...ALL.map(c => c.skill)), mn = Math.min(...ALL.map(c => c.skill));
-  $('#drvHead').innerHTML = (MENU.mode === 'career' ? 'Teamkollegen wählen · ' : '') + teamBadge(MENU.team).replace('<svg ', '<svg style="width:30px;height:30px;vertical-align:-7px;margin-right:8px" ') + T.name;
+  $('#drvHead').innerHTML = (MENU.mode === 'career' ? 'Teamkollegen wählen (der andere Fahrer wird durch dich ersetzt) · ' : '') + teamBadge(MENU.team).replace('<svg ', '<svg style="width:30px;height:30px;vertical-align:-7px;margin-right:8px" ') + T.name;
   $('#drivers').innerHTML = ds.map((c, n) => { const pace = 55 + 45 * (c.skill - mn) / (mx - mn || 1), team = 55 + 45 * (T.skill - 0.97) / 0.03;
     return '<button class="dcard' + (c.code === S.driver ? ' on' : '') + '" data-drv="' + c.code + '" style="--c1:' + c1 + ';--c2:' + c2 + ';--c3:' + c3 + '"><span class="num">' + c.num + '</span><div class="cd">' + c.code + ' · #' + c.num + '</div><div class="nm">' + c.name.replace(' ', '<br>') + '</div>'
       + '<div class="meta"><i style="background:' + hex(c.helmet) + '"></i>Helm · ' + T.name + '</div>'
@@ -6891,7 +6904,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v73'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v74'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
