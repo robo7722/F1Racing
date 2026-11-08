@@ -605,7 +605,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
         </div>
       </div>
     </div>
-    <div class="tver">Version <span id="verNo">0.93</span></div>
+    <div class="tver">Version <span id="verNo">0.94</span></div>
   </section>
 
   <section class="scr" id="scrTrack">
@@ -671,6 +671,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
   <section class="scr" id="scrSeason">
     <h2 class="mh" id="seHead"></h2>
     <div class="diffbar"><span>Schwierigkeit</span><div class="seg" id="seDiff"></div></div>
+    <div class="diffbar"><span>Rennlänge</span><div class="seg" id="seLen"></div></div>
     <div class="rgrid">
       <div class="rpanel"><div class="field"><label>Kalender</label><div class="ccal" id="seCal"></div></div></div>
       <div class="rpanel"><div class="field"><label>Meisterschaftsstand</label><div id="seTbl"></div></div><div id="seBtns"></div></div>
@@ -2092,7 +2093,7 @@ function teamTemplate(tk) {
   if (MD) {
     const T = T0, isF2 = T.kind === 'f2', cB = col(T.body), cA = col(T.acc), cT = col(T.tip), cLow = col(T.low ?? T.body), cC = col(0x4a4f57), cD = col(0x16181b);
     const pc = (k, x, y, z, o) => isF2 && k === 7 ? o.copy(cD) : isF2 && k === 0 && (z > 2.55 || (z > 2.15 && y < 0.36) || (z < -1.9 && y > 0.6)) ? o.copy(z > 2.55 ? cT : cA) : o.copy(k === 1 ? cA : k === 2 ? cT : k === 3 ? cC : k === 4 ? cD : (T.low !== undefined && y < T.split ? cLow : cB));
-    const gloss = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .3, metalness: T.metal * 0.7, clearcoat: 1, clearcoatRoughness: .06, envMapIntensity: 1.25, side: THREE.DoubleSide });
+    const gloss = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: isF2 ? .38 : .3, metalness: isF2 ? Math.min(.08, T.metal * 0.7) : T.metal * 0.7, clearcoat: isF2 ? .7 : 1, clearcoatRoughness: isF2 ? .12 : .06, envMapIntensity: isF2 ? .6 : 1.25, side: THREE.DoubleSide });   // F2: matter, kaum Metall – spiegelte sonst das Gras grün
     const haloMat = gloss.clone();   // Halo in der TV-Kamera: einfarbig in der Fahrzeugfarbe, ohne Lackierungs-Verlauf (Material vor dem Livery-Shader kopieren)
     return (TPL[tk] = { model: true, M: MD, lods: MD.C.lods.map(L => ({ gloss: paintGeo(L.gloss, pc), matte: paintGeo(L.matte, pc) })), halo: paintGeo(MD.C.halo, pc), haloFlat: paintGeo(MD.C.halo, (k, x, y, z, o) => o.copy(cB)), haloMat, glossMat: liveryMat(tk, gloss) });
   }
@@ -6544,7 +6545,9 @@ function setupCareerRace(laps) {
   if (TRK !== TRACKS[S.track]) { loading(true); setTimeout(() => { buildTrack(S.track); loading(false); go(); }, 30); } else go();
 }
 function careerStartQuali() { if (!CHP || CHP.round >= CAL.length) return; QL = true; CHP.phase = 'quali'; setupCareerRace(1); }
-function careerStartRace() { if (!CHP || CHP.round >= CAL.length) return; QL = false; setupCareerRace(TRACKS[CAL[CHP.round][0]].kartLaps || CHP.laps); }
+const LEN_LAPS = { s: 3, m: 5, l: 8 }, LEN_NAME = { s: 'Kurz', m: 'Mittel', l: 'Lang' };   // Rennlänge in der Karriere: wählbar auf dem Saison-Bildschirm
+const champLen = () => CHP && LEN_LAPS[CHP.len] ? CHP.len : (CHP && CHP.ser === 'kart' ? 'l' : 's');   // Standard wie bisher: Kart 8, F2/F1 3 Runden
+function careerStartRace() { if (!CHP || CHP.round >= CAL.length) return; QL = false; setupCareerRace(LEN_LAPS[champLen()]); }
 const QF = 1.04;   // KI-Rundenzeit im Qualifying = Profilzeit / Fahrerform × QF (Beschleunigungsverluste, Fahrfehler)
 function qualiResults() {
   resultsShown = true; QL = false;
@@ -6736,7 +6739,7 @@ function renderCareer() {
     const bestTxt = CAREER.best[t] ? 'Beste Saison: Platz ' + CAREER.best[t] : '';
     if (lk[t]) return t === 'f2' ? 'Gesperrt – Top 3 in der Kart-Saison' : 'Gesperrt – Top 3 in der F2-Saison';
     if (c && c.ser === t) return c.done ? 'Saison beendet: Platz ' + c.finalPos : 'Rennen ' + (c.round + 1) + '/' + calFor(t).length + ' · ' + (c.pts[c.driver] || 0) + ' Pkt';
-    return (t === 'kart' ? 'Neue Saison starten' : 'Team wählen & Saison starten') + (bestTxt ? ' · ' + bestTxt : '');
+    return (t === 'kart' && CAREER.slot.kart ? 'Neue Saison starten' : 'Team wählen & Saison starten') + (bestTxt ? ' · ' + bestTxt : '');
   };
   const sub = { kart: '3 Rennen · Genk, Wackersdorf, Silverstone', f2: calFor('f2').length + ' Rennen · Kalender 2026', f1: calFor('f1').length + ' Rennen · Upgrades' };
   $('#carCards').innerHTML = ['kart', 'f2', 'f1'].map(t => '<button class="tcard scard' + (lk[t] ? ' locked' : '') + '" data-tier="' + t + '" style="--tc:' + TIER_COL[t] + '"><div class="sbig">' + (t === 'kart' ? 'Karts' : t === 'f2' ? 'F2' : 'F1') + (lk[t] ? ' 🔒' : '') + '</div><div class="tn">' + (t === 'kart' ? 'Kart-Meisterschaft' : t === 'f2' ? 'Formula 2' : 'Formula 1') + '</div><div class="tf">' + sub[t] + '</div><div class="cst">' + txt(t) + '</div></button>').join('');
@@ -6746,8 +6749,8 @@ function careerEnter(tier) {
   if (tier !== 'kart' && !CAREER.unlock[tier]) { toast(tier === 'f2' ? 'Gewinne einen Platz unter den Top 3 in der Kart-Saison' : 'Beende die F2-Saison unter den Top 3'); return; }
   const c = loadChamp();
   if (c && c.ser === tier) { CHP = c; return careerOpenSeason(); }
-  if (tier === 'kart' || CAREER.slot[tier]) return startSeason(tier);
-  careerPickTeam(tier);
+  if (CAREER.slot[tier]) return startSeason(tier);
+  careerPickTeam(tier);   // auch im Kart: erst das Team wählen
 }
 function careerPickTeam(tier) {
   MENU.pick = tier; setMode('career'); SERIES._dirty = true; setSeries(tier, true);
@@ -6780,11 +6783,13 @@ function renderSeason() {
   const avail = CAREER.up.earned - CAREER.up.spent;
   const DN = { easy: 'Leicht', mid: 'Mittel', hard: 'Schwer', pro: 'Profi', leg: 'Legende' };
   $('#seDiff').innerHTML = Object.keys(DN).map(k => '<button data-v="' + k + '" class="' + (CHP.diff === k ? 'on' : '') + '">' + DN[k] + '</button>').join('');
+  $('#seLen').innerHTML = Object.keys(LEN_LAPS).map(k => '<button data-v="' + k + '" class="' + (champLen() === k ? 'on' : '') + '">' + LEN_NAME[k] + ' · ' + LEN_LAPS[k] + ' Rd.</button>').join('');
   let b = '';
   if (CHP.done) b += '<p class="seMsg">' + (CHP.finalPos === 1 ? '🏆 Meister! ' : 'Saison beendet – Platz ' + CHP.finalPos + '. ') + (CHP.endMsg || '') + '</p>';
   if (CHP.ser === 'f1') b += '<button class="mbtn" id="seUp"><span class="mt"><b>Upgrades</b><small>' + avail + ' Punkte verfügbar</small></span></button>';
   if (CHP.done && CHP.ser !== 'kart') b += '<button class="mbtn" id="seTeam"><span class="mt"><b>Team wechseln</b><small>' + (CHP.ser === 'f1' ? 'Höchstens 1 Platz bessere Teams oder schlechtere' : 'Neues Team und anderen Teamkollegen wählen') + '</small></span></button>';
   $('#seBtns').innerHTML = b;
+  $$('#seLen button').forEach(bt => bt.addEventListener('click', () => { CHP.len = bt.dataset.v; saveChamp(); $$('#seLen button').forEach(x => x.classList.toggle('on', x === bt)); }));
   $$('#seDiff button').forEach(bt => bt.addEventListener('click', () => { CHP.diff = bt.dataset.v; CAREER.diffPref = bt.dataset.v; saveChamp(); saveCar(); $$('#seDiff button').forEach(x => x.classList.toggle('on', x === bt)); }));
   const u = $('#seUp'); if (u) u.addEventListener('click', () => showScreen('upgrade'));
   const t2 = $('#seTeam'); if (t2) t2.addEventListener('click', () => { const tier = CHP.ser; delete CAREER.slot[tier]; saveCar(); CHP = null; try { localStorage.removeItem('f1champ'); } catch (e) {} careerPickTeam(tier); });
@@ -6954,7 +6959,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '0.93'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '0.94'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -7048,8 +7053,7 @@ function frame(now) {
   if (!window.__norender) { if (SHOW.on && !running && !$('#menu').classList.contains('hidden')) { showroomFrame(dt); const bo = BAKE.u.bakeOn.value; BAKE.u.bakeOn.value = 0; renderer.render(SHOW.scene, SHOW.cam); BAKE.u.bakeOn.value = bo; } else if (composer) { syncAoCam(); composer.render(dt); } else renderer.render(scene, camera); }
 }
 applyGfx();
-buildTrack(TRACKS[S.track] && (!TRACKS[S.track].extra || S.nos) && !TRACKS[S.track].kartOnly ? S.track : (S.track = 'monza'));
-placeOnGrid(); buildMenu(); renderMenu();
+buildTrack(TRACKS[S.track] && (!TRACKS[S.track].extra || S.nos) && !TRACKS[S.track].kartOnly ? S.track : (S.track = 'monza'));placeOnGrid(); buildMenu(); renderMenu();
 loading(false); $('#menu').classList.remove('hidden'); showScreen('title');
 window.__scene = () => scene; window.__cam = () => camera; window.__perf = (k = 20) => { const was = paused; paused = false; renderer.info.autoReset = false; renderer.info.reset(); let t = performance.now(); const t0 = t; for (let i = 0; i < k; i++) frame(t += 40); const gl = renderer.getContext(); gl.finish(); const ms = (performance.now() - t0) / k, r = renderer.info.render; const o = { calls: Math.round(r.calls / k), tris: Math.round(r.triangles / k), ms: +ms.toFixed(2), pr: renderer.getPixelRatio() }; renderer.info.autoReset = true; paused = was; return o; };   /* Test: Zeichenaufrufe/Bild und Zeit pro Bild (CPU+GPU, mit gl.finish) */
 // Testhilfen: Menü per Code bedienen (Strecke bauen, Rennen starten, feste Kamera)
