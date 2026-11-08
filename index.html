@@ -599,7 +599,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
         </div>
       </div>
     </div>
-    <div class="tver">♪ Musik: freetouse.com · Version <span id="verNo">v79</span></div>
+    <div class="tver">♪ Musik: freetouse.com · Version <span id="verNo">v81</span></div>
   </section>
 
   <section class="scr" id="scrTrack">
@@ -1927,6 +1927,7 @@ const WHEELM = mkWheelM(CARM), WHEELM2 = mkWheelM(CARM2);
 const MODELS = { f1: CARM ? { C: CARM, W: WHEELM, helm: [0.79, 0.18], rl: [0.315, -2.335], swPos: [0, 0.62, 0.68], cam: [0, 0.80, 0.26, 0.30], tv: [0, 1.04, 0.02, 2.4] } : null, f2: CARM2 ? { C: CARM2, W: WHEELM2, helm: [0.80, 0.21], rl: [0.31, -2.4], swPos: [0, 0.62, 0.68], cam: [0, 0.80, 0.26, 0.30], tv: [0, 1.04, 0.02, 2.4] } : null };
 const COMPOUNDS = COMPOUNDS_;
 const WMAT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .88, metalness: .05, side: THREE.DoubleSide });
+const MIRMAT = new THREE.MeshStandardMaterial({ color: 0xdfe6ee, metalness: 1, roughness: 0.05, envMapIntensity: 1.7, side: THREE.DoubleSide });
 const MATTE = new THREE.MeshStandardMaterial({ vertexColors: true, map: TEX.carbon, normalMap: TEX.carbonN, normalScale: new THREE.Vector2(.5, .5), roughness: .42, metalness: .35, side: THREE.DoubleSide });
 const col = h => new THREE.Color(h);
 function wheelGeo(w, comp) {
@@ -2520,6 +2521,7 @@ function makeCar0(d) {
     const MD = tp.M, L = tp.lods[0], W = MD.W[0], fw = MD.C.fw;
     const body = new THREE.Mesh(L.gloss, tp.glossMat), matte = new THREE.Mesh(L.matte, MATTE), halo = new THREE.Mesh(tp.halo, tp.glossMat);
     for (const m of [body, matte, halo]) { m.castShadow = true; g.add(m); }
+    if (MD.C.lods[0].mirror) g.add(new THREE.Mesh(MD.C.lods[0].mirror, MIRMAT));   // Spiegelglas: verspiegelt die Umgebung (Skybox) statt Carbon
     const helm = mergeParts([[new THREE.SphereGeometry(0.15, 32, 24).scale(1, 0.97, 1.1).translate(0, MD.helm[0], MD.helm[1]), col(d.helmet)], [new THREE.SphereGeometry(0.1512, 32, 8, 0, Math.PI * 2, 0, 0.5).scale(1, 0.97, 1.1).translate(0, MD.helm[0], MD.helm[1]), col(T.acc)], [new THREE.SphereGeometry(0.1513, 32, 4, 0, Math.PI * 2, 0.62, 0.1).scale(1, 0.97, 1.1).translate(0, MD.helm[0], MD.helm[1]), col(T.acc)], [new THREE.SphereGeometry(0.1521, 24, 8, Math.PI / 2 - 0.95, 1.9, 1.22, 0.4).scale(1, 0.97, 1.1).translate(0, MD.helm[0], MD.helm[1]), col(0x0a0c10)]]);
     const hm = new THREE.Mesh(helm, HELMAT); hm.castShadow = true; g.add(hm);
     const rl = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.045, 0.02), RLMAT); rl.position.set(0, MD.rl[0], MD.rl[1]); g.add(rl); // Regenlicht unten am Heck (nicht am Auspuff)
@@ -6249,7 +6251,7 @@ let camTY = 0, camH = 0, orbitT = 0, camK = 0, camAcc = 0, camLat = 0, camRoll =
 function toggleCam() { S.cam = (S.cam + 1) % (pl && pl.mesh && pl.mesh.tv ? 4 : 3); save(); }   // 0 Verfolger, 1 Hubschrauber, 2 Helm/Cockpit, 3 TV-Kamera über dem Halo (nur F1/F2)
 function updateCamera(dt) {
   let tx, tz;
-  { const wn = running && (S.cam === 2 || S.cam === 3) ? 0.2 : 0.8; if (camera.near !== wn) { camera.near = wn; camera.updateProjectionMatrix(); } }   /* größere Nahgrenze = viel genauerer Tiefenpuffer in der Ferne (kein Flimmern, keine falsche Reihenfolge) */
+  { const wn = running && S.cam === 3 ? 0.08 : running && S.cam === 2 ? 0.2 : 0.8; if (camera.near !== wn) { camera.near = wn; camera.updateProjectionMatrix(); } }   /* größere Nahgrenze = viel genauerer Tiefenpuffer in der Ferne (kein Flimmern, keine falsche Reihenfolge) */
   if (!running) {
     orbitT += dt; const s0 = modL(orbitT * 8 + 220), c = trackAt(s0, 0), ce = FLAT ? 0 : ELEV[c.i]; tx = c.x; tz = c.z; camTY = ce;
     const gd = Math.min(Math.abs(modL(s0 + 200) - 100), 400), lift = 3.2 * clamp(1 - (gd - 100) / 80, 0, 1);   // über der Startaufstellung etwas höher
@@ -6283,15 +6285,16 @@ function updateCamera(dt) {
     else if (S.cam === 1) { camera.position.set(p.x - fx * 12, 4.4 - camPit * 3 + ey - sl * 12, p.z - fz * 12); camera.lookAt(p.x + fx * 4, 0.3 + ey + sl * 4, p.z + fz * 4); }
     else { // Helmkamera: Kopf bewegt sich leicht relativ zum Auto (Fliehkraft, Bremsen, Vibration)
       const m = p.mesh.g;
-      if (sh > 0 && !paused) { m.position.x += (Math.random() - .5) * sh * 0.5; m.position.y += (Math.random() - .5) * sh * 0.5; } // Auto (und damit Lenkrad) wackelt
+      const st = S.cam === 3;   // TV-Kamera: fest am Auto montiert – kein Kopfwackeln, keine Vibration, kein Umschauen
+      if (sh > 0 && !paused && !st) { m.position.x += (Math.random() - .5) * sh * 0.5; m.position.y += (Math.random() - .5) * sh * 0.5; } // Auto (und damit Lenkrad) wackelt
       m.updateMatrixWorld();
       const latA = yawRate * p.v, k = Math.min(1, dt * 6), k2 = Math.min(1, dt * 4), tt = performance.now() / 1000;
       HEAD.x += (clamp(latA * 0.0018, -0.055, 0.055) - HEAD.x) * k; HEAD.r += (clamp(-latA * 0.0012, -0.045, 0.045) - HEAD.r) * k2;
       HEAD.z += (clamp(-camAcc * 0.0011, -0.03, 0.05) - HEAD.z) * k; HEAD.p += (clamp(-camAcc * 0.0012, -0.03, 0.05) - HEAD.p) * k2;
       const vib = Math.min(1, p.v / 50), bob = (Math.sin(tt * 2.1) * 0.004 + Math.sin(tt * 13.7) * 0.0012 * vib) * (paused ? 0 : 1), sway = Math.sin(tt * 1.3) * 0.003;
       const cp = S.cam === 3 && p.mesh.tv ? p.mesh.tv : (p.mesh.cam || [0, 0.9, 0.36]);
-      camera.position.set(cp[0] + HEAD.x + sway, cp[1] + bob - Math.abs(HEAD.z) * 0.15, cp[2] + HEAD.z); m.localToWorld(camera.position);
-      _ht.set(cp[0] + HEAD.x * 0.3 + sway * 0.5, cp[1] - (cp[3] ?? 0.4) - HEAD.p * 30 + bob * 0.5, 30); m.localToWorld(_ht); camera.up.set(0, 1, 0); camera.lookAt(_ht); camera.rotateZ(HEAD.r); if (camOrb || camPit) { camera.rotateY(-camOrb); camera.rotateX(-camPit * 0.45); }   // Cockpit: rechter Stick = Umschauen
+      if (st) camera.position.set(cp[0], cp[1], cp[2]); else camera.position.set(cp[0] + HEAD.x + sway, cp[1] + bob - Math.abs(HEAD.z) * 0.15, cp[2] + HEAD.z); m.localToWorld(camera.position);
+      if (st) _ht.set(cp[0], cp[1] - (cp[3] ?? 0.4), 30); else _ht.set(cp[0] + HEAD.x * 0.3 + sway * 0.5, cp[1] - (cp[3] ?? 0.4) - HEAD.p * 30 + bob * 0.5, 30); m.localToWorld(_ht); camera.up.set(0, 1, 0); camera.lookAt(_ht); if (!st) camera.rotateZ(HEAD.r); if (!st && (camOrb || camPit)) { camera.rotateY(-camOrb); camera.rotateX(-camPit * 0.45); }   // Cockpit: rechter Stick = Umschauen
     }
     if (sh > 0 && !paused && S.cam !== 2 && S.cam !== 3) { camera.position.x += (Math.random() - .5) * sh; camera.position.y += (Math.random() - .5) * sh; }
     { const on = running && isTouch && effCtrl === 'tilt' && S.level !== false, tg = on ? clamp(tiltAngle - tiltZero, -40, 40) * Math.PI / 180 : 0; levelR += (tg - levelR) * Math.min(1, dt * 12); if (Math.abs(levelR) > 1e-4) camera.rotateZ(-levelR); }   // Neigen: Bild dreht gegen, Horizont bleibt waagerecht
@@ -6299,6 +6302,7 @@ function updateCamera(dt) {
     camera.fov += (fov - camera.fov) * Math.min(1, dt * 2.5); camera.updateProjectionMatrix();
     for (const c of ais) { const d2 = (c.x - camera.position.x) ** 2 + (c.z - camera.position.z) ** 2; c.mesh.label.visible = d2 > 14 * 14 && d2 < 160 * 160; }
     pl.mesh.helm.visible = S.cam !== 2; if (pl.mesh.halo) pl.mesh.halo.visible = S.cam !== 2;
+    if (pl.mesh.tp) pl.mesh.helm.position.set(0, S.cam === 3 ? -0.03 : 0, S.cam === 3 ? 0.06 : 0);   // TV-Kamera: Helm leicht nach vorn/unten versetzt – bleibt sichtbar, ohne an der Kamera anzuschneiden
     pl.mesh.label.visible = false;
   }
 
@@ -6905,7 +6909,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v79'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v81'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
