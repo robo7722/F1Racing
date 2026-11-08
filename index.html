@@ -599,7 +599,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
         </div>
       </div>
     </div>
-    <div class="tver">♪ Musik: freetouse.com · Version <span id="verNo">v77</span></div>
+    <div class="tver">♪ Musik: freetouse.com · Version <span id="verNo">v78</span></div>
   </section>
 
   <section class="scr" id="scrTrack">
@@ -879,17 +879,17 @@ const F2_DRIVERS = [
   ['VAR', 'Nico Varrone', 22, 'F2_VAR', 0x8ec8f0, 'VAR'], ['VIL', 'Rafael Villagómez', 23, 'F2_VAR', 0x1c8c3c, 'VAR'],
   ['VAN', 'Laurens van Hoepen', 24, 'F2_TRI', 0xf0f0f0, 'TRI'], ['BEN', 'John Bennett', 25, 'F2_TRI', 0x1d3a9e, 'TRI'],
 ];
-const KART_TEAMS = {
+const KART_TEAMS = {   // alle Karts gleich schnell (gleicher Skill, keine Fahrerboni)
   K_NOV: { kind: 'kart', name: 'Nova Kart Team',   body: 0xe10600, pod: 0xe10600, acc: 0xf0f0f0, tip: 0xf0f0f0, metal: .2, skill: 0.980 },
-  K_APX: { kind: 'kart', name: 'Apex Racing',      body: 0x1456b8, pod: 0x1456b8, acc: 0xf0f0f0, tip: 0xf0f0f0, metal: .2, skill: 0.985 },
-  K_BLZ: { kind: 'kart', name: 'Blitz Kart',       body: 0xffc400, pod: 0xffc400, acc: 0x16181b, tip: 0x16181b, metal: .2, skill: 0.978 },
-  K_CRS: { kind: 'kart', name: 'Crest Motorsport', body: 0x1c9a4a, pod: 0x1c9a4a, acc: 0xf0f0f0, tip: 0xf0f0f0, metal: .2, skill: 0.975 },
-  K_DRG: { kind: 'kart', name: 'Drago Corse',      body: 0xff6a00, pod: 0xff6a00, acc: 0x16181b, tip: 0x16181b, metal: .2, skill: 0.972 },
-  K_ECL: { kind: 'kart', name: 'Eclipse Karting',  body: 0x2a2d33, pod: 0x2a2d33, acc: 0xb7bcc2, tip: 0xb7bcc2, metal: .3, skill: 0.970 },
-  K_FUS: { kind: 'kart', name: 'Fusion Team',      body: 0x8a2be2, pod: 0x8a2be2, acc: 0xf0f0f0, tip: 0xf0f0f0, metal: .2, skill: 0.968 },
-  K_GRF: { kind: 'kart', name: 'Griffin Racing',   body: 0x00a3a0, pod: 0x00a3a0, acc: 0x16181b, tip: 0x16181b, metal: .2, skill: 0.966 },
-  K_HZN: { kind: 'kart', name: 'Horizon Kart',     body: 0xe0007a, pod: 0xe0007a, acc: 0xf0f0f0, tip: 0xf0f0f0, metal: .2, skill: 0.964 },
-  K_ION: { kind: 'kart', name: 'Ion Karting',      body: 0xdfe3e8, pod: 0xdfe3e8, acc: 0x1456b8, tip: 0x1456b8, metal: .3, skill: 0.962 },
+  K_APX: { kind: 'kart', name: 'Apex Racing',      body: 0x1456b8, pod: 0x1456b8, acc: 0xf0f0f0, tip: 0xf0f0f0, metal: .2, skill: 0.980 },
+  K_BLZ: { kind: 'kart', name: 'Blitz Kart',       body: 0xffc400, pod: 0xffc400, acc: 0x16181b, tip: 0x16181b, metal: .2, skill: 0.980 },
+  K_CRS: { kind: 'kart', name: 'Crest Motorsport', body: 0x1c9a4a, pod: 0x1c9a4a, acc: 0xf0f0f0, tip: 0xf0f0f0, metal: .2, skill: 0.980 },
+  K_DRG: { kind: 'kart', name: 'Drago Corse',      body: 0xff6a00, pod: 0xff6a00, acc: 0x16181b, tip: 0x16181b, metal: .2, skill: 0.980 },
+  K_ECL: { kind: 'kart', name: 'Eclipse Karting',  body: 0x2a2d33, pod: 0x2a2d33, acc: 0xb7bcc2, tip: 0xb7bcc2, metal: .3, skill: 0.980 },
+  K_FUS: { kind: 'kart', name: 'Fusion Team',      body: 0x8a2be2, pod: 0x8a2be2, acc: 0xf0f0f0, tip: 0xf0f0f0, metal: .2, skill: 0.980 },
+  K_GRF: { kind: 'kart', name: 'Griffin Racing',   body: 0x00a3a0, pod: 0x00a3a0, acc: 0x16181b, tip: 0x16181b, metal: .2, skill: 0.980 },
+  K_HZN: { kind: 'kart', name: 'Horizon Kart',     body: 0xe0007a, pod: 0xe0007a, acc: 0xf0f0f0, tip: 0xf0f0f0, metal: .2, skill: 0.980 },
+  K_ION: { kind: 'kart', name: 'Ion Karting',      body: 0xdfe3e8, pod: 0xdfe3e8, acc: 0x1456b8, tip: 0x1456b8, metal: .3, skill: 0.980 },
 };
 const KART_DRIVERS = [
   ['MLE', 'Mika Lehmann', 7, 'K_NOV', 0xf0f0f0], ['JWE', 'Jonas Weber', 21, 'K_NOV', 0xe10600],
@@ -6905,7 +6905,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v77'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v78'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
