@@ -599,7 +599,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
         </div>
       </div>
     </div>
-    <div class="tver">Version <span id="verNo">v85</span></div>
+    <div class="tver">Version <span id="verNo">v86</span></div>
   </section>
 
   <section class="scr" id="scrTrack">
@@ -6498,7 +6498,7 @@ function startSeason(tier) {
   setMode('career'); SERIES._dirty = true; setSeries(tier, true);
   const pc = ALL.find(c => c.code === CAREER.slot[tier].code) || ALL[0]; S.driver = pc.code; pl = pc;
   CAL = calFor(tier);
-  CHP = { v: 2, career: true, ser: tier, round: 0, team: pc.team, driver: pc.code, diff: tier === 'kart' ? 'mid' : 'hard', laps: SERIES[tier].laps, autogas: !!S.autogas, assist: !!S.assist, line: S.line || 'off', pts: {}, races: [], phase: 'quali', grid: null, qpos: 0, quick: { laps: S.laps, grid: S.grid } };
+  CHP = { v: 2, career: true, ser: tier, round: 0, team: pc.team, driver: pc.code, diff: CAREER.diffPref || (tier === 'kart' ? 'mid' : 'hard'), laps: SERIES[tier].laps, autogas: !!S.autogas, assist: !!S.assist, line: S.line || 'off', pts: {}, races: [], phase: 'quali', grid: null, qpos: 0, quick: { laps: S.laps, grid: S.grid } };
   saveChamp(); careerOpenSeason();
 }
 function careerOpenSeason() {
@@ -6740,11 +6740,13 @@ function renderSeason() {
   $('#seTbl').innerHTML = '<table class="stbl"><tr><th>Pos</th><th></th><th>Fahrer</th><th style="text-align:right">Pkt</th></tr>' + rows.map(r => { const i = st.indexOf(r), Tm = TEAMS[r.c.team];
     return '<tr class="' + (r.c.code === me ? 'me' : '') + '"><td class="num">' + (i + 1) + '</td><td class="bar"><i style="background:' + hex(uiCol(Tm)) + '"></i></td><td>' + r.c.name + '</td><td class="pts">' + r.pts + '</td></tr>'; }).join('') + '</table>';
   const avail = CAREER.up.earned - CAREER.up.spent;
-  let b = '';
+  const DN = { easy: 'Leicht', mid: 'Mittel', hard: 'Schwer', pro: 'Profi', leg: 'Legende' };
+  let b = '<div class="field"><label>Schwierigkeit <span>jederzeit änderbar</span></label><div class="seg" id="seDiff">' + Object.keys(DN).map(k => '<button data-v="' + k + '" class="' + (CHP.diff === k ? 'on' : '') + '">' + DN[k] + '</button>').join('') + '</div></div>';
   if (CHP.done) b += '<p class="seMsg">' + (CHP.finalPos === 1 ? '🏆 Meister! ' : 'Saison beendet – Platz ' + CHP.finalPos + '. ') + (CHP.endMsg || '') + '</p>';
   if (CHP.ser === 'f1') b += '<button class="mbtn" id="seUp"><span class="mt"><b>Upgrades</b><small>' + avail + ' Punkte verfügbar</small></span></button>';
   if (CHP.done && CHP.ser !== 'kart') b += '<button class="mbtn" id="seTeam"><span class="mt"><b>Team wechseln</b><small>Neues Team und anderen Teamkollegen wählen</small></span></button>';
   $('#seBtns').innerHTML = b;
+  $$('#seDiff button').forEach(bt => bt.addEventListener('click', () => { CHP.diff = bt.dataset.v; CAREER.diffPref = bt.dataset.v; saveChamp(); saveCar(); $$('#seDiff button').forEach(x => x.classList.toggle('on', x === bt)); }));
   const u = $('#seUp'); if (u) u.addEventListener('click', () => showScreen('upgrade'));
   const t2 = $('#seTeam'); if (t2) t2.addEventListener('click', () => { const tier = CHP.ser; delete CAREER.slot[tier]; saveCar(); CHP = null; try { localStorage.removeItem('f1champ'); } catch (e) {} careerPickTeam(tier); });
   $('#mNext').innerHTML = seasonNextLabel() + ' <span>›</span>';
@@ -6914,7 +6916,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v85'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v86'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
