@@ -599,7 +599,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
         </div>
       </div>
     </div>
-    <div class="tver">Version <span id="verNo">v83</span></div>
+    <div class="tver">Version <span id="verNo">v84</span></div>
   </section>
 
   <section class="scr" id="scrTrack">
@@ -2495,6 +2495,7 @@ function kartSteeringWheel(T) {   // rundes Kart-Lenkrad: schwarzer Kranz mit Ma
   const add = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; g.add(m); return m; };
   add(new THREE.TorusGeometry(0.188, 0.021, 14, 44), rub);
   const mk = add(new THREE.TorusGeometry(0.188, 0.0225, 10, 10, 0.34), acc); mk.rotation.z = Math.PI / 2 - 0.17;   // Markierung bei 12 Uhr
+  for (const a of [Math.PI / 2 + 0.55, Math.PI / 2 - 0.55, -0.35, Math.PI + 0.35, 0.2 - Math.PI / 2 + 0.4, Math.PI * 1.5 - 0.4 - 0.2]) { const gp = add(new THREE.TorusGeometry(0.188, 0.0235, 8, 8, 0.22), new THREE.MeshStandardMaterial({ color: 0x3a3d44, roughness: .9 })); gp.rotation.z = a - 0.11; }   // Griffpolster (zeigen die Drehung)
   for (const a of [0, Math.PI, -Math.PI / 2]) { const sp = add(new THREE.BoxGeometry(0.17, 0.026, 0.014), met); sp.position.set(Math.cos(a) * 0.09, Math.sin(a) * 0.09, 0); sp.rotation.z = a; }
   add(new THREE.CylinderGeometry(0.052, 0.058, 0.03, 28).rotateX(Math.PI / 2), rub);
   add(new THREE.CylinderGeometry(0.03, 0.03, 0.034, 20).rotateX(Math.PI / 2), met);
@@ -5854,7 +5855,7 @@ const wrapA = a => Math.atan2(Math.sin(a), Math.cos(a));
 // thr/brk sind Pedalstellungen 0..1, steer -1..1, limit = optionale Höchstgeschwindigkeit (Bremsassistent)
 function carStep(c, thr, brk, dt, limit) {
   const sf = SURF[surface(c.idx, c.lat)];
-  { const raw = slipstream(c); c.slipR = raw; c.slipS = (c.slipS || 0) + (raw - (c.slipS || 0)) * Math.min(1, dt * (raw > (c.slipS || 0) ? 1.6 : 4)); }   // baut sich auf, fällt beim Ausscheren schnell ab
+  { const raw = SER === 'kart' ? 0 : slipstream(c); c.slipR = raw; c.slipS = (c.slipS || 0) + (raw - (c.slipS || 0)) * Math.min(1, dt * (raw > (c.slipS || 0) ? 1.6 : 4)); }   // baut sich auf, fällt beim Ausscheren schnell ab
   c.slip = thr > 0 ? c.slipS : 0; c.surf = surface(c.idx, c.lat);
   const fwdS = Math.sin(c.h) * TX[c.idx] + Math.cos(c.h) * TZ[c.idx];
   let a = c.street ? -9.81 * (SLOPE ? SLOPE[c.idx] : 0) * fwdS + thr * streetDrive(c.v) * sf[0] + thr * c.slip * 0.6 - brk * BRAKE * c.brkMul - (STREET.cd * c.v * c.v * (1 - 0.3 * (c.slipS || 0)) + STREET.roll) - (1 - thr) * 0.9
@@ -6912,7 +6913,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = 'v83'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = 'v84'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
