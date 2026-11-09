@@ -605,7 +605,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
         </div>
       </div>
     </div>
-    <div class="tver">Version <span id="verNo">0.95</span></div>
+    <div class="tver">Version <span id="verNo">0.96</span></div>
   </section>
 
   <section class="scr" id="scrTrack">
@@ -2093,7 +2093,7 @@ function teamTemplate(tk) {
   if (MD) {
     const T = T0, isF2 = T.kind === 'f2', cB = col(T.body), cA = col(T.acc), cT = col(T.tip), cLow = col(T.low ?? T.body), cC = col(0x4a4f57), cD = col(0x16181b);
     const pc = (k, x, y, z, o) => isF2 && k === 7 ? o.copy(cD) : isF2 && k === 0 && (z > 2.55 || (z > 2.15 && y < 0.36) || (z < -1.9 && y > 0.6)) ? o.copy(z > 2.55 ? cT : cA) : o.copy(k === 1 ? cA : k === 2 ? cT : k === 3 ? cC : k === 4 ? cD : (T.low !== undefined && y < T.split ? cLow : cB));
-    const gloss = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .3, metalness: T.metal * (isF2 ? 0.5 : 0.7), clearcoat: 1, clearcoatRoughness: .06, envMapIntensity: isF2 ? 1.0 : 1.25, side: THREE.DoubleSide });   // F2: wie F1, aber etwas weniger Metall und Umgebungsspiegelung (sonst grünstichig vom Gras)
+    const gloss = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .3, metalness: T.metal * (isF2 ? 0.2 : 0.7), clearcoat: isF2 ? .6 : 1, clearcoatRoughness: isF2 ? .15 : .06, envMapIntensity: isF2 ? 0.3 : 1.25, side: THREE.DoubleSide });   // F2: kaum Umgebungsspiegelung – die olivgrüne Spiegelung (Gras) lag auf jeder Nase und auf dem Lack
     const haloMat = gloss.clone();   // Halo in der TV-Kamera: einfarbig in der Fahrzeugfarbe, ohne Lackierungs-Verlauf (Material vor dem Livery-Shader kopieren)
     return (TPL[tk] = { model: true, M: MD, lods: MD.C.lods.map(L => ({ gloss: paintGeo(L.gloss, pc), matte: paintGeo(L.matte, pc) })), halo: paintGeo(MD.C.halo, pc), haloFlat: paintGeo(MD.C.halo, (k, x, y, z, o) => o.copy(cB)), haloMat, glossMat: liveryMat(tk, gloss) });
   }
@@ -4874,7 +4874,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         if (k % 3 === 0) excl.push([P[k][0], P[k][1], 12]);   /* keine Bäume/Häuser auf der Steilkurve */
         const A = sec(k), B = sec(k + 1); for (let q = 0; q < prof.length - 1; q++) { const a1 = A[q], a2 = A[q + 1], b1 = B[q], b2 = B[q + 1]; pos.push(...a1, ...b1, ...b2, ...a1, ...b2, ...a2); uv.push(0, k, 0, k + 1, 1, k + 1, 0, k, 1, k + 1, 1, k); } } }
     if (pos.length) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.computeVertexNormals(); const m = new THREE.Mesh(g, conc); m.receiveShadow = true; trackGroup.add(m); } }
-  if (TRK.osm && TRK.osm.podio) { const R = TRK.osm.podio, wm = lam({ color: 0xf1f3f5 }), deck = osmExtrude(R, 4.5, wm, wm, 7.5); trackGroup.add(deck);   // Podium: aufgeständerte Plattform, darunter frei
+  if (TRK.osm && TRK.osm.podio && !TRK.monza) { const R = TRK.osm.podio, wm = lam({ color: 0xf1f3f5 }), deck = osmExtrude(R, 4.5, wm, wm, 7.5); trackGroup.add(deck);   // Podium: aufgeständerte Plattform, darunter frei
     const cx = R.reduce((a, p) => a + p[0], 0) / R.length, cz = R.reduce((a, p) => a + p[1], 0) / R.length; for (const [x, z] of R.filter((_, k) => k % 4 === 0)) { const px = cx + (x - cx) * 0.8, pz = cz + (z - cz) * 0.8; if (!trackFree(px, pz, 1)) continue; const c = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 7.5, 8).translate(0, 3.75, 0), wm); c.position.set(px, 0, pz); trackGroup.add(c); } }
   // Wahrzeichen aus OSM-Grundrissen (echte Lage, echte Höhe) – vor der Stadt, damit sie ihnen ausweicht
   window.__osmSkip = [];
@@ -6959,7 +6959,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '0.95'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '0.96'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
