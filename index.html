@@ -497,6 +497,7 @@ h1 b{background:linear-gradient(90deg,#ff3b2f,#ff7a45);-webkit-background-clip:t
 .tm.locked{opacity:.4}
 .rpanel{overflow:auto;scrollbar-width:none}.rpanel::-webkit-scrollbar{display:none}
 .stbl td,.stbl th{padding:5px 6px}.stbl tr.me td{background:rgba(225,6,0,.28)}.stbl td.pts{font-weight:900;text-align:right}.stbl td.bar{width:10px;padding:0}.stbl td.bar i{display:block;width:4px;height:18px}
+.rpanel:has(#seTbl){padding-top:0}.stbl th{background:#15151e;padding-top:14px;padding-bottom:7px;z-index:2}   /* Kopfzeile deckt beim Scrollen alles darüber ab (kein Durchscheinen der Tabelle im Polster) */
 .seMsg{margin:10px 0;font-weight:800;color:#ffd400;font-size:14px}
 #seBtns .mbtn{padding:6px 0 6px 64px}
 .uprow{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid rgba(255,255,255,.12);margin-bottom:6px;cursor:pointer;background:rgba(255,255,255,.04)}
@@ -605,7 +606,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
         </div>
       </div>
     </div>
-    <div class="tver">Version <span id="verNo">0.99</span></div>
+    <div class="tver">Version <span id="verNo">1.00</span></div>
   </section>
 
   <section class="scr" id="scrTrack">
@@ -3203,6 +3204,12 @@ function buildTrack(key) {
     WL[i] = HW[i] + TH.wall - 7 + mL[i]; WR[i] = HW[i] + TH.wall - 7 + mR[i];
     const k = KS[i]; if (Math.abs(k) > 1e-4) { const lim = Math.max(HW[i] + 1.2, 0.55 / Math.abs(k)); /* enge Haarnadeln: innere Leitplanke dicht an der Fahrbahn, sonst faltet sie sich über die Gegenfahrbahn */ if (k > 0) WR[i] = Math.min(WR[i], lim); else WL[i] = Math.min(WL[i], lim); }
   }
+  if (TRK.kartOnly) {   // Kartbahnen: wo zwei Streckenteile eng beieinander liegen (U-Kurven), darf der Zaun höchstens bis zur Mitte dazwischen – sonst schneidet er in die Fahrbahn
+    const ar = Math.round(40 / DS);
+    for (let i = 0; i < N; i++) { let dm = 1e18; for (let j = 0; j < N; j++) { const g = Math.min(Math.abs(i - j), N - Math.abs(i - j)); if (g < ar) continue; const dx = PX[i] - PX[j], dz = PZ[i] - PZ[j], d2 = dx * dx + dz * dz; if (d2 < dm) dm = d2; }
+      const cap = Math.max(HW[i] + 0.9, Math.sqrt(dm) / 2 - 0.5); WL[i] = Math.min(WL[i], cap); WR[i] = Math.min(WR[i], cap); }
+    WL = filt(WL, 3, 'min'); WR = filt(WR, 3, 'min');
+  }
   BANK = null; if (TRK.nos && TRK.nos.karussell) { const [ka, kb] = TRK.nos.karussell, iAt = s3 => Math.floor(modL(s3) / DS) % N; let kk = 0; for (let s2 = ka; s2 < kb; s2 += DS) kk += KS[iAt(s2)]; KSD = kk > 0 ? 1 : -1; BANK = new Float32Array(N); const R = 30, B0 = Math.tan(17 * Math.PI / 180);
     for (let s2 = ka - R; s2 <= kb + R; s2 += DS * 0.5) { const w = s2 < ka ? (s2 - ka + R) / R : s2 > kb ? (kb + R - s2) / R : 1, e = w * w * (3 - 2 * w); BANK[iAt(s2)] = B0 * e; } }   // Karussell: Steilkurve ~17°
   if (TRK.nos) { const D = TRK.nos; for (let i = 0; i < N; i++) { WL[i] = Math.max(HW[i] + 2.4, D.wl[MJ[i]]); WR[i] = Math.max(HW[i] + 2.4, D.wr[MJ[i]]); }   // echte Leitplanken-Abstände
@@ -5625,9 +5632,11 @@ function swell(t, dur, v) { const src = ac.createBufferSource(), fl = ac.createB
 const TITLE = new Audio('./menu.mp3'); TITLE.loop = true; TITLE.preload = 'auto'; TITLE.volume = 0; let titleVol = 0;
 let titleT = performance.now();
 const rpVol = [0, 0];   // Lautstärke der beiden Renn-Musik-Player
+let hadRace = false;    // ab dem ersten Rennen läuft die Renn-Musik auch nach dem Rennen und in den Menüs weiter
 function titleTick() {
   const nw = performance.now(), dt = Math.min(0.5, (nw - titleT) / 1000); titleT = nw;
-  const want = S.music && !running && !document.hidden && rpVol[0] + rpVol[1] < 0.15 ? 0.75 * (S.volMusic ?? 0.7) : 0;
+  const menuMus = !running && (!hadRace || MENU.scr === 'title');   // Menü-Musik nur im Haupt-/Titelmenü (oder solange noch kein Rennen lief); sonst läuft die Renn-Musik weiter
+  const want = S.music && menuMus && !document.hidden && rpVol[0] + rpVol[1] < 0.15 ? 0.75 * (S.volMusic ?? 0.7) : 0;
   titleVol += (want - titleVol) * Math.min(1, dt * (want > titleVol ? 1.2 : 3)); if (Math.abs(want - titleVol) < 0.003) titleVol = want;
   TITLE.volume = clamp(titleVol, 0, 1);
   if (titleVol > 0.001 && TITLE.paused && TITLE.dataset.ok) TITLE.play().catch(() => {});
@@ -5684,7 +5693,7 @@ RP.forEach((a, n) => a.addEventListener('error', () => { if (/max\.mp3$/i.test(a
 function raceSongName() { if (raceIdx === -2) return MAX_FILES[maxTry]; const sg = RACE_SONGS[raceIdx]; return sg ? (sg.artist ? sg.artist + ' – ' : '') + sg.name : '–'; }
 function nextSong() { raceSongPick(running); }
 function raceMusicTick(dt) {
-  const base = S.music && running && !document.hidden ? 0.8 * (S.volMusic ?? 0.7) * (paused ? 0.7 : 1) : 0;
+  const base = S.music && (running || (hadRace && MENU.scr !== 'title')) && !document.hidden ? 0.8 * (S.volMusic ?? 0.7) * (paused ? 0.7 : 1) : 0;
   for (let n = 0; n < 2; n++) {
     const a = RP[n], want = n === rpCur ? base : 0, full = Math.max(0.05, 0.8 * (S.volMusic ?? 0.7));
     // einblenden in ~1,5 s, ausblenden in ~3 s (linear, gut hörbar)
@@ -5804,7 +5813,7 @@ function startRace() {
   seriesProfiles();
   placeOnGrid(); precompile();
   raceSongPick(false);
-  running = true; paused = false; resultsShown = false; raceState = 'lights'; lightsT = 0; lightsOut = 5 + Math.random() * 1.4;
+  running = true; hadRace = true; paused = false; resultsShown = false; raceState = 'lights'; lightsT = 0; lightsOut = 5 + Math.random() * 1.4;
   raceTime = 0; leaderFinished = false; fastest = null; tiltCheckT = 0;
   effCtrl = isTouch ? S.ctrl : 'touch';
   tiltZero = tiltAngle; camH = pl.h;
@@ -5966,7 +5975,8 @@ function updatePlayer(dt) {
 // KI-Fahrer: steuert dasselbe Fahrzeugmodell über Pedale und Lenkrad (Pure-Pursuit auf der Ideallinie)
 function updateAI(c, dt, prof = profAI, top = diff.top) {
   if (raceState !== 'race' || raceTime < c.react) { c.steer = 0; carStep(c, 0, raceState === 'race' ? 0 : 1, dt); c.brk = 0; return; }
-  const mood = (1 - (1 - c.skill) * (S.diff === 'pro' || S.diff === 'leg' ? 0.2 : 1)) * (1 + 0.003 * Math.sin(raceTime * 0.27 + c.phase));
+  const mood = (1 - (1 - c.skill) * (S.diff === 'pro' || S.diff === 'leg' ? 0.2 : 1)) * (1 + 0.003 * Math.sin(raceTime * 0.27 + c.phase)) * aiSlow();
+  { const dacc = (DIFF[S.diff] || DIFF.mid).acc || 1; c.accMul = SERPH.acc * (raceTime < 9 ? PM.acc : dacc); }   // Start: KI beschleunigt wie der Spieler (kein Raketenstart auf Profi); danach der Schwierigkeitsbonus
   let vt = Math.min(prof[c.idx] * mood, VTOP * top * SERPH.top * mood + (c.slip || 0) * 6.5);
   if (c.finished) vt = Math.min(vt, 45);
   // Verkehr: vorausfahrendes Auto in der eigenen Spur + Autos direkt daneben
@@ -6496,7 +6506,8 @@ function applyCareerSlot(k, list) {
 }
 function mkSlot(tier, team, mate) {
   const list = SERIES[tier].drivers, other = list.find(d => d[3] === team && d[0] !== mate) || list.find(d => d[3] === team);
-  let code = (CAREER.name.normalize('NFD').replace(/[^A-Za-z]/g, '').toUpperCase().slice(0, 3) || 'YOU').padEnd(3, 'X');
+  const sur = CAREER.name.trim().split(/\s+/).pop();   // Kürzel = erste 3 Buchstaben des Nachnamens (letztes Wort)
+  let code = (sur.normalize('NFD').replace(/[^A-Za-z]/g, '').toUpperCase().slice(0, 3) || 'YOU').padEnd(3, 'X');
   while (list.some(d => d[0] === code && d[0] !== other[0])) code = code.slice(0, 2) + String.fromCharCode(65 + Math.floor(Math.random() * 26));
   return { team, replaced: other[0], code };
 }
@@ -6544,13 +6555,33 @@ function teamStandings() {
   return Object.keys(TEAMS).filter(k => !TEAMS[k].playerOnly || byCode(CHP.driver)?.team === k).map(k => ({ k, pts: ALL.filter(c => c.team === k).reduce((a, c) => a + (CHP.pts[c.code] || 0), 0) })).sort((a, b) => b.pts - a.pts);
 }
 // ===== Karriere: Saison, Qualifying, Rennen =====
+// Erklärbildschirm beim ersten Einstieg in F2 (Windschatten) bzw. F1 (E-Motor-Boost + Upgrades) mit gezeichneten Spielausschnitten
+function showTierIntro(tier, next) {
+  const car = (x, y, c, w = 1) => '<g transform="translate(' + x + ' ' + y + ') scale(' + w + ')"><rect x="-34" y="-10" width="60" height="20" rx="8" fill="' + c + '"/><rect x="-44" y="-14" width="8" height="28" rx="2" fill="#16181b"/><rect x="24" y="-9" width="14" height="18" rx="3" fill="#16181b"/><rect x="-22" y="-14" width="14" height="5" rx="2" fill="#0d0d10"/><rect x="-22" y="9" width="14" height="5" rx="2" fill="#0d0d10"/><rect x="6" y="-14" width="14" height="5" rx="2" fill="#0d0d10"/><rect x="6" y="9" width="14" height="5" rx="2" fill="#0d0d10"/><circle cx="-4" cy="0" r="5" fill="#f4f4f4"/></g>';
+  let title, body, art;
+  if (tier === 'f2') {
+    title = 'Neu in der Formula 2: Windschatten';
+    body = '<p>Fährst du <b>dicht hinter einem Auto</b>, schiebt dich sein Windschatten: Du wirst auf den Geraden schneller als der Vordermann.</p><p>So nutzt du ihn: Bleib auf der Geraden hinter dem Auto, <b>scher kurz vor der Bremszone aus</b> und zieh außen vorbei. In engen Kurven hilft er nicht, dort zählt nur Grip.</p>';
+    art = '<svg viewBox="0 0 560 190" class="intArt"><rect width="560" height="190" rx="12" fill="#2a2d33"/><rect y="28" width="560" height="134" fill="#3a3d44"/><g stroke="#e8e8e8" stroke-width="3" stroke-dasharray="26 22"><line x1="0" y1="95" x2="560" y2="95"/></g><polygon points="372,95 120,52 120,138" fill="#4aa8ff" fill-opacity=".28"/><polygon points="372,95 120,70 120,120" fill="#4aa8ff" fill-opacity=".28"/>' + car(400, 95, '#e10600') + car(208, 95, '#f2d100') + '<g fill="#fff" font-family="system-ui,sans-serif" font-weight="800" font-size="14"><text x="400" y="62" text-anchor="middle">Vordermann</text><text x="208" y="166" text-anchor="middle" fill="#9fd0ff">du im Windschatten</text><text x="262" y="48" text-anchor="middle" fill="#9fd0ff">Windschatten</text></g><g stroke="#ffd400" stroke-width="4" stroke-linecap="round"><line x1="132" y1="95" x2="160" y2="95"/><line x1="124" y1="82" x2="146" y2="82"/><line x1="124" y1="108" x2="146" y2="108"/></g><text x="150" y="130" fill="#ffd400" font-family="system-ui,sans-serif" font-weight="900" font-size="15" text-anchor="middle">+ Tempo</text></svg>';
+  } else {
+    title = 'Neu in der Formula 1: E-Motor-Boost & Upgrades';
+    body = '<p><b>BOOST:</b> Tippe auf BOOST (oder die Boost-Taste), während du Gas gibst: Der E-Motor schiebt dich kurz stärker an. Die <b>Batterie</b> lädt sich beim <b>Bremsen und Ausrollen</b> wieder auf, leer ist der Boost weg.</p><p><b>Upgrades:</b> Für Siege und Pole-Positions bekommst du Punkte und kaufst damit Motor, Aerodynamik, Fahrwerk, Bremsen, Reifen und Getriebe. Die Upgrades findest du im Saison-Menü.</p>';
+    const bar = (y, n, lv) => '<text x="318" y="' + (y + 11) + '" fill="#cfd5dc" font-family="system-ui,sans-serif" font-weight="700" font-size="13">' + n + '</text>' + [0, 1, 2, 3, 4].map(k => '<rect x="' + (420 + k * 26) + '" y="' + y + '" width="22" height="14" rx="3" fill="' + (k < lv ? '#e10600' : '#3a3f47') + '"/>').join('');
+    art = '<svg viewBox="0 0 560 190" class="intArt"><rect width="560" height="190" rx="12" fill="#1b1f26"/><rect x="26" y="34" width="150" height="62" rx="9" fill="none" stroke="#cfd5dc" stroke-width="4"/><rect x="176" y="52" width="9" height="26" rx="3" fill="#cfd5dc"/><rect x="34" y="42" width="96" height="46" rx="5" fill="#ffd400"/><path d="M96 40 L70 70 H88 L80 92 L112 58 H94 Z" fill="#16181b"/><text x="100" y="124" text-anchor="middle" fill="#cfd5dc" font-family="system-ui,sans-serif" font-weight="800" font-size="14">ERS-Batterie</text><text x="100" y="144" text-anchor="middle" fill="#9fa7b1" font-family="system-ui,sans-serif" font-size="12">lädt beim Bremsen</text><circle cx="250" cy="76" r="36" fill="rgba(255,196,0,.14)" stroke="#ffc400" stroke-width="3"/><path d="M256 46 L236 82 H250 L244 108 L268 70 H254 Z" fill="#ffc400"/><text x="250" y="132" text-anchor="middle" fill="#ffc400" font-family="system-ui,sans-serif" font-weight="900" font-size="14">BOOST</text>' + bar(34, 'Motor', 3) + bar(62, 'Aero', 2) + bar(90, 'Fahrwerk', 4) + bar(118, 'Bremsen', 1) + '<text x="318" y="160" fill="#9fa7b1" font-family="system-ui,sans-serif" font-size="12">Upgrades mit Punkten kaufen</text></svg>';
+  }
+  const el = document.createElement('div'); el.id = 'tierIntro';
+  el.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(5,7,11,.92);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto;font-family:system-ui,sans-serif;color:#fff';
+  el.innerHTML = '<div style="max-width:720px;width:100%;background:#15151e;border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:18px 20px"><div style="font-size:12px;letter-spacing:.14em;color:#e10600;font-weight:800;text-transform:uppercase">Neue Funktion</div><h2 style="margin:4px 0 12px;font-size:22px;font-style:italic">' + title + '</h2><style>#tierIntro .intArt{width:100%;height:auto;display:block;margin-bottom:12px}#tierIntro p{margin:0 0 8px;font-size:14px;line-height:1.5;color:#dfe3e8}</style>' + art + body + '<button id="tierIntroOk" style="margin-top:8px;width:100%;height:46px;border:0;border-radius:6px;background:#e10600;color:#fff;font-weight:900;font-size:16px;letter-spacing:.06em">VERSTANDEN</button></div>';
+  document.body.appendChild(el); el.querySelector('#tierIntroOk').addEventListener('click', () => { el.remove(); next(); });
+}
 function startSeason(tier) {
   if (!CAREER.slot[tier]) { if (tier !== 'kart') return; CAREER.slot.kart = mkSlot('kart', 'K_NOV', 'MLE'); saveCar(); }
   setMode('career'); SERIES._dirty = true; setSeries(tier, true);
   const pc = ALL.find(c => c.code === CAREER.slot[tier].code) || ALL[0]; S.driver = pc.code; pl = pc;
   CAL = calFor(tier);
   CHP = { v: 2, career: true, ser: tier, round: 0, team: pc.team, driver: pc.code, diff: CAREER.diffPref || (tier === 'kart' ? 'mid' : 'hard'), laps: SERIES[tier].laps, autogas: !!S.autogas, assist: !!S.assist, line: S.line || 'off', pts: {}, races: [], phase: 'quali', grid: null, qpos: 0, quick: { laps: S.laps, grid: S.grid } };
-  saveChamp(); careerOpenSeason();
+  saveChamp();
+  if (tier !== 'kart' && !(CAREER.intro && CAREER.intro[tier])) { (CAREER.intro ||= {})[tier] = 1; saveCar(); showTierIntro(tier, careerOpenSeason); } else careerOpenSeason();
 }
 function careerOpenSeason() {
   setMode('career'); SERIES._dirty = true; setSeries(CHP.ser, true); CAL = calFor(CHP.ser);
@@ -6567,12 +6598,23 @@ function setupCareerRace(laps) {
 function careerStartQuali() { if (!CHP || CHP.round >= CAL.length) return; QL = true; CHP.phase = 'quali'; setupCareerRace(1); }
 const LEN_LAPS = { s: 3, m: 5, l: 8 }, LEN_NAME = { s: 'Kurz', m: 'Mittel', l: 'Lang' };   // Rennlänge in der Karriere: wählbar auf dem Saison-Bildschirm
 const champLen = () => CHP && LEN_LAPS[CHP.len] ? CHP.len : (CHP && CHP.ser === 'kart' ? 'l' : 's');   // Standard wie bisher: Kart 8, F2/F1 3 Runden
-function careerStartRace() { if (!CHP || CHP.round >= CAL.length) return; QL = false; setupCareerRace(LEN_LAPS[champLen()]); }
-const QF = 1.04;   // KI-Rundenzeit im Qualifying = Profilzeit / Fahrerform × QF (Beschleunigungsverluste, Fahrfehler)
+// Kart auf Silverstone (5,9 km, ~2:24 min pro Runde): Kurz 1 / Mittel 3 / Lang 5 Runden
+const careerLaps = len => { const tr = CHP && CAL && CAL[CHP.round] ? TRACKS[CAL[CHP.round][0]] : null; return CHP && CHP.ser === 'kart' && tr && tr.theme === 'sil' ? ({ s: 1, m: 3, l: 5 })[len] : LEN_LAPS[len]; };
+function careerStartRace() { if (!CHP || CHP.round >= CAL.length) return; QL = false; setupCareerRace(careerLaps(champLen())); }
+// Rundenzeit-Schätzung der KI MIT Beschleunigungsgrenze (das Tempoprofil kennt nur Querbeschleunigung/Bremsen -> war im Quali bis zu 18 % zu schnell)
+function aiLapEst() {
+  const dd = DIFF[S.diff] || DIFF.mid, accM = SERPH.acc * (dd.acc || 1), vmax = VTOP * Math.max(1, dd.top || 1) * SERPH.top;
+  const v = Float32Array.from(profAI, x => Math.min(x, vmax));
+  for (let pass = 0; pass < 2; pass++) for (let i = 0; i < N; i++) { const j = (i + 1) % N, a = accel(v[i], vmax) * accM, lim = Math.sqrt(v[i] * v[i] + 2 * a * DS); if (v[j] > lim) v[j] = lim; }
+  let T = 0; for (let i = 0; i < N; i++) T += DS / Math.max(8, v[i]); return T;
+}
+// Kart auf Silverstone: KI ca. 1 s pro Runde langsamer (Rundenzeit ~144 s -> Tempo x 0,993) auf jeder Schwierigkeit
+const aiSlow = () => SER === 'kart' && TRK && TRK.theme === 'sil' ? 0.993 : 1;
+const QF = 1.005;   // KI-Rundenzeit im Qualifying = Profilzeit / Fahrerform × QF (Beschleunigungsverluste, Fahrfehler)
 function qualiResults() {
   resultsShown = true; QL = false;
   const myT = (pl.lapTimes && pl.lapTimes[0]) || pl.best || pl.finishTime || 999;
-  seriesProfiles(); let T0 = 0; for (let i = 0; i < N; i++) T0 += DS / Math.max(8, profAI[i]);
+  seriesProfiles(); const T0 = aiLapEst() / aiSlow();   // Zeit der KI = Rennpace (mit Beschleunigungsgrenze), kein Boost im Quali
   const hard = CHP.diff === 'pro' || CHP.diff === 'leg';
   const rows = ALL.filter(c => inField([c.code, 0, 0, c.team], CHP.driver)).map(c => {
     if (c === pl) return { c, t: myT };
@@ -6758,7 +6800,7 @@ function renderCareer() {
   const txt = t => {
     const bestTxt = CAREER.best[t] ? 'Beste Saison: Platz ' + CAREER.best[t] : '';
     if (lk[t]) return t === 'f2' ? 'Gesperrt – Top 3 in der Kart-Saison' : 'Gesperrt – Top 3 in der F2-Saison';
-    if (c && c.ser === t) return c.done ? 'Saison beendet: Platz ' + c.finalPos : 'Rennen ' + (c.round + 1) + '/' + calFor(t).length + ' · ' + (c.pts[c.driver] || 0) + ' Pkt';
+    if (c && c.ser === t) return c.done ? 'Saison beendet: Platz ' + c.finalPos : 'Rennen ' + (c.round + 1) + '/' + calFor(t).length + ' · ' + (c.pts[c.driver] || 0) + ' Pkt · ' + ({ s: 'Kurz', m: 'Mittel', l: 'Lang' }[LEN_LAPS[c.len] ? c.len : (t === 'kart' ? 'l' : 's')]) + ' · ' + ({ easy: 'Leicht', mid: 'Mittel', hard: 'Schwer', pro: 'Profi', leg: 'Legende' }[c.diff] || '');
     return (t === 'kart' && CAREER.slot.kart ? 'Neue Saison starten' : 'Team wählen & Saison starten') + (bestTxt ? ' · ' + bestTxt : '');
   };
   const sub = { kart: '3 Rennen · Genk, Wackersdorf, Silverstone', f2: calFor('f2').length + ' Rennen · Kalender 2026', f1: calFor('f1').length + ' Rennen · Upgrades' };
@@ -6783,7 +6825,7 @@ function careerPickCommit() {
 const nextTier = t => t === 'kart' ? 'f2' : t === 'f2' ? 'f1' : null;
 function seasonNextLabel() {
   if (!CHP) return 'Weiter';
-  if (CHP.done) return CHP.finalPos <= 3 && nextTier(CHP.ser) ? 'Weiter zur ' + SERIES[nextTier(CHP.ser)].name : 'Saison wiederholen';
+  if (CHP.done) return CHP.finalPos <= 3 && nextTier(CHP.ser) ? 'Weiter zur ' + (nextTier(CHP.ser) === 'f2' ? 'F2' : 'F1') : 'Saison wiederholen';
   const trk = TRACKS[CAL[CHP.round][0]].name; return CHP.phase === 'race' ? 'Rennen · ' + trk + ' · P' + CHP.qpos : 'Qualifying · ' + trk;
 }
 function careerSeasonNext() {
@@ -6803,7 +6845,7 @@ function renderSeason() {
   const avail = CAREER.up.earned - CAREER.up.spent;
   const DN = { easy: 'Leicht', mid: 'Mittel', hard: 'Schwer', pro: 'Profi', leg: 'Legende' };
   $('#seDiff').innerHTML = Object.keys(DN).map(k => '<button data-v="' + k + '" class="' + (CHP.diff === k ? 'on' : '') + '">' + DN[k] + '</button>').join('');
-  $('#seLen').innerHTML = Object.keys(LEN_LAPS).map(k => '<button data-v="' + k + '" class="' + (champLen() === k ? 'on' : '') + '">' + LEN_NAME[k] + ' · ' + LEN_LAPS[k] + ' Rd.</button>').join('');
+  $('#seLen').innerHTML = Object.keys(LEN_LAPS).map(k => '<button data-v="' + k + '" class="' + (champLen() === k ? 'on' : '') + '">' + LEN_NAME[k] + ' · ' + careerLaps(k) + (careerLaps(k) === 1 ? ' Rd.' : ' Rd.') + '</button>').join('');
   let b = '';
   if (CHP.done) b += '<p class="seMsg">' + (CHP.finalPos === 1 ? '🏆 Meister! ' : 'Saison beendet – Platz ' + CHP.finalPos + '. ') + (CHP.endMsg || '') + '</p>';
   if (CHP.ser === 'f1') b += '<button class="mbtn" id="seUp"><span class="mt"><b>Upgrades</b><small>' + avail + ' Punkte verfügbar</small></span></button>';
@@ -6871,7 +6913,7 @@ function buildMenu2() {
 function renderDrivers() {
   const T = TEAMS[MENU.team], ds = ALL.filter(c => c.team === MENU.team), c1 = hex(uiCol(T)), c2 = hex(T.acc), c3 = contrast(uiCol(T));
   const mx = Math.max(...ALL.map(c => c.skill)), mn = Math.min(...ALL.map(c => c.skill));
-  $('#drvHead').innerHTML = (MENU.mode === 'career' ? 'Teamkollegen wählen (der andere Fahrer wird durch dich ersetzt) · ' : '') + teamBadge(MENU.team).replace('<svg ', '<svg style="width:30px;height:30px;vertical-align:-7px;margin-right:8px" ') + T.name;
+  $('#drvHead').innerHTML = MENU.mode === 'career' ? 'Teamkollegen wählen' : teamBadge(MENU.team).replace('<svg ', '<svg style="width:30px;height:30px;vertical-align:-7px;margin-right:8px" ') + T.name;
   $('#drivers').innerHTML = ds.map((c, n) => { const pace = 55 + 45 * (c.skill - mn) / (mx - mn || 1), team = 55 + 45 * (T.skill - 0.97) / 0.03;
     return '<button class="dcard' + (c.code === S.driver ? ' on' : '') + '" data-drv="' + c.code + '" style="--c1:' + c1 + ';--c2:' + c2 + ';--c3:' + c3 + '"><span class="num">' + c.num + '</span><div class="cd">' + c.code + ' · #' + c.num + '</div><div class="nm">' + c.name.replace(' ', '<br>') + '</div>'
       + '<div class="meta"><i style="background:' + hex(c.helmet) + '"></i>Helm · ' + T.name + '</div>'
@@ -6979,7 +7021,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '0.99'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.00'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
