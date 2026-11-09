@@ -605,7 +605,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
         </div>
       </div>
     </div>
-    <div class="tver">Version <span id="verNo">0.96</span></div>
+    <div class="tver">Version <span id="verNo">0.97</span></div>
   </section>
 
   <section class="scr" id="scrTrack">
@@ -1910,6 +1910,19 @@ function parseCarBin(CARBIN) {
   } catch (e) { console.warn('car.bin', e); return null; }
 }
 const CARM = parseCarBin(CARBIN), CARM2 = parseCarBin(F2BIN);
+// Die F2-Radmodelle haben Sturz eingebaut (vorn ca. 1,7°, hinten ca. 1,0°, links/rechts gespiegelt). Gedreht wird aber um die X-Achse -> die Räder eierten. Radachse hier gerade auf X ausrichten (Ebene durch die Reifenflanken, Drehung um Z).
+function straightenWheels(C) { if (!C) return;
+  for (const LL of C.lods) for (const k of ['wheelL', 'wheelR', 'rwheelL', 'rwheelR']) {   // jede Detailstufe einzeln (die Stufen hatten unterschiedlich viel Sturz)
+    const g0 = LL[k]; if (!g0) continue; const p = g0.attributes.position.array; let xm = 0; for (let i = 0; i < p.length; i += 3) xm = Math.max(xm, Math.abs(p[i]));
+    let bs = 0, nb = 0;
+    for (const sg of [1, -1]) { const P = []; let mx = 0, my = 0, mz = 0;
+      for (let i = 0; i < p.length; i += 3) { const x = p[i], y = p[i + 1], z = p[i + 2], r = Math.hypot(y, z); if (Math.sign(x) !== sg || Math.abs(x) < xm * 0.8 || r < 0.1 || r > 0.34) continue; P.push(x, y, z); mx += x; my += y; mz += z; }
+      const n = P.length / 3; if (n < 20) continue; mx /= n; my /= n; mz /= n; let sxy = 0, sxz = 0, syy = 0, syz = 0, szz = 0;
+      for (let i = 0; i < P.length; i += 3) { const dx = P[i] - mx, dy = P[i + 1] - my, dz = P[i + 2] - mz; sxy += dx * dy; sxz += dx * dz; syy += dy * dy; syz += dy * dz; szz += dz * dz; }
+      bs += (sxy * szz - sxz * syz) / (syy * szz - syz * syz); nb++; }   // Ebene x = a + b·y + c·z (kleinste Quadrate) -> b ist die Neigung um die Z-Achse
+    if (!nb) continue; const ang = Math.atan(bs / nb);
+    g0.rotateZ(ang); } }
+for (let it = 0; it < 8; it++) straightenWheels(CARM2);   // mehrere Durchgänge: jeder rechnet den Rest-Sturz neu aus, bis die Achse sauber auf X liegt
 if (CARM2 && !CARM2.halo) { const h = new THREE.BufferGeometry(); h.setAttribute('position', new THREE.BufferAttribute(new Float32Array(9), 3)); h.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(9), 3)); h.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(6), 2)); h.setIndex([0, 1, 2]); h.userData.cls = new Uint8Array([7, 7, 7]); h.computeBoundingSphere(); CARM2.halo = h; }
 // Farben je Klasse: 0 Lack, 1 Akzent, 2 Nasenspitze, 3 Carbon, 4 dunkel, 5 Reifen, 6 Reifenmarkierung, 7 Halo
 function paintGeo(g, fn) {
@@ -5498,19 +5511,25 @@ function updateAudio(thr) {
   if (!ac || !ENG) return;
   const E = ENG, on = S.sound && running && !paused && !resultsShown, t = ac.currentTime, gi = gearP(pl.v * 3.6);
   const road = !!(pl.mesh && pl.mesh.road);   // Roadster: Reihensechszylinder (tiefer, Drehzahl bis ~7300)
+  const kart = !!(pl.mesh && pl.mesh.kart), f2 = SER === 'f2' && !road && !kart;   // Kart: hoher Einzylinder-Zweitakter (direkt, ohne Getriebe) · F2: rauer V6-Turbo bis ~10.500 U/min, kein ERS
   const rev = pl.rev || 0, lim = rev > 0.93 ? (Math.random() - .5) * 700 : 0;   // Begrenzer flattert oben
-  let target = raceState === 'lights' ? (road ? 950 + rev * 6400 + lim : 4200 + rev * 8000 + lim) : road ? (pl.street ? gi.rpm : 1100 + (gi.rpm / 12000) * 6200) : gi.rpm;
-  if (gi.g !== E.gear) { E.cut = gi.g > E.gear ? 0.07 : 0.04; E.gear = gi.g; }
+  const kfr = clamp(pl.v / (VTOP * SERPH.top), 0, 1.1);
+  let target0 = raceState === 'lights' ? (road ? 950 + rev * 6400 + lim : 4200 + rev * 8000 + lim) : road ? (pl.street ? gi.rpm : 1100 + (gi.rpm / 12000) * 6200) : gi.rpm;
+  const target = kart ? (raceState === 'lights' ? 6000 + rev * 7000 + lim : 6500 + kfr * 7500 + lim * 0.4)
+    : f2 ? (raceState === 'lights' ? 4800 + rev * 5600 + lim : 4500 + (gi.rpm - 4000) / 9200 * 6000) : target0;
+  if (kart) E.gear = gi.g; else if (gi.g !== E.gear) { E.cut = gi.g > E.gear ? 0.07 : 0.04; E.gear = gi.g; }   // Kart: kein Getriebe, kein Schaltruck
   E.cut = Math.max(0, E.cut - 1 / 60);
   E.rpm += (target - E.rpm) * 0.35; const jit = 1 + (Math.random() - .5) * 0.006;
-  const f = E.rpm / 60 * 3, load = raceState === 'lights' ? 0.2 + 0.8 * (pl.rev || 0) : thr;   // V6 bzw. R6: 3 Zündungen pro Umdrehung
-  if (road) { E.o1.frequency.setTargetAtTime(f * jit, t, 0.02); E.o2.frequency.setTargetAtTime(f * 1.5, t, 0.02); E.o3.frequency.setTargetAtTime(f * 0.5, t, 0.02); E.o4.frequency.setTargetAtTime(f * 0.25 * 1.003, t, 0.02); }
+  const f = E.rpm / 60 * (kart ? 1 : 3), load = raceState === 'lights' ? 0.2 + 0.8 * (pl.rev || 0) : thr;   // V6 bzw. R6: 3 Zündungen pro Umdrehung · Zweitakt-Kart: 1 pro Umdrehung
+  if (kart) { E.o1.frequency.setTargetAtTime(f * jit, t, 0.012); E.o2.frequency.setTargetAtTime(f * 2.01, t, 0.012); E.o3.frequency.setTargetAtTime(f * 0.5, t, 0.012); E.o4.frequency.setTargetAtTime(f * 3.02, t, 0.012); }
+  else if (f2) { E.o1.frequency.setTargetAtTime(f * jit, t, 0.012); E.o2.frequency.setTargetAtTime(f * 1.503, t, 0.012); E.o3.frequency.setTargetAtTime(f * 0.5, t, 0.012); E.o4.frequency.setTargetAtTime(f * 0.75 * 1.004, t, 0.012); }
+  else if (road) { E.o1.frequency.setTargetAtTime(f * jit, t, 0.02); E.o2.frequency.setTargetAtTime(f * 1.5, t, 0.02); E.o3.frequency.setTargetAtTime(f * 0.5, t, 0.02); E.o4.frequency.setTargetAtTime(f * 0.25 * 1.003, t, 0.02); }
   else { E.o1.frequency.setTargetAtTime(f * jit, t, 0.012); E.o2.frequency.setTargetAtTime(f * 2.005, t, 0.012); E.o3.frequency.setTargetAtTime(f * 0.5, t, 0.012); E.o4.frequency.setTargetAtTime(f * 1.5, t, 0.012); }
-  E.nbp.frequency.setTargetAtTime(f * 2.5, t, 0.02); E.ng.gain.setTargetAtTime(0.12 + load * 0.22, t, 0.05);
-  E.lp.frequency.setTargetAtTime(road ? Math.min(1900, 260 + load * 900 + (E.rpm / 7300) * 700) : Math.min(4200, 500 + load * 2600 + (E.rpm / 12000) * 1300), t, 0.03);
-  const vol = on ? (E.cut > 0 ? 0.03 : (road ? 0.09 + load * 0.09 : 0.07 + load * 0.08)) : 0;
+  E.nbp.frequency.setTargetAtTime(f * (kart ? 4 : 2.5), t, 0.02); E.ng.gain.setTargetAtTime(kart ? 0.1 + load * 0.2 : f2 ? 0.16 + load * 0.26 : 0.12 + load * 0.22, t, 0.05);
+  E.lp.frequency.setTargetAtTime(kart ? Math.min(5200, 1300 + load * 2700 + (E.rpm / 14000) * 1500) : f2 ? Math.min(3300, 450 + load * 2000 + (E.rpm / 10500) * 1000) : road ? Math.min(1900, 260 + load * 900 + (E.rpm / 7300) * 700) : Math.min(4200, 500 + load * 2600 + (E.rpm / 12000) * 1300), t, 0.03);
+  const vol = on ? (E.cut > 0 ? 0.03 : (kart ? 0.055 + load * 0.065 : f2 ? 0.075 + load * 0.085 : road ? 0.09 + load * 0.09 : 0.07 + load * 0.08)) : 0;
   E.out.gain.setTargetAtTime(vol, t, E.cut > 0 ? 0.01 : 0.04);
-  E.turbo.frequency.setTargetAtTime(2600 + (E.rpm / 12000) * 2600, t, 0.05); E.tg.gain.setTargetAtTime(on && !road ? load * 0.012 : 0, t, 0.1);
+  E.turbo.frequency.setTargetAtTime(2600 + (E.rpm / 12000) * 2600, t, 0.05); E.tg.gain.setTargetAtTime(on && !road && !kart ? load * (f2 ? 0.006 : 0.012) : 0, t, 0.1);
   const ef = 380 + pl.v * 22; E.ers.frequency.setTargetAtTime(ef, t, 0.04); E.ers2.frequency.setTargetAtTime(ef * 2, t, 0.04); E.ers3.frequency.setTargetAtTime(ef * 3.01, t, 0.04); E.ebp.frequency.setTargetAtTime(ef * 2.2, t, 0.05);
   E.eg.gain.setTargetAtTime(on && pl.boosting ? 0.09 : 0, t, pl.boosting ? 0.06 : 0.15);
   if (on && pl.boosting && !E.wasBoost) { // Zisch beim Zuschalten
@@ -5519,14 +5538,15 @@ function updateAudio(thr) {
   }
   E.wasBoost = on && pl.boosting;
   // Fehlzündungen beim Gaswegnehmen
-  if (on && !road && thr < 0.2 && E.rpm > 8500 && Math.random() < 0.06) { const s = ac.createBufferSource(), g = ac.createGain(), fl = ac.createBiquadFilter(); s.buffer = E.nb; fl.type = 'lowpass'; fl.frequency.value = 900; s.connect(fl); fl.connect(g); g.connect(E.out); g.gain.setValueAtTime(0.9, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.05); s.start(t, Math.random() * 0.5); s.stop(t + 0.06); }
+  if (on && !road && !kart && thr < 0.2 && E.rpm > (f2 ? 7200 : 8500) && Math.random() < 0.06) { const s = ac.createBufferSource(), g = ac.createGain(), fl = ac.createBiquadFilter(); s.buffer = E.nb; fl.type = 'lowpass'; fl.frequency.value = 900; s.connect(fl); fl.connect(g); g.connect(E.out); g.gain.setValueAtTime(0.9, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.05); s.start(t, Math.random() * 0.5); s.stop(t + 0.06); }
   // die 4 nächsten Autos, mit Doppler-Effekt und Stereo-Position
   const near = ais.map(c => [Math.hypot(c.x - pl.x, c.z - pl.z), c]).sort((a, b) => a[0] - b[0]).slice(0, 4);
   E.others.forEach((O, k) => {
     const nd = near[k] ? near[k][0] : 1e9, c = near[k] && near[k][1];
     if (!c || !on || nd > 140) { O.fg.gain.setTargetAtTime(0, t, 0.1); return; }
     const dx = c.x - pl.x, dz = c.z - pl.z, dl = nd || 1, vr = ((Math.sin(c.h) * c.v - Math.sin(pl.h) * pl.v) * dx + (Math.cos(c.h) * c.v - Math.cos(pl.h) * pl.v) * dz) / dl;
-    const fn = gearInfo(c.v * 3.6).rpm / 60 * 3 * clamp(340 / (340 + vr), 0.65, 1.5);
+    const oRpm = kart ? 6500 + clamp(c.v / (VTOP * SERPH.top), 0, 1.1) * 7500 : f2 ? 4500 + (gearInfo(c.v * 3.6).rpm - 4000) / 9200 * 6000 : gearInfo(c.v * 3.6).rpm;
+    const fn = oRpm / 60 * (kart ? 1 : 3) * clamp(340 / (340 + vr), 0.65, 1.5);
     O.fo.frequency.setTargetAtTime(fn, t, 0.03); O.fo2.frequency.setTargetAtTime(fn * 0.5, t, 0.03); O.fl.frequency.setTargetAtTime(700 + (c.thr || 0) * 1600, t, 0.05);
     O.fg.gain.setTargetAtTime(0.06 * Math.pow(1 - nd / 140, 2) * (0.5 + 0.5 * (c.thr || 0)), t, 0.05);
     if (O.pan) { const side = (dx * Math.cos(pl.h) - dz * Math.sin(pl.h)) / dl; O.pan.pan.setTargetAtTime(clamp(side, -0.9, 0.9), t, 0.05); }
@@ -6959,7 +6979,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '0.96'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '0.97'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
