@@ -605,7 +605,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
         </div>
       </div>
     </div>
-    <div class="tver">Version <span id="verNo">0.94</span></div>
+    <div class="tver">Version <span id="verNo">0.95</span></div>
   </section>
 
   <section class="scr" id="scrTrack">
@@ -2093,7 +2093,7 @@ function teamTemplate(tk) {
   if (MD) {
     const T = T0, isF2 = T.kind === 'f2', cB = col(T.body), cA = col(T.acc), cT = col(T.tip), cLow = col(T.low ?? T.body), cC = col(0x4a4f57), cD = col(0x16181b);
     const pc = (k, x, y, z, o) => isF2 && k === 7 ? o.copy(cD) : isF2 && k === 0 && (z > 2.55 || (z > 2.15 && y < 0.36) || (z < -1.9 && y > 0.6)) ? o.copy(z > 2.55 ? cT : cA) : o.copy(k === 1 ? cA : k === 2 ? cT : k === 3 ? cC : k === 4 ? cD : (T.low !== undefined && y < T.split ? cLow : cB));
-    const gloss = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: isF2 ? .38 : .3, metalness: isF2 ? Math.min(.08, T.metal * 0.7) : T.metal * 0.7, clearcoat: isF2 ? .7 : 1, clearcoatRoughness: isF2 ? .12 : .06, envMapIntensity: isF2 ? .6 : 1.25, side: THREE.DoubleSide });   // F2: matter, kaum Metall – spiegelte sonst das Gras grün
+    const gloss = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .3, metalness: T.metal * (isF2 ? 0.5 : 0.7), clearcoat: 1, clearcoatRoughness: .06, envMapIntensity: isF2 ? 1.0 : 1.25, side: THREE.DoubleSide });   // F2: wie F1, aber etwas weniger Metall und Umgebungsspiegelung (sonst grünstichig vom Gras)
     const haloMat = gloss.clone();   // Halo in der TV-Kamera: einfarbig in der Fahrzeugfarbe, ohne Lackierungs-Verlauf (Material vor dem Livery-Shader kopieren)
     return (TPL[tk] = { model: true, M: MD, lods: MD.C.lods.map(L => ({ gloss: paintGeo(L.gloss, pc), matte: paintGeo(L.matte, pc) })), halo: paintGeo(MD.C.halo, pc), haloFlat: paintGeo(MD.C.halo, (k, x, y, z, o) => o.copy(cB)), haloMat, glossMat: liveryMat(tk, gloss) });
   }
@@ -6085,7 +6085,7 @@ function updateMeshes(dt) {
     let roll = 0; if (BANK && BANK[c.idx]) { const l0 = c.lat; c.lat = l0 + 0.4; const hp = bankAt(c); c.lat = l0 - 0.4; const hm = bankAt(c); c.lat = l0; roll = Math.atan((hp - hm) / 0.8 * (Math.cos(c.h) * RX[c.idx] - Math.sin(c.h) * RZ[c.idx])); }
     m.g.position.set(c.x, c.ey, c.z); m.g.rotation.set(FLAT ? 0 : -Math.atan(SLOPE[c.idx] * fw), c.h, roll);
     m.fl.rotation.y = m.fr.rotation.y = -c.steer * 0.35;
-    c.spin = (c.spin + Math.min((c.v || 0) * dt / (m.wr || 0.36), 0.55)) % (Math.PI * 2);
+    c.spin = (c.spin + Math.min((c.v || 0) * dt / (m.wr || 0.36), 0.28)) % (Math.PI * 2);   // Drehung pro Bild begrenzt: 0,55 rad/Bild wirkte bei hohem Tempo wie ein Eiern (Aliasing)
     if ((m.road || m.kart) && m.swSpin) m.swSpin.rotation.z = -(c.steer || 0) * 1.6;
     if (m.road) m.brakeMat.emissiveIntensity = running && c.brk > 0.1 ? 4 : 0.15;
     else m.rl.visible = running && c.v > 25 && ((c.thr || 0) < 0.6 || c.brk > 0.1) && ((performance.now() / 110) | 0) % 2 === 0;
@@ -6959,7 +6959,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '0.94'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '0.95'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
