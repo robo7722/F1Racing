@@ -1157,8 +1157,8 @@ Object.defineProperty(THREE.MeshStandardMaterial.prototype, 'envMap', {
 });
 const canvas = $('#c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: S.gfx === 'low' && (!isTouch || devicePixelRatio < 2), powerPreference: 'high-performance' });
-renderer.toneMapping = THREE.AgXToneMapping;   /* filmische Kurve: Lichter laufen weich aus und behalten Farbe (ACES ließ Rot, Himmel und Weiß hart ausbrennen) */
-const TONE = { sat: 1.1, con: 1.12 };   /* Ausgleich: AgX ist von sich aus flauer – die Farbstimmung je Strecke (look) wird damit multipliziert */
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+const TONE = { sat: 1, con: 1 };   /* globaler Faktor auf Sättigung/Kontrast der Streckenstimmung (1 = unverändert) */
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;   /* PCF statt PCF-Soft: kaum sichtbar, deutlich weniger Abtastungen */   // weiche Schattenkanten kosten auf dem Handy zu viel
 const maxAniso = renderer.capabilities.getMaxAnisotropy();
@@ -3532,17 +3532,11 @@ function buildTrack(key) {
     POCKETS.push({ a, sg, out }); };
   // Kurven einer Schikane im Streckenabschnitt [s0, s1] (Meter): Liste aus [Anfangsindex, Endindex, rechts?]
   const turnsIn = (s0, s1) => { const T = [], i1 = Math.round(s1 / DS); for (let i = Math.round(s0 / DS); i < i1; i++) if (Math.abs(KS[i]) > 1 / 70) { let e = i; while (e < i1 && Math.abs(KS[e]) > 1 / 70) e++; T.push([i, e, KS[(i + e) >> 1] > 0]); i = e; } return T; };
-  if (TRK.monza && !TRK.refFull) { const pad = Math.round(75 / DS);   // nach Luftbild: beide Schikanen haben geradeaus einen asphaltierten Notausgang, die Absperrung läuft gerade durch
-    const T1 = turnsIn(400, 900);   // Variante del Rettifilo (rechts–links): geradeaus (links) Notausgang auf der alten Geraden; rechts läuft die Absperrung außen um die Schikane, davor befestigte Fläche
-    if (T1.length) { const a = T1[0][0], e = T1[T1.length - 1][1], ir = T1[0][2] ? 1 : -1, t2 = T1[T1.length - 1];
-      straightOn(a - Math.round(40 / DS), e + Math.round(15 / DS), ir > 0 ? WL : WR, -ir); chordWall(a - Math.round(150 / DS), (t2[0] + t2[1]) >> 1, ir > 0 ? WR : WL, ir, true); }
-    const T2 = turnsIn(1700, 2000);   // Variante della Roggia (links–rechts): rechts geradeaus Notausgang; links innen läuft die Absperrung als Sehne hinter dem Scheitel vorbei
-    if (T2.length) { const a = T2[0][0], e = T2[T2.length - 1][1], ir = T2[0][2] ? 1 : -1;
-      straightOn(a - Math.round(40 / DS), e + Math.round(15 / DS), ir > 0 ? WL : WR, -ir); chordWall(a - pad, T2[0][1] + pad, ir > 0 ? WR : WL, ir); } }
+  if (TRK.monza && !TRK.refFull) { let ic = -1; for (let i = 0; i < Math.round(1200 / DS); i++) if (Math.abs(KS[i]) > 1 / 60) { ic = i; break; } if (ic > 0) noWall(ic - Math.round(110 / DS), ic + Math.round(140 / DS)); }
   // Permanente Rennstrecken: in engen Kurven läuft die innere Absperrung als Sehne hinter dem Scheitel vorbei statt der Fahrbahn bis in die Kurve
   // zu folgen – innen ist dann offene Fläche wie an echten Strecken. Nur für geprüfte Strecken (Stadtkurse haben die Mauer bewusst am Scheitel; in Abu Dhabi
   // und an Spas La Source stehen von Hand gesetzte Bauten direkt hinter der alten Linie). Liste je Strecke: ausgenommene Abschnitte [von, bis] in Metern.
-  const CHORD_OK = { monza: [], sil: [[1960, 2060]], rbr: [], spa: [[60, 320], [2280, 2380]] }[TRK.theme || 'monza'];
+  const CHORD_OK = { sil: [[1960, 2060]], rbr: [], spa: [[60, 320], [2280, 2380]] }[TRK.theme];
   if (CHORD_OK && !TRK.kartOnly) { const pd = Math.round(55 / DS); for (const [a, e, right] of turnsIn(0, L - 1)) { const m = (a + e) / 2 * DS; if (CHORD_OK.some(x => m >= x[0] && m <= x[1])) continue; chordWall(a - pd, e + pd, right ? WR : WL, right ? 1 : -1, false, 26); } }
   if (TRK === TRACKS.spa) { // Bus-Stop-Schikane: nur Kies, keine Mauer
     let f0 = -1, f1 = -1; for (let i = Math.round((L - 900) / DS); i < Math.round((L - 40) / DS); i++) if (Math.abs(KS[i]) > 1 / 70) { if (f0 < 0) f0 = i; f1 = i; }

@@ -535,3 +535,9 @@ Die Bäume der `trees: 'forest'`-Strecken bestehen nicht mehr aus Kugeln und Keg
 - **Farbstimmung je Strecke**: bleibt das `look`-Objekt im Thema (Schatten-/Lichterfarbe `sh`/`hi`, `sat`, `con`, `warm`, `tint`, `lift`, `fade`, `vig`, `bloom`, `grain`). Jedes Thema sollte ein eigenes haben – erbt ein Thema per `...THEMES.x`, übernimmt es sonst auch dessen Stimmung (die Kartbahnen Genk und Wackersdorf haben deshalb jetzt eigene Einträge direkt hinter dem Themen-Block).
   - Richtwerte: warme Abendsonne `warm: .3 … .4`, `hi` rötlich-gelb; kühl-bedeckt `warm: -.2`, `sat: .8 … .9`; Nacht `con: 1.16 … 1.2`, `bloom: .4`, `vig: .36 … .4`.
 - **Baum-Kacheln**: Bäume werden in Kacheln von 150 bis 300 m gruppiert (Streckenlänge ÷ 19). Kleine Strecken bekommen kleine Kacheln, damit die Fernstufen überhaupt greifen. Wechsel der Stufen: 130 m (Flächen weg, einfache Krone), 260 m (gröbste Stufe); Stämme ab 450 m aus.
+
+---
+
+## Nachtrag 6: Zurückgenommen
+- **Monza**: Die Schikanen-Umbauten (Rettifilo, Roggia) sind wieder wie vor Version 1.01. Die Bausteine `straightOn`, `chordWall` und `pocketFill` bleiben im Code für andere Strecken; Monza steht nicht mehr in `CHORD_OK`.
+- **Tonwertkurve**: wieder ACES, `TONE` steht auf 1 (keine globale Anhebung). Die Farbstimmung je Strecke ist unverändert, die neuen Stimmungen für Genk und Wackersdorf bleiben.
