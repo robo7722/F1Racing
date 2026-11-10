@@ -1,5 +1,5 @@
 // Service Worker: macht das Spiel offline-fähig und installierbar
-const CACHE = 'f1-rennen-1.00';
+const CACHE = 'f1-rennen-1.01';
 const APP = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './car.bin', './f2car.bin', './kart.bin', './textures/kart_body.jpg', './textures/kart_body_n.jpg', './textures/kart_wheel.jpg', './roadcar.bin', './menu.mp3',
   ...['asphalt_track', 'asphalt_pit_lane', 'sand_01', 'gravel_floor'].flatMap(t => ['diff', 'nor_gl'].map(m => './textures/' + t + '_' + m + '_1k.jpg')),
   ...['Grass004_Color', 'Grass004_NormalGL', 'LeafSet004_Color', 'LeafSet004_Opacity', 'LeafSet019_Color', 'LeafSet019_Opacity', 'Foliage001_Color', 'Foliage001_Opacity'].map(f => './textures/acg_' + f + '.jpg')];
@@ -17,6 +17,13 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE && k !== 'fr-music').map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
+// Audio aus dem Cache: Safari/iOS fragt mit "Range" an und erwartet eine Teilantwort (206) – eine volle 200-Antwort spielt dort nicht
+async function ranged(req, hit) {
+  const rg = req.headers.get('range'), m = rg && /bytes=(\d*)-(\d*)/.exec(rg); if (!hit || !m || hit.status !== 200) return hit;
+  const buf = await hit.clone().arrayBuffer(), n = buf.byteLength; let a = m[1] === '' ? Math.max(0, n - Number(m[2])) : Number(m[1]), b = m[1] === '' || m[2] === '' ? n - 1 : Math.min(n - 1, Number(m[2]));
+  if (!(a <= b) || a >= n) return new Response(null, { status: 416, headers: { 'Content-Range': 'bytes */' + n } });
+  return new Response(buf.slice(a, b + 1), { status: 206, headers: { 'Content-Type': hit.headers.get('Content-Type') || 'audio/mpeg', 'Content-Range': 'bytes ' + a + '-' + b + '/' + n, 'Content-Length': String(b - a + 1), 'Accept-Ranges': 'bytes' } });
+}
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
@@ -27,13 +34,13 @@ self.addEventListener('fetch', e => {
     return;
   }
   if (/\/music\/[^/]+\.(mp3|ogg|m4a|aac|wav|opus)$|\/max\.mp3$/i.test(new URL(req.url).pathname)) { // Rennmusik (Ordner music/): eigener, dauerhafter Cache (bei Bedarf geladen)
-    e.respondWith(caches.open('fr-music').then(c => c.match(req.url).then(hit => hit || fetch(req).then(r => {
+    e.respondWith(caches.open('fr-music').then(c => c.match(req.url).then(hit => hit ? ranged(req, hit) : fetch(req).then(r => {
       if (!MBUSY.has(req.url)) { MBUSY.add(req.url); fetch(req.url).then(full => full.ok && full.status === 200 ? c.put(req.url, full) : 0).catch(() => {}).finally(() => MBUSY.delete(req.url)); }
       return r;
     }))));
     return;
   }
-  e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(r => {
+  e.respondWith(caches.match(req).then(hit => hit ? (/\.mp3$/i.test(new URL(req.url).pathname) ? ranged(req, hit) : hit) : fetch(req).then(r => {
     if (r.ok && (req.url.startsWith(self.location.origin) || req.url.startsWith(CDN))) { const copy = r.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
     return r;
   })));
