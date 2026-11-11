@@ -2302,7 +2302,7 @@ function teamTemplate(tk) {
   if (MD) {
     const T = T0, isF2 = T.kind === 'f2', cB = col(T.body), cA = col(T.acc), cT = col(T.tip), cLow = col(T.low ?? T.body), cC = col(0x4a4f57), cD = col(0x16181b);
     const pc = (k, x, y, z, o) => isF2 && k === 7 ? o.copy(cD) : isF2 && k === 0 && (z > 2.55 || (z > 2.15 && y < 0.36) || (z < -1.9 && y > 0.6)) ? o.copy(z > 2.55 ? cT : cA) : o.copy(k === 1 ? cA : k === 2 ? cT : k === 3 ? cC : k === 4 ? cD : (T.low !== undefined && y < T.split ? cLow : cB));
-    const gloss = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: isF2 ? .32 : .3, metalness: T.metal * (isF2 ? 0.6 : 0.7), clearcoat: 1, clearcoatRoughness: isF2 ? .08 : .06, envMapIntensity: isF2 ? 1.2 : 1.25, side: THREE.DoubleSide });   /* F2 auf F1-Niveau: die dunkle Umgebung (Asphalt, Horizontband) spiegelt sich weich statt schwarz */   // F2: unscharfe, schwache Spiegelung – scharfe Umgebungsspiegelung (Gras/Tribünen) wirkte fleckig-grün
+    const gloss = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: isF2 ? .32 : .3, metalness: T.metal * (isF2 ? 0.6 : 0.7), clearcoat: isF2 ? .45 : 1, clearcoatRoughness: isF2 ? .35 : .06, envMapIntensity: isF2 ? 1.2 : 1.25, side: THREE.DoubleSide });   /* F2: weicher Klarlack – der scharfe Klarlack spiegelte Asphalt und Schatten als schwarze Flecken */   /* F2 auf F1-Niveau: die dunkle Umgebung (Asphalt, Horizontband) spiegelt sich weich statt schwarz */   // F2: unscharfe, schwache Spiegelung – scharfe Umgebungsspiegelung (Gras/Tribünen) wirkte fleckig-grün
     const haloMat = gloss.clone();   // Halo in der TV-Kamera: einfarbig in der Fahrzeugfarbe, ohne Lackierungs-Verlauf (Material vor dem Livery-Shader kopieren)
     return (TPL[tk] = { model: true, M: MD, lods: MD.C.lods.map(L => ({ gloss: paintGeo(L.gloss, pc), matte: paintGeo(L.matte, pc) })), halo: paintGeo(MD.C.halo, pc), haloFlat: cleanHalo(MD.C.halo, cB), haloMat, glossMat: liveryMat(tk, gloss) });
   }
@@ -3596,7 +3596,7 @@ function buildTrack(key) { BID++;
     { const o2 = filt(filt(ok, 2, 'max'), 2, 'min'); for (let i = 0; i < N; i++) if (o2[i] > 0.5 && !ok[i] && (NOWALL[i] & nb)) { let a2 = 0, c = 0; for (let k = -4; k <= 4; k++) { const j = (i + k + N) % N; if (ok[j]) { a2 += MID[j]; c++; } } if (c) { MID[i] = a2 / c; ok[i] = 2; } } }   /* einzelne Lücken schließen */
     for (let i = 0; i < N; i++) if (ok[i]) { let a2 = 0, c = 0; for (let k = -3; k <= 3; k++) { const j = (i + k + N) % N; if (ok[j]) { a2 += Math.min(MID[j], MID[i] + 1); c++; } } const m = Math.max(HW[i] + 0.5, a2 / c - 0.9);   /* je Ast 0,9 m vor der Mittellinie: Zaun des einen und Stützmauer des anderen kreuzen sich nie */ W[i] = (NOWALL[i] & nb) ? m : Math.min(W[i], m); NOWALL[i] &= ~nb; }   /* auch normale Mauern nie über die Mittellinie zum Nachbarast */
   }
-  PAVEZ = new Uint8Array(N); POCK = new Uint8Array(N); POCKETS = [];
+  PAVEZ = new Uint8Array(N); POCK = new Uint8Array(N); POCKETS = []; PAINTZ = null;
   const noWall = (a, b, ext = 38, pave = false, sides = 3) => {   // sides: 1 = nur links, 2 = nur rechts, 3 = beide
     {
       const SD = [[WL, -1, 1], [WR, 1, 2]].filter(x => sides & x[2]);
@@ -3793,6 +3793,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     pt.userData.own = true; pt.wrapS = THREE.ClampToEdgeWrapping;
     const pm = lam({ map: pt, roughness: .7, ...po(-2) }), gm2 = lam({ color: 0x1f9e5a, roughness: .75, ...po(-2) }), am = lam({ map: TEX.runoff, normalMap: TEX.runoffN, roughness: .85, ...po(-1) });
     const PZ2 = new Uint8Array(N); for (const [a, b] of TH.paint) for (let s2 = a; s2 <= b; s2 += DS) PZ2[Math.floor(modL(s2) / DS)] = 1;
+    PAINTZ = PZ2;
     const wd = i => PZ2[i] === 2 ? 11 : 10;
     hStrip(i => HW[i] + 1.5, i => Math.min(HW[i] + 1.5 + wd(i), WR[i] - 1), .019, .019, pm, { mask: i => PZ2[i], uScale: 1e6, uFixed: true, vScale: 30, conform: true });
     hStrip(i => -Math.min(HW[i] + 1.5 + wd(i), WL[i] - 1), i => -HW[i] - 1.5, .019, .019, pm, { mask: i => PZ2[i], uScale: 1e6, uFixed: true, vScale: 30, conform: true, flipU: true });
@@ -6368,10 +6369,12 @@ function resetCar(c) {
   if (c === pl) camH = p.h;
   projectCar(c);
 }
+let PAINTZ = null;   /* bemalte Asphaltausläufe (Spa): kein Gras, Fahrphysik wie Auslaufzone */
 function surface(i, lat) {
   const a = Math.abs(lat), h = HW[i];
   if (a <= h) return 'road';
   if ((lat < 0 ? KERBL : KERBR)[i] && a <= h + 1.5) return 'kerb';
+  if (PAINTZ && PAINTZ[i] && a <= h + 12.5) return 'runoff';
   if (POCK && POCK[i] & (lat < 0 ? 1 : 2)) return 'runoff';   // asphaltierter Notausgang einer Schikane
   if (PAVEZ && PAVEZ[i]) return a <= h + 15 ? 'runoff' : 'gravel';
   if (lat < 0 ? GRL[i] : GRR[i]) { const go = lat < 0 ? GOL : GOR; return a > h + 1.5 && (!go || a <= go[i] + 1) ? 'gravel' : a <= h + 1.5 ? 'grass' : 'grass'; }
@@ -7517,7 +7520,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.08'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.09'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
