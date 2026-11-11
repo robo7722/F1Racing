@@ -49,7 +49,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .mnext span{font-size:22px;margin-left:6px;vertical-align:-2px}
 .mnext.start{background:linear-gradient(100deg,#ff3b30,#ff7a1a);color:#fff;box-shadow:0 10px 34px rgba(255,70,40,.45),inset 0 1px 0 rgba(255,255,255,.4)}
 .mhint{position:absolute;left:0;right:0;bottom:2px;font-size:9px!important;opacity:.35;text-align:center;pointer-events:none;display:none}
-#menu[data-scr=race] .mhint{display:block}
+#menu[data-scr=race] .mhint{display:none}
+#menu[data-scr="title"] .mhint{display:block;left:50%;right:auto;transform:translateX(-50%);width:min(900px,94vw);bottom:6px}   /* Steuerungs-/Quellenhinweis nur im Hauptmenü – auf den Auswahlseiten überdeckte er die Zusammenfassung unten */
 .mh{margin:0 0 10px;font-size:clamp(20px,4.2vh,30px);font-weight:900;font-style:italic;letter-spacing:.02em;text-transform:uppercase}
 .mh.center{text-align:center}
 /* Titel */
@@ -5480,8 +5481,8 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       // Laubbaum: Kern (kleine dunkle Wolken) + Laubflächen; einfache Stufen: eine Wolke in voller Kronengröße
       const lcx = LF.lobes.reduce((q, l) => q + l[1], 0) / LF.lobes.length;
       const ball = mergeParts(LF.lobes.map((l, k) => [blob(l[3] * 0.62, l[0], l[1], l[2], k + 1, k ? 0 : 1), null]), true);   /* Kern: Hauptwolke fein, Nebenwolken grob – sie liegen hinter den Laubflächen */
-      const cardB = FOL.card ? lobeCards(LF.lobes, LF.cards, LF.sz) : null;
-      const ballLo = blobE(LF.lo[0], LF.lo[1], LF.lo[2] ?? lcx, 5, 2), ballFar = blobE(LF.lo[0], LF.lo[1], LF.lo[2] ?? lcx, 5, 1);
+      const cardB = FOL.card ? lobeCards(LF.lobes, Math.round(LF.cards * 0.72), LF.sz * 1.1) : null;   /* 28 % weniger Laubflächen, dafür etwas größer: gleiche Dichte, weniger Dreiecke */
+      const ballLo = mergeParts(LF.lobes.map((l, k) => [blob(l[3] * 0.66, l[0], l[1], l[2], k + 1, 0), null]), true), ballFar = blobE(LF.lo[0], LF.lo[1], LF.lo[2] ?? lcx, 5, 1);   /* mittlere Stufe: dieselben Wolken, nur gröber – die Silhouette bleibt, nur die Laubflächen entfallen (blenden vorher aus) */
       // Nadelbaum
       const pine = CN.kind === 'pine', cH = CN.y1 - CN.y0;
       const cone = pine ? blobE(CN.r * 0.55, 0.32, (CN.y0 + CN.y1) / 2 + 0.2, 7, 1) : coneT(CN.r * 0.42, cH * 1.05, CN.y0 + cH * 0.55, 7, 1);
@@ -5491,7 +5492,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       const trH = TS.trunkH || 6.4, trunk = new THREE.CylinderGeometry(0.2, 0.46, trH, 6, 1, true).translate(0, trH / 2, 0), trunkFar = new THREE.CylinderGeometry(0.2, 0.46, trH, 3, 1, true).translate(0, trH / 2, 0);   /* höherer, verjüngter Stamm: reicht bis in die Krone (Kiefer, Eukalyptus) */
       for (const g of [ball, cone, cardB, cardC, ballLo, coneLo, trunk]) if (g) g.userData.tree = true;
       for (const g of [cardB, cardC]) if (g) g.userData.lod = [[null, 130]];   /* Flächen verschwinden genau dann, wenn der Kern auf die einfache Stufe wechselt */
-      ball.userData.lod = [[ballLo, 130], [ballFar, 260]]; cone.userData.lod = [[coneLo, 130], [coneFar, 260]]; ballLo.userData.lod = [[ballFar, 130]]; coneLo.userData.lod = [[coneFar, 130]]; trunk.userData.lod = [[trunkFar, 90], [null, 450]];   /* Stufen wechseln früher: ab 130 m ist der Unterschied nicht mehr zu sehen */
+      ball.userData.lod = [[ballLo, 130], [ballFar, 300]]; cone.userData.lod = [[coneLo, 130], [coneFar, 260]]; ballLo.userData.lod = [[ballFar, 300]]; coneLo.userData.lod = [[coneFar, 130]]; trunk.userData.lod = [[trunkFar, 90], [null, 450]];   /* Stufen wechseln früher: ab 130 m ist der Unterschied nicht mehr zu sehen */
       if (TRK.nos) { for (const g of [ball, cone]) g.userData.lod.push([null, 1000]); for (const g of [ballLo, coneLo]) g.userData.lod.push([null, 1000]); trunk.userData.lod = [[trunkFar, 120], [null, 450]]; }   // Nordschleife: Waldkante übernimmt die Ferne
       const ic = new THREE.InstancedMesh(cone, needleMat, place.length), ib = new THREE.InstancedMesh(ball, leafMat, place.length), it = new THREE.InstancedMesh(trunk, lam({ map: TEX.bark, normalMap: TEX.barkN, normalScale: new THREE.Vector2(1.3, 1.3), color: 0xffffff, roughness: .95 }), place.length);
       const icL = new THREE.InstancedMesh(coneLo, needleMat, place.length), ibL = new THREE.InstancedMesh(ballLo, leafMat, place.length);
@@ -5502,7 +5503,8 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       let a = 0, b = 0;
       place.forEach(([x, z, sr], k) => {
         const near = nearN < nearCap && dTrk[k] < dCut; if (near) nearN++;
-        const s = sr ? sr * (0.9 + Math.random() * 0.2) : 1.0 + Math.random() * 1.0; sc.set(s, s * (0.9 + Math.random() * 0.7), s); qq.setFromAxisAngle(_v2, Math.random() * 6.28); m4.compose(pv.set(x, 0, z), qq, sc);
+        if (!near && !sr && S.gfx !== 'ultra' && (k * 2654435761 >>> 0) % 5 < 2) { it.setMatrixAt(k, m4.makeScale(0, 0, 0)); return; }   /* ferne Bäume (Hintergrund) um 40 % ausgedünnt, die übrigen etwas größer: weniger Zeichenlast, Wald bleibt dicht */
+        const s = sr ? sr * (0.9 + Math.random() * 0.2) : (1.0 + Math.random() * 1.0) * (near ? 1 : 1.15); sc.set(s, s * (0.9 + Math.random() * 0.7), s); qq.setFromAxisAngle(_v2, Math.random() * 6.28); m4.compose(pv.set(x, 0, z), qq, sc);
         it.setMatrixAt(k, m4);
         const isCon = Math.random() < conF;
         if (isCon) { const M2 = near ? ic : icL, n2 = near ? a++ : aL++; M2.setMatrixAt(n2, m4); M2.setColorAt(n2, cc.setHSL(CN.hsl[0] + Math.random() * .05, CN.hsl[1], CN.hsl[2] + Math.random() * .15)); if (near && icS) { icS.setMatrixAt(n2, m4); icS.setColorAt(n2, cc); } }
@@ -6547,7 +6549,7 @@ function updateMeshes(dt) {
     else m.rl.visible = running && c.v > 25 && ((c.thr || 0) < 0.6 || c.brk > 0.1) && ((performance.now() / 110) | 0) % 2 === 0;
     m.wfl.rotation.x = m.wfr.rotation.x = m.rr.rotation.x = c.spin;
     if (m.sw) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z; m.sw.visible = c === pl || dx * dx + dz * dz < 625; }   /* Kart: Lenkrad (viele kleine Teile) nur aus der Nähe zeichnen */
-    if (m.tp) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z, d2 = dx * dx + dz * dz; setLod(m, c === pl || d2 < 24 * 24 ? 0 : d2 < 85 * 85 ? 1 : 2);   /* Detailstufen früher: weniger Dreiecke bei vollem Starterfeld */ }
+    if (m.tp) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z, d2 = dx * dx + dz * dz; setLod(m, c === pl || d2 < 13 * 13 ? 0 : d2 < 46 * 46 ? 1 : 2);   /* volle Modellstufe (50.000 Dreiecke) nur für den Spieler und Autos unter 13 m */   /* Detailstufen früher: weniger Dreiecke bei vollem Starterfeld */ }
   }
 }
 
@@ -7462,7 +7464,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.03'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.04'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
