@@ -810,6 +810,8 @@ th{background:#0c0c12!important;letter-spacing:.16em;font-size:10px!important;co
 #helmet{position:absolute;inset:0;pointer-events:none;display:none;z-index:0}
 body.cockpit.helmcam #helmet{display:block}
 #helmet svg{width:100%;height:100%;display:block}
+#tc,#pos,#lap{display:none!important}   /* Rundenzeit, Position und Runde stehen jetzt im Tacho */
+#board{margin-top:0!important}
 #haloHud{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none}
 body.tvcam #haloHud{display:block}body.tvcam #speedo{display:none!important}
 #gauge{width:320px!important;height:120px!important}
@@ -6224,10 +6226,14 @@ function haloDraw(g, o) {
     g.lineWidth = Math.max(1.5, t * 0.07); g.strokeStyle = 'rgba(255,255,255,.18)'; g.beginPath(); g.ellipse(cx, cy, rx - t * 0.78, ry - t * 0.78 * k, 0, n0, n1); g.stroke();
     g.strokeStyle = f > 0.93 ? '#ff4a1a' : '#ffffff'; g.beginPath(); g.ellipse(cx, cy, rx - t * 0.78, ry - t * 0.78 * k, 0, n0, n0 + (n1 - n0) * f); g.stroke();
     txt('RPM x1000', (n0 + n1) / 2 + 0.05, t * 1.0, Math.max(6, t * 0.2), 'rgba(255,255,255,.55)', 600); }
-  // Name + Zeit links (nur TV-Ansicht)
-  if (full) { const n1 = thC - aw - bs - 0.07, n0 = Math.max(th0 + 0.06, n1 - 0.42), m = (n0 + n1) / 2, nm = String(pl.name || '').split(' ').pop().toUpperCase(), cur = raceState === 'race' && pl.lapsDone >= 0 && !pl.finished ? raceTime - pl.lapStart : 0;
-    { g.save(); g.lineWidth = 1.5; g.strokeStyle = '#ff7a1a'; g.beginPath(); g.ellipse(cx, cy, rx - t * 0.08, ry - t * 0.08 * k, 0, n0, n1); g.ellipse(cx, cy, rx - t * 0.92, ry - t * 0.92 * k, 0, n1, n0, true); g.closePath(); g.stroke(); g.restore(); }
-    txt(nm, m, t * 0.33, t * 0.38, '#fff', 800); txt(cur ? fmt(cur) : 'RUNDE ' + clamp(pl.lapsDone + 1, 1, S.laps) + '/' + S.laps, m, t * 0.7, t * 0.3, 'rgba(255,255,255,.85)', 600); }
+  // links: Position, Runde, Rundenzeit (ersetzt die Anzeigen oben in der Mitte und oben links) – in der TV-Ansicht zusätzlich der Fahrername
+  { const n1 = thC - aw - bs - 0.07, n0 = th0 + 0.05, m = (n0 + n1) / 2, pos = Math.max(1, order.indexOf(pl) + 1), cur = raceState === 'race' && pl.lapsDone >= 0 && !pl.finished ? raceTime - pl.lapStart : 0;
+    g.save(); g.lineWidth = 1.4; g.strokeStyle = 'rgba(225,6,0,.9)'; g.beginPath(); g.ellipse(cx, cy, rx - t * 0.08, ry - t * 0.08 * k, 0, n0, n1); g.ellipse(cx, cy, rx - t * 0.92, ry - t * 0.92 * k, 0, n1, n0, true); g.closePath(); g.stroke();
+    g.fillStyle = 'rgba(225,6,0,.85)'; g.beginPath(); g.ellipse(cx, cy, rx - t * 0.08, ry - t * 0.08 * k, 0, n0, n0 + 0.13); g.ellipse(cx, cy, rx - t * 0.92, ry - t * 0.92 * k, 0, n0 + 0.13, n0, true); g.closePath(); g.fill(); g.restore();
+    txt('P' + pos, n0 + 0.065, t * 0.5, t * 0.44, '#fff', 800);
+    const mm = (n0 + 0.15 + n1) / 2, nm = String(pl.name || '').split(' ').pop().toUpperCase();
+    txt((full ? nm + '  ' : '') + 'RUNDE ' + clamp(pl.lapsDone + 1, 1, S.laps) + '/' + S.laps, mm, t * 0.3, t * 0.27, 'rgba(255,255,255,.75)', 700);
+    txt(cur ? fmt(cur) : pl.best ? fmt(pl.best) : '0:00.000', mm, t * 0.68, t * 0.4, '#fff', 800); }
   // Tacho-Kreis oben
   g.fillStyle = 'rgba(10,16,28,.88)'; g.beginPath(); g.arc(gx, gy, r0, 0, Math.PI * 2); g.fill(); g.lineWidth = 1.2; g.strokeStyle = 'rgba(150,205,255,.5)'; g.stroke();
   { const s0 = Math.PI * 0.75, s1 = Math.PI * 2.25, fr = clamp(kmh / 350, 0, 1), rr = r0 * 0.84; g.lineCap = 'round'; g.lineWidth = Math.max(2.5, r0 * 0.11);
@@ -6242,7 +6248,7 @@ function haloDraw(g, o) {
   if (!document.body.classList.contains('noBoost')) { const w = r0 * 1.5, x0 = gx - w / 2, y = gy + r0 + 6, b2 = clamp(pl.bat || 0, 0, 1); g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(x0, y, w, 3); g.fillStyle = pl.boosting ? '#fff27a' : '#ffd400'; g.fillRect(x0, y, w * b2, 3);
     g.font = '700 ' + Math.max(6, r0 * 0.15) + 'px ' + F; g.fillStyle = 'rgba(255,212,0,.9)'; g.fillText(pl.boosting ? BOOST_NAME : 'ERS ' + Math.round(b2 * 100) + '%', gx, y + 9); }
 }
-function drawGauge() { const g = gG; g.clearRect(0, 0, 640, 240); g.save(); g.scale(2, 2); haloDraw(g, { cx: 160, cy: 190, rx: 150, ry: 150, t: 26, th0: Math.PI + 0.5, th1: Math.PI * 2 - 0.5, full: false }); g.restore(); }
+function drawGauge() { const g = gG; g.clearRect(0, 0, 640, 240); g.save(); g.scale(2, 2); haloDraw(g, { cx: 160, cy: 150, rx: 152, ry: 100, t: 26, th0: Math.PI + 0.42, th1: Math.PI * 2 - 0.42, full: false });   /* flacher Bogen: Schrift links steht fast waagerecht */ g.restore(); }
 // TV-Ansicht: die Grafik liegt auf dem echten Halo – drei Punkte des Halo-Bogens werden auf den Bildschirm projiziert, daraus die Ellipse
 const HHC = $('#haloHud'), HHG = HHC.getContext('2d'), _hv = new THREE.Vector3();
 // Helmrand in der Cockpitansicht (wie Need for Speed Shift): unscharfe Polsterung und Visierkante an den Bildrändern. Einmal als SVG gebaut (Unschärfe im SVG-Filter, statisch).
@@ -7370,8 +7376,14 @@ function fmt(t) { if (!t) return '–'; const m = Math.floor(t / 60), s = t - m 
 function showMsg(t, dur) { const el = $('#msg'); el.textContent = t; el.classList.add('show'); msgT = dur; }
 let gaugeT = 0, hudBat = -1, hudBoost = null;
 const HUDC = {};
+const HUDD = { h: 0, v: 0, la: 0, ax: 0 };
 function updateHUD(dt) {
   drawHaloHud();
+  if (running && pl) {   // Tacho in der Außenansicht leicht dynamisch: neigt sich mit der Fliehkraft, rutscht beim Bremsen/Beschleunigen ein paar Pixel
+    const sp = $('#speedo'), base = document.body.classList.contains('touchUI') ? 'translateX(-50%) ' : '';
+    if (S.cam < 2 && dt > 0 && !paused) { const yr = wrapA(pl.h - HUDD.h) / dt, ac = (pl.v - HUDD.v) / dt; HUDD.la += (clamp(yr * pl.v / 45, -1, 1) - HUDD.la) * Math.min(1, dt * 3); HUDD.ax += (clamp(ac / 30, -1, 1) - HUDD.ax) * Math.min(1, dt * 3);
+      sp.style.setProperty('transform', base + 'translate(' + (-HUDD.la * 7).toFixed(1) + 'px,' + (HUDD.ax * 4).toFixed(1) + 'px) rotate(' + (HUDD.la * 2.2).toFixed(2) + 'deg)', 'important'); }
+    HUDD.h = pl.h; HUDD.v = pl.v; }
   if (msgT > 0) { msgT -= dt; if (msgT <= 0) $('#msg').classList.remove('show'); }
   if (!running) return;
   gaugeT -= dt; if (gaugeT <= 0) { gaugeT = 1 / 30; drawGauge(); }
