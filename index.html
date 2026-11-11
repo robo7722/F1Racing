@@ -3064,7 +3064,7 @@ function bankBreaks(i) { const qe = HW[i] + BK_IN; return [0, KSD * qe, KSD * (q
 function bankAt(c) { if (!BANK) return 0; const f = modL(c.d) / DS, i0 = Math.floor(f) % N, i1 = (i0 + 1) % N, t = f - Math.floor(f); return bankY(i0, c.lat) * (1 - t) + bankY(i1, c.lat) * t; }
 const HOTEL_T = { value: 0 };
 let POCK = null, POCKETS = [];   // asphaltierte Notausgänge (Schikanen): Seiten-Bits je Streckenpunkt + Flächen zum Füllen
-let MC_CHIC = null, MC_DEM = null, MC_TERR = [], MC_PADS = null, BANDW = null, HORIZ = null, BANDS = [], MC_SEA = null, MC_ISL = null, MJ = null, SPI = null, PAVEZ = null, KERBL = null, KERBR = null, REFNW = null, WTL = null, WTR = null, GOL = null, GOR = null, HILLW = null, RISE = null, ELEV, SLOPE, FLAT = true, ELMEAN = 0, HG = null, HW, NOWALL, TRK, TH, N, L, DS, PX, PZ, TX, TZ, RX, RZ, KS, KP, KR, RL, profBot = null, WL, WR, GRL, GRR, KERB, profP, profAI, inSign = 1, poleSide = 1, hotelRoof = null;
+let HOLES = 0, MC_CHIC = null, MC_DEM = null, MC_TERR = [], MC_PADS = null, BANDW = null, HORIZ = null, BANDS = [], MC_SEA = null, MC_ISL = null, MJ = null, SPI = null, PAVEZ = null, KERBL = null, KERBR = null, REFNW = null, WTL = null, WTR = null, GOL = null, GOR = null, HILLW = null, RISE = null, ELEV, SLOPE, FLAT = true, ELMEAN = 0, HG = null, HW, NOWALL, TRK, TH, N, L, DS, PX, PZ, TX, TZ, RX, RZ, KS, KP, KR, RL, profBot = null, WL, WR, GRL, GRR, KERB, profP, profAI, inSign = 1, poleSide = 1, hotelRoof = null;
 const trackGroup = new THREE.Group(); scene.add(trackGroup);
 const wrapL = x => x - L * Math.round(x / L);
 const modL = x => ((x % L) + L) % L;
@@ -3377,6 +3377,39 @@ function tileGround(root, T = 6) {
     root.remove(ch);
   }
 }
+// Löcher im Boden schließen: Kies-/Auslauf-Streifen werden auf der Kurveninnenseite begrenzt (foldLim, sonst falten sie sich). Zwischen zwei Kurven einer Schikane
+// bleibt dadurch eine rundum eingeschlossene Lücke, durch die der Grasboden schien (linsenförmige Grasflecken im Kiesbett, z. B. Monza Rettifilo).
+// Alle Bodenflächen auf ein 1-m-Raster legen; jede freie Zelle innerhalb der Absperrung, die laut Fahrphysik (surface) Kies oder Auslauf ist, mit dem passenden Nachbarbelag füllen.
+// So stimmen Bild und Fahrgefühl überein, und gewollte Rasenflächen bleiben unberührt.
+function fillGroundHoles(dry = false) {
+  trackGroup.updateMatrixWorld(true); const Q = 2, C = new Map(), F = new Set(), key = (x, z) => x * 131072 + z, isFill = o => !!(o.userData.tile || o.userData.ground || (o.material && o.material.userData && o.material.userData.fill));
+  const raster = (o, fn) => { const g = o.geometry, P = g.attributes.position, I = g.index, n = I ? I.count : P.count, A = [0, 0, 0], B = [0, 0, 0], Cc = [0, 0, 0], e = o.matrixWorld.elements;
+    const get = (k, out) => { const x = P.getX(k), y = P.getY(k), z = P.getZ(k); out[0] = (e[0] * x + e[4] * y + e[8] * z + e[12]) * Q; out[1] = e[1] * x + e[5] * y + e[9] * z + e[13]; out[2] = (e[2] * x + e[6] * y + e[10] * z + e[14]) * Q; };
+    for (let t = 0; t < n; t += 3) { get(I ? I.getX(t) : t, A); get(I ? I.getX(t + 1) : t + 1, B); get(I ? I.getX(t + 2) : t + 2, Cc);
+      const x0 = Math.ceil(Math.min(A[0], B[0], Cc[0])), x1 = Math.floor(Math.max(A[0], B[0], Cc[0])), z0 = Math.ceil(Math.min(A[2], B[2], Cc[2])), z1 = Math.floor(Math.max(A[2], B[2], Cc[2]));
+      const d = (B[2] - Cc[2]) * (A[0] - Cc[0]) + (Cc[0] - B[0]) * (A[2] - Cc[2]); if (Math.abs(d) < 1e-9 || x1 - x0 > 300 * Q || z1 - z0 > 300 * Q) continue;
+      for (let x = x0; x <= x1; x++) for (let z = z0; z <= z1; z++) { const a = ((B[2] - Cc[2]) * (x - Cc[0]) + (Cc[0] - B[0]) * (z - Cc[2])) / d, b = ((Cc[2] - A[2]) * (x - Cc[0]) + (A[0] - Cc[0]) * (z - Cc[2])) / d, c = 1 - a - b; if (a < -1e-6 || b < -1e-6 || c < -1e-6) continue; fn(x, z, a * A[1] + b * B[1] + c * Cc[1]); } } };
+  for (const o of [...trackGroup.children]) { if (!o.isMesh || o.isInstancedMesh || !o.geometry || !o.geometry.attributes.position) continue; if (o.userData.tile || o.userData.ground) continue;
+    if (isFill(o)) { raster(o, (x, z) => F.add(key(x, z))); continue; }
+    if (!(o.userData.strip || o.userData.flat) || o.material.transparent || o.material.alphaTest > 0 || !o.material.map) continue;
+    raster(o, (x, z, y) => { const k = key(x, z), q = C.get(k); if (!q || y < q.y) C.set(k, { y, m: o.material }); }); }   /* je Zelle den TIEFSTEN Belag merken: Kies/Auslauf liegt unter Kerbs und Linien */
+  if (!C.size) return 0; const groups = new Map(), XZ = new Map(), done = new Set();
+  // Material je Belagsart: Kies = Kiesstreifen, Auslauf = tiefster asphaltierter Nachbar (aus den gerasterten Flächen ermittelt)
+  const pick = (x, z, want) => { for (let r = 1; r <= 6 * Q; r++) for (let a = -r; a <= r; a++) for (let b = -r; b <= r; b++) { if (Math.max(Math.abs(a), Math.abs(b)) !== r) continue; const c = C.get(key(x + a, z + b)); if (c && (want === 'gravel') === (c.m.map && c.m.map.source === TEX.gravel.source)) return c.m; } return null; };
+  for (let i = 0; i < N; i++) for (const sg of [-1, 1]) { const W = sg < 0 ? WL[i] : WR[i];
+    for (let o = HW[i] + 1.6; o < W - 0.6; o += 0.7 / Q) { const x = Math.round((PX[i] + RX[i] * o * sg) * Q), z = Math.round((PZ[i] + RZ[i] * o * sg) * Q), k = key(x, z); if (done.has(k)) continue; done.add(k); if (C.has(k) || F.has(k)) continue;
+      const wx = x / Q, wz = z / Q, [d, j] = nearestDist(wx, wz), lat = (wx - PX[j]) * RX[j] + (wz - PZ[j]) * RZ[j]; if (Math.abs(lat) >= (lat < 0 ? WL[j] : WR[j]) - 0.6 || d > 200) continue;
+      const sf = surface(j, lat); if (sf !== 'gravel') continue;   /* nur wo die Fahrphysik Kies meint, aber nichts gezeichnet ist (Asphalt-Ausläufe haben absichtlich Sand-/Rasenflächen dazwischen) */
+      let enc = 0; for (const [ux, uz] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) for (let r = 1; r <= 12 * Q; r++) if (C.has(key(x + ux * r, z + uz * r))) { enc++; break; }
+      if (enc < 7) continue;   /* nur eingeschlossene Lücken – nicht den Außenrand eines Kiesbetts zackig verbreitern */
+      const mat = pick(x, z, sf); if (!mat) continue; (groups.get(mat) || groups.set(mat, []).get(mat)).push([x, z]);
+      const sk = Math.round(j * DS / 20) * 20; XZ.set(sk, (XZ.get(sk) || 0) + 1); } }
+  if (dry) return [...groups.values()].reduce((a, L2) => a + L2.length, 0);   /* Testlauf: nur zählen, was noch offen wäre */
+  let cells = 0; for (const [mat, L2] of groups) { const pos = [], uv = [];
+    for (const [qx, qz] of L2) { const x = qx / Q, z = qz / Q, [, j] = nearestDist(x, z), y = (FLAT ? 0 : ELEV[j]) + 0.012, r = 1.2;   /* großzügig überlappen: liegt unter dem Kies, schließt auch schmale Spalten */ for (const [a, b] of [[-r, -r], [-r, r], [r, -r], [r, -r], [-r, r], [r, r]]) { pos.push(x + a, y, z + b); uv.push((x + a) / 10, (z + b) / 10); } }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setAttribute('normal', new THREE.Float32BufferAttribute(new Float32Array(pos.length).map((_, k) => k % 3 === 1 ? 1 : 0), 3));
+    const m = new THREE.Mesh(g, mat); m.receiveShadow = true; m.userData = { strip: true, flat: true, holeFill: true }; trackGroup.add(m); cells += L2.length; }
+  window.__holeList = [...XZ].sort((p, q) => q[1] - p[1]).slice(0, 30); return cells; }
 function chunkStrips(root, segLen = 900) {
   const per = Math.max(60, Math.round(segLen / DS)) * 6, v = new THREE.Vector3();
   for (const ch of [...root.children]) {
@@ -3515,7 +3548,18 @@ function applyElevation() {
     if (ch.userData.strip || ch.userData.fixed) continue;
     if (ch.userData.ground || ch.userData.perVertex) {
       const p = ch.geometry.attributes.position, ox = ch.position.x, oz = ch.position.z, oy = ch.position.y;
-      for (let k = 0; k < p.count; k++) p.setY(k, p.getY(k) + groundY(p.getX(k) + ox, p.getZ(k) + oz) - (ch.userData.ground ? oy * 0 : 0));
+      for (let k = 0; k < p.count; k++) { const x = p.getX(k) + ox, z = p.getZ(k) + oz; let y = groundY(x, z);
+        if (ch.userData.ground && !(MC_SEA && MC_SEA(x, z))) { const [d, j] = nearestDist(x, z); if (d < Math.max(WL[j], WR[j]) + 1) y = Math.min(y, ELEV[j] - 0.05 - oy); }   /* Bodenpunkt innerhalb der Absperrung nie über der Strecke: das grobe Raster stach sonst durch Kerbs und Auslauf (Nordschleife) */
+        p.setY(k, p.getY(k) + y); }
+      if (ch.userData.ground && ch.geometry.index && !TRK.mc) {   // Dreiecke des groben Bodens, die Fläche innerhalb der Absperrung überdecken: alle drei Ecken unter die Strecke (sonst sticht die schräge Fläche durch Kerb/Auslauf)
+        const I = ch.geometry.index.array, near = new Uint8Array(p.count), mw = Math.max(...WL, ...WR); let cell = 0; { const a = I[0], b = I[1]; cell = Math.hypot(p.getX(a) - p.getX(b), p.getZ(a) - p.getZ(b)); }
+        for (let k = 0; k < p.count; k++) near[k] = nearestDist(p.getX(k) + ox, p.getZ(k) + oz)[0] < mw + cell * 1.5 ? 1 : 0;
+        const lim = new Float32Array(p.count).fill(1e9);
+        for (let t = 0; t < I.length; t += 3) { const a = I[t], b = I[t + 1], c = I[t + 2]; if (!near[a] && !near[b] && !near[c]) continue; let em = 1e9;
+          for (const [u, v] of [[1, 0], [0, 1], [0, 0], [.5, .5], [.5, 0], [0, .5], [1 / 3, 1 / 3], [.75, .125], [.125, .75], [.125, .125]]) { const w = 1 - u - v, x = p.getX(a) * u + p.getX(b) * v + p.getX(c) * w + ox, z = p.getZ(a) * u + p.getZ(b) * v + p.getZ(c) * w + oz, [d, j] = nearestDist(x, z);
+            if (d < Math.max(WL[j], WR[j]) + 0.5 && ELEV[j] < em) em = ELEV[j]; }
+          if (em < 1e9) for (const q of [a, b, c]) lim[q] = Math.min(lim[q], em - 0.05 - oy); }
+        for (let k = 0; k < p.count; k++) if (lim[k] < p.getY(k)) p.setY(k, lim[k]); }
       p.needsUpdate = true; ch.geometry.computeVertexNormals(); ch.geometry.computeBoundingSphere(); if (TRK.mc && ch.userData.ground) mcGroundTint(ch); continue;
     }
     if (ch.isInstancedMesh) {
@@ -3622,6 +3666,8 @@ function ropeLine(lat, LIM) {
   }
   return lat;
 }
+// Bereich der Boxengasse (wird in buildTrack ab Mauer +0,2 m bis +11 m gebaut, s = −300 … +160): dort keine Geländebänder, Büsche o. Ä.
+function pitZone(i, side) { if (TRK.noPit || side !== (TRK.pitOut ? -inSign : inSign)) return false; return i >= Math.round(modL(-310) / DS) || i <= Math.round(170 / DS); }
 function buildTrack(key) { BID++;
   const _bt0 = performance.now(); TRK = TRACKS[key]; TH = THEMES[TRK.theme];
   trackGroup.traverse(o => {
@@ -3872,8 +3918,10 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     // Geländebänder: von der Mauer exakt auf Streckenhöhe hinaus ins Gelände (ersetzt den groben Boden im Streckenumfeld)
     const shm = TH.bandStone ? lam({ map: STONE_T(1), color: TH.bandStone, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 })   /* Stadtkurs: Stützmauern/Pflaster aus hellem Stein statt Grasböschung */
       : lam({ map: TEX.grassP, normalMap: TEX.grassN, normalScale: new THREE.Vector2(1.4, 1.4), color: TH.groundTint ?? 0xffffff, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
-    const K = 8;
-    for (const [W, sg] of [[WL, -1], [WR, 1]]) {
+    shm.userData.fill = true; const K = 8;
+    // Boxenseite: die Boxengasse wird später ab Mauer +0,2 m bis +11 m gebaut – das Band darf erst dahinter beginnen (in Spa stieg es mit dem Hang an und lag als Gras-Zebramuster 3 cm ÜBER der Boxengasse)
+    for (const [W0, sg] of [[WL, -1], [WR, 1]]) {
+      const W = W0.map((w, i) => pitZone(i, sg) ? w + 10.8 : w);
       const bw = new Float32Array(N);
       for (let i = 0; i < N; i++) { let w = 0; for (let o = 4; o <= BAND; o += 4) { const oo = W[i] + o, x = PX[i] + RX[i] * oo * sg, z = PZ[i] + RZ[i] * oo * sg; const [dd, jj] = nearestDist(x, z); if (dd < oo - 2.5) break; if (TRK.mc) { let dj = Math.abs(jj - i); dj = Math.min(dj, N - dj); if (dj * DS > 30 && dd < Math.max(WL[jj], WR[jj]) + 6) break; }   /* Monaco: Band nie über den ummauerten Bereich eines anderen Asts (sonst fällt es als Hügel auf dessen Fahrbahn ab) */ w = o; } bw[i] = w ? Math.min(BAND, w + 4) : 0; }
       const bws = filt(filt(bw, 3, 'min'), 3, 'avg'), H = []; (BANDW || (BANDW = [null, null]))[sg < 0 ? 0 : 1] = filt(bws, 6, 'max');
@@ -3890,7 +3938,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
 
   // Füllstreifen Gras von der Fahrbahn bis zur Mauer (auf Streckenhöhe) – der grobe Geländeboden liegt darunter
   if (!FLAT) { const gfm = TH.bandStone ? lam({ map: STONE_T(1), color: TH.bandStone, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1, side: THREE.DoubleSide }) : lam({ map: TEX.grassP, normalMap: TEX.grassN, normalScale: new THREE.Vector2(1.4, 1.4), color: TH.groundTint ?? 0xffffff, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1, side: THREE.DoubleSide });
-    hStrip(i => HW[i], i => WR[i] + 0.3, .006, .006, gfm, { uScale: 14, vScale: 14, mask: i => !(PAVEZ && PAVEZ[i]) }); hStrip(i => -WL[i] - 0.3, i => -HW[i], .006, .006, gfm, { uScale: 14, vScale: 14, mask: i => !(PAVEZ && PAVEZ[i]) });
+    gfm.userData.fill = true; hStrip(i => HW[i], i => WR[i] + 0.3, .006, .006, gfm, { uScale: 14, vScale: 14, mask: i => !(PAVEZ && PAVEZ[i]) }); hStrip(i => -WL[i] - 0.3, i => -HW[i], .006, .006, gfm, { uScale: 14, vScale: 14, mask: i => !(PAVEZ && PAVEZ[i]) });
     if (MC_CHIC) hStrip(i => HW[i], i => WR[i] + 0.3, .012, .012, lam({ map: TEX.runoff, normalMap: TEX.runoffN, roughness: .85, ...po(-2) }), { uScale: 10, vScale: 10, mask: i => inChicMC(i) }); }   /* Nouvelle Chicane: Asphalt statt Pflaster */
   // Fahrbahn, Linien, Kerbs, Auslauf
   const [aMap, aNrm, aCol] = asphaltFor(TH);
@@ -4065,7 +4113,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     }
     // Büsche direkt hinter den Zäunen (Monza)
     if (TH.trees === 'forest') {
-      const bu = []; for (const [W, s] of [[WL, -1], [WR, 1]]) for (let i = 0; i < N; i += 2) { if (Math.random() < 0.5 || (NOWALL[i] & (s < 0 ? 1 : 2))) continue; const p = trackAt(i * DS, s * (W[i] + 3.6 + Math.random() * 4)); if ([[0, 0], [2, 0], [-2, 0], [0, 2], [0, -2]].every(([u, v]) => trackFree(p.x + u, p.z + v, 1)) && !(TH.openInfield && Math.random() < .8)) bu.push([p.x, p.z]); }
+      const bu = []; for (const [W, s] of [[WL, -1], [WR, 1]]) for (let i = 0; i < N; i += 2) { if (Math.random() < 0.5 || (NOWALL[i] & (s < 0 ? 1 : 2)) || pitZone(i, s)) continue; const p = trackAt(i * DS, s * (W[i] + 3.6 + Math.random() * 4));   /* nicht auf die Boxengasse */ if ([[0, 0], [2, 0], [-2, 0], [0, 2], [0, -2]].every(([u, v]) => trackFree(p.x + u, p.z + v, 1)) && !(TH.openInfield && Math.random() < .8)) bu.push([p.x, p.z]); }
       const bg = new THREE.IcosahedronGeometry(1, 2); { const p = bg.attributes.position; for (let k = 0; k < p.count; k++) { const x = p.getX(k), y = p.getY(k), z = p.getZ(k), f = 1 + 0.13 * Math.sin(x * 3.1 + 1) * Math.sin(y * 3.7) * Math.sin(z * 2.9 + 2); p.setXYZ(k, x * f, y * f, z * f); } bg.computeVertexNormals(); }
       const ib2 = new THREE.InstancedMesh(bg, lam({ map: TEX.leaf, normalMap: TEX.leafN, normalScale: new THREE.Vector2(2, 2), roughness: .85 }), bu.length);
       bu.forEach(([x, z], k) => { const s3 = 0.6 + Math.random() * 0.7; m4.compose(pv.set(x, s3 * 0.5, z), qq.setFromAxisAngle(_v2, Math.random() * 6), sc.set(s3 * 1.3, s3, s3 * 1.3)); ib2.setMatrixAt(k, m4); ib2.setColorAt(k, cc.setHSL(0.26 + Math.random() * .06, .5, .2 + Math.random() * .1)); }); sc.set(1, 1, 1);
@@ -5781,6 +5829,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   sun.castShadow = TH.flood === 0; flood.castShadow = TH.flood > 0;
   renderer.toneMappingExposure = TH.exposure;
   applyElevation();
+  try { HOLES = fillGroundHoles(); } catch (e) { console.warn('fillGroundHoles', e); }
   tileGround(trackGroup);
   mergeGroups(trackGroup);
   chunkStrips(trackGroup);
@@ -7928,6 +7977,21 @@ window.__clipCheck = () => { let bad = 0, n = 0; const v = new THREE.Vector3(), 
 window.__sim = (sec, dt = 1 / 60) => { for (let t = 0; t < sec; t += dt) { if (running && !paused) step(dt); updateMeshes(dt); } return window.__dbg(); };   /* Test: Simulation ohne Bildausgabe vorspulen */
 window.__results = () => { order.forEach((c, i) => { c.finished = true; c.finishLaps = S.laps; c.finishTime = 5400 + i * 1.7; c.best = 88 + i * 0.21; }); fastest = fastest || { name: order[3].name, t: order[3].best }; showResults(); return $('#results').className; };   /* Test: Ergebnis-Bildschirm mit Testdaten öffnen */
 window.__wake = () => ({ a: +WAKE.a.toFixed(3), op: +WAKE.mat.opacity.toFixed(3), vis: WAKE.m.visible, slipS: +(pl.slipS || 0).toFixed(3), src: pl.slipFrom ? pl.slipFrom.code : null });   /* Test: Zustand des Windschatten-Kegels */
+// Testhilfe: Gras, das durch Kies/Auslauf/Fahrbahn sticht. Alle nicht-grünen Bodenflächen (Streifen) werden auf ein 1-m-Raster gelegt; dann wird geprüft,
+// ob an diesen Punkten eine Grasfläche (Füllstreifen, Geländeband, Bodenkachel) gleich hoch oder höher liegt. Ergebnis: Stellen (Streckenmeter) mit Anzahl Punkten.
+window.__grassBleed = (tol = 0.004) => { trackGroup.updateMatrixWorld(true); const M = new Map(), key = (x, z) => x * 100003 + z, isFill = o => !!(o.userData.tile || o.userData.ground || (o.material && o.material.userData && o.material.userData.fill));
+  const tris = (o, fn) => { const g = o.geometry, P = g.attributes.position, I = g.index, n = I ? I.count : P.count, e = o.matrixWorld.elements, A = [0, 0, 0], B = [0, 0, 0], C = [0, 0, 0];
+    const get = (k, out) => { const x = P.getX(k), y = P.getY(k), z = P.getZ(k); out[0] = e[0] * x + e[4] * y + e[8] * z + e[12]; out[1] = e[1] * x + e[5] * y + e[9] * z + e[13]; out[2] = e[2] * x + e[6] * y + e[10] * z + e[14]; };
+    for (let t = 0; t < n; t += 3) { get(I ? I.getX(t) : t, A); get(I ? I.getX(t + 1) : t + 1, B); get(I ? I.getX(t + 2) : t + 2, C); fn(A, B, C); } };
+  const raster = (A, B, C, fn) => { const x0 = Math.ceil(Math.min(A[0], B[0], C[0])), x1 = Math.floor(Math.max(A[0], B[0], C[0])), z0 = Math.ceil(Math.min(A[2], B[2], C[2])), z1 = Math.floor(Math.max(A[2], B[2], C[2]));
+    const d = (B[2] - C[2]) * (A[0] - C[0]) + (C[0] - B[0]) * (A[2] - C[2]); if (Math.abs(d) < 1e-9 || x1 - x0 > 400 || z1 - z0 > 400) return;
+    for (let x = x0; x <= x1; x++) for (let z = z0; z <= z1; z++) { const a = ((B[2] - C[2]) * (x - C[0]) + (C[0] - B[0]) * (z - C[2])) / d, b = ((C[2] - A[2]) * (x - C[0]) + (A[0] - C[0]) * (z - C[2])) / d, c = 1 - a - b; if (a < -1e-6 || b < -1e-6 || c < -1e-6) continue; fn(x, z, a * A[1] + b * B[1] + c * C[1]); } };
+  const fills = []; trackGroup.traverse(o => { if (!o.isMesh || o.isInstancedMesh || !o.visible || !o.geometry || !o.geometry.attributes.position) return; if (isFill(o)) { fills.push(o); return; }
+    if (!(o.userData.strip || o.userData.flat) || o.material.transparent || o.material.alphaTest > 0 || o.material.visible === false) return;
+    tris(o, (A, B, C) => raster(A, B, C, (x, z, y) => { const k = key(x, z), q = M.get(k); if (q === undefined || y > q) M.set(k, y); })); });
+  const out = new Map(); for (const o of fills) tris(o, (A, B, C) => raster(A, B, C, (x, z, y) => { const q = M.get(key(x, z)); if (q === undefined || y < q - tol) return; const [dd, j] = nearestDist(x, z), s = Math.round(j * DS / 10) * 10, r = out.get(s) || { s, n: 0, dy: 0, x, z, lat: 0, tag: o.userData.tile ? 'tile' : o.material.userData.fill ? 'fill' : 'ground' }; r.n++; r.dy = Math.max(r.dy, +(y - q).toFixed(3)); r.lat = Math.round(((x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j]) * 10) / 10; void dd; out.set(s, r); }));
+  const L2 = [...out.values()].sort((a, b) => b.n - a.n); return { pts: L2.reduce((a, r) => a + r.n, 0), spots: L2.length, cells: M.size, fills: fills.length, top: L2.slice(0, 12) }; };
+window.__holes = () => HOLES; window.__holesLeft = () => fillGroundHoles(true);
 window.__plRef = () => pl;
 window.__S = () => S; window.__mesh = () => ({ ALL, pl, MODELS, camera });   /* Test: Einstellungen und Fahrzeuge lesen/setzen */
 window.__laps = () => ais.map(a => a.code + ':' + (a.lapTimes || []).map(t => t.toFixed(1)).join('/'));
