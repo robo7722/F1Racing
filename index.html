@@ -1148,9 +1148,9 @@ function rubberMat(m, k = 0.3) {
  vRub = vec3(uv.x, aRub);`);
     sh.fragmentShader = `varying vec3 vRub;
 ` + sh.fragmentShader.replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
-      { float rd = ( vRub.x - vRub.y ) * 2.0 * vRub.z, rub = exp( - rd * rd / 2.4 ) * step( 0.5, vRub.z );   /* ~1,5 m breite Spur */
+      { float rd = ( vRub.x - vRub.y ) * 2.0 * vRub.z, rub = exp( - rd * rd / 5.0 ) * step( 0.5, vRub.z );   /* ~1,5 m breite Spur */
         float edge = smoothstep( 0.72, 1.0, abs( vRub.x - 0.5 ) * 2.0 ) * step( 0.5, vRub.z ) * ( 1.0 - rub );   /* Fahrbahnrand abseits der Linie: staubig-hell */
-        diffuseColor.rgb *= ( 1.0 - ${k.toFixed(2)} * rub ) * ( 1.0 + 0.10 * edge ); roughnessFactor *= 1.0 - 0.14 * rub; }`); };
+        diffuseColor.rgb *= ( 1.0 - ${k.toFixed(2)} * rub ) * ( 1.0 + 0.04 * edge ); roughnessFactor *= 1.0 - 0.14 * rub; }`); };
   m.customProgramCacheKey = function () { return (pk ? pk.call(this) : '') + '|rub' + k; };
   return m;
 }
@@ -3728,7 +3728,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   // Fahrbahn, Linien, Kerbs, Auslauf
   const [aMap, aNrm, aCol] = asphaltFor(TH);
   const roadM = new THREE.MeshStandardMaterial({ map: aMap, normalMap: aNrm, color: aCol || 0xffffff, normalScale: new THREE.Vector2(0.85, 0.85), roughness: .82, metalness: 0, envMapIntensity: .6, ...po(-2) }); sheenMat(roadM, TH.night ? 0.12 : 0.34); roadGrain(roadM);   // nachts ist der Horizont dunkel bzw. bunt beleuchtet -> nur ein Hauch
-  asphaltNoRepeat(roadM); rubberMat(roadM, TH.night ? 0.14 : 0.18); rubberLine(hStrip(i => -HW[i], i => HW[i], 0.02, 0.02, roadM, { uFixed: true, vScale: 14 }));
+  asphaltNoRepeat(roadM); rubberMat(roadM, TH.night ? 0.05 : 0.08);   /* sehr dezent: sonst wirkt die Spur als welliges Band */ rubberLine(hStrip(i => -HW[i], i => HW[i], 0.02, 0.02, roadM, { uFixed: true, vScale: 14 }));
   { const id = ROADTEX[TRK.theme] || ROADTEX[TH.asph], k = TH.asph || 'std'; if (id && id !== 'asphalt_track') roadPhoto(id).then(P => { if (!P || roadM.userData.dead) return; roadM.map = P.d; roadM.normalMap = P.n; roadGrain(roadM); roadM.color.copy(photoTint(P, ASPH_T[k] || [70, 70, 72])); roadM.needsUpdate = true; }); }   // eigener Belag je Strecke
   const white = lam({ color: TH.night ? 0x9a9a9a : 0xf2f2f2, ...po(-3) });
   hStrip(i => HW[i] - .35, i => HW[i] - .12, .025, .025, white); hStrip(i => -HW[i] + .12, i => -HW[i] + .35, .025, .025, white);
@@ -7462,7 +7462,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.02'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.03'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

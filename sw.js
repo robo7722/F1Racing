@@ -1,5 +1,5 @@
 // Service Worker: macht das Spiel offline-fähig und installierbar
-const CACHE = 'f1-rennen-1.02';
+const CACHE = 'f1-rennen-1.03';
 const APP = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './car.bin', './f2car.bin', './kart.bin', './textures/kart_body.jpg', './textures/kart_body_n.jpg', './textures/kart_wheel.jpg', './roadcar.bin', './menu.mp3',
   ...['asphalt_track', 'asphalt_pit_lane', 'sand_01', 'gravel_floor'].flatMap(t => ['diff', 'nor_gl'].map(m => './textures/' + t + '_' + m + '_1k.jpg')),
   ...['Grass004_Color', 'Grass004_NormalGL', 'LeafSet004_Color', 'LeafSet004_Opacity', 'LeafSet019_Color', 'LeafSet019_Opacity', 'Foliage001_Color', 'Foliage001_Opacity'].map(f => './textures/acg_' + f + '.jpg')];
