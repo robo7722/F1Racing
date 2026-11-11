@@ -6749,7 +6749,7 @@ function placeOnGrid() {
     const c = byCode(d[0]), s = QL ? -220 : slotS(j), p = trackAt(s, slotLat(j));
     Object.assign(c, { isPlayer: c === pl, d: s, v: 0, startD: s, gridLat: slotLat(j), yawKick: 0, pushV: 0, lat: slotLat(j), latT: slotLat(j), latV: 0, home: (Math.random() - .5) * 3, laneT: 0,
       lapsDone: -1, lapStart: 0, last: 0, best: 0, lapTimes: [], finished: false, finishTime: 0, finishLaps: 0, grid: j + 1,
-      react: 0.05 + Math.random() * 0.15, phase: Math.random() * 6.28, thrS: 0, brkS: 0, slip: 0, slipS: 0, blkPrev: null, ovr: null, lineK: 0.85 + Math.random() * 0.15, idx: p.i, x: p.x, z: p.z, h: p.h, steer: 0, brk: 0, sPrev: modL(s), wallCd: 0, stuckT: 0, wrongT: 0, thr: 0, spin: 0 });
+      react: 0.05 + Math.random() * 0.15, form: Math.random() * 0.006, phase: Math.random() * 6.28, thrS: 0, brkS: 0, slip: 0, slipS: 0, blkPrev: null, ovr: null, lineK: 0.85 + Math.random() * 0.15, idx: p.i, x: p.x, z: p.z, h: p.h, steer: 0, brk: 0, sPrev: modL(s), wallCd: 0, stuckT: 0, wrongT: 0, thr: 0, spin: 0 });
     const comp = c === pl ? 1 : Math.floor(Math.random() * 3);
     if (c.mesh.road || c.mesh.kart) { } else if (c.mesh.tp) { c.mesh.comp = comp; setLod(c.mesh, 0, true); c.mesh.halo.visible = true; } else { c.mesh.wfl.geometry = WHEEL.f[comp]; c.mesh.wfr.geometry = WHEEL.f[comp]; c.mesh.rr.geometry = WHEEL.r[comp]; }
     c.mesh.g.visible = true; c.mesh.g.position.set(p.x, 0, p.z); c.mesh.g.rotation.y = p.h; c.mesh.label.visible = c !== pl; c.mesh.helm.visible = true;
@@ -6989,7 +6989,7 @@ function updatePlayer(dt) {
 // KI-Fahrer: steuert dasselbe Fahrzeugmodell über Pedale und Lenkrad (Pure-Pursuit auf der Ideallinie)
 function updateAI(c, dt, prof = profAI, top = diff.top) {
   if (raceState !== 'race' || raceTime < c.react) { c.steer = 0; carStep(c, 0, raceState === 'race' ? 0 : 1, dt); c.brk = 0; return; }
-  const mood = (1 - (1 - c.skill) * (S.diff === 'pro' || S.diff === 'leg' ? 0.2 : 1)) * (1 + 0.003 * Math.sin(raceTime * 0.27 + c.phase)) * aiSlow();
+  const mood = (1 - (1 - c.skill) * (S.diff === 'pro' || S.diff === 'leg' ? 0.55 : 1.3) - (c.form || 0))   /* größere Tempounterschiede + Tagesform je Fahrer: das Feld zieht sich auseinander statt in Ketten zu fahren */ * (1 + 0.003 * Math.sin(raceTime * 0.27 + c.phase)) * aiSlow();
   { const dacc = (DIFF[S.diff] || DIFF.mid).acc || 1; c.accMul = SERPH.acc * (raceTime < 9 ? PM.acc : dacc * PACE * PACE); }   // Start: KI beschleunigt wie der Spieler (kein Raketenstart auf Profi); danach der Schwierigkeitsbonus
   let vt = Math.min(prof[c.idx] * mood, VTOP * top * SERPH.top * mood * (prof === profAI ? PACE : 1) + (c.slip || 0) * 6.5);
   if (c.finished) vt = Math.min(vt, 45);
@@ -7004,7 +7004,7 @@ function updateAI(c, dt, prof = profAI, top = diff.top) {
   c.blkPrev = blk;
   let following = false;
   if (blk) {
-    const want = 6 + c.v * 0.11, close = c.v - blk.v;
+    const want = 9 + c.v * 0.28, close = c.v - blk.v;   /* Folgeabstand ~0,3 s (vorher ~0,1 s: Stoßstange an Stoßstange) */
     if (bg < want + Math.max(0, close) * 1.6) {
       const vf = Math.max(blk.v * 0.7, blk.v + (bg - want) * 0.5);
       if (vf < vt) { vt = vf; following = true; }
@@ -8088,7 +8088,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.19'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.20'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
