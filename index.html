@@ -578,11 +578,11 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
 /* ===== UI 2027c: Gestaltung nach dem F1-Spiel – Tiefe statt Flachheit (Wunsch: hochwertig, kreativ, keine runden Kanten) =====
    Flächen: Carbon-Gewebe + Verlauf + harter Tiefenschatten + Lichtkante oben + rote Eckmarke. Auswahl: weiße Kontur, roter Balken, laufender Glanz.
    Schrift: Titillium Web in Versalien, große Konturziffern als Gestaltungselement, rote Kennziffern. Tasten: roter Verlauf mit weißem Pfeilblock. */
-:root{--f1r:#e10600;--f1r2:#ff2a14;--ink:#101017;--ink2:#1c1c26;--f1l:rgba(255,255,255,.1);--f1l2:rgba(255,255,255,.32);
-  --carbon:repeating-linear-gradient(45deg,rgba(255,255,255,.022) 0 2px,transparent 2px 4px),repeating-linear-gradient(-45deg,rgba(0,0,0,.18) 0 2px,transparent 2px 4px);
-  --surf:linear-gradient(180deg,rgba(44,44,58,.94) 0%,rgba(22,22,31,.95) 46%,rgba(13,13,19,.97) 100%);
-  --surfH:linear-gradient(180deg,rgba(58,58,74,.95) 0%,rgba(28,28,38,.96) 50%,rgba(15,15,22,.97) 100%);
-  --depth:0 16px 34px -10px rgba(0,0,0,.7),0 2px 0 rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.13);
+:root{--f1r:#e10600;--f1r2:#ff2a14;--ink:#0a1424;--ink2:#132238;--f1l:rgba(150,205,255,.2);--f1l2:rgba(150,205,255,.5);
+  --carbon:repeating-linear-gradient(90deg,rgba(150,205,255,.035) 0 1px,transparent 1px 7px);   /* feine Rasterlinien wie im Tacho-Band */
+  --surf:linear-gradient(180deg,rgba(26,44,72,.9) 0%,rgba(14,26,46,.9) 46%,rgba(8,16,30,.93) 100%);   /* Navy-Glas wie die Halo-Grafik des Tachos */
+  --surfH:linear-gradient(180deg,rgba(36,60,96,.92) 0%,rgba(18,34,60,.92) 50%,rgba(10,20,36,.94) 100%);
+  --depth:0 16px 34px -10px rgba(0,0,0,.7),inset 0 1px 0 rgba(150,205,255,.35);
   --sheen:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.13) 48%,rgba(255,255,255,.02) 56%,transparent 64%);
   --sl:polygon(0 0,100% 0,calc(100% - 16px) 100%,0 100%);--cut:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%)}
 @keyframes f1sheen{from{background-position:180% 0,0 0,0 0}to{background-position:-80% 0,0 0,0 0}}
@@ -788,6 +788,20 @@ th{background:#0c0c12!important;letter-spacing:.16em;font-size:10px!important;co
 #seCal div small{display:none}#seCal div.done{opacity:.55}#seCal div.next small{display:inline;opacity:.7}
 #seCal div svg{width:18px!important;height:12px!important}
 @media (max-height:380px){#seNext .sn-l span,#seNext .sn-tags{display:none!important}#seNext canvas{max-width:90px!important}#scrSeason .scol:last-child .spanel .field>label{display:none!important}}
+
+/* ===== Designsprache des Tachos auf das ganze UI: Navy-Glas, hellblaue Kante oben, Zahlen weiß, Rot nur für Auswahl/Platzierung ===== */
+.card,.rpanel,.spanel,.tcard,.tm,.dcard,.hbtn,.rvar,.uprow,.mback,.mgear,.msteps,.stepper button,.big.alt{border-top-color:rgba(150,205,255,.55)!important}
+#board{background:linear-gradient(90deg,rgba(14,26,46,.9),rgba(14,26,46,.62))!important;border-left:1px solid rgba(150,205,255,.45)!important}
+#board .r .p{background:rgba(150,205,255,.1)!important}
+#board .r.me{background:linear-gradient(90deg,#fff,#dde8f5)!important}
+.hb{background:linear-gradient(180deg,rgba(26,44,72,.85),rgba(8,16,30,.85))!important;border:1px solid rgba(150,205,255,.3)!important}
+#controls .pad{background:repeating-linear-gradient(90deg,rgba(150,205,255,.04) 0 1px,transparent 1px 7px),linear-gradient(180deg,rgba(26,44,72,.5),rgba(8,16,30,.55))!important;border:1px solid rgba(150,205,255,.25)!important;border-top-color:rgba(150,205,255,.55)!important}
+#controls .boostBtn{background:linear-gradient(180deg,rgba(26,44,72,.6),rgba(8,16,30,.65))!important}
+#lights{background:linear-gradient(180deg,rgba(26,44,72,.92),rgba(8,16,30,.92))!important;border:1px solid rgba(150,205,255,.35)!important}
+.seg,.chips button,.sw{background:rgba(8,16,30,.6)!important}
+th{background:#0a1424!important}
+.overlay{background:linear-gradient(90deg,rgba(4,10,20,.9),rgba(4,10,20,.72))!important}
+#menu::before{background:linear-gradient(90deg,rgba(4,10,20,.94) 0%,rgba(4,10,20,.78) 34%,rgba(4,10,20,.25) 62%,rgba(4,10,20,.05) 80%),radial-gradient(60% 70% at 0% 100%,rgba(225,6,0,.18),transparent 70%)!important}
 /* ===== HUD im F1-Spiel-Stil ===== */
 #tl{top:max(10px,env(safe-area-inset-top))!important;left:max(12px,env(safe-area-inset-left))!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:0!important;width:max-content;filter:drop-shadow(0 8px 16px rgba(0,0,0,.45))}
 #pos{display:flex!important;align-items:baseline;gap:2px;font-size:32px!important;font-weight:900!important;letter-spacing:-.01em!important;line-height:1.08!important;padding:1px 26px 1px 10px!important;background:linear-gradient(180deg,#ff2a14,#e10600 50%,#b40500)!important;border:0!important;box-shadow:none!important;text-shadow:none!important;clip-path:var(--sl)}
@@ -809,8 +823,9 @@ th{background:#0c0c12!important;letter-spacing:.16em;font-size:10px!important;co
 #speedo{filter:drop-shadow(0 10px 18px rgba(0,0,0,.5))!important;left:auto!important;transform:none!important;right:max(10px,env(safe-area-inset-right))!important;bottom:max(4px,env(safe-area-inset-bottom))!important}   /* unten rechts wie im F1-Spiel (Mitte verdeckte das eigene Auto) */
 #helmet{position:absolute;inset:0;pointer-events:none;display:none;z-index:0}
 body.cockpit.helmcam #helmet{display:block}
-#helmet svg{width:100%;height:100%;display:block}
+#helmet svg{position:absolute;inset:0;width:100%;height:100%;display:block}
 #tc,#pos,#lap{display:none!important}   /* Rundenzeit, Position und Runde stehen jetzt im Tacho */
+
 #board{margin-top:0!important}
 #haloHud{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none}
 body.tvcam #haloHud{display:block}body.tvcam #speedo{display:none!important}
@@ -6232,9 +6247,10 @@ function haloDraw(g, o) {
   // links: Position, Runde, Rundenzeit (ersetzt die Anzeigen oben in der Mitte und oben links) – in der TV-Ansicht zusätzlich der Fahrername
   { const n1 = thC - aw - bs - 0.07, n0 = th0 + 0.05, m = (n0 + n1) / 2, pos = Math.max(1, order.indexOf(pl) + 1), cur = raceState === 'race' && pl.lapsDone >= 0 && !pl.finished ? raceTime - pl.lapStart : 0;
     g.save(); g.lineWidth = 1.4; g.strokeStyle = 'rgba(225,6,0,.9)'; g.beginPath(); g.ellipse(cx, cy, rx - t * 0.08, ry - t * 0.08 * k, 0, n0, n1); g.ellipse(cx, cy, rx - t * 0.92, ry - t * 0.92 * k, 0, n1, n0, true); g.closePath(); g.stroke();
-    g.fillStyle = 'rgba(225,6,0,.85)'; g.beginPath(); g.ellipse(cx, cy, rx - t * 0.08, ry - t * 0.08 * k, 0, n0, n0 + 0.13); g.ellipse(cx, cy, rx - t * 0.92, ry - t * 0.92 * k, 0, n0 + 0.13, n0, true); g.closePath(); g.fill(); g.restore();
-    txt('P' + pos, n0 + 0.065, t * 0.5, t * 0.44, '#fff', 800);
-    const mm = (n0 + 0.15 + n1) / 2, nm = String(pl.name || '').split(' ').pop().toUpperCase();
+    g.font = '800 ' + t * 0.44 + 'px ' + F; const pw = (g.measureText('P' + pos).width + t * 0.5) / (rx - t * 0.5), pe = n0 + pw;   // roter Block genau so breit wie „P16“ + Rand
+    g.fillStyle = 'rgba(225,6,0,.9)'; g.beginPath(); g.ellipse(cx, cy, rx - t * 0.08, ry - t * 0.08 * k, 0, n0, pe); g.ellipse(cx, cy, rx - t * 0.92, ry - t * 0.92 * k, 0, pe, n0, true); g.closePath(); g.fill(); g.restore();
+    txt('P' + pos, (n0 + pe) / 2, t * 0.5, t * 0.44, '#fff', 800);
+    const mm = (pe + 0.02 + n1) / 2, nm = String(pl.name || '').split(' ').pop().toUpperCase();
     txt((full ? nm + '  ' : '') + 'RUNDE ' + clamp(pl.lapsDone + 1, 1, S.laps) + '/' + S.laps, mm, t * 0.3, t * 0.27, 'rgba(255,255,255,.75)', 700);
     txt(cur ? fmt(cur) : pl.best ? fmt(pl.best) : '0:00.000', mm, t * 0.68, t * 0.4, '#fff', 800); }
   // Tacho-Kreis oben
@@ -6261,7 +6277,18 @@ const HHC = $('#haloHud'), HHG = HHC.getContext('2d'), _hv = new THREE.Vector3()
     + '<path d="' + op + '" fill="url(#hv)"/>'   // Visier: oben leicht getönt, unten Schatten des Kinnteils
     + '<path filter="url(#hb)" fill="#070709" fill-rule="evenodd" d="M-60,-60H1060V1060H-60Z ' + op + '"/>'   // Helmschale/Polster: alles außerhalb der Visieröffnung
     + '<path filter="url(#hb2)" d="' + op + '" fill="none" stroke="#3a3c44" stroke-opacity=".55" stroke-width="10"/>'   // Lichtkante des Polsters
-    + '</svg>'; }
+    + '</svg>'
+    + visorSVG(); }
+// Visier: feine Kratzer, ein paar Schmutzpunkte (Gummiabrieb, Insekten) und eine weiche Spiegelung, die beim Umschauen leicht mitwandert
+function visorSVG() { let sd = 7; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647; let sc = '', dt2 = '';
+  for (let i = 0; i < 26; i++) { const x = 80 + R() * 840, y = 90 + R() * 700, l = 30 + R() * 150, a = (R() - 0.5) * 0.9, x2 = x + Math.cos(a) * l, y2 = y + Math.sin(a) * l, cx2 = (x + x2) / 2 + (R() - 0.5) * 30, cy2 = (y + y2) / 2 + (R() - 0.5) * 30;
+    sc += '<path d="M' + x.toFixed(0) + ',' + y.toFixed(0) + ' Q' + cx2.toFixed(0) + ',' + cy2.toFixed(0) + ' ' + x2.toFixed(0) + ',' + y2.toFixed(0) + '" stroke="#fff" stroke-opacity="' + (0.09 + R() * 0.12).toFixed(3) + '" stroke-width="' + (0.6 + R() * 0.9).toFixed(1) + '" fill="none"/>'; }
+  for (let i = 0; i < 14; i++) { const x = 60 + R() * 880, y = 60 + R() * 820, r = 1.5 + R() * 4.5, edge = Math.min(x, 1000 - x, y, 1000 - y) < 220; if (!edge && R() < 0.6) continue;
+    dt2 += '<ellipse cx="' + x.toFixed(0) + '" cy="' + y.toFixed(0) + '" rx="' + r.toFixed(1) + '" ry="' + (r * (0.6 + R() * 0.6)).toFixed(1) + '" fill="#2a2018" fill-opacity="' + (0.4 + R() * 0.35).toFixed(2) + '"/>'; }
+  return '<svg class="visor" viewBox="0 0 1000 1000" preserveAspectRatio="none"><defs><filter id="vb"><feGaussianBlur stdDeviation="1.4"/></filter><linearGradient id="vr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".42" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#dfefff" stop-opacity=".14"/><stop offset=".56" stop-color="#fff" stop-opacity=".05"/><stop offset=".62" stop-color="#fff" stop-opacity="0"/></linearGradient>'
+    + '<radialGradient id="vs" cx=".5" cy="-.15" r=".75"><stop offset=".55" stop-color="#bcd6ff" stop-opacity="0"/><stop offset=".72" stop-color="#bcd6ff" stop-opacity=".07"/><stop offset=".8" stop-color="#bcd6ff" stop-opacity="0"/></radialGradient></defs>'
+    + '<g class="vrefl"><rect x="-200" y="0" width="1400" height="1000" fill="url(#vr)"/><rect x="0" y="0" width="1000" height="1000" fill="url(#vs)"/></g>'
+    + '<g filter="url(#vb)">' + sc + dt2 + '</g></svg>'; }
 function drawHaloHud() {
   const on = running && S.cam === 3 && pl && pl.mesh && pl.mesh.tp; document.body.classList.toggle('tvcam', !!on); if (!on) return;
   const dpr = Math.min(2, devicePixelRatio || 1), W = innerWidth, H = innerHeight; if (HHC.width !== Math.round(W * dpr) || HHC.height !== Math.round(H * dpr)) { HHC.width = Math.round(W * dpr); HHC.height = Math.round(H * dpr); }
@@ -7269,6 +7296,7 @@ function drawWheel(dt) {
   if (pl.mesh.tp) { SW.g.position.set(...(pl.mesh.tp.M.swPos || [0, 0.605, 0.98])); SW.g.scale.setScalar(pl.mesh.tp.M.swS || 1); }   // Lenkradposition je Modell (F2 sitzt weiter hinten und tiefer)
   document.body.classList.toggle('cockpit', running && S.cam === 2);
   document.body.classList.toggle('helmcam', S.helm !== false);   /* Helmrand (Einstellung „Helmrand“) */
+  if (running && S.cam === 2) { const vr = document.querySelector('#helmet .vrefl'); if (vr) vr.setAttribute('transform', 'translate(' + (-(HEAD.look || 0) * 900 - (HEAD.x || 0) * 600).toFixed(1) + ',0)'); }   /* Spiegelung wandert gegen die Kopfdrehung */
   cockpitInterior(SW.g.visible && !!pl.mesh.tp);
   if (running && S.cam === 2 && pl.mesh.road) roadDashTick(dt);
   armsTick();
@@ -7292,14 +7320,15 @@ function drawWheel(dt) {
   box(250, 62, 140, 150); g.fillStyle = '#fff'; g.font = `800 112px ${F}`; g.textAlign = 'center'; g.fillText(pl.v < 0.5 ? 'N' : gi.g, 320, 180); lab('GEAR', 320, 204, 'center');
   // links: Tempo, Delta, Runde
   box(26, 62, 210, 70); lab('SPEED', 36, 80); g.font = `800 40px ${F}`; g.fillStyle = '#fff'; g.textAlign = 'right'; g.fillText(kmh, 222, 122);
-  box(26, 142, 210, 70); lab('DELTA', 36, 160); { const best = pl.best || 0, cur = raceTime - (pl.lapStart || 0), d = best ? (cur - best * clamp(modL(pl.d) / L, 0, 1)) : 0; g.font = `700 32px ${F}`; g.fillStyle = !best ? '#9aa8b5' : d <= 0 ? '#22e06a' : '#ff4b3a'; g.fillText(best ? (d > 0 ? '+' : '−') + Math.abs(d).toFixed(2) : '--.--', 222, 200); }
+  box(26, 142, 210, 70); lab('LAP TIME', 36, 160); { const best = pl.best || 0, run = raceState === 'race' && pl.lapsDone >= 0 && !pl.finished, cur = run ? raceTime - (pl.lapStart || 0) : 0, d = best ? (cur - best * clamp(modL(pl.d) / L, 0, 1)) : 0;   // laufende Rundenzeit (ersetzt die Anzeige oben im Cockpit), Delta klein daneben
+    g.font = `800 30px ${F}`; g.fillStyle = '#fff'; g.textAlign = 'right'; g.fillText(cur ? fmt(cur) : '0:00.000', 222, 202); g.font = `700 15px ${F}`; g.fillStyle = !best ? '#6f8396' : d <= 0 ? '#22e06a' : '#ff4b3a'; g.fillText(best ? (d > 0 ? '+' : '−') + Math.abs(d).toFixed(2) : '', 222, 162); }
   // rechts: ERS, Batterie, Modus
   box(404, 62, 210, 70); lab('ERS', 414, 80); g.font = `800 40px ${F}`; g.fillStyle = '#ffd400'; g.textAlign = 'right'; g.fillText(Math.round((pl.bat || 0) * 100) + '%', 600, 122);
-  box(404, 142, 210, 70); lab('MODE', 414, 160); g.font = `700 26px ${F}`; g.fillStyle = pl.boosting ? '#ffd400' : '#19c8ff'; g.fillText(pl.boosting ? 'OVERTAKE' : 'BALANCED', 600, 198);
+  box(404, 142, 210, 70); lab('MODE', 414, 160); g.font = `700 26px ${F}`; g.fillStyle = pl.boosting ? '#ffd400' : '#19c8ff'; g.fillText(pl.boosting ? 'ERS AKTIV' : 'BALANCED', 600, 198);
   // unten: Reifen (4 Felder), Bremsbalance, Batteriebalken, Runde
   const tt = 88 + Math.min(14, (pl.v || 0) / 7);
   [[26, 226], [86, 226], [26, 262], [86, 262]].forEach(([x, y], k) => { g.fillStyle = tt + k > 96 ? '#ff9f1a' : '#22c06a'; g.fillRect(x, y, 54, 30); g.fillStyle = '#04120a'; g.font = `700 16px ${F}`; g.textAlign = 'center'; g.fillText(Math.round(tt + k * 1.5), x + 27, y + 21); });
-  box(152, 226, 92, 66); lab('BRK BAL', 160, 244); g.font = `700 26px ${F}`; g.fillStyle = '#fff'; g.textAlign = 'right'; g.fillText('56.0', 236, 282);
+  box(152, 226, 92, 66); g.fillStyle = '#e10600'; g.fillRect(153, 227, 91, 18); g.font = `700 13px ${F}`; g.fillStyle = '#fff'; g.textAlign = 'left'; g.fillText('POS', 160, 241); g.font = `800 30px ${F}`; g.textAlign = 'right'; g.fillText('P' + Math.max(1, order.indexOf(pl) + 1), 236, 284);   // Platzierung (ersetzt „P16“ oben links)
   box(256, 226, 128, 66); lab('LAP', 264, 244); g.font = `700 26px ${F}`; g.fillStyle = '#fff'; g.textAlign = 'right'; g.fillText(clamp((pl.lapsDone ?? 0) + 1, 1, S.laps) + '/' + S.laps, 376, 282);
   box(396, 226, 218, 66); lab('BATTERY', 404, 244); g.fillStyle = '#1a2028'; g.fillRect(404, 256, 202, 26); g.fillStyle = pl.boosting ? '#ffd400' : '#19c8ff'; g.fillRect(404, 256, 202 * (pl.bat || 0), 26);
   for (let k = 1; k < 10; k++) { g.fillStyle = '#07090d'; g.fillRect(404 + k * 20.2, 256, 2, 26); }
@@ -7355,7 +7384,7 @@ function updateCamera(dt) {
       const cp = S.cam === 3 && p.mesh.tv ? p.mesh.tv : (p.mesh.cam || [0, 0.9, 0.36]);
       if (st) camera.position.set(cp[0], cp[1], cp[2]); else camera.position.set(cp[0] + HEAD.x + sway, cp[1] + bob - Math.abs(HEAD.z) * 0.15, cp[2] + HEAD.z); m.localToWorld(camera.position);
       if (st) _ht.set(cp[0], cp[1] - (cp[3] ?? 0.4), 30); else _ht.set(cp[0] + HEAD.x * 0.3 + sway * 0.5, cp[1] - (cp[3] ?? 0.4) - HEAD.p * 30 + bob * 0.5, 30); m.localToWorld(_ht); camera.up.set(0, 1, 0); camera.lookAt(_ht); if (!st) { const D = clamp(p.v * 0.9, 14, 60); let kk = 0, nn = 0; for (let ds = 6; ds <= D; ds += 3) { kk += KS[Math.floor(modL(p.sPrev + ds) / DS) % N] || 0; nn++; }   // Helmkamera: Blick zum Kurvenscheitel (Krümmung voraus × halbe Vorausschau-Distanz ≈ Winkel zum Scheitelpunkt), weich nachgeführt
-        const tgt = clamp(-(kk / Math.max(1, nn)) * D * 0.5 * 0.75, -0.26, 0.26); HEAD.look = (HEAD.look || 0) + (tgt - (HEAD.look || 0)) * Math.min(1, dt * 2.6); camera.rotateY(HEAD.look); camera.rotateZ(HEAD.r); } if (!st && (camOrb || camPit)) { camera.rotateY(-camOrb); camera.rotateX(-camPit * 0.45); }   // Cockpit: rechter Stick = Umschauen
+        const tgt = clamp(-(kk / Math.max(1, nn)) * D * 0.5 * 0.75, -0.26, 0.26); HEAD.look = (HEAD.look || 0) + (tgt - (HEAD.look || 0)) * Math.min(1, dt * 1.3);   /* träger (Wunsch): ~0,8 s bis zum Ziel */ camera.rotateY(HEAD.look); camera.rotateZ(HEAD.r); } if (!st && (camOrb || camPit)) { camera.rotateY(-camOrb); camera.rotateX(-camPit * 0.45); }   // Cockpit: rechter Stick = Umschauen
     }
     if (sh > 0 && !paused && S.cam !== 2 && S.cam !== 3) { camera.position.x += (Math.random() - .5) * sh; camera.position.y += (Math.random() - .5) * sh; }
     { const on = running && isTouch && effCtrl === 'tilt' && S.level !== false, tg = on ? clamp(tiltAngle - tiltZero, -40, 40) * Math.PI / 180 : 0; levelR += (tg - levelR) * Math.min(1, dt * 12); if (Math.abs(levelR) > 1e-4) camera.rotateZ(-levelR); }   // Neigen: Bild dreht gegen, Horizont bleibt waagerecht
@@ -8052,7 +8081,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.17'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.18'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
