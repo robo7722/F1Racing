@@ -558,3 +558,11 @@ Die Bäume der `trees: 'forest'`-Strecken bestehen nicht mehr aus Kugeln und Keg
 - **Karriere-Bildschirm**: neue Anordnung (links: nächstes Rennen mit Streckenumriss, Rennwochenende, Aktionen; rechts: Tabelle, Kalender). Die Auswahl von Schwierigkeit und Länge bleibt erhalten (`renderMenu` setzt nur noch Reihen mit Einstellungsschlüssel zurück).
 - **Kollisionsklang** (`bump(stärke, 'car' | 'wall')`): Schlag, Knirschen, Splitter, bei Wandkontakt zusätzlich metallisches Schaben.
 - **Kart-Anzeige**: Halterung am Lenkrohr, Bildschirm zeigt Tempo und Drehzahl (`kartDispTick`).
+
+---
+
+## Nachtrag 8: HUD 2026 und Prüfhilfen
+
+- **HUD**: neuer Tacho (`drawGauge`): Drehzahl-LEDs als flacher Bogen, Tempo groß in der Mitte, Gang links, ERS und Gas/Bremse rechts, rote Kante unten wächst mit dem Tempo. Position, Runde, Tower (mit Akzentkante) und Rundenzeit (hängendes Glasfeld mit Beschriftung) liegen in einer eigenen letzten CSS-Schicht („HUD 2026“ am Ende des Stylesheets) – dort ändern, nicht in den älteren Schichten.
+- **Kollisionsklang prüfen ohne Lautsprecher**: `await __bumpTest('wall' | 'car', stärke)` rendert den Klang offline und liefert Spitzenpegel, Dauer, Pegelverlauf und Energie je Frequenzband. Sollwert: Spitze unter 1, unter 150 Hz höchstens ~25 %, Hauptenergie zwischen 1 und 4 kHz (sonst ist er auf Handylautsprechern nicht hörbar).
+- **Ruckler messen**: `window.__noWarm = true` vor `__race(...)` schaltet das Vorwärmen (`warmUpTrack`) ab. Dann die Strecke in 15-m-Schritten mit `__view(s, …)` + `__frame(1)` abfahren und die Einzelzeiten auswerten (Median, 99-%-Wert, Höchstwert). Spitzen am Startgitter sind normal (22 Autos dicht beieinander).

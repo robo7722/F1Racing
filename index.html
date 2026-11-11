@@ -574,6 +574,20 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
 .sbtns{display:flex;flex-direction:column;gap:8px}
 .spanel .ccal{max-height:34vh;overflow-y:auto;scrollbar-width:none}
 @media (max-width:760px){.sgrid{grid-template-columns:1fr}.snext canvas{width:36%}}
+
+/* ===== HUD 2026: ruhigere Gewichtung – Position und Rundenzeit gleichrangig, Tower als Glasstreifen, größere Zeit, Tacho als Bogen ===== */
+#tl{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+#pos{font-size:38px!important;letter-spacing:-.01em;box-shadow:0 8px 22px rgba(225,6,0,.35),inset 0 1px 0 rgba(255,255,255,.35)}
+#pos span{font-size:.38em;font-weight:800;opacity:.8;letter-spacing:.02em;margin-left:2px}
+#lap{margin:0!important;padding:3px 11px!important;font-size:11px!important;font-weight:800!important;letter-spacing:.16em!important;border-left:3px solid #e10600;background:linear-gradient(90deg,rgba(21,21,30,.92),rgba(21,21,30,.55))!important}
+#board{margin-top:0!important;border-top:0!important;border-left:3px solid #e10600!important;background:linear-gradient(90deg,rgba(14,17,24,.88),rgba(14,17,24,.5))!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+#board .r{border-bottom:0!important;font-size:12px}
+#board .r.me{background:linear-gradient(90deg,rgba(255,255,255,.95),rgba(255,255,255,.78))!important;color:#12141b!important;box-shadow:0 0 14px rgba(255,255,255,.25)}
+#tc{display:flex!important;flex-direction:column;align-items:center;gap:1px;padding:5px 22px 6px!important;border-radius:0 0 14px 14px!important;background:linear-gradient(180deg,rgba(14,17,24,.88),rgba(14,17,24,.62))!important;border:1px solid rgba(255,255,255,.14)!important;border-top:0!important;box-shadow:0 10px 26px rgba(0,0,0,.35)!important;backdrop-filter:blur(10px)!important;-webkit-backdrop-filter:blur(10px)!important;text-shadow:none!important}
+#tc .tcl{display:block!important;font-size:9px;letter-spacing:.3em;color:rgba(255,255,255,.55)}
+#ltime{font-size:25px!important;font-weight:800!important;font-style:italic;letter-spacing:.02em}
+#lsub{font-size:11px;font-weight:700;letter-spacing:.06em;color:rgba(255,255,255,.62)}
+#speedo{filter:drop-shadow(0 8px 18px rgba(0,0,0,.45))}
 </style>
 </head>
 <body>
@@ -5722,25 +5736,31 @@ function drawMap() {
 const gC = $('#gauge'), gG = gC.getContext('2d');
 function rrect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
 function drawGauge() {
+  // Tacho 2026: Drehzahl-LEDs als flacher Bogen über der Anzeige, Tempo groß in der Mitte, Gang links, ERS und Pedale rechts. Rote Kante unten wächst mit dem Tempo.
   const g = gG, W2 = 280, H2 = 52; g.clearRect(0, 0, 560, 104); g.save(); g.scale(2, 2);
-  const kmh = pl.v * 3.6, gi = gearP(kmh);
-  g.fillStyle = 'rgba(8,11,16,.62)'; rrect(g, 0.5, 0.5, W2 - 1, H2 - 1, 12); g.fill(); g.strokeStyle = 'rgba(255,255,255,.14)'; g.lineWidth = 1; g.stroke();
+  const kmh = pl.v * 3.6, gi = gearP(kmh), pre = raceState === 'lights';
+  const bg = g.createLinearGradient(0, 0, 0, H2); bg.addColorStop(0, 'rgba(18,22,30,.78)'); bg.addColorStop(1, 'rgba(6,8,12,.86)');
+  g.fillStyle = bg; rrect(g, 0.5, 6.5, W2 - 1, H2 - 7, 13); g.fill(); g.strokeStyle = 'rgba(255,255,255,.16)'; g.lineWidth = 1; g.stroke();
+  { const sp = clamp(kmh / 340, 0, 1), gr = g.createLinearGradient(14, 0, W2 - 14, 0); gr.addColorStop(0, '#e10600'); gr.addColorStop(1, '#ff6a3c'); g.save(); rrect(g, 0.5, 6.5, W2 - 1, H2 - 7, 13); g.clip(); g.fillStyle = 'rgba(255,255,255,.07)'; g.fillRect(0, H2 - 3, W2, 3); g.fillStyle = gr; g.fillRect(0, H2 - 3, W2 * sp, 3); g.restore(); }
   g.textBaseline = 'middle';
-  g.fillStyle = '#fff'; g.font = 'italic 900 26px "Titillium Web",system-ui,sans-serif'; g.textAlign = 'right'; g.fillText(Math.round(kmh), 66, 22);
-  g.fillStyle = 'rgba(255,255,255,.55)'; g.font = '700 8px system-ui,sans-serif'; g.fillText('KM/H', 66, 41);
-  g.fillStyle = 'rgba(225,6,0,.16)'; g.strokeStyle = '#e10600'; g.lineWidth = 1.4; rrect(g, 74, 8, 28, 36, 7); g.fill(); g.stroke();
-  g.fillStyle = '#e10600'; g.textAlign = 'center'; g.font = 'italic 900 22px "Titillium Web",system-ui,sans-serif'; g.fillText(pl.v < 0.5 ? 'N' : gi.g, 88, 27);
-  // Drehzahl-Segmente
-  const x0 = 110, x1 = W2 - 10, nS = 20, sw = (x1 - x0) / nS, pre = raceState === 'lights', gf = pre ? 0.05 + 0.95 * (pl.rev || 0) : gi.f, f = pre ? gf : pl.v < 0.5 ? 0.05 : gi.f, lit = Math.round(f * nS), blink = gf > 0.96 && (performance.now() / 90 | 0) % 2;   // vor dem Start: Anzeige folgt dem Hochdrehen
-  for (let k = 0; k < nS; k++) { const on = k < lit && !blink, colr = k < 10 ? '#22e06a' : k < 16 ? '#ff2a10' : '#4d7cff'; g.fillStyle = on ? colr : 'rgba(255,255,255,.1)'; if (on && k >= 16) { g.shadowColor = colr; g.shadowBlur = 6; } rrect(g, x0 + k * sw + 1, 9, sw - 2, 14, 2); g.fill(); g.shadowBlur = 0; }
-  // ERS-Batterie
-  g.fillStyle = 'rgba(255,255,255,.1)'; rrect(g, x0 + 1, 29, x1 - x0 - 2, 6, 3); g.fill();
-  g.fillStyle = pl.boosting ? '#fff07a' : '#ffc400'; if (pl.boosting) { g.shadowColor = '#ffd400'; g.shadowBlur = 8; } rrect(g, x0 + 1, 29, Math.max(6, (x1 - x0 - 2) * (pl.bat || 0)), 6, 3); g.fill(); g.shadowBlur = 0;
-  // Gas / Bremse
-  const half = (x1 - x0 - 6) / 2;
-  g.fillStyle = 'rgba(255,255,255,.08)'; rrect(g, x0 + 1, 40, half, 4, 2); g.fill(); rrect(g, x0 + 5 + half, 40, half, 4, 2); g.fill();
-  g.fillStyle = '#2bd46b'; { const th = pre ? (pl.rev || 0) : (pl.thr || 0); if (th > 0.01) { rrect(g, x0 + 1, 40, half * th, 4, 2); g.fill(); } }
-  g.fillStyle = '#ff2a10'; if (pl.brk) { rrect(g, x0 + 5 + half, 40, half * (pl.brk || 0), 4, 2); g.fill(); }
+  // Drehzahl-Bogen: 22 LEDs, Mitte etwas höher (Bogen), Farben grün -> rot -> blau (Schaltblitz)
+  const nS = 22, f = pre ? 0.05 + 0.95 * (pl.rev || 0) : pl.v < 0.5 ? 0.05 : gi.f, lit = Math.round(f * nS), blink = f > 0.96 && (performance.now() / 90 | 0) % 2, xa = 22, xb = W2 - 22, sw = (xb - xa) / nS;
+  for (let k = 0; k < nS; k++) { const t = k / (nS - 1), yy = 3 + 6 * Math.pow(2 * t - 1, 2), on = k < lit && !blink, colr = k < 11 ? '#2be07a' : k < 17 ? '#ff3a1a' : '#4d86ff';
+    g.fillStyle = on ? colr : 'rgba(255,255,255,.11)'; if (on && k >= 14) { g.shadowColor = colr; g.shadowBlur = 7; } rrect(g, xa + k * sw + 1, yy, sw - 2.4, 5.5, 2.2); g.fill(); g.shadowBlur = 0; }
+  // Gang
+  g.fillStyle = 'rgba(225,6,0,.16)'; g.strokeStyle = '#e10600'; g.lineWidth = 1.4; rrect(g, 12, 17, 32, 29, 8); g.fill(); g.stroke();
+  g.fillStyle = '#fff'; g.textAlign = 'center'; g.font = 'italic 900 24px "Titillium Web",system-ui,sans-serif'; g.fillText(pl.v < 0.5 ? 'N' : gi.g, 28, 32.5);
+  // Tempo
+  g.fillStyle = '#fff'; g.textAlign = 'center'; g.font = 'italic 900 33px "Titillium Web",system-ui,sans-serif'; g.fillText(Math.round(kmh), 138, 30);
+  g.fillStyle = 'rgba(255,255,255,.55)'; g.font = '700 8px system-ui,sans-serif'; g.fillText('KM/H', 138, 45);
+  // ERS + Pedale
+  const x0 = 192, x1 = W2 - 12, bw = x1 - x0;
+  g.fillStyle = 'rgba(255,255,255,.58)'; g.font = '800 8px system-ui,sans-serif'; g.textAlign = 'left'; g.fillText('ERS', x0, 21); g.textAlign = 'right'; g.fillText(Math.round((pl.bat || 0) * 100) + '%', x1, 21);
+  g.fillStyle = 'rgba(255,255,255,.1)'; rrect(g, x0, 26, bw, 6, 3); g.fill();
+  g.fillStyle = pl.boosting ? '#fff07a' : '#ffc400'; if (pl.boosting) { g.shadowColor = '#ffd400'; g.shadowBlur = 8; } rrect(g, x0, 26, Math.max(6, bw * (pl.bat || 0)), 6, 3); g.fill(); g.shadowBlur = 0;
+  const half = (bw - 4) / 2; g.fillStyle = 'rgba(255,255,255,.08)'; rrect(g, x0, 38, half, 4, 2); g.fill(); rrect(g, x0 + half + 4, 38, half, 4, 2); g.fill();
+  g.fillStyle = '#2bd46b'; { const th = pre ? (pl.rev || 0) : (pl.thr || 0); if (th > 0.01) { rrect(g, x0, 38, half * th, 4, 2); g.fill(); } }
+  g.fillStyle = '#ff2a10'; if (pl.brk) { rrect(g, x0 + half + 4, 38, half * (pl.brk || 0), 4, 2); g.fill(); }
   g.restore();
 }
 
@@ -5963,17 +5983,27 @@ let BUMP_NB = null;
 // Schaben (zwei verstimmte Sägezähne durch Resonanzfilter) bzw. beim Auto-Auto-Treffer das helle Knacken von Carbonteilen. Stärke 0..1 skaliert Lautstärke und Dauer.
 function bump(strength = 1, kind = 'car') {
   if (!ac || !S.sound) return;
-  try { const t = ac.currentTime, st = clamp(strength, 0.2, 1), out = ac.createGain(); out.gain.value = 0.9 * st; out.connect(sfxBus());
+  try { const t = ac.currentTime, st = clamp(strength, 0.2, 1), out = ac.createGain(), lim = ac.createDynamicsCompressor(); lim.threshold.value = -10; lim.ratio.value = 8; lim.attack.value = 0.002; lim.release.value = 0.08; out.gain.value = 0.85 * st; out.connect(lim); lim.connect(sfxBus());   /* Begrenzer: nie Übersteuern, auch bei Treffern in Serie */
     if (!BUMP_NB) { BUMP_NB = ac.createBuffer(1, ac.sampleRate, ac.sampleRate); const d = BUMP_NB.getChannelData(0); for (let k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1; }
     const nz = (f, q, v, dur, off = 0) => { const n = ac.createBufferSource(), bp = ac.createBiquadFilter(), g = ac.createGain(); n.buffer = BUMP_NB; bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = q; g.gain.setValueAtTime(v, t + off); g.gain.exponentialRampToValueAtTime(0.001, t + off + dur); n.connect(bp); bp.connect(g); g.connect(out); n.start(t + off, Math.random() * 0.5); n.stop(t + off + dur + 0.02); };
-    { const o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(95, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.16); g.gain.setValueAtTime(0.9, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.22 + 0.15 * st); o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.45); }   // Schlag
-    nz(700 + Math.random() * 300, 0.7, 0.8, 0.12 + 0.12 * st);              // Aufprall-Knirschen
-    nz(2600 + Math.random() * 900, 1.3, 0.35, 0.07 + 0.05 * st);              // Splitter / Kunststoffbruch
-    if (kind === 'wall') { for (const f of [410, 617]) { const o = ac.createOscillator(), bp = ac.createBiquadFilter(), g = ac.createGain(); o.type = 'sawtooth'; o.frequency.setValueAtTime(f * (0.9 + Math.random() * 0.2), t + 0.03); bp.type = 'bandpass'; bp.frequency.value = 1500; bp.Q.value = 5; g.gain.setValueAtTime(0.0001, t + 0.03); g.gain.exponentialRampToValueAtTime(0.14 * st, t + 0.06); g.gain.exponentialRampToValueAtTime(0.001, t + 0.35 + 0.35 * st); o.connect(bp); bp.connect(g); g.connect(out); o.start(t + 0.03); o.stop(t + 0.8); }
-      nz(1800, 2.2, 0.28, 0.4 + 0.3 * st, 0.05); }                          // Metall schabt an der Leitplanke
-    else { nz(4200, 2.5, 0.22, 0.09, 0.02); nz(1500, 1.4, 0.25, 0.14, 0.05); }   // Carbon knackt, Teile fliegen
+    { const o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(95, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.16); g.gain.setValueAtTime(0.42, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.16 + 0.1 * st); o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.4); }   // Schlag (leiser als vorher: lag zu 98 % unter 150 Hz und war auf Handylautsprechern kaum zu hören)
+    nz(550 + Math.random() * 250, 0.45, 3.2, 0.13 + 0.14 * st);              // Aufprall-Knirschen (breit, laut)
+    nz(1500 + Math.random() * 500, 0.8, 2.4, 0.1 + 0.1 * st, 0.012);         // Blech verformt sich
+    nz(3000 + Math.random() * 900, 0.9, 2.0, 0.08 + 0.06 * st);               // Splitter / Kunststoffbruch
+    if (kind === 'wall') { for (const f of [410, 617]) { const o = ac.createOscillator(), bp = ac.createBiquadFilter(), g = ac.createGain(); o.type = 'sawtooth'; o.frequency.setValueAtTime(f * (0.9 + Math.random() * 0.2), t + 0.03); bp.type = 'bandpass'; bp.frequency.value = 1500; bp.Q.value = 5; g.gain.setValueAtTime(0.0001, t + 0.03); g.gain.exponentialRampToValueAtTime(0.32 * st, t + 0.06); g.gain.exponentialRampToValueAtTime(0.001, t + 0.35 + 0.35 * st); o.connect(bp); bp.connect(g); g.connect(out); o.start(t + 0.03); o.stop(t + 0.8); }
+      nz(2000, 1.6, 1.3, 0.4 + 0.3 * st, 0.05); }                          // Metall schabt an der Leitplanke
+    else { nz(4500, 1.6, 1.0, 0.09, 0.02); nz(1800, 1.0, 1.2, 0.15, 0.05); }   // Carbon knackt, Teile fliegen
   } catch (e) {}
 }
+
+// Test: Kollisionsklang offline rendern und messen (Spitzenpegel, Pegelverlauf, Energie je Frequenzband) – ohne Lautsprecher prüfbar
+window.__bumpTest = async (kind = 'car', st = 1) => { const ac0 = ac, sfx0 = SFX, snd0 = S.sound, nb0 = BUMP_NB; try { const sr = 44100; ac = new OfflineAudioContext(1, Math.round(sr * 1.5), sr); SFX = null; BUMP_NB = null; S.sound = true; bump(st, kind); const buf = await ac.startRendering(), d = buf.getChannelData(0);
+    let pk = 0; for (let i = 0; i < d.length; i++) pk = Math.max(pk, Math.abs(d[i]));
+    const win = Math.round(sr * 0.1), env = []; for (let w = 0; w < 15; w++) { let e = 0; for (let i = w * win; i < (w + 1) * win && i < d.length; i++) e += d[i] * d[i]; env.push(+Math.sqrt(e / win).toFixed(3)); }
+    const N = 2048, seg = d.subarray(Math.round(sr * 0.02), Math.round(sr * 0.02) + N), bands = { 'unter150': 0, '150-1k': 0, '1k-4k': 0, 'ueber4k': 0 }; for (let k = 1; k < N / 2; k += 2) { let re = 0, im = 0; for (let n = 0; n < N; n++) { const a2 = 2 * Math.PI * k * n / N, wv = 0.5 - 0.5 * Math.cos(2 * Math.PI * n / N); re += seg[n] * wv * Math.cos(a2); im -= seg[n] * wv * Math.sin(a2); } const f = k * sr / N, e = re * re + im * im; bands[f < 150 ? 'unter150' : f < 1000 ? '150-1k' : f < 4000 ? '1k-4k' : 'ueber4k'] += e; }
+    const tot = Object.values(bands).reduce((q, v) => q + v, 0) || 1; for (const k in bands) bands[k] = +(bands[k] / tot * 100).toFixed(0) + ' %';
+    let last = 0; for (let i = d.length - 1; i >= 0; i--) if (Math.abs(d[i]) > 0.01) { last = i; break; }
+    return { kind, stärke: st, spitze: +pk.toFixed(2), dauerMs: Math.round(last / sr * 1000), pegelProHundertMs: env, spektrum: bands }; } finally { ac = ac0; SFX = sfx0; S.sound = snd0; BUMP_NB = nb0; } };
 
 /* ======================= Musik (live erzeugt, orchestral-episch) ======================= */
 const MUS = { bus: null, rev: null, step: 0, nextT: 0, noise: null, song: null };
@@ -6190,7 +6220,7 @@ const WARM = { rt: null };
 // Sonst lädt der Treiber jedes Teil erst, wenn es zum ersten Mal in Sicht kommt: auf langen Strecken (Spa) ruckelt es dann während der Fahrt.
 let BID = 0, WARM_ID = -1;
 function warmUpTrack() {
-  if (WARM_ID === BID) return; WARM_ID = BID; const t0 = performance.now();
+  if (WARM_ID === BID || window.__noWarm) return; WARM_ID = BID; const t0 = performance.now();
   try { const rt = new THREE.WebGLRenderTarget(8, 8), prev = renderer.getRenderTarget(), objs = []; scene.traverse(o => { if (o.isMesh || o.isPoints || o.isLine) objs.push([o, o.visible, o.frustumCulled, o.geometry]); });
     const levels = Math.max(1, ...objs.map(([o]) => o.userData && o.userData.lodSteps ? o.userData.lodSteps.length + 1 : 1)), se = renderer.shadowMap.enabled, sa = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false;
     renderer.setRenderTarget(rt);
@@ -7464,7 +7494,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.04'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.05'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
