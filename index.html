@@ -1550,9 +1550,13 @@ const WAKE = (() => {
   const m = new THREE.Mesh(geo, mat); m.frustumCulled = false; m.renderOrder = 5; m.visible = false; m.layers.set(1); camera.layers.enable(1); return { m, mat, t, host: null, a: 0 };
 })();
 function wakeTick(dt) {
-  const src = running && !paused && raceState === 'race' ? pl.slipFrom : null, want = src ? clamp(0.25 + (pl.slipS || 0) * 1.6, 0, 1) : 0;
-  if (src && WAKE.host !== src.mesh.g) { WAKE.host = src.mesh.g; WAKE.host.add(WAKE.m); }
-  WAKE.a += (want - WAKE.a) * Math.min(1, dt * (want > WAKE.a ? 1.6 : 2.4)); WAKE.mat.opacity = WAKE.a * WAKE.a * 0.7; WAKE.m.visible = WAKE.a > 0.02;   /* langsames Einblenden (quadratisch: erst nur ein Hauch), etwas schnelleres Ausblenden */
+  const live = running && !paused && raceState === 'race', src = live ? pl.slipFrom : null, ss = pl.slipS || 0;
+  if (src) { if (!WAKE.host) { WAKE.host = src.mesh.g; WAKE.host.add(WAKE.m); } else if (WAKE.host !== src.mesh.g) WAKE.pend = src.mesh.g; else WAKE.pend = null; }
+  /* Der Kegel springt nie: Wechselt der Vordermann, wird er erst am alten Auto ausgeblendet und dann am neuen wieder eingeblendet. Verliert man den Windschatten, klingt er mit dem geglätteten Wert (slipS) ab, statt mit der ein/aus-Bedingung zu flackern. */
+  const want = live && !WAKE.pend && (src || ss > 0.03) ? clamp(0.12 + ss * 1.7, 0, 1) : 0;
+  WAKE.a += (want - WAKE.a) * Math.min(1, dt * (want > WAKE.a ? 1.5 : 2.2));
+  if (WAKE.pend && WAKE.a < 0.03) { WAKE.host = WAKE.pend; WAKE.pend = null; WAKE.host.add(WAKE.m); }
+  WAKE.mat.opacity = WAKE.a * WAKE.a * 0.7; WAKE.m.visible = WAKE.a > 0.004;   /* quadratisch: erst nur ein Hauch, dann wachsend */
   WAKE.t.offset.y -= dt * (1.2 + pl.v * 0.03);
 }
 const STK = { f: 0 };
@@ -7520,7 +7524,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.09'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.10'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -7701,6 +7705,8 @@ window.__clipCheck = () => { let bad = 0, n = 0; const v = new THREE.Vector3(), 
   return { buildings: n, clipping: bad }; };
 window.__sim = (sec, dt = 1 / 60) => { for (let t = 0; t < sec; t += dt) { if (running && !paused) step(dt); updateMeshes(dt); } return window.__dbg(); };   /* Test: Simulation ohne Bildausgabe vorspulen */
 window.__results = () => { order.forEach((c, i) => { c.finished = true; c.finishLaps = S.laps; c.finishTime = 5400 + i * 1.7; c.best = 88 + i * 0.21; }); fastest = fastest || { name: order[3].name, t: order[3].best }; showResults(); return $('#results').className; };   /* Test: Ergebnis-Bildschirm mit Testdaten öffnen */
+window.__wake = () => ({ a: +WAKE.a.toFixed(3), op: +WAKE.mat.opacity.toFixed(3), vis: WAKE.m.visible, slipS: +(pl.slipS || 0).toFixed(3), src: pl.slipFrom ? pl.slipFrom.code : null });   /* Test: Zustand des Windschatten-Kegels */
+window.__plRef = () => pl;
 window.__laps = () => ais.map(a => a.code + ':' + (a.lapTimes || []).map(t => t.toFixed(1)).join('/'));
 window.__dbg = () => ({ L, N, raceState, running, paused, lightsT, raceTime, plD: pl.d, plV: pl.v, plLat: pl.lat, order: order.map(c => c.code), best: pl.best, fastest, resultsShown, aiBest: ais.slice(0, 5).map(a => a.code + ':' + (a.best || 0).toFixed(1)) });
 requestAnimationFrame(frame);

@@ -568,3 +568,6 @@ Die Bäume der `trees: 'forest'`-Strecken bestehen nicht mehr aus Kugeln und Keg
 - **Ruckler messen**: `window.__noWarm = true` vor `__race(...)` schaltet das Vorwärmen (`warmUpTrack`) ab. Dann die Strecke in 15-m-Schritten mit `__view(s, …)` + `__frame(1)` abfahren und die Einzelzeiten auswerten (Median, 99-%-Wert, Höchstwert). Spitzen am Startgitter sind normal (22 Autos dicht beieinander).
 
 - **Esplanade neu (1.07)**: zwei ovale Eierkuppeln (Superellipsoid, Exponent 3), Hülle mit dichtem Raster flacher dreieckiger Alu-Blenden (ein zusammengefasstes Netz je Strecke, Vertexfarben), warm leuchtendes Foyer-Glas, weißer Randträger mit V-Stützen. Kein InstancedMesh verwenden (wird dort ignoriert).
+
+- **Windschatten-Kegel (1.10)**: wechselt nie sprunghaft das Auto – bei neuem Vordermann erst am alten ausblenden, dann am neuen einblenden; Abklingen mit dem geglätteten Wert (slipS) statt mit der Ein/Aus-Bedingung. Prüfhelfer: `__wake()`, `__plRef()`.
+- **Spa/bemalte Ausläufe**: `PAINTZ` markiert sie als Auslaufzone (kein Gras, Fahrphysik Auslauf). **F2-Lack**: Klarlack .45 / Rauheit .35.
