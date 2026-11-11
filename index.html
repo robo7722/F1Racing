@@ -2273,7 +2273,7 @@ const mkWheelM = C => C ? C.lods.map((L, l) => {
   return { L: v(L.wheelL, hf), R: v(L.wheelR, hf), RL: v(L.rwheelL, hr), RR: v(L.rwheelR, hr) };
 }) : null;
 const WHEELM = mkWheelM(CARM), WHEELM2 = mkWheelM(CARM2);
-const MODELS = { f1: CARM ? { C: CARM, W: WHEELM, helm: [0.79, 0.18], rl: [0.315, -2.335], tv: [0, 1.04, 0.02, 2.4] } : null, f2: CARM2 ? { C: CARM2, W: WHEELM2, helm: [0.80, 0.21], rl: [0.40, -2.468], rlS: [0.085, 0.075, 0.02], swPos: [0, 0.625, 0.68], swS: 0.78, cam: [0, 0.80, 0.26, 0.30],   /* swS: Lenkrad im F2 kleiner – die Kamera sitzt dort viel näher dran */ tv: [0, 1.04, 0.02, 2.4] } : null };
+const MODELS = { f1: CARM ? { C: CARM, W: WHEELM, helm: [0.79, 0.18], rl: [0.315, -2.335], swPos: [0, 0.575, 0.74], swS: 0.85, cam: [0, 0.88, 0.25, 3.5],   /* Lenkrad IN der Cockpitwanne (vorher z 0,98 = unter dem Vorderdeck, darüber gemalt), Augenpunkt etwas weiter hinten mit leichtem Blick nach unten wie in echten Onboards */ tv: [0, 1.04, 0.02, 2.4] } : null, f2: CARM2 ? { C: CARM2, W: WHEELM2, helm: [0.80, 0.21], rl: [0.40, -2.468], rlS: [0.085, 0.075, 0.02], swPos: [0, 0.61, 0.64], swS: 0.8, cam: [0, 0.83, 0.20, 3.5],   /* swS: Lenkrad im F2 kleiner – die Kamera sitzt dort viel näher dran */ tv: [0, 1.04, 0.02, 2.4] } : null };
 const COMPOUNDS = COMPOUNDS_;
 const WMAT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .88, metalness: .05, side: THREE.DoubleSide });
 const MIRMAT = new THREE.MeshStandardMaterial({ color: 0xdfe6ee, metalness: 1, roughness: .05, envMapIntensity: 1.15, side: THREE.DoubleSide });   // Spiegelglas: spiegelt die Umgebung (vorher eine einfarbig hellblaue, selbstleuchtende Fläche – im Cockpit ein weißer Klotz)
@@ -2409,48 +2409,53 @@ const LIVERY = {
     if (c > 0.5 && c < 1.5) col = mix(G, W, aaS(p.y - 0.4)); if (c > 1.5 && c < 2.5) col = G; return col;`,
 };
 let haloFlatOn = false;   // TV-Kamera aktiv: Halos aller Autos einfarbig (siehe Kamera-Update)
+// Cockpit-Innenraum (Wunsch: einheitliche Farbe IM Cockpit): alles unterhalb des Cockpitrands innerhalb der Öffnung wird einfarbig dunkles Carbon –
+// vorher malte der Lackierungs-Shader Streifen, Keile und Akzentfarben auf die Innenwände. Maße aus dem Höhenraster der Modelle vermessen (Rand F1 0,62 m, F2 0,67 m).
+const COCK = { f1: { x: 0.165, z0: 0.10, z1: 0.84, y: 0.615, fl: 0.30, wd: 0.07 }, f2: { x: 0.19, z0: 0.0, z1: 0.70, y: 0.655, fl: 0.14, wd: 0.05 } }, COCK_COL = new THREE.Color(0x1d2026);
+// Cockpitansicht (nur Spielerauto): Karosserieflächen INNERHALB der Öffnung (unter dem Rand) werden verworfen – das Modell hat dort beim F1 eine flache Abdeckung 4 cm unter dem Rand,
+// in der Lenkrad und Hände steckten (deshalb wurden sie früher als Overlay über das Auto gemalt und schwebten über der Nase). Statt dessen: eigene Cockpitwanne (cockTub) aus Carbon.
+const cockCutGLSL = k => { const c = COCK[k]; return '\n { float cw = ' + c.x.toFixed(3) + ' + clamp((' + c.y.toFixed(3) + ' - vCP.y) * 1.2, 0.0, ' + c.wd.toFixed(3) + '); if (abs(vCP.x) < cw && vCP.z > ' + c.z0.toFixed(3) + ' && vCP.z < ' + (c.z1 + 0.02).toFixed(3) + ' && vCP.y < ' + (c.y - 0.002).toFixed(3) + ' && vCP.y > ' + (c.fl - 0.02).toFixed(3) + ') discard; }'; };
+function cockCut(mat, k) { const m = mat.clone(), ob = mat.onBeforeCompile, key = mat.customProgramCacheKey();
+  m.onBeforeCompile = (sh, r) => { if (ob) ob.call(mat, sh, r); sh.vertexShader = 'varying vec3 vCP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vCP = position;'); sh.fragmentShader = 'varying vec3 vCP;\n' + sh.fragmentShader.replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>' + cockCutGLSL(k)); };
+  m.customProgramCacheKey = () => key + '|cockcut-' + k; return m; }
+const COCK_MAT = (() => { const t = TEX.carbon.clone(), n = TEX.carbonN.clone(); for (const x of [t, n]) { x.repeat.set(1, 1); x.needsUpdate = true; } return new THREE.MeshStandardMaterial({ map: t, normalMap: n, normalScale: new THREE.Vector2(.35, .35), color: 0x3a3e46, roughness: .55, metalness: .25, side: THREE.DoubleSide }); })();
+const COCK_PAD = new THREE.MeshStandardMaterial({ color: 0x15171b, roughness: .9, metalness: 0 });   // Polster/Armaturenkante: matt schwarz
+function cockTub(k) {   // Wanne: schräge Seitenwände (oben so breit wie die Öffnung, unten breiter), Boden, Spritzwand vorn mit Armaturenkante, Rückwand; UV in Metern (Carbon-Webung ~ 3 cm)
+  const c = COCK[k], w0 = c.x + 0.003, w1 = c.x + c.wd, yT = c.y + 0.003, fl = c.fl, z0 = c.z0 - 0.01, z1 = c.z1 + 0.012, P = [], U = [];
+  const quad = (a, b, d, e) => { for (const q of [a, b, d, a, d, e]) { P.push(...q); U.push((q[2] + q[0]) * 30, (q[1] + q[0] * 0.3) * 30); } };
+  for (const s of [-1, 1]) quad([s * w0, yT, z0], [s * w0, yT, z1], [s * w1, fl, z1], [s * w1, fl, z0]);
+  quad([-w1, fl, z0], [w1, fl, z0], [w1, fl, z1], [-w1, fl, z1]);
+  quad([-w0, yT, z1], [w0, yT, z1], [w1, fl, z1 + 0.02], [-w1, fl, z1 + 0.02]);
+  quad([-w0, yT, z0], [w0, yT, z0], [w1, fl, z0], [-w1, fl, z0]);
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.computeVertexNormals();
+  const grp = new THREE.Group(), tub = new THREE.Mesh(g, COCK_MAT); grp.add(tub);
+  const dash = new THREE.Mesh(new THREE.BoxGeometry(w0 * 2 - 0.004, 0.04, 0.07), COCK_PAD); dash.position.set(0, c.y - 0.018, c.z1 - 0.03); grp.add(dash);   // Armaturenkante unter dem vorderen Rand
+  for (const s of [-1, 1]) { const pad = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.05, (c.z1 - c.z0) * 0.55), COCK_PAD); pad.position.set(s * (w0 - 0.012), c.y - 0.028, c.z0 + (c.z1 - c.z0) * 0.3); grp.add(pad); }   // seitliche Polster
+  grp.traverse(o => { if (o.isMesh) { o.frustumCulled = false; o.castShadow = false; } }); grp.visible = false; return grp; }
+
+const inCock = (k, x, y, z) => { const c = COCK[k]; return Math.abs(x) < c.x && z > c.z0 && z < c.z1 && y < c.y; };
+const cockGLSL = k => { const c = COCK[k]; return '\n if (abs(vLP.x) < ' + c.x.toFixed(3) + ' && vLP.z > ' + c.z0.toFixed(3) + ' && vLP.z < ' + c.z1.toFixed(3) + ' && vLP.y < ' + c.y.toFixed(3) + ') diffuseColor.rgb = vec3(' + [COCK_COL.r, COCK_COL.g, COCK_COL.b].map(v => v.toFixed(4)).join(',') + ');'; };
 function liveryMat(tk, gloss) { const code = LIVERY[tk]; if (!code) return gloss;
   gloss.onBeforeCompile = sh => {
     sh.vertexShader = 'attribute float aCls; varying float vCls; varying vec3 vLP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vLP = position; vCls = aCls;');
-    sh.fragmentShader = 'varying float vCls; varying vec3 vLP;\n' + LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 2.5 || vCls > 6.5) diffuseColor.rgb = livery(vLP, vCls);');
+    sh.fragmentShader = 'varying float vCls; varying vec3 vLP;\n' + LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 2.5 || vCls > 6.5) diffuseColor.rgb = livery(vLP, vCls);' + cockGLSL('f1'));
   };
   gloss.customProgramCacheKey = () => 'livery-' + tk; return gloss; }
-// Halo für die TV-Kamera: das Modell-Halo hat an der Mittelstrebe Dreiecke, die sich gegenseitig durchdringen (gezackter Rand von oben gesehen).
-// Statt des Modells wird ein sauberes Halo entlang der vermessenen Mittellinie des Modell-Halos gezogen: EIN durchgehender, vorn runder Bügel (U-Form wie beim echten Halo, kein spitzes V)
-// mit flach-ovalem Querschnitt (7 cm breit, 5,4 cm hoch) und eine schmale, in Fahrtrichtung lange Mittelstrebe, die sich oben in den Bügel verbreitert.
-const HALO_SPEC = {
-  f1: { hoop: [[0.292, 0.745, 0.02], [0.300, 0.762, 0.22], [0.288, 0.792, 0.36], [0.262, 0.815, 0.48], [0.205, 0.835, 0.58], [0.125, 0.848, 0.68], [0.05, 0.853, 0.755]], top: [0.854, 0.778], strut: [[0, 0.848, 0.775], [0, 0.765, 0.925], [0, 0.668, 1.055]] },
-  f2: { hoop: [[0.300, 0.745, 0.05], [0.298, 0.800, 0.15], [0.285, 0.845, 0.22], [0.250, 0.866, 0.30], [0.205, 0.878, 0.36], [0.140, 0.887, 0.425], [0.06, 0.891, 0.475]], top: [0.892, 0.497], strut: [[0, 0.886, 0.495], [0, 0.800, 0.69], [0, 0.703, 0.86]] },
-};
-function sweepGeo(curve, n, sec, ax) {   // Profil entlang einer Kurve ziehen: sec(t) -> [halbe Breite, halbe Höhe]; ax = feste Querachse (Mittelstrebe) oder null (Bügel: quer = Tangente × oben)
-  const R = 14, pos = [], nrm = [], uv = [], idx = [], V = THREE.Vector3, t = new V(), sd = new V(), up = new V(), c = new V(), Y = new V(0, 1, 0);
-  for (let i = 0; i <= n; i++) { const u = i / n; curve.getPoint(u, c); curve.getTangent(u, t); if (ax) sd.copy(ax); else sd.crossVectors(t, Y).normalize(); up.crossVectors(sd, t).normalize(); const [a, b] = sec(u);
-    for (let k = 0; k < R; k++) { const an = k / R * Math.PI * 2, cs = Math.cos(an), sn = Math.sin(an); pos.push(c.x + sd.x * a * cs + up.x * b * sn, c.y + sd.y * a * cs + up.y * b * sn, c.z + sd.z * a * cs + up.z * b * sn);
-      const nx = sd.x * cs / a + up.x * sn / b, ny = sd.y * cs / a + up.y * sn / b, nz = sd.z * cs / a + up.z * sn / b, l = Math.hypot(nx, ny, nz) || 1; nrm.push(nx / l, ny / l, nz / l); uv.push(k / R, u); } }
-  for (let i = 0; i < n; i++) for (let k = 0; k < R; k++) { const a = i * R + k, b = i * R + (k + 1) % R, d = a + R, e = b + R; idx.push(a, d, b, b, d, e); }
-  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); return g;
-}
-function cleanHalo(kind, c) {
-  const S = HALO_SPEC[kind] || HALO_SPEC.f1, V = THREE.Vector3, R = S.hoop.map(p => new V(p[0], p[1], p[2])), L = S.hoop.map(p => new V(-p[0], p[1], p[2])).reverse();
-  const hoop = new THREE.CatmullRomCurve3([...R, new V(0, S.top[0], S.top[1]), ...L], false, 'centripetal'), strut = new THREE.CatmullRomCurve3(S.strut.map(p => new V(p[0], p[1], p[2])));
-  const parts = [sweepGeo(hoop, 72, () => [0.035, 0.027], null), sweepGeo(strut, 14, u => [lerp(0.034, 0.015, Math.min(1, u * 2.2)), lerp(0.05, 0.034, u)], new V(1, 0, 0))];
-  const g = mergeParts(parts.map(t => [t, c]), true); g.computeBoundingSphere(); return g;
-}
 function teamTemplate(tk) {
   if (TPL[tk]) return TPL[tk];
   const T0 = LIVS[tk] || TEAMS[tk], MD = MODELS[T0.kind === 'f2' ? 'f2' : 'f1'];
   if (MD) {
     const T = T0, isF2 = T.kind === 'f2', cB = col(T.body), cA = col(T.acc), cT = col(T.tip), cLow = col(T.low ?? T.body), cC = col(0x4a4f57), cD = col(0x16181b);
-    const pc = (k, x, y, z, o) => isF2 && k === 7 ? o.copy(cD) : isF2 && k === 0 && (z > 2.55 || (z > 2.15 && y < 0.36) || (z < -1.9 && y > 0.6)) ? o.copy(z > 2.55 ? cT : cA) : o.copy(k === 1 ? cA : k === 2 ? cT : k === 3 ? cC : k === 4 ? cD : (T.low !== undefined && y < T.split ? cLow : cB));
+    const pc = (k, x, y, z, o) => k !== 5 && k !== 6 && inCock(isF2 ? 'f2' : 'f1', x, y, z) ? o.copy(COCK_COL) : isF2 && k === 7 ? o.copy(cD) : isF2 && k === 0 && (z > 2.55 || (z > 2.15 && y < 0.36) || (z < -1.9 && y > 0.6)) ? o.copy(z > 2.55 ? cT : cA) : o.copy(k === 1 ? cA : k === 2 ? cT : k === 3 ? cC : k === 4 ? cD : (T.low !== undefined && y < T.split ? cLow : cB));
     const gloss = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: isF2 ? .32 : .3, metalness: T.metal * (isF2 ? 0.6 : 0.7), clearcoat: isF2 ? .85 : 1, clearcoatRoughness: isF2 ? .12 : .06, envMapIntensity: isF2 ? 1.15 : 1.25, side: THREE.DoubleSide });   /* F2: Normalen sind jetzt bereinigt (renormCar) – der Lack darf fast so klar spiegeln wie beim F1 */
     if (isF2) {   // Farbfelder (Nase, Flügel, Unterteil) im Shader je Bildpunkt statt je Eckpunkt -> gerade, scharfe Farbgrenzen statt gezackter Dreieckskanten
       const v3 = c => 'vec3(' + c.r.toFixed(4) + ',' + c.g.toFixed(4) + ',' + c.b.toFixed(4) + ')';
       gloss.onBeforeCompile = sh => { viewFacing(sh);
         sh.vertexShader = 'attribute float aCls; varying float vCls; varying vec3 vLP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vLP = position; vCls = aCls;');
-        sh.fragmentShader = 'varying float vCls; varying vec3 vLP;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 0.5) { diffuseColor.rgb = vLP.z > 2.55 ? ' + v3(cT) + ' : ((vLP.z > 2.15 && vLP.y < 0.36) || (vLP.z < -1.9 && vLP.y > 0.6)) ? ' + v3(cA) + ' : ' + (T.low !== undefined ? 'vLP.y < ' + T.split.toFixed(3) + ' ? ' + v3(cLow) + ' : ' : '') + v3(cB) + '; }'); };
+        sh.fragmentShader = 'varying float vCls; varying vec3 vLP;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 0.5) { diffuseColor.rgb = vLP.z > 2.55 ? ' + v3(cT) + ' : ((vLP.z > 2.15 && vLP.y < 0.36) || (vLP.z < -1.9 && vLP.y > 0.6)) ? ' + v3(cA) + ' : ' + (T.low !== undefined ? 'vLP.y < ' + T.split.toFixed(3) + ' ? ' + v3(cLow) + ' : ' : '') + v3(cB) + '; }' + cockGLSL('f2')); };
       gloss.customProgramCacheKey = () => 'f2paint-' + tk; }   /* F2: weicher Klarlack – der scharfe Klarlack spiegelte Asphalt und Schatten als schwarze Flecken */   /* F2 auf F1-Niveau: die dunkle Umgebung (Asphalt, Horizontband) spiegelt sich weich statt schwarz */   // F2: unscharfe, schwache Spiegelung – scharfe Umgebungsspiegelung (Gras/Tribünen) wirkte fleckig-grün
     const haloMat = gloss.clone();   // Halo in der TV-Kamera: einfarbig in der Fahrzeugfarbe, ohne Lackierungs-Verlauf (Material vor dem Livery-Shader kopieren)
-    return (TPL[tk] = { model: true, M: MD, lods: MD.C.lods.map(L => ({ gloss: paintGeo(L.gloss, pc), matte: paintGeo(L.matte, pc) })), halo: paintGeo(MD.C.halo, pc), haloFlat: cleanHalo(isF2 ? 'f2' : 'f1', isF2 ? cD : T.low !== undefined ? cLow : cB), haloMat,   /* Halo-Farbe wie am Auto: F2 schwarz, zweifarbige F1-Lackierungen in der dunklen Grundfarbe */ glossMat: liveryMat(tk, gloss) });
+    return (TPL[tk] = { model: true, M: MD, lods: MD.C.lods.map(L => ({ gloss: paintGeo(L.gloss, pc), matte: paintGeo(L.matte, pc) })), halo: paintGeo(MD.C.halo, pc), haloFlat: paintGeo(MD.C.halo, (k, x, y, z, o) => o.copy(cB)), haloMat,   /* TV-Kamera: das Halo AUS DEM MODELL in der Wagenfarbe – genau wie Version 1.00 (Wunsch). Ein fast schwarzes Halo spiegelte nur den Himmel als dünne Linie und wirkte spitz */ glossMat: liveryMat(tk, gloss) });
   }
   const T = TEAMS[tk];
   const cB = col(T.body), cA = col(T.acc), cT = col(T.tip), cLow = col(T.low ?? T.body), cC = col(0x5a6068), cD = col(0x16181b), cL = col(0xff1a0a), cW = col(0xe9ecef);
@@ -6281,7 +6286,8 @@ const rpVol = [0, 0];   // Lautstärke der beiden Renn-Musik-Player
 let hadRace = false;    // ab dem ersten Rennen läuft die Renn-Musik auch nach dem Rennen und in den Menüs weiter
 function titleTick() {
   const nw = performance.now(), dt = Math.min(0.5, (nw - titleT) / 1000); titleT = nw;
-  const menuMus = !running && (!hadRace || MENU.scr === 'title');   // Menü-Musik nur im Haupt-/Titelmenü (oder solange noch kein Rennen lief); sonst läuft die Renn-Musik weiter
+  if (!running && MENU.scr === 'title') hadRace = false;   // zurück im Hauptmenü: ab hier bleibt die Menü-Musik, bis das nächste Rennen wirklich startet (nicht schon bei der Klassenwahl)
+  const menuMus = !running && !hadRace;   // nach einem Rennen läuft die Renn-Musik in Ergebnis-/Folgemenüs weiter, bis man im Hauptmenü ist
   const want = S.music && menuMus && !document.hidden && rpVol[0] + rpVol[1] < 0.15 ? 0.75 * (S.volMusic ?? 0.7) : 0;
   titleVol += (want - titleVol) * Math.min(1, dt * (want > titleVol ? 1.2 : 3)); if (Math.abs(want - titleVol) < 0.003) titleVol = want;
   TITLE.volume = clamp(titleVol, 0, 1);
@@ -6341,7 +6347,7 @@ let rpErr = 0; RP.forEach(a => a.addEventListener('playing', () => { rpErr = 0; 
 function raceSongName() { if (raceIdx === -2) return MAX_FILES[maxTry]; const sg = RACE_SONGS[raceIdx]; return sg ? (sg.artist ? sg.artist + ' – ' : '') + sg.name : '–'; }
 function nextSong() { raceSongPick(running); }
 function raceMusicTick(dt) {
-  const base = S.music && (running || (hadRace && MENU.scr !== 'title')) && !document.hidden ? 0.8 * (S.volMusic ?? 0.7) * (paused ? 0.7 : 1) : 0;
+  const base = S.music && (running || hadRace) && !document.hidden ? 0.8 * (S.volMusic ?? 0.7) * (paused ? 0.7 : 1) : 0;
   for (let n = 0; n < 2; n++) {
     const a = RP[n], want = n === rpCur ? base : 0, full = Math.max(0.05, 0.8 * (S.volMusic ?? 0.7));
     // einblenden in ~1,5 s, ausblenden in ~3 s (linear, gut hörbar)
@@ -6817,7 +6823,7 @@ const SW = (() => {
   const sh = new THREE.Shape(); sh.moveTo(-0.118, 0.088); sh.lineTo(0.118, 0.088); sh.quadraticCurveTo(0.142, 0.086, 0.146, 0.062); sh.lineTo(0.15, -0.03); sh.quadraticCurveTo(0.148, -0.062, 0.118, -0.078); sh.lineTo(0.07, -0.092); sh.lineTo(-0.07, -0.092); sh.lineTo(-0.118, -0.078); sh.quadraticCurveTo(-0.148, -0.062, -0.15, -0.03); sh.lineTo(-0.146, 0.062); sh.quadraticCurveTo(-0.142, 0.086, -0.118, 0.088);
   const body = new THREE.ExtrudeGeometry(sh, { depth: 0.026, bevelEnabled: true, bevelThickness: 0.007, bevelSize: 0.007, bevelSegments: 3, curveSegments: 10 });
   const cTex = TEX.carbon.clone(); cTex.repeat.set(44, 44); cTex.needsUpdate = true; const cNrm = TEX.carbonN.clone(); cNrm.repeat.set(44, 44); cNrm.needsUpdate = true;
-  mk(body, new THREE.MeshStandardMaterial({ map: cTex, normalMap: cNrm, normalScale: new THREE.Vector2(.2, .2), color: 0x2c2f35, roughness: .42, metalness: .35 }), 60).onBeforeRender = r => { r.state.buffers.depth.setMask(true); r.clearDepth(); };   /* Maske an, sonst leert gl.clear die Tiefe nicht (der Himmel davor schreibt keine Tiefe) */
+  mk(body, new THREE.MeshStandardMaterial({ map: cTex, normalMap: cNrm, normalScale: new THREE.Vector2(.2, .2), color: 0x2c2f35, roughness: .42, metalness: .35 }), 60);   /* KEIN Leeren der Tiefe mehr: Lenkrad sitzt jetzt wirklich in der Cockpitwanne und wird normal verdeckt */   /* Maske an, sonst leert gl.clear die Tiefe nicht (der Himmel davor schreibt keine Tiefe) */
   { const P = [], V = THREE.Vector3, rub = col(0x16171a), alu = col(0x3b3f46), aluL = col(0x9aa1ab), blk = col(0x0c0d0f), wht = col(0xe8eaee);
     const cyl = (r, h, x, y, z, c, seg = 20, r2 = r) => P.push([new THREE.CylinderGeometry(r2, r, h, seg).rotateX(Math.PI / 2).translate(x, y, z), c]);
     const box = (w, h, d, x, y, z, c, rz = 0) => { const g = new THREE.BoxGeometry(w, h, d); if (rz) g.rotateZ(rz); g.translate(x, y, z); P.push([g, c]); };
@@ -6926,7 +6932,7 @@ function makeArms(overlay, rg, road = false) {
     const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.037, 0.043, 0.09, 18, 1, true).translate(0, 0.045, 0), cuffM);   // Handschuh-Stulpe über dem Ärmel
     const strap = new THREE.Mesh(new THREE.CylinderGeometry(0.044, 0.044, 0.018, 18, 1, true).translate(0, 0.05, 0), strapM);   // Klettband
     cuffM.side = strapM.side = THREE.DoubleSide; g.add(fore, cuff, strap, hand);
-    for (const [o, ro] of [[fore, 1], [cuff, 2], [strap, 3], [hand, 4]]) { o.frustumCulled = false; if (overlay) { o.renderOrder = 2e6 + ro; o.material.transparent = true; o.material.depthWrite = true; } }
+    for (const [o, ro] of [[fore, 1], [cuff, 2], [strap, 3], [hand, 4]]) { o.frustumCulled = false; if (overlay && o !== fore) {   /* Unterarm NICHT als Overlay: er verschwindet richtig unter dem Cockpitrand (lag vorher über der Karosserie) */ o.renderOrder = 2e6 + ro; o.material.transparent = true; o.material.depthWrite = true; } }
     side.push({ sx, fore, cuff, strap, hand, w: HAND_W(rg) });
   }
   return { g, side, suit, hm, cuffM };
@@ -6957,10 +6963,17 @@ function armsTick() {
     for (const a of A.side) { const ang = (a.sx < 0 ? Math.PI : 0) + spin; poseArm(a, Math.cos(ang) * R, Math.sin(ang) * R, 0, ang - (a.sx < 0 ? Math.PI : 0), a.sx * 0.27, -0.27, 0.38); }
   }
 }
+let cockOn = null;   // Spielerauto, dessen Cockpit gerade „geöffnet“ ist (Innenraum sichtbar, Abdeckung verworfen)
+function cockpitInterior(on) {
+  const m = pl && pl.mesh; if (cockOn && (!on || cockOn !== m)) { cockOn.body.material = cockOn.tp.glossMat; cockOn.matte.material = MATTE; if (cockOn.tub) cockOn.tub.visible = false; cockOn = null; }
+  if (!on || cockOn === m) return; const tp = m.tp, k = tp.M === MODELS.f2 ? 'f2' : 'f1';
+  tp.cutGloss ||= cockCut(tp.glossMat, k); tp.cutMatte ||= cockCut(MATTE, k); if (!m.tub) { m.tub = cockTub(k); m.g.add(m.tub); }
+  m.body.material = tp.cutGloss; m.matte.material = tp.cutMatte; m.tub.visible = true; cockOn = m; }
 function drawWheel(dt) {
   SW.g.visible = running && S.cam === 2 && !pl.mesh.road && !pl.mesh.kart;   // Roadster und Kart haben ihr eigenes rundes Lenkrad am Auto
   if (pl.mesh.tp) { SW.g.position.set(...(pl.mesh.tp.M.swPos || [0, 0.605, 0.98])); SW.g.scale.setScalar(pl.mesh.tp.M.swS || 1); }   // Lenkradposition je Modell (F2 sitzt weiter hinten und tiefer)
   document.body.classList.toggle('cockpit', running && S.cam === 2);
+  cockpitInterior(SW.g.visible && !!pl.mesh.tp);
   if (running && S.cam === 2 && pl.mesh.road) roadDashTick(dt);
   armsTick();
   if (!SW.g.visible) return;
@@ -7915,6 +7928,7 @@ window.__sim = (sec, dt = 1 / 60) => { for (let t = 0; t < sec; t += dt) { if (r
 window.__results = () => { order.forEach((c, i) => { c.finished = true; c.finishLaps = S.laps; c.finishTime = 5400 + i * 1.7; c.best = 88 + i * 0.21; }); fastest = fastest || { name: order[3].name, t: order[3].best }; showResults(); return $('#results').className; };   /* Test: Ergebnis-Bildschirm mit Testdaten öffnen */
 window.__wake = () => ({ a: +WAKE.a.toFixed(3), op: +WAKE.mat.opacity.toFixed(3), vis: WAKE.m.visible, slipS: +(pl.slipS || 0).toFixed(3), src: pl.slipFrom ? pl.slipFrom.code : null });   /* Test: Zustand des Windschatten-Kegels */
 window.__plRef = () => pl;
+window.__S = () => S; window.__mesh = () => ({ ALL, pl, MODELS, camera });   /* Test: Einstellungen und Fahrzeuge lesen/setzen */
 window.__laps = () => ais.map(a => a.code + ':' + (a.lapTimes || []).map(t => t.toFixed(1)).join('/'));
 window.__dbg = () => ({ L, N, raceState, running, paused, lightsT, raceTime, plD: pl.d, plV: pl.v, plLat: pl.lat, order: order.map(c => c.code), best: pl.best, fastest, resultsShown, aiBest: ais.slice(0, 5).map(a => a.code + ':' + (a.best || 0).toFixed(1)) });
 requestAnimationFrame(frame);
