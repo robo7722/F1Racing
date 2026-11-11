@@ -575,120 +575,214 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
 .spanel .ccal{max-height:34vh;overflow-y:auto;scrollbar-width:none}
 @media (max-width:760px){.sgrid{grid-template-columns:1fr}.snext canvas{width:36%}}
 
-/* ===== HUD 2026: ruhigere Gewichtung – Position und Rundenzeit gleichrangig, Tower als Glasstreifen, größere Zeit, Tacho als Bogen ===== */
-#tl{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
-#pos{font-size:38px!important;letter-spacing:-.01em;box-shadow:0 8px 22px rgba(225,6,0,.35),inset 0 1px 0 rgba(255,255,255,.35)}
-#pos span{font-size:.38em;font-weight:800;opacity:.8;letter-spacing:.02em;margin-left:2px}
-#lap{margin:0!important;padding:3px 11px!important;font-size:11px!important;font-weight:800!important;letter-spacing:.16em!important;border-left:3px solid #e10600;background:linear-gradient(90deg,rgba(21,21,30,.92),rgba(21,21,30,.55))!important}
-#board{margin-top:0!important;border-top:0!important;border-left:3px solid #e10600!important;background:linear-gradient(90deg,rgba(14,17,24,.88),rgba(14,17,24,.5))!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-#board .r{border-bottom:0!important;font-size:12px}
-#board .r.me{background:linear-gradient(90deg,rgba(255,255,255,.95),rgba(255,255,255,.78))!important;color:#12141b!important;box-shadow:0 0 14px rgba(255,255,255,.25)}
-#tc{display:flex!important;flex-direction:column;align-items:center;gap:1px;padding:5px 22px 6px!important;border-radius:0 0 14px 14px!important;background:linear-gradient(180deg,rgba(14,17,24,.88),rgba(14,17,24,.62))!important;border:1px solid rgba(255,255,255,.14)!important;border-top:0!important;box-shadow:0 10px 26px rgba(0,0,0,.35)!important;backdrop-filter:blur(10px)!important;-webkit-backdrop-filter:blur(10px)!important;text-shadow:none!important}
-#tc .tcl{display:block!important;font-size:9px;letter-spacing:.3em;color:rgba(255,255,255,.55)}
-#ltime{font-size:25px!important;font-weight:800!important;font-style:italic;letter-spacing:.02em}
-#lsub{font-size:11px;font-weight:700;letter-spacing:.06em;color:rgba(255,255,255,.62)}
-#speedo{filter:drop-shadow(0 8px 18px rgba(0,0,0,.45))}
-/* ===== UI 2027: ruhiges Glas-Design – runde Flächen, weiche Tiefe, ein Akzentverlauf; ersetzt den kantigen TV-Look (Schrägen, harte Balken) ===== */
-:root{--a1:#ff3b30;--ag:linear-gradient(135deg,#ff4a3d,#e10600 55%,#c20a2e);--g1:rgba(17,20,28,.68);--gb:rgba(255,255,255,.1);--gbh:rgba(255,255,255,.24);--r:16px;--sh:0 18px 50px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.07);--f1r:#ff3b30}
-#menu::before{background:linear-gradient(100deg,rgba(6,8,13,.9) 0%,rgba(6,8,13,.58) 36%,rgba(6,8,13,.1) 68%,transparent 84%),radial-gradient(70% 60% at 0% 100%,rgba(255,59,48,.2),transparent 62%),radial-gradient(60% 50% at 100% 0%,rgba(80,120,255,.1),transparent 60%)!important}
-.card,.rpanel,.spanel,.tcard,.tm,.dcard,.hbtn,.rvar,.diffbar{background:linear-gradient(160deg,rgba(255,255,255,.075),rgba(255,255,255,.018) 60%),var(--g1)!important;border:1px solid var(--gb)!important;border-radius:var(--r)!important;box-shadow:var(--sh)!important;backdrop-filter:blur(16px) saturate(150%)!important;-webkit-backdrop-filter:blur(16px) saturate(150%)!important}
-.card{border-radius:22px!important;padding:20px 22px!important}
-.card h2{font-size:24px;margin-bottom:12px}
-.rpanel,.spanel{padding:16px 18px!important}
-.spanel .diffbar{background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:4px 0!important;border-radius:0!important}
-.tcard:hover,.tm:hover,.hbtn:hover{border-color:var(--gbh)!important}
-.tcard::before{height:3px;background:linear-gradient(90deg,var(--tc),transparent 85%)}
-.tcard.on{border-color:var(--tc)!important;background:linear-gradient(165deg,color-mix(in srgb,var(--tc) 20%,transparent),rgba(255,255,255,.02) 62%),var(--g1)!important;box-shadow:0 0 0 1.5px var(--tc),0 22px 56px rgba(0,0,0,.5),0 0 48px -10px var(--tc)!important}
-.tcard .chk{width:28px;height:28px;box-shadow:0 4px 14px rgba(0,0,0,.4)}
-.tcard .ts div{border-radius:11px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.06)}
-.tm{padding:10px 12px!important}
-.tm::after{top:10px;bottom:10px;left:0;width:3px;border-radius:0 3px 3px 0}
-.tm.on{border-color:var(--c1)!important;background:linear-gradient(120deg,color-mix(in srgb,var(--c1) 26%,transparent),rgba(255,255,255,.02) 70%),var(--g1)!important;box-shadow:0 0 0 1.5px var(--c1),0 12px 30px rgba(0,0,0,.45),0 0 34px -10px var(--c1)!important}
-.dcard{padding:16px 18px!important}
-.dcard.on{border-color:var(--c1)!important;box-shadow:0 0 0 1.5px var(--c1),0 20px 50px rgba(0,0,0,.5),0 0 54px -12px var(--c1)!important}
-.dcard .pick{border-radius:999px;height:38px}
-.dcard .bar u{height:6px;border-radius:3px}
-/* Kopf: runde Glas-Tasten, Schritte als Pillenleiste */
-.mback,.mgear{width:44px!important;height:44px!important;border-radius:50%!important;background:var(--g1)!important;border:1px solid var(--gb)!important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);transition:transform .15s,background .2s,border-color .2s}
-.mback:hover,.mgear:hover{border-color:var(--gbh)!important;background:rgba(44,48,60,.82)!important}
-.mback:active,.mgear:active{transform:scale(.93)}
-.msteps{gap:2px!important;padding:4px;border-radius:999px;background:var(--g1);border:1px solid var(--gb);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
-.msteps i{transform:none!important;border-radius:999px!important;background:transparent!important;border:0!important;transition:background .25s,color .25s}
-.msteps i>b{transform:none!important}
-.msteps i.on{background:var(--ag)!important;box-shadow:0 6px 18px rgba(225,6,0,.4)}
-.msteps i.on b{color:#e10600!important}
-.mh{display:flex;align-items:center;gap:12px;margin-bottom:14px!important;letter-spacing:.015em!important}
-.mh::before{flex:none;width:5px!important;height:1em!important;border-radius:3px;transform:none!important;margin:0!important;background:var(--ag)!important}
-.mh.center{justify-content:center}
-/* Fuß: Auswahl-Pillen und Weiter-Taste */
-.msel span{border-radius:999px;padding:6px 13px;background:var(--g1);border:1px solid var(--gb);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-.mnext{clip-path:none!important;border-radius:999px!important;background:var(--ag)!important;height:52px!important;padding:0 28px 0 34px!important;box-shadow:0 12px 34px rgba(225,6,0,.42),inset 0 1px 0 rgba(255,255,255,.35)!important}
-.mnext:hover{filter:brightness(1.08);transform:translateY(-1px)}
-/* Hauptmenü */
-.hub{gap:14px}
-.hero{border-radius:22px!important;padding:20px 28px 18px!important;background:radial-gradient(120% 150% at 100% 0%,rgba(255,150,90,.4),transparent 55%),linear-gradient(120deg,#ff3b30 0,#d90812 46%,#7a0616 100%)!important;box-shadow:0 24px 60px rgba(225,6,0,.34),inset 0 1px 0 rgba(255,255,255,.35)!important}
-.hero::before{display:none}
-.hero::after{right:-50px;width:240px;background:linear-gradient(90deg,rgba(255,255,255,.13),transparent)}
-.hero .hgo{right:22px;bottom:16px;padding:8px 16px;border-radius:999px;font-size:13px!important;letter-spacing:.1em;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.26)}
-.hero .hst i{border-radius:999px}
-.hrow,.hfoot{gap:14px}
-.hbtn{position:relative;overflow:hidden;padding:14px 40px 14px 18px!important}
-.hbtn::after{content:"›";position:absolute;right:16px;top:50%;transform:translateY(-54%);font-size:26px;line-height:1;color:rgba(255,255,255,.32);transition:transform .2s,color .2s}
-.hbtn:hover::after{transform:translate(4px,-54%);color:#fff}
+/* ===== UI 2027c: Gestaltung nach dem F1-Spiel – Tiefe statt Flachheit (Wunsch: hochwertig, kreativ, keine runden Kanten) =====
+   Flächen: Carbon-Gewebe + Verlauf + harter Tiefenschatten + Lichtkante oben + rote Eckmarke. Auswahl: weiße Kontur, roter Balken, laufender Glanz.
+   Schrift: Titillium Web in Versalien, große Konturziffern als Gestaltungselement, rote Kennziffern. Tasten: roter Verlauf mit weißem Pfeilblock. */
+:root{--f1r:#e10600;--f1r2:#ff2a14;--ink:#101017;--ink2:#1c1c26;--f1l:rgba(255,255,255,.1);--f1l2:rgba(255,255,255,.32);
+  --carbon:repeating-linear-gradient(45deg,rgba(255,255,255,.022) 0 2px,transparent 2px 4px),repeating-linear-gradient(-45deg,rgba(0,0,0,.18) 0 2px,transparent 2px 4px);
+  --surf:linear-gradient(180deg,rgba(44,44,58,.94) 0%,rgba(22,22,31,.95) 46%,rgba(13,13,19,.97) 100%);
+  --surfH:linear-gradient(180deg,rgba(58,58,74,.95) 0%,rgba(28,28,38,.96) 50%,rgba(15,15,22,.97) 100%);
+  --depth:0 16px 34px -10px rgba(0,0,0,.7),0 2px 0 rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.13);
+  --sheen:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.13) 48%,rgba(255,255,255,.02) 56%,transparent 64%);
+  --sl:polygon(0 0,100% 0,calc(100% - 16px) 100%,0 100%);--cut:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%)}
+@keyframes f1sheen{from{background-position:180% 0,0 0,0 0}to{background-position:-80% 0,0 0,0 0}}
+@keyframes f1in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes f1bar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+#menu,#menu *,.overlay,.overlay *,#hud,#hud *,#controls *,#editBar,#editBar *,#rot{border-radius:0!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+#hud #lights i,.msel span i,.dcard .meta i{border-radius:50%!important}
+#menu *,.overlay *,#hud *,#controls *,#loading *{font-family:"Titillium Web",system-ui,sans-serif!important;font-synthesis:none}
+#menu *,.overlay *,#hud *,#controls *{font-style:normal!important}   /* alles aufrecht wie im F1-Spiel (die Schrift wird auch kursiv geladen) */
+.hbtn.hidden,#install.hidden{display:none!important}
+/* Hintergrund: dunkler Verlauf, feine Tempolinien, Filmkorn, große Konturschrift */
+#menu::before{background:linear-gradient(90deg,rgba(6,6,10,.94) 0%,rgba(6,6,10,.78) 34%,rgba(6,6,10,.25) 62%,rgba(6,6,10,.05) 80%),radial-gradient(60% 70% at 0% 100%,rgba(225,6,0,.22),transparent 70%)!important}
+#menu .mvig{background:repeating-linear-gradient(102deg,rgba(255,255,255,.035) 0 1px,transparent 1px 7px) 0 0/100% 100%,linear-gradient(180deg,rgba(6,6,10,.55),transparent 22%,transparent 72%,rgba(6,6,10,.8))!important;
+  -webkit-mask-image:linear-gradient(90deg,#000 0,rgba(0,0,0,.35) 55%,transparent 80%);mask-image:linear-gradient(90deg,#000 0,rgba(0,0,0,.35) 55%,transparent 80%)}
+#menu::after{content:attr(data-scr);position:absolute;right:-1vw;bottom:-6vh;z-index:0;pointer-events:none;font:900 34vh/1 "Titillium Web",sans-serif;text-transform:uppercase;letter-spacing:-.02em;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.06);white-space:nowrap}
+#menu[data-scr=title]::after{content:"F1"}#menu[data-scr=series]::after{content:"KLASSE"}#menu[data-scr=track]::after{content:"STRECKE"}#menu[data-scr=team]::after,#menu[data-scr=driver]::after{content:""}#menu[data-scr=race]::after{content:"START"}
+#menu .scr{z-index:1}
+/* Kopf */
+.mback,.mgear{width:42px!important;height:42px!important;background:var(--carbon),var(--surf)!important;border:1px solid var(--f1l)!important;border-top-color:rgba(255,255,255,.22)!important;box-shadow:var(--depth)!important;font-size:22px;transition:background .15s}
+.mback:active,.mgear:active{background:#fff!important;color:var(--ink)!important}
+.msteps{gap:0!important;padding:0!important;background:var(--carbon),var(--surf)!important;border:1px solid var(--f1l)!important;border-top-color:rgba(255,255,255,.2)!important;box-shadow:var(--depth)!important}
+.msteps i{position:relative;height:40px!important;padding:0 16px 0 14px!important;gap:8px!important;background:transparent!important;border:0!important;color:rgba(255,255,255,.42)!important;font-weight:700!important;font-size:12px!important;letter-spacing:.14em!important;box-shadow:none!important}
+.msteps i+i::before{content:"";position:absolute;left:0;top:11px;bottom:11px;width:1px;background:rgba(255,255,255,.1)}
+.msteps i b{display:inline-block!important;width:auto!important;height:auto!important;background:none!important;color:rgba(225,6,0,.6)!important;font-weight:900!important;font-size:13px!important}
+.msteps i b::before{content:"0"}
+.msteps i.on{color:#fff!important;background:linear-gradient(180deg,rgba(225,6,0,.0),rgba(225,6,0,.22))!important}
+.msteps i.on::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--f1r);transform-origin:left;animation:f1bar .45s cubic-bezier(.2,.8,.2,1)}
+.msteps i.on b{color:var(--f1r2)!important}
+.msteps i.done{color:rgba(255,255,255,.75)!important}.msteps i.done b{color:var(--f1r)!important}
+.msteps i,.msteps i>b{transform:none!important}
+.msteps i b,.msteps i.on b,.msteps i.done b{background:none!important;box-shadow:none!important}
+#scrTitle .tver{top:calc(12px + env(safe-area-inset-top))!important;bottom:auto!important}
+.hbtn{padding-right:42px!important}
+/* Überschriften mit roter Kennmarke und auslaufender Linie */
+.mh{display:flex!important;align-items:center;gap:12px!important;font-weight:900!important;font-size:clamp(20px,5vh,30px)!important;letter-spacing:.05em!important;margin:0 0 12px!important;text-shadow:0 4px 18px rgba(0,0,0,.6)}
+.mh::before{content:""!important;flex:none;width:6px!important;height:.9em!important;background:var(--f1r)!important;transform:skewX(-18deg)!important;margin:0 2px 0 0!important}
+.mh::after{content:"";flex:1;height:1px;max-width:380px;background:linear-gradient(90deg,rgba(255,255,255,.35),transparent)}
+.mh.center{justify-content:center}.mh.center::after{display:none}
+/* Flächen */
+.card,.rpanel,.spanel,.tcard,.tm,.dcard,.hbtn,.rvar,.uprow{background:var(--carbon),var(--surf)!important;border:1px solid var(--f1l)!important;border-top-color:rgba(255,255,255,.2)!important;box-shadow:var(--depth)!important}
+.tcard,.dcard,.rpanel,.spanel,.hbtn,.tm{position:relative}
+.rpanel::after,.spanel::after,.dcard::after{content:"";position:absolute;right:0;top:0;width:0;height:0;border-style:solid;border-width:0 14px 14px 0;border-color:transparent var(--f1r) transparent transparent;pointer-events:none}
+.tcard{animation:f1in .4s both;transition:transform .2s,border-color .2s}
+.tcard::before{height:3px!important;background:var(--tc)!important;box-shadow:0 0 18px var(--tc)}
+.tcard:hover,.tm:hover,.hbtn:hover,.dcard:hover{border-color:var(--f1l2)!important}
+:is(.tcard,.dcard,.tm,.hbtn).on,.tcard.on{outline:2px solid #fff;outline-offset:-2px;border-color:transparent!important;
+  background:var(--sheen),linear-gradient(180deg,color-mix(in srgb,var(--tc,var(--c1,#e10600)) 26%,transparent),transparent 62%),var(--surfH)!important;background-size:250% 100%,100% 100%,100% 100%!important;
+  animation:f1sheen 3.2s linear infinite!important;box-shadow:inset 0 -4px 0 var(--f1r),0 22px 40px -12px rgba(0,0,0,.8)!important;transform:translateY(-3px)!important}
+.tcard .chk{width:26px!important;height:26px!important;background:var(--f1r)!important;color:#fff!important;box-shadow:none!important;right:14px!important;top:14px!important;clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}
+.tcard .tn{font-weight:900!important;letter-spacing:.03em;font-size:clamp(18px,4.6vh,26px)!important}
+.tcard .tf{opacity:.85}
+.tcard .ts div{background:rgba(0,0,0,.28)!important;border:0!important;border-left:2px solid var(--tc)!important}
+.tcard .ts b{font-weight:900!important}
+.scard .sbig{font-weight:900!important;text-shadow:0 10px 40px color-mix(in srgb,var(--tc) 55%,transparent)!important;letter-spacing:-.02em;font-size:clamp(46px,15vh,104px)!important}
+.tm{padding:8px 10px 8px 12px!important;transition:transform .15s}
+.tm::after{top:0!important;bottom:0!important;width:4px!important}
+.tm b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px!important;letter-spacing:.04em!important;font-weight:900!important}
+.tm small{white-space:nowrap;letter-spacing:.1em!important}
+.tm>span,.tm>div{min-width:0}
+.tm.on{transform:translateX(4px)!important}
+.teaminfo h3{font-weight:900!important;letter-spacing:.03em;font-size:clamp(24px,6vh,40px)!important;text-shadow:0 6px 24px rgba(0,0,0,.7)}
+.dcard .num{font-weight:900!important;opacity:.16!important;color:transparent!important;-webkit-text-stroke:2px var(--c1)}
+.dcard .nm{font-weight:900!important;letter-spacing:.02em}
+.dcard .pick{height:36px!important;background:rgba(255,255,255,.07)!important;border:1px solid var(--f1l)!important;letter-spacing:.16em!important;font-weight:700!important}
+.dcard.on .pick{background:#fff!important;color:var(--ink)!important}
+.dcard .bar u,.dcard .bar u i{border-radius:0!important}
+/* Fuß: Auswahl-Etiketten und Weiter-Taste mit weißem Pfeilblock */
+.msel span{background:rgba(10,10,16,.75)!important;border:0!important;border-left:2px solid var(--f1r)!important;padding:6px 12px!important;letter-spacing:.06em;font-weight:700;text-transform:uppercase;font-size:11px!important}
+.mnext,.mnext.start{position:relative;clip-path:var(--sl)!important;background:linear-gradient(180deg,#ff2a14 0%,#e10600 45%,#b80500 100%)!important;box-shadow:none!important;height:48px!important;padding:0 34px 0 24px!important;font-weight:900!important;letter-spacing:.14em!important;font-size:15px!important;display:inline-flex;align-items:center}
+.mnext span{display:inline-grid!important;place-items:center;width:28px;height:28px;margin-left:14px!important;background:#fff;color:var(--f1r);font-size:20px!important;font-weight:900;vertical-align:middle!important;transition:transform .2s}
+.mnext:hover span{transform:translateX(3px)}
+.mnext:active{filter:brightness(1.2)}
+/* Hauptmenü wie im F1-Spiel: Logo oben, darunter eine Reihe großer Kacheln mit Konturziffern */
+#scrTitle.on{align-items:flex-end!important}
+.tleft{max-width:none!important;width:100%}
+.logo2 b,.logo2 span{font-style:normal!important}
+.tag{background:none!important;border:0!important;border-left:3px solid var(--f1r)!important;padding:2px 0 2px 10px!important;margin:10px 0 14px!important;font-size:11px!important;letter-spacing:.24em!important;font-weight:700!important}
+.hub{display:grid!important;grid-template-columns:1.7fr 1fr 1fr 1fr;gap:12px!important;margin:0!important;width:min(1180px,100%)!important;counter-reset:hb}
+.hub .hrow,.hub .hfoot{display:contents!important}
+.hero,.hbtn{min-height:clamp(118px,40vh,230px)!important;display:flex!important;flex-direction:column;justify-content:flex-end!important;text-align:left;animation:f1in .45s both}
+.hrow .hbtn:nth-child(1){animation-delay:.06s}.hrow .hbtn:nth-child(2){animation-delay:.12s}.hfoot .hbtn{animation-delay:.18s}
+.hero{clip-path:var(--cut);padding:16px 22px 18px 26px!important;background:repeating-linear-gradient(115deg,rgba(255,255,255,.07) 0 2px,transparent 2px 14px) 100% 0/45% 100% no-repeat,radial-gradient(90% 120% at 100% 0%,#ff4a2a 0,transparent 60%),linear-gradient(160deg,#e10600 0%,#a80400 70%,#6e0300 100%)!important;box-shadow:none!important}
+.hero::before{width:6px!important;background:#fff!important}
+.hero::after{content:"01"!important;position:absolute;right:16px!important;top:6px!important;bottom:auto!important;left:auto!important;width:auto!important;background:none!important;transform:none!important;font:900 clamp(46px,14vh,96px)/1 "Titillium Web",sans-serif;color:transparent;-webkit-text-stroke:1.5px rgba(255,255,255,.4)}
+.hero .hk{font-weight:900!important;font-style:normal!important;letter-spacing:.02em!important;font-size:clamp(30px,10vh,62px)!important;text-shadow:0 6px 24px rgba(0,0,0,.35)}
+.hero .hs{letter-spacing:.14em!important;font-weight:700!important}
+.hero .hgo{position:static!important;align-self:flex-start;margin-top:12px;background:#fff!important;color:var(--f1r)!important;border:0!important;clip-path:var(--sl);padding:8px 30px 8px 14px!important;font-style:normal!important;font-weight:900!important;letter-spacing:.14em!important;font-size:12px!important}
+.hero .hst i{background:rgba(0,0,0,.35)!important;border:0!important}
+.hbtn{counter-increment:hb;padding:14px 14px 16px 16px!important;border-left:0!important;border-bottom:3px solid var(--f1r)!important;overflow:hidden}
+.hbtn.ghost{border-bottom-color:rgba(255,255,255,.45)!important}
+.hbtn::before{content:"0" counter(hb);position:absolute;right:10px;top:4px;font:900 clamp(40px,12vh,80px)/1 "Titillium Web",sans-serif;color:transparent;-webkit-text-stroke:1.5px rgba(255,255,255,.14);transition:-webkit-text-stroke-color .2s}
+.hrow .hbtn:nth-child(1)::before{content:"02"}.hrow .hbtn:nth-child(2)::before{content:"03"}.hfoot .hbtn::before{content:"04"}
+.hbtn:hover::before{-webkit-text-stroke-color:rgba(225,6,0,.7)}
+.hbtn b{font-weight:900!important;letter-spacing:.03em!important;font-size:clamp(15px,3.9vh,22px)!important;line-height:1.05!important;white-space:normal}
+.hbtn small{font-size:11px!important;line-height:1.3!important;margin-top:5px!important;color:rgba(255,255,255,.6)!important}
+.hbtn::after{content:"›"!important;position:absolute;right:12px;bottom:12px;top:auto!important;transform:none!important;width:24px;height:24px;display:grid;place-items:center;font-size:18px;font-weight:900;background:rgba(255,255,255,.1);color:#fff}
+.hbtn:hover::after{background:var(--f1r)}
+.hbtn:active,.hero:active{transform:translateY(1px)!important;filter:brightness(1.15)}
 .hbtn .ic,.hbtn .chev{display:none!important}
-.tag{display:inline-block;padding:6px 14px;border-radius:999px;background:var(--g1);border:1px solid var(--gb);font-size:11px;letter-spacing:.2em;margin:20px 0 6px}
-.tver{padding:5px 12px;border-radius:999px;background:rgba(17,20,28,.5);border:1px solid var(--gb)}
+.tver{background:none!important;border:0!important;padding:0!important;letter-spacing:.2em!important}
 /* Bedienelemente */
-.seg{border-radius:13px!important;background:rgba(0,0,0,.34)!important;border:1px solid var(--gb)!important;padding:4px!important;gap:2px}
-.seg button{border-radius:9px!important;font-weight:700;transition:background .2s,color .2s}
-.seg button:not(.on):hover{color:#fff;background:rgba(255,255,255,.06)}
-.seg button.on{background:var(--ag)!important;box-shadow:0 6px 16px rgba(225,6,0,.35),inset 0 1px 0 rgba(255,255,255,.3)}
-.sw{width:50px;height:30px;border-radius:15px;background:rgba(255,255,255,.15);transition:background .2s}
-.sw::after{top:3px;left:3px;width:24px;height:24px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.4);transition:transform .22s cubic-bezier(.3,1.4,.5,1)}
-.sw.on{background:var(--ag)!important}.sw.on::after{transform:translateX(20px)}
-.tog{border-bottom:1px solid rgba(255,255,255,.07);padding:9px 0;font-size:14px;font-weight:600}
-.stepper button{border-radius:50%!important;width:42px;height:42px;background:rgba(255,255,255,.07);border:1px solid var(--gb);transition:background .2s}
-.stepper button:hover{background:rgba(255,255,255,.15)}
-.chips button{border-radius:999px!important;height:30px;padding:0 13px;background:rgba(255,255,255,.05)}
-.chips button.on{background:var(--ag)!important;border-color:transparent!important}
-.field>label{color:rgba(255,255,255,.55)}
-.big{border-radius:13px!important;height:48px;background:var(--ag)!important;font-weight:800;letter-spacing:.04em;box-shadow:0 8px 22px rgba(225,6,0,.28);transition:transform .12s,filter .2s,background .2s}
-.big:hover{filter:brightness(1.08)}.big:active{transform:scale(.985)}
-.big.alt{background:rgba(255,255,255,.06)!important;border:1px solid var(--gb)!important;box-shadow:none}
-.big.alt:hover{background:rgba(255,255,255,.12)!important;filter:none}
-.big.danger{border-color:rgba(255,80,70,.5)!important;color:#ff7b72!important}
-.ptabs{border-bottom:0;gap:4px;padding:4px;border-radius:13px;background:rgba(0,0,0,.32);border:1px solid var(--gb);margin:6px 0 14px}
-.ptabs button{height:36px;border-radius:9px;border-bottom:0;margin:0;font-size:12px;transition:background .2s,color .2s}
-.ptabs button.on{background:rgba(255,255,255,.13);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
-.iconbtn{width:40px;padding:0;justify-content:center;border-radius:50%}
-.overlay{background:radial-gradient(90% 80% at 50% 40%,rgba(10,12,18,.5),rgba(4,5,8,.86))}
-.tablewrap{border-radius:14px;border:1px solid var(--gb)}
-th{background:#171a22}
-#resTable tr.me td,.stbl tr.me td{background:rgba(255,59,48,.24)!important}
-.ccal div{border-radius:10px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.07)}
-.ccal div.next{border-color:var(--a1);box-shadow:inset 3px 0 0 var(--a1);background:rgba(255,59,48,.1)}
-.pinfo span{border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--gb)}
-.uprow{border-radius:12px}.ubuy{border-radius:10px;background:var(--ag)}.pips i{border-radius:3px}.pips i.on{background:var(--a1)}
-.snext{border-radius:20px;background:radial-gradient(120% 150% at 100% 0%,rgba(255,150,90,.35),transparent 55%),linear-gradient(120deg,#ff3b30 0,#c90a14 55%,#6d0614)}
-.snext::before{display:none}
-#cName,#saveCode{border-radius:12px;background:rgba(0,0,0,.35);border:1px solid var(--gb)}
-#cName:focus{border-color:var(--a1);box-shadow:0 0 0 3px rgba(255,59,48,.22)}
-.toast{border-radius:999px}
-input[type=range]{height:6px;border-radius:3px}
-/* HUD */
-#pos{clip-path:none!important;border-radius:14px!important;background:var(--ag)!important;padding:2px 16px 2px 14px!important}
-#lap{border-left:0!important;border-radius:999px;padding:4px 12px!important;background:rgba(14,17,24,.72)!important;border:1px solid var(--gb)}
-#board{border-left:0!important;border-radius:14px!important;background:rgba(14,17,24,.66)!important;border:1px solid var(--gb)!important;padding:4px!important;overflow:hidden}
-#board .r{border-radius:9px!important}
-#tc{border-radius:0 0 18px 18px!important}
-.hb{border-radius:50%!important;width:40px!important;height:40px!important;background:rgba(14,17,24,.7)!important;border:1px solid var(--gb)!important;display:grid;place-items:center}
-.pad{border-radius:20px!important;background:rgba(14,17,24,.36)!important}
-.pad.gas{border-color:rgba(70,220,140,.5)!important}.pad.brake{border-color:rgba(255,95,85,.55)!important}
-.pad.on{background:rgba(255,59,48,.5)!important}.pad.gas.on{background:rgba(50,200,120,.5)!important}
-#lights{border-radius:22px}
-#editBar{border-radius:999px}#editBar button{border-radius:999px}
-#menu .scr{padding-top:calc(64px + env(safe-area-inset-top));padding-bottom:76px}
-#menu #scrTitle{padding-top:calc(24px + env(safe-area-inset-top));padding-bottom:24px}
+.seg{background:rgba(0,0,0,.35)!important;border:1px solid var(--f1l)!important;padding:3px!important;gap:3px!important}
+.seg button{font-weight:700!important;letter-spacing:.08em;text-transform:uppercase;font-size:12px!important;box-shadow:none!important;color:rgba(255,255,255,.55)!important;transition:background .15s,color .15s}
+.seg button.on{background:linear-gradient(180deg,#fff,#dcdde3)!important;color:var(--ink)!important;box-shadow:inset 0 -3px 0 var(--f1r)!important}
+.sw{width:48px!important;height:24px!important;background:rgba(0,0,0,.45)!important;border:1px solid var(--f1l2)!important}
+.sw::after{top:3px!important;left:3px!important;width:16px!important;height:16px!important;background:#9a9caa!important;box-shadow:none!important}
+.sw.on{background:linear-gradient(180deg,#ff2a14,#c00500)!important;border-color:var(--f1r)!important}.sw.on::after{background:#fff!important;transform:translateX(24px)!important}
+.stepper button{width:40px!important;height:40px!important;background:var(--carbon),var(--surf)!important;border:1px solid var(--f1l)!important;border-top-color:rgba(255,255,255,.22)!important}
+.stepper output{font-weight:900!important;font-size:24px!important}
+.stepper button:active{background:#fff!important;color:var(--ink)!important}
+.chips button{height:28px!important;background:rgba(0,0,0,.35)!important;border:1px solid var(--f1l)!important;font-weight:700!important}
+.chips button.on{background:#fff!important;color:var(--ink)!important;border-color:#fff!important;box-shadow:inset 0 -3px 0 var(--f1r)}
+.field>label{color:rgba(255,255,255,.55)!important;font-weight:700!important;letter-spacing:.2em!important}
+.big{height:46px!important;background:linear-gradient(180deg,#ff2a14 0%,#e10600 45%,#b80500 100%)!important;box-shadow:none!important;font-weight:900!important;letter-spacing:.14em!important;text-transform:uppercase;font-size:14px!important}
+.big:active{filter:brightness(1.2)}
+.big.alt{background:var(--carbon),var(--surf)!important;border:1px solid var(--f1l)!important;border-top-color:rgba(255,255,255,.2)!important;color:#fff!important}
+.big.danger{border-color:rgba(225,6,0,.75)!important;color:#ff6b61!important}
+.ptabs{background:none!important;border:0!important;border-bottom:1px solid var(--f1l)!important;padding:0!important;gap:0!important;margin:6px 0 10px!important}
+.ptabs button{position:relative;height:38px!important;background:none!important;border:0!important;margin:0!important;box-shadow:none!important;font-weight:700!important;letter-spacing:.16em!important;color:rgba(255,255,255,.45)!important}
+.ptabs button.on{color:#fff!important;background:linear-gradient(180deg,transparent,rgba(225,6,0,.2))!important}
+.ptabs button.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;background:var(--f1r);transform-origin:left;animation:f1bar .35s cubic-bezier(.2,.8,.2,1)}
+.iconbtn{width:38px!important;height:38px!important;background:rgba(0,0,0,.35)!important;border:1px solid var(--f1l2)!important}
+input[type=range]{height:4px!important;accent-color:var(--f1r)}
+.sw2{border-radius:0!important;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%)}
+#cName,#saveCode{background:rgba(0,0,0,.4)!important;border:1px solid var(--f1l)!important;box-shadow:none!important}#cName:focus{border-color:#fff!important;box-shadow:inset 0 -3px 0 var(--f1r)!important}
+.ccal div{background:rgba(0,0,0,.25)!important;border:0!important;border-left:2px solid rgba(255,255,255,.15)!important}
+.ccal div.next{border-left-color:var(--f1r)!important;background:linear-gradient(90deg,rgba(225,6,0,.25),transparent)!important;box-shadow:none!important}
+.pinfo span{background:rgba(0,0,0,.35)!important;border:0!important;border-left:2px solid var(--f1r)!important}
+.diffbar{background:rgba(0,0,0,.3)!important;border:0!important;border-left:3px solid var(--f1r)!important}
+.snext{clip-path:var(--cut);background:repeating-linear-gradient(115deg,rgba(255,255,255,.07) 0 2px,transparent 2px 14px) 100% 0/40% 100% no-repeat,linear-gradient(160deg,#e10600,#7a0300)!important;border:0!important}
+.uprow.on{outline:2px solid #fff;outline-offset:-2px;box-shadow:inset 4px 0 0 var(--f1r)!important}
+.ubuy{background:linear-gradient(180deg,#ff2a14,#c00500)!important}
+/* Overlays */
+.overlay{background:linear-gradient(90deg,rgba(6,6,10,.9),rgba(6,6,10,.7)),repeating-linear-gradient(102deg,rgba(255,255,255,.03) 0 1px,transparent 1px 7px)!important}
+.card{border-top:0!important;padding:14px 18px!important;position:relative;animation:f1in .3s both}
+.card::before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:linear-gradient(90deg,var(--f1r) 0 60%,#fff 60% 62%,transparent 62%)}
+.card .head h2,#resTitle{font-weight:900!important;letter-spacing:.04em;text-transform:uppercase;font-size:clamp(20px,5vh,28px)!important}
+.card.tabbed{height:min(560px,calc(100dvh - 16px))!important}
+.card.tabbed>.big{margin-top:8px!important}
+#results .card{max-height:calc(100dvh - 16px)!important}
+.tablewrap{border:1px solid var(--f1l)!important;background:rgba(0,0,0,.25)}
+th{background:#0c0c12!important;letter-spacing:.16em;font-size:10px!important;color:rgba(255,255,255,.55)!important}
+#resTable td,.stbl td{border-bottom:1px solid rgba(255,255,255,.05)}
+#resTable tr.me td,.stbl tr.me td{background:#fff!important;color:var(--ink)!important;font-weight:900}
+#resTable tr:nth-child(2) td:first-child{color:#ffd400;font-weight:900}
+.toast{background:var(--ink)!important;border:1px solid var(--f1l)!important;border-left:3px solid var(--f1r)!important}
+/* Flache Bildschirme (Handy quer: 412 px als App, ~360 px im Browser) */
+@media (max-height:430px){
+  #menu .scr{padding-top:calc(58px + env(safe-area-inset-top))!important;padding-bottom:66px!important}
+  #menu #scrTitle{padding-top:calc(10px + env(safe-area-inset-top))!important;padding-bottom:calc(14px + env(safe-area-inset-bottom))!important}
+  .logo2 b{font-size:11px!important}.logo2 span{font-size:clamp(30px,10vh,44px)!important}
+  .tag{margin:6px 0 10px!important}
+  .hero,.hbtn{min-height:clamp(110px,42vh,190px)!important}
+  .hero{padding:12px 18px 14px 22px!important}
+  .mh{font-size:20px!important;margin-bottom:8px!important}
+  .tcard{padding:10px 12px!important}.tcard .ts{margin-top:6px!important}.tcard .ts b{font-size:13px!important}.tcard .ts div{padding:3px 6px!important}
+  .tm{padding:6px 8px 6px 10px!important;gap:8px!important}.tm svg{width:30px!important;height:30px!important}.tm b{font-size:12px!important}
+  .rpanel{padding:10px 12px!important}.field{margin-bottom:7px!important}
+  .stepper button{width:36px!important;height:36px!important}
+  .seg button{height:30px!important}.tog{padding:4px 0!important}.chips button{height:26px!important}
+  .mnext{height:44px!important}
+}
+@media (max-height:380px){
+  .logo2{display:none!important}.tag{margin-top:0!important}
+  .hero .hs,.hbtn small{display:none!important}
+  .hero,.hbtn{min-height:clamp(100px,46vh,170px)!important}
+  .tcard .tf{display:none}
+  #menu .scr{padding-top:calc(52px + env(safe-area-inset-top))!important;padding-bottom:60px!important}
+  .msteps i{height:36px!important;padding:0 11px!important}
+  .seg button{height:26px!important}.field>label{margin-bottom:3px!important}.rpanel{padding:8px 10px!important}.field{margin-bottom:5px!important}.stepper button{width:32px!important;height:32px!important}
+  #menu[data-scr=race] #scrRace>.mh{display:none!important}#menu[data-scr=race] .rgrid{height:100%!important}   /* Überschrift steht schon im Reiter „05 Rennen“ */
+}
+@media (orientation:portrait){.hub{grid-template-columns:1fr 1fr}.hub .hero{grid-column:1/-1}}
+/* ===== HUD im F1-Spiel-Stil ===== */
+#tl{top:max(10px,env(safe-area-inset-top))!important;left:max(12px,env(safe-area-inset-left))!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:0!important;width:max-content;filter:drop-shadow(0 8px 16px rgba(0,0,0,.45))}
+#pos{display:flex!important;align-items:baseline;gap:2px;font-size:32px!important;font-weight:900!important;letter-spacing:-.01em!important;line-height:1.08!important;padding:1px 26px 1px 10px!important;background:linear-gradient(180deg,#ff2a14,#e10600 50%,#b40500)!important;border:0!important;box-shadow:none!important;text-shadow:none!important;clip-path:var(--sl)}
+#pos span{font-size:13px!important;font-weight:700!important;opacity:.85!important;color:#fff!important}
+#lap{margin:0!important;padding:4px 10px!important;font-size:11px!important;font-weight:700!important;letter-spacing:.18em!important;text-transform:uppercase;background:#0c0c12!important;border:0!important;border-bottom:1px solid rgba(255,255,255,.12)!important;color:#fff!important;text-shadow:none!important}
+#board{margin:0!important;padding:0!important;min-width:0!important;width:auto!important;background:linear-gradient(90deg,rgba(16,16,23,.92),rgba(16,16,23,.7))!important;border:0!important;font-size:12px!important;font-weight:700!important}
+#board .r{padding:0 12px 0 0!important;gap:8px!important;background:none!important;color:#fff!important;box-shadow:none!important;height:22px;letter-spacing:.06em}
+#board .r .p{width:26px!important;height:100%;display:grid;place-items:center;color:#fff!important;font-weight:900;background:rgba(255,255,255,.07)}
+#board .r i{width:3px!important;height:14px!important}
+#board .r.me{background:linear-gradient(90deg,#fff,#e4e5ea)!important;color:var(--ink)!important;font-weight:900!important}
+#board .r.me .p{background:var(--f1r)!important;color:#fff!important}
+#board .sep{height:1px!important;margin:0!important;background:rgba(255,255,255,.1)!important}
+#tc{padding:5px 22px 6px!important;background:linear-gradient(180deg,rgba(28,28,38,.92),rgba(12,12,18,.9))!important;border:0!important;box-shadow:0 10px 24px -8px rgba(0,0,0,.6)!important;text-shadow:none!important;min-width:160px;clip-path:polygon(0 0,100% 0,calc(100% - 12px) 100%,12px 100%)}
+#tc::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,var(--f1r) 20%,var(--f1r) 80%,transparent)}
+#tc .tcl{display:block!important;font-size:8.5px!important;letter-spacing:.3em!important;color:rgba(255,255,255,.5)!important;font-weight:700}
+#ltime{font-size:23px!important;font-weight:900!important;letter-spacing:.02em!important;font-variant-numeric:tabular-nums;line-height:1.1}
+#lsub{font-size:10.5px!important;font-weight:700!important;letter-spacing:.06em;color:rgba(255,255,255,.62)!important;font-variant-numeric:tabular-nums}
+.hb{width:40px!important;height:40px!important;background:linear-gradient(180deg,rgba(40,40,52,.85),rgba(14,14,20,.85))!important;border:1px solid rgba(255,255,255,.14)!important;box-shadow:0 8px 18px -6px rgba(0,0,0,.6)!important}
+#speedo{filter:drop-shadow(0 10px 18px rgba(0,0,0,.5))!important;bottom:max(6px,env(safe-area-inset-bottom))!important}
+#gauge{width:300px!important;height:84px!important;opacity:1!important}
+@media (max-height:430px){#gauge{width:276px!important;height:77px!important}}
+#lights{background:linear-gradient(180deg,#22222c,#0c0c12)!important;border:1px solid rgba(255,255,255,.14)!important;padding:10px 14px!important;box-shadow:0 14px 30px -10px rgba(0,0,0,.8)!important}
+#msg{font-weight:900!important;letter-spacing:.06em;font-style:normal!important}
+.pad{background:rgba(16,16,23,.32)!important;border:1px solid rgba(255,255,255,.2)!important}
+.pad.on,.pad.gas.on,.pad.brake.on{background:rgba(255,255,255,.3)!important}
+.boostBtn{background:rgba(16,16,23,.6)!important;border:1px solid rgba(255,214,0,.6)!important}
+#editBar{background:var(--ink)!important}
 </style>
 </head>
 <body>
@@ -707,7 +801,7 @@ input[type=range]{height:6px;border-radius:3px}
     <canvas id="map" width="336" height="336"></canvas>
     <div class="hbtns"><button id="pauseBtn" class="hb" aria-label="Pause">❚❚</button><button id="camBtn" class="hb" aria-label="Kamera"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h3l2-2.5h6L17 7h3a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 4 7z"/><circle cx="12" cy="13" r="3.6"/></svg></button><button id="musBtn" class="hb" aria-label="Musik">♪</button></div>
   </div>
-  <div id="speedo"><canvas id="gauge" width="560" height="104"></canvas><div id="bat"><i id="batFill"></i><b id="batTxt">50%</b><small>ERS</small></div></div>
+  <div id="speedo"><canvas id="gauge" width="600" height="168"></canvas><div id="bat"><i id="batFill"></i><b id="batTxt">50%</b><small>ERS</small></div></div>
   <div id="msg"></div>
   <div id="lights" class="hidden"><i></i><i></i><i></i><i></i><i></i></div>
 </div>
@@ -6013,31 +6107,35 @@ function drawMap() {
 const gC = $('#gauge'), gG = gC.getContext('2d');
 function rrect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
 function drawGauge() {
-  // Tacho 2026: Drehzahl-LEDs als flacher Bogen über der Anzeige, Tempo groß in der Mitte, Gang links, ERS und Pedale rechts. Rote Kante unten wächst mit dem Tempo.
-  const g = gG, W2 = 280, H2 = 52; g.clearRect(0, 0, 560, 104); g.save(); g.scale(2, 2);
-  const kmh = pl.v * 3.6, gi = gearP(kmh), pre = raceState === 'lights';
-  const bg = g.createLinearGradient(0, 0, 0, H2); bg.addColorStop(0, 'rgba(18,22,30,.78)'); bg.addColorStop(1, 'rgba(6,8,12,.86)');
-  g.fillStyle = bg; rrect(g, 0.5, 6.5, W2 - 1, H2 - 7, 13); g.fill(); g.strokeStyle = 'rgba(255,255,255,.16)'; g.lineWidth = 1; g.stroke();
-  { const sp = clamp(kmh / 340, 0, 1), gr = g.createLinearGradient(14, 0, W2 - 14, 0); gr.addColorStop(0, '#e10600'); gr.addColorStop(1, '#ff6a3c'); g.save(); rrect(g, 0.5, 6.5, W2 - 1, H2 - 7, 13); g.clip(); g.fillStyle = 'rgba(255,255,255,.07)'; g.fillRect(0, H2 - 3, W2, 3); g.fillStyle = gr; g.fillRect(0, H2 - 3, W2 * sp, 3); g.restore(); }
-  g.textBaseline = 'middle';
-  // Drehzahl-Bogen: 22 LEDs, Mitte etwas höher (Bogen), Farben grün -> rot -> blau (Schaltblitz)
-  const nS = 22, f = pre ? 0.05 + 0.95 * (pl.rev || 0) : pl.v < 0.5 ? 0.05 : gi.f, lit = Math.round(f * nS), blink = f > 0.96 && (performance.now() / 90 | 0) % 2, xa = 22, xb = W2 - 22, sw = (xb - xa) / nS;
-  for (let k = 0; k < nS; k++) { const t = k / (nS - 1), yy = 3 + 6 * Math.pow(2 * t - 1, 2), on = k < lit && !blink, colr = k < 11 ? '#2be07a' : k < 17 ? '#ff3a1a' : '#4d86ff';
-    g.fillStyle = on ? colr : 'rgba(255,255,255,.11)'; if (on && k >= 14) { g.shadowColor = colr; g.shadowBlur = 7; } rrect(g, xa + k * sw + 1, yy, sw - 2.4, 5.5, 2.2); g.fill(); g.shadowBlur = 0; }
+  // Tacho im Stil des F1-Spiels: eckiges Panel (Ecken oben angeschnitten), oben 15 Schaltlichter (grün · rot · violett), Gang groß in der Mitte im Rahmen,
+  // Tempo links, ERS und Pedale rechts. Aufrechte Schrift (Titillium Web 900), keine Rundungen, keine Leuchtschatten.
+  const g = gG, W2 = 300, H2 = 84, c = 10; g.clearRect(0, 0, 600, 168); g.save(); g.scale(2, 2);
+  const kmh = pl.v * 3.6, gi = gearP(kmh), pre = raceState === 'lights', ers = !document.body.classList.contains('noBoost'), F = '"Titillium Web",system-ui,sans-serif';
+  g.beginPath(); g.moveTo(c, 0); g.lineTo(W2 - c, 0); g.lineTo(W2, c); g.lineTo(W2, H2); g.lineTo(0, H2); g.lineTo(0, c); g.closePath(); g.fillStyle = 'rgba(21,21,30,.88)'; g.fill();
+  g.fillStyle = '#e10600'; g.fillRect(c, 0, W2 - 2 * c, 2);   // rote Oberkante
+  // Schaltlichter
+  const nS = 15, f = pre ? 0.05 + 0.95 * (pl.rev || 0) : pl.v < 0.5 ? 0 : gi.f, lit = Math.round(clamp((f - 0.3) / 0.66, 0, 1) * nS), blink = f > 0.96 && (performance.now() / 90 | 0) % 2, x0 = 16, sw = (W2 - 32) / nS;
+  for (let k = 0; k < nS; k++) { const on = k < lit && !blink; g.fillStyle = on ? (k < 5 ? '#00d26a' : k < 10 ? '#ff1e00' : '#b04dff') : 'rgba(255,255,255,.1)'; g.fillRect(x0 + k * sw + 1.5, 8, sw - 3, 6); }
+  if (blink) { g.fillStyle = '#4d86ff'; for (let k = 0; k < nS; k++) g.fillRect(x0 + k * sw + 1.5, 8, sw - 3, 6); }   // Schaltblitz
+  g.textBaseline = 'alphabetic';
   // Gang
-  g.fillStyle = 'rgba(225,6,0,.16)'; g.strokeStyle = '#e10600'; g.lineWidth = 1.4; rrect(g, 12, 17, 32, 29, 8); g.fill(); g.stroke();
-  g.fillStyle = '#fff'; g.textAlign = 'center'; g.font = 'italic 900 24px "Titillium Web",system-ui,sans-serif'; g.fillText(pl.v < 0.5 ? 'N' : gi.g, 28, 32.5);
+  const gx = W2 / 2, gw = 46, gy = 22, gh = 54; g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 1.5; g.strokeRect(gx - gw / 2, gy, gw, gh);
+  g.fillStyle = '#fff'; g.textAlign = 'center'; g.font = '900 44px ' + F; g.fillText(pl.v < 0.5 ? 'N' : gi.g, gx, gy + 44);
   // Tempo
-  g.fillStyle = '#fff'; g.textAlign = 'center'; g.font = 'italic 900 33px "Titillium Web",system-ui,sans-serif'; g.fillText(Math.round(kmh), 138, 30);
-  g.fillStyle = 'rgba(255,255,255,.55)'; g.font = '700 8px system-ui,sans-serif'; g.fillText('KM/H', 138, 45);
+  g.textAlign = 'right'; g.font = '900 36px ' + F; g.fillStyle = '#fff'; g.fillText(Math.round(kmh), gx - gw / 2 - 10, 60);
+  g.font = '700 9px ' + F; g.fillStyle = 'rgba(255,255,255,.6)'; g.fillText('KM/H', gx - gw / 2 - 10, 73);
   // ERS + Pedale
-  const x0 = 192, x1 = W2 - 12, bw = x1 - x0;
-  g.fillStyle = 'rgba(255,255,255,.58)'; g.font = '800 8px system-ui,sans-serif'; g.textAlign = 'left'; g.fillText('ERS', x0, 21); g.textAlign = 'right'; g.fillText(Math.round((pl.bat || 0) * 100) + '%', x1, 21);
-  g.fillStyle = 'rgba(255,255,255,.1)'; rrect(g, x0, 26, bw, 6, 3); g.fill();
-  g.fillStyle = pl.boosting ? '#fff07a' : '#ffc400'; if (pl.boosting) { g.shadowColor = '#ffd400'; g.shadowBlur = 8; } rrect(g, x0, 26, Math.max(6, bw * (pl.bat || 0)), 6, 3); g.fill(); g.shadowBlur = 0;
-  const half = (bw - 4) / 2; g.fillStyle = 'rgba(255,255,255,.08)'; rrect(g, x0, 38, half, 4, 2); g.fill(); rrect(g, x0 + half + 4, 38, half, 4, 2); g.fill();
-  g.fillStyle = '#2bd46b'; { const th = pre ? (pl.rev || 0) : (pl.thr || 0); if (th > 0.01) { rrect(g, x0, 38, half * th, 4, 2); g.fill(); } }
-  g.fillStyle = '#ff2a10'; if (pl.brk) { rrect(g, x0 + half + 4, 38, half * (pl.brk || 0), 4, 2); g.fill(); }
+  const rx = gx + gw / 2 + 12, rw = W2 - 14 - rx;
+  if (ers) { g.textAlign = 'left'; g.font = '700 9px ' + F; g.fillStyle = 'rgba(255,255,255,.6)'; g.fillText(pl.boosting ? 'ERS · BOOST' : 'ERS', rx, 33); g.textAlign = 'right'; g.fillStyle = '#fff'; g.font = '900 11px ' + F; g.fillText(Math.round((pl.bat || 0) * 100) + '%', rx + rw, 33);
+    g.fillStyle = 'rgba(255,255,255,.1)'; g.fillRect(rx, 38, rw, 7); g.fillStyle = pl.boosting ? '#fff27a' : '#ffd400'; g.fillRect(rx, 38, rw * clamp(pl.bat || 0, 0, 1), 7);
+    for (let k = 1; k < 4; k++) { g.fillStyle = 'rgba(21,21,30,.9)'; g.fillRect(rx + rw * k / 4 - 0.5, 38, 1, 7); } }
+  const py = ers ? 56 : 40, ph = ers ? 5 : 8, half = (rw - 4) / 2;
+  g.textAlign = 'left'; g.font = '700 8px ' + F; g.fillStyle = 'rgba(255,255,255,.5)'; g.fillText('GAS', rx, py - 3); g.fillText('BREMSE', rx + half + 4, py - 3);
+  g.fillStyle = 'rgba(255,255,255,.1)'; g.fillRect(rx, py, half, ph); g.fillRect(rx + half + 4, py, half, ph);
+  { const th = pre ? (pl.rev || 0) : (pl.thr || 0); g.fillStyle = '#00d26a'; if (th > 0.01) g.fillRect(rx, py, half * th, ph); }
+  g.fillStyle = '#ff1e00'; if (pl.brk) g.fillRect(rx + half + 4, py, half * clamp(pl.brk, 0, 1), ph);
+  // Tempo-Leiste unten
+  g.fillStyle = 'rgba(255,255,255,.08)'; g.fillRect(0, H2 - 2, W2, 2); g.fillStyle = '#fff'; g.fillRect(0, H2 - 2, W2 * clamp(kmh / 340, 0, 1), 2);
   g.restore();
 }
 
@@ -7992,6 +8090,7 @@ window.__grassBleed = (tol = 0.004) => { trackGroup.updateMatrixWorld(true); con
   const out = new Map(); for (const o of fills) tris(o, (A, B, C) => raster(A, B, C, (x, z, y) => { const q = M.get(key(x, z)); if (q === undefined || y < q - tol) return; const [dd, j] = nearestDist(x, z), s = Math.round(j * DS / 10) * 10, r = out.get(s) || { s, n: 0, dy: 0, x, z, lat: 0, tag: o.userData.tile ? 'tile' : o.material.userData.fill ? 'fill' : 'ground' }; r.n++; r.dy = Math.max(r.dy, +(y - q).toFixed(3)); r.lat = Math.round(((x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j]) * 10) / 10; void dd; out.set(s, r); }));
   const L2 = [...out.values()].sort((a, b) => b.n - a.n); return { pts: L2.reduce((a, r) => a + r.n, 0), spots: L2.length, cells: M.size, fills: fills.length, top: L2.slice(0, 12) }; };
 window.__holes = () => HOLES; window.__holesLeft = () => fillGroundHoles(true);
+window.__scr = k => { showScreen(k); return MENU.scr; };   /* Test: Menübildschirm direkt öffnen */
 window.__plRef = () => pl;
 window.__S = () => S; window.__mesh = () => ({ ALL, pl, MODELS, camera });   /* Test: Einstellungen und Fahrzeuge lesen/setzen */
 window.__laps = () => ais.map(a => a.code + ':' + (a.lapTimes || []).map(t => t.toFixed(1)).join('/'));
