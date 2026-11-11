@@ -807,6 +807,14 @@ th{background:#0c0c12!important;letter-spacing:.16em;font-size:10px!important;co
 #lsub{font-size:10.5px!important;font-weight:700!important;letter-spacing:.06em;color:rgba(255,255,255,.62)!important;font-variant-numeric:tabular-nums}
 .hb{width:40px!important;height:40px!important;background:linear-gradient(180deg,rgba(40,40,52,.85),rgba(14,14,20,.85))!important;border:1px solid rgba(255,255,255,.14)!important;box-shadow:0 8px 18px -6px rgba(0,0,0,.6)!important}
 #speedo{filter:drop-shadow(0 10px 18px rgba(0,0,0,.5))!important;left:auto!important;transform:none!important;right:max(10px,env(safe-area-inset-right))!important;bottom:max(4px,env(safe-area-inset-bottom))!important}   /* unten rechts wie im F1-Spiel (Mitte verdeckte das eigene Auto) */
+#helmet{position:absolute;inset:0;pointer-events:none;display:none;z-index:0}
+body.cockpit.helmcam #helmet{display:block}
+#helmet svg{width:100%;height:100%;display:block}
+#haloHud{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none}
+body.tvcam #haloHud{display:block}body.tvcam #speedo{display:none!important}
+#gauge{width:320px!important;height:120px!important}
+@media (max-height:430px){#gauge{width:272px!important;height:102px!important}}
+@media (max-height:380px){#gauge{width:240px!important;height:90px!important}}
 body.touchUI #speedo{left:50%!important;right:auto!important;transform:translateX(-50%)!important;bottom:max(4px,env(safe-area-inset-bottom))!important}   /* Touch: Mitte unten zwischen den Tasten (Wunsch) */
 /* Touch-Tasten im F1-Spiel-Stil: dunkle Carbon-Flächen mit angeschnittener Ecke, Farbbalken unten (Lenken weiß, Bremse rot, Gas grün), Symbol + Beschriftung, Druck = Farbe füllt die Taste */
 #controls .pad{position:relative;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:0!important;border:1px solid rgba(255,255,255,.16)!important;border-top-color:rgba(255,255,255,.3)!important;
@@ -825,9 +833,6 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 #controls .boostBtn svg{width:24px;height:24px}#controls .boostBtn small{font:700 9px "Titillium Web",sans-serif;letter-spacing:.18em}
 #controls .boostBtn.on{background:linear-gradient(180deg,#ffe45c,#ffb000)!important;color:#15151e}
 #controls .pad.hidden,#controls .boostBtn.hidden,body.noBoost #controls .boostBtn{display:none!important}
-#gauge{width:230px!important;height:150px!important;opacity:1!important}
-@media (max-height:430px){#gauge{width:184px!important;height:120px!important}}
-@media (max-height:380px){#gauge{width:162px!important;height:106px!important}}
 #lights{background:linear-gradient(180deg,#22222c,#0c0c12)!important;border:1px solid rgba(255,255,255,.14)!important;padding:10px 14px!important;box-shadow:0 14px 30px -10px rgba(0,0,0,.8)!important}
 #msg{font-weight:900!important;letter-spacing:.06em;font-style:normal!important}
 .pad{background:rgba(16,16,23,.32)!important;border:1px solid rgba(255,255,255,.2)!important}
@@ -841,6 +846,7 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 <div id="loading"><div class="ldBox"><div class="ldLogo"><small>FORMULA</small>RACING</div><div class="ldTrk" id="ldTrk"></div><div class="ldBar"><i></i></div><div class="ldTxt">Strecke wird geladen</div></div></div>
 
 <div id="hud" class="hidden">
+  <div id="helmet" aria-hidden="true"></div>
   <div id="tl">
     <div id="pos">P–<span>/22</span></div>
     <div id="lap">Runde 1/5</div>
@@ -852,7 +858,8 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
     <canvas id="map" width="336" height="336"></canvas>
     <div class="hbtns"><button id="pauseBtn" class="hb" aria-label="Pause">❚❚</button><button id="camBtn" class="hb" aria-label="Kamera"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h3l2-2.5h6L17 7h3a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 4 7z"/><circle cx="12" cy="13" r="3.6"/></svg></button><button id="musBtn" class="hb" aria-label="Musik">♪</button></div>
   </div>
-  <div id="speedo"><canvas id="gauge" width="460" height="300"></canvas><div id="bat"><i id="batFill"></i><b id="batTxt">50%</b><small>ERS</small></div></div>
+  <div id="speedo"><canvas id="gauge" width="640" height="240"></canvas><div id="bat"><i id="batFill"></i><b id="batTxt">50%</b><small>ERS</small></div></div>
+  <canvas id="haloHud"></canvas>
   <div id="msg"></div>
   <div id="lights" class="hidden"><i></i><i></i><i></i><i></i><i></i></div>
 </div>
@@ -2587,8 +2594,8 @@ function cockCut(mat, k) { const m = mat.clone(), ob = mat.onBeforeCompile, key 
   m.onBeforeCompile = (sh, r) => { if (ob) ob.call(mat, sh, r); sh.vertexShader = 'varying vec3 vCP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vCP = position;'); sh.fragmentShader = 'varying vec3 vCP;\n' + sh.fragmentShader.replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>' + cockCutGLSL(k)); };
   m.customProgramCacheKey = () => key + '|cockcut-' + k; return m; }
 const COCK_MAT = (() => { const t = TEX.carbon.clone(), n = TEX.carbonN.clone(); for (const x of [t, n]) { x.repeat.set(1, 1); x.needsUpdate = true; } return new THREE.MeshStandardMaterial({ map: t, normalMap: n, normalScale: new THREE.Vector2(.35, .35), color: 0x3a3e46, roughness: .55, metalness: .25, side: THREE.DoubleSide }); })();
-const COCK_PAD = new THREE.MeshStandardMaterial({ color: 0x15171b, roughness: .9, metalness: 0 });   // Polster/Armaturenkante: matt schwarz
-function cockTub(k) {   // Wanne: schräge Seitenwände (oben so breit wie die Öffnung, unten breiter), Boden, Spritzwand vorn mit Armaturenkante, Rückwand; UV in Metern (Carbon-Webung ~ 3 cm)
+const COCK_PAD = new THREE.MeshStandardMaterial({ color: 0x24252b, roughness: .95, metalness: 0, side: THREE.DoubleSide });   // Polster/Armaturenkante: matt schwarz
+function cockTub(k, bodyCol = 0x808890, swz = 0.68) {   // Wanne: schräge Seitenwände (oben so breit wie die Öffnung, unten breiter), Boden, Spritzwand vorn mit Armaturenkante, Rückwand; UV in Metern (Carbon-Webung ~ 3 cm)
   const c = COCK[k], w0 = c.x + 0.003, w1 = c.x + c.wd, yT = c.y + 0.003, fl = c.fl, z0 = c.z0 - 0.01, z1 = c.z1 + 0.012, P = [], U = [];
   const quad = (a, b, d, e) => { for (const q of [a, b, d, a, d, e]) { P.push(...q); U.push((q[2] + q[0]) * 30, (q[1] + q[0] * 0.3) * 30); } };
   for (const s of [-1, 1]) quad([s * w0, yT, z0], [s * w0, yT, z1], [s * w1, fl, z1], [s * w1, fl, z0]);
@@ -2597,8 +2604,17 @@ function cockTub(k) {   // Wanne: schräge Seitenwände (oben so breit wie die �
   quad([-w0, yT, z0], [w0, yT, z0], [w1, fl, z0], [-w1, fl, z0]);
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.computeVertexNormals();
   const grp = new THREE.Group(), tub = new THREE.Mesh(g, COCK_MAT); grp.add(tub);
-  const dash = new THREE.Mesh(new THREE.BoxGeometry(w0 * 2 - 0.004, 0.04, 0.07), COCK_PAD); dash.position.set(0, c.y - 0.018, c.z1 - 0.03); grp.add(dash);   // Armaturenkante unter dem vorderen Rand
-  for (const s of [-1, 1]) { const pad = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.05, (c.z1 - c.z0) * 0.55), COCK_PAD); pad.position.set(s * (w0 - 0.012), c.y - 0.028, c.z0 + (c.z1 - c.z0) * 0.3); grp.add(pad); }   // seitliche Polster
+  // Haube über den Beinen (wie im echten Monocoque): flacher Bogen in Wagenfarbe vom Lenkrad bis zur Vorderkante, darunter eine Armaturenfront aus Carbon mit Lenksäule
+  { const za = swz + 0.035, zb = c.z1 + 0.012, L2 = Math.max(0.03, zb - za), R2 = w0 + 0.004, ky = 0.34, yc = c.y - 0.012 - R2 * ky;
+    const hood = new THREE.CylinderGeometry(R2, R2, L2, 24, 1, true, -Math.PI / 2, Math.PI); hood.rotateX(Math.PI / 2); hood.scale(1, ky, 1); hood.translate(0, yc, (za + zb) / 2);
+    grp.add(new THREE.Mesh(hood, new THREE.MeshStandardMaterial({ color: bodyCol, roughness: .32, metalness: .35, side: THREE.DoubleSide })));
+    const face = new THREE.CircleGeometry(R2, 24, 0, Math.PI); face.scale(1, ky, 1); face.translate(0, yc, za + 0.001); grp.add(new THREE.Mesh(face, COCK_MAT));
+    const lip = new THREE.TorusGeometry(R2, 0.006, 6, 24, Math.PI); lip.scale(1, ky, 1); lip.translate(0, yc, za); grp.add(new THREE.Mesh(lip, COCK_PAD));   // Gummikante
+    const col = new THREE.CylinderGeometry(0.018, 0.022, 0.12, 12); col.rotateX(Math.PI / 2 - 0.45); col.translate(0, c.y - 0.06, za - 0.02); grp.add(new THREE.Mesh(col, COCK_PAD));   // Lenksäule
+    for (const s2 of [-1, 1]) { const zE = swz - 0.2, pad = new THREE.CapsuleGeometry(0.045, Math.max(0.04, zE - c.z0 - 0.09), 4, 12); pad.rotateX(Math.PI / 2); pad.scale(0.8, 1.15, 1); pad.translate(s2 * (w0 - 0.03), c.y - 0.008, (c.z0 + zE) / 2);   /* Kopf-/Schulterpolster, ragen über den Rand; enden 20 cm vor dem Lenkrad (Hände frei) */ grp.add(new THREE.Mesh(pad, COCK_PAD)); } }   // Seitenpolster
+  // gepolsterter Cockpitrand rundherum (schwarzer Wulst entlang der Öffnung, vorn im Bogen um das Lenkrad)
+  { const V = THREE.Vector3, y = c.y + 0.004, zf = c.z1 + 0.01, pts = [new V(-w0, y, c.z0 - 0.02), new V(-w0, y, zf - 0.12), new V(-w0 * 0.75, y + 0.006, zf - 0.03), new V(0, y + 0.012, zf), new V(w0 * 0.75, y + 0.006, zf - 0.03), new V(w0, y, zf - 0.12), new V(w0, y, c.z0 - 0.02)];
+    grp.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, false, 'centripetal'), 64, 0.016, 8, false), COCK_PAD)); }
   grp.traverse(o => { if (o.isMesh) { o.frustumCulled = false; o.castShadow = false; } }); grp.visible = false; return grp; }
 
 const inCock = (k, x, y, z) => { const c = COCK[k]; return Math.abs(x) < c.x && z > c.z0 && z < c.z1 && y < c.y; };
@@ -6181,34 +6197,76 @@ function drawMap() {
 const gC = $('#gauge'), gG = gC.getContext('2d');
 function rrect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
 const BOOST_NAME = 'ERS AKTIV';
-function drawGauge() {
-  // Tacho, modern (Stil aktueller F1-Spiele): keine Scheibe, keine Skalenstriche. Ein schlanker, durchgehender Drehzahlbogen mit Farbverlauf (Grün -> Gelb -> Rot),
-  // dessen Ende als heller Punkt leuchtet; darüber 9 kleine Schaltlichter. Gang sehr groß, Tempo darunter. Links und rechts dünne senkrechte Balken für Bremse und Gas,
-  // unten ein flacher, unterteilter ERS-Balken. Hinter allem nur ein weicher dunkler Schleier für Lesbarkeit.
-  const g = gG, W2 = 230, H2 = 150; g.clearRect(0, 0, 460, 300); g.save(); g.scale(2, 2);
-  const kmh = pl.v * 3.6, gi = gearP(kmh), pre = raceState === 'lights', ers = !document.body.classList.contains('noBoost'), F = '"Titillium Web",system-ui,sans-serif';
-  const cx = W2 / 2, cy = 80, R = 56, a0 = Math.PI * 0.8, a1 = Math.PI * 2.2, span = a1 - a0;
-  { const sh = g.createRadialGradient(cx, cy, 8, cx, cy, R + 26); sh.addColorStop(0, 'rgba(6,6,10,.62)'); sh.addColorStop(.7, 'rgba(6,6,10,.4)'); sh.addColorStop(1, 'rgba(6,6,10,0)'); g.fillStyle = sh; g.fillRect(0, 0, W2, H2); }
-  const f = clamp(pre ? 0.05 + 0.95 * (pl.rev || 0) : pl.v < 0.5 ? 0 : gi.f, 0, 1), flash = f > 0.965 && (performance.now() / 85 | 0) % 2;
-  // Bogen: Spur + Füllung mit Farbverlauf entlang des Bogens (konischer Verlauf)
-  g.lineCap = 'round'; g.lineWidth = 6; g.strokeStyle = 'rgba(255,255,255,.1)'; g.beginPath(); g.arc(cx, cy, R, a0, a1); g.stroke();
-  if (f > 0.005) { let grad; if (g.createConicGradient) { grad = g.createConicGradient(a0 - 0.05, cx, cy); grad.addColorStop(0, '#00e07a'); grad.addColorStop(0.42, '#00e07a'); grad.addColorStop(0.56, '#ffd400'); grad.addColorStop(0.7, '#ff2a14'); grad.addColorStop(0.82, '#c040ff'); grad.addColorStop(1, '#c040ff'); } else grad = '#00e07a';
-    const ae = a0 + span * f; g.strokeStyle = flash ? '#4d8bff' : grad; g.beginPath(); g.arc(cx, cy, R, a0, ae); g.stroke();
-    g.fillStyle = '#fff'; g.shadowColor = flash ? '#4d8bff' : 'rgba(255,255,255,.9)'; g.shadowBlur = 8; g.beginPath(); g.arc(cx + Math.cos(ae) * R, cy + Math.sin(ae) * R, 3.6, 0, Math.PI * 2); g.fill(); g.shadowBlur = 0; }
-  // Schaltlichter oben
-  { const n = 9, lit = Math.round(clamp((f - 0.55) / 0.4, 0, 1) * n), w = 7, gp = 3, x0 = cx - (n * w + (n - 1) * gp) / 2, y = cy - R - 16;
-    for (let k = 0; k < n; k++) { const c = flash ? '#4d8bff' : k < 3 ? '#00e07a' : k < 6 ? '#ff2a14' : '#c040ff'; g.fillStyle = k < lit ? c : 'rgba(255,255,255,.12)'; g.fillRect(x0 + k * (w + gp), y, w, 4); } }
-  // Gang + Tempo
-  g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillStyle = flash ? '#8fb2ff' : '#fff'; g.font = '700 58px ' + F; g.fillText(pl.v < 0.5 || pre ? 'N' : gi.g, cx, cy + 16);
-  g.font = '700 17px ' + F; g.fillStyle = '#fff'; g.fillText(Math.round(kmh), cx, cy + 36); g.font = '600 7.5px ' + F; g.fillStyle = 'rgba(255,255,255,.55)'; g.fillText('KM/H', cx, cy + 45);
-  // Bremse links, Gas rechts: schlanke senkrechte Balken
-  const bh = 52, by = cy - bh / 2 + 4, bar = (x, v, c) => { g.fillStyle = 'rgba(255,255,255,.1)'; g.fillRect(x, by, 4, bh); if (v > 0.01) { g.fillStyle = c; const h = bh * clamp(v, 0, 1); g.fillRect(x, by + bh - h, 4, h); } };
-  bar(cx - R - 20, pl.brk || 0, '#ff2a14'); bar(cx + R + 16, pre ? (pl.rev || 0) : (pl.thr || 0), '#00e07a');
-  // ERS-Balken unten, 8 Abschnitte
-  if (ers) { const w = 92, x0 = cx - w / 2, y = H2 - 10, n = 8, sw = w / n, b2 = clamp(pl.bat || 0, 0, 1), col = pl.boosting ? '#fff27a' : '#ffd400';
-    for (let k = 0; k < n; k++) { const fill = clamp(b2 * n - k, 0, 1); g.fillStyle = 'rgba(255,255,255,.1)'; g.fillRect(x0 + k * sw + 1, y, sw - 2, 4); if (fill > 0) { g.fillStyle = col; g.fillRect(x0 + k * sw + 1, y, (sw - 2) * fill, 4); } }
-    g.font = '700 7px ' + F; g.fillStyle = col; g.textAlign = 'right'; g.fillText(pl.boosting ? BOOST_NAME : 'ERS', x0 - 5, y + 4.5); g.textAlign = 'left'; g.fillText(Math.round(b2 * 100) + '%', x0 + w + 5, y + 4.5); }
-  g.restore();
+// Tacho im Stil der F1-TV-Halografik („Halo HUD“ der Onboard-Übertragung): halbtransparentes Band entlang des Halo-Bogens, oben ein runder Tacho (km/h + mph, Ring mit
+// rotem Ende), links davon Bremse- und rechts Gas-Balken, rechts die Gänge N–8 mit Drehzahl-Linie, links Fahrername und Rundenzeit.
+// Ein Zeichenverfahren für beide Fälle: o = Ellipse (cx, cy, rx, ry), Bandbreite t, Bogen th0..th1; full = mit Name/Zeit (TV-Ansicht über dem echten Halo).
+function haloDraw(g, o) {
+  const { cx, cy, rx, ry, t, th0, th1, full } = o, k = ry / rx, F = '"Titillium Web",system-ui,sans-serif', thC = Math.PI * 1.5;
+  const kmh = pl.v * 3.6, gi = gearP(kmh), pre = raceState === 'lights', f = clamp(pre ? 0.05 + 0.95 * (pl.rev || 0) : pl.v < 0.5 ? 0 : gi.f, 0, 1);
+  const P = (th, d) => [cx + (rx - d) * Math.cos(th), cy + (ry - d * k) * Math.sin(th)], tan = th => Math.atan2(ry * Math.cos(th), -rx * Math.sin(th));
+  const txt = (s2, th, d, size, col, w = 700, al = 'center') => { const [x, y] = P(th, d); g.save(); g.translate(x, y); g.rotate(tan(th)); g.font = w + ' ' + size + 'px ' + F; g.fillStyle = col; g.textAlign = al; g.textBaseline = 'middle'; g.fillText(s2, 0, 0); g.restore(); };
+  const quad = (tA, tB, dA, dB, col) => { const a = P(tA, dA), b = P(tB, dA), c = P(tB, dB), d = P(tA, dB); g.fillStyle = col; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.lineTo(c[0], c[1]); g.lineTo(d[0], d[1]); g.closePath(); g.fill(); };
+  // Band: dunkles Glas mit heller Außenkante und feiner Innenlinie
+  g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, th0, th1); g.ellipse(cx, cy, rx - t, ry - t * k, 0, th1, th0, true); g.closePath();
+  { const gr = g.createLinearGradient(0, cy - ry, 0, cy - ry + t * 2.5); gr.addColorStop(0, 'rgba(22,40,66,.62)'); gr.addColorStop(1, 'rgba(8,16,30,.55)'); g.fillStyle = gr; } g.fill();
+  g.lineWidth = 1.4; g.strokeStyle = 'rgba(150,205,255,.55)'; g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, th0, th1); g.stroke();
+  g.lineWidth = 1; g.strokeStyle = 'rgba(150,205,255,.18)'; g.beginPath(); g.ellipse(cx, cy, rx - t, ry - t * k, 0, th0, th1); g.stroke();
+  // feine Rasterlinien im Band (wie die Struktur der TV-Grafik)
+  g.strokeStyle = 'rgba(150,205,255,.07)'; g.lineWidth = 1; for (let th = th0 + 0.03; th < th1; th += 0.035) { const a = P(th, 2), b = P(th, t - 2); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); }
+  const r0 = t * 1.08, [gx, gy] = P(thC, t * 0.5), aw = r0 * 1.15 / rx;   // Tacho-Kreis
+  // Bremse (links) und Gas (rechts): schräge Balken im Band
+  const nB = 8, bs = 0.2, br = pre ? 0 : (pl.brk || 0), th2 = pre ? (pl.rev || 0) : (pl.thr || 0);
+  for (let i = 0; i < nB; i++) { const w = bs / nB, tl = thC - aw - (i + 1) * w, tr = thC + aw + i * w, onB = (nB - i) / nB <= br + 0.001, onT = (i + 1) / nB <= th2 + 0.001;
+    quad(tl + w * 0.2, tl + w * 0.8, t * 0.2, t * 0.85, onB ? '#ff3b2f' : 'rgba(255,255,255,.12)'); quad(tr + w * 0.2, tr + w * 0.8, t * 0.2, t * 0.85, onT ? '#33e070' : 'rgba(255,255,255,.12)'); }
+  txt('BRAKE', thC - aw - bs * 0.55, t + t * 0.28, Math.max(7, t * 0.24), 'rgba(255,255,255,.8)', 600); txt('THROTTLE', thC + aw + bs * 0.55, t + t * 0.28, Math.max(7, t * 0.24), 'rgba(255,255,255,.8)', 600);
+  // Gänge + Drehzahl rechts
+  { const n0 = thC + aw + bs + 0.07, n1 = Math.min(th1 - 0.06, n0 + 0.5), G = ['N', 1, 2, 3, 4, 5, 6, 7, 8], cur = pl.v < 0.5 || pre ? 'N' : gi.g;
+    G.forEach((v, i) => { const th = n0 + (n1 - n0) * i / (G.length - 1), on = String(v) === String(cur); txt(String(v), th, t * 0.36, on ? t * 0.62 : t * 0.34, on ? '#ffffff' : 'rgba(255,255,255,.55)', on ? 800 : 600); });
+    txt('GEARS', n1 + 0.035, t * 0.36, Math.max(6, t * 0.2), 'rgba(255,255,255,.6)', 600, 'left');
+    g.lineWidth = Math.max(1.5, t * 0.07); g.strokeStyle = 'rgba(255,255,255,.18)'; g.beginPath(); g.ellipse(cx, cy, rx - t * 0.78, ry - t * 0.78 * k, 0, n0, n1); g.stroke();
+    g.strokeStyle = f > 0.93 ? '#ff4a1a' : '#ffffff'; g.beginPath(); g.ellipse(cx, cy, rx - t * 0.78, ry - t * 0.78 * k, 0, n0, n0 + (n1 - n0) * f); g.stroke();
+    txt('RPM x1000', (n0 + n1) / 2 + 0.05, t * 1.0, Math.max(6, t * 0.2), 'rgba(255,255,255,.55)', 600); }
+  // Name + Zeit links (nur TV-Ansicht)
+  if (full) { const n1 = thC - aw - bs - 0.07, n0 = Math.max(th0 + 0.06, n1 - 0.42), m = (n0 + n1) / 2, nm = String(pl.name || '').split(' ').pop().toUpperCase(), cur = raceState === 'race' && pl.lapsDone >= 0 && !pl.finished ? raceTime - pl.lapStart : 0;
+    { g.save(); g.lineWidth = 1.5; g.strokeStyle = '#ff7a1a'; g.beginPath(); g.ellipse(cx, cy, rx - t * 0.08, ry - t * 0.08 * k, 0, n0, n1); g.ellipse(cx, cy, rx - t * 0.92, ry - t * 0.92 * k, 0, n1, n0, true); g.closePath(); g.stroke(); g.restore(); }
+    txt(nm, m, t * 0.33, t * 0.38, '#fff', 800); txt(cur ? fmt(cur) : 'RUNDE ' + clamp(pl.lapsDone + 1, 1, S.laps) + '/' + S.laps, m, t * 0.7, t * 0.3, 'rgba(255,255,255,.85)', 600); }
+  // Tacho-Kreis oben
+  g.fillStyle = 'rgba(10,16,28,.88)'; g.beginPath(); g.arc(gx, gy, r0, 0, Math.PI * 2); g.fill(); g.lineWidth = 1.2; g.strokeStyle = 'rgba(150,205,255,.5)'; g.stroke();
+  { const s0 = Math.PI * 0.75, s1 = Math.PI * 2.25, fr = clamp(kmh / 350, 0, 1), rr = r0 * 0.84; g.lineCap = 'round'; g.lineWidth = Math.max(2.5, r0 * 0.11);
+    g.strokeStyle = 'rgba(255,255,255,.14)'; g.beginPath(); g.arc(gx, gy, rr, s0, s1); g.stroke();
+    if (fr > 0.003) { const e = s0 + (s1 - s0) * fr, red = Math.max(s0, e - 0.5); g.strokeStyle = '#ffffff'; g.beginPath(); g.arc(gx, gy, rr, s0, red); g.stroke(); g.strokeStyle = '#ff4a1a'; g.beginPath(); g.arc(gx, gy, rr, red, e); g.stroke(); }
+    g.lineCap = 'butt'; }
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = 'rgba(255,255,255,.75)'; g.font = '600 ' + r0 * 0.2 + 'px ' + F; g.fillText('KM/H', gx, gy - r0 * 0.5);
+  g.fillStyle = '#fff'; g.font = '800 ' + r0 * 0.56 + 'px ' + F; g.fillText(Math.round(kmh), gx, gy - r0 * 0.07);
+  g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(gx - r0 * 0.5, gy + r0 * 0.22, r0, 1);
+  g.fillStyle = '#fff'; g.font = '700 ' + r0 * 0.34 + 'px ' + F; g.fillText(Math.round(kmh * 0.6214), gx, gy + r0 * 0.47); g.fillStyle = 'rgba(255,255,255,.65)'; g.font = '600 ' + r0 * 0.16 + 'px ' + F; g.fillText('MPH', gx, gy + r0 * 0.72);
+  // ERS (nicht beim Kart): kleiner gelber Balken unter dem Tacho
+  if (!document.body.classList.contains('noBoost')) { const w = r0 * 1.5, x0 = gx - w / 2, y = gy + r0 + 6, b2 = clamp(pl.bat || 0, 0, 1); g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(x0, y, w, 3); g.fillStyle = pl.boosting ? '#fff27a' : '#ffd400'; g.fillRect(x0, y, w * b2, 3);
+    g.font = '700 ' + Math.max(6, r0 * 0.15) + 'px ' + F; g.fillStyle = 'rgba(255,212,0,.9)'; g.fillText(pl.boosting ? BOOST_NAME : 'ERS ' + Math.round(b2 * 100) + '%', gx, y + 9); }
+}
+function drawGauge() { const g = gG; g.clearRect(0, 0, 640, 240); g.save(); g.scale(2, 2); haloDraw(g, { cx: 160, cy: 190, rx: 150, ry: 150, t: 26, th0: Math.PI + 0.5, th1: Math.PI * 2 - 0.5, full: false }); g.restore(); }
+// TV-Ansicht: die Grafik liegt auf dem echten Halo – drei Punkte des Halo-Bogens werden auf den Bildschirm projiziert, daraus die Ellipse
+const HHC = $('#haloHud'), HHG = HHC.getContext('2d'), _hv = new THREE.Vector3();
+// Helmrand in der Cockpitansicht (wie Need for Speed Shift): unscharfe Polsterung und Visierkante an den Bildrändern. Einmal als SVG gebaut (Unschärfe im SVG-Filter, statisch).
+{ const el = $('#helmet'), op = 'M60,150 C150,45 360,26 500,26 C640,26 850,45 940,150 C985,300 995,600 980,850 C950,1010 760,1070 500,1070 C240,1070 50,1010 20,850 C5,600 15,300 60,150 Z';   /* unten fast offen: Lenkrad und Hände bleiben frei */
+  el.innerHTML = '<svg viewBox="0 0 1000 1000" preserveAspectRatio="none"><defs><filter id="hb" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="16"/></filter><filter id="hb2"><feGaussianBlur stdDeviation="7"/></filter>'
+    + '<linearGradient id="hv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".42"/><stop offset=".22" stop-color="#000" stop-opacity="0"/><stop offset=".82" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></linearGradient></defs>'
+    + '<path d="' + op + '" fill="url(#hv)"/>'   // Visier: oben leicht getönt, unten Schatten des Kinnteils
+    + '<path filter="url(#hb)" fill="#070709" fill-rule="evenodd" d="M-60,-60H1060V1060H-60Z ' + op + '"/>'   // Helmschale/Polster: alles außerhalb der Visieröffnung
+    + '<path filter="url(#hb2)" d="' + op + '" fill="none" stroke="#3a3c44" stroke-opacity=".55" stroke-width="10"/>'   // Lichtkante des Polsters
+    + '</svg>'; }
+function drawHaloHud() {
+  const on = running && S.cam === 3 && pl && pl.mesh && pl.mesh.tp; document.body.classList.toggle('tvcam', !!on); if (!on) return;
+  const dpr = Math.min(2, devicePixelRatio || 1), W = innerWidth, H = innerHeight; if (HHC.width !== Math.round(W * dpr) || HHC.height !== Math.round(H * dpr)) { HHC.width = Math.round(W * dpr); HHC.height = Math.round(H * dpr); }
+  const pr = (x, y, z) => { _hv.set(x, y, z); pl.mesh.g.localToWorld(_hv); _hv.project(camera); return [(_hv.x + 1) / 2 * W, (1 - _hv.y) / 2 * H]; };
+  // Halo-Außenkante (vermessen am Modell): Scheitel vorn, dazu zwei Punkte weiter hinten an der Seite – Ellipse durch alle drei (Mittelpunkt per Suche)
+  const isF2 = pl.mesh.tp.M === MODELS.f2, A = pr(0, isF2 ? 0.89 : 0.86, isF2 ? 0.49 : 0.76), sd = (x, y, z) => { const a = pr(x, y, z), b = pr(-x, y, z); return [Math.abs(a[0] - b[0]) / 2, (a[1] + b[1]) / 2]; };
+  const B = isF2 ? sd(0.25, 0.866, 0.30) : sd(0.31, 0.81, 0.5), C = isF2 ? sd(0.288, 0.792, 0.36 - 0.14) : sd(0.32, 0.78, 0.4), cx = A[0];
+  let best = 1e18, cy = A[1] + H * 0.5, rx = W * 0.35, ry = H * 0.4;
+  for (let c = A[1] + 20; c < A[1] + H * 3; c += 2) { const r_y = c - A[1], qb = 1 - ((c - B[1]) / r_y) ** 2; if (qb <= 0.01) continue; const r_x = B[0] / Math.sqrt(qb), e = (C[0] / r_x) ** 2 + ((c - C[1]) / r_y) ** 2 - 1; if (e * e < best) { best = e * e; cy = c; rx = r_x; ry = r_y; } }
+  if (!isFinite(rx) || rx < 40) return;
+  HHG.setTransform(dpr, 0, 0, dpr, 0, 0); HHG.clearRect(0, 0, W, H);
+  haloDraw(HHG, { cx, cy, rx, ry, t: clamp(H * 0.085, 26, 46), th0: Math.PI + 0.02, th1: Math.PI * 2 - 0.02, full: true });
 }
 
 /* ======================= Eingabe ======================= */
@@ -6682,7 +6740,7 @@ function warmUpTrack() {
 }
 function precompile() { try { const prev = renderer.getRenderTarget(); if (composer) renderer.setRenderTarget(composer.renderTarget1); renderer.compile(scene, camera); renderer.setRenderTarget(prev); } catch (e) { console.warn('precompile', e); }
   // Materialien, die erst beim Kamerawechsel auftauchen (Cockpit: aufgeschnittene Karosserie + Wanne, TV-Kamera: einfarbiges Halo), jetzt mit übersetzen – sonst Hänger beim ersten Umschalten
-  try { const m = pl && pl.mesh; if (m) { const tp = m.tp || {}, k = tp.M === MODELS.f2 ? 'f2' : 'f1'; if (m.tp) { tp.cutGloss ||= cockCut(tp.glossMat, k); tp.cutMatte ||= cockCut(MATTE, k); if (!m.tub) { m.tub = cockTub(k); m.g.add(m.tub); } }
+  try { const m = pl && pl.mesh; if (m) { const tp = m.tp || {}, k = tp.M === MODELS.f2 ? 'f2' : 'f1'; if (m.tp) { tp.cutGloss ||= cockCut(tp.glossMat, k); tp.cutMatte ||= cockCut(MATTE, k); if (!m.tub) { m.tub = cockTub(k, cockBodyCol(), (tp.M.swPos || [0, 0, 0.68])[2]); m.g.add(m.tub); } }
       const sc = new THREE.Scene(), add = (g, mt) => { const o = new THREE.Mesh(g, mt); o.frustumCulled = false; sc.add(o); }; if (m.tp) { add(m.body.geometry, tp.cutGloss); add(m.matte.geometry, tp.cutMatte); if (tp.haloFlat) add(tp.haloFlat, tp.haloMat); m.tub.traverse(o => { if (o.isMesh) add(o.geometry, o.material); }); }
       ARMS.f1 ||= makeArms(true, 0.033); ARMS.road ||= makeArms(false, 0.023, true);
       for (const G of [SW.g, ARMS.f1.g, ARMS.road.g]) G.traverse(o => { if (o.isMesh) add(o.geometry, o.material); }); sc.add(...scene.children.filter(o => o.isLight).map(l => l.clone())); sc.fog = scene.fog; sc.environment = scene.environment;
@@ -7193,15 +7251,17 @@ function armsTick() {
   }
 }
 let cockOn = null;   // Spielerauto, dessen Cockpit gerade „geöffnet“ ist (Innenraum sichtbar, Abdeckung verworfen)
+function cockBodyCol() { const T = (typeof LIVS !== 'undefined' && LIVS[pl.team]) || TEAMS[pl.team] || {}; return T.body ?? 0x808890; }
 function cockpitInterior(on) {
   const m = pl && pl.mesh; if (cockOn && (!on || cockOn !== m)) { cockOn.body.material = cockOn.tp.glossMat; cockOn.matte.material = MATTE; if (cockOn.tub) cockOn.tub.visible = false; cockOn = null; }
   if (!on || cockOn === m) return; const tp = m.tp, k = tp.M === MODELS.f2 ? 'f2' : 'f1';
-  tp.cutGloss ||= cockCut(tp.glossMat, k); tp.cutMatte ||= cockCut(MATTE, k); if (!m.tub) { m.tub = cockTub(k); m.g.add(m.tub); }
+  tp.cutGloss ||= cockCut(tp.glossMat, k); tp.cutMatte ||= cockCut(MATTE, k); if (!m.tub) { m.tub = cockTub(k, cockBodyCol(), (tp.M.swPos || [0, 0, 0.68])[2]); m.g.add(m.tub); }
   m.body.material = tp.cutGloss; m.matte.material = tp.cutMatte; m.tub.visible = true; cockOn = m; }
 function drawWheel(dt) {
   SW.g.visible = running && S.cam === 2 && !pl.mesh.road && !pl.mesh.kart;   // Roadster und Kart haben ihr eigenes rundes Lenkrad am Auto
   if (pl.mesh.tp) { SW.g.position.set(...(pl.mesh.tp.M.swPos || [0, 0.605, 0.98])); SW.g.scale.setScalar(pl.mesh.tp.M.swS || 1); }   // Lenkradposition je Modell (F2 sitzt weiter hinten und tiefer)
   document.body.classList.toggle('cockpit', running && S.cam === 2);
+  document.body.classList.toggle('helmcam', S.helm !== false);   /* Helmrand (Einstellung „Helmrand“) */
   cockpitInterior(SW.g.visible && !!pl.mesh.tp);
   if (running && S.cam === 2 && pl.mesh.road) roadDashTick(dt);
   armsTick();
@@ -7287,7 +7347,8 @@ function updateCamera(dt) {
       const vib = Math.min(1, p.v / 50), bob = (Math.sin(tt * 2.1) * 0.004 + Math.sin(tt * 13.7) * 0.0012 * vib) * (paused ? 0 : 1), sway = Math.sin(tt * 1.3) * 0.003;
       const cp = S.cam === 3 && p.mesh.tv ? p.mesh.tv : (p.mesh.cam || [0, 0.9, 0.36]);
       if (st) camera.position.set(cp[0], cp[1], cp[2]); else camera.position.set(cp[0] + HEAD.x + sway, cp[1] + bob - Math.abs(HEAD.z) * 0.15, cp[2] + HEAD.z); m.localToWorld(camera.position);
-      if (st) _ht.set(cp[0], cp[1] - (cp[3] ?? 0.4), 30); else _ht.set(cp[0] + HEAD.x * 0.3 + sway * 0.5, cp[1] - (cp[3] ?? 0.4) - HEAD.p * 30 + bob * 0.5, 30); m.localToWorld(_ht); camera.up.set(0, 1, 0); camera.lookAt(_ht); if (!st) camera.rotateZ(HEAD.r); if (!st && (camOrb || camPit)) { camera.rotateY(-camOrb); camera.rotateX(-camPit * 0.45); }   // Cockpit: rechter Stick = Umschauen
+      if (st) _ht.set(cp[0], cp[1] - (cp[3] ?? 0.4), 30); else _ht.set(cp[0] + HEAD.x * 0.3 + sway * 0.5, cp[1] - (cp[3] ?? 0.4) - HEAD.p * 30 + bob * 0.5, 30); m.localToWorld(_ht); camera.up.set(0, 1, 0); camera.lookAt(_ht); if (!st) { const D = clamp(p.v * 0.9, 14, 60); let kk = 0, nn = 0; for (let ds = 6; ds <= D; ds += 3) { kk += KS[Math.floor(modL(p.sPrev + ds) / DS) % N] || 0; nn++; }   // Helmkamera: Blick zum Kurvenscheitel (Krümmung voraus × halbe Vorausschau-Distanz ≈ Winkel zum Scheitelpunkt), weich nachgeführt
+        const tgt = clamp(-(kk / Math.max(1, nn)) * D * 0.5 * 0.75, -0.26, 0.26); HEAD.look = (HEAD.look || 0) + (tgt - (HEAD.look || 0)) * Math.min(1, dt * 2.6); camera.rotateY(HEAD.look); camera.rotateZ(HEAD.r); } if (!st && (camOrb || camPit)) { camera.rotateY(-camOrb); camera.rotateX(-camPit * 0.45); }   // Cockpit: rechter Stick = Umschauen
     }
     if (sh > 0 && !paused && S.cam !== 2 && S.cam !== 3) { camera.position.x += (Math.random() - .5) * sh; camera.position.y += (Math.random() - .5) * sh; }
     { const on = running && isTouch && effCtrl === 'tilt' && S.level !== false, tg = on ? clamp(tiltAngle - tiltZero, -40, 40) * Math.PI / 180 : 0; levelR += (tg - levelR) * Math.min(1, dt * 12); if (Math.abs(levelR) > 1e-4) camera.rotateZ(-levelR); }   // Neigen: Bild dreht gegen, Horizont bleibt waagerecht
@@ -7312,6 +7373,7 @@ function showMsg(t, dur) { const el = $('#msg'); el.textContent = t; el.classLis
 let gaugeT = 0, hudBat = -1, hudBoost = null;
 const HUDC = {};
 function updateHUD(dt) {
+  drawHaloHud();
   if (msgT > 0) { msgT -= dt; if (msgT <= 0) $('#msg').classList.remove('show'); }
   if (!running) return;
   gaugeT -= dt; if (gaugeT <= 0) { gaugeT = 1 / 30; drawGauge(); }
@@ -7977,7 +8039,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.16'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.17'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -8179,6 +8241,7 @@ window.__scr = k => { showScreen(k); return MENU.scr; };   /* Test: Menübildsch
 window.__season = tier => { if (!CAREER) { CAREER = carDef(); CAREER.name = 'Robert Nemec'; } if (tier !== 'kart' && !CAREER.slot[tier]) CAREER.slot[tier] = mkSlot(tier, SERIES[tier].drivers[4][3], null); (CAREER.intro ||= {})[tier] = 1; startSeason(tier); return MENU.scr; };   /* Test: Saison-Bildschirm öffnen */
 window.__arms = () => ARMS;
 window.__layout = () => { effCtrl = S.ctrl; layoutControls(); return effCtrl; };   /* Test: Touch-Tasten zeigen */
+window.__ks = s2 => KS[Math.floor(modL(s2) / DS) % N]; window.__head = () => HEAD; window.__tp = s2 => { const q = trackAt(s2, 0); pl.x = q.x; pl.z = q.z; pl.h = q.h; camH = q.h; projectCar(pl); pl.sPrev = modL(s2); return pl.idx; };
 window.__plRef = () => pl;
 window.__S = () => S; window.__mesh = () => ({ ALL, pl, MODELS, camera });   /* Test: Einstellungen und Fahrzeuge lesen/setzen */
 window.__laps = () => ais.map(a => a.code + ':' + (a.lapTimes || []).map(t => t.toFixed(1)).join('/'));
