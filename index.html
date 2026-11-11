@@ -588,6 +588,107 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
 #ltime{font-size:25px!important;font-weight:800!important;font-style:italic;letter-spacing:.02em}
 #lsub{font-size:11px;font-weight:700;letter-spacing:.06em;color:rgba(255,255,255,.62)}
 #speedo{filter:drop-shadow(0 8px 18px rgba(0,0,0,.45))}
+/* ===== UI 2027: ruhiges Glas-Design – runde Flächen, weiche Tiefe, ein Akzentverlauf; ersetzt den kantigen TV-Look (Schrägen, harte Balken) ===== */
+:root{--a1:#ff3b30;--ag:linear-gradient(135deg,#ff4a3d,#e10600 55%,#c20a2e);--g1:rgba(17,20,28,.68);--gb:rgba(255,255,255,.1);--gbh:rgba(255,255,255,.24);--r:16px;--sh:0 18px 50px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.07);--f1r:#ff3b30}
+#menu::before{background:linear-gradient(100deg,rgba(6,8,13,.9) 0%,rgba(6,8,13,.58) 36%,rgba(6,8,13,.1) 68%,transparent 84%),radial-gradient(70% 60% at 0% 100%,rgba(255,59,48,.2),transparent 62%),radial-gradient(60% 50% at 100% 0%,rgba(80,120,255,.1),transparent 60%)!important}
+.card,.rpanel,.spanel,.tcard,.tm,.dcard,.hbtn,.rvar,.diffbar{background:linear-gradient(160deg,rgba(255,255,255,.075),rgba(255,255,255,.018) 60%),var(--g1)!important;border:1px solid var(--gb)!important;border-radius:var(--r)!important;box-shadow:var(--sh)!important;backdrop-filter:blur(16px) saturate(150%)!important;-webkit-backdrop-filter:blur(16px) saturate(150%)!important}
+.card{border-radius:22px!important;padding:20px 22px!important}
+.card h2{font-size:24px;margin-bottom:12px}
+.rpanel,.spanel{padding:16px 18px!important}
+.spanel .diffbar{background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:4px 0!important;border-radius:0!important}
+.tcard:hover,.tm:hover,.hbtn:hover{border-color:var(--gbh)!important}
+.tcard::before{height:3px;background:linear-gradient(90deg,var(--tc),transparent 85%)}
+.tcard.on{border-color:var(--tc)!important;background:linear-gradient(165deg,color-mix(in srgb,var(--tc) 20%,transparent),rgba(255,255,255,.02) 62%),var(--g1)!important;box-shadow:0 0 0 1.5px var(--tc),0 22px 56px rgba(0,0,0,.5),0 0 48px -10px var(--tc)!important}
+.tcard .chk{width:28px;height:28px;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+.tcard .ts div{border-radius:11px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.06)}
+.tm{padding:10px 12px!important}
+.tm::after{top:10px;bottom:10px;left:0;width:3px;border-radius:0 3px 3px 0}
+.tm.on{border-color:var(--c1)!important;background:linear-gradient(120deg,color-mix(in srgb,var(--c1) 26%,transparent),rgba(255,255,255,.02) 70%),var(--g1)!important;box-shadow:0 0 0 1.5px var(--c1),0 12px 30px rgba(0,0,0,.45),0 0 34px -10px var(--c1)!important}
+.dcard{padding:16px 18px!important}
+.dcard.on{border-color:var(--c1)!important;box-shadow:0 0 0 1.5px var(--c1),0 20px 50px rgba(0,0,0,.5),0 0 54px -12px var(--c1)!important}
+.dcard .pick{border-radius:999px;height:38px}
+.dcard .bar u{height:6px;border-radius:3px}
+/* Kopf: runde Glas-Tasten, Schritte als Pillenleiste */
+.mback,.mgear{width:44px!important;height:44px!important;border-radius:50%!important;background:var(--g1)!important;border:1px solid var(--gb)!important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);transition:transform .15s,background .2s,border-color .2s}
+.mback:hover,.mgear:hover{border-color:var(--gbh)!important;background:rgba(44,48,60,.82)!important}
+.mback:active,.mgear:active{transform:scale(.93)}
+.msteps{gap:2px!important;padding:4px;border-radius:999px;background:var(--g1);border:1px solid var(--gb);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.msteps i{transform:none!important;border-radius:999px!important;background:transparent!important;border:0!important;transition:background .25s,color .25s}
+.msteps i>b{transform:none!important}
+.msteps i.on{background:var(--ag)!important;box-shadow:0 6px 18px rgba(225,6,0,.4)}
+.msteps i.on b{color:#e10600!important}
+.mh{display:flex;align-items:center;gap:12px;margin-bottom:14px!important;letter-spacing:.015em!important}
+.mh::before{flex:none;width:5px!important;height:1em!important;border-radius:3px;transform:none!important;margin:0!important;background:var(--ag)!important}
+.mh.center{justify-content:center}
+/* Fuß: Auswahl-Pillen und Weiter-Taste */
+.msel span{border-radius:999px;padding:6px 13px;background:var(--g1);border:1px solid var(--gb);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.mnext{clip-path:none!important;border-radius:999px!important;background:var(--ag)!important;height:52px!important;padding:0 28px 0 34px!important;box-shadow:0 12px 34px rgba(225,6,0,.42),inset 0 1px 0 rgba(255,255,255,.35)!important}
+.mnext:hover{filter:brightness(1.08);transform:translateY(-1px)}
+/* Hauptmenü */
+.hub{gap:14px}
+.hero{border-radius:22px!important;padding:20px 28px 18px!important;background:radial-gradient(120% 150% at 100% 0%,rgba(255,150,90,.4),transparent 55%),linear-gradient(120deg,#ff3b30 0,#d90812 46%,#7a0616 100%)!important;box-shadow:0 24px 60px rgba(225,6,0,.34),inset 0 1px 0 rgba(255,255,255,.35)!important}
+.hero::before{display:none}
+.hero::after{right:-50px;width:240px;background:linear-gradient(90deg,rgba(255,255,255,.13),transparent)}
+.hero .hgo{right:22px;bottom:16px;padding:8px 16px;border-radius:999px;font-size:13px!important;letter-spacing:.1em;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.26)}
+.hero .hst i{border-radius:999px}
+.hrow,.hfoot{gap:14px}
+.hbtn{position:relative;overflow:hidden;padding:14px 40px 14px 18px!important}
+.hbtn::after{content:"›";position:absolute;right:16px;top:50%;transform:translateY(-54%);font-size:26px;line-height:1;color:rgba(255,255,255,.32);transition:transform .2s,color .2s}
+.hbtn:hover::after{transform:translate(4px,-54%);color:#fff}
+.hbtn .ic,.hbtn .chev{display:none!important}
+.tag{display:inline-block;padding:6px 14px;border-radius:999px;background:var(--g1);border:1px solid var(--gb);font-size:11px;letter-spacing:.2em;margin:20px 0 6px}
+.tver{padding:5px 12px;border-radius:999px;background:rgba(17,20,28,.5);border:1px solid var(--gb)}
+/* Bedienelemente */
+.seg{border-radius:13px!important;background:rgba(0,0,0,.34)!important;border:1px solid var(--gb)!important;padding:4px!important;gap:2px}
+.seg button{border-radius:9px!important;font-weight:700;transition:background .2s,color .2s}
+.seg button:not(.on):hover{color:#fff;background:rgba(255,255,255,.06)}
+.seg button.on{background:var(--ag)!important;box-shadow:0 6px 16px rgba(225,6,0,.35),inset 0 1px 0 rgba(255,255,255,.3)}
+.sw{width:50px;height:30px;border-radius:15px;background:rgba(255,255,255,.15);transition:background .2s}
+.sw::after{top:3px;left:3px;width:24px;height:24px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.4);transition:transform .22s cubic-bezier(.3,1.4,.5,1)}
+.sw.on{background:var(--ag)!important}.sw.on::after{transform:translateX(20px)}
+.tog{border-bottom:1px solid rgba(255,255,255,.07);padding:9px 0;font-size:14px;font-weight:600}
+.stepper button{border-radius:50%!important;width:42px;height:42px;background:rgba(255,255,255,.07);border:1px solid var(--gb);transition:background .2s}
+.stepper button:hover{background:rgba(255,255,255,.15)}
+.chips button{border-radius:999px!important;height:30px;padding:0 13px;background:rgba(255,255,255,.05)}
+.chips button.on{background:var(--ag)!important;border-color:transparent!important}
+.field>label{color:rgba(255,255,255,.55)}
+.big{border-radius:13px!important;height:48px;background:var(--ag)!important;font-weight:800;letter-spacing:.04em;box-shadow:0 8px 22px rgba(225,6,0,.28);transition:transform .12s,filter .2s,background .2s}
+.big:hover{filter:brightness(1.08)}.big:active{transform:scale(.985)}
+.big.alt{background:rgba(255,255,255,.06)!important;border:1px solid var(--gb)!important;box-shadow:none}
+.big.alt:hover{background:rgba(255,255,255,.12)!important;filter:none}
+.big.danger{border-color:rgba(255,80,70,.5)!important;color:#ff7b72!important}
+.ptabs{border-bottom:0;gap:4px;padding:4px;border-radius:13px;background:rgba(0,0,0,.32);border:1px solid var(--gb);margin:6px 0 14px}
+.ptabs button{height:36px;border-radius:9px;border-bottom:0;margin:0;font-size:12px;transition:background .2s,color .2s}
+.ptabs button.on{background:rgba(255,255,255,.13);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.iconbtn{width:40px;padding:0;justify-content:center;border-radius:50%}
+.overlay{background:radial-gradient(90% 80% at 50% 40%,rgba(10,12,18,.5),rgba(4,5,8,.86))}
+.tablewrap{border-radius:14px;border:1px solid var(--gb)}
+th{background:#171a22}
+#resTable tr.me td,.stbl tr.me td{background:rgba(255,59,48,.24)!important}
+.ccal div{border-radius:10px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.07)}
+.ccal div.next{border-color:var(--a1);box-shadow:inset 3px 0 0 var(--a1);background:rgba(255,59,48,.1)}
+.pinfo span{border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--gb)}
+.uprow{border-radius:12px}.ubuy{border-radius:10px;background:var(--ag)}.pips i{border-radius:3px}.pips i.on{background:var(--a1)}
+.snext{border-radius:20px;background:radial-gradient(120% 150% at 100% 0%,rgba(255,150,90,.35),transparent 55%),linear-gradient(120deg,#ff3b30 0,#c90a14 55%,#6d0614)}
+.snext::before{display:none}
+#cName,#saveCode{border-radius:12px;background:rgba(0,0,0,.35);border:1px solid var(--gb)}
+#cName:focus{border-color:var(--a1);box-shadow:0 0 0 3px rgba(255,59,48,.22)}
+.toast{border-radius:999px}
+input[type=range]{height:6px;border-radius:3px}
+/* HUD */
+#pos{clip-path:none!important;border-radius:14px!important;background:var(--ag)!important;padding:2px 16px 2px 14px!important}
+#lap{border-left:0!important;border-radius:999px;padding:4px 12px!important;background:rgba(14,17,24,.72)!important;border:1px solid var(--gb)}
+#board{border-left:0!important;border-radius:14px!important;background:rgba(14,17,24,.66)!important;border:1px solid var(--gb)!important;padding:4px!important;overflow:hidden}
+#board .r{border-radius:9px!important}
+#tc{border-radius:0 0 18px 18px!important}
+.hb{border-radius:50%!important;width:40px!important;height:40px!important;background:rgba(14,17,24,.7)!important;border:1px solid var(--gb)!important;display:grid;place-items:center}
+.pad{border-radius:20px!important;background:rgba(14,17,24,.36)!important}
+.pad.gas{border-color:rgba(70,220,140,.5)!important}.pad.brake{border-color:rgba(255,95,85,.55)!important}
+.pad.on{background:rgba(255,59,48,.5)!important}.pad.gas.on{background:rgba(50,200,120,.5)!important}
+#lights{border-radius:22px}
+#editBar{border-radius:999px}#editBar button{border-radius:999px}
+#menu .scr{padding-top:calc(64px + env(safe-area-inset-top));padding-bottom:76px}
+#menu #scrTitle{padding-top:calc(24px + env(safe-area-inset-top));padding-bottom:24px}
 </style>
 </head>
 <body>
@@ -770,7 +871,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
     <div class="msel" id="mSel"></div>
     <button class="mnext" id="mNext">Weiter <span>›</span></button>
   </footer>
-  <p class="hint mhint" id="hint">Handy quer halten · PC: Pfeiltasten/WASD, Leertaste = Bremse, Shift/E = Boost, C = Kamera, P = Pause · Controller: Stick lenken, RT Gas, LT Bremse, RB Boost, Y Kamera, rechter Stick Kamera drehen, Start Pause · Menü: Steuerkreuz + A · Streckendaten: TUM racetrack-database (LGPL-3.0), bacinger/f1-circuits (MIT) · Wahrzeichen-Lage: © OpenStreetMap-Mitwirkende (ODbL) · Titelmusik: Alegend – Evermore · Rennmusik: Burgundy – All Night, Aylex – Back To Life / Blast / Okay Energy / Glorious, Walen – HEADPHONK (alle freetouse.com)</p>
+  <p class="hint mhint hidden" id="hint"></p>
   <button id="go" class="hidden"></button>
 </div>
 
@@ -794,6 +895,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
     <div class="tog"><span>Neigung umkehren</span><button class="sw" data-tog="invert" aria-label="Neigung umkehren"></button></div>
     <div class="tog"><span>Horizont waagerecht halten (Neigen)</span><button class="sw" data-tog="level" aria-label="Horizont waagerecht halten"></button></div>
     <button class="big alt" id="editCtl">✥ Touch-Tasten verschieben</button>
+    <p class="hint left">PC: Pfeiltasten/WASD lenken und Gas, Leertaste = Bremse, Shift/E = Boost, C = Kamera, P = Pause · Controller: Stick lenken, RT Gas, LT Bremse, RB Boost, Y Kamera, rechter Stick Kamera drehen, Start Pause · Menü: Steuerkreuz + A</p>
   </section></div>
   <div class="ppane" id="sExtra"><section class="panel" id="setExtra">
     <div class="tog"><span>Team RONE Racing freischalten</span><button class="sw" data-tog="rone" aria-label="Team RONE Racing freischalten"></button></div>
@@ -2100,6 +2202,28 @@ function addPlate(M, x0, x1, z0, z1, y, cls = 0) {
     ap('position', 3, [x0, y, z0, x1, y, z0, x1, y, z1, x0, y, z1]); ap('normal', 3, [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0]); ap('uv', 2, [x0 * 3, z0 * 3, x1 * 3, z0 * 3, x1 * 3, z1 * 3, x0 * 3, z1 * 3]);
     const ix = Array.from(g.index.array); ix.push(n, n + 2, n + 1, n, n + 3, n + 2); g.setIndex(ix); const c = new Uint8Array(n + 4); c.set(g.userData.cls); c.fill(cls, n); g.userData.cls = c; g.computeBoundingSphere(); }
 }
+// F2-Modell: die mitgelieferten Normalen zeigen stellenweise nach innen (uneinheitliche Dreiecksrichtung im Quellmodell) – dort spiegelte der Lack den dunklen Boden: fleckig, kontrastreich, zu dunkel.
+// Normalen neu berechnen: Flächennormalen nach außen richten (weg von der Wagenlängsachse), über verschweißte Positionen (4 mm, überbrückt Blechstöße) mitteln und zweimal glätten.
+function renormCar(M, tol = 0.004, it = 2, w = 0.5) {
+  if (!M) return; for (const Lv of M.lods) { const g = Lv.gloss; if (!g) continue;
+    const p = g.attributes.position.array, ix = g.index.array, n = p.length / 3, q = 1 / tol, key = new Map(), rep = new Int32Array(n);
+    for (let i = 0; i < n; i++) { const k = Math.round(p[i * 3] * q) + ',' + Math.round(p[i * 3 + 1] * q) + ',' + Math.round(p[i * 3 + 2] * q); let r = key.get(k); if (r === undefined) { r = i; key.set(k, i); } rep[i] = r; }
+    const A = new Float32Array(n * 3);
+    for (let f = 0; f < ix.length; f += 3) { const a = ix[f] * 3, b = ix[f + 1] * 3, c = ix[f + 2] * 3, ux = p[b] - p[a], uy = p[b + 1] - p[a + 1], uz = p[b + 2] - p[a + 2], vx = p[c] - p[a], vy = p[c + 1] - p[a + 1], vz = p[c + 2] - p[a + 2];
+      let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; const cx = (p[a] + p[b] + p[c]) / 3, cy = (p[a + 1] + p[b + 1] + p[c + 1]) / 3 - 0.45;
+      if (nx * cx + ny * cy < 0) { nx = -nx; ny = -ny; nz = -nz; }
+      for (let k = 0; k < 3; k++) { const r = rep[ix[f + k]] * 3; A[r] += nx; A[r + 1] += ny; A[r + 2] += nz; } }
+    let N = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) { const r = rep[i] * 3, l = Math.hypot(A[r], A[r + 1], A[r + 2]) || 1; N[i * 3] = A[r] / l; N[i * 3 + 1] = A[r + 1] / l; N[i * 3 + 2] = A[r + 2] / l; }
+    for (let t = 0; t < it; t++) { const B = new Float32Array(n * 3), Mx = new Float32Array(n * 3);
+      for (let f = 0; f < ix.length; f += 3) for (let k = 0; k < 3; k++) { const a = rep[ix[f + k]] * 3; for (const o of [ix[f + (k + 1) % 3] * 3, ix[f + (k + 2) % 3] * 3]) { B[a] += N[o]; B[a + 1] += N[o + 1]; B[a + 2] += N[o + 2]; } }
+      for (let i = 0; i < n; i++) { const r = rep[i] * 3, l = Math.hypot(B[r], B[r + 1], B[r + 2]) || 1, x = N[i * 3] * (1 - w) + B[r] / l * w, y = N[i * 3 + 1] * (1 - w) + B[r + 1] / l * w, z = N[i * 3 + 2] * (1 - w) + B[r + 2] / l * w, m = Math.hypot(x, y, z) || 1; Mx[i * 3] = x / m; Mx[i * 3 + 1] = y / m; Mx[i * 3 + 2] = z / m; }
+      N = Mx; }
+    g.attributes.normal.array.set(N); g.attributes.normal.needsUpdate = true; }
+}
+renormCar(CARM2);
+// Lack-Shader: Normale immer zum Betrachter drehen (Flächen mit verdrehter Dreiecksrichtung spiegelten sonst den Boden statt des Himmels)
+function viewFacing(sh) { sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\n if (dot(normal, vViewPosition) < 0.0) normal = -normal;\n nonPerturbedNormal = normal;'); }
 addPlate(CARM2, -0.115, 0.115, 0.69, 0.94, 0.681);
 // Die F2-Radmodelle haben Sturz eingebaut (vorn ca. 1,7°, hinten ca. 1,0°, links/rechts gespiegelt). Gedreht wird aber um die X-Achse -> die Räder eierten. Radachse hier gerade auf X ausrichten (Ebene durch die Reifenflanken, Drehung um Z).
 function straightenWheels(C) { if (!C) return;
@@ -2149,10 +2273,10 @@ const mkWheelM = C => C ? C.lods.map((L, l) => {
   return { L: v(L.wheelL, hf), R: v(L.wheelR, hf), RL: v(L.rwheelL, hr), RR: v(L.rwheelR, hr) };
 }) : null;
 const WHEELM = mkWheelM(CARM), WHEELM2 = mkWheelM(CARM2);
-const MODELS = { f1: CARM ? { C: CARM, W: WHEELM, helm: [0.79, 0.18], rl: [0.315, -2.335], tv: [0, 1.04, 0.02, 2.4] } : null, f2: CARM2 ? { C: CARM2, W: WHEELM2, helm: [0.80, 0.21], rl: [0.40, -2.468], rlS: [0.085, 0.075, 0.02], swPos: [0, 0.62, 0.68], cam: [0, 0.80, 0.26, 0.30], tv: [0, 1.04, 0.02, 2.4] } : null };
+const MODELS = { f1: CARM ? { C: CARM, W: WHEELM, helm: [0.79, 0.18], rl: [0.315, -2.335], tv: [0, 1.04, 0.02, 2.4] } : null, f2: CARM2 ? { C: CARM2, W: WHEELM2, helm: [0.80, 0.21], rl: [0.40, -2.468], rlS: [0.085, 0.075, 0.02], swPos: [0, 0.625, 0.68], swS: 0.78, cam: [0, 0.80, 0.26, 0.30],   /* swS: Lenkrad im F2 kleiner – die Kamera sitzt dort viel näher dran */ tv: [0, 1.04, 0.02, 2.4] } : null };
 const COMPOUNDS = COMPOUNDS_;
 const WMAT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .88, metalness: .05, side: THREE.DoubleSide });
-const MIRMAT = new THREE.MeshBasicMaterial({ color: 0x9fc4e8, side: THREE.DoubleSide, fog: false });
+const MIRMAT = new THREE.MeshStandardMaterial({ color: 0xdfe6ee, metalness: 1, roughness: .05, envMapIntensity: 1.15, side: THREE.DoubleSide });   // Spiegelglas: spiegelt die Umgebung (vorher eine einfarbig hellblaue, selbstleuchtende Fläche – im Cockpit ein weißer Klotz)
 const MATTE = new THREE.MeshStandardMaterial({ vertexColors: true, map: TEX.carbon, normalMap: TEX.carbonN, normalScale: new THREE.Vector2(.5, .5), roughness: .42, metalness: .35, side: THREE.DoubleSide });
 const col = h => new THREE.Color(h);
 function wheelGeo(w, comp) {
@@ -2292,12 +2416,24 @@ function liveryMat(tk, gloss) { const code = LIVERY[tk]; if (!code) return gloss
   };
   gloss.customProgramCacheKey = () => 'livery-' + tk; return gloss; }
 // Halo für die TV-Kamera: das Modell-Halo hat an der Mittelstrebe Dreiecke, die sich gegenseitig durchdringen (gezackter Rand von oben gesehen).
-// Statt des Modells wird hier ein sauberes Rohr (Radius 2,4 cm) entlang zweier Bögen von den hinteren Streben zur Frontstrebe gezogen – gleiche Hüllbox, einfarbig.
-function cleanHalo(halo, c) {
-  if (!halo.boundingBox) halo.computeBoundingBox(); const b = halo.boundingBox, hw = Math.max(Math.abs(b.min.x), b.max.x), h = b.max.y - b.min.y, L = b.max.z - b.min.z, y0 = b.min.y, z0 = b.min.z, V = THREE.Vector3;
-  const arc = sg => new THREE.CatmullRomCurve3([new V(sg * hw * 0.9, y0 + h * 0.0, z0 + L * 0.1), new V(sg * hw * 0.98, y0 + h * 0.42, z0 + L * 0.27), new V(sg * hw * 0.78, y0 + h * 0.78, z0 + L * 0.5), new V(sg * hw * 0.34, y0 + h * 0.95, z0 + L * 0.78), new V(0, y0 + h, z0 + L * 0.93)]);
-  const strut = new THREE.CatmullRomCurve3([new V(0, y0 + h, z0 + L * 0.93), new V(0, y0 + h * 0.62, z0 + L * 0.98), new V(0, y0 + h * 0.1, z0 + L)]);
-  const parts = [[arc(-1), 0.024], [arc(1), 0.024], [strut, 0.028]].map(([cv, r]) => new THREE.TubeGeometry(cv, 26, r, 8, false));
+// Statt des Modells wird ein sauberes Halo entlang der vermessenen Mittellinie des Modell-Halos gezogen: EIN durchgehender, vorn runder Bügel (U-Form wie beim echten Halo, kein spitzes V)
+// mit flach-ovalem Querschnitt (7 cm breit, 5,4 cm hoch) und eine schmale, in Fahrtrichtung lange Mittelstrebe, die sich oben in den Bügel verbreitert.
+const HALO_SPEC = {
+  f1: { hoop: [[0.292, 0.745, 0.02], [0.300, 0.762, 0.22], [0.288, 0.792, 0.36], [0.262, 0.815, 0.48], [0.205, 0.835, 0.58], [0.125, 0.848, 0.68], [0.05, 0.853, 0.755]], top: [0.854, 0.778], strut: [[0, 0.848, 0.775], [0, 0.765, 0.925], [0, 0.668, 1.055]] },
+  f2: { hoop: [[0.300, 0.745, 0.05], [0.298, 0.800, 0.15], [0.285, 0.845, 0.22], [0.250, 0.866, 0.30], [0.205, 0.878, 0.36], [0.140, 0.887, 0.425], [0.06, 0.891, 0.475]], top: [0.892, 0.497], strut: [[0, 0.886, 0.495], [0, 0.800, 0.69], [0, 0.703, 0.86]] },
+};
+function sweepGeo(curve, n, sec, ax) {   // Profil entlang einer Kurve ziehen: sec(t) -> [halbe Breite, halbe Höhe]; ax = feste Querachse (Mittelstrebe) oder null (Bügel: quer = Tangente × oben)
+  const R = 14, pos = [], nrm = [], uv = [], idx = [], V = THREE.Vector3, t = new V(), sd = new V(), up = new V(), c = new V(), Y = new V(0, 1, 0);
+  for (let i = 0; i <= n; i++) { const u = i / n; curve.getPoint(u, c); curve.getTangent(u, t); if (ax) sd.copy(ax); else sd.crossVectors(t, Y).normalize(); up.crossVectors(sd, t).normalize(); const [a, b] = sec(u);
+    for (let k = 0; k < R; k++) { const an = k / R * Math.PI * 2, cs = Math.cos(an), sn = Math.sin(an); pos.push(c.x + sd.x * a * cs + up.x * b * sn, c.y + sd.y * a * cs + up.y * b * sn, c.z + sd.z * a * cs + up.z * b * sn);
+      const nx = sd.x * cs / a + up.x * sn / b, ny = sd.y * cs / a + up.y * sn / b, nz = sd.z * cs / a + up.z * sn / b, l = Math.hypot(nx, ny, nz) || 1; nrm.push(nx / l, ny / l, nz / l); uv.push(k / R, u); } }
+  for (let i = 0; i < n; i++) for (let k = 0; k < R; k++) { const a = i * R + k, b = i * R + (k + 1) % R, d = a + R, e = b + R; idx.push(a, d, b, b, d, e); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); return g;
+}
+function cleanHalo(kind, c) {
+  const S = HALO_SPEC[kind] || HALO_SPEC.f1, V = THREE.Vector3, R = S.hoop.map(p => new V(p[0], p[1], p[2])), L = S.hoop.map(p => new V(-p[0], p[1], p[2])).reverse();
+  const hoop = new THREE.CatmullRomCurve3([...R, new V(0, S.top[0], S.top[1]), ...L], false, 'centripetal'), strut = new THREE.CatmullRomCurve3(S.strut.map(p => new V(p[0], p[1], p[2])));
+  const parts = [sweepGeo(hoop, 72, () => [0.035, 0.027], null), sweepGeo(strut, 14, u => [lerp(0.034, 0.015, Math.min(1, u * 2.2)), lerp(0.05, 0.034, u)], new V(1, 0, 0))];
   const g = mergeParts(parts.map(t => [t, c]), true); g.computeBoundingSphere(); return g;
 }
 function teamTemplate(tk) {
@@ -2306,9 +2442,15 @@ function teamTemplate(tk) {
   if (MD) {
     const T = T0, isF2 = T.kind === 'f2', cB = col(T.body), cA = col(T.acc), cT = col(T.tip), cLow = col(T.low ?? T.body), cC = col(0x4a4f57), cD = col(0x16181b);
     const pc = (k, x, y, z, o) => isF2 && k === 7 ? o.copy(cD) : isF2 && k === 0 && (z > 2.55 || (z > 2.15 && y < 0.36) || (z < -1.9 && y > 0.6)) ? o.copy(z > 2.55 ? cT : cA) : o.copy(k === 1 ? cA : k === 2 ? cT : k === 3 ? cC : k === 4 ? cD : (T.low !== undefined && y < T.split ? cLow : cB));
-    const gloss = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: isF2 ? .32 : .3, metalness: T.metal * (isF2 ? 0.6 : 0.7), clearcoat: isF2 ? .45 : 1, clearcoatRoughness: isF2 ? .35 : .06, envMapIntensity: isF2 ? 1.2 : 1.25, side: THREE.DoubleSide });   /* F2: weicher Klarlack – der scharfe Klarlack spiegelte Asphalt und Schatten als schwarze Flecken */   /* F2 auf F1-Niveau: die dunkle Umgebung (Asphalt, Horizontband) spiegelt sich weich statt schwarz */   // F2: unscharfe, schwache Spiegelung – scharfe Umgebungsspiegelung (Gras/Tribünen) wirkte fleckig-grün
+    const gloss = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: isF2 ? .32 : .3, metalness: T.metal * (isF2 ? 0.6 : 0.7), clearcoat: isF2 ? .85 : 1, clearcoatRoughness: isF2 ? .12 : .06, envMapIntensity: isF2 ? 1.15 : 1.25, side: THREE.DoubleSide });   /* F2: Normalen sind jetzt bereinigt (renormCar) – der Lack darf fast so klar spiegeln wie beim F1 */
+    if (isF2) {   // Farbfelder (Nase, Flügel, Unterteil) im Shader je Bildpunkt statt je Eckpunkt -> gerade, scharfe Farbgrenzen statt gezackter Dreieckskanten
+      const v3 = c => 'vec3(' + c.r.toFixed(4) + ',' + c.g.toFixed(4) + ',' + c.b.toFixed(4) + ')';
+      gloss.onBeforeCompile = sh => { viewFacing(sh);
+        sh.vertexShader = 'attribute float aCls; varying float vCls; varying vec3 vLP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vLP = position; vCls = aCls;');
+        sh.fragmentShader = 'varying float vCls; varying vec3 vLP;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 0.5) { diffuseColor.rgb = vLP.z > 2.55 ? ' + v3(cT) + ' : ((vLP.z > 2.15 && vLP.y < 0.36) || (vLP.z < -1.9 && vLP.y > 0.6)) ? ' + v3(cA) + ' : ' + (T.low !== undefined ? 'vLP.y < ' + T.split.toFixed(3) + ' ? ' + v3(cLow) + ' : ' : '') + v3(cB) + '; }'); };
+      gloss.customProgramCacheKey = () => 'f2paint-' + tk; }   /* F2: weicher Klarlack – der scharfe Klarlack spiegelte Asphalt und Schatten als schwarze Flecken */   /* F2 auf F1-Niveau: die dunkle Umgebung (Asphalt, Horizontband) spiegelt sich weich statt schwarz */   // F2: unscharfe, schwache Spiegelung – scharfe Umgebungsspiegelung (Gras/Tribünen) wirkte fleckig-grün
     const haloMat = gloss.clone();   // Halo in der TV-Kamera: einfarbig in der Fahrzeugfarbe, ohne Lackierungs-Verlauf (Material vor dem Livery-Shader kopieren)
-    return (TPL[tk] = { model: true, M: MD, lods: MD.C.lods.map(L => ({ gloss: paintGeo(L.gloss, pc), matte: paintGeo(L.matte, pc) })), halo: paintGeo(MD.C.halo, pc), haloFlat: cleanHalo(MD.C.halo, cB), haloMat, glossMat: liveryMat(tk, gloss) });
+    return (TPL[tk] = { model: true, M: MD, lods: MD.C.lods.map(L => ({ gloss: paintGeo(L.gloss, pc), matte: paintGeo(L.matte, pc) })), halo: paintGeo(MD.C.halo, pc), haloFlat: cleanHalo(isF2 ? 'f2' : 'f1', isF2 ? cD : T.low !== undefined ? cLow : cB), haloMat,   /* Halo-Farbe wie am Auto: F2 schwarz, zweifarbige F1-Lackierungen in der dunklen Grundfarbe */ glossMat: liveryMat(tk, gloss) });
   }
   const T = TEAMS[tk];
   const cB = col(T.body), cA = col(T.acc), cT = col(T.tip), cLow = col(T.low ?? T.body), cC = col(0x5a6068), cD = col(0x16181b), cL = col(0xff1a0a), cW = col(0xe9ecef);
@@ -2758,11 +2900,10 @@ function kartDriver(d, T) {
   const body = new THREE.Mesh(mergeParts(parts), KDRV.suit); body.castShadow = true; g.add(body);
   const hp = K3(0, 43, 54), helm = new THREE.Group(); helm.position.copy(hp);
   const hs = (r, ...a) => new THREE.SphereGeometry(r * 1.3, ...a).scale(1, 0.97, 1.12), hc = col(d.helmet), ha = helmAcc(d.helmet, T.acc);
-  const shell = new THREE.Mesh(mergeParts([[hs(0.122, 22, 15), hc],
-    [hs(0.1235, 22, 4, 0, Math.PI * 2, 0.15, 0.22), ha],                                                       // Zierstreifen
-    [new THREE.SphereGeometry(0.1, 14, 9).scale(1.1, 0.6, 1.02).translate(0, -0.078, 0.064), hc],               // Kinnbügel
-    [new THREE.BoxGeometry(0.15, 0.012, 0.07).rotateX(0.5).translate(0, 0.118, -0.135), ha],                    // Abrisskante hinten oben
-    [hs(0.1245, 16, 6, -Math.PI / 2 - 0.95, 1.9, 1.15, 0.42).rotateY(Math.PI), col(0x11161f)]]), KDRV.helm);                 // Visier
+  void ha;   // Helm glatt und rund: nur Schale, Kinnpartie und Visier – keine Aufsätze (Zierstreifen und Abrisskante entfernt)
+  const shell = new THREE.Mesh(mergeParts([[hs(0.122, 28, 20), hc],
+    [new THREE.SphereGeometry(0.1, 18, 12).scale(1.1, 0.6, 1.02).translate(0, -0.078, 0.064), hc],               // Kinnbügel
+    [hs(0.1232, 20, 8, -Math.PI / 2 - 0.95, 1.9, 1.15, 0.42).rotateY(Math.PI), col(0x11161f)]]), KDRV.helm);                 // Visier
   shell.castShadow = true; helm.add(shell); helm.rotation.x = 0.05;
   g.add(helm);
   return g;
@@ -2806,9 +2947,10 @@ function makeKart(d, T) {
   swPivot.position.set(0, 0.5005, 0.1235); swPivot.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(axx, ay, az)); swPivot.add(swSpin); swSpin.add(kartSteeringWheel(T)); g.add(swPivot);
   // Anzeige (wie ein Rennkart-Display): Halterung am Lenkrohr hinter dem Lenkrad, Gehäuse über dem Kranz, Bildschirm zeigt Tempo und Drehzahl (nur der Spieler-Kart wird neu gezeichnet)
   const dcv = document.createElement('canvas'); dcv.width = 192; dcv.height = 96; const dtex = new THREE.CanvasTexture(dcv); dtex.colorSpace = THREE.SRGBColorSpace; dtex.anisotropy = 4; kartDispDraw(dcv, 0, 0, true); dtex.needsUpdate = true;
-  const stalk = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.25, 0.012), new THREE.MeshStandardMaterial({ color: 0x8f969e, metalness: .85, roughness: .35 })); stalk.position.set(0, 0.145, -0.03);
-  const hous = new THREE.Mesh(new THREE.BoxGeometry(0.21, 0.125, 0.026), new THREE.MeshStandardMaterial({ color: 0x15171a, roughness: .5 })); hous.position.set(0, 0.285, -0.012); hous.rotation.x = -0.22;
-  const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.19, 0.095), new THREE.MeshBasicMaterial({ map: dtex, toneMapped: false })); scr.position.set(0, 0, 0.0135); hous.add(scr); swPivot.add(stalk, hous);
+  // Sitzt wie beim echten Rennkart IM Lenkrad (oberes Feld zwischen Nabe und Kranz, dort sind keine Speichen) – vorher stand sie über dem Kranz mitten im Blickfeld
+  const stalk = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.085, 0.012), new THREE.MeshStandardMaterial({ color: 0x8f969e, metalness: .85, roughness: .35 })); stalk.position.set(0, 0.06, -0.022);
+  const hous = new THREE.Mesh(new THREE.BoxGeometry(0.158, 0.08, 0.02), new THREE.MeshStandardMaterial({ color: 0x15171a, roughness: .5 })); hous.position.set(0, 0.1, -0.006);
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.146, 0.068), new THREE.MeshBasicMaterial({ map: dtex, toneMapped: false })); scr.position.set(0, 0, 0.0105); hous.add(scr); swPivot.add(stalk, hous);
   const rl = new THREE.Object3D(), label = carLabel(d, T); label.position.y = 1.35; g.add(label); scene.add(g);
   return { g, fl, fr, wfl, wfr, rr, label, helm: drv, rl, kart: true, wr: 0.2, swSpin, sw: swPivot, dcv, dtex, dT: 0, cam: [0, 0.74, -0.5, 0.3], camS: 0.72 };
 }
@@ -3156,7 +3298,7 @@ function mcCityTop(x, z) { return 170 + 20 * Math.sin(x * 0.0061 + z * 0.0023) *
 function mcGroundTint(ch) { const p = ch.geometry.attributes.position, n = ch.geometry.attributes.normal, c = new Float32Array(p.count * 3), ox = ch.position.x, oz = ch.position.z;
   for (let k = 0; k < p.count; k++) { const x = p.getX(k) + ox, z = p.getZ(k) + oz, y = p.getY(k), ny = n.getY(k), top = mcCityTop(x, z), f = clamp((y - top + 25) / 40, 0, 1), rock = clamp((0.74 - ny) / 0.2, 0, 1) * clamp((y - 60) / 80, 0, 1);
     const nz = Math.sin(x * 0.043 + Math.sin(z * 0.031) * 2) * Math.sin(z * 0.047 + Math.sin(x * 0.029) * 2), dry = clamp(0.5 + nz * 0.9, 0, 1);   /* Flecken: dunkle Steineichen/Pinien und trockene, olivbraune Macchia */
-    const tw = 0.5 + 0.5 * Math.sin(x * 0.19 + Math.sin(z * 0.13) * 3) * Math.sin(z * 0.17), hr = lerp(0.36, 0.52, tw), hg = lerp(0.24, 0.36, tw), hb = lerp(0.17, 0.26, tw);   /* Dächer und Mauern: warme Terrakotta-/Ockertöne */
+    const tw = 0.5 + 0.5 * Math.sin(x * 0.19 + Math.sin(z * 0.13) * 3) * Math.sin(z * 0.17), hr = lerp(0.2, 0.3, tw), hg = lerp(0.2, 0.295, tw), hb = lerp(0.205, 0.3, tw);   /* Stadtboden: graues Pflaster (Gehwege, Gassen, Plätze) – vorher Terrakotta-Braun, das zwischen den Häusern wie nackte Erde aussah */
     let r = lerp(hr, lerp(0.045, 0.17, dry), f), g = lerp(hg, lerp(0.085, 0.15, dry), f), b = lerp(hb, lerp(0.03, 0.065, dry), f);   /* Macchia-Farben linear (sRGB ≈ dunkelgrün bis olivbraun) */   /* unten Stadt: graue Straßen und Plätze */
     r = lerp(r, 0.8, rock); g = lerp(g, 0.77, rock); b = lerp(b, 0.7, rock); c[k * 3] = r; c[k * 3 + 1] = g; c[k * 3 + 2] = b; }
   ch.geometry.setAttribute('color', new THREE.BufferAttribute(c, 3)); ch.material.vertexColors = true; ch.material.needsUpdate = true; }
@@ -4448,11 +4590,63 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     // nächstgelegene wirklich freie Stelle (Spirale bis 250 m) – sonst kein Gebäude, damit nichts in die Strecke ragt
     const place = (pt, r, need = 6) => { const [x0, z0] = pt; for (let d = 0; d <= 250; d += 6) for (let a = 0; a < Math.PI * 2; a += d ? 6 / d : 7) { const x = x0 + Math.cos(a) * d, z = z0 + Math.sin(a) * d;
         if (trackFree(x, z, need + r) && !inMarina(x, z)) { excl.push([x, z, r + 8]); return [x, z]; } } return null; };
-    // Casino de Monte-Carlo: Belle-Époque-Bau, zwei Ecktürme mit grünen Kupferhauben, Mittelkuppel
-    const pCas = place(M.casino, 38); if (pCas) { const [x, z] = pCas, g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = 0.35; trackGroup.add(g);
-      const body = new THREE.Mesh(new THREE.BoxGeometry(64, 22, 34).translate(0, 11, 0), facadeMat({ wall: '#efe4c8', frame: '#fff7e6', balcony: '#f6ecd4', glass: '#40382c', glassTop: '#b8a47a', litP: .5, emiI: 1.1, roof: '#6aa08c', seed: 21, bays: 10, floors: 8, bayM: 4.8, floorM: 5.5 })); g.add(body);
-      for (const sx of [-1, 1]) { const tw = new THREE.Mesh(new THREE.BoxGeometry(10, 34, 10).translate(sx * 30, 17, 15), cream); g.add(tw); const cap = new THREE.Mesh(new THREE.ConeGeometry(7.6, 12, 4).rotateY(Math.PI / 4).translate(sx * 30, 40, 15), copper); g.add(cap); }
-      g.add(new THREE.Mesh(new THREE.SphereGeometry(11, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2).translate(0, 22, -2), copper)); g.add(new THREE.Mesh(new THREE.BoxGeometry(66, 3, 36).translate(0, 23, 0), stone)); }
+    // Casino de Monte-Carlo (nach Foto der Platzseite): cremefarbener Belle-Époque-Bau – Mittelrisalit mit Vordach und Uhrengiebel, flankiert von zwei schlanken Türmen mit offener Laterne und Kuppelhaube,
+    // dahinter die große kupfergrüne Kuppel auf quadratischem Grundriss, grünblaue Mansarddächer, Mosaikfries unter dem Gesims, hohe Bogenfenster im Hauptgeschoss, niedrigere Seitenflügel mit Eckpavillons
+    const pCas = place(M.casino, 38); if (pCas) { const [x, z] = pCas, g0 = new THREE.Group(), g = new THREE.Group(); g0.position.set(x, 0, z); g0.rotation.y = 0.35; g0.add(g); trackGroup.add(g0);
+      const bay = (emi) => { const t = canvasTex(256, 512, (c, w, h) => {
+          const Y = f => h * (1 - f);   // f = Höhe 0 (Boden) … 1 (Gesims)
+          if (emi) { c.fillStyle = '#000'; c.fillRect(0, 0, w, h); } else { c.fillStyle = '#e9dcc0'; c.fillRect(0, 0, w, h);
+            for (let k = 0; k < 9; k++) { c.fillStyle = 'rgba(120,96,60,.16)'; c.fillRect(0, Y(0.04 + k * 0.042), w, 2); }   // Rustika-Fugen im Erdgeschoss
+            c.fillStyle = '#f6edd8'; c.fillRect(0, Y(0.415), w, h * 0.03); c.fillStyle = 'rgba(90,70,40,.3)'; c.fillRect(0, Y(0.385), w, 3);   // Gurtgesims
+            for (const px of [0, w - 26]) { c.fillStyle = '#f3e8cf'; c.fillRect(px, Y(0.86), 26, h * 0.445); c.fillStyle = 'rgba(90,70,40,.22)'; c.fillRect(px ? px : 24, Y(0.86), 2, h * 0.445); c.fillStyle = '#fbf3df'; c.fillRect(px - 3, Y(0.875), 32, 10); }   // Pilaster mit Kapitell
+            c.fillStyle = '#2f6f86'; c.fillRect(0, Y(0.965), w, h * 0.09); c.fillStyle = '#3f8ea3'; for (let k = 0; k < 8; k++) c.fillRect(k * 32 + 4, Y(0.955), 24, h * 0.07);   // Mosaikfries
+            c.fillStyle = '#e9dcc0'; c.beginPath(); c.arc(w / 2, Y(0.92), 19, 0, 7); c.fill(); c.fillStyle = '#d2a84e'; c.beginPath(); c.arc(w / 2, Y(0.92), 14, 0, 7); c.fill(); c.fillStyle = '#2f6f86'; c.beginPath(); c.arc(w / 2, Y(0.92), 8, 0, 7); c.fill();   // Medaillon
+            c.fillStyle = '#fbf3df'; c.fillRect(0, 0, w, h * 0.035); c.fillStyle = 'rgba(90,70,40,.35)'; for (let k = 0; k < 16; k++) c.fillRect(k * 16 + 3, h * 0.035, 9, 5);   // Kranzgesims mit Zahnschnitt
+            c.fillStyle = '#f6edd8'; c.fillRect(46, Y(0.47), w - 92, h * 0.045); c.fillStyle = 'rgba(90,70,40,.4)'; for (let k = 0; k < 9; k++) c.fillRect(54 + k * 17, Y(0.462), 5, h * 0.03); }   // Balustrade unter dem Fenster
+          const arch = (cx, yb, yt, hw, fill) => { c.fillStyle = fill; c.beginPath(); c.moveTo(cx - hw, Y(yb)); c.lineTo(cx - hw, Y(yt) + hw); c.arc(cx, Y(yt) + hw, hw, Math.PI, 0); c.lineTo(cx + hw, Y(yb)); c.closePath(); c.fill(); };
+          if (!emi) { arch(w / 2, 0.47, 0.845, 62, '#fbf3df'); arch(w / 2, 0, 0.345, 66, '#fbf3df'); }
+          { const gd = c.createLinearGradient(0, Y(0.83), 0, Y(0.47)); if (emi) { gd.addColorStop(0, '#3a2c14'); gd.addColorStop(1, '#8a6a34'); } else { gd.addColorStop(0, '#31404c'); gd.addColorStop(1, '#55504a'); } arch(w / 2, 0.475, 0.83, 52, gd); }   // hohes Bogenfenster
+          { const gd = c.createLinearGradient(0, Y(0.33), 0, Y(0)); if (emi) { gd.addColorStop(0, '#b98a3e'); gd.addColorStop(1, '#ffd592'); } else { gd.addColorStop(0, '#4a3c28'); gd.addColorStop(1, '#8a6c40'); } arch(w / 2, 0, 0.33, 56, gd); }   // Bogentür, warm erleuchtet
+          if (!emi) { c.fillStyle = '#fbf3df'; c.fillRect(w / 2 - 2, Y(0.83), 4, h * 0.355); c.fillRect(w / 2 - 52, Y(0.66), 104, 4); c.fillRect(w / 2 - 2, Y(0.33), 4, h * 0.33); c.fillRect(w / 2 - 56, Y(0.2), 112, 4); }   // Sprossen
+        }); t.userData.own = true; t.wrapS = THREE.RepeatWrapping; return t; };
+      const wallM = new THREE.MeshStandardMaterial({ map: bay(false), emissiveMap: bay(true), emissive: 0xffffff, emissiveIntensity: TH.night ? 1.3 : 0.3, roughness: .85, metalness: 0 });
+      const creamM = lam({ color: 0xe2d3b0 }), stoneM = lam({ color: 0xeadfc4 }), roofM = new THREE.MeshStandardMaterial({ color: 0x4f7473, roughness: .65, metalness: .2 }), domeM = new THREE.MeshStandardMaterial({ color: 0x7fa890, roughness: .5, metalness: .35 }), ironM = new THREE.MeshStandardMaterial({ color: 0x24272b, roughness: .5, metalness: .6 });
+      const add = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; g.add(m); return m; };
+      const wall = (w, h, bays, px, y0, pz, ry) => { const pg = new THREE.PlaneGeometry(w, h), uv = pg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, uv.getX(i) * bays); const m = add(pg, wallM); m.position.set(px, y0 + h / 2, pz); m.rotation.y = ry; };
+      const block = (W, D, H, cx, cz, nF, nS) => { wall(W, H, nF, cx, 0, cz + D / 2, 0); wall(W, H, nF, cx, 0, cz - D / 2, Math.PI); wall(D, H, nS, cx + W / 2, 0, cz, Math.PI / 2); wall(D, H, nS, cx - W / 2, 0, cz, -Math.PI / 2);
+        add(new THREE.BoxGeometry(W + 1.4, 0.8, D + 1.4).translate(cx, H + 0.4, cz), stoneM); };   // Kranzgesims
+      const mansard = (W, D, h, y, cx, cz, top = 0.74) => add(new THREE.CylinderGeometry(top, 1, 1, 4, 1).rotateY(Math.PI / 4).scale(W / 1.4142, h, D / 1.4142).translate(cx, y + h / 2, cz), roofM);
+      const cupola = (cx, y, cz, r) => { const d = new THREE.SphereGeometry(r, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 1.35, 1).translate(cx, y, cz); add(d, domeM);
+        add(new THREE.CylinderGeometry(r * 0.26, r * 0.3, r * 0.6, 10).translate(cx, y + r * 1.6, cz), creamM); add(new THREE.SphereGeometry(r * 0.34, 10, 6).translate(cx, y + r * 2.05, cz), domeM); add(new THREE.ConeGeometry(r * 0.09, r * 1.1, 6).translate(cx, y + r * 2.8, cz), ironM); };
+      const W = 44, D = 26, H = 16, F = D / 2;
+      block(W, D, H, 0, 0, 7, 4); mansard(W + 0.6, D + 0.6, 4.6, H + 0.8, 0, 0);
+      add(new THREE.BoxGeometry(W * 0.74, 0.5, D * 0.74).translate(0, H + 5.6, 0), stoneM);   // Dachkrone
+      // Mittelrisalit mit Vordach, Freitreppe und Uhrengiebel
+      block(18, 5, H + 2, 0, F + 2.5, 3, 1); mansard(18.6, 5.6, 3.2, H + 2.8, 0, F + 2.5, 0.8);
+      add(new THREE.BoxGeometry(22, 0.5, 5).translate(0, 0.25, F + 7.5), stoneM); add(new THREE.BoxGeometry(19, 0.5, 3).translate(0, 0.75, F + 6.5), stoneM);
+      add(new THREE.BoxGeometry(13, 0.3, 4.6).translate(0, 5.2, F + 7.2), ironM); for (const sx of [-1, 1]) for (const dz of [5.3, 9.2]) add(new THREE.CylinderGeometry(0.11, 0.11, 4.4, 8).translate(sx * 6.1, 3, F + dz), ironM);   // Vordach (Marquise) auf Eisenstützen
+      add(new THREE.PlaneGeometry(12.4, 4).rotateX(Math.PI / 2).translate(0, 5.03, F + 7.2), new THREE.MeshStandardMaterial({ color: 0x3a2c18, emissive: 0xffc878, emissiveIntensity: TH.night ? 1.6 : 0.5 }));   // warmes Licht unter dem Vordach
+      add(new THREE.BoxGeometry(7, 4.4, 1.2).translate(0, H + 5, F + 4.6), creamM); add(new THREE.CylinderGeometry(0.01, 1, 1, 4, 1).rotateY(Math.PI / 4).scale(5.6, 1.8, 1.2).translate(0, H + 8.1, F + 4.6), stoneM);
+      add(new THREE.CircleGeometry(1.5, 28).translate(0, H + 5.2, F + 5.23), new THREE.MeshStandardMaterial({ color: 0xfbf7ea, emissive: 0xfff1c8, emissiveIntensity: TH.night ? 1.2 : 0.25, roughness: .5 })); add(new THREE.TorusGeometry(1.55, 0.12, 6, 28).translate(0, H + 5.2, F + 5.22), new THREE.MeshStandardMaterial({ color: 0xc9a24a, roughness: .4, metalness: .7 }));   // Uhr
+      // die zwei Türme: Schaft, Gesims, offene Laterne aus vier Pfeilern, Kuppelhaube mit Spitze
+      for (const sx of [-1, 1]) { const tx = sx * 9.2, tz = F + 2.4;
+        add(new THREE.BoxGeometry(4.6, 9.5, 4.6).translate(tx, H + 2.8 + 4.75, tz), creamM); add(new THREE.BoxGeometry(5.6, 0.6, 5.6).translate(tx, H + 12.6, tz), stoneM);
+        for (const a of [-1, 1]) for (const b of [-1, 1]) add(new THREE.BoxGeometry(0.7, 4.2, 0.7).translate(tx + a * 1.75, H + 15, tz + b * 1.75), creamM);
+        add(new THREE.BoxGeometry(1.6, 4.2, 1.6).translate(tx, H + 15, tz), ironM);   // dunkler Kern = Blick durch die offene Laterne
+        add(new THREE.BoxGeometry(5.2, 0.5, 5.2).translate(tx, H + 17.35, tz), stoneM); cupola(tx, H + 17.6, tz, 2.5); }
+      // große Kuppel: quadratischer Tambour, Kuppel mit abgerundet-quadratischem Grundriss, Krone mit Laterne
+      { const cz = -1, yb = H + 5.4; add(new THREE.BoxGeometry(16.5, 3.2, 16.5).translate(0, yb + 1.6, cz), creamM); add(new THREE.BoxGeometry(17.5, 0.5, 17.5).translate(0, yb + 3.45, cz), stoneM);
+        const dg = new THREE.SphereGeometry(1, 32, 14, 0, Math.PI * 2, 0, Math.PI / 2), P = dg.attributes.position;
+        for (let i = 0; i < P.count; i++) { const px = P.getX(i), pz = P.getZ(i), a = Math.atan2(pz, px), k = 1 / Math.pow(Math.pow(Math.abs(Math.cos(a)), 4) + Math.pow(Math.abs(Math.sin(a)), 4), 0.25); P.setX(i, px * k); P.setZ(i, pz * k); }
+        dg.computeVertexNormals(); dg.scale(7.6, 8.4, 7.6).translate(0, yb + 3.7, cz); add(dg, domeM);
+        add(new THREE.CylinderGeometry(2.3, 2.7, 1.1, 20).translate(0, yb + 12.3, cz), creamM); cupola(0, yb + 12.8, cz, 1.7); }
+      // Seitenflügel: niedriger, eigenes Mansarddach, Eckpavillon mit Haube an der Platzseite
+      for (const sx of [-1, 1]) { const cx = sx * (W / 2 + 6.5), wH = 11.5; block(13, 20, wH, cx, -1, 2, 3); mansard(13.6, 20.6, 3.6, wH + 0.8, cx, -1);
+        const ex = sx * (W / 2 + 10.2), ez = 9; add(new THREE.BoxGeometry(5.2, wH + 3.4, 5.2).translate(ex, (wH + 3.4) / 2, ez), creamM); add(new THREE.BoxGeometry(6, 0.5, 6).translate(ex, wH + 3.65, ez), stoneM); cupola(ex, wH + 3.9, ez, 2.5); }
+      // am Hang: Gebäude auf den höchsten Geländepunkt unter dem Grundriss heben (sonst versank das Erdgeschoss bergseitig im Platz), darunter ein Steinsockel
+      { const cr = Math.cos(0.35), sr = Math.sin(0.35), y0 = placeY(x, z); let top = y0; for (const lx of [-36, -18, 0, 18, 36]) for (const lz of [-14, 0, 14, 22]) top = Math.max(top, placeY(x + lx * cr + lz * sr, z - lx * sr + lz * cr));
+        top = Math.max(top, ELEV[nearestDist(x, z)[1]] || 0);   /* mindestens Streckenniveau: der Casino-Platz liegt auf Höhe der Fahrbahn */
+        g.position.y = Math.min(18, top - y0) + 0.2; add(new THREE.BoxGeometry(72, 20, 40).translate(0, -10.05, 3), stoneM); } }
     // Hôtel de Paris: langer Bau mit Mansarddach
     const pHdp = place(M.hdp, 48); if (pHdp) { const [x, z] = pHdp, g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = 0.35; trackGroup.add(g);
       g.add(new THREE.Mesh(new THREE.BoxGeometry(90, 24, 28).translate(0, 12, 0), facadeMat({ wall: '#f2ead6', frame: '#fffaf0', balcony: '#ffffff', glass: '#3c3a36', glassTop: '#a8a090', litP: .45, emiI: 1, roof: '#4e5662', seed: 23, bays: 18, floors: 7, bayM: 5, floorM: 3.6 })));
@@ -5400,17 +5594,17 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       pl.forEach(([x, z], k) => { const s2 = 0.55 + Math.random() * 0.35; qq.setFromAxisAngle(_v2, Math.random() * 6.28); m4.compose(pv.set(x, 0, z), qq, sc.set(s2, s2, s2)); it.setMatrixAt(k, m4); ic.setMatrixAt(k, m4); });
       lawn.receiveShadow = true; trackGroup.add(lawn, it, ic); }
     if (TRK.mc && mcDem()) { // Monaco (Fotos): die Hänge sind lückenlos bebaut – Häuser im dichten Raster auf dem echten Gelände (EU-DEM) bis ~270 m Höhe, kein nackter Boden zwischen den Häusern
-      const tH0 = performance.now(), hs = [], SP = 17, R = 2800, c0x = (minX + maxX) / 2, c0z = (minZ + maxZ) / 2, rj = (a, b) => { const v = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453; return v - Math.floor(v); };
+      const tH0 = performance.now(), hs = [], SP = 14, R = 2800, c0x = (minX + maxX) / 2, c0z = (minZ + maxZ) / 2, rj = (a, b) => { const v = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453; return v - Math.floor(v); };
       // Nachschlage-Raster (20 m): nur Zellen nahe der Strecke brauchen die teuren Abstandsprüfungen; Sperrkreise und Bauten je Zelle vorsortiert
       const nearT = new Set(), ck = (x, z) => Math.floor(x / 20) * 65536 + Math.floor(z / 20); for (let i = 0; i < N; i++) { const r = Math.max(WL[i], WR[i]) + 40; for (let a = -r; a <= r; a += 20) for (let b = -r; b <= r; b += 20) nearT.add(ck(PX[i] + a, PZ[i] + b)); }
       const pipM = (P, x, z) => { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const [xi, zi] = P[i], [xj, zj] = P[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; }, xH = new Map(), addH = (x, z, r, v) => { for (let a = Math.floor((x - r) / 20); a <= Math.floor((x + r) / 20); a++) for (let b = Math.floor((z - r) / 20); b <= Math.floor((z + r) / 20); b++) { const k = a * 65536 + b; let L4 = xH.get(k); if (!L4) xH.set(k, L4 = []); L4.push(v); } };
       for (const e of excl) addH(e[0], e[1], e[2] + 14, e[3] ? { P: e[3] } : [e[0], e[1], e[2] + 2]); for (const F of LMP) addH(F.cx, F.cz, F.r + 16, [F.cx, F.cz, F.r + 4]);   /* je Zelle alles, was ein Haus mit 11 m Halbmaß berühren kann */
-      for (let gx = -R; gx <= R; gx += SP) for (let gz = -R; gz <= R; gz += SP) { const x = c0x + gx + (rj(gx, gz) - .5) * 5, z = c0z + gz + (rj(gz, gx) - .5) * 5, h = demH(x, z); if (h < 1 || h > mcCityTop(x, z) || inMarina(x, z) || (MC_SEA && MC_SEA(x, z))) continue;
+      for (let gx = -R; gx <= R; gx += SP) for (let gz = -R; gz <= R; gz += SP) { const x = c0x + gx + (rj(gx, gz) - .5) * 3, z = c0z + gz + (rj(gz, gx) - .5) * 3, h = demH(x, z); if (h < 1 || h > mcCityTop(x, z) || inMarina(x, z) || (MC_SEA && MC_SEA(x, z))) continue;
         const near = nearT.has(ck(x, z)); if (near) { const [d] = nearestDist(x, z); if (d < 14) continue; }
         const kx = Math.floor(x / 60), kz = Math.floor(z / 60); let hit = false; for (let a = -1; a <= 1 && !hit; a++) for (let b = -1; b <= 1 && !hit; b++) { const L3 = bGrid.get((kx + a + 512) * 4096 + kz + b + 512); if (L3) for (const Q of L3) if (Math.abs(Q[0] - x) < Q[2] + 10 && Math.abs(Q[1] - z) < Q[3] + 10) { hit = true; break; } }
         if (hit) continue;
         const gxD = demH(x + 8, z) - demH(x - 8, z), gzD = demH(x, z + 8) - demH(x, z - 8), slope = Math.hypot(gxD, gzD) / 16, rot = Math.atan2(gzD, -gxD) + (rj(x, z) - .5) * 0.2, cr = Math.cos(rot), sr = Math.sin(rot);   /* längs der Höhenlinie */
-        let w = 16 + rj(x, 1) * 4.5, l = 16 + rj(z, 2) * 4.5, ok = false; const L4 = xH.get(ck(x, z));
+        let w = 14.5 + rj(x, 1) * 4.5, l = 14.5 + rj(z, 2) * 4.5, ok = false;   /* Raster 14 m, Häuser 14,5–19 m: die Häuser stoßen aneinander bzw. überlappen leicht -> geschlossene Bebauung, kein Boden dazwischen */ const L4 = xH.get(ck(x, z));
         for (const f of [1, 0.7, 0.5]) { const pts = [[0, 0], [-1, -1], [1, -1], [1, 1], [-1, 1], [0, -1], [0, 1], [-1, 0], [1, 0]].map(([u, v]) => [x + u * (w * f / 2 + 0.8) * cr + v * (l * f / 2 + 0.8) * sr, z - u * (w * f / 2 + 0.8) * sr + v * (l * f / 2 + 0.8) * cr]);   /* Grundriss des Hauses in seiner Größe */
           if (L4 && L4.some(e => e.P ? pts.some(([px, pz]) => pipM(e.P, px, pz)) : pts.some(([px, pz]) => (px - e[0]) ** 2 + (pz - e[1]) ** 2 < e[2] * e[2]))) continue;
           if (near && !pts.every(([px, pz]) => trackFree(px, pz, 1.5))) continue;
@@ -6618,16 +6812,30 @@ const SW = (() => {
   const g = new THREE.Group(); g.position.set(0, 0.56, 1.0); g.visible = false;
   // Lenkrad und Hände: nach der Szene, mit eigenem Tiefenpuffer (Tiefe wird vor dem ersten Teil geleert) – so liegen sie über dem Auto, verdecken sich aber untereinander richtig
   const mk = (geo, mat, ro) => { mat.transparent = true; mat.depthWrite = true; const m = new THREE.Mesh(geo, mat); m.renderOrder = 2e6 - 100 + ro; m.frustumCulled = false; g.add(m); return m; };   /* „transparent“ (bei voller Deckkraft): kommt erst NACH allen transparenten Effekten dran – das Leeren der Tiefe trifft dann nur noch Lenkrad und Hände */
-  // Schmetterlings-Form
-  const sh = new THREE.Shape(); sh.moveTo(-0.13, 0.085); sh.lineTo(0.13, 0.085); sh.quadraticCurveTo(0.2, 0.08, 0.21, 0.02); sh.lineTo(0.2, -0.07); sh.quadraticCurveTo(0.18, -0.1, 0.12, -0.085); sh.lineTo(0.06, -0.06); sh.lineTo(-0.06, -0.06); sh.lineTo(-0.12, -0.085); sh.quadraticCurveTo(-0.18, -0.1, -0.2, -0.07); sh.lineTo(-0.21, 0.02); sh.quadraticCurveTo(-0.2, 0.08, -0.13, 0.085);
-  const body = new THREE.ExtrudeGeometry(sh, { depth: 0.03, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.006, bevelSegments: 2 });
-  mk(body, new THREE.MeshStandardMaterial({ color: 0x0b0c0e, roughness: .55, metalness: .15 }), 60).onBeforeRender = r => { r.state.buffers.depth.setMask(true); r.clearDepth(); };   /* Maske an, sonst leert gl.clear die Tiefe nicht (der Himmel davor schreibt keine Tiefe) */
-  for (const s2 of [-1, 1]) { const gr = new THREE.CapsuleGeometry(0.032, 0.11, 4, 10); gr.translate(s2 * 0.2, -0.01, 0.02); mk(gr, new THREE.MeshStandardMaterial({ color: 0x1a1b1d, roughness: .95 }), 61); }
-  const cols = [0xe11d48, 0xfacc15, 0x22c55e, 0x3b82f6, 0xf97316, 0xffffff];
-  [[-0.15, 0.05], [0.15, 0.05], [-0.155, -0.02], [0.155, -0.02], [-0.1, -0.045], [0.1, -0.045]].forEach(([x, y], k) => { const b = new THREE.CylinderGeometry(0.011, 0.011, 0.012, 14).rotateX(Math.PI / 2).translate(x, y, 0.04); mk(b, new THREE.MeshStandardMaterial({ color: cols[k], roughness: .4, emissive: cols[k], emissiveIntensity: .12 }), 62); });
-  [[-0.045, -0.04], [0.045, -0.04]].forEach(([x, y]) => { const r = new THREE.CylinderGeometry(0.016, 0.016, 0.018, 18).rotateX(Math.PI / 2).translate(x, y, 0.042); mk(r, new THREE.MeshStandardMaterial({ color: 0xb8bec6, metalness: .9, roughness: .3 }), 62); });
+  // Lenkrad nach echtem Formelwagen-Vorbild: Carbon-Mittelteil mit abgeschrägten Ecken, zwei offene Griffschlaufen (Lücke zwischen Griff und Mittelteil), Display mit Rahmen,
+  // Drucktasten in dunklen Fassungen, drei Drehschalter unten mit Zeigerstrich, zwei Daumenräder, Schaltwippen dahinter, Mittenmarkierung oben
+  const sh = new THREE.Shape(); sh.moveTo(-0.118, 0.088); sh.lineTo(0.118, 0.088); sh.quadraticCurveTo(0.142, 0.086, 0.146, 0.062); sh.lineTo(0.15, -0.03); sh.quadraticCurveTo(0.148, -0.062, 0.118, -0.078); sh.lineTo(0.07, -0.092); sh.lineTo(-0.07, -0.092); sh.lineTo(-0.118, -0.078); sh.quadraticCurveTo(-0.148, -0.062, -0.15, -0.03); sh.lineTo(-0.146, 0.062); sh.quadraticCurveTo(-0.142, 0.086, -0.118, 0.088);
+  const body = new THREE.ExtrudeGeometry(sh, { depth: 0.026, bevelEnabled: true, bevelThickness: 0.007, bevelSize: 0.007, bevelSegments: 3, curveSegments: 10 });
+  const cTex = TEX.carbon.clone(); cTex.repeat.set(44, 44); cTex.needsUpdate = true; const cNrm = TEX.carbonN.clone(); cNrm.repeat.set(44, 44); cNrm.needsUpdate = true;
+  mk(body, new THREE.MeshStandardMaterial({ map: cTex, normalMap: cNrm, normalScale: new THREE.Vector2(.2, .2), color: 0x2c2f35, roughness: .42, metalness: .35 }), 60).onBeforeRender = r => { r.state.buffers.depth.setMask(true); r.clearDepth(); };   /* Maske an, sonst leert gl.clear die Tiefe nicht (der Himmel davor schreibt keine Tiefe) */
+  { const P = [], V = THREE.Vector3, rub = col(0x16171a), alu = col(0x3b3f46), aluL = col(0x9aa1ab), blk = col(0x0c0d0f), wht = col(0xe8eaee);
+    const cyl = (r, h, x, y, z, c, seg = 20, r2 = r) => P.push([new THREE.CylinderGeometry(r2, r, h, seg).rotateX(Math.PI / 2).translate(x, y, z), c]);
+    const box = (w, h, d, x, y, z, c, rz = 0) => { const g = new THREE.BoxGeometry(w, h, d); if (rz) g.rotateZ(rz); g.translate(x, y, z); P.push([g, c]); };
+    for (const s2 of [-1, 1]) {   // Griffschlaufe: vom oberen Rand des Mittelteils nach außen, senkrecht durch die Hand, unten zurück
+      const cv = new THREE.CatmullRomCurve3([new V(s2 * 0.118, 0.07, 0.012), new V(s2 * 0.172, 0.074, 0.016), new V(s2 * 0.2, 0.045, 0.02), new V(s2 * 0.203, -0.01, 0.02), new V(s2 * 0.197, -0.06, 0.02), new V(s2 * 0.165, -0.088, 0.016), new V(s2 * 0.112, -0.074, 0.012)], false, 'centripetal');
+      const tg = new THREE.TubeGeometry(cv, 40, 0.0235, 12, false); tg.scale(1, 1, 1.12); P.push([tg, rub]);
+      box(0.05, 0.062, 0.006, s2 * 0.176, 0.012, -0.022, blk, s2 * -0.12);   // Schaltwippe hinter dem Griff
+      cyl(0.012, 0.016, s2 * 0.128, -0.028, 0.036, alu, 14); cyl(0.0125, 0.004, s2 * 0.128, -0.028, 0.046, aluL, 14);   // Daumenrad
+    }
+    box(0.172, 0.092, 0.007, 0, 0.026, 0.034, blk);   // Display-Rahmen
+    box(0.012, 0.007, 0.003, 0, 0.0905, 0.034, col(0xffd400));   // Mittenmarkierung (12 Uhr)
+    const bc = [0xc8263a, 0xd9b21c, 0x2aa85a, 0x2f6fd0, 0xd9731a, 0xd8dbe0, 0x7a3fc0, 0x1f9bb0];
+    [[-0.118, 0.066], [0.118, 0.066], [-0.124, 0.03], [0.124, 0.03], [-0.122, -0.004], [0.122, -0.004], [-0.098, -0.06], [0.098, -0.06]].forEach(([x, y], k) => { cyl(0.0125, 0.007, x, y, 0.0365, alu, 16); cyl(0.0088, 0.012, x, y, 0.042, col(bc[k]), 16, 0.0078); });
+    [[-0.052, 0xc8263a], [0, 0x2f6fd0], [0.052, 0xd9b21c]].forEach(([x, rc]) => { const y = -0.058; cyl(0.019, 0.005, x, y, 0.0355, col(rc), 24); cyl(0.0165, 0.008, x, y, 0.039, blk, 24); cyl(0.0125, 0.017, x, y, 0.049, alu, 12, 0.0115); box(0.0028, 0.011, 0.002, x, y + 0.0065, 0.0582, wht); });
+    mk(mergeParts(P), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .55, metalness: .25 }), 61);
+  }
   const sc = document.createElement('canvas'); sc.width = 640; sc.height = 320; const tex = new THREE.CanvasTexture(sc); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
-  mk(new THREE.PlaneGeometry(0.15, 0.075).translate(0, 0.02, 0.0375), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }), 63);
+  mk(new THREE.PlaneGeometry(0.16, 0.08).translate(0, 0.026, 0.0378), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }), 63);
   return { g, sc, tex, t: 0 };
 })();
 // Roadster-Cockpit: funktionierende Instrumente und Navi mit mitdrehender 3D-Karte (nur in der Cockpit-Ansicht, ca. 15x pro Sekunde)
@@ -6689,7 +6897,7 @@ const _ay = new THREE.Vector3(0, 1, 0), _ad = new THREE.Vector3(), _aw = new THR
 function capsBetween(a, b, r, col) { const d = new THREE.Vector3().subVectors(b, a), L = d.length(), g = new THREE.CapsuleGeometry(r, Math.max(0.001, L), 5, 12);
   g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(_ay, d.normalize())); g.translate((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2); return [g, col]; }
 function handGeo(sx, rgReal, k = 1.3, road = false) {   // k: Handschuhgröße relativ zu einer Hand am dünnen Griff – gebaut am Griff rg/k, dann um die Griffachse mit k skaliert (Finger liegen wieder auf dem echten Griff)
-  const rg = rgReal / k, P = [], V = (x, y, z) => new THREE.Vector3(x, y, z), glove = col(road ? 0x2c2624 : 0xd7dadf), grip = col(road ? 0x1c1817 : 0x4a4f57), band = col(road ? 0x3b3330 : 0x23262b), seam = col(road ? 0x8a7660 : 0xb9bec5);   // Roadster: dunkle Leder-Fahrhandschuhe
+  const rg = rgReal / k, P = [], V = (x, y, z) => new THREE.Vector3(x, y, z), glove = col(road ? 0x2c2624 : 0xe6e8ec), grip = col(road ? 0x1c1817 : 0x3a3d44), band = col(road ? 0x3b3330 : 0x1b1d21), seam = col(road ? 0x8a7660 : 0xffffff);   // Formel-Handschuh: helle Grundfarben – das Material färbt sie in der Teamfarbe ein (armsTick)   // Roadster: dunkle Leder-Fahrhandschuhe
   const d2r = Math.PI / 180, arc = (R, ph, y) => V(sx * R * Math.cos(ph * d2r), y, R * Math.sin(ph * d2r));   // φ: 0 = außen, +90 = zum Fahrer, -90 = von ihm weg
   // vier Finger: Knöchel außen-hinten am Griff, Glieder legen sich um die Rückseite nach innen (vom Fahrer aus großteils verdeckt)
   [[0.03, 0.0112, 1], [0.0085, 0.0118, 1.05], [-0.0125, 0.0112, 0.98], [-0.032, 0.0098, 0.86]].forEach(([y, r, ln]) => {
@@ -6721,7 +6929,7 @@ function makeArms(overlay, rg, road = false) {
     for (const [o, ro] of [[fore, 1], [cuff, 2], [strap, 3], [hand, 4]]) { o.frustumCulled = false; if (overlay) { o.renderOrder = 2e6 + ro; o.material.transparent = true; o.material.depthWrite = true; } }
     side.push({ sx, fore, cuff, strap, hand, w: HAND_W(rg) });
   }
-  return { g, side, suit };
+  return { g, side, suit, hm, cuffM };
 }
 // Hand an den Griffpunkt (nicht mitdrehender Lenkradrahmen) setzen, um rz gedreht; Stulpe und Ärmel vom Handgelenk zum Ellbogen
 function poseArm(a, gx, gy, gz, rz, ex, ey, ez) {
@@ -6731,15 +6939,15 @@ function poseArm(a, gx, gy, gz, rz, ex, ey, ez) {
   for (const o of [a.fore, a.cuff, a.strap]) { o.position.copy(_aw); o.quaternion.setFromUnitVectors(_ay, _ad); }
   a.fore.scale.set(1, Math.max(0.01, L), 1);
 }
-const ARMS = { f1: null, road: null };
+const ARMS = { f1: null, road: null }, _gc = new THREE.Color(), _gw = new THREE.Color(0xffffff);
 function armsTick() {
   const cock = running && S.cam === 2 && !!(pl && pl.mesh), road = !!(pl && pl.mesh && (pl.mesh.road || pl.mesh.kart)), col = pl && TEAMS[pl.team] ? uiCol(TEAMS[pl.team]) : 0xffffff;
   if (ARMS.f1) ARMS.f1.g.visible = cock && !road; if (ARMS.road) ARMS.road.g.visible = cock && road;
   if (!cock) return;
   const steer = pl.steer || 0;
   if (!road) {   // F1: Lenkrad dreht max. ~70°, die Hände bleiben an den Griffen
-    const A = ARMS.f1 ||= makeArms(true, 0.033); A.suit.color.setHex(col);
-    if (A.g.parent !== pl.mesh.g) pl.mesh.g.add(A.g); A.g.position.copy(SW.g.position);
+    const A = ARMS.f1 ||= makeArms(true, 0.033); A.suit.color.setHex(col); _gc.setHex(col).lerp(_gw, 0.12); if (_gc.r + _gc.g + _gc.b < 0.09) _gc.setHex(0x3a3f48); A.hm.color.copy(_gc); A.cuffM.color.copy(_gc);   // Handschuhe und Stulpen in Teamfarbe (vorher immer weiß); bei fast schwarzen Teams dunkelgrau, damit die Finger erkennbar bleiben
+    if (A.g.parent !== pl.mesh.g) pl.mesh.g.add(A.g); A.g.position.copy(SW.g.position); A.g.scale.copy(SW.g.scale);
     A.g.rotation.set(0.45, Math.PI, 0); const ang = -steer * 1.25, c = Math.cos(ang), s2 = Math.sin(ang);
     for (const a of A.side) { const x0 = a.sx * 0.2, y0 = -0.01; poseArm(a, x0 * c - y0 * s2, x0 * s2 + y0 * c, 0.02, ang, a.sx * 0.34, -0.33, 0.42); }
   } else if (pl.mesh.swSpin && pl.mesh.swSpin.parent) {   // Roadster (rundes Lenkrad): Hände auf 9 und 3 Uhr, wandern mit dem Einschlag am Kranz entlang
@@ -6751,7 +6959,7 @@ function armsTick() {
 }
 function drawWheel(dt) {
   SW.g.visible = running && S.cam === 2 && !pl.mesh.road && !pl.mesh.kart;   // Roadster und Kart haben ihr eigenes rundes Lenkrad am Auto
-  if (pl.mesh.tp) SW.g.position.set(...(pl.mesh.tp.M.swPos || [0, 0.56, 1.0]));   // Lenkradposition je Modell (F2 sitzt weiter hinten und tiefer)
+  if (pl.mesh.tp) { SW.g.position.set(...(pl.mesh.tp.M.swPos || [0, 0.605, 0.98])); SW.g.scale.setScalar(pl.mesh.tp.M.swS || 1); }   // Lenkradposition je Modell (F2 sitzt weiter hinten und tiefer)
   document.body.classList.toggle('cockpit', running && S.cam === 2);
   if (running && S.cam === 2 && pl.mesh.road) roadDashTick(dt);
   armsTick();
@@ -7524,7 +7732,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.10'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.11'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
