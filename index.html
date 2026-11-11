@@ -807,7 +807,24 @@ th{background:#0c0c12!important;letter-spacing:.16em;font-size:10px!important;co
 #lsub{font-size:10.5px!important;font-weight:700!important;letter-spacing:.06em;color:rgba(255,255,255,.62)!important;font-variant-numeric:tabular-nums}
 .hb{width:40px!important;height:40px!important;background:linear-gradient(180deg,rgba(40,40,52,.85),rgba(14,14,20,.85))!important;border:1px solid rgba(255,255,255,.14)!important;box-shadow:0 8px 18px -6px rgba(0,0,0,.6)!important}
 #speedo{filter:drop-shadow(0 10px 18px rgba(0,0,0,.5))!important;left:auto!important;transform:none!important;right:max(10px,env(safe-area-inset-right))!important;bottom:max(4px,env(safe-area-inset-bottom))!important}   /* unten rechts wie im F1-Spiel (Mitte verdeckte das eigene Auto) */
-body.touchUI #speedo{bottom:calc(max(12px,env(safe-area-inset-bottom)) + min(27vh,116px) + 4px)!important;right:max(6px,env(safe-area-inset-right))!important}   /* über den Gas-/Bremstasten */
+body.touchUI #speedo{left:50%!important;right:auto!important;transform:translateX(-50%)!important;bottom:max(4px,env(safe-area-inset-bottom))!important}   /* Touch: Mitte unten zwischen den Tasten (Wunsch) */
+/* Touch-Tasten im F1-Spiel-Stil: dunkle Carbon-Flächen mit angeschnittener Ecke, Farbbalken unten (Lenken weiß, Bremse rot, Gas grün), Symbol + Beschriftung, Druck = Farbe füllt die Taste */
+#controls .pad{position:relative;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:0!important;border:1px solid rgba(255,255,255,.16)!important;border-top-color:rgba(255,255,255,.3)!important;
+  background:repeating-linear-gradient(45deg,rgba(255,255,255,.025) 0 2px,transparent 2px 4px),linear-gradient(180deg,rgba(40,40,52,.55),rgba(10,10,15,.6))!important;color:#fff;box-shadow:0 10px 24px -8px rgba(0,0,0,.6)!important;
+  clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);transition:background .08s,transform .08s;font-size:0!important}
+#controls .pad::after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(255,255,255,.75)}
+#controls .pad.brake::after{background:#e10600}#controls .pad.gas::after{background:#00d26a}
+#controls .pad svg{width:34px;height:34px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+#controls .pad.steer svg{width:42px;height:42px}
+#controls .pad b{font:700 11px "Titillium Web",system-ui,sans-serif!important;letter-spacing:.2em;color:rgba(255,255,255,.85)}
+#controls .pad.on{transform:translateY(1px);background:linear-gradient(180deg,rgba(255,255,255,.45),rgba(255,255,255,.2))!important}
+#controls .pad.brake.on{background:linear-gradient(180deg,rgba(255,40,20,.75),rgba(180,5,0,.65))!important}
+#controls .pad.gas.on{background:linear-gradient(180deg,rgba(0,230,120,.7),rgba(0,150,70,.6))!important}
+#controls .boostBtn{border-radius:0!important;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  background:linear-gradient(180deg,rgba(40,40,52,.6),rgba(10,10,15,.65))!important;border:1px solid rgba(255,212,0,.55)!important;color:#ffd400;box-shadow:inset 0 -3px 0 #ffd400!important}
+#controls .boostBtn svg{width:24px;height:24px}#controls .boostBtn small{font:700 9px "Titillium Web",sans-serif;letter-spacing:.18em}
+#controls .boostBtn.on{background:linear-gradient(180deg,#ffe45c,#ffb000)!important;color:#15151e}
+#controls .pad.hidden,#controls .boostBtn.hidden,body.noBoost #controls .boostBtn{display:none!important}
 #gauge{width:230px!important;height:150px!important;opacity:1!important}
 @media (max-height:430px){#gauge{width:184px!important;height:120px!important}}
 @media (max-height:380px){#gauge{width:162px!important;height:106px!important}}
@@ -841,15 +858,15 @@ body.touchUI #speedo{bottom:calc(max(12px,env(safe-area-inset-bottom)) + min(27v
 </div>
 
 <div id="controls" class="hidden">
-  <button class="boostBtn" id="bBoost">⚡<small>BOOST</small></button>
+  <button class="boostBtn" id="bBoost"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 5 14h6l-1 8 8-12h-6z" fill="currentColor"/></svg><small>BOOST</small></button>
   <div class="side left">
-    <button class="pad" id="bL">◀</button>
-    <button class="pad" id="bR">▶</button>
-    <button class="pad brake" id="bBrakeL">BREMSE</button>
+    <button class="pad steer" id="bL" aria-label="Links"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="square"/></svg></button>
+    <button class="pad steer" id="bR" aria-label="Rechts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4 8 8-8 8" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="square"/></svg></button>
+    <button class="pad brake hidden" id="bBrakeL"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="9" width="14" height="11" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M8 13h8M8 16h8" stroke="currentColor" stroke-width="1.6"/></svg><b>BREMSE</b></button>
   </div>
   <div class="side right">
-    <button class="pad brake" id="bBrake">BREMSE</button>
-    <button class="pad gas" id="bGas">GAS</button>
+    <button class="pad brake" id="bBrake"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="9" width="14" height="11" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M8 13h8M8 16h8" stroke="currentColor" stroke-width="1.6"/></svg><b>BREMSE</b></button>
+    <button class="pad gas" id="bGas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v16H8z" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M10 8h4M10 11h4M10 14h4" stroke="currentColor" stroke-width="1.6"/></svg><b>GAS</b></button>
   </div>
 </div>
 
@@ -6747,7 +6764,7 @@ function layoutControls() {
   if (!isTouch) { ctl.classList.add('hidden'); return; }
   ctl.classList.remove('hidden'); document.body.classList.add('touchUI');
   const tilt = effCtrl === 'tilt', show = (id, v) => $('#' + id).classList.toggle('hidden', !v);
-  show('bL', !tilt); show('bR', !tilt); show('bBrakeL', tilt); show('bBrake', !tilt || S.autogas); show('bGas', !S.autogas);
+  show('bL', !tilt); show('bR', !tilt); show('bBrakeL', false); show('bBrake', true);   /* nur noch die rechte Bremse (Wunsch), auch beim Neigen */ show('bGas', !S.autogas);
   applyLayout();
 }
 
@@ -7960,7 +7977,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.13'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.14'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -8161,6 +8178,7 @@ window.__holes = () => HOLES; window.__holesLeft = () => fillGroundHoles(true);
 window.__scr = k => { showScreen(k); return MENU.scr; };   /* Test: Menübildschirm direkt öffnen */
 window.__season = tier => { if (!CAREER) { CAREER = carDef(); CAREER.name = 'Robert Nemec'; } if (tier !== 'kart' && !CAREER.slot[tier]) CAREER.slot[tier] = mkSlot(tier, SERIES[tier].drivers[4][3], null); (CAREER.intro ||= {})[tier] = 1; startSeason(tier); return MENU.scr; };   /* Test: Saison-Bildschirm öffnen */
 window.__arms = () => ARMS;
+window.__layout = () => { effCtrl = S.ctrl; layoutControls(); return effCtrl; };   /* Test: Touch-Tasten zeigen */
 window.__plRef = () => pl;
 window.__S = () => S; window.__mesh = () => ({ ALL, pl, MODELS, camera });   /* Test: Einstellungen und Fahrzeuge lesen/setzen */
 window.__laps = () => ais.map(a => a.code + ':' + (a.lapTimes || []).map(t => t.toFixed(1)).join('/'));
