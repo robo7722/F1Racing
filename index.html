@@ -3213,7 +3213,7 @@ function bankBreaks(i) { const qe = HW[i] + BK_IN; return [0, KSD * qe, KSD * (q
 function bankAt(c) { if (!BANK) return 0; const f = modL(c.d) / DS, i0 = Math.floor(f) % N, i1 = (i0 + 1) % N, t = f - Math.floor(f); return bankY(i0, c.lat) * (1 - t) + bankY(i1, c.lat) * t; }
 const HOTEL_T = { value: 0 };
 let POCK = null, POCKETS = [];   // asphaltierte Notausgänge (Schikanen): Seiten-Bits je Streckenpunkt + Flächen zum Füllen
-let HOLES = 0, MC_CHIC = null, MC_DEM = null, MC_TERR = [], MC_PADS = null, BANDW = null, HORIZ = null, BANDS = [], MC_SEA = null, MC_ISL = null, MJ = null, SPI = null, PAVEZ = null, KERBL = null, KERBR = null, REFNW = null, WTL = null, WTR = null, GOL = null, GOR = null, HILLW = null, RISE = null, ELEV, SLOPE, FLAT = true, ELMEAN = 0, HG = null, HW, NOWALL, TRK, TH, N, L, DS, PX, PZ, TX, TZ, RX, RZ, KS, KP, KR, RL, profBot = null, WL, WR, GRL, GRR, KERB, profP, profAI, inSign = 1, poleSide = 1, hotelRoof = null;
+let ROAD_WAIT = null, HOLES = 0, MC_CHIC = null, MC_DEM = null, MC_TERR = [], MC_PADS = null, BANDW = null, HORIZ = null, BANDS = [], MC_SEA = null, MC_ISL = null, MJ = null, SPI = null, PAVEZ = null, KERBL = null, KERBR = null, REFNW = null, WTL = null, WTR = null, GOL = null, GOR = null, HILLW = null, RISE = null, ELEV, SLOPE, FLAT = true, ELMEAN = 0, HG = null, HW, NOWALL, TRK, TH, N, L, DS, PX, PZ, TX, TZ, RX, RZ, KS, KP, KR, RL, profBot = null, WL, WR, GRL, GRR, KERB, profP, profAI, inSign = 1, poleSide = 1, hotelRoof = null;
 const trackGroup = new THREE.Group(); scene.add(trackGroup);
 const wrapL = x => x - L * Math.round(x / L);
 const modL = x => ((x % L) + L) % L;
@@ -4093,7 +4093,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   const [aMap, aNrm, aCol] = asphaltFor(TH);
   const roadM = new THREE.MeshStandardMaterial({ map: aMap, normalMap: aNrm, color: aCol || 0xffffff, normalScale: new THREE.Vector2(0.85, 0.85), roughness: .82, metalness: 0, envMapIntensity: .6, ...po(-2) }); sheenMat(roadM, TH.night ? 0.12 : 0.34); roadGrain(roadM);   // nachts ist der Horizont dunkel bzw. bunt beleuchtet -> nur ein Hauch
   asphaltNoRepeat(roadM); rubberMat(roadM, TH.night ? 0.05 : 0.08);   /* sehr dezent: sonst wirkt die Spur als welliges Band */ rubberLine(hStrip(i => -HW[i], i => HW[i], 0.02, 0.02, roadM, { uFixed: true, vScale: 14 }));
-  { const id = ROADTEX[TRK.theme] || ROADTEX[TH.asph], k = TH.asph || 'std'; if (id && id !== 'asphalt_track') roadPhoto(id).then(P => { if (!P || roadM.userData.dead) return; roadM.map = P.d; roadM.normalMap = P.n; roadGrain(roadM); roadM.color.copy(photoTint(P, ASPH_T[k] || [70, 70, 72])); roadM.needsUpdate = true; }); }   // eigener Belag je Strecke
+  { const id = ROADTEX[TRK.theme] || ROADTEX[TH.asph], k = TH.asph || 'std'; if (id && id !== 'asphalt_track') ROAD_WAIT = roadPhoto(id).then(P => { if (!P || roadM.userData.dead) return; roadM.map = P.d; roadM.normalMap = P.n; roadGrain(roadM); roadM.color.copy(photoTint(P, ASPH_T[k] || [70, 70, 72])); roadM.needsUpdate = true; }); }   // eigener Belag je Strecke
   const white = lam({ color: TH.night ? 0x9a9a9a : 0xf2f2f2, ...po(-3) });
   hStrip(i => HW[i] - .35, i => HW[i] - .12, .025, .025, white); hStrip(i => -HW[i] + .12, i => -HW[i] + .35, .025, .025, white);
   const kc = TH.kerb.map(c => col(c).multiplyScalar(TH.night ? 0.62 : 1)), kerbCol = i => kc[(i >> 1) & 1];   // nachts matter: helle Curbs unter Flutlicht sollen nicht strahlen
@@ -6664,6 +6664,12 @@ function warmUpTrack() {
   window.__warmMs = Math.round(performance.now() - t0);
 }
 function precompile() { try { const prev = renderer.getRenderTarget(); if (composer) renderer.setRenderTarget(composer.renderTarget1); renderer.compile(scene, camera); renderer.setRenderTarget(prev); } catch (e) { console.warn('precompile', e); }
+  // Materialien, die erst beim Kamerawechsel auftauchen (Cockpit: aufgeschnittene Karosserie + Wanne, TV-Kamera: einfarbiges Halo), jetzt mit übersetzen – sonst Hänger beim ersten Umschalten
+  try { const m = pl && pl.mesh; if (m) { const tp = m.tp || {}, k = tp.M === MODELS.f2 ? 'f2' : 'f1'; if (m.tp) { tp.cutGloss ||= cockCut(tp.glossMat, k); tp.cutMatte ||= cockCut(MATTE, k); if (!m.tub) { m.tub = cockTub(k); m.g.add(m.tub); } }
+      const sc = new THREE.Scene(), add = (g, mt) => { const o = new THREE.Mesh(g, mt); o.frustumCulled = false; sc.add(o); }; if (m.tp) { add(m.body.geometry, tp.cutGloss); add(m.matte.geometry, tp.cutMatte); if (tp.haloFlat) add(tp.haloFlat, tp.haloMat); m.tub.traverse(o => { if (o.isMesh) add(o.geometry, o.material); }); }
+      ARMS.f1 ||= makeArms(true, 0.033); ARMS.road ||= makeArms(false, 0.023, true);
+      for (const G of [SW.g, ARMS.f1.g, ARMS.road.g]) G.traverse(o => { if (o.isMesh) add(o.geometry, o.material); }); sc.add(...scene.children.filter(o => o.isLight).map(l => l.clone())); sc.fog = scene.fog; sc.environment = scene.environment;
+      if (!WARM.rt2) WARM.rt2 = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType }); const prev = renderer.getRenderTarget(); renderer.setRenderTarget(WARM.rt2); renderer.compile(sc, camera); renderer.render(sc, camera); renderer.setRenderTarget(prev); } } catch (e) { console.warn('precompile2', e); }
   // Alles einmal winzig (4×4 Pixel) zeichnen – ohne Sichtfeld-Prüfung und mit jeder Detailstufe: lädt jede Geometrie, Instanzliste und Textur JETZT auf die Grafikkarte,
   // statt beim ersten Auftauchen mitten im Rennen (das waren die kurzen Lade-Ruckler kurz nach dem Start, v. a. in den großen Stadtkursen Vegas und Singapur)
   try { if (!WARM.rt) WARM.rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType });
@@ -6700,6 +6706,7 @@ function startRace() {
   diff = DIFF[S.diff] || DIFF.mid;
   seriesProfiles();
   placeOnGrid(); precompile(); warmUpTrack();
+  DYN.acc = DYN.n = DYN.bad = DYN.calm = 0; DYN.tChg = performance.now() + 5000;   /* Auflösung in den ersten 15 s nicht umschalten: jede Umschaltung legt alle Render-Ziele neu an (Hänger genau am Start) */
   raceSongPick(false);
   $('#hud').style.visibility = ''; running = true; hadRace = true; paused = false; resultsShown = false; raceState = 'lights'; lightsT = 0; lightsOut = 5 + Math.random() * 1.4;
   raceTime = 0; leaderFinished = false; fastest = null; tiltCheckT = 0;
@@ -7930,13 +7937,16 @@ $$('.seg button').forEach(b => b.addEventListener('click', () => { const k = b.p
   if (k === 'line') applyLine();
   if (k === 'ctrl' && running) { effCtrl = isTouch ? S.ctrl : 'touch'; if (effCtrl === 'tilt') { enableMotion(); tiltZero = tiltAngle; } layoutControls(); } if (k === 'gfx') { const was = running; REBUILD = true; loading(true); setTimeout(() => { try { applyGfx(); buildTrack(S.track); if (!was) placeOnGrid(); } finally { loading(false); REBUILD = false; last = performance.now(); pauseDrawn = 0; } }, 30); } renderMenu(); }));   /* im Rennen: Strecke neu aufbauen, Autos und Rennstand bleiben (nur die Bildschleife steht kurz) */
 $$('.sw').forEach(b => b.addEventListener('click', () => { S[b.dataset.tog] = !S[b.dataset.tog]; save(); if (b.dataset.tog === 'nos') renderTracks(); renderMenu(); }));
+// Vollbild + Querformat schon beim ersten Antippen im Menü – nicht erst beim Rennstart (die Größenänderung legte alle Render-Ziele neu an: Hänger beim Start)
+addEventListener('pointerup', function fsOnce() { if (!isTouch || standalone || document.fullscreenElement) { removeEventListener('pointerup', fsOnce, true); return; } try { const el = document.documentElement; if (el.requestFullscreen) el.requestFullscreen({ navigationUI: 'hide' }).then(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {}); } catch (e) {} removeEventListener('pointerup', fsOnce, true); }, true);
 $('#go').addEventListener('click', () => {
   if (isTouch) {
-    if (!standalone) try { const el = document.documentElement; if (el.requestFullscreen) el.requestFullscreen({ navigationUI: 'hide' }).then(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {}); } catch (e) {}
+    if (!standalone && !document.fullscreenElement) try { const el = document.documentElement; if (el.requestFullscreen) el.requestFullscreen({ navigationUI: 'hide' }).then(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {}); } catch (e) {}
     else try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) {}
     if (S.ctrl === 'tilt') enableMotion();
   }
-  initAudio(); startRace();
+  initAudio();
+  if (ROAD_WAIT) { const w = ROAD_WAIT; ROAD_WAIT = null; Promise.race([w, new Promise(r => setTimeout(r, 2000))]).then(() => startRace()); } else startRace();   /* Asphalt-Foto erst fertig laden: sonst wird das Fahrbahn-Material mitten im Start neu übersetzt */
 });
 function loading(on) { if (on) { const t = typeof TRACKS !== 'undefined' && TRACKS[S.track]; $('#ldTrk').textContent = t ? t.name + (t.land ? ' · ' + t.land : '') : ''; } $('#loading').classList.toggle('hidden', !on); }
 
