@@ -714,7 +714,7 @@ input[type=range]{height:4px!important;accent-color:var(--f1r)}
 .diffbar{background:rgba(0,0,0,.3)!important;border:0!important;border-left:3px solid var(--f1r)!important}
 .snext{clip-path:var(--cut);background:repeating-linear-gradient(115deg,rgba(255,255,255,.07) 0 2px,transparent 2px 14px) 100% 0/40% 100% no-repeat,linear-gradient(160deg,#e10600,#7a0300)!important;border:0!important}
 .uprow.on{outline:2px solid #fff;outline-offset:-2px;box-shadow:inset 4px 0 0 var(--f1r)!important}
-.ubuy{background:linear-gradient(180deg,#ff2a14,#c00500)!important}
+.ubuy{background:linear-gradient(180deg,#ff2a14,#c00500)!important;color:#fff!important}.ubuy:disabled{background:rgba(255,255,255,.08)!important;color:rgba(255,255,255,.4)!important}
 /* Overlays */
 .overlay{background:linear-gradient(90deg,rgba(6,6,10,.9),rgba(6,6,10,.7)),repeating-linear-gradient(102deg,rgba(255,255,255,.03) 0 1px,transparent 1px 7px)!important}
 .card{border-top:0!important;padding:14px 18px!important;position:relative;animation:f1in .3s both}
@@ -756,6 +756,38 @@ th{background:#0c0c12!important;letter-spacing:.16em;font-size:10px!important;co
   #menu[data-scr=race] #scrRace>.mh{display:none!important}#menu[data-scr=race] .rgrid{height:100%!important}   /* Überschrift steht schon im Reiter „05 Rennen“ */
 }
 @media (orientation:portrait){.hub{grid-template-columns:1fr 1fr}.hub .hero{grid-column:1/-1}}
+/* Saison-Bildschirm (Karriere): alles auf einen Blick ohne Seiten-Scrollen – links nächstes Rennen + Wochenende, rechts Tabelle (scrollt innen, Kopf bleibt stehen) + Kalender als Leiste */
+#scrSeason .sgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:10px!important;height:calc(100% - 42px)!important;overflow:hidden!important;align-items:stretch!important}
+#scrSeason .scol{min-height:0;gap:8px!important;overflow-y:auto;scrollbar-width:none}#scrSeason .scol::-webkit-scrollbar{display:none}
+#seNext{flex:none;min-height:0!important;padding:10px 12px 10px 18px!important;gap:8px!important}
+#seNext .sn-l small{font-size:10px!important;letter-spacing:.14em!important}
+#seNext .sn-l b{font-size:clamp(22px,7vh,34px)!important}
+#seNext .sn-l span{font-size:12px!important}
+#seNext .sn-tags{margin-top:4px!important}#seNext .sn-tags i{padding:3px 8px!important;font-size:10px!important}
+#seNext canvas{width:32%!important;max-width:140px!important}
+#scrSeason .spanel{flex:none;padding:8px 12px!important}
+#scrSeason .spanel .field{margin:0!important}
+#scrSeason .spanel .field>label{margin-bottom:6px!important}
+#scrSeason .diffbar{flex-direction:row!important;align-items:center!important;gap:8px!important;padding:4px 6px 4px 8px!important;margin:0 0 5px!important}
+#scrSeason .diffbar>span{flex:0 0 54px;font-size:10px!important;letter-spacing:.12em!important;color:rgba(255,255,255,.65);overflow:hidden;text-overflow:ellipsis}
+#scrSeason .spanel .field>label{display:none!important}
+#scrSeason .scol:last-child .spanel .field>label{display:block!important}
+#scrSeason .diffbar .seg{max-width:none!important}
+#scrSeason .seg button{height:28px!important;font-size:11px!important;letter-spacing:.03em!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px!important}
+#seBtns{flex:none;flex-direction:row!important;gap:8px!important}#seBtns:empty{display:none}#seBtns .seMsg{margin:0!important;font-size:12px!important}#seBtns .mbtn{flex:1;padding:6px 30px 6px 12px!important;min-height:0;background:var(--carbon),var(--surf)!important;border:1px solid var(--f1l)!important;border-bottom:3px solid var(--f1r)!important;text-align:left;position:relative}#seBtns .mbtn::before{display:none!important}#seBtns .mbtn::after{content:'›'!important;position:absolute;right:10px;top:50%;left:auto!important;bottom:auto!important;width:auto!important;transform:translateY(-55%)!important;background:none!important;font-size:22px;color:#fff}#seBtns .mbtn b{font-size:14px!important}#seBtns .mbtn small{font-size:10px!important}
+#scrSeason .scol:last-child{overflow:hidden}
+#scrSeason .scol:last-child>.spanel:first-child{flex:1 1 0;min-height:0;display:flex;flex-direction:column}
+#scrSeason .scol:last-child>.spanel:first-child .field{flex:1;min-height:0;display:flex;flex-direction:column}
+#seTbl{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none}#seTbl::-webkit-scrollbar{display:none}
+#seTbl .stbl{width:100%;border-collapse:collapse}
+#seTbl .stbl th{position:sticky;top:0;z-index:2;background:#0c0c12!important;padding:5px 6px!important}
+#seTbl .stbl td{padding:4px 6px!important;font-size:13px}
+#seCal{display:flex!important;flex-direction:row!important;gap:6px;overflow-x:auto!important;max-height:none!important;scrollbar-width:none;padding-bottom:2px}
+#seCal::-webkit-scrollbar{display:none}
+#seCal div{flex:none;display:flex;align-items:center;gap:6px;padding:4px 10px 4px 8px!important;white-space:nowrap;font-size:12px}
+#seCal div small{display:none}#seCal div.done{opacity:.55}#seCal div.next small{display:inline;opacity:.7}
+#seCal div svg{width:18px!important;height:12px!important}
+@media (max-height:380px){#seNext .sn-l span,#seNext .sn-tags{display:none!important}#seNext canvas{max-width:90px!important}#scrSeason .scol:last-child .spanel .field>label{display:none!important}}
 /* ===== HUD im F1-Spiel-Stil ===== */
 #tl{top:max(10px,env(safe-area-inset-top))!important;left:max(12px,env(safe-area-inset-left))!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:0!important;width:max-content;filter:drop-shadow(0 8px 16px rgba(0,0,0,.45))}
 #pos{display:flex!important;align-items:baseline;gap:2px;font-size:32px!important;font-weight:900!important;letter-spacing:-.01em!important;line-height:1.08!important;padding:1px 26px 1px 10px!important;background:linear-gradient(180deg,#ff2a14,#e10600 50%,#b40500)!important;border:0!important;box-shadow:none!important;text-shadow:none!important;clip-path:var(--sl)}
@@ -917,13 +949,13 @@ th{background:#0c0c12!important;letter-spacing:.16em;font-size:10px!important;co
       <div class="scol">
         <div class="snext" id="seNext"></div>
         <div class="spanel"><div class="field"><label>Rennwochenende</label>
-          <div class="diffbar"><span>Schwierigkeit</span><div class="seg" id="seDiff"></div></div>
-          <div class="diffbar"><span>Rennlänge</span><div class="seg" id="seLen"></div></div></div></div>
-        <div id="seBtns" class="sbtns"></div>
+          <div class="diffbar"><span>Niveau</span><div class="seg" id="seDiff"></div></div>
+          <div class="diffbar"><span>Länge</span><div class="seg" id="seLen"></div></div></div></div>
       </div>
       <div class="scol">
         <div class="spanel"><div class="field"><label>Meisterschaftsstand</label><div id="seTbl"></div></div></div>
         <div class="spanel"><div class="field"><label>Kalender</label><div class="ccal" id="seCal"></div></div></div>
+        <div id="seBtns" class="sbtns"></div>
       </div>
     </div>
   </section>
@@ -8115,6 +8147,7 @@ window.__grassBleed = (tol = 0.004) => { trackGroup.updateMatrixWorld(true); con
 window.__elev = (a = 0, n = 40) => { const o = []; for (let i = a; i < a + n; i++) o.push(+(FLAT ? 0 : ELEV[(i + N) % N]).toFixed(3)); return { DS: +DS.toFixed(3), N, FLAT, el: o }; };   /* Test: Höhenprofil */
 window.__holes = () => HOLES; window.__holesLeft = () => fillGroundHoles(true);
 window.__scr = k => { showScreen(k); return MENU.scr; };   /* Test: Menübildschirm direkt öffnen */
+window.__season = tier => { if (!CAREER) { CAREER = carDef(); CAREER.name = 'Robert Nemec'; } if (tier !== 'kart' && !CAREER.slot[tier]) CAREER.slot[tier] = mkSlot(tier, SERIES[tier].drivers[4][3], null); (CAREER.intro ||= {})[tier] = 1; startSeason(tier); return MENU.scr; };   /* Test: Saison-Bildschirm öffnen */
 window.__plRef = () => pl;
 window.__S = () => S; window.__mesh = () => ({ ALL, pl, MODELS, camera });   /* Test: Einstellungen und Fahrzeuge lesen/setzen */
 window.__laps = () => ais.map(a => a.code + ':' + (a.lapTimes || []).map(t => t.toFixed(1)).join('/'));
