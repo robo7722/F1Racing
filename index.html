@@ -6270,7 +6270,7 @@ function startRace() {
   seriesProfiles();
   placeOnGrid(); precompile(); warmUpTrack();
   raceSongPick(false);
-  running = true; hadRace = true; paused = false; resultsShown = false; raceState = 'lights'; lightsT = 0; lightsOut = 5 + Math.random() * 1.4;
+  $('#hud').style.visibility = ''; running = true; hadRace = true; paused = false; resultsShown = false; raceState = 'lights'; lightsT = 0; lightsOut = 5 + Math.random() * 1.4;
   raceTime = 0; leaderFinished = false; fastest = null; tiltCheckT = 0;
   effCtrl = isTouch ? S.ctrl : 'touch';
   tiltZero = tiltAngle; camH = pl.h;
@@ -6880,7 +6880,7 @@ function showResults() {
   $('#resSub').textContent = pl.name + ' · ' + TRK.full + ' · ' + S.laps + ' Runden · Start P' + pl.grid + (dp > 0 ? ' · ' + dp + ' Plätze gutgemacht' : dp < 0 ? ' · ' + (-dp) + ' Plätze verloren' : '') + (fastest ? ' · Schnellste Runde: ' + fastest.name + ' ' + fmt(fastest.t) : '');
   $('#resTabs').classList.add('hidden'); $('#again').textContent = 'Nochmal'; $('#resMenu').textContent = 'Hauptmenü';
   if (CHP) champShowResults();
-  $('#results').classList.remove('hidden'); $('#controls').classList.add('hidden');
+  $('#results').classList.remove('hidden'); $('#controls').classList.add('hidden'); $('#hud').style.visibility = 'hidden';   /* HUD hinter den Ergebnissen ausblenden */
 }
 
 function showTTResults() {   // Zeitfahren: Rundenzeiten, Bestzeit, persönlicher Rekord je Strecke
@@ -7494,7 +7494,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.05'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.06'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -7674,6 +7674,7 @@ window.__clipCheck = () => { let bad = 0, n = 0; const v = new THREE.Vector3(), 
       for (const [u, w] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { const x = v.x + u * sc.x / 2 * c + w * sc.z / 2 * s2, z = v.z - u * sc.x / 2 * s2 + w * sc.z / 2 * c; if (!trackFree(x, z, 0.5)) { bad++; break; } } } });
   return { buildings: n, clipping: bad }; };
 window.__sim = (sec, dt = 1 / 60) => { for (let t = 0; t < sec; t += dt) { if (running && !paused) step(dt); updateMeshes(dt); } return window.__dbg(); };   /* Test: Simulation ohne Bildausgabe vorspulen */
+window.__results = () => { order.forEach((c, i) => { c.finished = true; c.finishLaps = S.laps; c.finishTime = 5400 + i * 1.7; c.best = 88 + i * 0.21; }); fastest = fastest || { name: order[3].name, t: order[3].best }; showResults(); return $('#results').className; };   /* Test: Ergebnis-Bildschirm mit Testdaten öffnen */
 window.__laps = () => ais.map(a => a.code + ':' + (a.lapTimes || []).map(t => t.toFixed(1)).join('/'));
 window.__dbg = () => ({ L, N, raceState, running, paused, lightsT, raceTime, plD: pl.d, plV: pl.v, plLat: pl.lat, order: order.map(c => c.code), best: pl.best, fastest, resultsShown, aiBest: ais.slice(0, 5).map(a => a.code + ':' + (a.best || 0).toFixed(1)) });
 requestAnimationFrame(frame);
