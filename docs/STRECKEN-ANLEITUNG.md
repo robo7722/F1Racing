@@ -574,3 +574,33 @@ Die Bäume der `trees: 'forest'`-Strecken bestehen nicht mehr aus Kugeln und Keg
 - **1.11 – Autos/Cockpit**: F2-Normalen werden beim Laden neu berechnet (`renormCar`, Flächen nach außen, 4 mm verschweißt, 2× geglättet) und der Lack-Shader dreht die Normale zum Betrachter (`viewFacing`) – deshalb darf der F2-Klarlack jetzt .85 / Rauheit .12 haben (ersetzt die Angabe oben). F2-Farbfelder (Nase, Flügel) liegen im Shader, nicht mehr in den Eckpunktfarben. TV-Kamera-Halo: `HALO_SPEC` (vermessene Mittellinie je Modell) + `sweepGeo` – runder Bügel, kein V. Lenkrad (`SW`): Carbon-Mittelteil, Griffschlaufen, Drehschalter; Handschuhe in Teamfarbe. Kart: Helm ohne Aufsätze, Anzeige sitzt im Lenkrad.
 - **1.11 – Monaco**: Stadtboden ist graues Pflaster (`mcGroundTint`), Hanghäuser im 14-m-Raster (≈13 800 statt 9 400). Casino nach Foto der Platzseite neu (Risalit mit Vordach und Uhr, zwei Türme mit Laterne, große Kuppel auf abgerundet-quadratischem Grundriss, Mansarddächer, Seitenflügel); steht auf dem höchsten Geländepunkt unter dem Grundriss, darunter ein Sockel.
 - **1.11 – UI**: letzter CSS-Block „UI 2027“ bestimmt das Aussehen (Glasflächen, runde Ecken, Pillen, Akzentverlauf `--ag`). Neue Regeln dort ergänzen, nicht in den älteren Blöcken. Der Hinweistext unten im Hauptmenü ist entfernt; die Tastenbelegung steht unter Einstellungen → Steuerung.
+
+---
+
+## Nachtrag: Stand Version 1.12
+
+### Neue Prüfhelfer (Konsole)
+| Befehl | Soll | Bedeutung |
+|---|---|---|
+| `__grassBleed()` | `pts` ≈ 0 | Grasflächen (Füllstreifen, Geländebänder, Bodenkacheln), die auf gleicher Höhe oder über einem Kies-/Auslauf-/Fahrbahnstreifen liegen. `top` nennt Streckenmeter `s`, seitlichen Abstand `lat`, Höhenunterschied `dy` und Art `tag` |
+| `__holes()` / `__holesLeft()` | – / 0 | Anzahl der beim Bau geschlossenen Kies-Lücken (0,5-m-Zellen) bzw. was noch offen wäre |
+| `__elev(i, n)` | – | Höhenprofil ab Abschnitt `i` |
+| `__scr('race')` | – | Menübildschirm direkt öffnen |
+
+### Was beim Bau automatisch passiert
+- **Kies-Lücken** (`fillGroundHoles`): Kiesstreifen werden auf der Kurveninnenseite begrenzt (`foldLim`). Zwischen zwei Kurven einer Schikane blieb so eine eingeschlossene Lücke, durch die der Grasboden schien (Monza Rettifilo). Jede Zelle, die laut `surface()` Kies ist, aber nicht gezeichnet wurde und rundum von Belag eingeschlossen ist, wird mit dem Kies-Material gefüllt.
+- **Boxengasse** (`pitZone`): Geländebänder und Büsche beginnen auf der Boxenseite erst hinter der Boxengasse (Spa hatte ein Gras-Zebramuster auf der Boxengasse).
+- **Grober Boden**: Dreiecke, die Fläche innerhalb der Absperrung überdecken, liegen immer unter Streckenhöhe (Nordschleife: Boden schnitt den Kerb an).
+
+### Asphalt
+- Fahrbahn- und Auslauf-Fotos werden beim Laden mit `flatTex` hochpassgefiltert (große helle/dunkle Wolken entfernt, Kachel nahtlos). Neue Asphalt-Fotos brauchen deshalb keine besondere Vorauswahl mehr, sollten aber feine, gleichmäßige Körnung haben.
+- Prüfen: Draufsicht `__view(s, 0, 30, s + 0.01, 0, 0)` aufnehmen und den Kontrast stark erhöhen – es dürfen keine Querbänder im Abstand der Kachel (≈ 5,4 m) zu sehen sein.
+
+### Cockpit
+- In der Cockpitansicht verwirft der Lack-Shader des Spielerautos die Flächen innerhalb der Öffnung (`cockCut`); eine eigene Carbon-Wanne (`cockTub`) mit Boden, Seitenwänden, Armaturenkante und Polstern ersetzt sie. Maße je Modell in `COCK` (aus dem Höhenraster der Modelle vermessen).
+- Lenkrad und Hände werden normal tiefengeprüft (kein Overlay mehr). Lenkradposition je Modell: `swPos`, `swS`, Augenpunkt `cam` in `MODELS`.
+- TV-Kamera: Halo aus dem Modell, einfarbig in Wagenfarbe (wie 1.00).
+
+### Oberfläche
+- Gestaltung nach dem F1-Spiel: eckig (Radius 0), Carbon-Flächen mit Tiefe, Titillium Web aufrecht, Rot `#E10600`. Alle Regeln im Block „UI 2027c“ am Ende des Stils.
+- Testgrößen: 891×412 (S26 Ultra quer als App) und 891×360 (im Browser mit Leisten).
