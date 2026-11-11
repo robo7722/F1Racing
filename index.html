@@ -3070,7 +3070,7 @@ function kartDispDraw(cv, kmh, rpm, idle) {   // Display im Stil eines Kart-Date
   g.fillStyle = '#aab6c2'; g.font = '800 14px system-ui,sans-serif'; g.textAlign = 'left'; g.fillText('KM/H', 8, 92); g.textAlign = 'right'; g.fillText(idle ? '' : (Math.round(rpm / 100) / 10).toFixed(1) + 'k', 184, 92); g.setTransform(1, 0, 0, 1, 0, 0);
 }
 function kartDispTick(dt) { const m = pl && pl.mesh; if (!m || !m.kart || !m.dcv) return; m.dT -= dt; if (m.dT > 0) return; m.dT = 0.07;   // ~14 Bilder/s genügen
-  const kmh = Math.max(0, (pl.v || 0) * 3.6 * 2.1), thr = pl.thr || 0, rpm = clamp(6200 + clamp((pl.v || 0) / (VTOP * 0.5), 0, 1.05) * 6200 + (pl.rev || 0) * 4500 + thr * 700, 5000, 14500);   // Kart-Tempo wie im Spiel skaliert (Anzeige nach Gefühl)
+  const kmh = Math.max(0, (pl.v || 0) * 3.6),   /* gleiche km/h wie der Tacho im HUD (vorher ×2,1 „nach Gefühl“: bis ~360 km/h) */ thr = pl.thr || 0, rpm = clamp(6200 + clamp((pl.v || 0) / (VTOP * 0.5), 0, 1.05) * 6200 + (pl.rev || 0) * 4500 + thr * 700, 5000, 14500);   // Kart-Tempo wie im Spiel skaliert (Anzeige nach Gefühl)
   kartDispDraw(m.dcv, kmh, running ? rpm : 6000 + (pl.rev || 0) * 6000, false); m.dtex.needsUpdate = true; }
 function kartSteeringWheel(T) {   // Kart-Lenkrad: Kranz mit Markierung und Griffpolstern, drei gelochte Alu-Speichen, verschraubte Nabe, Laptimer-Anzeige oben auf den Speichen
   const g = new THREE.Group(), rub = col(0x141518), met = col(0x9aa1aa), metD = col(0x4a4f57), acc = col(T.acc === 0x16181b ? T.body : T.acc), pad = col(0x3a3d44), parts = [];
