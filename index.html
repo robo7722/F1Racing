@@ -2422,7 +2422,7 @@ const mkWheelM = C => C ? C.lods.map((L, l) => {
   return { L: v(L.wheelL, hf), R: v(L.wheelR, hf), RL: v(L.rwheelL, hr), RR: v(L.rwheelR, hr) };
 }) : null;
 const WHEELM = mkWheelM(CARM), WHEELM2 = mkWheelM(CARM2);
-const MODELS = { f1: CARM ? { C: CARM, W: WHEELM, helm: [0.79, 0.18], rl: [0.315, -2.335], swPos: [0, 0.575, 0.74], swS: 0.85, cam: [0, 0.88, 0.25, 3.5],   /* Lenkrad IN der Cockpitwanne (vorher z 0,98 = unter dem Vorderdeck, darüber gemalt), Augenpunkt etwas weiter hinten mit leichtem Blick nach unten wie in echten Onboards */ tv: [0, 1.04, 0.02, 2.4] } : null, f2: CARM2 ? { C: CARM2, W: WHEELM2, helm: [0.80, 0.21], rl: [0.40, -2.468], rlS: [0.085, 0.075, 0.02], swPos: [0, 0.61, 0.64], swS: 0.8, cam: [0, 0.83, 0.20, 3.5],   /* swS: Lenkrad im F2 kleiner – die Kamera sitzt dort viel näher dran */ tv: [0, 1.04, 0.02, 2.4] } : null };
+const MODELS = { f1: CARM ? { C: CARM, W: WHEELM, helm: [0.79, 0.18], rl: [0.315, -2.335], swPos: [0, 0.56, 0.68], swS: 0.82, cam: [0, 0.80, 0.22, 3.0],   /* Lenkrad IN der Cockpitwanne (vorher z 0,98 = unter dem Vorderdeck, darüber gemalt), Augenpunkt etwas weiter hinten mit leichtem Blick nach unten wie in echten Onboards */ tv: [0, 1.04, 0.02, 2.4] } : null, f2: CARM2 ? { C: CARM2, W: WHEELM2, helm: [0.80, 0.21], rl: [0.40, -2.468], rlS: [0.085, 0.075, 0.02], swPos: [0, 0.61, 0.64], swS: 0.8, cam: [0, 0.83, 0.20, 3.5],   /* swS: Lenkrad im F2 kleiner – die Kamera sitzt dort viel näher dran */ tv: [0, 1.04, 0.02, 2.4] } : null };
 const COMPOUNDS = COMPOUNDS_;
 const WMAT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .88, metalness: .05, side: THREE.DoubleSide });
 const MIRMAT = new THREE.MeshStandardMaterial({ color: 0xdfe6ee, metalness: 1, roughness: .05, envMapIntensity: 1.15, side: THREE.DoubleSide });   // Spiegelglas: spiegelt die Umgebung (vorher eine einfarbig hellblaue, selbstleuchtende Fläche – im Cockpit ein weißer Klotz)
@@ -7155,6 +7155,7 @@ function poseArm(a, gx, gy, gz, rz, ex, ey, ez) {
   for (const o of [a.fore, a.cuff, a.strap]) { o.position.copy(_aw); o.quaternion.setFromUnitVectors(_ay, _ad); }
   a.fore.scale.set(1, Math.max(0.01, L), 1);
 }
+const SW_ROT = 0.95;   // sichtbare Lenkraddrehung bei vollem Einschlag (~55°): mehr hob die Hände so hoch, dass die Unterarme quer über die Karosserie liefen
 const ARMS = { f1: null, road: null }, _gc = new THREE.Color(), _gw = new THREE.Color(0xffffff);
 function armsTick() {
   const cock = running && S.cam === 2 && !!(pl && pl.mesh), road = !!(pl && pl.mesh && (pl.mesh.road || pl.mesh.kart)), col = pl && TEAMS[pl.team] ? uiCol(TEAMS[pl.team]) : 0xffffff;
@@ -7164,8 +7165,9 @@ function armsTick() {
   if (!road) {   // F1: Lenkrad dreht max. ~70°, die Hände bleiben an den Griffen
     const A = ARMS.f1 ||= makeArms(true, 0.033); A.suit.color.setHex(col); _gc.setHex(col).lerp(_gw, 0.12); if (_gc.r + _gc.g + _gc.b < 0.09) _gc.setHex(0x3a3f48); A.hm.color.copy(_gc); A.cuffM.color.copy(_gc);   // Handschuhe und Stulpen in Teamfarbe (vorher immer weiß); bei fast schwarzen Teams dunkelgrau, damit die Finger erkennbar bleiben
     if (A.g.parent !== pl.mesh.g) pl.mesh.g.add(A.g); A.g.position.copy(SW.g.position); A.g.scale.copy(SW.g.scale);
-    A.g.rotation.set(0.45, Math.PI, 0); const ang = -steer * 1.25, c = Math.cos(ang), s2 = Math.sin(ang);
-    for (const a of A.side) { const x0 = a.sx * 0.2, y0 = -0.01; poseArm(a, x0 * c - y0 * s2, x0 * s2 + y0 * c, 0.02, ang, a.sx * 0.34, -0.33, 0.42); }
+    A.g.rotation.set(0.45, Math.PI, 0); const ang = -steer * SW_ROT, c = Math.cos(ang), s2 = Math.sin(ang);
+    const E = (pl.mesh.tp && pl.mesh.tp.M.elb) || [0.11, -0.46, 0.33];   // Ellbogen-Zielpunkt (Lenkrad-Koordinaten): INNERHALB der Cockpitbreite und tief – sonst stachen die Unterarme beim Lenken durch Seitenwand und Halo
+    for (const a of A.side) { const x0 = a.sx * 0.2, y0 = -0.01; poseArm(a, x0 * c - y0 * s2, x0 * s2 + y0 * c, 0.02, ang, a.sx * E[0], E[1], E[2]); }
   } else if (pl.mesh.swSpin && pl.mesh.swSpin.parent) {   // Roadster (rundes Lenkrad): Hände auf 9 und 3 Uhr, wandern mit dem Einschlag am Kranz entlang
     const A = ARMS.road ||= makeArms(false, 0.023, true), piv = pl.mesh.swSpin.parent; A.suit.color.setHex(pl.mesh.kart ? col : 0x2b3442);   // Straßenauto: Jackenärmel statt Rennanzug
     if (A.g.parent !== piv) piv.add(A.g);
@@ -7188,7 +7190,7 @@ function drawWheel(dt) {
   armsTick();
   if (!SW.g.visible) return;
   if (SW.g.parent !== pl.mesh.g) pl.mesh.g.add(SW.g); // Lenkrad sitzt fest im Auto und bewegt/wackelt mit ihm
-  SW.g.rotation.set(0.45, Math.PI, -(pl.steer || 0) * 1.25);
+  SW.g.rotation.set(0.45, Math.PI, -(pl.steer || 0) * SW_ROT);
   SW.t -= dt; if (SW.t > 0) return; SW.t = 0.07;
   const g = SW.sc.getContext('2d'), w = 640, h = 320, kmh = Math.round(pl.v * 3.6), gi = gearInfo(kmh), F = 'system-ui,sans-serif';
   // Rahmen + Display-Hintergrund mit leichtem Raster
@@ -8158,6 +8160,7 @@ window.__elev = (a = 0, n = 40) => { const o = []; for (let i = a; i < a + n; i+
 window.__holes = () => HOLES; window.__holesLeft = () => fillGroundHoles(true);
 window.__scr = k => { showScreen(k); return MENU.scr; };   /* Test: Menübildschirm direkt öffnen */
 window.__season = tier => { if (!CAREER) { CAREER = carDef(); CAREER.name = 'Robert Nemec'; } if (tier !== 'kart' && !CAREER.slot[tier]) CAREER.slot[tier] = mkSlot(tier, SERIES[tier].drivers[4][3], null); (CAREER.intro ||= {})[tier] = 1; startSeason(tier); return MENU.scr; };   /* Test: Saison-Bildschirm öffnen */
+window.__arms = () => ARMS;
 window.__plRef = () => pl;
 window.__S = () => S; window.__mesh = () => ({ ALL, pl, MODELS, camera });   /* Test: Einstellungen und Fahrzeuge lesen/setzen */
 window.__laps = () => ais.map(a => a.code + ':' + (a.lapTimes || []).map(t => t.toFixed(1)).join('/'));
