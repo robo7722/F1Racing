@@ -2437,6 +2437,9 @@ function ringParts(hw, segs) {
 function wheelGeoM(g, hw, comp, segs) {
   const cTy = new THREE.Color(0x141414), cRim = new THREE.Color(0x2b2e33), cc = new THREE.Color(COMPOUNDS_[comp]);
   const base = paintGeo(g, (k, x, y, z, o) => o.copy(k === 5 ? cTy : cRim)), R = ringParts(hw, segs);
+  // Markierung auf die Reifenflanke legen: je Seite und Radius die tatsächliche Flankenposition aus dem Modell lesen (vorher fest bei ±hw – die Flanke wölbt sich nach innen, die Linie schwebte daneben)
+  { const gp = g.attributes.position.array, side = (sd, r) => { let m = -1; for (let i = 0; i < gp.length; i += 3) { const rr = Math.hypot(gp[i + 1], gp[i + 2]); if (Math.abs(rr - r) < 0.008 && sd * gp[i] > m) m = sd * gp[i]; } return m; }, cache = new Map();
+    for (let i = 0; i < R.pos.length; i += 3) { const sd = Math.sign(R.pos[i]), r = Math.round(Math.hypot(R.pos[i + 1], R.pos[i + 2]) * 1000) / 1000, key = sd + ':' + r; if (!cache.has(key)) cache.set(key, side(sd, r)); const x = cache.get(key); if (x > 0) R.pos[i] = sd * (x + 0.0015); } }
   const n0 = base.attributes.position.count, n1 = R.pos.length / 3;
   const P = new Float32Array((n0 + n1) * 3), Nn = new Float32Array((n0 + n1) * 3), C = new Float32Array((n0 + n1) * 3), U = new Float32Array((n0 + n1) * 2);
   P.set(base.attributes.position.array); P.set(R.pos, n0 * 3); Nn.set(base.attributes.normal.array); Nn.set(R.nrm, n0 * 3); C.set(base.attributes.color.array);
