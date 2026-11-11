@@ -6180,34 +6180,34 @@ function drawMap() {
 }
 const gC = $('#gauge'), gG = gC.getContext('2d');
 function rrect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+const BOOST_NAME = 'BOOST';
 function drawGauge() {
-  // Tacho wie in den F1-Spielen: Drehzahlring über 240° aus 24 Segmenten (grün · rot · violett, Schaltblitz blau), Gang groß in der Mitte, km/h darunter,
-  // ERS als innerer gelber Ring, Gas und Bremse als kurze Bögen an den Ringenden. Logische Größe 230×150, Leinwand doppelt (scharf).
+  // Tacho, modern (Stil aktueller F1-Spiele): keine Scheibe, keine Skalenstriche. Ein schlanker, durchgehender Drehzahlbogen mit Farbverlauf (Grün -> Gelb -> Rot),
+  // dessen Ende als heller Punkt leuchtet; darüber 9 kleine Schaltlichter. Gang sehr groß, Tempo darunter. Links und rechts dünne senkrechte Balken für Bremse und Gas,
+  // unten ein flacher, unterteilter ERS-Balken. Hinter allem nur ein weicher dunkler Schleier für Lesbarkeit.
   const g = gG, W2 = 230, H2 = 150; g.clearRect(0, 0, 460, 300); g.save(); g.scale(2, 2);
   const kmh = pl.v * 3.6, gi = gearP(kmh), pre = raceState === 'lights', ers = !document.body.classList.contains('noBoost'), F = '"Titillium Web",system-ui,sans-serif';
-  const cx = W2 / 2, cy = 78, R = 60, a0 = Math.PI * (150 / 180), a1 = Math.PI * (390 / 180), span = a1 - a0;
-  // Scheibe: dunkel, leicht gewölbt; feiner Außenring
-  { const gr = g.createRadialGradient(cx, cy - 20, 10, cx, cy, R + 12); gr.addColorStop(0, 'rgba(34,34,46,.9)'); gr.addColorStop(1, 'rgba(8,8,12,.92)'); g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, R + 10, 0, Math.PI * 2); g.fill();
-    g.strokeStyle = 'rgba(255,255,255,.14)'; g.lineWidth = 1; g.beginPath(); g.arc(cx, cy, R + 10, 0, Math.PI * 2); g.stroke(); }
-  // Drehzahl-Segmente
-  const nS = 24, f = pre ? 0.05 + 0.95 * (pl.rev || 0) : pl.v < 0.5 ? 0.02 : gi.f, lit = Math.round(clamp(f, 0, 1) * nS), flash = f > 0.965 && (performance.now() / 85 | 0) % 2, gap = 0.035, sw = span / nS;
-  g.lineWidth = 9; g.lineCap = 'butt';
-  for (let k = 0; k < nS; k++) { const on = k < lit, c = flash ? '#3d7bff' : k < 14 ? '#00d26a' : k < 20 ? '#ff1e00' : '#b04dff';
-    g.strokeStyle = on ? c : 'rgba(255,255,255,.09)'; g.beginPath(); g.arc(cx, cy, R, a0 + k * sw + gap / 2, a0 + (k + 1) * sw - gap / 2); g.stroke(); }
-  // Skalenstriche innen
-  g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 1.2; for (let k = 0; k <= 12; k++) { const an = a0 + span * k / 12, r1 = R - 7, r2 = R - (k % 3 ? 10 : 13); g.beginPath(); g.moveTo(cx + Math.cos(an) * r1, cy + Math.sin(an) * r1); g.lineTo(cx + Math.cos(an) * r2, cy + Math.sin(an) * r2); g.stroke(); }
-  // ERS: innerer Ring (gelb), zeigt Ladung; beim Boost heller
-  if (ers) { const rE = R - 19, b2 = clamp(pl.bat || 0, 0, 1); g.lineWidth = 3.5; g.strokeStyle = 'rgba(255,255,255,.08)'; g.beginPath(); g.arc(cx, cy, rE, a0, a1); g.stroke();
-    g.strokeStyle = pl.boosting ? '#fff27a' : '#ffd400'; g.beginPath(); g.arc(cx, cy, rE, a0, a0 + span * b2); g.stroke(); }
-  // Gang
-  g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillStyle = flash ? '#7fa8ff' : '#fff'; g.font = '700 50px ' + F; g.fillText(pl.v < 0.5 && !pre ? 'N' : pre ? 'N' : gi.g, cx, cy + 12);
-  // Tempo
-  g.font = '700 21px ' + F; g.fillStyle = '#fff'; g.fillText(Math.round(kmh), cx, cy + 36); g.font = '600 8px ' + F; g.fillStyle = 'rgba(255,255,255,.55)'; g.fillText('KM/H', cx, cy + 46);
-  // Gas / Bremse: kurze Bögen außen an den Ringenden (unten links Bremse, unten rechts Gas)
-  const rP = R + 6, pa = Math.PI * 0.2; g.lineWidth = 4;
-  const pedal = (from, dir, v, col) => { g.strokeStyle = 'rgba(255,255,255,.1)'; g.beginPath(); g.arc(cx, cy, rP, Math.min(from, from + dir * pa), Math.max(from, from + dir * pa)); g.stroke(); if (v > 0.01) { g.strokeStyle = col; const e = from + dir * pa * clamp(v, 0, 1); g.beginPath(); g.arc(cx, cy, rP, Math.min(from, e), Math.max(from, e)); g.stroke(); } };
-  pedal(a0 - 0.06, -1, pl.brk || 0, '#ff1e00'); pedal(a1 + 0.06, 1, pre ? (pl.rev || 0) : (pl.thr || 0), '#00d26a');
-  if (ers) { g.font = '700 7.5px ' + F; g.fillStyle = pl.boosting ? '#fff27a' : 'rgba(255,212,0,.85)'; g.textAlign = 'right'; g.fillText(pl.boosting ? 'BOOST' : 'ERS', cx - 26, cy + 38); g.textAlign = 'left'; g.fillText(Math.round((pl.bat || 0) * 100) + '%', cx + 26, cy + 38); }   // unter dem Ring-Ende, frei vom Gang
+  const cx = W2 / 2, cy = 80, R = 56, a0 = Math.PI * 0.8, a1 = Math.PI * 2.2, span = a1 - a0;
+  { const sh = g.createRadialGradient(cx, cy, 8, cx, cy, R + 26); sh.addColorStop(0, 'rgba(6,6,10,.62)'); sh.addColorStop(.7, 'rgba(6,6,10,.4)'); sh.addColorStop(1, 'rgba(6,6,10,0)'); g.fillStyle = sh; g.fillRect(0, 0, W2, H2); }
+  const f = clamp(pre ? 0.05 + 0.95 * (pl.rev || 0) : pl.v < 0.5 ? 0 : gi.f, 0, 1), flash = f > 0.965 && (performance.now() / 85 | 0) % 2;
+  // Bogen: Spur + Füllung mit Farbverlauf entlang des Bogens (konischer Verlauf)
+  g.lineCap = 'round'; g.lineWidth = 6; g.strokeStyle = 'rgba(255,255,255,.1)'; g.beginPath(); g.arc(cx, cy, R, a0, a1); g.stroke();
+  if (f > 0.005) { let grad; if (g.createConicGradient) { grad = g.createConicGradient(a0 - 0.05, cx, cy); grad.addColorStop(0, '#00e07a'); grad.addColorStop(0.42, '#00e07a'); grad.addColorStop(0.56, '#ffd400'); grad.addColorStop(0.7, '#ff2a14'); grad.addColorStop(0.82, '#c040ff'); grad.addColorStop(1, '#c040ff'); } else grad = '#00e07a';
+    const ae = a0 + span * f; g.strokeStyle = flash ? '#4d8bff' : grad; g.beginPath(); g.arc(cx, cy, R, a0, ae); g.stroke();
+    g.fillStyle = '#fff'; g.shadowColor = flash ? '#4d8bff' : 'rgba(255,255,255,.9)'; g.shadowBlur = 8; g.beginPath(); g.arc(cx + Math.cos(ae) * R, cy + Math.sin(ae) * R, 3.6, 0, Math.PI * 2); g.fill(); g.shadowBlur = 0; }
+  // Schaltlichter oben
+  { const n = 9, lit = Math.round(clamp((f - 0.55) / 0.4, 0, 1) * n), w = 7, gp = 3, x0 = cx - (n * w + (n - 1) * gp) / 2, y = cy - R - 16;
+    for (let k = 0; k < n; k++) { const c = flash ? '#4d8bff' : k < 3 ? '#00e07a' : k < 6 ? '#ff2a14' : '#c040ff'; g.fillStyle = k < lit ? c : 'rgba(255,255,255,.12)'; g.fillRect(x0 + k * (w + gp), y, w, 4); } }
+  // Gang + Tempo
+  g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillStyle = flash ? '#8fb2ff' : '#fff'; g.font = '700 58px ' + F; g.fillText(pl.v < 0.5 || pre ? 'N' : gi.g, cx, cy + 16);
+  g.font = '700 17px ' + F; g.fillStyle = '#fff'; g.fillText(Math.round(kmh), cx, cy + 36); g.font = '600 7.5px ' + F; g.fillStyle = 'rgba(255,255,255,.55)'; g.fillText('KM/H', cx, cy + 45);
+  // Bremse links, Gas rechts: schlanke senkrechte Balken
+  const bh = 52, by = cy - bh / 2 + 4, bar = (x, v, c) => { g.fillStyle = 'rgba(255,255,255,.1)'; g.fillRect(x, by, 4, bh); if (v > 0.01) { g.fillStyle = c; const h = bh * clamp(v, 0, 1); g.fillRect(x, by + bh - h, 4, h); } };
+  bar(cx - R - 20, pl.brk || 0, '#ff2a14'); bar(cx + R + 16, pre ? (pl.rev || 0) : (pl.thr || 0), '#00e07a');
+  // ERS-Balken unten, 8 Abschnitte
+  if (ers) { const w = 92, x0 = cx - w / 2, y = H2 - 10, n = 8, sw = w / n, b2 = clamp(pl.bat || 0, 0, 1), col = pl.boosting ? '#fff27a' : '#ffd400';
+    for (let k = 0; k < n; k++) { const fill = clamp(b2 * n - k, 0, 1); g.fillStyle = 'rgba(255,255,255,.1)'; g.fillRect(x0 + k * sw + 1, y, sw - 2, 4); if (fill > 0) { g.fillStyle = col; g.fillRect(x0 + k * sw + 1, y, (sw - 2) * fill, 4); } }
+    g.font = '700 7px ' + F; g.fillStyle = col; g.textAlign = 'right'; g.fillText(pl.boosting ? BOOST_NAME : 'ERS', x0 - 5, y + 4.5); g.textAlign = 'left'; g.fillText(Math.round(b2 * 100) + '%', x0 + w + 5, y + 4.5); }
   g.restore();
 }
 
@@ -7977,7 +7977,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.14'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.15'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
