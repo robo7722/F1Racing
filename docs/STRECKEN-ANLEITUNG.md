@@ -541,3 +541,20 @@ Die Bäume der `trees: 'forest'`-Strecken bestehen nicht mehr aus Kugeln und Keg
 ## Nachtrag 6: Zurückgenommen
 - **Monza**: Die Schikanen-Umbauten (Rettifilo, Roggia) sind wieder wie vor Version 1.01. Die Bausteine `straightOn`, `chordWall` und `pocketFill` bleiben im Code für andere Strecken; Monza steht nicht mehr in `CHORD_OK`.
 - **Tonwertkurve**: wieder ACES, `TONE` steht auf 1 (keine globale Anhebung). Die Farbstimmung je Strecke ist unverändert, die neuen Stimmungen für Genk und Wackersdorf bleiben.
+
+---
+
+## Nachtrag 7: Version 1.02 – Überblendung, Gras, Asphalt, Karriere
+
+- **`distFade(material, d0, d1)`**: löst ein Material zwischen d0 und d1 Metern Entfernung punktweise auf (Dither, kein Sortieren, kaum Kosten). Eingesetzt bei den Laubflächen der Bäume (92–128 m, genau vor dem Stufenwechsel), bei Grasbüscheln (40–68 m). Für neue Vegetation mit Alpha-Test dasselbe verwenden, damit nichts plötzlich auftaucht.
+- **Grasbüschel (`grassTufts`)** gibt es auf allen Strecken mit `ground: 'grass'`, im ganzen Streifen zwischen Fahrbahn und Absperrung (dicht bis 8 m Abstand, danach lockerer, bis 24 m). Auf Strecken über 9 km (Nordschleife) nur 40 % Dichte.
+- **Auslaufzonen („paved“) und Z-Fighting**: Flächen, die übereinander liegen, brauchen deutlich verschiedene `polygonOffset`-Werte (Fahrbahn −2, Auslauf −3, bemalte Streifen −4, Grasfüllung +1). Bei nur ±1 flackert ab ca. 300 m das Gras durch den Asphalt („Loch“).
+- **Asphalt** wird zweimal gelesen (`asphaltNoRepeat`, zweiter Maßstab 0,4-fach versetzt) – dadurch keine sichtbare Wiederholung mehr. Die Gummispur (`rubberMat`) ist dezent (0,18).
+- **Baum-Flächen**: Laubflächen zeigen nie nach oben (Erhebung begrenzt, Normale in [−0,3 … 0,45]); Schirmkiefern hängen stärker (`droop` 0,34), damit keine flachen Scheiben entstehen.
+- **Monaco**: Häuser sind einfache Quader (kein Detailwechsel); die Fassadentextur zeichnet Klappläden (`shutter`-Farben), Fensterbänke und Stürze. Der Hang bis zur Stadtgrenze ist in warmen Dachfarben eingefärbt und mit 17-m-Raster bebaut, damit zwischen den Häusern kein Boden sichtbar ist.
+- **Esplanade (Singapur)**: zwei Glaskuppeln mit je 3400 dreieckigen Alu-Spitzen als ein Netz.
+- **Vorwärmen (`warmUpTrack`)**: beim Rennstart werden alle Geometrien und Texturen (auch Detailstufen) einmal in ein 8×8-Bild gezeichnet – gegen Ruckler beim ersten Sichtbarwerden (Spa).
+- **Grafikwechsel im Rennen**: Strecke wird neu aufgebaut, Rennstand und Autos bleiben (`REBUILD` hält nur die Bildschleife kurz an).
+- **Karriere-Bildschirm**: neue Anordnung (links: nächstes Rennen mit Streckenumriss, Rennwochenende, Aktionen; rechts: Tabelle, Kalender). Die Auswahl von Schwierigkeit und Länge bleibt erhalten (`renderMenu` setzt nur noch Reihen mit Einstellungsschlüssel zurück).
+- **Kollisionsklang** (`bump(stärke, 'car' | 'wall')`): Schlag, Knirschen, Splitter, bei Wandkontakt zusätzlich metallisches Schaben.
+- **Kart-Anzeige**: Halterung am Lenkrohr, Bildschirm zeigt Tempo und Drehzahl (`kartDispTick`).
