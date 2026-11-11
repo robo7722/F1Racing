@@ -1792,7 +1792,7 @@ function bakeSky() {
 }
 function skyTick(dt) { SKYC.rot += dt * 0.0022; skyBox.material.uniforms.uRot.value = SKYC.rot; }
 function applySky() {
-  { const sk = TH.sky || [0x2468c4, 0x86bfee, 0xe6f0f8]; MIRMAT.color.setHex(sk[1]).lerp(new THREE.Color(sk[2]), 0.35).multiplyScalar(TH.night ? 0.22 : 0.95); }   /* Rückspiegel zeigen den Himmel dieser Strecke, nicht den Boden */
+  { const sk = TH.sky || [0x2468c4, 0x86bfee, 0xe6f0f8]; MIRMAT.emissive.setHex(sk[1]).lerp(new THREE.Color(sk[0]), 0.25).multiplyScalar(TH.night ? 0.5 : 0.8); }   /* Rückspiegel zeigen den Himmel dieser Strecke, nicht den Boden */
   const u = skyPB.material.uniforms, P = TH.phys || {};
   u.turbidity.value = P.turb ?? 4; u.rayleigh.value = P.ray ?? 1.5; u.mieCoefficient.value = P.mie ?? .005; u.mieDirectionalG.value = P.g ?? .8; u.skyGain.value = P.gain ?? 1;
   u.sunPosition.value.copy(skyMat.uniforms.sunDir.value); u.sunCosU.value = TH.sunCos ?? 0.99995667; skyMat.uniforms.sunExp.value = TH.sunExp ?? 900; skyMat.uniforms.haze.value = TH.haze ?? 0; skyMat.uniforms.hazeCol.value.setHex(TH.hazeCol ?? 0xffffff);
@@ -2509,7 +2509,7 @@ const WHEELM = mkWheelM(CARM), WHEELM2 = mkWheelM(CARM2);
 const MODELS = { f1: CARM ? { C: CARM, W: WHEELM, helm: [0.79, 0.18], rl: [0.315, -2.335], swPos: [0, 0.60, 0.665], swS: 0.78, cam: [0, 0.80, 0.22, 3.0],   /* Lenkrad IN der Cockpitwanne (vorher z 0,98 = unter dem Vorderdeck, darüber gemalt), Augenpunkt etwas weiter hinten mit leichtem Blick nach unten wie in echten Onboards */ tv: [0, 1.04, 0.02, 2.4] } : null, f2: CARM2 ? { C: CARM2, W: WHEELM2, helm: [0.80, 0.21], rl: [0.40, -2.468], rlS: [0.085, 0.075, 0.02], swPos: [0, 0.61, 0.64], swS: 0.8, cam: [0, 0.83, 0.20, 3.5],   /* swS: Lenkrad im F2 kleiner – die Kamera sitzt dort viel näher dran */ tv: [0, 1.04, 0.02, 2.4] } : null };
 const COMPOUNDS = COMPOUNDS_;
 const WMAT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .88, metalness: .05, side: THREE.DoubleSide });
-const MIRMAT = new THREE.MeshStandardMaterial({ color: 0xdfe6ee, metalness: 1, roughness: .05, envMapIntensity: 1.15, side: THREE.DoubleSide });   // Spiegelglas: spiegelt die Umgebung (vorher eine einfarbig hellblaue, selbstleuchtende Fläche – im Cockpit ein weißer Klotz)
+const MIRMAT = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x86bfee, metalness: 0, roughness: 1, envMapIntensity: 0, side: THREE.DoubleSide });   /* Spiegelglas in der Himmelsfarbe der Strecke (nachts dunkel) – als Spiegel der Umgebung zeigte es Gras und Tribünen und wirkte grün */   // Spiegelglas: spiegelt die Umgebung (vorher eine einfarbig hellblaue, selbstleuchtende Fläche – im Cockpit ein weißer Klotz)
 const MATTE = new THREE.MeshStandardMaterial({ vertexColors: true, map: TEX.carbon, normalMap: TEX.carbonN, normalScale: new THREE.Vector2(.5, .5), roughness: .42, metalness: .35, side: THREE.DoubleSide });
 const col = h => new THREE.Color(h);
 function wheelGeo(w, comp) {
