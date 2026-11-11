@@ -802,6 +802,13 @@ th{background:#0c0c12!important;letter-spacing:.16em;font-size:10px!important;co
 th{background:#0a1424!important}
 .overlay{background:linear-gradient(90deg,rgba(4,10,20,.9),rgba(4,10,20,.72))!important}
 #menu::before{background:linear-gradient(90deg,rgba(4,10,20,.94) 0%,rgba(4,10,20,.78) 34%,rgba(4,10,20,.25) 62%,rgba(4,10,20,.05) 80%),radial-gradient(60% 70% at 0% 100%,rgba(225,6,0,.18),transparent 70%)!important}
+/* Schalter: eckig wie der Rest – Navy-Glas mit hellblauer Kante, eckiger Schieber, Beschriftung AN/AUS; an = rot gefüllt */
+.sw{position:relative!important;width:66px!important;height:26px!important;flex:none;background:rgba(8,16,30,.7)!important;border:1px solid rgba(150,205,255,.35)!important;border-radius:0!important;box-shadow:inset 0 1px 0 rgba(150,205,255,.15)!important}
+.sw::after{content:""!important;position:absolute;top:3px!important;left:3px!important;width:18px!important;height:18px!important;border-radius:0!important;background:linear-gradient(180deg,#c9d6e6,#8fa2b8)!important;box-shadow:none!important;transition:transform .18s cubic-bezier(.2,.8,.2,1)!important}
+.sw::before{content:"AUS";position:absolute;right:8px;top:50%;transform:translateY(-50%);font:700 10px "Titillium Web",system-ui,sans-serif;letter-spacing:.14em;color:rgba(255,255,255,.5)}
+.sw.on{background:linear-gradient(180deg,#ff2a14,#c00500)!important;border-color:#ff4a3a!important}
+.sw.on::after{transform:translateX(40px)!important;background:#fff!important}
+.sw.on::before{content:"AN";right:auto;left:10px;color:#fff}
 /* ===== HUD im F1-Spiel-Stil ===== */
 #tl{top:max(10px,env(safe-area-inset-top))!important;left:max(12px,env(safe-area-inset-left))!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:0!important;width:max-content;filter:drop-shadow(0 8px 16px rgba(0,0,0,.45))}
 #pos{display:flex!important;align-items:baseline;gap:2px;font-size:32px!important;font-weight:900!important;letter-spacing:-.01em!important;line-height:1.08!important;padding:1px 26px 1px 10px!important;background:linear-gradient(180deg,#ff2a14,#e10600 50%,#b40500)!important;border:0!important;box-shadow:none!important;text-shadow:none!important;clip-path:var(--sl)}
@@ -8081,7 +8088,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.18'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.19'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
