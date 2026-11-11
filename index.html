@@ -2914,11 +2914,11 @@ function kartDriver(d, T) {
   return g;
 }
 function kartDispDraw(cv, kmh, rpm, idle) {   // Display im Stil eines Kart-Datenloggers: Drehzahlbalken oben, Tempo groß, Einheit klein
-  const g = cv.getContext('2d'), w = cv.width, h = cv.height; g.fillStyle = '#0b0e12'; g.fillRect(0, 0, w, h);
-  const n = 16, bw = (w - 16) / n, f = idle ? 0 : clamp((rpm - 6000) / 8500, 0, 1);
-  for (let k = 0; k < n; k++) { const on = (k + 1) / n <= f + 0.001, c = k > 12 ? '#ff3b30' : k > 9 ? '#ffd23f' : '#37e07a'; g.fillStyle = on ? c : '#1c2229'; g.fillRect(8 + k * bw + 1, 8, bw - 2, 14); }
-  g.fillStyle = '#e8f1f7'; g.font = '700 54px "Titillium Web",system-ui,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillText(idle ? '--' : String(Math.round(kmh)), w / 2, 76);
-  g.fillStyle = '#7f8c99'; g.font = '700 13px system-ui,sans-serif'; g.textAlign = 'left'; g.fillText('km/h', 12, 90); g.textAlign = 'right'; g.fillText(idle ? '' : (Math.round(rpm / 100) / 10).toFixed(1) + ' x1000', w - 12, 90);
+  const g = cv.getContext('2d'), w = cv.width, h = cv.height, u = w / 192; g.setTransform(u, 0, 0, u, 0, 0); g.fillStyle = '#05070a'; g.fillRect(0, 0, 192, 96);   // in 192x96-Einheiten gezeichnet, Leinwand 1,5-fach (schärfer)
+  const n = 12, bw = 176 / n, f = idle ? 0 : clamp((rpm - 6000) / 8500, 0, 1);
+  for (let k = 0; k < n; k++) { const on = (k + 1) / n <= f + 0.001, c = k > 9 ? '#ff3b30' : k > 6 ? '#ffd23f' : '#37e07a'; g.fillStyle = on ? c : '#1a2027'; g.fillRect(8 + k * bw + 1, 6, bw - 2, 12); }
+  g.fillStyle = '#ffffff'; g.font = '900 62px "Titillium Web",system-ui,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillText(idle ? '--' : String(Math.round(kmh)), 96, 78);   // Tempo groß und weiß: aus dem Sitz gut lesbar
+  g.fillStyle = '#aab6c2'; g.font = '800 14px system-ui,sans-serif'; g.textAlign = 'left'; g.fillText('KM/H', 8, 92); g.textAlign = 'right'; g.fillText(idle ? '' : (Math.round(rpm / 100) / 10).toFixed(1) + 'k', 184, 92); g.setTransform(1, 0, 0, 1, 0, 0);
 }
 function kartDispTick(dt) { const m = pl && pl.mesh; if (!m || !m.kart || !m.dcv) return; m.dT -= dt; if (m.dT > 0) return; m.dT = 0.07;   // ~14 Bilder/s genügen
   const kmh = Math.max(0, (pl.v || 0) * 3.6 * 2.1), thr = pl.thr || 0, rpm = clamp(6200 + clamp((pl.v || 0) / (VTOP * 0.5), 0, 1.05) * 6200 + (pl.rev || 0) * 4500 + thr * 700, 5000, 14500);   // Kart-Tempo wie im Spiel skaliert (Anzeige nach Gefühl)
@@ -2951,11 +2951,12 @@ function makeKart(d, T) {
   const swPivot = new THREE.Group(), swSpin = new THREE.Group(), az = new THREE.Vector3(0, 29, -36).normalize(), axx = new THREE.Vector3(-1, 0, 0), ay = new THREE.Vector3().crossVectors(az, axx);
   swPivot.position.set(0, 0.5005, 0.1235); swPivot.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(axx, ay, az)); swPivot.add(swSpin); swSpin.add(kartSteeringWheel(T)); g.add(swPivot);
   // Anzeige (wie ein Rennkart-Display): Halterung am Lenkrohr hinter dem Lenkrad, Gehäuse über dem Kranz, Bildschirm zeigt Tempo und Drehzahl (nur der Spieler-Kart wird neu gezeichnet)
-  const dcv = document.createElement('canvas'); dcv.width = 192; dcv.height = 96; const dtex = new THREE.CanvasTexture(dcv); dtex.colorSpace = THREE.SRGBColorSpace; dtex.anisotropy = 4; kartDispDraw(dcv, 0, 0, true); dtex.needsUpdate = true;
-  // Sitzt wie beim echten Rennkart IM Lenkrad (oberes Feld zwischen Nabe und Kranz, dort sind keine Speichen) – vorher stand sie über dem Kranz mitten im Blickfeld
-  const stalk = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.085, 0.012), new THREE.MeshStandardMaterial({ color: 0x8f969e, metalness: .85, roughness: .35 })); stalk.position.set(0, 0.06, -0.022);
-  const hous = new THREE.Mesh(new THREE.BoxGeometry(0.158, 0.08, 0.02), new THREE.MeshStandardMaterial({ color: 0x15171a, roughness: .5 })); hous.position.set(0, 0.1, -0.006);
-  const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.146, 0.068), new THREE.MeshBasicMaterial({ map: dtex, toneMapped: false })); scr.position.set(0, 0, 0.0105); hous.add(scr); swPivot.add(stalk, hous);
+  const dcv = document.createElement('canvas'); dcv.width = 288; dcv.height = 144; const dtex = new THREE.CanvasTexture(dcv); dtex.colorSpace = THREE.SRGBColorSpace; dtex.anisotropy = 4; kartDispDraw(dcv, 0, 0, true); dtex.needsUpdate = true;
+  // Sitzt wie beim echten Rennkart HINTER dem Lenkrad auf der Lenksäule (feststehend) und ist durch das obere Feld zwischen Nabe und Kranz zu lesen.
+  // Vorher lag sie in derselben Ebene wie Kranz und Speichen: beim Lenken drehten die Speichen durch das Display, oben stieß es an den Kranz.
+  const stalk = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.1, 0.014), new THREE.MeshStandardMaterial({ color: 0x8f969e, metalness: .85, roughness: .35 })); stalk.position.set(0, 0.06, -0.08);   /* Halter hinter dem Gehäuse (verdeckte sonst die Ziffern) */
+  const hous = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.078, 0.022), new THREE.MeshStandardMaterial({ color: 0x15171a, roughness: .5 })); hous.position.set(0, 0.124, -0.062);
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.138, 0.066), new THREE.MeshBasicMaterial({ map: dtex, toneMapped: false })); scr.position.set(0, 0, 0.0115); hous.add(scr); swPivot.add(stalk, hous);
   const rl = new THREE.Object3D(), label = carLabel(d, T); label.position.y = 1.35; g.add(label); scene.add(g);
   return { g, fl, fr, wfl, wfr, rr, label, helm: drv, rl, kart: true, wr: 0.2, swSpin, sw: swPivot, dcv, dtex, dT: 0, cam: [0, 0.74, -0.5, 0.3], camS: 0.72 };
 }
