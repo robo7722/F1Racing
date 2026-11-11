@@ -858,7 +858,7 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 </div>
 
 <div id="controls" class="hidden">
-  <button class="boostBtn" id="bBoost"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 5 14h6l-1 8 8-12h-6z" fill="currentColor"/></svg><small>BOOST</small></button>
+  <button class="boostBtn" id="bBoost"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 5 14h6l-1 8 8-12h-6z" fill="currentColor"/></svg><small>ERS</small></button>
   <div class="side left">
     <button class="pad steer" id="bL" aria-label="Links"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="square"/></svg></button>
     <button class="pad steer" id="bR" aria-label="Rechts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4 8 8-8 8" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="square"/></svg></button>
@@ -1040,7 +1040,7 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
     <div class="tog"><span>Neigung umkehren</span><button class="sw" data-tog="invert" aria-label="Neigung umkehren"></button></div>
     <div class="tog"><span>Horizont waagerecht halten (Neigen)</span><button class="sw" data-tog="level" aria-label="Horizont waagerecht halten"></button></div>
     <button class="big alt" id="editCtl">✥ Touch-Tasten verschieben</button>
-    <p class="hint left">PC: Pfeiltasten/WASD lenken und Gas, Leertaste = Bremse, Shift/E = Boost, C = Kamera, P = Pause · Controller: Stick lenken, RT Gas, LT Bremse, RB Boost, Y Kamera, rechter Stick Kamera drehen, Start Pause · Menü: Steuerkreuz + A</p>
+    <p class="hint left">PC: Pfeiltasten/WASD lenken und Gas, Leertaste = Bremse, Shift/E = ERS, C = Kamera, P = Pause · Controller: Stick lenken, RT Gas, LT Bremse, RB ERS, Y Kamera, rechter Stick Kamera drehen, Start Pause · Menü: Steuerkreuz + A</p>
   </section></div>
   <div class="ppane" id="sExtra"><section class="panel" id="setExtra">
     <div class="tog"><span>Team RONE Racing freischalten</span><button class="sw" data-tog="rone" aria-label="Team RONE Racing freischalten"></button></div>
@@ -6180,7 +6180,7 @@ function drawMap() {
 }
 const gC = $('#gauge'), gG = gC.getContext('2d');
 function rrect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
-const BOOST_NAME = 'BOOST';
+const BOOST_NAME = 'ERS AKTIV';
 function drawGauge() {
   // Tacho, modern (Stil aktueller F1-Spiele): keine Scheibe, keine Skalenstriche. Ein schlanker, durchgehender Drehzahlbogen mit Farbverlauf (Grün -> Gelb -> Rot),
   // dessen Ende als heller Punkt leuchtet; darüber 9 kleine Schaltlichter. Gang sehr groß, Tempo darunter. Links und rechts dünne senkrechte Balken für Bremse und Gas,
@@ -6232,7 +6232,7 @@ function clearKeys() { for (const k of ['kB', 'kL', 'kR', 'kU', 'kD']) inp[k] = 
 addEventListener('blur', clearKeys);   // Fenster verliert den Fokus (Alt-Tab): das keyup kommt nie an -> sonst bleibt Gas/Lenkung hängen
 
 /* ---- Controller (Gamepad-API, Standard-Belegung: Xbox/PlayStation/8BitDo …) ----
-   Linker Stick / Steuerkreuz = Lenken, R2/RT = Gas, L2/LT = Bremse, A/✕ = Gas, X/□ = Bremse, R1/L1 = Boost, Y/△ = Kamera, Start = Pause
+   Linker Stick / Steuerkreuz = Lenken, R2/RT = Gas, L2/LT = Bremse, A/✕ = Gas, X/□ = Bremse, R1/L1 = ERS, Y/△ = Kamera, Start = Pause
    Rechter Stick = Kamera drehen. Im Menü: Steuerkreuz/Stick = Auswahl bewegen, A = Drücken, B = Zurück, Start = Weiter, LB/RB = Reiter */
 const GP = { on: false, steer: 0, thr: 0, brk: 0, boost: false, prev: [], t: 0 };
 addEventListener('gamepadconnected', e => { GP.on = true; document.body.classList.add('gamepad'); showMsg('Controller verbunden', 1.6); });
@@ -7505,10 +7505,10 @@ function showTierIntro(tier, next) {
     body = '<p>Fährst du <b>dicht hinter einem Auto</b>, schiebt dich sein Windschatten: Du wirst auf den Geraden schneller als der Vordermann.</p><p>So nutzt du ihn: Bleib auf der Geraden hinter dem Auto, <b>scher kurz vor der Bremszone aus</b> und zieh außen vorbei. In engen Kurven hilft er nicht, dort zählt nur Grip.</p>';
     art = '<svg viewBox="0 0 560 190" class="intArt"><rect width="560" height="190" rx="12" fill="#2a2d33"/><rect y="28" width="560" height="134" fill="#3a3d44"/><g stroke="#e8e8e8" stroke-width="3" stroke-dasharray="26 22"><line x1="0" y1="95" x2="560" y2="95"/></g><polygon points="372,95 120,52 120,138" fill="#4aa8ff" fill-opacity=".28"/><polygon points="372,95 120,70 120,120" fill="#4aa8ff" fill-opacity=".28"/>' + car(400, 95, '#e10600') + car(208, 95, '#f2d100') + '<g fill="#fff" font-family="system-ui,sans-serif" font-weight="800" font-size="14"><text x="400" y="62" text-anchor="middle">Vordermann</text><text x="208" y="166" text-anchor="middle" fill="#9fd0ff">du im Windschatten</text><text x="262" y="48" text-anchor="middle" fill="#9fd0ff">Windschatten</text></g><g stroke="#ffd400" stroke-width="4" stroke-linecap="round"><line x1="132" y1="95" x2="160" y2="95"/><line x1="124" y1="82" x2="146" y2="82"/><line x1="124" y1="108" x2="146" y2="108"/></g><text x="150" y="130" fill="#ffd400" font-family="system-ui,sans-serif" font-weight="900" font-size="15" text-anchor="middle">+ Tempo</text></svg>';
   } else {
-    title = 'Neu in der Formula 1: E-Motor-Boost & Upgrades';
-    body = '<p><b>BOOST:</b> Tippe auf BOOST (oder die Boost-Taste), während du Gas gibst: Der E-Motor schiebt dich kurz stärker an. Die <b>Batterie</b> lädt sich beim <b>Bremsen und Ausrollen</b> wieder auf, leer ist der Boost weg.</p><p><b>Upgrades:</b> Für Siege und Pole-Positions bekommst du Punkte und kaufst damit Motor, Aerodynamik, Fahrwerk, Bremsen, Reifen und Getriebe. Die Upgrades findest du im Saison-Menü.</p>';
+    title = 'Neu in der Formula 1: ERS & Upgrades';
+    body = '<p><b>ERS:</b> Tippe auf ERS (oder die ERS-Taste), während du Gas gibst: Der E-Motor schiebt dich kurz stärker an. Die <b>Batterie</b> lädt sich beim <b>Bremsen und Ausrollen</b> wieder auf, leer ist das ERS aus.</p><p><b>Upgrades:</b> Für Siege und Pole-Positions bekommst du Punkte und kaufst damit Motor, Aerodynamik, Fahrwerk, Bremsen, Reifen und Getriebe. Die Upgrades findest du im Saison-Menü.</p>';
     const bar = (y, n, lv) => '<text x="318" y="' + (y + 11) + '" fill="#cfd5dc" font-family="system-ui,sans-serif" font-weight="700" font-size="13">' + n + '</text>' + [0, 1, 2, 3, 4].map(k => '<rect x="' + (420 + k * 26) + '" y="' + y + '" width="22" height="14" rx="3" fill="' + (k < lv ? '#e10600' : '#3a3f47') + '"/>').join('');
-    art = '<svg viewBox="0 0 560 190" class="intArt"><rect width="560" height="190" rx="12" fill="#1b1f26"/><rect x="26" y="34" width="150" height="62" rx="9" fill="none" stroke="#cfd5dc" stroke-width="4"/><rect x="176" y="52" width="9" height="26" rx="3" fill="#cfd5dc"/><rect x="34" y="42" width="96" height="46" rx="5" fill="#ffd400"/><path d="M96 40 L70 70 H88 L80 92 L112 58 H94 Z" fill="#16181b"/><text x="100" y="124" text-anchor="middle" fill="#cfd5dc" font-family="system-ui,sans-serif" font-weight="800" font-size="14">ERS-Batterie</text><text x="100" y="144" text-anchor="middle" fill="#9fa7b1" font-family="system-ui,sans-serif" font-size="12">lädt beim Bremsen</text><circle cx="250" cy="76" r="36" fill="rgba(255,196,0,.14)" stroke="#ffc400" stroke-width="3"/><path d="M256 46 L236 82 H250 L244 108 L268 70 H254 Z" fill="#ffc400"/><text x="250" y="132" text-anchor="middle" fill="#ffc400" font-family="system-ui,sans-serif" font-weight="900" font-size="14">BOOST</text>' + bar(34, 'Motor', 3) + bar(62, 'Aero', 2) + bar(90, 'Fahrwerk', 4) + bar(118, 'Bremsen', 1) + '<text x="318" y="160" fill="#9fa7b1" font-family="system-ui,sans-serif" font-size="12">Upgrades mit Punkten kaufen</text></svg>';
+    art = '<svg viewBox="0 0 560 190" class="intArt"><rect width="560" height="190" rx="12" fill="#1b1f26"/><rect x="26" y="34" width="150" height="62" rx="9" fill="none" stroke="#cfd5dc" stroke-width="4"/><rect x="176" y="52" width="9" height="26" rx="3" fill="#cfd5dc"/><rect x="34" y="42" width="96" height="46" rx="5" fill="#ffd400"/><path d="M96 40 L70 70 H88 L80 92 L112 58 H94 Z" fill="#16181b"/><text x="100" y="124" text-anchor="middle" fill="#cfd5dc" font-family="system-ui,sans-serif" font-weight="800" font-size="14">ERS-Batterie</text><text x="100" y="144" text-anchor="middle" fill="#9fa7b1" font-family="system-ui,sans-serif" font-size="12">lädt beim Bremsen</text><circle cx="250" cy="76" r="36" fill="rgba(255,196,0,.14)" stroke="#ffc400" stroke-width="3"/><path d="M256 46 L236 82 H250 L244 108 L268 70 H254 Z" fill="#ffc400"/><text x="250" y="132" text-anchor="middle" fill="#ffc400" font-family="system-ui,sans-serif" font-weight="900" font-size="14">ERS</text>' + bar(34, 'Motor', 3) + bar(62, 'Aero', 2) + bar(90, 'Fahrwerk', 4) + bar(118, 'Bremsen', 1) + '<text x="318" y="160" fill="#9fa7b1" font-family="system-ui,sans-serif" font-size="12">Upgrades mit Punkten kaufen</text></svg>';
   }
   const el = document.createElement('div'); el.id = 'tierIntro';
   el.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(5,7,11,.92);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto;font-family:system-ui,sans-serif;color:#fff';
@@ -7977,7 +7977,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.15'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.16'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
