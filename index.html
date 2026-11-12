@@ -1096,7 +1096,7 @@ body.warmhelm #helmet{display:block!important;opacity:.01}
 :is(#pause,#settings) .big.alt{background:linear-gradient(180deg,rgba(74,78,86,.5),rgba(40,42,48,.62))!important;border:1px solid rgba(255,255,255,.16)!important;border-top-color:rgba(255,255,255,.26)!important}
 :is(#pause,#settings) .big.alt.danger{border-color:rgba(225,6,0,.6)!important;color:#ff6a5c!important}
 
-.tag:empty{display:block!important;border:0!important;padding:0!important;height:0!important}   /* leere Zeile bleibt als Abstand zwischen Logo und Kacheln stehen */
+.tag:empty{visibility:hidden}.tag:empty::before{content:"\00a0"}   /* leere Zeile behält exakt Höhe und Abstände der früheren Textzeile: Logo und Kacheln stehen wie zuvor */
 
 /* Klassenwahl: gewählte Karte bleibt an ihrem Platz (kein Anheben/Hüpfen) */
 #serCards .scard,#serCards .scard.on,#carCards .scard,#carCards .scard.on{transform:none!important;transition:border-color .2s,background .2s!important}
@@ -1104,6 +1104,13 @@ body.warmhelm #helmet{display:block!important;opacity:.01}
 /* Pausenmenü und Einstellungen: eckig wie die übrigen Menüs (keine abgerundeten Fenster, Reiter, Tasten, Regler-Felder) */
 :is(#pause,#settings) :is(.card,.big,.ptabs button,.pinfo span,.seg,.seg button,.sw,.chips button,.stepper button,textarea,input,select,.xbtn,button){border-radius:0!important}
 :is(#pause,#settings) .sw::after{border-radius:0!important}
+
+/* Fahrerkarte: Wähl-Taste über die ganze Breite, Schrift mit Luft */
+.dcard .pick{display:flex!important;width:100%;box-sizing:border-box;padding:0 14px!important;letter-spacing:.14em!important;white-space:nowrap;font-size:11.5px!important}
+/* Schließen-Kreuz (Einstellungen): gezeichnet statt Schriftzeichen, exakt mittig */
+#closeSettings{position:relative;display:grid!important;place-items:center!important;padding:0!important;font-size:0!important;line-height:0!important;border-radius:0!important}
+#closeSettings::before,#closeSettings::after{content:"";position:absolute;left:50%;top:50%;width:16px;height:2px;margin:-1px 0 0 -8px;background:#fff}
+#closeSettings::before{transform:rotate(45deg)}#closeSettings::after{transform:rotate(-45deg)}
 </style>
 </head>
 <body>
@@ -1330,10 +1337,6 @@ body.warmhelm #helmet{display:block!important;opacity:.01}
       <div class="row2"><button class="big alt" id="saveExp">Exportieren</button><button class="big alt" id="saveImp">Importieren</button></div>
       <textarea id="saveCode" spellcheck="false" placeholder="Exportcode hier einfügen und auf Importieren tippen"></textarea>
       <p class="hint left">Die Karriere wird nach jedem Qualifying, Rennen und Upgrade im Browser gespeichert. Mit dem Exportcode kannst du den Spielstand sichern oder auf ein anderes Gerät übertragen.</p></div>
-    <div class="field" style="margin-top:12px"><label>Team-Logos <span id="logoCnt">eigene Dateien</span></label>
-      <div class="row2"><button class="big alt" id="logoImp">Logos laden</button><button class="big alt" id="logoClr">Entfernen</button></div>
-      <input type="file" id="logoFile" accept="image/*" multiple hidden>
-      <p class="hint left">Eigene Logo-Dateien wählen (PNG, SVG, WebP – mehrere auf einmal). Der Dateiname bestimmt das Team: Kürzel oder Name, z. B. MER.png, ferrari.svg, red-bull.png. Die Bilder bleiben nur auf diesem Gerät und werden nicht hochgeladen.</p></div>
     <div class="field" style="margin-top:12px"><label>Credits</label>
       <p class="hint left">Titelmusik: Alegend – Evermore (freetouse.com) · Rennmusik (alle Titel): <span id="creditSongs"></span></p>
       <p class="hint left">Streckendaten: TUM racetrack-database (LGPL-3.0), bacinger/f1-circuits (MIT) · Wahrzeichen-Lage: © OpenStreetMap-Mitwirkende (ODbL)</p></div>
@@ -2670,21 +2673,7 @@ function renormCar(M, tol = 0.004, it = 2, w = 0.5) {
       N = Mx; }
     g.attributes.normal.array.set(N); g.attributes.normal.needsUpdate = true; }
 }
-renormCar(CARM2);
-// F1-Modell: an der Unterkante der Seitenkästen (und an den Leitblechen davor) endet die Lackfläche im Netz als Sägezahn – zwischen den Zähnen fehlen Dreiecke, dahinter sah man den Unterboden.
-// Reparatur am Netz: an offenen Rändern in dieser Zone jede Kerbe (Randpunkt, an dem die Fläche über 180° einnimmt und dessen beide Randnachbarn nahe beieinander liegen) mit einem Dreieck schließen.
-function fillNotches(g, zone, passes = 3) { if (!g || !g.index) return 0; const p = g.attributes.position.array, q = 2000; let ix = Array.from(g.index.array), added = 0;
-  const wid = new Map(), W = new Int32Array(p.length / 3); for (let i = 0; i < W.length; i++) { const k = Math.round(p[i * 3] * q) + ',' + Math.round(p[i * 3 + 1] * q) + ',' + Math.round(p[i * 3 + 2] * q); let r = wid.get(k); if (r === undefined) { r = wid.size; wid.set(k, r); } W[i] = r; }
-  const ang = (a, b, c) => { const ux = p[a * 3] - p[b * 3], uy = p[a * 3 + 1] - p[b * 3 + 1], uz = p[a * 3 + 2] - p[b * 3 + 2], vx = p[c * 3] - p[b * 3], vy = p[c * 3 + 1] - p[b * 3 + 1], vz = p[c * 3 + 2] - p[b * 3 + 2]; return Math.acos(clamp((ux * vx + uy * vy + uz * vz) / (Math.hypot(ux, uy, uz) * Math.hypot(vx, vy, vz) || 1), -1, 1)); };
-  const inZ = i => zone(p[i * 3], p[i * 3 + 1], p[i * 3 + 2]), len = (a, b) => Math.hypot(p[a * 3] - p[b * 3], p[a * 3 + 1] - p[b * 3 + 1], p[a * 3 + 2] - p[b * 3 + 2]);
-  for (let ps = 0; ps < passes; ps++) { const cnt = new Map(), dir = [], inner = new Map();
-    for (let t = 0; t < ix.length; t += 3) for (let k = 0; k < 3; k++) { const a = ix[t + k], b = ix[t + (k + 1) % 3], c = ix[t + (k + 2) % 3], wa = W[a], wb = W[b]; if (wa === wb) continue; const key = wa < wb ? wa + '_' + wb : wb + '_' + wa; cnt.set(key, (cnt.get(key) || 0) + 1); dir.push([a, b, key]); inner.set(wa, (inner.get(wa) || 0) + ang(c, a, b)); }
-    const out = new Map(), inc = new Map(); for (const [a, b, key] of dir) if (cnt.get(key) === 1) { out.set(W[a], out.has(W[a]) ? null : [a, b]); inc.set(W[b], inc.has(W[b]) ? null : [a, b]); }
-    const add = [], used = new Set(); for (const [wv, e1] of inc) { const e2 = out.get(wv); if (!e1 || !e2) continue; const u = e1[0], v = e1[1], w = e2[1]; if (W[u] === W[w] || used.has(W[u]) || used.has(wv) || used.has(W[w])) continue; if (!inZ(u) || !inZ(v) || !inZ(w)) continue;
-      if ((inner.get(wv) || 0) < Math.PI * 1.02 || ang(u, v, w) > 2.7 || len(u, w) > 0.22) continue; add.push(v, u, w); used.add(W[u]); used.add(wv); used.add(W[w]); }
-    if (!add.length) break; ix = ix.concat(add); added += add.length / 3; }
-  if (added) g.setIndex(ix); return added; }
-if (CARM) for (const Lv of CARM.lods) fillNotches(Lv.gloss, (x, y, z) => Math.abs(x) > 0.3 && y < 0.34 && z > -1.4 && z < 1.6);
+/* F2-Modell neu aus dem Original vereinfacht (Kanten erhalten, Normalen mit Knickwinkel): Nachbesserungen an Normalen, Abdeckplatte und Ersatz-Halo sind nicht mehr nötig */
 // F2-Halo: im Modell hat jedes Dreieck eigene Normalen (sichtbare Facetten). Normalen über gleiche Positionen mitteln -> glatte Rohre.
 function smoothGeo(g, tol = 0.003) { if (!g || !g.attributes.normal) return; const p = g.attributes.position.array, N0 = g.attributes.normal.array, n = p.length / 3, q = 1 / tol, map = new Map(), rp = new Int32Array(n), A = new Float32Array(n * 3);
   for (let i = 0; i < n; i++) { const k = Math.round(p[i * 3] * q) + ',' + Math.round(p[i * 3 + 1] * q) + ',' + Math.round(p[i * 3 + 2] * q); let r = map.get(k); if (r === undefined) { r = i; map.set(k, i); } rp[i] = r; }
@@ -2697,7 +2686,7 @@ function smoothGeo(g, tol = 0.003) { if (!g || !g.attributes.normal) return; con
 
 // Lack-Shader: Normale immer zum Betrachter drehen (Flächen mit verdrehter Dreiecksrichtung spiegelten sonst den Boden statt des Himmels)
 function viewFacing(sh) { sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\n if (dot(normal, vViewPosition) < 0.0) normal = -normal;\n nonPerturbedNormal = normal;'); }
-addPlate(CARM2, -0.115, 0.115, 0.69, 0.94, 0.681);
+
 // Die F2-Radmodelle haben Sturz eingebaut (vorn ca. 1,7°, hinten ca. 1,0°, links/rechts gespiegelt). Gedreht wird aber um die X-Achse -> die Räder eierten. Radachse hier gerade auf X ausrichten (Ebene durch die Reifenflanken, Drehung um Z).
 function straightenWheels(C) { if (!C) return;
   for (const LL of C.lods) for (const k of ['wheelL', 'wheelR', 'rwheelL', 'rwheelR']) {   // jede Detailstufe einzeln (die Stufen hatten unterschiedlich viel Sturz)
@@ -2712,15 +2701,6 @@ function straightenWheels(C) { if (!C) return;
     g0.rotateZ(ang); } }
 for (let it = 0; it < 8; it++) straightenWheels(CARM2);   // mehrere Durchgänge: jeder rechnet den Rest-Sturz neu aus, bis die Achse sauber auf X liegt
 if (CARM2 && !CARM2.halo) { const h = new THREE.BufferGeometry(); h.setAttribute('position', new THREE.BufferAttribute(new Float32Array(9), 3)); h.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(9), 3)); h.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(6), 2)); h.setIndex([0, 1, 2]); h.userData.cls = new Uint8Array([7, 7, 7]); h.computeBoundingSphere(); CARM2.halo = h; }
-// F2-Halo neu modelliert: der Halo aus dem Modell war ein ausgefranstes, löchriges Netz (sichtbare Dreiecke, hinten ohne Anschluss). Jetzt ein glatter Rohrbügel entlang der vermessenen Form,
-// Mittelstrebe bis ins Vorderdeck, die hinteren Enden laufen nach unten in die Karosserie (verbunden – auch mit dem Cockpit-Modell der Fahreransicht).
-if (CARM2) { const pts = [], N2 = 48, tail = [[0.25, 0.62, -0.02], [0.25, 0.705, 0.035], [0.256, 0.76, 0.08], [0.275, 0.777, 0.14]];   // hintere Enden: genau auf den Befestigungspunkten des Modells (x ≈ 0,255, z ≈ 0,08) und von dort in die Halterung hinein
-  for (const q of tail) pts.push(new THREE.Vector3(-q[0], q[1], q[2]));
-  for (let i = 0; i <= N2; i++) { const t = Math.PI * i / N2, c = Math.cos(t), sn = Math.sin(t); pts.push(new THREE.Vector3(-0.29 * Math.sign(c) * Math.pow(Math.abs(c), 0.55), 0.7945 + 0.0805 * sn, 0.2 + 0.28 * sn)); }   // Bügel in EINER Ebene: Arme in der Seitenansicht gerade, vorn ein runder Bogen
-  for (const q of tail.slice().reverse()) pts.push(new THREE.Vector3(q[0], q[1], q[2]));
-  const parts = [new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, false, 'centripetal'), 160, 0.03, 16), rod([0, 0.872, 0.47], [0, 0.68, 0.89], 0.027, 16)], P = [], Nn = [], U = [], I = []; let base = 0;
-  for (const g of parts) { P.push(...g.attributes.position.array); Nn.push(...g.attributes.normal.array); U.push(...g.attributes.uv.array); for (const k of g.index.array) I.push(k + base); base += g.attributes.position.count; g.dispose(); }
-  const h = new THREE.BufferGeometry(); h.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); h.setAttribute('normal', new THREE.Float32BufferAttribute(Nn, 3)); h.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); h.setIndex(I); h.userData.cls = new Uint8Array(base).fill(7); h.computeBoundingSphere(); CARM2.haloCk = h; }   /* nur für die Fahreransicht – in allen Außenansichten bleibt der Halo des Modells */
 // Farben je Klasse: 0 Lack, 1 Akzent, 2 Nasenspitze, 3 Carbon, 4 dunkel, 5 Reifen, 6 Reifenmarkierung, 7 Halo
 function paintGeo(g, fn) {
   const cl = g.userData.cls, p = g.attributes.position.array, c = new Float32Array(cl.length * 3), t = new THREE.Color();
@@ -3510,12 +3490,13 @@ function helmGeoNew() { if (HELM_G) return HELM_G; const dec = (b, T) => { const
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.BufferAttribute(Nn, 3)); g.setAttribute('aZone', new THREE.BufferAttribute(Float32Array.from(z8), 1)); g.setIndex(new THREE.BufferAttribute(ix, 1)); g.computeBoundingSphere(); return (HELM_G = g); }
 // Helmdesigns der F1-Fahrer als Farbschema: Grundfarbe, zwei Zusatzfarben, Muster, Visiertönung. Angelehnt an die bekannten Farben der Fahrer (ohne Sponsoren, Logos und Schriftzüge).
 // Muster: 0 Mittelstreifen · 1 untere Hälfte · 2 Heckkeil · 3 Kappe + Ring · 4 drei Längsbänder · 5 Flanken · 6 zwei Querringe
-const HELM_DESIGN = { RUS: [0x0c1430, 0x00d2be, 0xf2f2f2, 2, 0x0a1a2a], ANT: [0x0e1a3a, 0xf2f2f2, 0xd81e2c, 0, 0x101820], LEC: [0xd4121e, 0xf2f2f2, 0x8fd0f0, 1, 0x1a1012], HAM: [0xf5c400, 0xd4121e, 0x111111, 5, 0x2a1a08],
-  NOR: [0xd8f000, 0x1830c0, 0x111111, 3, 0x101a2a], PIA: [0x10141c, 0xff8000, 0x00b8c8, 2, 0x0a1418], VER: [0xf4f4f4, 0x121c4a, 0xd81e2c, 2, 0x10142a], HAD: [0xf6d400, 0x0a8a3a, 0x1a4ac0, 6, 0x14140a],
-  ALO: [0x1d5fd0, 0xf6d400, 0xd81e2c, 0, 0x0a1428], STR: [0x0c4a38, 0xf2f2f2, 0xc8f000, 1, 0x0a1a14], ALB: [0xf2f2f2, 0x5a3ad0, 0x30b0f0, 5, 0x14102a], SAI: [0xd81e2c, 0xf6c800, 0x1040c0, 1, 0x1a1010],
-  LAW: [0x111111, 0xf2f2f2, 0xd81e2c, 0, 0x101010], LIN: [0x1a2a8a, 0x9af000, 0xd81e2c, 2, 0x0a1028], GAS: [0x1440b0, 0xf2f2f2, 0xd81e2c, 4, 0x0a1028], COL: [0x74b8f0, 0xf2f2f2, 0xf6c800, 6, 0x0a1a2a],
-  OCO: [0xf2f2f2, 0xd81e2c, 0x1440b0, 2, 0x141418], BEA: [0xf2f2f2, 0xd81e2c, 0x1a2a8a, 0, 0x101418], HUL: [0xf4f4f4, 0x111111, 0xd81e2c, 1, 0x101010], BOR: [0xf6d400, 0x0a8a3a, 0x1a4ac0, 3, 0x14140a],
-  PER: [0x101a50, 0xf6c800, 0xd81e2c, 5, 0x0a1028], BOT: [0x101418, 0x1f9cff, 0xf2f2f2, 2, 0x0a1420], NEM: [0x111111, 0xe10600, 0xf2f2f2, 0, 0x100808] };
+const HELM_DESIGN = { RUS: [0x16307a, 0x00d2be, 0xf2f2f2, 2, 0x0a1a2a], ANT: [0x00a19c, 0xf2f2f2, 0xd81e2c, 4, 0x101820], LEC: [0xd4121e, 0xf2f2f2, 0x8fd0f0, 1, 0x1a1012], HAM: [0xf5c400, 0xd4121e, 0x111111, 5, 0x2a1a08],
+  NOR: [0xd8f000, 0x1830c0, 0x111111, 3, 0x101a2a], PIA: [0x10141c, 0xff8000, 0x00b8c8, 2, 0x0a1418], VER: [0x121c4a, 0xd81e2c, 0xf6c800, 0, 0x10142a], HAD: [0xf6e27a, 0x0a8a3a, 0x1a4ac0, 6, 0x14140a],
+  ALO: [0x1d5fd0, 0xf6d400, 0xd81e2c, 0, 0x0a1428], STR: [0x0c4a38, 0xf2f2f2, 0xc8f000, 1, 0x0a1a14], ALB: [0x5a3ad0, 0xf2f2f2, 0x30b0f0, 5, 0x14102a], SAI: [0x8e0c1a, 0xf6c800, 0x1040c0, 1, 0x1a1010],
+  LAW: [0x16181c, 0xf2f2f2, 0xd81e2c, 0, 0x101010], LIN: [0x9af000, 0x1a2a8a, 0xd81e2c, 2, 0x0a1028], GAS: [0x1440b0, 0xf2f2f2, 0xd81e2c, 4, 0x0a1028], COL: [0x74b8f0, 0xf2f2f2, 0xf6c800, 6, 0x0a1a2a],
+  OCO: [0xff5fa2, 0xf2f2f2, 0x1440b0, 2, 0x141418], BEA: [0xff5a1f, 0xf2f2f2, 0x1a2a8a, 3, 0x101418], HUL: [0xf4f4f4, 0x111111, 0xd81e2c, 1, 0x101010], BOR: [0x0a8a3a, 0xf6d400, 0x1a4ac0, 3, 0x14140a],
+  PER: [0xc79a2a, 0x101a50, 0xd81e2c, 5, 0x0a1028], BOT: [0x1f9cff, 0x101418, 0xf2f2f2, 2, 0x0a1420], NEM: [0x3a3d44, 0xe10600, 0xf2f2f2, 0, 0x100808] };
+for (const d of F1_DRIVERS) if (HELM_DESIGN[d[0]]) d[4] = HELM_DESIGN[d[0]][0];   // Helmfarbe in Fahrerwahl, Tabellen und Kart = Grundfarbe des Helmdesigns
 function helmMat(d, hAcc) { const D = HELM_DESIGN[d.code], h = [...String(d.code || 'X')].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 9973, 7), cs = D ? D.slice(0, 3).map(col) : [col(d.helmet), hAcc.clone(), col(0xf2f2f2)], pat = D ? D[3] : h % 7, vis = col(D ? D[4] : 0x0c1016);
   const m = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: .24, metalness: .1, clearcoat: 1, clearcoatRoughness: .08, side: THREE.DoubleSide });
   m.onBeforeCompile = sh => { sh.uniforms.uA = { value: cs[0] }; sh.uniforms.uB = { value: cs[1] }; sh.uniforms.uC = { value: cs[2] }; sh.uniforms.uV = { value: vis }; sh.uniforms.uPat = { value: pat };
@@ -3529,7 +3510,7 @@ function helmMat(d, hAcc) { const D = HELM_DESIGN[d.code], h = [...String(d.code
         else if (uPat == 4) { c = p.x < -0.2 ? uA : p.x < 0.2 ? uB : uC; c = mix(uA, c, smoothstep(0.1, 0.1 + w, p.y + 0.2 * p.z)); }
         else if (uPat == 5) { float a = abs(p.x) - 0.25 * p.y; c = mix(c, uC, smoothstep(0.52, 0.52 + w, a)); c = mix(c, uB, smoothstep(0.6, 0.6 + w, a)); }
         else { float e = p.y - 0.12 * p.z; c = mix(c, uB, (1.0 - smoothstep(0.09, 0.09 + w, abs(e - 0.42)))); c = mix(c, uC, (1.0 - smoothstep(0.07, 0.07 + w, abs(e - 0.2)))); }
-        if (vHZ > 2.5) c = vec3(0.012); else if (vHZ > 1.5) c = uB * 0.9; else if (vHZ > 0.5) c = uV;
+        if (vHZ > 1.5 && vHZ < 2.5) discard; if (vHZ > 2.5) c = vec3(0.012); else if (vHZ > 0.5) c = uV;
         diffuseColor.rgb = c; }`); };
   m.customProgramCacheKey = () => 'helmLiv'; return m; }
 // (älterer, aus Grundkörpern gebauter Helm – nicht mehr verwendet)
@@ -8179,21 +8160,7 @@ const TRACK_INFO = { mc: { turns: 19, col: '#e5e7eb' }, sil: { turns: 18, col: '
 Object.assign(TRACK_INFO, { genk: { turns: 14, col: '#fdda24' }, wack: { turns: 13, col: '#ff3b30' } });
 const FLAG_OLD = { mc: ['#ce1126', '#ffffff', '#ffffff'], sil: ['#012169', '#ffffff', '#c8102e'], mtl: ['#d80621', '#ffffff', '#d80621'], nos: ['#000000', '#dd0000', '#ffce00'], sgp: ['#ef3340', '#ffffff', '#ef3340'], mel: ['#012169', '#ffffff', '#e4002b'], vegas: ['#b22234', '#ffffff', '#3c3b6e'], monza: ['#009246', '#ffffff', '#ce2b37'], yas: ['#00732f', '#ffffff', '#000000'], spa: ['#000000', '#fdda24', '#ef3340'], rbr: ['#ed2939', '#ffffff', '#ed2939'] };
 // eigene Team-Embleme (keine echten Logos): Form + Farben + Kürzel
-// Eigene Team-Logos: der Spieler lädt selbst Bilddateien (Einstellungen › Spielstand). Sie werden verkleinert nur auf diesem Gerät gespeichert (localStorage), nie hochgeladen
-// und liegen nicht im Projekt. Ohne Datei bleibt das gezeichnete Wappen.
-let LOGOS = (() => { try { const o = JSON.parse(localStorage.getItem('f1logos') || '{}'); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } })();
-const logoNorm = t => String(t).toLowerCase().replace(/\.[a-z0-9]+$/, '').replace(/[^a-z0-9]/g, '');
-function logoKeyFor(file) { const b = logoNorm(file); if (b.length < 2) return null; const all = Object.assign({}, F1_TEAMS, F2_TEAMS, KART_TEAMS);
-  for (const k in all) if (logoNorm(k.replace(/^(F2_|K_)/, '')) === b || logoNorm(k) === b) return k;
-  for (const k in all) { const n = logoNorm(all[k].name || ''); if (n && (n === b || (b.length >= 4 && (n.includes(b) || b.includes(n))))) return k; }
-  return null; }
-async function logoImport(files) { let ok = 0; const miss = [];
-  for (const f of files) { const k = logoKeyFor(f.name); if (!k) { miss.push(f.name); continue; }
-    try { const url = URL.createObjectURL(f), im = new Image(); await new Promise((res, rej) => { im.onload = res; im.onerror = rej; im.src = url; });
-      const S2 = 192, cv = document.createElement('canvas'); cv.width = cv.height = S2; const w = im.naturalWidth || S2, h = im.naturalHeight || S2, sc = Math.min(S2 / w, S2 / h); cv.getContext('2d').drawImage(im, (S2 - w * sc) / 2, (S2 - h * sc) / 2, w * sc, h * sc); URL.revokeObjectURL(url);
-      LOGOS[k] = cv.toDataURL('image/png'); ok++; } catch (e) { miss.push(f.name); } }
-  try { localStorage.setItem('f1logos', JSON.stringify(LOGOS)); } catch (e) { toast('Speicher voll – Logos nur bis zum Neustart sichtbar'); }
-  return { ok, miss }; }
+const LOGOS = {}; try { localStorage.removeItem('f1logos'); } catch (e) {}   // Logos kommen nur noch aus dem Projektordner logos/ (früher zusätzlich auf dem Gerät ladbar)
 // Logos aus dem Projektordner: liegt dort logos/<Kürzel>.png (z. B. logos/MER.png, logos/F2_INV.png), ersetzt sie das gezeichnete Wappen. Fehlt die Datei, bleibt das Wappen.
 const REPO_LOGOS = {}, LOGO_V = Date.now().toString(36);   /* je Start eine neue Abfrage: geänderte, neue und gelöschte Dateien im Ordner logos/ wirken sofort (kein alter Stand aus dem Zwischenspeicher) */
 function loadRepoLogos() { const keys = Object.keys(Object.assign({}, F1_TEAMS, F2_TEAMS, KART_TEAMS)); let left = keys.length, hit = 0;
@@ -8275,7 +8242,7 @@ const TIER_ICO = { kart: '🏁', f2: '2', f1: '1' };
 function renderSeriesCards() {
   $('#serHead').textContent = MENU.mode === 'tt' ? 'Zeitrennen – Fahrzeugklasse' : 'Schnelles Spiel – Fahrzeugklasse';
   const info = { kart: ['Rennkart', 'Leicht · wendig · sehr kurvenstark'], f2: ['Formula 2', 'Dallara F2 2024 · 22 Fahrer · 11 Teams'], f1: ['Formula 1', 'Saison 2026 · 22 Fahrer · 11 Teams'] };
-  $('#serCards').innerHTML = ['kart', 'f2', 'f1'].map(t => '<button class="tcard scard' + (t === SER ? ' on' : '') + '" data-ser="' + t + '" style="--tc:' + TIER_COL[t] + '"><i class="sbg" style="background-image:url(textures/class_' + t + '.jpg)"></i><span class="chk">✓</span><div class="sbig">' + (t === 'kart' ? 'GoKart' : t === 'f2' ? 'F2' : 'F1') + '</div><div class="tn">' + info[t][0] + '</div><div class="tf">' + info[t][1] + '</div></button>').join('');
+  $('#serCards').innerHTML = ['kart', 'f2', 'f1'].map(t => '<button class="tcard scard' + (t === SER ? ' on' : '') + '" data-ser="' + t + '" style="--tc:' + TIER_COL[t] + '"><i class="sbg" style="background-image:url(textures/class_' + t + '.jpg?v=3)"></i><span class="chk">✓</span><div class="sbig">' + (t === 'kart' ? 'GoKart' : t === 'f2' ? 'F2' : 'F1') + '</div><div class="tn">' + info[t][0] + '</div><div class="tf">' + info[t][1] + '</div></button>').join('');
   $$('#serCards .scard').forEach(b => b.addEventListener('click', () => { setSeries(b.dataset.ser); MENU.team = null; $$('#serCards .scard').forEach(x => x.classList.toggle('on', x === b)); }));
 }
 function renderTitle() {
@@ -8428,10 +8395,6 @@ function buildMenu2() {
   $('#tPlay').addEventListener('click', () => { setMode('tt'); CHP = null; showScreen('series'); });
   $('#cPlay').addEventListener('click', () => { setMode('career'); if (!CAREER) return showScreen('name'); const c = loadChamp(); if (c && !c.done) { CHP = c; return careerOpenSeason(); } careerEnter(careerTier()); });   /* direkt in die laufende Saison bzw. in die höchste freigeschaltete Klasse – keine Klassenwahl mehr */
   $('#saveExp').addEventListener('click', () => { try { $('#saveCode').value = btoa(unescape(encodeURIComponent(JSON.stringify({ v: 1, career: CAREER, champ: loadChamp() })))); $('#saveCode').select(); try { navigator.clipboard.writeText($('#saveCode').value); } catch (e) {} toast(CAREER ? 'Spielstand exportiert (in der Zwischenablage)' : 'Noch keine Karriere vorhanden'); } catch (e) { toast('Export fehlgeschlagen'); } });
-  { const cnt = () => { const n = Object.keys(LOGOS).length; $('#logoCnt').textContent = n ? n + ' geladen' : 'eigene Dateien'; }, redo = () => { cnt(); renderTeams(); renderMenu(); if (CHP && MENU.scr === 'season') renderSeason(); }; cnt();
-    $('#logoImp').addEventListener('click', () => $('#logoFile').click());
-    $('#logoFile').addEventListener('change', async e => { const r = await logoImport([...e.target.files]); e.target.value = ''; redo(); toast(r.ok + ' Logo' + (r.ok === 1 ? '' : 's') + ' geladen' + (r.miss.length ? ' · nicht zugeordnet: ' + r.miss.slice(0, 3).join(', ') : '')); });
-    $('#logoClr').addEventListener('click', () => { LOGOS = {}; try { localStorage.removeItem('f1logos'); } catch (e) {} redo(); toast('Logos entfernt'); }); }
   loadRepoLogos();
   $('#saveImp').addEventListener('click', () => { try { const o = JSON.parse(decodeURIComponent(escape(atob($('#saveCode').value.trim())))); if (!o || o.v !== 1 || !o.career || o.career.v !== 1) throw 0; CAREER = o.career; CAREER.name = cleanName(CAREER.name) || 'Fahrer'; saveCar(); if (o.champ) { CHP = o.champ; saveChamp(); } else { try { localStorage.removeItem('f1champ'); } catch (e) {} } CHP = null; SERIES._dirty = true; toast('Spielstand importiert: ' + CAREER.name); } catch (e) { toast('Ungültiger Exportcode'); } });
   $('#careerReset').addEventListener('click', e => { const b = e.currentTarget; if (b.dataset.arm) { b.dataset.arm = ''; b.textContent = 'Karriere zurücksetzen'; resetCareer(); toast('Karriere zurückgesetzt'); } else { b.dataset.arm = '1'; b.textContent = 'Wirklich löschen? Nochmal tippen'; setTimeout(() => { b.dataset.arm = ''; b.textContent = 'Karriere zurücksetzen'; }, 4000); } });
@@ -8449,7 +8412,7 @@ function renderDrivers() {
     return '<button class="dcard' + (c.code === S.driver ? ' on' : '') + '" data-drv="' + c.code + '" style="--c1:' + c1 + ';--c2:' + c2 + ';--c3:' + c3 + '"><span class="num">' + c.num + '</span><div class="cd">' + c.code + ' · #' + c.num + '</div><div class="nm">' + c.name.replace(' ', '<br>') + '</div>'
       + '<div class="meta"><i style="background:' + hex(c.helmet) + '"></i>Helm · ' + T.name + '</div>'
       + '<div class="bars"><div class="bar">Fahrer-Tempo<u><i style="width:' + pace.toFixed(0) + '%"></i></u></div><div class="bar">Auto<u><i style="width:' + clamp(team, 30, 100).toFixed(0) + '%"></i></u></div></div>'
-      + '<div class="pick">' + (c.code === S.driver ? '✓ Ausgewählt' : (n ? 'Rechts' : 'Links') + ' wählen') + '</div></button>'; }).join('');
+      + '<div class="pick">' + (c.code === S.driver ? 'Ausgewählt' : (n ? 'Rechts' : 'Links') + ' wählen') + '</div></button>'; }).join('');
   $$('.dcard').forEach(b => b.addEventListener('click', () => { S.driver = b.dataset.drv; save(); placeOnGrid(); renderMenu(); if (SHOW.on) showroomPick(); }));
 }
 function renderMenu() {
@@ -8551,6 +8514,7 @@ function wallDraw(now) { const W = SHOW.wall; if (!W || !W.c1) return; const g =
 // Auswahl-Studio: beide Autos stehen parallel (Nase nach −x), keine Drehteller. Die Kamera fährt je Bildschirm an einen anderen Platz und schwebt dort leicht:
 // Hauptmenü: Auto schräg von vorn im Fenster der Karriere-Kachel · Teamwahl: nah, schräg von vorn, nur das erste Auto · Fahrerwahl: Fahrt nach vorn, beide Autos frontal ·
 // Streckenwahl: Fahrt zur Seite, bis das gewählte Auto genau seitlich rechts im Bild steht.
+const SHOW_SW = 1.2;   // Teamwechsel: Schwenkwinkel der Kamera (~70°) – das neue Team steht gleich daneben
 const SHOW_POS = [[0, 0, 0], [0, 0, 2.45]], SHOW_ROT = -Math.PI / 2;   /* Fahrerwahl: Autos dicht nebeneinander – passen zwischen die Fahrertafeln */
 function showroomTeam(team) {
   initShowroom(); if (SHOW.team === team && SHOW.ser === SER) return; const swing = MENU.scr === 'team' && !!SHOW.cp && SHOW.cars.length > 0 && SHOW.ser === SER && TEAMS[SHOW.team]; SHOW.team = team; SHOW.ser = SER;
@@ -8564,7 +8528,7 @@ function showroomTeam(team) {
 // Mitte des Schwenks (Kamera schaut quer in den leeren Raum): altes Auto weg, neues sichtbar, und die ganze Bühne wird um die Kamera auf die Gegenseite gedreht.
 // Die Kamera selbst bleibt an ihrem Platz und dreht sich nur – am Ende des 180°-Schwenks steht das neue Team vor ihr.
 function showroomSwap(flip) { if (!SHOW.old) return; for (const m of SHOW.old) { SHOW.stage.remove(m.g); m.g.traverse(o => { if (o.isSprite) o.material.map.dispose(); }); } SHOW.old = null;
-  if (flip) { const st = SHOW.stage; st.updateMatrixWorld(); const W = SHOW.cp.clone().applyMatrix4(st.matrixWorld); SHOW.flip = !SHOW.flip; st.rotation.y = SHOW.flip ? Math.PI : 0; st.position.set(SHOW.flip ? W.x + SHOW.cp.x : W.x - SHOW.cp.x, 0, SHOW.flip ? W.z + SHOW.cp.z : W.z - SHOW.cp.z); st.updateMatrixWorld(true); }
+  if (flip) { const st = SHOW.stage; st.updateMatrixWorld(); const W = SHOW.cp.clone().applyMatrix4(st.matrixWorld), ph = (SHOW.phi = (SHOW.phi || 0) - SHOW_SW), c = Math.cos(ph), sn = Math.sin(ph); st.rotation.y = ph; st.position.set(W.x - (SHOW.cp.x * c + SHOW.cp.z * sn), 0, W.z - (-SHOW.cp.x * sn + SHOW.cp.z * c)); st.updateMatrixWorld(true); }
   if (SHOW.pendWall) { showroomWall(SHOW.pendWall, null); SHOW.pendWall = null; } showroomPick(); }
 // Spiegelung am Boden: das Auto noch einmal, an der Bodenebene gespiegelt, unter dem leicht durchscheinenden Hallenboden
 function showroomMirror(m) { const r = m.g.clone(true); r.position.set(0, 0, 0); r.rotation.set(0, 0, 0); r.scale.set(1, -1, 1); r.traverse(o => { o.castShadow = false; o.receiveShadow = false; if (o.isSprite) o.visible = false; }); m.g.add(r); }
@@ -8600,8 +8564,8 @@ function showroomFrame(dt) {
   if (!SHOW.cp) { SHOW.cp = _sp.clone(); SHOW.ct = _st.clone(); SHOW.ox = ox; SHOW.oy = oy; }
   const k = 1 - Math.exp(-dt * (scr === 'title' ? 6 : 2.1)); SHOW.cp.lerp(_sp, k); SHOW.ct.lerp(_st, k); cam.position.copy(SHOW.cp);
   _st.copy(SHOW.ct); if (SHOW.old && scr !== 'team') { showroomSwap(false); SHOW.orbT = 1; }
-  if (scr === 'team' && SHOW.orbT !== undefined && SHOW.orbT < 1) { const o0 = SHOW.orbT; SHOW.orbT = Math.min(1, o0 + dt / 1.8); if (o0 < 0.5 && SHOW.orbT >= 0.5) showroomSwap(true);
-    const q = SHOW.orbT, e = q * q * (3 - 2 * q), a = q < 0.5 ? Math.PI * e : Math.PI * e - Math.PI, dx = SHOW.ct.x - cam.position.x, dz = SHOW.ct.z - cam.position.z; _st.x = cam.position.x + dx * Math.cos(a) - dz * Math.sin(a); _st.z = cam.position.z + dx * Math.sin(a) + dz * Math.cos(a); }
+  if (scr === 'team' && SHOW.orbT !== undefined && SHOW.orbT < 1) { const o0 = SHOW.orbT; SHOW.orbT = Math.min(1, o0 + dt / 0.75); if (o0 < 0.5 && SHOW.orbT >= 0.5) showroomSwap(true);
+    const q = SHOW.orbT, e = q * q * (3 - 2 * q), a = q < 0.5 ? SHOW_SW * e : SHOW_SW * e - SHOW_SW, dx = SHOW.ct.x - cam.position.x, dz = SHOW.ct.z - cam.position.z; _st.x = cam.position.x + dx * Math.cos(a) - dz * Math.sin(a); _st.z = cam.position.z + dx * Math.sin(a) + dz * Math.cos(a); }
   SHOW.stage.updateMatrixWorld(); cam.position.applyMatrix4(SHOW.stage.matrixWorld); _st.applyMatrix4(SHOW.stage.matrixWorld); cam.lookAt(_st);
   SHOW.ox += (ox - SHOW.ox) * k; SHOW.oy += (oy - SHOW.oy) * k;
   cam.aspect = W2 / H2; cam.setViewOffset(W2, H2, SHOW.ox * W2, SHOW.oy * H2, W2, H2); cam.updateProjectionMatrix();
@@ -8635,7 +8599,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.23'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.24'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
