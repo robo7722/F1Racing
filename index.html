@@ -1097,6 +1097,14 @@ body.warmhelm #helmet{display:block!important;opacity:.01}
 :is(#pause,#settings) .big.alt.danger{border-color:rgba(225,6,0,.6)!important;color:#ff6a5c!important}
 
 #scrTitle.on{align-items:stretch!important}#scrTitle .tleft{display:flex;flex-direction:column;justify-content:flex-end;min-height:0}#scrTitle .logo2{flex:1 1 auto;min-height:0;align-items:center;margin-top:-10px}#scrTitle .tag:empty{display:none}   /* Logo genau mittig zwischen oberem Rand und Kacheln */
+#serCards .scard,#carCards .scard{animation:none!important;transition:none!important}   /* beim Abwählen startete die Einblend-Animation der Karte neu (Blinken) */
+:is(#pause,#settings) .card{background:none!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;width:min(940px,96vw)!important;max-width:none!important}   /* kein Fensterrahmen: Inhalt steht wie in den anderen Menüs direkt auf dem Hintergrund */
+:is(#pause,#settings).overlay{background:linear-gradient(180deg,rgba(14,15,18,.94),rgba(14,15,18,.88))!important}
+:is(#pause,#settings) .head h2::before{content:"";display:inline-block;width:9px;height:19px;margin-right:12px;background:var(--f1r);transform:skewX(-16deg);vertical-align:-2px}
+#mwipe{position:fixed;inset:0;z-index:60;pointer-events:none;overflow:hidden;display:none}#mwipe.go{display:block}
+#mwipe i{position:absolute;top:-10%;bottom:-10%;left:-90%;transform:skewX(-18deg);animation:mwipe .62s cubic-bezier(.55,0,.25,1) forwards}
+#mwipe i:nth-child(1){width:70%;background:#e10600}#mwipe i:nth-child(2){width:5%;background:#fff;animation-delay:.07s}#mwipe i:nth-child(3){width:34%;background:#1b1c21;animation-delay:.12s}
+@keyframes mwipe{to{left:135%}}
 #menu .msteps i{align-items:baseline!important;line-height:40px}#menu .msteps i b{font-size:12px!important;line-height:inherit}#menu .msteps i:last-child{padding-right:26px!important}   /* Schrittleiste: Zahl und Text auf einer Grundlinie, hinter dem letzten Eintrag mehr Luft */
 #serCards .sbig img{display:none;height:clamp(40px,14vh,92px);max-width:86%;object-fit:contain;object-position:left bottom;filter:drop-shadow(0 4px 14px rgba(0,0,0,.7))}#serCards .sbig.hasimg img{display:block}#serCards .sbig.hasimg span{display:none}#serCards .sbig img.inv{filter:invert(1);mix-blend-mode:screen}#serCards .sbig img.wht{filter:brightness(0) invert(1) drop-shadow(0 4px 14px rgba(0,0,0,.7))}#serCards .scard .tn,#serCards .scard .tf{display:none!important}#serCards .scard .sbig.hasimg{position:absolute;inset:0;margin:0!important;display:grid;place-items:center}#serCards .sbig img{width:66%!important;height:44%!important;max-width:none!important;object-position:center!important}   /* nur die Logos, keine Texte */   /* Klassen-Logo aus logos/F1.png, F2.png, KART.png – fehlt die Datei, bleibt der Schriftzug */
 #serCards .scard.on .sbg{filter:brightness(.78) saturate(1.08)!important}#serCards .scard .chk{display:none!important}#serCards .scard[data-ser=f2] .sbg,#serCards .scard[data-ser=f1] .sbg{scale:-1 1}   /* Auswahl nur über Rahmen und Haken – das Bild wird nicht mehr heller/dunkler geschaltet */
@@ -2081,7 +2089,7 @@ const STREAKS = 80, stPos = new Float32Array(STREAKS * 6), stData = [];
 const stGeo = new THREE.BufferGeometry(); stGeo.setAttribute('position', new THREE.BufferAttribute(stPos, 3));
 const stMat = new THREE.LineBasicMaterial({ color: new THREE.Color(0.75, 0.8, 0.88), transparent: true, opacity: 0, depthWrite: false, fog: false, blending: THREE.AdditiveBlending });
 const streaks = new THREE.LineSegments(stGeo, stMat); streaks.frustumCulled = false; camera.add(streaks); scene.add(camera);
-const respawnStreak = d => { d.a = Math.random() * Math.PI * 2; d.r = 1.6 + Math.random() * 2.6; d.z = -40 - Math.random() * 30; };
+const respawnStreak = d => { d.a = Math.random() * Math.PI * 2; d.r = 3.0 + Math.random() * 2.8;   /* weiter außen: die Streifen laufen am Bildrand, nicht durch die Bildmitte */ d.z = -40 - Math.random() * 30; };
 for (let i = 0; i < STREAKS; i++) { const d = {}; respawnStreak(d); d.z = -2 - Math.random() * 50; stData.push(d); }
 const WAKE = (() => {
   const t = canvasTex(128, 256, (g, w, h) => { g.clearRect(0, 0, w, h);
@@ -2113,7 +2121,7 @@ function updateStreaks(dt) {
   const f0 = running && !paused && S.gfx !== 'low' ? Math.max(clamp((pl.v - 50) / 40, 0, 1), (pl.slipS || 0) * 0.8) : 0;
   STK.f += (f0 - STK.f) * Math.min(1, dt * 2.2); const f = STK.f;   /* Luftstreifen blenden weich ein und aus */
   streaks.visible = f > 0.01; if (!streaks.visible) return;
-  stMat.opacity = Math.min(0.42, f * 0.22 + (pl.boostFx || 0) * 0.1 + (pl.slipS || 0) * 0.16);
+  stMat.opacity = Math.min(0.16, f * 0.08 + (pl.boostFx || 0) * 0.04 + (pl.slipS || 0) * 0.06);   /* nur noch ein Hauch */
   const len = 1 + f * 5 + (pl.boostFx || 0) * 2, sp = pl.v * 1.4;
   stData.forEach((d, i) => {
     d.z += sp * dt; if (d.z > -5) respawnStreak(d);
@@ -2897,10 +2905,10 @@ const COCK = { f1: { x: 0.165, z0: 0.10, z1: 0.71, y: 0.615, fl: 0.30, wd: 0.07,
 // in der Lenkrad und Hände steckten (deshalb wurden sie früher als Overlay über das Auto gemalt und schwebten über der Nase). Statt dessen: eigene Cockpitwanne (cockTub) aus Carbon.
 const cockWn = (c, z) => { if (!c.wn) return 0; const t = clamp((z - c.zn0) / (c.zn1 - c.zn0), 0, 1); return c.wn * t * t * (3 - 2 * t); };
 const cockCutGLSL = k => { const G = CK[k], f = v => v.toFixed(3);   // alles vom Fahrzeugmodell, was im Kasten des neuen Cockpit-Modells liegt, wird in der Cockpitansicht nicht gezeichnet
-  return '\n { float zc = vCP.z; if (zc > ' + f(G.zB) + ' && zc < ' + f(G.zCut) + ' && abs(vCP.x) < ' + ckGLSL(G.hw, 'zc') + ' - 0.004 && vCP.y < 0.86 && vCP.y > mix(' + f(G.fl - 0.06) + ', ' + f(G.yLo) + ', smoothstep(' + f(G.z1) + ', ' + f(G.z1 + 0.25) + ', zc))) discard; }' + (k === 'f2' ? '\n if (vCP.y > 0.86 && abs(vCP.x) < 0.40 && vCP.z > -0.30 && vCP.z < 1.05) discard;' : ''); };   /* F2: Carbon-Teile über dem Kopf (Halo-Verkleidung) lagen direkt vor der Kamera */
+  return '\n { float zc = vCP.z; if (zc > ' + f(G.zB) + ' && zc < ' + f(G.zCut) + ' && abs(vCP.x) < ' + ckGLSL(G.hw, 'zc') + ' - 0.004 && vCP.y < 0.86 && vCP.y > mix(' + f(G.fl - 0.06) + ', ' + f(G.yLo) + ', smoothstep(' + f(G.z1) + ', ' + f(G.z1 + 0.25) + ', zc))' + (k === 'f1' ? ' && !(zc > 0.66 && zc < 0.88 && vCP.y > 0.672 && vCP.y < 0.745 && abs(vCP.x) > 0.19)' : '') + ') discard; }' + (k === 'f2' ? '\n if (vCP.y > 0.86 && abs(vCP.x) < 0.40 && vCP.z > -0.30 && vCP.z < 1.05 && length(vViewPosition) < 0.42) discard;' : ''); };   /* F2: Carbon-Teile über dem Kopf (Halo-Verkleidung) lagen direkt vor der Kamera */
 function cockCut(mat, k) { const m = mat.clone(), ob = mat.onBeforeCompile, key = mat.customProgramCacheKey();
   m.onBeforeCompile = (sh, r) => { if (ob) ob.call(mat, sh, r); sh.vertexShader = 'varying vec3 vCP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vCP = position;'); sh.fragmentShader = 'varying vec3 vCP;\n' + sh.fragmentShader.replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>' + cockCutGLSL(k)); };
-  m.customProgramCacheKey = () => key + '|cocknew2-' + k; return m; }
+  m.customProgramCacheKey = () => key + '|cocknew4-' + k; return m; }
 const COCK_MAT = (() => { const t = TEX.carbon.clone(), n = TEX.carbonN.clone(); for (const x of [t, n]) { x.repeat.set(1, 1); x.needsUpdate = true; } return new THREE.MeshStandardMaterial({ map: t, normalMap: n, normalScale: new THREE.Vector2(.35, .35), color: 0x3a3e46, roughness: .55, metalness: .25, side: THREE.DoubleSide }); })();
 const COCK_PAD = new THREE.MeshStandardMaterial({ color: 0x24252b, roughness: .95, metalness: 0, side: THREE.DoubleSide });   // Polster/Armaturenkante: matt schwarz
 // ===== Neues Cockpit-Modell (F1 und F2, nur Cockpitansicht) =====
@@ -7516,7 +7524,7 @@ function lapCheck(c) {
       const lt = raceTime - c.lapStart; c.last = lt; if (!c.best || lt < c.best) c.best = lt;
       if (!fastest || lt < fastest.t) fastest = { t: lt, code: c.code, name: c.name };
       (c.lapTimes ||= []).push(lt);
-      if (c === pl && nl < S.laps && !leaderFinished) showMsg(nl === S.laps - 1 ? 'LETZTE RUNDE' : 'Runde ' + nl + ': ' + fmt(lt) + (cars.length === 1 && lt === c.best && nl > 1 ? ' · Bestzeit!' : ''), 2);
+      /* keine Einblendung von Rundenzeit / „Letzte Runde“ in der Bildmitte mehr (störte beim Fahren) – Runde und Zeiten stehen in der Anzeige */
     }
     c.lapStart = raceTime; c.lapsDone = nl;
     if (!c.finished && raceState === 'race' && nl >= 1 && (nl >= S.laps || leaderFinished)) {
@@ -7703,7 +7711,7 @@ function poseArm(a, gx, gy, gz, rz, ex, ey, ez) {
 const SW_ROT = 0.95;   // sichtbare Lenkraddrehung bei vollem Einschlag (~55°): mehr hob die Hände so hoch, dass die Unterarme quer über die Karosserie liefen
 const ARMS = { f1: null, road: null }, _gc = new THREE.Color(), _gw = new THREE.Color(0xffffff);
 function armsTick() {
-  const cock = running && S.cam === 2 && !!(pl && pl.mesh), road = !!(pl && pl.mesh && (pl.mesh.road || pl.mesh.kart)), col = pl && TEAMS[pl.team] ? uiCol(TEAMS[pl.team]) : 0xffffff;
+  const cock = running && (S.cam === 2 || S.cam === 3) && !!(pl && pl.mesh), road = !!(pl && pl.mesh && (pl.mesh.road || pl.mesh.kart)), col = pl && TEAMS[pl.team] ? uiCol(TEAMS[pl.team]) : 0xffffff;
   if (ARMS.f1) ARMS.f1.g.visible = cock && !road; if (ARMS.road) ARMS.road.g.visible = cock && road;
   if (!cock) return;
   const steer = pl.steer || 0;
@@ -7736,7 +7744,7 @@ function cockpitInterior(on) {
   m.body.material = tp.cutGloss; m.matte.material = tp.cutMatte; m.tub.visible = true; cockOn = m;
   tp.cutGloss.transparent = tp.cutMatte.transparent = true; m.body.renderOrder = m.matte.renderOrder = COCK_RO; cockLast(m.tub, true); cockLast(SW.g, true); if (ARMS.f1) cockLast(ARMS.f1.g, true); }
 function drawWheel(dt) {
-  SW.g.visible = running && S.cam === 2 && !pl.mesh.road && !pl.mesh.kart;   // Roadster und Kart haben ihr eigenes rundes Lenkrad am Auto
+  SW.g.visible = running && (S.cam === 2 || S.cam === 3) && !pl.mesh.road && !pl.mesh.kart;   /* auch in der TV-Kamera: Blick von oben ins modellierte Cockpit mit Lenkrad und Händen */   // Roadster und Kart haben ihr eigenes rundes Lenkrad am Auto
   if (pl.mesh.tp) { SW.g.position.set(...(pl.mesh.tp.M.swPos || [0, 0.605, 0.98])); SW.g.scale.setScalar(pl.mesh.tp.M.swS || 1); }   // Lenkradposition je Modell (F2 sitzt weiter hinten und tiefer)
   document.body.classList.toggle('cockpit', running && S.cam === 2);
   document.body.classList.toggle('helmcam', S.helm !== false);   /* Helmrand (Einstellung „Helmrand“) */
@@ -8237,6 +8245,7 @@ const contrast = n => { const c = new THREE.Color(n); return .3 * c.r + .59 * c.
 function showScreen(k) {
   if (k === 'upgrade') { MENU.seTab = 'up'; k = 'season'; }   // Upgrades sind jetzt ein Reiter des Saison-Bildschirms
   if (k === 'title') { setMode('quick'); CHP = null; QL = false; applyPM(); quickRestore(); }   // geladene Saison nicht in Schnelle Rennen mitnehmen (sonst zählt ein Schnelles Rennen als Karriere-Rennen)
+  if (MENU.scr === 'title' && k !== 'title' && !$('#menu').classList.contains('hidden')) { let w = $('#mwipe'); if (!w) { w = document.createElement('div'); w.id = 'mwipe'; w.innerHTML = '<i></i><i></i><i></i>'; document.body.appendChild(w); } w.classList.remove('go'); void w.offsetWidth; w.classList.add('go'); clearTimeout(w._t); w._t = setTimeout(() => w.classList.remove('go'), 900); }   /* schräger Wischer in Rot/Weiß/Dunkel */
   MENU.scr = k; $('#menu').dataset.scr = k;
   $$('#menu .scr').forEach(e => e.classList.toggle('on', e.id === 'scr' + k[0].toUpperCase() + k.slice(1)));
   const idx = SCR.indexOf(k); $$('#mSteps i').forEach((e, n) => { e.classList.toggle('on', n + 1 === idx); e.classList.toggle('done', n + 1 < idx); });
@@ -8640,7 +8649,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.26'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.27'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

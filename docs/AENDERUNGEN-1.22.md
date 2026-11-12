@@ -101,3 +101,11 @@
 - **Einstellungen aus dem Menü**: es wird nichts neu gezeichnet – vorher lief dahinter die Strecke des letzten Rennens weiter.
 - **Klassen-Logos**: `logos/F2.png` ohne Schriftzug, 3× hochskaliert mit geschärften Kanten (zwei Flächenfarben).
 
+## Version 1.27
+- **Klassenwahl**: Blinken der abgewählten Karte behoben (beim Wegfall von `.on` startete die Einblend-Animation `f1in` neu) – Karten ohne Animation/Übergang. F2-Logo aus neuer Vorlage (ohne Schriftzug, weißer Grund herausgerechnet).
+- **Hauptmenü → Untermenü**: schräger Wischer in Rot/Weiß/Dunkel (`#mwipe`, in `showScreen`).
+- **Einstellungen/Pause**: kein Fensterrahmen mehr, Inhalt direkt auf dem abgedunkelten Hintergrund, Überschrift mit rotem Schrägstrich.
+- **TV-Kamera**: zeigt jetzt das modellierte Cockpit mit Lenkrad und Armen (gleiche Umschaltung wie Cockpitansicht).
+- **Cockpit F1**: Spiegelhalter werden nicht mehr mit ausgeschnitten. **F2**: Carbon über dem Kopf nur ausgeblendet, wenn es näher als 42 cm an der Kamera liegt.
+- **Tempo-Streifen** weiter außen und viel schwächer; Einblendung „Runde n: Zeit“/„Letzte Runde“ entfernt.
+
