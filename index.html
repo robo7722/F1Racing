@@ -673,16 +673,6 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
 .hero .hst i{background:rgba(0,0,0,.35)!important;border:0!important}
 .hbtn{counter-increment:hb;padding:14px 14px 16px 16px!important;border-left:0!important;border-bottom:3px solid var(--f1r)!important;overflow:hidden}
 .hbtn.ghost{border-bottom-color:rgba(255,255,255,.45)!important}
-/* Kacheln ohne Ziffern: oben links ein Etikett mit rotem Strich, oben rechts das Symbol des Modus als feine Linienzeichnung auf schraffiertem Eck */
-.hbtn::before{content:"";position:absolute;right:0;top:0;width:62%;height:58%;background:repeating-linear-gradient(115deg,rgba(150,205,255,.07) 0 2px,transparent 2px 12px);-webkit-mask-image:linear-gradient(215deg,#000 0,transparent 68%);mask-image:linear-gradient(215deg,#000 0,transparent 68%);pointer-events:none}
-.hi{position:absolute;right:12px;top:14px;width:clamp(34px,13vh,76px);height:clamp(34px,13vh,76px);pointer-events:none;color:rgba(150,205,255,.34);transition:color .2s,transform .25s}
-.hi svg{width:100%;height:100%;display:block;fill:none;stroke:currentColor;stroke-width:1.15;stroke-linecap:round;stroke-linejoin:round}
-.hbtn:hover .hi{color:#fff;transform:translateY(-2px)}
-.hero .hi{color:rgba(255,255,255,.42);right:18px;top:12px;width:clamp(34px,11vh,72px);height:clamp(34px,11vh,72px)}
-.hey{position:absolute;left:16px;top:13px;display:flex;align-items:center;gap:7px;font:700 10px "Titillium Web",sans-serif;font-style:normal;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.6);white-space:nowrap}
-.hey::before{content:"";width:14px;height:3px;background:var(--f1r);transform:skewX(-20deg)}
-.hbtn.ghost .hey::before{background:rgba(255,255,255,.55)}
-.hero .hey{left:26px;top:15px;color:rgba(255,255,255,.85)}.hero .hey::before{background:#fff}
 .hbtn b{font-weight:900!important;letter-spacing:.03em!important;font-size:clamp(15px,3.9vh,22px)!important;line-height:1.05!important;white-space:normal}
 .hbtn small{font-size:11px!important;line-height:1.3!important;margin-top:5px!important;color:rgba(255,255,255,.6)!important}
 .hbtn::after{content:"›"!important;position:absolute;right:12px;bottom:12px;top:auto!important;transform:none!important;width:24px;height:24px;display:grid;place-items:center;font-size:18px;font-weight:900;background:rgba(255,255,255,.1);color:#fff}
@@ -922,6 +912,64 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 .pad.on,.pad.gas.on,.pad.brake.on{background:rgba(255,255,255,.3)!important}
 .boostBtn{background:rgba(16,16,23,.6)!important;border:1px solid rgba(255,214,0,.6)!important}
 #editBar{background:var(--ink)!important}
+
+/* ===== Hauptmenü (Vorlage: Kachelmenü mit Kopfband): Karriere-Kachel mit weißem Kopfband, kleine Kacheln mit Titel oben, Beschreibung unten links und Symbol im roten Feld unten rechts ===== */
+.hero{padding:0!important;justify-content:flex-start!important;clip-path:none!important;background:none!important;outline:2px solid #fff;outline-offset:-2px}
+.hero::before{display:none!important}
+.hband{display:flex;flex-direction:column;gap:3px;padding:10px 16px 9px;background:linear-gradient(180deg,#fff,#e6ebf2);color:var(--ink);min-width:0}
+.hero .hk{color:var(--ink)!important;text-shadow:none!important;font-size:clamp(19px,6vh,34px)!important;letter-spacing:.02em!important;line-height:1!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hero .hs{color:rgba(10,20,36,.72)!important;opacity:1!important;font-size:11px!important;letter-spacing:.1em!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hbody{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;gap:8px;padding:12px 16px 14px;overflow:hidden;background:repeating-linear-gradient(115deg,rgba(255,255,255,.07) 0 2px,transparent 2px 14px) 100% 0/55% 100% no-repeat,radial-gradient(90% 120% at 100% 0%,#ff4a2a 0,transparent 60%),linear-gradient(160deg,#e10600 0%,#a80400 70%,#6e0300 100%)}
+.hero .hgo{margin-top:0!important}
+.hero .hi{position:absolute;right:6%;top:50%;bottom:auto;width:auto;height:86%;aspect-ratio:1;transform:translateY(-50%);background:none;padding:0;color:rgba(255,255,255,.3)}
+.hero .hi svg{stroke-width:.9}
+.hbtn{justify-content:space-between!important;padding:11px 14px 12px!important}
+.hbtn::before{content:"";position:absolute;right:0;top:0;width:62%;height:58%;background:repeating-linear-gradient(115deg,rgba(150,205,255,.07) 0 2px,transparent 2px 12px);-webkit-mask-image:linear-gradient(215deg,#000 0,transparent 68%);mask-image:linear-gradient(215deg,#000 0,transparent 68%);pointer-events:none}
+.hbtn::after{display:none!important}
+.hbtn b{color:rgba(255,255,255,.92)}
+.hbtn small{max-width:calc(100% - 46px);margin-top:0!important}
+.hi{position:absolute;right:12px;bottom:12px;width:clamp(30px,9vh,40px);height:clamp(30px,9vh,40px);padding:6px;box-sizing:border-box;background:linear-gradient(180deg,#ff2a14,#c00500);color:#fff;pointer-events:none;transition:transform .2s,filter .2s}
+.hi svg{width:100%;height:100%;display:block;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.hbtn.ghost .hi{background:linear-gradient(180deg,rgba(150,205,255,.3),rgba(150,205,255,.14))}
+.hbtn:hover .hi{transform:translateY(-2px);filter:brightness(1.2)}
+#install .mt{display:contents}
+@media (max-height:380px){.hband{padding:7px 12px 6px}.hbody{padding:8px 12px 10px}}
+
+/* ===== Streckenwahl (Vorlage): Infotafel links, Streckenname als große Konturschrift, Streckenleiste unten ===== */
+#scrTrack.on,#scrTeam.on{display:flex!important;flex-direction:column}
+#scrTrack>.mh,#scrTeam .mh{flex:none}
+.tsel{position:relative;flex:1;min-height:0;display:flex;align-items:stretch;gap:18px;margin-bottom:10px}
+.tinfo{flex:none;display:flex;align-items:stretch;gap:14px;padding:10px 16px 10px 8px;background:var(--carbon),var(--surf);border:1px solid var(--f1l);border-top-color:rgba(150,205,255,.55);box-shadow:inset 3px 0 0 var(--tc,#e10600);animation:f1in .3s both;max-width:62%}
+.tinfo canvas{height:100%;width:auto;max-width:44vw;aspect-ratio:7/5;min-height:0;filter:drop-shadow(0 0 10px var(--tc))}
+.tinfo .tst{display:grid;grid-template-columns:auto auto;align-content:center;gap:clamp(4px,1.6vh,12px) 22px;min-width:0}
+.tinfo .tst div{min-width:0;border-bottom:1px solid rgba(150,205,255,.16);padding-bottom:3px}.tinfo .tst .w{grid-column:1/-1}
+.tinfo .tst small{display:block;font:700 9.5px "Titillium Web",sans-serif;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.55)}
+.tinfo .tst b{display:block;font-size:clamp(13px,3.6vh,17px);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:30vw}
+.tinfo .tst b svg{width:20px!important;height:13px!important;display:inline-block;vertical-align:-1px;margin-right:6px}
+.tbig{flex:1;min-width:0;align-self:center;font:900 clamp(40px,19vh,120px)/.95 "Titillium Web",sans-serif;letter-spacing:.02em;text-transform:uppercase;color:transparent;-webkit-text-stroke:1.5px rgba(255,255,255,.6);white-space:nowrap;overflow:hidden;pointer-events:none;-webkit-mask-image:linear-gradient(90deg,#000 70%,transparent);mask-image:linear-gradient(90deg,#000 70%,transparent)}
+#scrTrack .tcards{flex:none!important;height:auto!important;gap:8px!important;padding:2px 2px 4px!important;align-items:stretch}
+#scrTrack .tcard{flex:0 0 clamp(108px,15vw,150px)!important;height:clamp(64px,19vh,92px);padding:7px 9px 5px!important;transform:none!important;animation:none}
+#scrTrack .tcard .tf,#scrTrack .tcard .ts,#scrTrack .tcard .chk{display:none!important}
+#scrTrack .tcard .tn{font-size:11.5px!important;letter-spacing:.06em!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(255,255,255,.75)}
+#scrTrack .tcard canvas{filter:none!important;opacity:.6}
+#scrTrack .tcard::before{display:none!important}
+#scrTrack .tcard.on{outline:2px solid #fff!important;outline-offset:-2px;background:linear-gradient(180deg,rgba(60,84,120,.95),rgba(24,38,62,.95))!important;box-shadow:none!important}
+#scrTrack .tcard.on .tn{color:#fff}#scrTrack .tcard.on canvas{opacity:1}
+
+/* ===== Teamwahl (Vorlage): Teamname oben links, große Konturschrift hinter den Autos, Teamleiste mit Wappen unten ===== */
+#scrTeam .teamwrap{width:100%!important;height:auto!important;flex:1;min-height:0;position:static}
+#scrTeam .teams{margin-top:auto;display:flex!important;gap:6px!important;overflow-x:auto;padding:2px!important;justify-content:safe center;flex:none}
+#scrTeam .tm{flex:none;width:clamp(46px,13.5vh,62px);height:clamp(46px,13.5vh,62px);padding:0!important;display:grid!important;place-items:center;transform:none!important}
+#scrTeam .tm>span{display:none}
+#scrTeam .tm svg{width:70%!important;height:70%!important}
+#scrTeam .tm::after{display:none}
+#scrTeam .tm.on{outline:2px solid #fff!important;outline-offset:-2px;background:linear-gradient(180deg,rgba(60,84,120,.95),rgba(24,38,62,.95))!important;box-shadow:inset 0 -3px 0 var(--c1)!important}
+#scrTeam .teaminfo{position:absolute!important;left:max(22px,env(safe-area-inset-left));right:auto!important;top:calc(54px + env(safe-area-inset-top) + clamp(34px,9vh,48px))!important;text-align:left!important;display:grid;grid-template-columns:auto 1fr;column-gap:10px;align-items:center}
+#scrTeam .teaminfo svg{width:34px!important;height:34px!important;grid-row:1/3}
+#scrTeam .teaminfo h3{margin:0!important;font-size:clamp(17px,4.6vh,26px)!important}
+#scrTeam .teaminfo p{margin:0!important;font-size:10.5px!important}
+#scrTeam .tbig{position:absolute;left:0;right:0;top:calc(54px + env(safe-area-inset-top) + 16vh);text-align:center;font-size:clamp(60px,34vh,220px);-webkit-text-stroke:1.5px rgba(255,255,255,.22);-webkit-mask-image:none;mask-image:none;z-index:-1}
+@media (orientation:portrait){.tsel{flex-direction:column}.tinfo{max-width:none}.tbig{display:none}}
 </style>
 </head>
 <body>
@@ -974,19 +1022,17 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
       <div class="logo2"><div><b>FORMULA</b><span>RACING</span></div></div>
       <p class="tag" id="sub">Saison 2026 · 22 Fahrer · 11 Teams · 10 Strecken</p>
       <div class="hub">
-        <button class="hero" id="cPlay"><i class="hey">Saison 2026</i><i class="hi"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5c-9 0-16 7-16 16v9c0 3 2 5 5 5h4l3 6h10l3-6h2c3 0 5-2 5-5v-9c0-9-7-16-16-16z"/><path d="M12 20h20c3 0 5 2 5 5v2H16c-3 0-4-2-4-4z"/><path d="M24 5v6"/></svg></i>
-          <span class="hk">Karriere</span>
-          <span class="hs" id="cSub">Vom Kart bis in die Formel 1</span>
-          <span class="hst" id="cState"></span>
-          <span class="hgo" id="cGo">Neue Karriere ›</span>
+        <button class="hero" id="cPlay">
+          <span class="hband"><span class="hk">Karriere</span><span class="hs" id="cSub">Vom Kart bis in die Formel 1</span></span>
+          <span class="hbody"><i class="hi"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5c-9 0-16 7-16 16v9c0 3 2 5 5 5h4l3 6h10l3-6h2c3 0 5-2 5-5v-9c0-9-7-16-16-16z"/><path d="M12 20h20c3 0 5 2 5 5v2H16c-3 0-4-2-4-4z"/><path d="M24 5v6"/></svg></i><span class="hst" id="cState"></span><span class="hgo" id="cGo">Neue Karriere ›</span></span>
         </button>
         <div class="hrow">
-          <button class="hbtn" id="qPlay"><i class="hey">Einzelrennen</i><i class="hi"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 43V6"/><path d="M10 8h28l-5 9 5 9H10"/><path d="M19 8v18M28 8v18M10 17h23"/></svg></i><b>Schnelles Spiel</b><small>GoKart, F2 oder F1 · Strecke, Team, Fahrer</small></button>
-          <button class="hbtn" id="tPlay"><i class="hey">Hotlap</i><i class="hi"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="27" r="15"/><path d="M24 27l6-7M20 6h8M24 6v6M36 14l3-3"/></svg></i><b>Zeitrennen</b><small>Allein gegen die Uhr · Runden wählbar</small></button>
+          <button class="hbtn" id="qPlay"><i class="hi"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 43V6"/><path d="M10 8h28l-5 9 5 9H10"/><path d="M19 8v18M28 8v18M10 17h23"/></svg></i><b>Schnelles Spiel</b><small>GoKart, F2 oder F1 · Strecke, Team, Fahrer</small></button>
+          <button class="hbtn" id="tPlay"><i class="hi"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="27" r="15"/><path d="M24 27l6-7M20 6h8M24 6v6M36 14l3-3"/></svg></i><b>Zeitrennen</b><small>Allein gegen die Uhr · Runden wählbar</small></button>
         </div>
         <div class="hfoot">
-          <button class="hbtn ghost" id="tSettings"><i class="hey">Optionen</i><i class="hi"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 13h32M8 24h32M8 35h32"/><circle cx="17" cy="13" r="4"/><circle cx="31" cy="24" r="4"/><circle cx="20" cy="35" r="4"/></svg></i><b>Einstellungen</b><small>Grafik, Audio, Steuerung, Spielstand</small></button>
-          <button class="hbtn ghost hidden" id="install"><i class="hey">App</i><i class="hi"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 7v22M15 21l9 9 9-9M9 35v4a3 3 0 0 0 3 3h24a3 3 0 0 0 3-3v-4"/></svg></i><span class="ic steel"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span><span class="mt"><b>App installieren</b><small>Vollbild vom Startbildschirm</small></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="hbtn ghost" id="tSettings"><i class="hi"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 13h32M8 24h32M8 35h32"/><circle cx="17" cy="13" r="4"/><circle cx="31" cy="24" r="4"/><circle cx="20" cy="35" r="4"/></svg></i><b>Einstellungen</b><small>Grafik, Audio, Steuerung, Spielstand</small></button>
+          <button class="hbtn ghost hidden" id="install"><i class="hi"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 7v22M15 21l9 9 9-9M9 35v4a3 3 0 0 0 3 3h24a3 3 0 0 0 3-3v-4"/></svg></i><span class="ic steel"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span><span class="mt"><b>App installieren</b><small>Vollbild vom Startbildschirm</small></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </div>
       </div>
     </div>
@@ -995,6 +1041,7 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 
   <section class="scr" id="scrTrack">
     <h2 class="mh">Strecke wählen</h2>
+    <div class="tsel"><div class="tinfo" id="trkInfo"></div><div class="tbig" id="trkBig"></div></div>
     <div class="tcards" id="tracks"></div>
   </section>
 
@@ -1003,7 +1050,7 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
       <h2 class="mh">Team wählen</h2>
       <div class="teams" id="teams"></div>
     </div>
-    <div class="teaminfo" id="teamInfo"></div>
+    <div class="teaminfo" id="teamInfo"></div><div class="tbig" id="teamBig"></div>
   </section>
 
   <section class="scr" id="scrDriver">
@@ -2708,9 +2755,9 @@ function cockTub(k, bodyCol = 0x808890, swz = 0.68, livMat = null) {   // Wanne:
  }   // (schwarze Seitenpolster entfernt: sie waren nur in der Cockpitansicht zu sehen)
   // (kein schwarzer Randwulst mehr um die Öffnung – Wunsch: er war in keiner anderen Ansicht zu sehen; die Karosseriekante bildet den Rand)
   // F1: lackierte Abdeckung vor dem Lenkrad – das Modell hat dort nur eine tiefer liegende, löchrige Fläche (dreieckiges Loch, in der Lackfarbe des Streifens)
-  if (c.hood) { const [ya, yb, ze] = c.hood, hw = wT(z1) + 0.08, nz = 22, nx = 28,   /* breiter (vorher +0,02): deckt die gezackte Carbonkante des Modells und das offene Ende der Spiegelstreben neben dem Lenkrad ab */ nr = 7, rr = 0.03, HP = [], HI = [], zA = z1 - 0.012, zr = 0.80, hwz = z => { const q = clamp((z - zr) / (ze - zr), 0, 1), b = clamp((z - zA) / 0.05, 0, 1); return hw * Math.sqrt(Math.max(0.02, 1 - q * q)) * (0.875 + 0.125 * b * b * (3 - 2 * b)); };   /* hinten etwas schmaler als die Öffnung: die abgerollte Kante schneidet das Deck nicht */
+  if (c.hood) { const [ya, yb, ze] = c.hood, hw = wT(z1) + 0.062, nz = 22, nx = 40,   /* breiter (vorher +0,02): deckt die gezackte Carbonkante des Modells und das offene Ende der Spiegelstreben neben dem Lenkrad ab */ nr = 7, rr = 0.03, HP = [], HI = [], zA = z1 - 0.012, zr = 0.80, hwz = z => { const q = clamp((z - zr) / (ze - zr), 0, 1), b = clamp((z - zA) / 0.05, 0, 1); return hw * Math.sqrt(Math.max(0.02, 1 - q * q)) * (0.875 + 0.125 * b * b * (3 - 2 * b)); };   /* hinten etwas schmaler als die Öffnung: die abgerollte Kante schneidet das Deck nicht */
     // Querschnitt gewölbt, zu den Seiten weich auf die Höhe des Decks abfallend (keine senkrechte Schürze); vorn halbrund und nach unten gezogen; zum Fahrer hin rund abgerollt statt einer harten Kante
-    const yAt = (z, u) => { const t = clamp((z - zA) / (ze - zA), 0, 1), e = clamp((z - 0.86) / (ze - 0.86), 0, 1), a = Math.abs(u); return lerp(ya, yb, t) - 0.07 * e * e * e + 0.007 * (1 - u * u) * (1 - e) - 0.058 * a * a * a * a * a * a; };   /* Seiten tauchen klar unter das Deck (kein Flimmern an der Berührkante) */
+    const yAt = (z, u) => { const t = clamp((z - zA) / (ze - zA), 0, 1), e = clamp((z - 0.86) / (ze - 0.86), 0, 1), a = Math.abs(u); return lerp(ya, yb, t) - 0.07 * e * e * e + 0.007 * (1 - u * u) * (1 - e) - 0.09 * Math.pow(a, 12); };   /* flach bis kurz vor den Rand, dann steil unter das Deck: das Ende der Spiegelstrebe liegt ganz unter der Abdeckung, die Strebe tritt sauber aus der Flanke aus, die Kante taucht überall ins Deck */   /* Seiten tauchen klar unter das Deck (kein Flimmern an der Berührkante) */
     const rows = [[zA, -(rr + 0.004)]];   /* endet knapp über dem Cockpitrand: darunter färbt der Lackierungs-Shader den Innenraum um (Grenze genau auf dieser Fläche = Flimmern) */ for (let k2 = 0; k2 <= nr; k2++) { const an = k2 / nr * Math.PI / 2; rows.push([zA + rr * (1 - Math.cos(an)), -rr * (1 - Math.sin(an))]); } for (let j = 1; j <= nz; j++) rows.push([zA + rr + (ze - zA - rr) * j / nz, 0]);
     for (const [z, dy] of rows) for (let i = 0; i <= nx; i++) { const u = i / nx * 2 - 1; HP.push(u * hwz(z), yAt(Math.max(z, zA + rr), u) + dy, z); }
     for (let j = 0; j < rows.length - 1; j++) for (let i = 0; i < nx; i++) { const a = j * (nx + 1) + i, b2 = a + 1, d = a + nx + 1, e = d + 1; HI.push(a, d, b2, b2, d, e); }
@@ -3325,7 +3372,7 @@ function setSeries(k, quiet) {
   placeOnGrid();
   try { renderTeams(); } catch (e) {}
 }
-window.__setSeries = setSeries; window.__dev = { get scene() { return scene; }, get camera() { return camera; }, THREE, get ALL() { return ALL; }, get pl() { return pl; }, showScreen: k => showScreen(k), MENU: () => MENU, step: dt => step(dt), cars: () => cars, startRace: () => startRace(), showResults: () => showResults(), prof: () => ({ N, DS, profAI, L }), S, setQL: v => { QL = v; } };
+window.__setSeries = setSeries; window.__dev = { get scene() { return scene; }, get camera() { return camera; }, THREE, get ALL() { return ALL; }, get pl() { return pl; }, showScreen: k => showScreen(k), MENU: () => MENU, step: dt => step(dt), cars: () => cars, startRace: () => startRace(), showResults: () => showResults(), dirt: dt => visorDirtTick(dt), prof: () => ({ N, DS, profAI, L }), S, setQL: v => { QL = v; } };
 let pl = byCode(S.driver) || ALL[0];
 const cars = []; let ais = [];
 // Schatten mit vereinfachten Modellen: nur im Schatten-Durchgang tragen nahe Autos die mittlere Detailstufe (im Schattenbild nicht zu unterscheiden,
@@ -7940,6 +7987,7 @@ function renderSeriesCards() {
 function renderTitle() {
   const c = CAREER ? loadChamp() : null, tiers = ['kart', 'f2', 'f1'], nm = { kart: 'Kart', f2: 'F2', f1: 'F1' };
   $('#cSub').textContent = !CAREER ? 'Vom Kart bis in die Formel 1' : CAREER.name + (c ? ' · ' + SERIES[c.ser].name + (c.done ? ' · Saison beendet' : ' · Rennen ' + (c.round + 1) + '/' + calFor(c.ser).length) : ' · ' + SERIES[careerTier()].name);
+  $('#cPlay .hk').textContent = CAREER && c && !c.done ? 'Karriere fortsetzen' : 'Karriere';
   $('#cGo').textContent = !CAREER ? 'Neue Karriere ›' : c && !c.done ? 'Fortsetzen ›' : 'Weiter ›';
   $('#cState').innerHTML = '';
 }
@@ -8054,25 +8102,29 @@ function renderTeams() {
   if (!S.rone && TEAMS[(byCode(S.driver) || ALL[0]).team].playerOnly) { S.driver = 'RUS'; save(); placeOnGrid(); }
   if (!S.rone && MENU.team && TEAMS[MENU.team] && TEAMS[MENU.team].playerOnly) MENU.team = 'MER';
   $('#teams').innerHTML = Object.keys(TEAMS).filter(k => !TEAMS[k].playerOnly || S.rone).map(k => { const T = TEAMS[k], ds = ALL.filter(c => c.team === k);
-    return '<button class="tm" data-team="' + k + '" style="--c1:' + hex(uiCol(T)) + '">' + teamBadge(k) + '<span><b>' + T.name + '</b><small>' + ds.map(c => c.code).join(' · ') + '</small></span></button>'; }).join('');
+    return '<button class="tm" data-team="' + k + '" title="' + T.name + '" style="--c1:' + hex(uiCol(T)) + '">' + teamBadge(k) + '<span><b>' + T.name + '</b><small>' + ds.map(c => c.code).join(' · ') + '</small></span></button>'; }).join('');
   $$('.tm').forEach(b => { const k = b.dataset.team, open = teamOpen(k); b.classList.toggle('locked', !open); if (!open) b.querySelector('small').textContent = lockMsg(k);
     b.addEventListener('click', () => { if (!teamOpen(k)) { toast(f1Rank() ? 'Dieses Team war im Vorjahr mehr als 1 Platz besser als dein Team' : 'Dafür brauchst du in der F2 mindestens Platz ' + f1Need(k)); return; } MENU.team = k; showroomTeam(MENU.team); renderMenu(); }); });
   MENU.roneShown = !!S.rone;
 }
 function buildMenu() { renderTracks(); buildMenu2(); }
+function trkMap(cv, t, col2, lw = 3) { const g = cv.getContext('2d'), W2 = cv.width, H2 = cv.height; g.clearRect(0, 0, W2, H2); let a = 1e9, bb = -1e9, c = 1e9, d = -1e9; for (const p of t.pts) { a = Math.min(a, p[0]); bb = Math.max(bb, p[0]); c = Math.min(c, p[1]); d = Math.max(d, p[1]); }
+  const sc = Math.min((W2 - 30) / (bb - a), (H2 - 30) / (d - c)), ox = (W2 - (bb - a) * sc) / 2, oz = (H2 - (d - c) * sc) / 2, fx = x => ox + (x - a) * sc, fz = z => oz + (z - c) * sc;
+  const path = () => { g.beginPath(); t.pts.forEach((p, k) => k ? g.lineTo(fx(p[0]), fz(p[1])) : g.moveTo(fx(p[0]), fz(p[1]))); g.closePath(); };
+  g.lineJoin = 'round'; g.shadowColor = col2; g.shadowBlur = lw * 6; path(); g.strokeStyle = col2; g.lineWidth = lw * 2.3; g.stroke(); g.shadowBlur = 0; path(); g.strokeStyle = '#f4f7fa'; g.lineWidth = lw; g.stroke();
+  const p0 = t.pts[0]; g.fillStyle = '#fff'; g.beginPath(); g.arc(fx(p0[0]), fz(p0[1]), lw * 1.7, 0, 7); g.fill(); g.fillStyle = '#e10600'; g.beginPath(); g.arc(fx(p0[0]), fz(p0[1]), lw, 0, 7); g.fill(); }
+// Streckenwahl: links Infotafel der gewählten Strecke (große Skizze + Daten), dahinter der Name als Konturschrift, unten die Leiste aller Strecken
+function renderTrackInfo() { const k = S.track, t = TRACKS[k]; if (!t || MENU.trkShown === k + SER) return; MENU.trkShown = k + SER; const ti = TRACK_INFO[k] || { turns: '–', col: '#e10600' };
+  $('#trkInfo').innerHTML = '<canvas width="420" height="300"></canvas><div class="tst"><div><small>Kurven</small><b>' + ti.turns + '</b></div><div><small>Streckenlänge</small><b>' + t.km + '</b></div><div><small>Runden (GP)</small><b>' + t.laps + '</b></div><div><small>Land</small><b>' + flagSVG(k) + t.land + '</b></div><div class="w"><small>Kurs</small><b>' + t.full + '</b></div></div>';
+  $('#trkInfo').style.setProperty('--tc', ti.col); trkMap($('#trkInfo canvas'), t, ti.col, 5); $('#trkBig').textContent = t.name; }
 function renderTracks() {
   if (TRACKS[S.track] && ((TRACKS[S.track].extra && !S.nos) || (TRACKS[S.track].kartOnly && SER !== 'kart'))) S.track = 'monza';
   $('#tracks').innerHTML = Object.entries(TRACKS).filter(([k, t]) => (!t.extra || S.nos) && (!t.kartOnly || SER === 'kart')).map(([k, t]) => { const ti = TRACK_INFO[k] || { turns: '–', col: '#e10600' };
     return '<button class="tcard" data-trk="' + k + '" style="--tc:' + ti.col + '"><span class="chk">✓</span><div class="tn">' + t.name + '</div><div class="tf">' + t.full + ' · ' + t.land + '' + flagSVG(k) + '</div><canvas width="300" height="190"></canvas>'
       + '<div class="ts"><div><b>' + t.km + '</b><small>Länge</small></div><div><b>' + ti.turns + '</b><small>Kurven</small></div><div><b>' + t.laps + '</b><small>Runden</small></div></div></button>'; }).join('');
   $$('#tracks .tcard').forEach(b => {
-    const t = TRACKS[b.dataset.trk], cv = b.querySelector('canvas'), g = cv.getContext('2d'), col2 = getComputedStyle(b).getPropertyValue('--tc') || '#e10600';
-    const W2 = cv.width, H2 = cv.height; let a = 1e9, bb = -1e9, c = 1e9, d = -1e9; for (const p of t.pts) { a = Math.min(a, p[0]); bb = Math.max(bb, p[0]); c = Math.min(c, p[1]); d = Math.max(d, p[1]); }
-    const sc = Math.min((W2 - 30) / (bb - a), (H2 - 30) / (d - c)), ox = (W2 - (bb - a) * sc) / 2, oz = (H2 - (d - c) * sc) / 2, fx = x => ox + (x - a) * sc, fz = z => oz + (z - c) * sc;
-    const path = () => { g.beginPath(); t.pts.forEach((p, k) => k ? g.lineTo(fx(p[0]), fz(p[1])) : g.moveTo(fx(p[0]), fz(p[1]))); g.closePath(); };
-    g.lineJoin = 'round'; g.shadowColor = col2; g.shadowBlur = 18; path(); g.strokeStyle = col2; g.lineWidth = 7; g.stroke(); g.shadowBlur = 0; path(); g.strokeStyle = '#f4f7fa'; g.lineWidth = 3; g.stroke();
-    const p0 = t.pts[0]; g.fillStyle = '#fff'; g.beginPath(); g.arc(fx(p0[0]), fz(p0[1]), 5, 0, 7); g.fill(); g.fillStyle = '#e10600'; g.beginPath(); g.arc(fx(p0[0]), fz(p0[1]), 3, 0, 7); g.fill();
-    b.addEventListener('click', () => { S.track = b.dataset.trk; save(); renderMenu(); b.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' }); });
+    trkMap(b.querySelector('canvas'), TRACKS[b.dataset.trk], getComputedStyle(b).getPropertyValue('--tc') || '#e10600', 5);
+    b.addEventListener('click', () => { S.track = b.dataset.trk; save(); renderMenu(); b.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); });
     b.addEventListener('dblclick', menuNext);
   });
 }
@@ -8105,9 +8157,9 @@ function renderMenu() {
   if (MENU.roneShown !== undefined && MENU.roneShown !== !!S.rone) renderTeams();
   const d = byCode(S.driver) || ALL[0];
   if (!MENU.team) MENU.team = d.team;
-  $$('.tcard').forEach(b => b.classList.toggle('on', b.dataset.trk === S.track));
+  $$('.tcard').forEach(b => b.classList.toggle('on', b.dataset.trk === S.track)); renderTrackInfo();
   $$('.tm').forEach(b => b.classList.toggle('on', b.dataset.team === MENU.team));
-  { const T = TEAMS[MENU.team], ds = ALL.filter(c => c.team === MENU.team); $('#teamInfo').innerHTML = teamBadge(MENU.team) + '<h3>' + T.name + '</h3><p>' + ds.map(c => c.name).join(' · ') + '</p>'; }
+  { const T = TEAMS[MENU.team], ds = ALL.filter(c => c.team === MENU.team); $('#teamInfo').innerHTML = teamBadge(MENU.team) + '<h3>' + T.name + '</h3><p>' + ds.map(c => c.name).join(' · ') + '</p>'; $('#teamBig').textContent = T.short || T.name; }
   if (MENU.scr === 'driver') renderDrivers();
   const T = TEAMS[d.team], tr = TRACKS[S.track], sel = [];
   if (MENU.mode !== 'career' && SCR.indexOf(MENU.scr) >= 2) sel.push('<span>' + SERIES[SER].name + '</span>');
@@ -8171,10 +8223,10 @@ function showroomPick() { SHOW.cars.forEach((m, n0) => { const n = m.slot ?? n0;
 function showroomFrame(dt) {
   SHOW.t += dt; const t = SHOW.t, cam = SHOW.cam, team = MENU.scr === 'team';
   SHOW.cars.forEach((m, n) => { m.g.rotation.y = (n ? -0.6 : 0.6) + t * 0.18 * (n ? -1 : 1); });
-  const r = team ? 16 : 13.2, a = Math.sin(t * 0.08) * 0.22;
+  const r = team ? 17 : 13.2, a = Math.sin(t * 0.08) * 0.22;
   cam.position.set(Math.sin(a) * r, team ? 3.4 : 2.7, Math.cos(a) * r); cam.lookAt(0, 0.55, 0);
   const W2 = innerWidth, H2 = innerHeight; if (cam.aspect !== W2 / H2) { cam.aspect = W2 / H2; }
-  if (team) cam.setViewOffset(W2, H2, -W2 * 0.21, -H2 * 0.1, W2, H2); else cam.setViewOffset(W2, H2, 0, -H2 * 0.06, W2, H2);
+  if (team) cam.setViewOffset(W2, H2, 0, H2 * 0.03, W2, H2);   /* Teamwahl: Autos mittig über der Teamleiste (vorher nach rechts versetzt neben der Teamliste) */ else cam.setViewOffset(W2, H2, 0, -H2 * 0.06, W2, H2);
   cam.updateProjectionMatrix();
 }
 $$('[data-step]').forEach(b => b.addEventListener('click', () => {
