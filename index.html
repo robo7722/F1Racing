@@ -1036,11 +1036,24 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 .hbody{background:linear-gradient(90deg,rgba(0,0,0,.5),rgba(0,0,0,0) 48%)!important}
 
 .logo2 .glogo{display:block;height:clamp(38px,15vh,96px);width:auto;max-width:min(60vw,460px);object-fit:contain;object-position:left center}
+
+.ldLogo .glogo.ld{display:block;height:clamp(54px,20vh,130px);width:auto;max-width:70vw;margin:0 auto;object-fit:contain}
+.mtop .mlogo{margin-left:auto;flex:0 1 auto;min-width:0;height:34px;max-width:22vw;object-fit:contain;object-position:right center}
+.mtop .mlogo:not([hidden])+.mgear{margin-left:0!important}
+@media (orientation:portrait){.mtop .mlogo{display:none}}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 <div id="loading"><div class="ldBox"><div class="ldLogo"><small>FORMULA</small>RACING</div><div class="ldTrk" id="ldTrk"></div><div class="ldBar"><i></i></div><div class="ldTxt">Strecke wird geladen</div></div></div>
+<script>
+/* Eigenes Titel-Logo: liegt logos/LOGO.png im Projekt, ersetzt es den Schriftzug „FORMULA RACING“ – sofort beim Start auf dem Ladebildschirm, im Hauptmenü und klein oben in allen Untermenüs. Fehlt die Datei, bleibt der Schriftzug. */
+(function () { var im = new Image(); im.onload = function () {
+  var put = function (sel, cls) { var el = document.querySelector(sel); if (!el) return; var g = new Image(); g.src = im.src; g.className = cls; g.alt = 'Logo'; el.innerHTML = ''; el.appendChild(g); };
+  var go = function () { put('.ldLogo', 'glogo ld'); put('.logo2', 'glogo'); var m = document.getElementById('mLogo'); if (m) { m.src = im.src; m.hidden = false; } };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); };
+  im.src = 'logos/LOGO.png'; })();
+</script>
 
 <div id="hud" class="hidden">
   <div id="helmet" aria-hidden="true"></div>
@@ -1080,6 +1093,7 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
   <header class="mtop">
     <button class="mback" id="mBack" aria-label="Zurück">‹</button>
     <div class="msteps" id="mSteps"><i><b>1</b>Strecke</i><i><b>2</b>Team</i><i><b>3</b>Fahrer</i><i><b>4</b>Rennen</i></div>
+    <img class="mlogo" id="mLogo" alt="" hidden>
     <button class="mgear" id="mGear" aria-label="Einstellungen">⚙</button>
   </header>
 
@@ -7995,7 +8009,7 @@ async function logoImport(files) { let ok = 0; const miss = [];
   return { ok, miss }; }
 // Logos aus dem Projektordner: liegt dort logos/<Kürzel>.png (z. B. logos/MER.png, logos/F2_INV.png), ersetzt sie das gezeichnete Wappen. Fehlt die Datei, bleibt das Wappen.
 const REPO_LOGOS = {};
-function loadRepoLogos() { { const gl = new Image(); gl.onload = () => { const el = document.querySelector('.logo2'); if (el) { el.innerHTML = ''; gl.className = 'glogo'; gl.alt = 'Logo'; el.appendChild(gl); } }; gl.src = 'logos/LOGO.png'; }   /* eigenes Spiel-Logo im Hauptmenü: logos/LOGO.png ersetzt den Schriftzug */ const keys = Object.keys(Object.assign({}, F1_TEAMS, F2_TEAMS, KART_TEAMS)); let left = keys.length, hit = 0;
+function loadRepoLogos() { const keys = Object.keys(Object.assign({}, F1_TEAMS, F2_TEAMS, KART_TEAMS)); let left = keys.length, hit = 0;
   const done = () => { if (--left === 0 && hit) { try { renderTeams(); renderMenu(); if (CHP && MENU.scr === 'season') renderSeason(); } catch (e) {} } };
   for (const k of keys) { const im = new Image(); im.onload = () => { REPO_LOGOS[k] = im.src; hit++; done(); }; im.onerror = done; im.src = 'logos/' + k + '.png'; } }
 function teamBadge(k) {
