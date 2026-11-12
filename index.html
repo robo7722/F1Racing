@@ -1100,6 +1100,10 @@ body.warmhelm #helmet{display:block!important;opacity:.01}
 
 /* Klassenwahl: gewählte Karte bleibt an ihrem Platz (kein Anheben/Hüpfen) */
 #serCards .scard,#serCards .scard.on,#carCards .scard,#carCards .scard.on{transform:none!important;transition:border-color .2s,background .2s!important}
+
+/* Pausenmenü und Einstellungen: eckig wie die übrigen Menüs (keine abgerundeten Fenster, Reiter, Tasten, Regler-Felder) */
+:is(#pause,#settings) :is(.card,.big,.ptabs button,.pinfo span,.seg,.seg button,.sw,.chips button,.stepper button,textarea,input,select,.xbtn,button){border-radius:0!important}
+:is(#pause,#settings) .sw::after{border-radius:0!important}
 </style>
 </head>
 <body>
