@@ -5,6 +5,9 @@ Lege hier PNG-Dateien ab. Das Spiel lädt sie beim Start und ersetzt damit die g
 - Dateiname = Team-Kürzel + `.png`, Groß-/Kleinschreibung genau so wie unten
 - quadratisch, am besten 256 × 256 px, transparenter Hintergrund
 
+## Spiel-Logo
+`LOGO.png` ersetzt den Schriftzug „FORMULA RACING“ im Hauptmenü. Querformat, transparenter Hintergrund, etwa 800 × 240 px.
+
 ## Formel 1
 `MER.png` Mercedes · `FER.png` Ferrari · `MCL.png` McLaren · `RBR.png` Red Bull · `AST.png` Aston Martin · `WIL.png` Williams · `RB.png` Racing Bulls · `ALP.png` Alpine · `HAA.png` Haas · `AUD.png` Audi · `CAD.png` Cadillac · `RON.png` RONE Racing
 

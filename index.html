@@ -578,11 +578,11 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
 /* ===== UI 2027c: Gestaltung nach dem F1-Spiel – Tiefe statt Flachheit (Wunsch: hochwertig, kreativ, keine runden Kanten) =====
    Flächen: Carbon-Gewebe + Verlauf + harter Tiefenschatten + Lichtkante oben + rote Eckmarke. Auswahl: weiße Kontur, roter Balken, laufender Glanz.
    Schrift: Titillium Web in Versalien, große Konturziffern als Gestaltungselement, rote Kennziffern. Tasten: roter Verlauf mit weißem Pfeilblock. */
-:root{--f1r:#e10600;--f1r2:#ff2a14;--ink:#0a1424;--ink2:#132238;--f1l:rgba(150,205,255,.2);--f1l2:rgba(150,205,255,.5);
+:root{--f1r:#e10600;--f1r2:#ff2a14;--ink:#101114;--ink2:#1c1d21;--f1l:rgba(255,255,255,.2);--f1l2:rgba(255,255,255,.5);
   --carbon:linear-gradient(transparent,transparent);   /* Rasterlinien entfernt (Wunsch): glatte Flächen */
-  --surf:linear-gradient(180deg,rgba(26,44,72,.9) 0%,rgba(14,26,46,.9) 46%,rgba(8,16,30,.93) 100%);   /* Navy-Glas wie die Halo-Grafik des Tachos */
-  --surfH:linear-gradient(180deg,rgba(36,60,96,.92) 0%,rgba(18,34,60,.92) 50%,rgba(10,20,36,.94) 100%);
-  --depth:0 16px 34px -10px rgba(0,0,0,.7),inset 0 1px 0 rgba(150,205,255,.35);
+  --surf:linear-gradient(180deg,rgba(74,78,86,.9) 0%,rgba(40,42,48,.9) 46%,rgba(30,32,37,.93) 100%);   /* Navy-Glas wie die Halo-Grafik des Tachos */
+  --surfH:linear-gradient(180deg,rgba(92,96,106,.92) 0%,rgba(54,56,64,.92) 50%,rgba(32,34,40,.94) 100%);
+  --depth:0 16px 34px -10px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.35);
   --sheen:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.13) 48%,rgba(255,255,255,.02) 56%,transparent 64%);
   --sl:polygon(0 0,100% 0,calc(100% - 16px) 100%,0 100%);--cut:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%)}
 @keyframes f1sheen{from{background-position:180% 0,0 0,0 0}to{background-position:-80% 0,0 0,0 0}}
@@ -759,12 +759,12 @@ th{background:#0c0c12!important;letter-spacing:.16em;font-size:10px!important;co
 .sehead .mh{margin:0!important;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block!important}
 .sehead .mh::before{display:inline-block!important;vertical-align:-2px;margin-right:10px!important}
 .sechips{display:flex;gap:6px;flex:none}
-.sechips i{font:700 11px "Titillium Web",sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:5px 10px;background:rgba(8,16,30,.7);border:1px solid var(--f1l);color:rgba(255,255,255,.75);white-space:nowrap}
+.sechips i{font:700 11px "Titillium Web",sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:5px 10px;background:rgba(30,32,37,.7);border:1px solid var(--f1l);color:rgba(255,255,255,.75);white-space:nowrap}
 .sechips i b{color:#fff;font-weight:900;margin-left:5px}.sechips i.hot{border-color:var(--f1r)}.sechips i.gold b{color:#ffd400}
 .setabs{flex:none;display:flex;gap:6px;margin:10px 0 12px}
-.setabs button{position:relative;flex:1 1 0;min-width:0;height:44px;display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(8,16,30,.62);border:1px solid var(--f1l);border-bottom:3px solid transparent;color:rgba(255,255,255,.6);font:700 13px "Titillium Web",sans-serif;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;transition:background .15s,color .15s}
-.setabs button.on{background:linear-gradient(180deg,rgba(36,60,96,.95),rgba(14,26,46,.95));color:#fff;border-color:var(--f1l2);border-bottom-color:var(--f1r)}
-.setabs button em{font-style:normal;font-weight:900;font-size:11px;letter-spacing:.04em;padding:2px 7px;background:#ffd400;color:#0a1424}
+.setabs button{position:relative;flex:1 1 0;min-width:0;height:44px;display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(30,32,37,.62);border:1px solid var(--f1l);border-bottom:3px solid transparent;color:rgba(255,255,255,.6);font:700 13px "Titillium Web",sans-serif;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;transition:background .15s,color .15s}
+.setabs button.on{background:linear-gradient(180deg,rgba(92,96,106,.95),rgba(40,42,48,.95));color:#fff;border-color:var(--f1l2);border-bottom-color:var(--f1r)}
+.setabs button em{font-style:normal;font-weight:900;font-size:11px;letter-spacing:.04em;padding:2px 7px;background:#ffd400;color:#101114}
 .sepanes{flex:1;min-height:0;position:relative}
 .sepane{position:absolute;inset:0;display:none;overflow-y:auto;scrollbar-width:none}.sepane::-webkit-scrollbar{display:none}
 .sepane.on{display:block;animation:f1in .25s cubic-bezier(.2,.8,.2,1)}
@@ -789,20 +789,20 @@ th{background:#0c0c12!important;letter-spacing:.16em;font-size:10px!important;co
 #seBtns .mbtn::before{display:none!important}
 #seBtns .mbtn::after{content:'›'!important;position:absolute;right:12px;top:50%;left:auto!important;bottom:auto!important;width:auto!important;transform:translateY(-55%)!important;background:none!important;font-size:22px;color:#fff}
 #seBtns .mbtn b{font-size:14px!important}#seBtns .mbtn small{font-size:10px!important}
-.sebar{display:flex;gap:3px;margin-bottom:10px}.sebar i{flex:1;height:6px;background:rgba(150,205,255,.16)}.sebar i.d{background:#33e070}.sebar i.n{background:var(--f1r)}
+.sebar{display:flex;gap:3px;margin-bottom:10px}.sebar i{flex:1;height:6px;background:rgba(255,255,255,.16)}.sebar i.d{background:#33e070}.sebar i.n{background:var(--f1r)}
 .sestats{display:flex;gap:8px}.sestats span{flex:1;min-width:0;display:flex;flex-direction:column;font:700 10px "Titillium Web",sans-serif;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sestats b{font-size:20px;font-weight:900;letter-spacing:0;color:#fff;line-height:1.15}
 /* Tabelle: alle Fahrer in EINER Spalte untereinander (Wunsch), eigene Zeile hervorgehoben */
 #seTbl{display:block}
-#seTbl .strow{break-inside:avoid;display:grid;grid-template-columns:34px 4px minmax(0,1fr) auto auto;align-items:center;gap:10px;height:34px;padding:0 12px 0 0;margin-bottom:4px;background:rgba(8,16,30,.9);border:1px solid rgba(150,205,255,.14);font-size:14px;font-weight:600}
-#seTbl .strow .n{height:100%;display:grid;place-items:center;background:rgba(150,205,255,.1);font-weight:900}
+#seTbl .strow{break-inside:avoid;display:grid;grid-template-columns:34px 4px minmax(0,1fr) auto auto;align-items:center;gap:10px;height:34px;padding:0 12px 0 0;margin-bottom:4px;background:rgba(30,32,37,.9);border:1px solid rgba(255,255,255,.14);font-size:14px;font-weight:600}
+#seTbl .strow .n{height:100%;display:grid;place-items:center;background:rgba(255,255,255,.1);font-weight:900}
 #seTbl .strow i{height:18px}#seTbl .strow .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #seTbl .strow .tmn{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45);white-space:nowrap}
 #seTbl .strow .pt{font-weight:900;min-width:30px;text-align:right;font-variant-numeric:tabular-nums}
-#seTbl .strow.me{background:linear-gradient(90deg,#fff,#dde8f5);color:var(--ink);font-weight:900;border-color:#fff}#seTbl .strow.me .n{background:var(--f1r);color:#fff}#seTbl .strow.me .tmn{color:rgba(10,20,36,.6)}
+#seTbl .strow.me{background:linear-gradient(90deg,#fff,#e8e9ec);color:var(--ink);font-weight:900;border-color:#fff}#seTbl .strow.me .n{background:var(--f1r);color:#fff}#seTbl .strow.me .tmn{color:rgba(32,34,40,.6)}
 #seTbl .strow.top .n{color:#ffd400}
 /* Kalender: Karten im Raster – erledigt (mit Ergebnis), nächstes Rennen rot, kommende gedimmt */
 .secal{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
-.secal .cc{position:relative;display:flex;flex-direction:column;gap:3px;padding:9px 12px 10px;background:rgba(8,16,30,.9);border:1px solid rgba(150,205,255,.16);min-width:0}
+.secal .cc{position:relative;display:flex;flex-direction:column;gap:3px;padding:9px 12px 10px;background:rgba(30,32,37,.9);border:1px solid rgba(255,255,255,.16);min-width:0}
 .secal .cc .ct{display:flex;align-items:center;justify-content:space-between;gap:6px;font:700 10.5px "Titillium Web",sans-serif;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5)}
 .secal .cc .ct svg{width:22px!important;height:14px!important;flex:none}
 .secal .cc b{font-size:17px;font-weight:900;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -817,26 +817,26 @@ th{background:#0c0c12!important;letter-spacing:.16em;font-size:10px!important;co
 @media (max-height:470px){#seProg{display:none}.setabs{margin:8px 0 10px}.setabs button{height:40px}}
 @media (max-height:380px){.setabs{margin:6px 0 8px}.setabs button{height:36px}#seNext .sn-l span{display:none!important}.sechips{display:none}}
 /* Klassenwahl der Karriere: ruhiger – Status als Marke, gesperrte Klassen klar erkennbar */
-#carCards .scard .cst{border-top:0!important;margin-top:10px;padding:7px 10px!important;background:rgba(8,16,30,.6);border-left:3px solid var(--tc);font-size:12px!important;letter-spacing:.03em}
+#carCards .scard .cst{border-top:0!important;margin-top:10px;padding:7px 10px!important;background:rgba(30,32,37,.6);border-left:3px solid var(--tc);font-size:12px!important;letter-spacing:.03em}
 #carCards .scard.cur{outline:2px solid #fff;outline-offset:-2px}
-#carCards .scard .ctag{position:absolute;top:10px;right:12px;font:900 10px "Titillium Web",sans-serif;letter-spacing:.16em;text-transform:uppercase;padding:3px 8px;background:var(--tc);color:#0a1424}
+#carCards .scard .ctag{position:absolute;top:10px;right:12px;font:900 10px "Titillium Web",sans-serif;letter-spacing:.16em;text-transform:uppercase;padding:3px 8px;background:var(--tc);color:#101114}
 #carCards .scard.locked .ctag{background:#8a8f98}
 
 /* ===== Designsprache des Tachos auf das ganze UI: Navy-Glas, hellblaue Kante oben, Zahlen weiß, Rot nur für Auswahl/Platzierung ===== */
-.card,.rpanel,.spanel,.tcard,.tm,.dcard,.hbtn,.rvar,.uprow,.mback,.mgear,.msteps,.stepper button,.big.alt{border-top-color:rgba(150,205,255,.55)!important}
+.card,.rpanel,.spanel,.tcard,.tm,.dcard,.hbtn,.rvar,.uprow,.mback,.mgear,.msteps,.stepper button,.big.alt{border-top-color:rgba(255,255,255,.55)!important}
 #board{background:linear-gradient(90deg,rgba(14,26,46,.9),rgba(14,26,46,.62))!important;border-left:1px solid rgba(150,205,255,.45)!important}
 #board .r .p{background:rgba(150,205,255,.1)!important}
 #board .r.me{background:linear-gradient(90deg,#fff,#dde8f5)!important}
 .hb{background:linear-gradient(180deg,rgba(26,44,72,.85),rgba(8,16,30,.85))!important;border:1px solid rgba(150,205,255,.3)!important}
-#controls .pad{background:linear-gradient(180deg,rgba(26,44,72,.5),rgba(8,16,30,.55))!important;border:1px solid rgba(150,205,255,.25)!important;border-top-color:rgba(150,205,255,.55)!important}
-#controls .boostBtn{background:linear-gradient(180deg,rgba(26,44,72,.6),rgba(8,16,30,.65))!important}
-#lights{background:linear-gradient(180deg,rgba(26,44,72,.92),rgba(8,16,30,.92))!important;border:1px solid rgba(150,205,255,.35)!important}
-.seg,.chips button,.sw{background:rgba(8,16,30,.6)!important}
-th{background:#0a1424!important}
-.overlay{background:linear-gradient(90deg,rgba(4,10,20,.9),rgba(4,10,20,.72))!important}
-#menu::before{background:linear-gradient(90deg,rgba(4,10,20,.94) 0%,rgba(4,10,20,.78) 34%,rgba(4,10,20,.25) 62%,rgba(4,10,20,.05) 80%),radial-gradient(60% 70% at 0% 100%,rgba(225,6,0,.18),transparent 70%)!important}
+#controls .pad{background:linear-gradient(180deg,rgba(74,78,86,.5),rgba(30,32,37,.55))!important;border:1px solid rgba(255,255,255,.25)!important;border-top-color:rgba(255,255,255,.55)!important}
+#controls .boostBtn{background:linear-gradient(180deg,rgba(74,78,86,.6),rgba(30,32,37,.65))!important}
+#lights{background:linear-gradient(180deg,rgba(74,78,86,.92),rgba(30,32,37,.92))!important;border:1px solid rgba(255,255,255,.35)!important}
+.seg,.chips button,.sw{background:rgba(30,32,37,.6)!important}
+th{background:#101114!important}
+.overlay{background:linear-gradient(90deg,rgba(16,17,20,.9),rgba(16,17,20,.72))!important}
+#menu::before{background:linear-gradient(90deg,rgba(16,17,20,.94) 0%,rgba(16,17,20,.78) 34%,rgba(16,17,20,.25) 62%,rgba(16,17,20,.05) 80%),radial-gradient(60% 70% at 0% 100%,rgba(225,6,0,.18),transparent 70%)!important}
 /* Schalter: eckig wie der Rest – Navy-Glas mit hellblauer Kante, eckiger Schieber, Beschriftung AN/AUS; an = rot gefüllt */
-.sw{position:relative!important;width:66px!important;height:26px!important;flex:none;background:rgba(8,16,30,.7)!important;border:1px solid rgba(150,205,255,.35)!important;border-radius:0!important;box-shadow:inset 0 1px 0 rgba(150,205,255,.15)!important}
+.sw{position:relative!important;width:66px!important;height:26px!important;flex:none;background:rgba(30,32,37,.7)!important;border:1px solid rgba(255,255,255,.35)!important;border-radius:0!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.15)!important}
 .sw::after{content:""!important;position:absolute;top:3px!important;left:3px!important;width:18px!important;height:18px!important;border-radius:0!important;background:linear-gradient(180deg,#c9d6e6,#8fa2b8)!important;box-shadow:none!important;transition:transform .18s cubic-bezier(.2,.8,.2,1)!important}
 .sw::before{content:"AUS";position:absolute;right:8px;top:50%;transform:translateY(-50%);font:700 10px "Titillium Web",system-ui,sans-serif;letter-spacing:.14em;color:rgba(255,255,255,.5)}
 .sw.on{background:linear-gradient(180deg,#ff2a14,#c00500)!important;border-color:#ff4a3a!important}
@@ -918,19 +918,19 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 .hero::before{display:none!important}
 .hband{display:flex;flex-direction:column;gap:3px;padding:10px 16px 9px;background:linear-gradient(180deg,#fff,#e6ebf2);color:var(--ink);min-width:0}
 .hero .hk{color:var(--ink)!important;text-shadow:none!important;font-size:clamp(19px,6vh,34px)!important;letter-spacing:.02em!important;line-height:1!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hero .hs{color:rgba(10,20,36,.72)!important;opacity:1!important;font-size:11px!important;letter-spacing:.1em!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hero .hs{color:rgba(32,34,40,.72)!important;opacity:1!important;font-size:11px!important;letter-spacing:.1em!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hbody{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;gap:8px;padding:12px 16px 14px;overflow:hidden;background:repeating-linear-gradient(115deg,rgba(255,255,255,.07) 0 2px,transparent 2px 14px) 100% 0/55% 100% no-repeat,radial-gradient(90% 120% at 100% 0%,#ff4a2a 0,transparent 60%),linear-gradient(160deg,#e10600 0%,#a80400 70%,#6e0300 100%)}
 .hero .hgo{margin-top:0!important}
 .hero .hi{position:absolute;right:6%;top:50%;bottom:auto;width:auto;height:86%;aspect-ratio:1;transform:translateY(-50%);background:none;padding:0;color:rgba(255,255,255,.3)}
 .hero .hi svg{stroke-width:.9}
 .hbtn{justify-content:space-between!important;padding:11px 14px 12px!important}
-.hbtn::before{content:"";position:absolute;right:0;top:0;width:62%;height:58%;background:repeating-linear-gradient(115deg,rgba(150,205,255,.07) 0 2px,transparent 2px 12px);-webkit-mask-image:linear-gradient(215deg,#000 0,transparent 68%);mask-image:linear-gradient(215deg,#000 0,transparent 68%);pointer-events:none}
+.hbtn::before{content:"";position:absolute;right:0;top:0;width:62%;height:58%;background:repeating-linear-gradient(115deg,rgba(255,255,255,.07) 0 2px,transparent 2px 12px);-webkit-mask-image:linear-gradient(215deg,#000 0,transparent 68%);mask-image:linear-gradient(215deg,#000 0,transparent 68%);pointer-events:none}
 .hbtn::after{display:none!important}
 .hbtn b{color:rgba(255,255,255,.92)}
 .hbtn small{max-width:calc(100% - 46px);margin-top:0!important}
 .hi{position:absolute;right:12px;bottom:12px;width:clamp(30px,9vh,40px);height:clamp(30px,9vh,40px);padding:6px;box-sizing:border-box;background:linear-gradient(180deg,#ff2a14,#c00500);color:#fff;pointer-events:none;transition:transform .2s,filter .2s}
 .hi svg{width:100%;height:100%;display:block;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
-.hbtn.ghost .hi{background:linear-gradient(180deg,rgba(150,205,255,.3),rgba(150,205,255,.14))}
+.hbtn.ghost .hi{background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,.14))}
 .hbtn:hover .hi{transform:translateY(-2px);filter:brightness(1.2)}
 #install .mt{display:contents}
 @media (max-height:380px){.hband{padding:7px 12px 6px}.hbody{padding:8px 12px 10px}}
@@ -939,10 +939,10 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 #scrTrack.on,#scrTeam.on{display:flex!important;flex-direction:column}
 #scrTrack>.mh,#scrTeam .mh{flex:none}
 .tsel{position:relative;flex:1;min-height:0;display:flex;align-items:stretch;gap:18px;margin-bottom:10px}
-.tinfo{flex:none;display:flex;align-items:stretch;gap:14px;padding:10px 16px 10px 8px;background:var(--carbon),var(--surf);border:1px solid var(--f1l);border-top-color:rgba(150,205,255,.55);box-shadow:inset 3px 0 0 var(--tc,#e10600);animation:f1in .3s both;max-width:62%}
+.tinfo{flex:none;display:flex;align-items:stretch;gap:14px;padding:10px 16px 10px 8px;background:var(--carbon),var(--surf);border:1px solid var(--f1l);border-top-color:rgba(255,255,255,.55);box-shadow:inset 3px 0 0 var(--tc,#e10600);animation:f1in .3s both;max-width:62%}
 .tinfo canvas{height:100%;width:auto;max-width:44vw;aspect-ratio:7/5;min-height:0;filter:drop-shadow(0 0 10px var(--tc))}
 .tinfo .tst{display:grid;grid-template-columns:auto auto;align-content:center;gap:clamp(4px,1.6vh,12px) 22px;min-width:0}
-.tinfo .tst div{min-width:0;border-bottom:1px solid rgba(150,205,255,.16);padding-bottom:3px}.tinfo .tst .w{grid-column:1/-1}
+.tinfo .tst div{min-width:0;border-bottom:1px solid rgba(255,255,255,.16);padding-bottom:3px}.tinfo .tst .w{grid-column:1/-1}
 .tinfo .tst small{display:block;font:700 9.5px "Titillium Web",sans-serif;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.55)}
 .tinfo .tst b{display:block;font-size:clamp(13px,3.6vh,17px);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:30vw}
 .tinfo .tst b svg{width:20px!important;height:13px!important;display:inline-block;vertical-align:-1px;margin-right:6px}
@@ -953,7 +953,7 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 #scrTrack .tcard .tn{font-size:11.5px!important;letter-spacing:.06em!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(255,255,255,.75)}
 #scrTrack .tcard canvas{filter:none!important;opacity:.6}
 #scrTrack .tcard::before{display:none!important}
-#scrTrack .tcard.on{outline:2px solid #fff!important;outline-offset:-2px;background:linear-gradient(180deg,rgba(60,84,120,.95),rgba(24,38,62,.95))!important;box-shadow:none!important}
+#scrTrack .tcard.on{outline:2px solid #fff!important;outline-offset:-2px;background:linear-gradient(180deg,rgba(110,114,124,.95),rgba(58,60,68,.95))!important;box-shadow:none!important}
 #scrTrack .tcard.on .tn{color:#fff}#scrTrack .tcard.on canvas{opacity:1}
 
 /* ===== Teamwahl (Vorlage): Teamname oben links, große Konturschrift hinter den Autos, Teamleiste mit Wappen unten ===== */
@@ -963,7 +963,7 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 #scrTeam .tm>span{display:none}
 #scrTeam .tm svg{width:70%!important;height:70%!important}
 #scrTeam .tm::after{display:none}
-#scrTeam .tm.on{outline:2px solid #fff!important;outline-offset:-2px;background:linear-gradient(180deg,rgba(60,84,120,.95),rgba(24,38,62,.95))!important;box-shadow:inset 0 -3px 0 var(--c1)!important}
+#scrTeam .tm.on{outline:2px solid #fff!important;outline-offset:-2px;background:linear-gradient(180deg,rgba(110,114,124,.95),rgba(58,60,68,.95))!important;box-shadow:inset 0 -3px 0 var(--c1)!important}
 #scrTeam .teaminfo{position:absolute!important;left:max(22px,env(safe-area-inset-left));right:auto!important;top:calc(54px + env(safe-area-inset-top) + clamp(34px,9vh,48px))!important;text-align:left!important;display:grid;grid-template-columns:auto 1fr;column-gap:10px;align-items:center}
 #scrTeam .teaminfo svg{width:34px!important;height:34px!important;grid-row:1/3}
 #scrTeam .teaminfo h3{margin:0!important;font-size:clamp(17px,4.6vh,26px)!important}
@@ -1015,6 +1015,27 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 .hi{border-radius:6px;background:linear-gradient(180deg,#e0263a,#a5101f)!important}
 .hbtn.ghost .hi{background:linear-gradient(180deg,#e0263a,#a5101f)!important}
 .hub{gap:10px!important}
+
+/* ===== Untermenüs im Stil des Hauptmenüs: Facetten-Hintergrund, Graphitglas, runde Ecken, keine schrägen Schnitte ===== */
+:root{--sl:none;--cut:none;--depth:0 10px 24px -14px rgba(0,0,0,.75);--f1l:rgba(255,255,255,.16);--f1l2:rgba(255,255,255,.42)}
+#menu:not([data-scr=team]):not([data-scr=driver]):not([data-scr=track])::before{background:linear-gradient(118deg,transparent 0 46%,rgba(255,255,255,.035) 46% 63%,transparent 63%),linear-gradient(62deg,rgba(255,255,255,.03) 0 24%,transparent 24%),linear-gradient(152deg,transparent 0 70%,rgba(0,0,0,.35) 70%),radial-gradient(80% 70% at 50% 40%,#3a3c41,#1b1c20 70%,#0e0f12)!important}
+#menu:not([data-scr=team]):not([data-scr=driver]):not([data-scr=track]) .mvig{display:none}
+.card,.rpanel,.spanel,.tcard,.tm,.dcard,.rvar,.uprow,.mback,.mgear,.msteps,.scard,.setabs button,#seTbl .strow,.secal .cc,.sechips i,.tinfo,.seg,.big,.mnext,.snext,.stepper button,.chips button,.msel span,#seBtns .mbtn,.hero .hgo{border-radius:9px!important}
+.msteps,.snext,#seTbl .strow,.dcard,.tcard,.scard{overflow:hidden}
+.seg button,.msteps i{border-radius:6px!important}
+.card,.rpanel,.spanel,.tcard,.tm,.dcard,.rvar,.uprow,.mback,.mgear,.msteps,.stepper button,.big.alt,.tinfo{border-top-color:rgba(255,255,255,.26)!important;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.mnext,.mnext.start{padding:0 18px 0 24px!important}
+.mnext span{border-radius:6px}
+.tinfo{box-shadow:none!important;border-left:3px solid var(--tc,#e10600)!important}
+/* Kacheln des Hauptmenüs mit Bild (aus dem Spiel aufgenommen), nach unten abgedunkelt, damit die Schrift lesbar bleibt */
+#qPlay{background:linear-gradient(180deg,rgba(18,19,22,.5),rgba(18,19,22,.25) 45%,rgba(18,19,22,.85)),url(textures/menu_quick.jpg) center/cover no-repeat!important}
+#tPlay{background:linear-gradient(90deg,rgba(18,19,22,.82),rgba(18,19,22,.35) 60%,rgba(18,19,22,.6)),url(textures/menu_tt.jpg) center/cover no-repeat!important}
+#tSettings{background:linear-gradient(90deg,rgba(18,19,22,.82),rgba(18,19,22,.35) 60%,rgba(18,19,22,.6)),url(textures/menu_set.jpg) center/cover no-repeat!important}
+#qPlay b,#tPlay b,#tSettings b{color:#fff!important;text-shadow:0 2px 10px rgba(0,0,0,.8)}
+#qPlay small,#tPlay small,#tSettings small{color:rgba(255,255,255,.85)!important;text-shadow:0 1px 6px rgba(0,0,0,.9)}
+.hbody{background:linear-gradient(90deg,rgba(0,0,0,.5),rgba(0,0,0,0) 48%)!important}
+
+.logo2 .glogo{display:block;height:clamp(38px,15vh,96px);width:auto;max-width:min(60vw,460px);object-fit:contain;object-position:left center}
 </style>
 </head>
 <body>
@@ -2627,7 +2648,7 @@ const mkWheelM = C => C ? C.lods.map((L, l) => {
   return { L: v(L.wheelL, hf), R: v(L.wheelR, hf), RL: v(L.rwheelL, hr), RR: v(L.rwheelR, hr) };
 }) : null;
 const WHEELM = mkWheelM(CARM), WHEELM2 = mkWheelM(CARM2);
-const MODELS = { f1: CARM ? { C: CARM, W: WHEELM, helm: [0.79, 0.18], rl: [0.315, -2.335], swPos: [0, 0.60, 0.665], swS: 0.78, cam: [0, 0.80, 0.22, 3.0],   /* Lenkrad IN der Cockpitwanne (vorher z 0,98 = unter dem Vorderdeck, darüber gemalt), Augenpunkt etwas weiter hinten mit leichtem Blick nach unten wie in echten Onboards */ tv: [0, 1.04, 0.02, 2.4] } : null, f2: CARM2 ? { C: CARM2, W: WHEELM2, helm: [0.80, 0.21], rl: [0.40, -2.468], rlS: [0.085, 0.075, 0.02], swPos: [0, 0.61, 0.64], swS: 0.8, cam: [0, 0.83, 0.20, 3.5],   /* swS: Lenkrad im F2 kleiner – die Kamera sitzt dort viel näher dran */ tv: [0, 1.04, 0.02, 2.4] } : null };
+const MODELS = { f1: CARM ? { C: CARM, W: WHEELM, helm: [0.79, 0.18], rl: [0.315, -2.335], swPos: [0, 0.60, 0.665], swS: 0.78, cam: [0, 0.765, 0.22, 3.0],   /* Lenkrad IN der Cockpitwanne (vorher z 0,98 = unter dem Vorderdeck, darüber gemalt), Augenpunkt etwas weiter hinten mit leichtem Blick nach unten wie in echten Onboards */ tv: [0, 1.04, 0.02, 2.4] } : null, f2: CARM2 ? { C: CARM2, W: WHEELM2, helm: [0.80, 0.21], rl: [0.40, -2.468], rlS: [0.085, 0.075, 0.02], swPos: [0, 0.61, 0.64], swS: 0.8, cam: [0, 0.795, 0.20, 3.5],   /* swS: Lenkrad im F2 kleiner – die Kamera sitzt dort viel näher dran */ tv: [0, 1.04, 0.02, 2.4] } : null };
 const COMPOUNDS = COMPOUNDS_;
 const WMAT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .88, metalness: .05, side: THREE.DoubleSide });
 const MIRMAT = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x86bfee, metalness: 0, roughness: 1, envMapIntensity: 0, side: THREE.DoubleSide });   /* Spiegelglas in der Himmelsfarbe der Strecke (nachts dunkel) – als Spiegel der Umgebung zeigte es Gras und Tribünen und wirkte grün */   // Spiegelglas: spiegelt die Umgebung (vorher eine einfarbig hellblaue, selbstleuchtende Fläche – im Cockpit ein weißer Klotz)
@@ -7974,7 +7995,7 @@ async function logoImport(files) { let ok = 0; const miss = [];
   return { ok, miss }; }
 // Logos aus dem Projektordner: liegt dort logos/<Kürzel>.png (z. B. logos/MER.png, logos/F2_INV.png), ersetzt sie das gezeichnete Wappen. Fehlt die Datei, bleibt das Wappen.
 const REPO_LOGOS = {};
-function loadRepoLogos() { const keys = Object.keys(Object.assign({}, F1_TEAMS, F2_TEAMS, KART_TEAMS)); let left = keys.length, hit = 0;
+function loadRepoLogos() { { const gl = new Image(); gl.onload = () => { const el = document.querySelector('.logo2'); if (el) { el.innerHTML = ''; gl.className = 'glogo'; gl.alt = 'Logo'; el.appendChild(gl); } }; gl.src = 'logos/LOGO.png'; }   /* eigenes Spiel-Logo im Hauptmenü: logos/LOGO.png ersetzt den Schriftzug */ const keys = Object.keys(Object.assign({}, F1_TEAMS, F2_TEAMS, KART_TEAMS)); let left = keys.length, hit = 0;
   const done = () => { if (--left === 0 && hit) { try { renderTeams(); renderMenu(); if (CHP && MENU.scr === 'season') renderSeason(); } catch (e) {} } };
   for (const k of keys) { const im = new Image(); im.onload = () => { REPO_LOGOS[k] = im.src; hit++; done(); }; im.onerror = done; im.src = 'logos/' + k + '.png'; } }
 function teamBadge(k) {
@@ -8263,10 +8284,11 @@ function renderMenu() {
 }
 
 /* ======================= Showroom (Team- und Fahrerwahl) ======================= */
+const SHOW_FOV = 2 * Math.atan(12 / 120) * 180 / Math.PI;   /* 120 mm Brennweite (Kleinbild, 24 mm Bildhöhe) = 11,4° – Tele: kaum perspektivische Verzerrung, Kamera entsprechend weiter weg */
 const SHOW = { on: false, scene: null, cam: null, cars: [], team: null, t: 0, rings: [], spots: [] };
 function initShowroom() {
   if (SHOW.scene) return;
-  const sc = new THREE.Scene(); sc.background = new THREE.Color(0x05070b); sc.fog = new THREE.Fog(0x05070b, 16, 40);
+  const sc = new THREE.Scene(); sc.background = new THREE.Color(0x05070b); sc.fog = new THREE.Fog(0x05070b, 60, 150);
   { // Studio-Umgebung für Spiegelungen: dunkler Raum mit großen Lichtflächen
     const es = new THREE.Scene(); es.add(new THREE.Mesh(new THREE.BoxGeometry(40, 16, 40), new THREE.MeshBasicMaterial({ color: 0x0a0d12, side: THREE.BackSide })));
     const pm = (w, h, x, y, z, ry, rx, k) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(k, k, k * 1.05), side: THREE.DoubleSide })); m.position.set(x, y, z); m.rotation.set(rx, ry, 0); es.add(m); };
@@ -8287,7 +8309,7 @@ function initShowroom() {
   const rim = new THREE.DirectionalLight(0x9fd8ff, 2.2); rim.position.set(-6, 4, -8); sc.add(rim);
   { const cv = document.createElement('canvas'); cv.width = 2048; cv.height = 640; const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 4;
     const wall = new THREE.Mesh(new THREE.PlaneGeometry(44, 13.75), new THREE.MeshBasicMaterial({ map: tx, fog: false, toneMapped: false })); wall.position.set(0, 6.875, -6.5); sc.add(wall); const wall2 = new THREE.Mesh(wall.geometry, wall.material); wall2.rotation.y = -Math.PI / 2; wall2.position.set(8.5, 6.875, 1.6); sc.add(wall2);   /* zweite Wand im rechten Winkel: Hintergrund der Frontalansicht (Fahrerwahl) */ SHOW.wall = { cv, tx }; }
-  SHOW.scene = sc; SHOW.cam = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 0.1, 120);
+  SHOW.scene = sc; SHOW.cam = new THREE.PerspectiveCamera(SHOW_FOV, innerWidth / innerHeight, 0.5, 200);
 }
 // Rückwand des Showrooms: dunkles Graphit, schräge Farbflächen in der Teamfarbe, feine Linien und der Teamname als große Konturschrift
 function showroomWall(team, text) { const W = SHOW.wall; if (!W || !TEAMS[team]) return; const wk = team + '|' + (text || ''); if (W.key === wk) return; W.key = wk; const T = TEAMS[team], g = W.cv.getContext('2d'), w = W.cv.width, h = W.cv.height, c1 = hex(uiCol(T)), c2 = hex(T.acc ?? uiCol(T)), sk = h * 0.42;
@@ -8296,14 +8318,14 @@ function showroomWall(team, text) { const W = SHOW.wall; if (!W || !TEAMS[team])
   { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, c1 + '00'); gr.addColorStop(0.35, c1 + 'cc'); gr.addColorStop(1, c1); slab(w * 0.36, w * 0.56, 0, h, gr); }   // große Farbfläche hinter den Autos
   g.globalAlpha = 0.55; slab(w * 0.575, w * 0.59, 0, h, c2); g.globalAlpha = 0.9; slab(w * 0.2, w * 0.33, h * 0.78, h, c1); g.globalAlpha = 0.35; slab(w * 0.62, w * 0.9, h * 0.62, h * 0.7, c1); g.globalAlpha = 1;
   g.strokeStyle = 'rgba(255,255,255,.16)'; g.lineWidth = 2; g.beginPath(); g.moveTo(w * 0.1, h * 0.3); g.lineTo(w * 0.3, h * 0.3); g.lineTo(w * 0.3 - 30, h * 0.3 + 40); g.moveTo(w * 0.68, h * 0.2); g.lineTo(w * 0.92, h * 0.2); g.stroke();
-  { const nm = String(text || T.short || T.name).toUpperCase(); let fs = h * 0.3; g.font = '900 ' + fs + 'px "Titillium Web",system-ui,sans-serif'; const mw = g.measureText(nm).width, lim = w * 0.34; if (mw > lim) { fs *= lim / mw; g.font = '900 ' + fs + 'px "Titillium Web",system-ui,sans-serif'; }
+  { const nm = String(text || T.short || T.name).toUpperCase(); let fs = h * 0.22; g.font = '900 ' + fs + 'px "Titillium Web",system-ui,sans-serif'; const mw = g.measureText(nm).width, lim = w * 0.25; if (mw > lim) { fs *= lim / mw; g.font = '900 ' + fs + 'px "Titillium Web",system-ui,sans-serif'; }
     g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.lineJoin = 'round'; g.lineWidth = 4; g.strokeStyle = 'rgba(255,255,255,.62)'; g.strokeText(nm, w / 2, h * 0.9); }
   { const gr = g.createLinearGradient(0, h * 0.8, 0, h); gr.addColorStop(0, 'rgba(5,7,11,0)'); gr.addColorStop(1, 'rgba(5,7,11,.55)'); g.fillStyle = gr; g.fillRect(0, h * 0.8, w, h * 0.2); }   // zum Boden hin abdunkeln
   W.tx.needsUpdate = true; }
 // Auswahl-Studio: beide Autos stehen parallel (Nase nach −x), keine Drehteller. Die Kamera fährt je Bildschirm an einen anderen Platz und schwebt dort leicht:
 // Hauptmenü: Auto schräg von vorn im Fenster der Karriere-Kachel · Teamwahl: nah, schräg von vorn, nur das erste Auto · Fahrerwahl: Fahrt nach vorn, beide Autos frontal ·
 // Streckenwahl: Fahrt zur Seite, bis das gewählte Auto genau seitlich rechts im Bild steht.
-const SHOW_POS = [[0, 0, 0], [0, 0, 3.2]], SHOW_ROT = -Math.PI / 2;
+const SHOW_POS = [[0, 0, 0], [0, 0, 2.45]], SHOW_ROT = -Math.PI / 2;   /* Fahrerwahl: Autos dicht nebeneinander – passen zwischen die Fahrertafeln */
 function showroomTeam(team) {
   initShowroom(); if (SHOW.team === team && SHOW.ser === SER) return; SHOW.team = team; SHOW.ser = SER;
   for (const m of SHOW.cars) { SHOW.scene.remove(m.g); m.g.traverse(o => { if (o.isSprite) o.material.map.dispose(); }); }
@@ -8321,14 +8343,14 @@ function showroomFrame(dt) {
   const cam = SHOW.cam, scr = MENU.scr, W2 = innerWidth, H2 = innerHeight; SHOW.t += dt; const t = SHOW.t;
   if (SHOW.scr !== scr) { SHOW.scr = scr; showroomPick(); }
   let ox = 0, oy = 0;
-  if (scr === 'driver') { _sp.set(-12.6, 1.75, 1.6); _st.set(0, 0.62, 1.6); }                       // frontal auf beide Autos
-  else if (scr === 'track') { _sp.set(-0.4, 0.92, 8.0); _st.set(-0.4, 0.6, 0); ox = -0.175; oy = 0.06; }   // genau von der Seite, Auto rechts neben der Infotafel
+  if (scr === 'driver') { _sp.set(-34, 1.25, 1.22); _st.set(0, 0.6, 1.22); }                       // frontal auf beide Autos
+  else if (scr === 'track') { _sp.set(-0.4, 1.46, 21.4); _st.set(-0.4, 0.6, 0); ox = -0.175; oy = 0.06; }   // genau von der Seite, Auto rechts neben der Infotafel
   else if (scr === 'title') { _st.set(-0.2, 0.55, 0); _sp.set(-5.4, 1.15, 7.0);
     const hb = (SHOW.hb ||= document.querySelector('#cPlay .hbody')), r = hb.getBoundingClientRect();
-    if (r.width > 10) { const d = 5.4 / (0.6 * r.width / W2) / (2 * Math.tan(15 * Math.PI / 180) * (W2 / H2)); _sp.sub(_st).setLength(d).add(_st); ox = -((r.left + r.width * 0.62) / W2 - 0.5); oy = -((r.top + r.height * 0.5) / H2 - 0.5);
+    if (r.width > 10) { const d = 5.4 / (0.5 * r.width / W2) / (2 * Math.tan(SHOW_FOV / 2 * Math.PI / 180) * (W2 / H2)); _sp.sub(_st).setLength(d).add(_st); ox = -((r.left + r.width * 0.71) / W2 - 0.5); oy = -((r.top + r.height * 0.46) / H2 - 0.5);   /* Auto rechts in der Kachel: links unten bleibt die Taste frei */
       const key = [r.left, r.top, r.width, r.height].map(Math.round).join(','); if (SHOW.hole !== key) { SHOW.hole = key; const st = $('#menu').style; st.setProperty('--hx', r.left + 'px'); st.setProperty('--hy', r.top + 'px'); st.setProperty('--hw', r.width + 'px'); st.setProperty('--hh', r.height + 'px'); } } }
-  else { _sp.set(-5.6, 1.2, 6.4); _st.set(-0.35, 0.5, 0); oy = 0.05; }                              // Teamwahl: nah, schräg von vorn
-  _sp.x += Math.sin(t * 0.27) * 0.22; _sp.y += Math.sin(t * 0.19) * 0.05; _sp.z += Math.cos(t * 0.23) * 0.18;   // leichtes Schweben – nie ganz statisch
+  else { _sp.set(-14.4, 2.38, 17.2); _st.set(-0.35, 0.5, 0); oy = 0.05; }                              // Teamwahl: nah, schräg von vorn
+  _sp.x += Math.sin(t * 0.27) * 0.5; _sp.y += Math.sin(t * 0.19) * 0.1; _sp.z += Math.cos(t * 0.23) * 0.4;   // leichtes Schweben – nie ganz statisch
   if (!SHOW.cp) { SHOW.cp = _sp.clone(); SHOW.ct = _st.clone(); SHOW.ox = ox; SHOW.oy = oy; }
   const k = 1 - Math.exp(-dt * (scr === 'title' ? 6 : 2.1)); SHOW.cp.lerp(_sp, k); SHOW.ct.lerp(_st, k); cam.position.copy(SHOW.cp); cam.lookAt(SHOW.ct);
   SHOW.ox += (ox - SHOW.ox) * k; SHOW.oy += (oy - SHOW.oy) * k;
@@ -8386,18 +8408,7 @@ addEventListener('resize', resize);
 let last = performance.now();
 const _sv = new THREE.Vector3(), _cd = new THREE.Vector3(), _v2b = new THREE.Vector2();
 const DYN = { acc: 0, n: 0, scale: 1, calm: 0, bad: 0, tChg: 0 };
-function dynRes(raw) {
-  if (!running || paused || document.hidden || raw > 250) { DYN.acc = DYN.n = 0; return; }
-  DYN.acc += raw; DYN.n++; if (DYN.acc < 1500) return;
-  const avg = DYN.acc / DYN.n; DYN.acc = DYN.n = 0; let ns = DYN.scale;
-  // Jede Änderung legt alle Render-Ziele neu an (kurzer Hänger) – deshalb nur selten: runter erst nach 2 langsamen Fenstern (3 s), rauf erst nach 12 ruhigen (18 s), dann mindestens 10 s Pause
-  const tNow = performance.now(); if (tNow - (DYN.tChg || 0) < 10000) return;
-  // Pendeln verhindern: musste die Auflösung kurz nach einer Erhöhung wieder gesenkt werden, wird in diesem Rennen nur noch nach sehr langer Ruhe (bzw. gar nicht mehr) erhöht – jedes Umschalten ist ein spürbarer Hänger
-  if (avg > 21.5) { DYN.calm = 0; if (++DYN.bad >= 2) { ns = Math.max(0.8, DYN.scale - (avg > 30 ? 0.1 : 0.05)); DYN.bad = 0; if (DYN.upAt && tNow - DYN.upAt < 60000) DYN.pen = (DYN.pen || 0) + 1; } }   /* nicht unter 80 %: sonst werden Linien und Curbs matschig */
-  else if (avg < 16.8 && DYN.scale < 1) { DYN.bad = 0; if (++DYN.calm >= 12 * 2 ** Math.min(4, DYN.pen || 0) && (DYN.pen || 0) < 3) { ns = Math.min(1, DYN.scale + 0.05); DYN.calm = 0; DYN.upAt = tNow; } }
-  else { DYN.calm = 0; DYN.bad = 0; }
-  if (Math.abs(ns - DYN.scale) > 0.01) { DYN.scale = ns; DYN.tChg = tNow; resize(); }
-}
+// (Dynamische Auflösung entfernt – Wunsch: jedes Umschalten legte alle Render-Ziele neu an und ruckelte spürbar. Die Auflösung bleibt jetzt während des Rennens fest.)
 const SPHERE = { cv: null, tex: null, t: 0, acc: 0 }, WHEEL_ROT = { obj: null, rim: null }, FOUNT = { jets: null, t: 0 }, FLYER = { obj: null }, SGT = { list: [] };
 function vegasTick(dt) {
   if (FLYER.obj && FLYER.obj.parent && TRK.sgp) { FLYER.obj.rotation.z += dt * 0.012; const t = performance.now() / 1000; for (const [pv, k] of SGT.list) pv.rotation.set(Math.sin(t * 0.21 + k * 1.3) * 0.45, 0, Math.cos(t * 0.17 + k * 2.1) * 0.55); }   // Riesenrad dreht sich langsam, Lichtstrahlen schwenken
@@ -8431,7 +8442,6 @@ let REBUILD = false;
 function tick(now, forced) {
   if (REBUILD) { last = now; return; }   /* Grafik wird gerade umgestellt */   // forced: Testhilfen zeichnen direkt, ohne eine zweite Bildschleife zu starten
   if (!forced) { const e = fpsPrev ? now - fpsPrev : 1000 / 60; fpsPrev = now; fpsAcc = Math.min(fpsAcc + e, 1000 / 30); if (!S.fpsFree && fpsAcc < 1000 / 60 - 1.5) return; fpsAcc = Math.max(0, fpsAcc - 1000 / 60); }   // FPS auf 60 begrenzen (120-Hz-Displays)
-  if (!forced) dynRes(now - last);
   const dt = clamp((now - last) / 1000, 0, 0.05); last = now;
   if (running && !paused) { const n = dt > 0.025 ? 2 : 1; for (let k = 0; k < n; k++) step(dt / n); }
   if (!running || !paused) updateMeshes(running && !paused ? dt : 0);
@@ -8458,7 +8468,7 @@ function tick(now, forced) {
   if (HORIZ) { HORIZ.position.x = camera.position.x; HORIZ.position.z = camera.position.z; }
   // Pause: das Bild steht still, also nur zwei Bilder zeichnen und dann die Grafikkarte schonen
   if (running && paused) { if (pauseDrawn >= 2) return; pauseDrawn++; } else pauseDrawn = 0;
-  if (!window.__norender && !(!running && MENU.scr === 'title' && !SHOW.on && !$('#menu').classList.contains('hidden'))) {   /* Hauptmenü: fester Hintergrund statt Kamerafahrt – dort wird die Strecke nicht gerendert (spart Akku) */ if (SHOW.on && !running && !$('#menu').classList.contains('hidden')) { showroomFrame(dt); const bo = BAKE.u.bakeOn.value, et = ENVP.tex; BAKE.u.bakeOn.value = 0; if (SHOW.env) ENVP.tex = SHOW.env; renderer.render(SHOW.scene, SHOW.cam); ENVP.tex = et; BAKE.u.bakeOn.value = bo;   /* im Showroom spiegelt sich das Studio, nicht die Strecke */ } else if (composer) { syncAoCam(); composer.render(dt); } else renderer.render(scene, camera); }
+  if (!window.__norender && !(!running && !SHOW.on && !$('#menu').classList.contains('hidden'))) {   /* Hauptmenü: fester Hintergrund statt Kamerafahrt – dort wird die Strecke nicht gerendert (spart Akku) */ if (SHOW.on && !running && !$('#menu').classList.contains('hidden')) { showroomFrame(dt); const bo = BAKE.u.bakeOn.value, et = ENVP.tex; BAKE.u.bakeOn.value = 0; if (SHOW.env) ENVP.tex = SHOW.env; renderer.render(SHOW.scene, SHOW.cam); ENVP.tex = et; BAKE.u.bakeOn.value = bo;   /* im Showroom spiegelt sich das Studio, nicht die Strecke */ } else if (composer) { syncAoCam(); composer.render(dt); } else renderer.render(scene, camera); }
 }
 applyGfx();
 buildTrack(TRACKS[S.track] && (!TRACKS[S.track].extra || S.nos) && !TRACKS[S.track].kartOnly ? S.track : (S.track = 'monza'));placeOnGrid(); buildMenu(); renderMenu();

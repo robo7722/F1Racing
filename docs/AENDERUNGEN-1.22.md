@@ -43,3 +43,11 @@
 - **Hauptmenü**: graue Glaskacheln mit runden Ecken; in der Karriere-Kachel steht das eigene Auto (Fenster ins Studio).
 - **Kamerafahrten im Studio** (`showroomFrame`): Teamwahl nah und schräg von vorn · Fahrerwahl: Fahrt nach vorn, beide Autos frontal · Streckenwahl: Fahrt zur Seite, Auto genau seitlich rechts. Überall leichtes Schweben.
 - **Cockpit F1**: nur die Abdeckung vor dem Lenkrad ist breiter und hat eine steile Flanke; keine Seitenwangen, Öffnung unverändert.
+
+## Nachtrag (fünfte Runde)
+- **Dynamische Auflösung entfernt** (`dynRes`): die Auflösung bleibt im Rennen fest.
+- **Cockpit-Kamera** 3,5 cm tiefer (F1 0,765 · F2 0,795): der Halo-Bügel liegt über dem Horizont.
+- **Studio mit 120 mm Brennweite** (`SHOW_FOV` 11,4°), Kamera entsprechend weiter weg. Fahrerwahl: flacher von vorn, Autos 2,45 m nebeneinander.
+- **Hauptmenü**: Bilder für Schnelles Spiel, Zeitrennen, Einstellungen (`textures/menu_*.jpg`, aus dem Spiel aufgenommen); Auto in der Karriere-Kachel rechts neben der Taste.
+- **Untermenüs** in Graphitglas und Weiß statt Navy und Hellblau, fester Facetten-Hintergrund; die Strecke wird in Menüs nicht mehr gerendert.
+- **Eigenes Spiel-Logo**: `logos/LOGO.png` ersetzt den Schriftzug im Hauptmenü.
