@@ -28,6 +28,8 @@ So tauschst du es auf GitHub:
 ## Formel 1
 `MER.png` Mercedes · `FER.png` Ferrari · `MCL.png` McLaren · `RBR.png` Red Bull · `AST.png` Aston Martin · `WIL.png` Williams · `RB.png` Racing Bulls · `ALP.png` Alpine · `HAA.png` Haas · `AUD.png` Audi · `CAD.png` Cadillac · `RON.png` RONE Racing
 
+Die elf echten Teams liegen als 512 × 512 px, transparenter Hintergrund, helle Emblem-Variante ohne Schriftzug vor. Quelle: Teamlogos der offiziellen F1-Seite (formula1.com, Saison 2026, Variante „logowhite“), Leerrand abgeschnitten und quadratisch zentriert.
+
 ## Formel 2 und Kart
 Kürzel mit Vorsatz `F2_` bzw. `K_`, z. B. `F2_INV.png` (Invicta), `F2_HIT.png` (Hitech). Die vollständige Liste steht in `index.html` bei `F2_TEAMS` und `KART_TEAMS`.
 
