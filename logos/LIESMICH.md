@@ -28,8 +28,17 @@ So tauschst du es auf GitHub:
 ## Formel 1
 `MER.png` Mercedes · `FER.png` Ferrari · `MCL.png` McLaren · `RBR.png` Red Bull · `AST.png` Aston Martin · `WIL.png` Williams · `RB.png` Racing Bulls · `ALP.png` Alpine · `HAA.png` Haas · `AUD.png` Audi · `CAD.png` Cadillac · `RON.png` RONE Racing
 
+Die elf echten Teams liegen als 512 × 512 px, transparenter Hintergrund, helle Emblem-Variante ohne Schriftzug vor. Quelle: Teamlogos der offiziellen F1-Seite (formula1.com, Saison 2026, Variante „logowhite“), Leerrand abgeschnitten und quadratisch zentriert.
+
+`RON.png` ist ein eigener Entwurf im gleichen Stil: weißer, schräg gestellter Schriftzug „RONE“ mit drei Tempo-Balken, 512 × 512 px, transparent.
+
 ## Formel 2 und Kart
 Kürzel mit Vorsatz `F2_` bzw. `K_`, z. B. `F2_INV.png` (Invicta), `F2_HIT.png` (Hitech). Die vollständige Liste steht in `index.html` bei `F2_TEAMS` und `KART_TEAMS`.
+
+### Formel 2 (vorhanden)
+`F2_INV.png` Invicta Racing · `F2_HIT.png` Hitech · `F2_CAM.png` Campos Racing · `F2_DAM.png` DAMS · `F2_MPM.png` MP Motorsport · `F2_PRE.png` Prema Racing · `F2_ROD.png` Rodin Motorsport · `F2_ART.png` ART Grand Prix · `F2_AIX.png` AIX Racing · `F2_VAR.png` Van Amersfoort Racing · `F2_TRI.png` Trident Racing
+
+Alle 512 × 512 px, transparenter Hintergrund, helle Variante für dunklen Untergrund. Invicta ist im Original gelb und wurde auf Weiß umgefärbt. Quelle: Teamlogos der offiziellen F2-Seite (fiaformula2.com, Saison 2026, Variante „logowhite“), Leerrand abgeschnitten und quadratisch zentriert.
 
 ## Klassen-Logos (Klassenwahl „Kart / F2 / F1“)
 Ersetzen den großen Schriftzug auf der jeweiligen Karte.
