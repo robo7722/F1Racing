@@ -71,3 +71,11 @@
 - **Neues, eigenständiges Cockpit-Modell** (`cockNew`, Maße in `CK`): Wanne, Innenwände, Carbon-Einfassung, Schultern, Armaturenwulst, Vorderdeck und Flanken als ein geschlossenes Netz aus Querschnitten. Es misst nichts am Fahrzeugmodell.
 - Das Fahrzeugmodell wird in der Cockpitansicht im Kasten um das neue Modell nicht gezeichnet (`cockCutGLSL`); kurz vor der Vorderachse taucht das neue Modell 1,5 cm kleiner in die echte Nase ein.
 - Die früheren Ansätze (`cockTub`, `cockShell`, `SHELLS`) werden für F1/F2 nicht mehr verwendet und können entfernt werden.
+
+## Version 1.23
+- **Helm-Modell F1/F2** aus einer Vorlage auf ~3500 Dreiecke reduziert (`HELM_BIN`, `helmGeoNew`), eine Geometrie für alle Autos; Fahrerdesigns als Farbschema im Shader (`HELM_DESIGN`, `helmMat`, 7 Muster). Fahrer (Schultern, Arme, HANS) im Auto.
+- **F2-Halo neu modelliert**: ebener Rohrbügel mit geraden Armen, Enden in den Halterungen.
+- **F1-Netz**: Kerben an der Unterkante der Seitenkästen geschlossen (`fillNotches`).
+- **Studio**: LED-Wand mit Animation und Glitch-Schrift (`wallDraw`); Teamwechsel = Kamera dreht 180° auf der Stelle, Bühne mit neuem Team auf der Gegenseite (`showroomSwap`).
+- **Klassenbilder**: Kartbahn Genk, Spa (Raidillon), Singapur (Riesenrad).
+- Logos bei jedem Start frisch, Streckenwahl nur über „Weiter“, Cockpit vorgeladen, Überlagerungen im Menü-Stil.
