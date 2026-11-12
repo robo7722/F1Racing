@@ -1028,9 +1028,9 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 .mnext span{border-radius:6px}
 .tinfo{box-shadow:none!important;border-left:3px solid var(--tc,#e10600)!important}
 /* Kacheln des Hauptmenüs mit Bild (aus dem Spiel aufgenommen), nach unten abgedunkelt, damit die Schrift lesbar bleibt */
-#qPlay{background:linear-gradient(180deg,rgba(12,13,16,.7),rgba(12,13,16,.2) 42%,rgba(12,13,16,.78)),url(textures/menu_quick.jpg) center/cover no-repeat!important}
-#tPlay{background:linear-gradient(90deg,rgba(14,15,18,.5),rgba(14,15,18,0) 45%),url(textures/menu_tt.jpg) 78% 50%/cover no-repeat,#0e0f12!important}
-#tSettings{background:linear-gradient(90deg,rgba(18,19,22,.82),rgba(18,19,22,.35) 60%,rgba(18,19,22,.6)),url(textures/menu_set.jpg) center/cover no-repeat!important}
+#qPlay::before{background:linear-gradient(180deg,rgba(12,13,16,.7),rgba(12,13,16,.2) 42%,rgba(12,13,16,.78)),url(textures/menu_quick.jpg) center/cover no-repeat!important}
+#tPlay::before{background:linear-gradient(90deg,rgba(14,15,18,.5),rgba(14,15,18,0) 45%),url(textures/menu_tt.jpg) 78% 50%/cover no-repeat,#0e0f12!important}
+#tSettings::before{background:linear-gradient(90deg,rgba(18,19,22,.82),rgba(18,19,22,.35) 60%,rgba(18,19,22,.6)),url(textures/menu_set.jpg) center/cover no-repeat!important}
 #qPlay b,#tPlay b,#tSettings b{color:#fff!important;text-shadow:0 2px 10px rgba(0,0,0,.8)}
 #qPlay small,#tPlay small,#tSettings small{color:rgba(255,255,255,.85)!important;text-shadow:0 1px 6px rgba(0,0,0,.9)}
 .hbody{background:linear-gradient(90deg,rgba(0,0,0,.5),rgba(0,0,0,0) 48%)!important}
@@ -1041,6 +1041,10 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 .mtop .mlogo{margin-left:auto;flex:0 1 auto;min-width:0;height:34px;max-width:22vw;object-fit:contain;object-position:right center}
 .mtop .mlogo:not([hidden])+.mgear{margin-left:0!important}
 @media (orientation:portrait){.mtop .mlogo{display:none}}
+
+/* Kachelbilder leicht unscharf (eigene Ebene hinter dem Text): mehr Kontrast zur Schrift */
+#qPlay,#tPlay,#tSettings{background:#0e0f12!important;isolation:isolate}
+#qPlay::before,#tPlay::before,#tSettings::before{content:""!important;display:block!important;position:absolute!important;inset:-10px!important;width:auto!important;height:auto!important;-webkit-mask:none!important;mask:none!important;filter:blur(1.1px) brightness(.85);z-index:-1;pointer-events:none}
 </style>
 </head>
 <body>
