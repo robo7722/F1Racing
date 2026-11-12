@@ -1045,6 +1045,38 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 /* Kachelbilder leicht unscharf (eigene Ebene hinter dem Text): mehr Kontrast zur Schrift */
 #qPlay,#tPlay,#tSettings{background:#0e0f12!important;isolation:isolate}
 #qPlay::before,#tPlay::before,#tSettings::before{content:""!important;display:block!important;position:absolute!important;inset:-10px!important;width:auto!important;height:auto!important;-webkit-mask:none!important;mask:none!important;filter:blur(1.1px) brightness(.85);z-index:-1;pointer-events:none}
+
+/* ===== Symbole in Knöpfen als gezeichnete Formen (keine Schriftzeichen): sitzen exakt mittig ===== */
+.mback,.mgear,.hb{display:grid!important;place-items:center!important;padding:0!important;line-height:0!important}
+.mback::before{content:"";width:9px;height:15px;background:#fff;clip-path:polygon(64% 0,100% 0,36% 50%,100% 100%,64% 100%,0 50%)}
+.mback:active::before{background:var(--ink)}
+.mgear svg,.hb svg{display:block}
+.mnext,.mnext.start{display:inline-flex!important;align-items:center!important;justify-content:center;gap:14px;padding:0 12px 0 22px!important}
+.mnext span{display:grid!important;place-items:center!important;margin:0!important;flex:none;transform:none}
+.mnext span::before{content:""!important;display:block;width:9px!important;height:15px!important;border:0!important;background:var(--f1r);transform:none!important;clip-path:polygon(0 0,36% 0,100% 50%,36% 100%,0 100%,64% 50%)}
+.hero .hgo{display:inline-flex!important;align-items:center;gap:10px;padding:9px 14px!important;line-height:1!important}
+.hero .hgo::after{content:"";width:7px;height:11px;background:var(--f1r);clip-path:polygon(0 0,36% 0,100% 50%,36% 100%,0 100%,64% 50%)}
+#seBtns .mbtn::after{content:""!important;width:8px!important;height:13px!important;top:50%!important;right:14px!important;transform:translateY(-50%)!important;background:#fff!important;font-size:0!important;clip-path:polygon(0 0,36% 0,100% 50%,36% 100%,0 100%,64% 50%)}
+.hi{display:grid!important;place-items:center}
+.seg button,.big,.setabs button,.chips button,.stepper button,.dcard .pick{display:inline-flex;align-items:center;justify-content:center;line-height:1!important}
+.seg button{display:flex}
+/* Streckentafel: Beschriftungen bleiben in ihrer Spalte */
+.tinfo .tst small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Klassenwahl: Rennbild der Klasse als Hintergrund, bewegt sich langsam */
+#serCards .scard{isolation:isolate}
+#serCards .scard .sbg{position:absolute;inset:-6%;z-index:-1;background:center/cover no-repeat;filter:brightness(.62) saturate(1.1);animation:sbgMove 16s ease-in-out infinite alternate;pointer-events:none}
+#serCards .scard:nth-child(2) .sbg{animation-delay:-5s}#serCards .scard:nth-child(3) .sbg{animation-delay:-10s}
+#serCards .scard::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(12,13,16,.25),rgba(12,13,16,.1) 40%,rgba(12,13,16,.88));pointer-events:none}
+#serCards .scard.on .sbg{filter:brightness(.85) saturate(1.15)}
+#serCards .scard .tn,#serCards .scard .tf,#serCards .scard .sbig{text-shadow:0 2px 12px rgba(0,0,0,.85)!important}
+@keyframes sbgMove{from{transform:scale(1) translate3d(-2.5%,0,0)}to{transform:scale(1.1) translate3d(2.5%,-1.5%,0)}}
+
+#menu.carbg .hero .hi{display:none!important}
+.mnext span{position:relative!important;width:28px!important;height:28px!important}
+.mnext span::before{position:absolute!important;left:50%!important;top:50%!important;margin:-7.5px 0 0 -4.5px!important}
+
+#serCards .scard{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+#serCards .scard .sbg{filter:brightness(.78) saturate(1.08)}#serCards .scard.on .sbg{filter:brightness(.95) saturate(1.12)}
 </style>
 </head>
 <body>
@@ -1071,7 +1103,7 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
   <div id="tc" class="box"><div class="tcl">RUNDENZEIT</div><div id="ltime">0:00.000</div><div id="lsub">Beste –</div></div>
   <div id="tr">
     <canvas id="map" width="336" height="336"></canvas>
-    <div class="hbtns"><button id="pauseBtn" class="hb" aria-label="Pause">❚❚</button><button id="camBtn" class="hb" aria-label="Kamera"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h3l2-2.5h6L17 7h3a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 4 7z"/><circle cx="12" cy="13" r="3.6"/></svg></button><button id="musBtn" class="hb" aria-label="Musik">♪</button></div>
+    <div class="hbtns"><button id="pauseBtn" class="hb" aria-label="Pause"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><rect x="5" y="4" width="5" height="16"/><rect x="14" y="4" width="5" height="16"/></svg></button><button id="camBtn" class="hb" aria-label="Kamera"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h3l2-2.5h6L17 7h3a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 4 7z"/><circle cx="12" cy="13" r="3.6"/></svg></button><button id="musBtn" class="hb" aria-label="Musik">♪</button></div>
   </div>
   <div id="speedo"><canvas id="gauge" width="640" height="240"></canvas><div id="bat"><i id="batFill"></i><b id="batTxt">50%</b><small>ERS</small></div></div>
   <canvas id="haloHud"></canvas>
@@ -1095,10 +1127,10 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 <div id="menu" class="hidden" data-scr="title">
   <div class="mvig"></div>
   <header class="mtop">
-    <button class="mback" id="mBack" aria-label="Zurück">‹</button>
+    <button class="mback" id="mBack" aria-label="Zurück"></button>
     <div class="msteps" id="mSteps"><i><b>1</b>Strecke</i><i><b>2</b>Team</i><i><b>3</b>Fahrer</i><i><b>4</b>Rennen</i></div>
     <img class="mlogo" id="mLogo" alt="" hidden>
-    <button class="mgear" id="mGear" aria-label="Einstellungen">⚙</button>
+    <button class="mgear" id="mGear" aria-label="Einstellungen"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2.2" fill="#2a2c31"/><circle cx="15" cy="12" r="2.2" fill="#2a2c31"/><circle cx="10" cy="18" r="2.2" fill="#2a2c31"/></svg></button>
   </header>
 
   <section class="scr" id="scrTitle">
@@ -1108,7 +1140,7 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
       <div class="hub">
         <button class="hero" id="cPlay">
           <span class="hband"><span class="hk">Karriere</span><span class="hs" id="cSub">Vom Kart bis in die Formel 1</span></span>
-          <span class="hbody"><i class="hi"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5c-9 0-16 7-16 16v9c0 3 2 5 5 5h4l3 6h10l3-6h2c3 0 5-2 5-5v-9c0-9-7-16-16-16z"/><path d="M12 20h20c3 0 5 2 5 5v2H16c-3 0-4-2-4-4z"/><path d="M24 5v6"/></svg></i><span class="hst" id="cState"></span><span class="hgo" id="cGo">Neue Karriere ›</span></span>
+          <span class="hbody"><i class="hi"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5c-9 0-16 7-16 16v9c0 3 2 5 5 5h4l3 6h10l3-6h2c3 0 5-2 5-5v-9c0-9-7-16-16-16z"/><path d="M12 20h20c3 0 5 2 5 5v2H16c-3 0-4-2-4-4z"/><path d="M24 5v6"/></svg></i><span class="hst" id="cState"></span><span class="hgo" id="cGo">Neue Karriere</span></span>
         </button>
         <div class="hrow">
           <button class="hbtn" id="qPlay"><i class="hi"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 43V6"/><path d="M10 8h28l-5 9 5 9H10"/><path d="M19 8v18M28 8v18M10 17h23"/></svg></i><b>Schnelles Spiel</b><small>GoKart, F2 oder F1 · Strecke, Team, Fahrer</small></button>
@@ -7531,11 +7563,16 @@ function armsTick() {
 }
 let cockOn = null;   // Spielerauto, dessen Cockpit gerade „geöffnet“ ist (Innenraum sichtbar, Abdeckung verworfen)
 function cockBodyCol() { const T = (typeof LIVS !== 'undefined' && LIVS[pl.team]) || TEAMS[pl.team] || {}; return T.body ?? 0x808890; }
+// Cockpitteile (Karosserie des Spielers, Wanne, Lenkrad, Arme) werden NACH allen Effekten gezeichnet: ihre Materialien laufen in der Durchsicht-Reihe mit hoher Reihenfolge,
+// bleiben aber voll deckend und schreiben Tiefe. Windschattenkegel und Luftstreifen (schreiben keine Tiefe) liegen damit nie mehr über dem Cockpit.
+const COCK_RO = 990;
+function cockLast(o, on) { if (!o) return; o.traverse(x => { if (!x.isMesh || x.material === HALO_PRE || x.renderOrder >= 998) return; x.renderOrder = on ? COCK_RO : 0; if (on) for (const mt of Array.isArray(x.material) ? x.material : [x.material]) if (!mt.transparent) { mt.transparent = true; mt.needsUpdate = true; } }); }
 function cockpitInterior(on) {
-  const m = pl && pl.mesh; if (cockOn && (!on || cockOn !== m)) { cockOn.body.material = cockOn.tp.glossMat; cockOn.matte.material = MATTE; if (cockOn.tub) cockOn.tub.visible = false; cockOn = null; }
+  const m = pl && pl.mesh; if (cockOn && (!on || cockOn !== m)) { cockOn.body.material = cockOn.tp.glossMat; cockOn.matte.material = MATTE; cockOn.body.renderOrder = cockOn.matte.renderOrder = 0; if (cockOn.tub) cockOn.tub.visible = false; cockOn = null; }
   if (!on || cockOn === m) return; const tp = m.tp, k = tp.M === MODELS.f2 ? 'f2' : 'f1';
-  tp.cutGloss ||= cockCut(tp.glossMat, k); tp.cutMatte ||= cockCut(MATTE, k); if (!m.tub) { m.tub = cockTub(k, cockBodyCol(), (tp.M.swPos || [0, 0, 0.68])[2], tp.glossMat); m.g.add(m.tub); }
-  m.body.material = tp.cutGloss; m.matte.material = tp.cutMatte; m.tub.visible = true; cockOn = m; }
+  tp.cutGloss ||= cockCut(tp.glossMat, k); tp.cutMatte ||= cockCut(MATTE, k); if (!m.tub) { m.tub = cockTub(k, cockBodyCol(), (tp.M.swPos || [0, 0, 0.68])[2], tp.glossMat); m.tub.traverse(x => { if (x.isMesh && x.material === tp.glossMat) x.material = tp.cutGloss; }); m.g.add(m.tub); }
+  m.body.material = tp.cutGloss; m.matte.material = tp.cutMatte; m.tub.visible = true; cockOn = m;
+  tp.cutGloss.transparent = tp.cutMatte.transparent = true; m.body.renderOrder = m.matte.renderOrder = COCK_RO; cockLast(m.tub, true); cockLast(SW.g, true); if (ARMS.f1) cockLast(ARMS.f1.g, true); }
 function drawWheel(dt) {
   SW.g.visible = running && S.cam === 2 && !pl.mesh.road && !pl.mesh.kart;   // Roadster und Kart haben ihr eigenes rundes Lenkrad am Auto
   if (pl.mesh.tp) { SW.g.position.set(...(pl.mesh.tp.M.swPos || [0, 0.605, 0.98])); SW.g.scale.setScalar(pl.mesh.tp.M.swS || 1); }   // Lenkradposition je Modell (F2 sitzt weiter hinten und tiefer)
@@ -7628,8 +7665,8 @@ function updateCamera(dt) {
       HEAD.z += (clamp(-camAcc * 0.0011, -0.03, 0.05) - HEAD.z) * k; HEAD.p += (clamp(-camAcc * 0.0012, -0.03, 0.05) - HEAD.p) * k2;
       const vib = Math.min(1, p.v / 50), bob = (Math.sin(tt * 2.1) * 0.004 + Math.sin(tt * 13.7) * 0.0012 * vib) * (paused ? 0 : 1), sway = Math.sin(tt * 1.3) * 0.003;
       const cp = S.cam === 3 && p.mesh.tv ? p.mesh.tv : (p.mesh.cam || [0, 0.9, 0.36]);
-      if (st) camera.position.set(cp[0], cp[1], cp[2]); else camera.position.set(cp[0] + HEAD.x + sway, cp[1] + bob - Math.abs(HEAD.z) * 0.15, cp[2] + HEAD.z); m.localToWorld(camera.position);
-      if (st) _ht.set(cp[0], cp[1] - (cp[3] ?? 0.4), 30); else _ht.set(cp[0] + HEAD.x * 0.3 + sway * 0.5, cp[1] - (cp[3] ?? 0.4) - HEAD.p * 30 + bob * 0.5, 30); m.localToWorld(_ht); camera.up.set(0, 1, 0); camera.lookAt(_ht); if (!st) { const D = clamp(p.v * 0.9, 14, 60); let kk = 0, nn = 0; for (let ds = 6; ds <= D; ds += 3) { kk += KS[Math.floor(modL(p.sPrev + ds) / DS) % N] || 0; nn++; }   // Helmkamera: Blick zum Kurvenscheitel (Krümmung voraus × halbe Vorausschau-Distanz ≈ Winkel zum Scheitelpunkt), weich nachgeführt
+      if (st) camera.position.set(cp[0], cp[1], cp[2]); else camera.position.set(cp[0] + HEAD.x + sway, cp[1] - 0.008, cp[2] + HEAD.z); m.localToWorld(camera.position);   /* Höhe fest (Wunsch): kein Wippen, kein Absenken beim Bremsen/Beschleunigen */
+      if (st) _ht.set(cp[0], cp[1] - (cp[3] ?? 0.4), 30); else _ht.set(cp[0] + HEAD.x * 0.3 + sway * 0.5, cp[1] - (cp[3] ?? 0.4) - 0.9, 30);   /* Blickhöhe fest auf der tieferen Stellung – vorher nickte der Blick beim Bremsen und Beschleunigen */ m.localToWorld(_ht); camera.up.set(0, 1, 0); camera.lookAt(_ht); if (!st) { const D = clamp(p.v * 0.9, 14, 60); let kk = 0, nn = 0; for (let ds = 6; ds <= D; ds += 3) { kk += KS[Math.floor(modL(p.sPrev + ds) / DS) % N] || 0; nn++; }   // Helmkamera: Blick zum Kurvenscheitel (Krümmung voraus × halbe Vorausschau-Distanz ≈ Winkel zum Scheitelpunkt), weich nachgeführt
         const tgt = clamp(-(kk / Math.max(1, nn)) * D * 0.5 * 0.75, -0.26, 0.26); HEAD.look = (HEAD.look || 0) + (tgt - (HEAD.look || 0)) * Math.min(1, dt * 1.3);   /* träger (Wunsch): ~0,8 s bis zum Ziel */ camera.rotateY(HEAD.look); camera.rotateZ(HEAD.r); } if (!st && (camOrb || camPit)) { camera.rotateY(-camOrb); camera.rotateX(-camPit * 0.45); }   // Cockpit: rechter Stick = Umschauen
     }
     if (sh > 0 && !paused && S.cam !== 2 && S.cam !== 3) { camera.position.x += (Math.random() - .5) * sh; camera.position.y += (Math.random() - .5) * sh; }
@@ -7649,6 +7686,7 @@ function updateCamera(dt) {
     pl.mesh.label.visible = false;
   }
 
+  if (window.__camHook) window.__camHook(camera, pl);
   for (const l of [sun, flood]) { l.target.position.set(tx, camTY, tz); const d = l === sun ? skyMat.uniforms.sunDir.value : _fd; l.position.set(tx + d.x * 200, camTY + d.y * 200, tz + d.z * 200); }
   if (hotelRoof) HOTEL_T.value = (performance.now() / 1000) % 3600;   // Farben wandern nur ganz langsam, kein Blinken
 }
@@ -8055,7 +8093,7 @@ function showScreen(k) {
   $$('#menu .scr').forEach(e => e.classList.toggle('on', e.id === 'scr' + k[0].toUpperCase() + k.slice(1)));
   const idx = SCR.indexOf(k); $$('#mSteps i').forEach((e, n) => { e.classList.toggle('on', n + 1 === idx); e.classList.toggle('done', n + 1 < idx); });
   if ((k === 'team' || k === 'driver' || k === 'track') && MENU.team && TEAMS[MENU.team]) { SHOW.on = true; showroomTeam(MENU.team); showroomWall(MENU.team, k === 'track' && TRACKS[S.track] ? TRACKS[S.track].name : null); }
-  else if (k === 'title') { try { const d0 = byCode(S.driver) || ALL[0]; showroomTeam(d0.team); showroomWall(d0.team, ' '); SHOW.on = true; } catch (e) { SHOW.on = false; } $('#menu').classList.toggle('carbg', SHOW.on); }   // Hauptmenü: das eigene Auto steht im Fenster der Karriere-Kachel
+  else if (k === 'title') { try { const cc = CAREER ? loadChamp() : null; if (!(cc && showroomCareer(cc))) { const d0 = byCode(S.driver) || ALL[0]; showroomTeam(d0.team); showroomWall(d0.team, ' '); } SHOW.on = true; } catch (e) { SHOW.on = false; } $('#menu').classList.toggle('carbg', SHOW.on); }   // Hauptmenü: das eigene Auto steht im Fenster der Karriere-Kachel
   else SHOW.on = false;
   const nb = $('#mNext'), car = MENU.mode === 'career';
   nb.style.display = k === 'career' || k === 'upgrade' ? 'none' : '';
@@ -8092,14 +8130,14 @@ const TIER_ICO = { kart: '🏁', f2: '2', f1: '1' };
 function renderSeriesCards() {
   $('#serHead').textContent = MENU.mode === 'tt' ? 'Zeitrennen – Fahrzeugklasse' : 'Schnelles Spiel – Fahrzeugklasse';
   const info = { kart: ['Rennkart', 'Leicht · wendig · sehr kurvenstark'], f2: ['Formula 2', 'Dallara F2 2024 · 22 Fahrer · 11 Teams'], f1: ['Formula 1', 'Saison 2026 · 22 Fahrer · 11 Teams'] };
-  $('#serCards').innerHTML = ['kart', 'f2', 'f1'].map(t => '<button class="tcard scard' + (t === SER ? ' on' : '') + '" data-ser="' + t + '" style="--tc:' + TIER_COL[t] + '"><span class="chk">✓</span><div class="sbig">' + (t === 'kart' ? 'GoKart' : t === 'f2' ? 'F2' : 'F1') + '</div><div class="tn">' + info[t][0] + '</div><div class="tf">' + info[t][1] + '</div></button>').join('');
+  $('#serCards').innerHTML = ['kart', 'f2', 'f1'].map(t => '<button class="tcard scard' + (t === SER ? ' on' : '') + '" data-ser="' + t + '" style="--tc:' + TIER_COL[t] + '"><i class="sbg" style="background-image:url(textures/class_' + t + '.jpg)"></i><span class="chk">✓</span><div class="sbig">' + (t === 'kart' ? 'GoKart' : t === 'f2' ? 'F2' : 'F1') + '</div><div class="tn">' + info[t][0] + '</div><div class="tf">' + info[t][1] + '</div></button>').join('');
   $$('#serCards .scard').forEach(b => b.addEventListener('click', () => { setSeries(b.dataset.ser); MENU.team = null; $$('#serCards .scard').forEach(x => x.classList.toggle('on', x === b)); }));
 }
 function renderTitle() {
   const c = CAREER ? loadChamp() : null, tiers = ['kart', 'f2', 'f1'], nm = { kart: 'Kart', f2: 'F2', f1: 'F1' };
   $('#cSub').textContent = !CAREER ? 'Vom Kart bis in die Formel 1' : CAREER.name + (c ? ' · ' + SERIES[c.ser].name + (c.done ? ' · Saison beendet' : ' · Rennen ' + (c.round + 1) + '/' + calFor(c.ser).length) : ' · ' + SERIES[careerTier()].name);
   $('#cPlay .hk').textContent = CAREER && c && !c.done ? 'Karriere fortsetzen' : 'Karriere';
-  $('#cGo').textContent = !CAREER ? 'Neue Karriere ›' : c && !c.done ? 'Fortsetzen ›' : 'Weiter ›';
+  $('#cGo').textContent = !CAREER ? 'Neue Karriere' : c && !c.done ? 'Fortsetzen' : 'Weiter';
   $('#cState').innerHTML = '';
 }
 function renderName() {
@@ -8226,7 +8264,7 @@ function trkMap(cv, t, col2, lw = 3) { const g = cv.getContext('2d'), W2 = cv.wi
   const p0 = t.pts[0]; g.fillStyle = '#fff'; g.beginPath(); g.arc(fx(p0[0]), fz(p0[1]), lw * 1.7, 0, 7); g.fill(); g.fillStyle = '#e10600'; g.beginPath(); g.arc(fx(p0[0]), fz(p0[1]), lw, 0, 7); g.fill(); }
 // Streckenwahl: links Infotafel der gewählten Strecke (große Skizze + Daten), dahinter der Name als Konturschrift, unten die Leiste aller Strecken
 function renderTrackInfo() { const k = S.track, t = TRACKS[k]; if (!t || MENU.trkShown === k + SER) return; MENU.trkShown = k + SER; const ti = TRACK_INFO[k] || { turns: '–', col: '#e10600' };
-  $('#trkInfo').innerHTML = '<canvas width="420" height="300"></canvas><div class="tst"><div><small>Kurven</small><b>' + ti.turns + '</b></div><div><small>Streckenlänge</small><b>' + t.km + '</b></div><div><small>Runden (GP)</small><b>' + t.laps + '</b></div><div><small>Land</small><b>' + flagSVG(k) + t.land + '</b></div><div class="w"><small>Kurs</small><b>' + t.full + '</b></div></div>';
+  $('#trkInfo').innerHTML = '<canvas width="420" height="300"></canvas><div class="tst"><div><small>Kurven</small><b>' + ti.turns + '</b></div><div><small>Länge</small><b>' + t.km + '</b></div><div><small>Runden (GP)</small><b>' + t.laps + '</b></div><div><small>Land</small><b>' + flagSVG(k) + t.land + '</b></div><div class="w"><small>Kurs</small><b>' + t.full + '</b></div></div>';
   $('#trkInfo').style.setProperty('--tc', ti.col); trkMap($('#trkInfo canvas'), t, ti.col, 5); $('#trkBig').textContent = t.name; if (SHOW.on && MENU.scr === 'track' && MENU.team) showroomWall(MENU.team, t.name); }
 function renderTracks() {
   if (TRACKS[S.track] && ((TRACKS[S.track].extra && !S.nos) || (TRACKS[S.track].kartOnly && SER !== 'kart'))) S.track = 'monza';
@@ -8314,7 +8352,7 @@ function initShowroom() {
     pm(22, 2.2, 0, 2.2, 16, 0, 0, 2.4); pm(6, 6, -9, 8, 7, 0, Math.PI / 2, 4.5); pm(6, 6, 9, 8, 7, 0, Math.PI / 2, 4.5);   /* Lichtband vorn + zwei Softboxen: lange, weiche Glanzlichter auf Lack und Carbon */
     SHOW.env = sc.environment = pmrem.fromScene(es, 0.02).texture;
   }
-  const floor = new THREE.Mesh(new THREE.CircleGeometry(40, 96).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x0b0e13, roughness: .32, metalness: .55, envMapIntensity: .6 })); floor.receiveShadow = true; sc.add(floor);
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(40, 96).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x0b0e13, roughness: .32, metalness: .55, envMapIntensity: .6, transparent: true, opacity: .8 })); floor.receiveShadow = true;   /* leicht durchscheinend: darunter liegt das gespiegelte Auto */ sc.add(floor);
   const grid = new THREE.Mesh(new THREE.RingGeometry(7.5, 7.56, 128).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xe10600, transparent: true, opacity: .25 })); grid.position.y = 0.01; sc.add(grid); SHOW.gridRing = grid;
   for (const x of [-3.15, 3.15]) {
     const tt = new THREE.Mesh(new THREE.CylinderGeometry(3.0, 3.1, 0.12, 96), new THREE.MeshStandardMaterial({ color: 0x14181f, roughness: .25, metalness: .8 })); tt.position.set(x, 0.06, 0); tt.receiveShadow = true; sc.add(tt); (SHOW.tts ||= []).push(tt);
@@ -8326,7 +8364,14 @@ function initShowroom() {
   const key = new THREE.DirectionalLight(0xffffff, 3.0); key.position.set(4, 9, 6); key.castShadow = true; key.shadow.mapSize.set(1024, 1024); const kc = key.shadow.camera; kc.left = kc.bottom = -8; kc.right = kc.top = 8; kc.near = 1; kc.far = 30; key.shadow.bias = -0.0004; sc.add(key);
   const rim = new THREE.DirectionalLight(0x9fd8ff, 2.2); rim.position.set(-6, 4, -8); sc.add(rim);
   { const cv = document.createElement('canvas'); cv.width = 2048; cv.height = 640; const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 4;
-    const wall = new THREE.Mesh(new THREE.PlaneGeometry(44, 13.75), new THREE.MeshBasicMaterial({ map: tx, fog: false, toneMapped: false })); wall.position.set(0, 6.875, -6.5); sc.add(wall); const wall2 = new THREE.Mesh(wall.geometry, wall.material); wall2.rotation.y = -Math.PI / 2; wall2.position.set(8.5, 6.875, 1.6); sc.add(wall2);   /* zweite Wand im rechten Winkel: Hintergrund der Frontalansicht (Fahrerwahl) */ SHOW.wall = { cv, tx }; }
+    const wall = new THREE.Mesh(new THREE.PlaneGeometry(44, 13.75), new THREE.MeshBasicMaterial({ map: tx, fog: false, toneMapped: false })); wall.position.set(0, 6.875, -6.5); sc.add(wall); const wall2 = new THREE.Mesh(wall.geometry, wall.material); wall2.rotation.y = -Math.PI / 2; wall2.position.set(8.5, 6.875, 1.6); sc.add(wall2);   /* zweite Wand im rechten Winkel: Hintergrund der Frontalansicht (Fahrerwahl) */ SHOW.wall = { cv, tx };
+    // Bewegung auf der Wand: zwei schräge Lichtbänder wandern langsam darüber (eigene, additiv gemischte Ebene – die Wandgrafik selbst wird nicht neu gezeichnet)
+    const sw = canvasTex(512, 64, (g, w, h) => { g.fillStyle = '#000'; g.fillRect(0, 0, w, h); for (const [x0, bw, al] of [[90, 120, .55], [330, 46, .3]]) { const gr = g.createLinearGradient(x0, 0, x0 + bw, 0); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(.5, 'rgba(255,255,255,' + al + ')'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(x0, 0, bw, h); } });
+    sw.wrapS = sw.wrapT = THREE.RepeatWrapping; sw.repeat.set(1, 1); sw.rotation = -0.38; SHOW.sweep = sw;
+    const swm = new THREE.MeshBasicMaterial({ map: sw, transparent: true, opacity: .34, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, toneMapped: false });
+    const walls = [wall, wall2]; for (const wl of [wall, wall2]) { const o = new THREE.Mesh(wl.geometry, swm); o.position.copy(wl.position); o.rotation.copy(wl.rotation); o.translateZ(0.02); sc.add(o); walls.push(o); }
+    // Spiegelung der Wand im Boden: dieselben Flächen noch einmal, an der Bodenebene gespiegelt (der Boden ist leicht durchscheinend)
+    for (const wl of walls) { const o = new THREE.Mesh(wl.geometry, wl.material); o.position.copy(wl.position); o.position.y = -wl.position.y; o.rotation.copy(wl.rotation); o.scale.y = -1; sc.add(o); } }
   SHOW.scene = sc; SHOW.cam = new THREE.PerspectiveCamera(SHOW_FOV, innerWidth / innerHeight, 0.5, 200);
 }
 // Rückwand des Showrooms: dunkles Graphit, schräge Farbflächen in der Teamfarbe, feine Linien und der Teamname als große Konturschrift
@@ -8349,9 +8394,21 @@ function showroomTeam(team) {
   for (const m of SHOW.cars) { SHOW.scene.remove(m.g); m.g.traverse(o => { if (o.isSprite) o.material.map.dispose(); }); }
   const tl = ALL.filter(c => c.team === team);
   for (const o of [...SHOW.tts, ...SHOW.rings]) o.visible = false; if (SHOW.gridRing) SHOW.gridRing.visible = false;
-  SHOW.cars = tl.map((c, n) => { const m = makeCar(c); scene.remove(m.g); m.label.visible = false; m.code = c.code; m.slot = n; m.g.rotation.set(0, SHOW_ROT, 0); m.g.traverse(o => { if (o.isMesh) o.castShadow = true; }); SHOW.scene.add(m.g); return m; });
-  showroomWall(team, null); showroomPick();
+  SHOW.cars = tl.map((c, n) => { const m = makeCar(c); scene.remove(m.g); m.label.visible = false; m.code = c.code; m.slot = n; m.g.rotation.set(0, SHOW_ROT, 0); m.g.traverse(o => { if (o.isMesh) o.castShadow = true; }); showroomMirror(m); SHOW.scene.add(m.g); return m; });
+  showroomWall(team, null); showroomPick(); showroomSwing();
 }
+// Spiegelung am Boden: das Auto noch einmal, an der Bodenebene gespiegelt, unter dem leicht durchscheinenden Hallenboden
+function showroomMirror(m) { const r = m.g.clone(true); r.position.set(0, 0, 0); r.rotation.set(0, 0, 0); r.scale.set(1, -1, 1); r.traverse(o => { o.castShadow = false; o.receiveShadow = false; if (o.isSprite) o.visible = false; }); m.g.add(r); }
+// Teamwechsel: die Kamera wird seitlich um das Auto versetzt und schwenkt weich an ihren Platz zurück
+function showroomSwing() { if (MENU.scr !== 'team' || !SHOW.cp) return; SHOW.sw = -(SHOW.sw || 1); const a = 0.42 * SHOW.sw, dx = SHOW.cp.x - SHOW.ct.x, dz = SHOW.cp.z - SHOW.ct.z; SHOW.cp.x = SHOW.ct.x + dx * Math.cos(a) - dz * Math.sin(a); SHOW.cp.z = SHOW.ct.z + dx * Math.sin(a) + dz * Math.cos(a); }
+// Hauptmenü mit laufender Karriere: das Karriere-Auto (Klasse, Team, eigener Helm) – unabhängig davon, was im Schnellen Spiel gewählt ist
+function showroomCareer(c) { initShowroom(); const key = 'career|' + c.ser + '|' + c.team + '|' + c.driver; if (SHOW.team === key) return true; const SD = SERIES[c.ser]; if (!SD || !SD.teams[c.team]) return false;
+  const T0 = TEAMS; let m; try { TEAMS = SD.teams; const d = SD.drivers.find(x => x[3] === c.team); if (!d) return false;
+      m = makeCar({ code: c.driver, name: CAREER.name, num: d[2], team: c.team, helmet: CAREER.helmet || d[4], liv: d[5] ? 'F2_' + d[5] : undefined }); SHOW.wall.key = null; showroomWall(c.team, ' '); } catch (e) { return false; } finally { TEAMS = T0; }
+  for (const o of SHOW.cars) { SHOW.scene.remove(o.g); o.g.traverse(x => { if (x.isSprite) x.material.map.dispose(); }); }
+  for (const o of [...SHOW.tts, ...SHOW.rings]) o.visible = false; if (SHOW.gridRing) SHOW.gridRing.visible = false;
+  scene.remove(m.g); m.label.visible = false; m.code = c.driver; m.slot = 0; m.g.rotation.set(0, SHOW_ROT, 0); m.g.traverse(o => { if (o.isMesh) o.castShadow = true; }); showroomMirror(m); SHOW.scene.add(m.g);
+  SHOW.cars = [m]; SHOW.team = key; SHOW.ser = SER; showroomPick(); return true; }
 function showroomPick() { const scr = MENU.scr, has = SHOW.cars.some(x => x.code === S.driver);
   SHOW.cars.forEach((m, n0) => { const n = m.slot ?? n0, sel = m.code === S.driver, solo = scr === 'team' ? n === 0 : has ? sel : n === 0;
     m.g.visible = scr === 'driver' ? true : solo; const P = scr === 'driver' ? SHOW_POS[n % 2] : SHOW_POS[0]; m.g.position.set(P[0], 0, P[2]);
@@ -8360,6 +8417,7 @@ const _sp = new THREE.Vector3(), _st = new THREE.Vector3();
 function showroomFrame(dt) {
   const cam = SHOW.cam, scr = MENU.scr, W2 = innerWidth, H2 = innerHeight; SHOW.t += dt; const t = SHOW.t;
   if (SHOW.scr !== scr) { SHOW.scr = scr; showroomPick(); }
+  if (SHOW.sweep) SHOW.sweep.offset.x = (SHOW.sweep.offset.x - dt * 0.035) % 1;
   let ox = 0, oy = 0;
   if (scr === 'driver') { _sp.set(-34, 1.25, 1.22); _st.set(0, 0.6, 1.22); }                       // frontal auf beide Autos
   else if (scr === 'track') { _sp.set(-0.4, 1.46, 21.4); _st.set(-0.4, 0.6, 0); ox = -0.175; oy = 0.06; }   // genau von der Seite, Auto rechts neben der Infotafel
