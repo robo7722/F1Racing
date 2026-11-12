@@ -30,3 +30,11 @@
 - **Cockpit F1**: Seitenwangen an der Abdeckung neben dem Lenkrad; Öffnung an den Händen breiter (`COCK.f1.wn` 0,055).
 - **Cockpit F2**: Öffnung an Lenkrad und Händen breiter (`COCK.f2.wn` 0,05).
 - Bewusst nicht gemacht: 1:1-Kopie der Menüs eines bestehenden Spiels. Aufbau und Stimmung sind angelehnt, die Gestaltung ist eigen.
+
+## Nachtrag (dritte Runde)
+- **Ablauf** im schnellen Spiel und Zeitrennen: Klasse → Team → Fahrer → Strecke → Rennen.
+- **Auswahl-Studio**: Autos stehen fest in Seitenansicht, keine Drehteller, keine Rotation. Teamwahl zeigt ein Auto; zur Fahrerwahl fährt die Kamera zurück und das zweite Auto erscheint; auf der Streckenwahl steht das Auto des gewählten Fahrers rechts, der Streckenname auf der Rückwand.
+- **Hauptmenü**: oben zwei große Kacheln (Karriere, Schnelles Spiel), darunter die kleinen.
+- **Logos im Repo**: PNGs in `logos/` ablegen, siehe `logos/LIESMICH.md`.
+- **Cockpit**: Abdeckung, Seitenwangen und breitere Öffnungen (F1/F2) wieder entfernt – Karosserie wie in 1.21. Der durchscheinende Halo bleibt.
+- Pfeil der Weiter-Taste als gezeichneter Winkel, exakt mittig.
