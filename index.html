@@ -991,7 +991,8 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 #menu[data-scr=track]::before{background:linear-gradient(180deg,rgba(5,7,11,.72),transparent 30%,transparent 78%,rgba(5,7,11,.8)),linear-gradient(90deg,rgba(5,7,11,.85),transparent 30%)!important}
 #menu[data-scr=track] .mvig{background:none!important}
 #trkBig{visibility:hidden}
-.tinfo{max-width:46%!important}.tinfo canvas{max-width:20vw!important}.tinfo .tst b{max-width:18vw}
+/* Infotafel schmal (ein Drittel der Breite): so kann das Auto daneben näher herankommen */
+.tinfo{max-width:34%!important;gap:8px!important;padding:8px 12px 8px 4px!important}.tinfo canvas{max-width:12.5vw!important}.tinfo .tst{gap:clamp(3px,1.3vh,9px) 14px!important}.tinfo .tst b{max-width:15vw;font-size:clamp(12px,3.3vh,15px)!important}.tinfo .tst small{font-size:8.5px!important;letter-spacing:.12em!important}
 
 /* Pfeil im weißen Feld der Weiter-Taste: als gezeichneter Winkel exakt mittig (das Schriftzeichen „›“ saß je nach Schrift zu tief und zu weit links) */
 .mnext span{font-size:0!important;line-height:0!important}
@@ -8321,7 +8322,7 @@ function showroomFrame(dt) {
   if (SHOW.scr !== scr) { SHOW.scr = scr; showroomPick(); }
   let ox = 0, oy = 0;
   if (scr === 'driver') { _sp.set(-12.6, 1.75, 1.6); _st.set(0, 0.62, 1.6); }                       // frontal auf beide Autos
-  else if (scr === 'track') { _sp.set(0.15, 0.92, 9.3); _st.set(0.15, 0.6, 0); ox = -0.26; oy = 0.06; }   // genau von der Seite, Auto rechts neben der Infotafel
+  else if (scr === 'track') { _sp.set(-0.4, 0.92, 8.0); _st.set(-0.4, 0.6, 0); ox = -0.175; oy = 0.06; }   // genau von der Seite, Auto rechts neben der Infotafel
   else if (scr === 'title') { _st.set(-0.2, 0.55, 0); _sp.set(-5.4, 1.15, 7.0);
     const hb = (SHOW.hb ||= document.querySelector('#cPlay .hbody')), r = hb.getBoundingClientRect();
     if (r.width > 10) { const d = 5.4 / (0.6 * r.width / W2) / (2 * Math.tan(15 * Math.PI / 180) * (W2 / H2)); _sp.sub(_st).setLength(d).add(_st); ox = -((r.left + r.width * 0.62) / W2 - 0.5); oy = -((r.top + r.height * 0.5) / H2 - 0.5);
