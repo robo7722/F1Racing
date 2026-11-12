@@ -3532,7 +3532,7 @@ function setSeries(k, quiet) {
   placeOnGrid();
   try { renderTeams(); } catch (e) {}
 }
-window.__setSeries = setSeries; window.__dev = { get scene() { return scene; }, get camera() { return camera; }, THREE, get ALL() { return ALL; }, get pl() { return pl; }, showScreen: k => showScreen(k), MENU: () => MENU, step: dt => step(dt), cars: () => cars, startRace: () => startRace(), showResults: () => showResults(), dirt: dt => visorDirtTick(dt), prof: () => ({ N, DS, profAI, L }), S, setQL: v => { QL = v; } };
+window.__setSeries = setSeries; window.__dev = { get scene() { return scene; }, get camera() { return camera; }, THREE, get ALL() { return ALL; }, get pl() { return pl; }, showScreen: k => showScreen(k), MENU: () => MENU, step: dt => step(dt), cars: () => cars, startRace: () => startRace(), showResults: () => showResults(), dirt: dt => visorDirtTick(dt), terr: (x, z) => terr(x, z), surfH: (x, z) => surfH(x, z), groundY: (x, z) => groundY(x, z), prof: () => ({ N, DS, profAI, L }), S, setQL: v => { QL = v; } };
 let pl = byCode(S.driver) || ALL[0];
 const cars = []; let ais = [];
 // Schatten mit vereinfachten Modellen: nur im Schatten-Durchgang tragen nahe Autos die mittlere Detailstufe (im Schattenbild nicht zu unterscheiden,
@@ -3741,7 +3741,11 @@ function terr(x, z) { const px = PX, pz = PZ, elev = ELEV, n = N, hg = HG;
   if (HFLD) { const fx = (x - HFLD.x0) / HFLD.c, fz = (z - HFLD.z0) / HFLD.c;
     if (fx >= 0 && fz >= 0 && fx < HFLD.w - 1 && fz < HFLD.h - 1) { const ix = Math.floor(fx), iz = Math.floor(fz), u = fx - ix, v = fz - iz, A = HFLD.a, w = HFLD.w, k = iz * w + ix;
       h = (A[k] * (1 - u) + A[k + 1] * u) * (1 - v) + (A[k + w] * (1 - u) + A[k + w + 1] * u) * v; } }
-  return { h, d: Math.sqrt(md), j: mj };
+  // Abstand zum nächsten ANDEREN Streckenabschnitt (mehr als 150 m Fahrstrecke entfernt): genau in der Mitte zwischen zwei unterschiedlich hohen Abschnitten sprang die Bodenhöhe (Geländestufe im Infield)
+  let m2 = 1e18; { const gap = Math.max(12, Math.round(150 / (DS || 5)));
+    for (let a = -2; a <= 2; a++) for (let b = -2; b <= 2; b++) { const L2 = hg.get((cx + a + 4096) * 8192 + cz + b + 4096); if (!L2) continue;
+      for (const i of L2) { let di = Math.abs(i - mj); if (di > n / 2) di = n - di; if (di < gap) continue; const dx = x - px[i], dz = z - pz[i], d2 = dx * dx + dz * dz; if (d2 < m2) m2 = d2; } } }
+  return { h, d: Math.sqrt(md), j: mj, d2: Math.sqrt(m2) };
 }
 // glattes Gelände zwischen den Streckenteilen (harmonische Interpolation): gleichmäßige, flache Neigung statt Stufen
 let HFLD = null;
@@ -3773,12 +3777,13 @@ function projPt(G, x, z) {
 function hillAt(x, z, t) { const px = PX, pz = PZ, rx = RX, rz = RZ, hg = HG, wl = WL, wr = WR;
   if (!HILLW) return 0; const j = t.j, w = HILLW[j]; if (w <= 0) return 0;
   const lat = (x - px[j]) * rx[j] + (z - pz[j]) * rz[j]; if (lat > 0) return 0;
-  let a = clamp((-lat - wl[j] - 22) / 60, 0, 1); a = a * a * (3 - 2 * a); if (a <= 0) return 0;
+  let a = clamp((t.d - wl[j] - 22) / 60, 0, 1); a = a * a * (3 - 2 * a); if (a <= 0) return 0;   /* Abstand zur Strecke (stetig) statt Querabstand zum nächsten Punkt */
   // auch zu allen anderen Streckenteilen (ohne Hügel) sanft auslaufen -> keine Kante, unter die man schauen kann
-  const cx = Math.floor(x / 40), cz = Math.floor(z / 40); let md = 1e18, mj = -1;
-  for (let p = -4; p <= 4; p++) for (let q = -4; q <= 4; q++) { const L2 = hg.get((cx + p + 4096) * 8192 + cz + q + 4096); if (!L2) continue; for (const i of L2) { if (HILLW[i] > 0.05) continue; const dx = x - px[i], dz = z - pz[i], d2 = dx * dx + dz * dz; if (d2 < md) { md = d2; mj = i; } } }
+  const cx = Math.floor(x / 40), cz = Math.floor(z / 40); let md = 1e18, mj = -1, sw = 0, sh = 0;
+  for (let p = -4; p <= 4; p++) for (let q = -4; q <= 4; q++) { const L2 = hg.get((cx + p + 4096) * 8192 + cz + q + 4096); if (!L2) continue; for (const i of L2) { const dx = x - px[i], dz = z - pz[i], d2 = dx * dx + dz * dz; { const ww = 1 / ((d2 + 400) * (d2 + 400)); sw += ww; sh += ww * HILLW[i]; } if (HILLW[i] > 0.05) continue; if (d2 < md) { md = d2; mj = i; } } }
+  const ws = sw > 0 ? sh / sw : w;   /* Hügelstärke weich aus allen nahen Streckenpunkten gemittelt statt vom einen nächsten Punkt: im Kurveninneren springt der nächste Punkt, die Hügelhöhe sprang mit (meterhohe Geländestufen im Infield des Red Bull Rings) */
   let b = 1; if (mj >= 0) { b = clamp((Math.sqrt(md) - Math.max(wl[mj], wr[mj]) - 10) / 70, 0, 1); b = b * b * (3 - 2 * b); }
-  return w * TH.hill.h * a * b * (1 - 0.4 * clamp((-lat - wl[j] - 160) / 120, 0, 1));
+  return ws * TH.hill.h * a * b * (1 - 0.4 * clamp((-lat - wl[j] - 160) / 120, 0, 1));
 }
 const BAND = 70;
 function sideW(t, x, z) { const j = t.j, lat = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j]; return lat < 0 ? WL[j] : WR[j]; }
@@ -3827,7 +3832,7 @@ let RUB_C = null; const rubbleTex = () => { if (!RUB_C) RUB_C = canvasTex(256, 2
 const offsetPoly = (R, d) => { let A = 0; for (let i = 0; i < R.length; i++) { const [x1, z1] = R[i], [x2, z2] = R[(i + 1) % R.length]; A += x1 * z2 - x2 * z1; } const sg = A > 0 ? 1 : -1, n = R.length;
   return R.map((p, i) => { const a = R[(i - 1 + n) % n], b = R[(i + 1) % n], e1x = p[0] - a[0], e1z = p[1] - a[1], e2x = b[0] - p[0], e2z = b[1] - p[1], l1 = Math.hypot(e1x, e1z) || 1, l2 = Math.hypot(e2x, e2z) || 1,
     n1x = e1z / l1 * sg, n1z = -e1x / l1 * sg, n2x = e2z / l2 * sg, n2z = -e2x / l2 * sg, mx = n1x + n2x, mz = n1z + n2z, ml = Math.hypot(mx, mz) || 1, k = d / Math.max(0.35, (mx * n1x + mz * n1z) / ml); return [p[0] + mx / ml * k, p[1] + mz / ml * k]; }); };
-function surfH(x, z, t) { const elev = ELEV; if (FLAT) return 0; t = t || terr(x, z); const W = sideW(t, x, z), nb = TH.harmonic ? clamp((t.d - (W + 3)) / 22, 0, 1) : clamp((t.d - (W + 12)) / 50, 0, 1); let h = lerp(TRK.mc ? mcNear(x, z, t, W) : elev[t.j], t.h, nb * nb * (3 - 2 * nb)) + riseAt(x, z, t.d) + hillAt(x, z, t); if (TRK.mc && t.d > 140) { let w = clamp((t.d - 140) / 260, 0, 1); w = w * w * (3 - 2 * w); h = Math.max(h, demH(x, z) * w); }   /* Monaco: weiter weg echter Hang (EU-DEM) */ if (MC_PADS) h = padH(x, z, h); return h; }
+function surfH(x, z, t) { const elev = ELEV; if (FLAT) return 0; t = t || terr(x, z); const W = sideW(t, x, z), nb = TH.harmonic ? clamp((t.d - (W + 3)) / 22, 0, 1) : clamp((t.d - (W + 12)) / 50, 0, 1); let near = TRK.mc ? mcNear(x, z, t, W) : elev[t.j]; if (!TRK.mc && t.d2 !== undefined && t.d2 < 1e8) { const g = clamp((1 - t.d / Math.max(t.d2, 0.01)) / 0.4, 0, 1); near = lerp(t.h, near, g * g * (3 - 2 * g)); }   /* zwischen zwei Abschnitten weich auf die gemittelte Höhe übergehen statt hart umzuschalten */ let h = lerp(near, t.h, nb * nb * (3 - 2 * nb)) + riseAt(x, z, t.d) + hillAt(x, z, t); if (TRK.mc && t.d > 140) { let w = clamp((t.d - 140) / 260, 0, 1); w = w * w * (3 - 2 * w); h = Math.max(h, demH(x, z) * w); }   /* Monaco: weiter weg echter Hang (EU-DEM) */ if (MC_PADS) h = padH(x, z, h); return h; }
 // Monaco: Gelände nie höher als die tiefste nahe Straße plus sanfter Anstieg (30 %) – Plätze zwischen zwei Straßen liegen eben auf der unteren Höhe, die obere Straße steht auf ihrer Stützmauer (statt Buckel und Falten)
 function mcCone(x, z) { const px = PX, pz = PZ, elev = ELEV, spi = SPI, wl = WL, wr = WR; const cx = Math.floor(x / 32), cz = Math.floor(z / 32); let m = 1e9; const FM = TRK.mc.fairmont, fq = clamp((Math.hypot(x - FM[0], z - FM[1]) - 170) / 70, 0, 1), flat = 22 - 18 * fq * fq * (3 - 2 * fq), slope = 0.1 + 0.2 * fq * fq * (3 - 2 * fq);   /* ebene Zone hinter den Mauern nur im Haarnadel-Komplex, außen wie bisher */ for (let a = -3; a <= 3; a++) for (let b = -3; b <= 3; b++) { const L2 = spi.get((cx + a + 4096) * 8192 + cz + b + 4096); if (!L2) continue; for (const j of L2) { const d = Math.hypot(x - px[j], z - pz[j]); if (d > 96) continue; const v = elev[j] + Math.max(0, d - Math.max(wl[j], wr[j]) - flat) * slope;   /* hinter jeder Mauer erst 22 m eben, dann sanft ansteigend */ if (v < m) m = v; } } return m; }
 // Monaco: direkt neben der Strecke liegt der Boden auf der eigenen Streckenhöhe und steigt erst hinter der Mauer an (sonst ragt der Mischboden zwischen zwei Ästen über die tiefere Fahrbahn)
@@ -4419,7 +4424,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       const bw = new Float32Array(N);
       for (let i = 0; i < N; i++) { let w = 0; for (let o = 4; o <= BAND; o += 4) { const oo = W[i] + o, x = PX[i] + RX[i] * oo * sg, z = PZ[i] + RZ[i] * oo * sg; const [dd, jj] = nearestDist(x, z); if (dd < oo - 2.5) break; if (TRK.mc) { let dj = Math.abs(jj - i); dj = Math.min(dj, N - dj); if (dj * DS > 30 && dd < Math.max(WL[jj], WR[jj]) + 6) break; }   /* Monaco: Band nie über den ummauerten Bereich eines anderen Asts (sonst fällt es als Hügel auf dessen Fahrbahn ab) */ w = o; } bw[i] = w ? Math.min(BAND, w + 4) : 0; }
       const bws = filt(filt(bw, 3, 'min'), 3, 'avg'), H = []; (BANDW || (BANDW = [null, null]))[sg < 0 ? 0 : 1] = filt(bws, 6, 'max');
-      for (let k = 0; k <= K; k++) { const a = new Float32Array(N); for (let i = 0; i < N; i++) { const o = W[i] + bws[i] * k / K, x = PX[i] + RX[i] * o * sg, z = PZ[i] + RZ[i] * o * sg, dh = surfH(x, z) - ELEV[i], f = clamp((o - W[i]) / (TRK.mc && dh < 0 ? 1.5 : 12), 0, 1); a[i] = dh * f * f * (3 - 2 * f); }   /* Monaco: tiefer liegendes Gelände direkt hinter der Mauer (die Steinschürze deckt den Absatz) statt Böschung */ H.push(a); }
+      for (let k = 0; k <= K; k++) { const a = new Float32Array(N); for (let i = 0; i < N; i++) { const o = Math.abs(foldLim(i, (W[i] + bws[i] * k / K) * sg)), x = PX[i] + RX[i] * o * sg, z = PZ[i] + RZ[i] * o * sg, dh = surfH(x, z) - ELEV[i], f = clamp((o - W[i]) / (TRK.mc && dh < 0 ? 1.5 : 12), 0, 1);   /* Höhe an der TATSÄCHLICHEN Position: hStrip schiebt Punkte im Kurveninneren auf die Faltgrenze zusammen (foldLim) – mit den Höhen der ursprünglichen Positionen lagen dort mehrere Punkte übereinander und bildeten senkrechte Wände (Red Bull Ring, Infield) */ a[i] = dh * f * f * (3 - 2 * f); }   /* Monaco: tiefer liegendes Gelände direkt hinter der Mauer (die Steinschürze deckt den Absatz) statt Böschung */ H.push(a); }
       for (let k = 0; k < K; k++) {
         const o0 = i => W[i] + bws[i] * k / K, o1 = i => W[i] + bws[i] * (k + 1) / K, msk = i => bws[i] > 0.5;
         BANDS.push(sg < 0 ? hStrip(i => -o1(i), i => -o0(i), 0.004, 0.004, shm, { uScale: 14, vScale: 14, yL: H[k + 1], yR: H[k], mask: msk }) : hStrip(o0, o1, 0.004, 0.004, shm, { uScale: 14, vScale: 14, yL: H[k], yR: H[k + 1], mask: msk }));
