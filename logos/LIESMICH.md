@@ -36,6 +36,6 @@ Kürzel mit Vorsatz `F2_` bzw. `K_`, z. B. `F2_INV.png` (Invicta), `F2_HIT.png` 
 ### Formel 2 (vorhanden)
 `F2_INV.png` Invicta Racing · `F2_HIT.png` Hitech · `F2_CAM.png` Campos Racing · `F2_DAM.png` DAMS · `F2_MPM.png` MP Motorsport · `F2_PRE.png` Prema Racing · `F2_ROD.png` Rodin Motorsport · `F2_ART.png` ART Grand Prix · `F2_AIX.png` AIX Racing · `F2_VAR.png` Van Amersfoort Racing · `F2_TRI.png` Trident Racing
 
-Alle 512 × 512 px, transparenter Hintergrund, helle Variante für dunklen Untergrund. Quelle: Teamlogos der offiziellen F2-Seite (fiaformula2.com, Saison 2026, Variante „logowhite“), Leerrand abgeschnitten und quadratisch zentriert.
+Alle 512 × 512 px, transparenter Hintergrund, helle Variante für dunklen Untergrund. Invicta ist im Original gelb und wurde auf Weiß umgefärbt. Quelle: Teamlogos der offiziellen F2-Seite (fiaformula2.com, Saison 2026, Variante „logowhite“), Leerrand abgeschnitten und quadratisch zentriert.
 
 Logos, die du in den Einstellungen auf dem Gerät lädst, haben Vorrang vor diesen Dateien.
