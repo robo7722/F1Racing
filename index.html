@@ -185,7 +185,7 @@ tr.me td{background:rgba(0,210,190,.22)!important;font-weight:800}
 td.bar{padding-right:0}td.bar i{display:block;width:4px;height:16px;border-radius:2px}
 td.num{font-variant-numeric:tabular-nums;text-align:right}
 #loading{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:radial-gradient(120% 90% at 50% 40%,#161c26 0%,#0b0f14 55%,#06080b 100%);color:var(--mut)}
-#loading::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.022) 0 2px,transparent 2px 26px);pointer-events:none}
+#loading::before{content:none}
 .ldBox{position:relative;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;animation:ldIn .35s ease-out both}
 .ldLogo{font-family:"Titillium Web",system-ui,sans-serif;font-style:italic;font-weight:900;font-size:clamp(40px,7vw,72px);line-height:.9;letter-spacing:.04em;color:#f2f5f7;text-shadow:0 6px 30px rgba(0,0,0,.6)}
 .ldLogo small{display:block;font-size:.3em;font-weight:700;letter-spacing:.62em;color:var(--mut);margin:0 0 .5em .3em}
@@ -579,7 +579,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
    Flächen: Carbon-Gewebe + Verlauf + harter Tiefenschatten + Lichtkante oben + rote Eckmarke. Auswahl: weiße Kontur, roter Balken, laufender Glanz.
    Schrift: Titillium Web in Versalien, große Konturziffern als Gestaltungselement, rote Kennziffern. Tasten: roter Verlauf mit weißem Pfeilblock. */
 :root{--f1r:#e10600;--f1r2:#ff2a14;--ink:#0a1424;--ink2:#132238;--f1l:rgba(150,205,255,.2);--f1l2:rgba(150,205,255,.5);
-  --carbon:repeating-linear-gradient(90deg,rgba(150,205,255,.035) 0 1px,transparent 1px 7px);   /* feine Rasterlinien wie im Tacho-Band */
+  --carbon:linear-gradient(transparent,transparent);   /* Rasterlinien entfernt (Wunsch): glatte Flächen */
   --surf:linear-gradient(180deg,rgba(26,44,72,.9) 0%,rgba(14,26,46,.9) 46%,rgba(8,16,30,.93) 100%);   /* Navy-Glas wie die Halo-Grafik des Tachos */
   --surfH:linear-gradient(180deg,rgba(36,60,96,.92) 0%,rgba(18,34,60,.92) 50%,rgba(10,20,36,.94) 100%);
   --depth:0 16px 34px -10px rgba(0,0,0,.7),inset 0 1px 0 rgba(150,205,255,.35);
@@ -595,7 +595,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
 .hbtn.hidden,#install.hidden{display:none!important}
 /* Hintergrund: dunkler Verlauf, feine Tempolinien, Filmkorn, große Konturschrift */
 #menu::before{background:linear-gradient(90deg,rgba(6,6,10,.94) 0%,rgba(6,6,10,.78) 34%,rgba(6,6,10,.25) 62%,rgba(6,6,10,.05) 80%),radial-gradient(60% 70% at 0% 100%,rgba(225,6,0,.22),transparent 70%)!important}
-#menu .mvig{background:repeating-linear-gradient(102deg,rgba(255,255,255,.035) 0 1px,transparent 1px 7px) 0 0/100% 100%,linear-gradient(180deg,rgba(6,6,10,.55),transparent 22%,transparent 72%,rgba(6,6,10,.8))!important;
+#menu .mvig{background:linear-gradient(180deg,rgba(6,6,10,.55),transparent 22%,transparent 72%,rgba(6,6,10,.8))!important;
   -webkit-mask-image:linear-gradient(90deg,#000 0,rgba(0,0,0,.35) 55%,transparent 80%);mask-image:linear-gradient(90deg,#000 0,rgba(0,0,0,.35) 55%,transparent 80%)}
 #menu::after{content:attr(data-scr);position:absolute;right:-1vw;bottom:-6vh;z-index:0;pointer-events:none;font:900 34vh/1 "Titillium Web",sans-serif;text-transform:uppercase;letter-spacing:-.02em;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.06);white-space:nowrap}
 #menu[data-scr=title]::after{content:"F1"}#menu[data-scr=series]::after{content:"KLASSE"}#menu[data-scr=track]::after{content:"STRECKE"}#menu[data-scr=team]::after,#menu[data-scr=driver]::after{content:""}#menu[data-scr=race]::after{content:"START"}
@@ -619,7 +619,7 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
 /* Überschriften mit roter Kennmarke und auslaufender Linie */
 .mh{display:flex!important;align-items:center;gap:12px!important;font-weight:900!important;font-size:clamp(20px,5vh,30px)!important;letter-spacing:.05em!important;margin:0 0 12px!important;text-shadow:0 4px 18px rgba(0,0,0,.6)}
 .mh::before{content:""!important;flex:none;width:6px!important;height:.9em!important;background:var(--f1r)!important;transform:skewX(-18deg)!important;margin:0 2px 0 0!important}
-.mh::after{content:"";flex:1;height:1px;max-width:380px;background:linear-gradient(90deg,rgba(255,255,255,.35),transparent)}
+.mh::after{content:none}   /* Linie neben der Überschrift entfernt (Wunsch) */
 .mh.center{justify-content:center}.mh.center::after{display:none}
 /* Flächen */
 .card,.rpanel,.spanel,.tcard,.tm,.dcard,.hbtn,.rvar,.uprow{background:var(--carbon),var(--surf)!important;border:1px solid var(--f1l)!important;border-top-color:rgba(255,255,255,.2)!important;box-shadow:var(--depth)!important}
@@ -716,7 +716,7 @@ input[type=range]{height:4px!important;accent-color:var(--f1r)}
 .uprow.on{outline:2px solid #fff;outline-offset:-2px;box-shadow:inset 4px 0 0 var(--f1r)!important}
 .ubuy{background:linear-gradient(180deg,#ff2a14,#c00500)!important;color:#fff!important}.ubuy:disabled{background:rgba(255,255,255,.08)!important;color:rgba(255,255,255,.4)!important}
 /* Overlays */
-.overlay{background:linear-gradient(90deg,rgba(6,6,10,.9),rgba(6,6,10,.7)),repeating-linear-gradient(102deg,rgba(255,255,255,.03) 0 1px,transparent 1px 7px)!important}
+.overlay{background:linear-gradient(90deg,rgba(6,6,10,.9),rgba(6,6,10,.7))!important}
 .card{border-top:0!important;padding:14px 18px!important;position:relative;animation:f1in .3s both}
 .card::before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:linear-gradient(90deg,var(--f1r) 0 60%,#fff 60% 62%,transparent 62%)}
 .card .head h2,#resTitle{font-weight:900!important;letter-spacing:.04em;text-transform:uppercase;font-size:clamp(20px,5vh,28px)!important}
@@ -756,38 +756,71 @@ th{background:#0c0c12!important;letter-spacing:.16em;font-size:10px!important;co
   #menu[data-scr=race] #scrRace>.mh{display:none!important}#menu[data-scr=race] .rgrid{height:100%!important}   /* Überschrift steht schon im Reiter „05 Rennen“ */
 }
 @media (orientation:portrait){.hub{grid-template-columns:1fr 1fr}.hub .hero{grid-column:1/-1}}
-/* Saison-Bildschirm (Karriere): alles auf einen Blick ohne Seiten-Scrollen – links nächstes Rennen + Wochenende, rechts Tabelle (scrollt innen, Kopf bleibt stehen) + Kalender als Leiste */
-#scrSeason .sgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:10px!important;height:calc(100% - 42px)!important;overflow:hidden!important;align-items:stretch!important}
-#scrSeason .scol{min-height:0;gap:8px!important;overflow-y:auto;scrollbar-width:none}#scrSeason .scol::-webkit-scrollbar{display:none}
-#seNext{flex:none;min-height:0!important;padding:10px 12px 10px 18px!important;gap:8px!important}
-#seNext .sn-l small{font-size:10px!important;letter-spacing:.14em!important}
-#seNext .sn-l b{font-size:clamp(22px,7vh,34px)!important}
-#seNext .sn-l span{font-size:12px!important}
-#seNext .sn-tags{margin-top:4px!important}#seNext .sn-tags i{padding:3px 8px!important;font-size:10px!important}
-#seNext canvas{width:32%!important;max-width:140px!important}
-#scrSeason .spanel{flex:none;padding:8px 12px!important}
-#scrSeason .spanel .field{margin:0!important}
-#scrSeason .spanel .field>label{margin-bottom:6px!important}
-#scrSeason .diffbar{flex-direction:row!important;align-items:center!important;gap:8px!important;padding:4px 6px 4px 8px!important;margin:0 0 5px!important}
-#scrSeason .diffbar>span{flex:0 0 54px;font-size:10px!important;letter-spacing:.12em!important;color:rgba(255,255,255,.65);overflow:hidden;text-overflow:ellipsis}
-#scrSeason .spanel .field>label{display:none!important}
-#scrSeason .scol:last-child .spanel .field>label{display:block!important}
-#scrSeason .diffbar .seg{max-width:none!important}
-#scrSeason .seg button{height:28px!important;font-size:11px!important;letter-spacing:.03em!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px!important}
-#seBtns{flex:none;flex-direction:row!important;gap:8px!important}#seBtns:empty{display:none}#seBtns .seMsg{margin:0!important;font-size:12px!important}#seBtns .mbtn{flex:1;padding:6px 30px 6px 12px!important;min-height:0;background:var(--carbon),var(--surf)!important;border:1px solid var(--f1l)!important;border-bottom:3px solid var(--f1r)!important;text-align:left;position:relative}#seBtns .mbtn::before{display:none!important}#seBtns .mbtn::after{content:'›'!important;position:absolute;right:10px;top:50%;left:auto!important;bottom:auto!important;width:auto!important;transform:translateY(-55%)!important;background:none!important;font-size:22px;color:#fff}#seBtns .mbtn b{font-size:14px!important}#seBtns .mbtn small{font-size:10px!important}
-#scrSeason .scol:last-child{overflow:hidden}
-#scrSeason .scol:last-child>.spanel:first-child{flex:1 1 0;min-height:0;display:flex;flex-direction:column}
-#scrSeason .scol:last-child>.spanel:first-child .field{flex:1;min-height:0;display:flex;flex-direction:column}
-#seTbl{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none}#seTbl::-webkit-scrollbar{display:none}
-#seTbl .stbl{width:100%;border-collapse:collapse}
-#seTbl .stbl th{position:sticky;top:0;z-index:2;background:#0c0c12!important;padding:5px 6px!important}
-#seTbl .stbl td{padding:4px 6px!important;font-size:13px}
-#seCal{display:flex!important;flex-direction:row!important;gap:6px;overflow-x:auto!important;max-height:none!important;scrollbar-width:none;padding-bottom:2px}
-#seCal::-webkit-scrollbar{display:none}
-#seCal div{flex:none;display:flex;align-items:center;gap:6px;padding:4px 10px 4px 8px!important;white-space:nowrap;font-size:12px}
-#seCal div small{display:none}#seCal div.done{opacity:.55}#seCal div.next small{display:inline;opacity:.7}
-#seCal div svg{width:18px!important;height:12px!important}
-@media (max-height:380px){#seNext .sn-l span,#seNext .sn-tags{display:none!important}#seNext canvas{max-width:90px!important}#scrSeason .scol:last-child .spanel .field>label{display:none!important}}
+/* Saison-Bildschirm (Karriere) in Reitern: Rennen · Tabelle · Kalender · Upgrades – je Reiter nur ein Thema, großzügig gesetzt (vorher alles gleichzeitig auf einer Seite) */
+#scrSeason.on{display:flex!important;flex-direction:column}
+.sehead{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0}
+.sehead .mh{margin:0!important;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block!important}
+.sehead .mh::before{display:inline-block!important;vertical-align:-2px;margin-right:10px!important}
+.sechips{display:flex;gap:6px;flex:none}
+.sechips i{font:700 11px "Titillium Web",sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:5px 10px;background:rgba(8,16,30,.7);border:1px solid var(--f1l);color:rgba(255,255,255,.75);white-space:nowrap}
+.sechips i b{color:#fff;font-weight:900;margin-left:5px}.sechips i.hot{border-color:var(--f1r)}.sechips i.gold b{color:#ffd400}
+.setabs{flex:none;display:flex;gap:6px;margin:10px 0 12px}
+.setabs button{position:relative;flex:1 1 0;min-width:0;height:44px;display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(8,16,30,.62);border:1px solid var(--f1l);border-bottom:3px solid transparent;color:rgba(255,255,255,.6);font:700 13px "Titillium Web",sans-serif;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;transition:background .15s,color .15s}
+.setabs button.on{background:linear-gradient(180deg,rgba(36,60,96,.95),rgba(14,26,46,.95));color:#fff;border-color:var(--f1l2);border-bottom-color:var(--f1r)}
+.setabs button em{font-style:normal;font-weight:900;font-size:11px;letter-spacing:.04em;padding:2px 7px;background:#ffd400;color:#0a1424}
+.sepanes{flex:1;min-height:0;position:relative}
+.sepane{position:absolute;inset:0;display:none;overflow-y:auto;scrollbar-width:none}.sepane::-webkit-scrollbar{display:none}
+.sepane.on{display:block;animation:f1in .25s cubic-bezier(.2,.8,.2,1)}
+.sepane[data-pane=race].on{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:12px;align-items:stretch}
+#seNext{min-height:0!important;height:100%;padding:16px 18px 16px 24px!important;align-items:center}
+#seNext .sn-l small{font-size:11px!important;letter-spacing:.16em!important}
+#seNext .sn-l b{font-size:clamp(28px,10vh,52px)!important;line-height:1!important}
+#seNext .sn-l span{font-size:13px!important}
+#seNext .sn-tags{margin-top:10px!important}#seNext .sn-tags i{padding:5px 10px!important;font-size:11px!important;border-radius:0!important}
+#seNext canvas{width:40%!important;max-width:240px!important}
+.seside{display:flex;flex-direction:column;gap:8px;min-height:0;overflow-y:auto;scrollbar-width:none}.seside::-webkit-scrollbar{display:none}
+.seside .spanel{flex:none;padding:8px 12px 10px!important}
+.selab{font:700 10.5px "Titillium Web",sans-serif;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:5px}
+#scrSeason .seg{display:flex;flex-wrap:wrap;gap:4px;background:none!important;padding:0!important;max-width:none!important}
+#scrSeason .seg button{flex:1 1 0;min-width:58px;height:30px!important;font-size:12px!important;letter-spacing:.04em!important;white-space:nowrap;padding:0 6px!important}
+#seBtns{flex:none;flex-direction:column!important;gap:8px!important}#seBtns:empty{display:none}
+#seBtns .seMsg{margin:0!important;font-size:13px!important;padding:10px 12px;background:rgba(255,212,0,.1);border:1px solid rgba(255,212,0,.4)}
+#seBtns .mbtn{padding:9px 34px 9px 12px!important;min-height:0;background:var(--surf)!important;border:1px solid var(--f1l)!important;border-bottom:3px solid var(--f1r)!important;text-align:left;position:relative}
+#seBtns .mbtn::before{display:none!important}
+#seBtns .mbtn::after{content:'›'!important;position:absolute;right:12px;top:50%;left:auto!important;bottom:auto!important;width:auto!important;transform:translateY(-55%)!important;background:none!important;font-size:22px;color:#fff}
+#seBtns .mbtn b{font-size:14px!important}#seBtns .mbtn small{font-size:10px!important}
+.sebar{display:flex;gap:3px;margin-bottom:10px}.sebar i{flex:1;height:6px;background:rgba(150,205,255,.16)}.sebar i.d{background:#33e070}.sebar i.n{background:var(--f1r)}
+.sestats{display:flex;gap:8px}.sestats span{flex:1;min-width:0;display:flex;flex-direction:column;font:700 10px "Titillium Web",sans-serif;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sestats b{font-size:20px;font-weight:900;letter-spacing:0;color:#fff;line-height:1.15}
+/* Tabelle: alle Fahrer, zwei Spalten nebeneinander, eigene Zeile hervorgehoben */
+#seTbl{columns:2;column-gap:12px}
+#seTbl .strow{break-inside:avoid;display:grid;grid-template-columns:34px 4px minmax(0,1fr) auto auto;align-items:center;gap:10px;height:34px;padding:0 12px 0 0;margin-bottom:4px;background:rgba(8,16,30,.9);border:1px solid rgba(150,205,255,.14);font-size:14px;font-weight:600}
+#seTbl .strow .n{height:100%;display:grid;place-items:center;background:rgba(150,205,255,.1);font-weight:900}
+#seTbl .strow i{height:18px}#seTbl .strow .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#seTbl .strow .tmn{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45);white-space:nowrap}
+#seTbl .strow .pt{font-weight:900;min-width:30px;text-align:right;font-variant-numeric:tabular-nums}
+#seTbl .strow.me{background:linear-gradient(90deg,#fff,#dde8f5);color:var(--ink);font-weight:900;border-color:#fff}#seTbl .strow.me .n{background:var(--f1r);color:#fff}#seTbl .strow.me .tmn{color:rgba(10,20,36,.6)}
+#seTbl .strow.top .n{color:#ffd400}
+/* Kalender: Karten im Raster – erledigt (mit Ergebnis), nächstes Rennen rot, kommende gedimmt */
+.secal{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.secal .cc{position:relative;display:flex;flex-direction:column;gap:3px;padding:9px 12px 10px;background:rgba(8,16,30,.9);border:1px solid rgba(150,205,255,.16);min-width:0}
+.secal .cc .ct{display:flex;align-items:center;justify-content:space-between;gap:6px;font:700 10.5px "Titillium Web",sans-serif;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5)}
+.secal .cc .ct svg{width:22px!important;height:14px!important;flex:none}
+.secal .cc b{font-size:17px;font-weight:900;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.secal .cc small{font-size:12px;font-weight:600;color:rgba(255,255,255,.6)}
+.secal .cc.done{border-left:3px solid #33e070}.secal .cc.done small{color:#fff}.secal .cc.done small u{text-decoration:none;font-weight:900;color:#33e070;margin-left:6px}
+.secal .cc.next{background:linear-gradient(160deg,#e10600,#7a0300);border-color:#ff4a3a}.secal .cc.next .ct,.secal .cc.next small{color:rgba(255,255,255,.9)}
+.secal .cc.todo b{color:rgba(255,255,255,.7)}
+/* Upgrades als Reiter */
+.seup{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;height:100%}
+.seup .rpanel{min-height:0;overflow-y:auto}
+@media (max-width:760px){.sepane[data-pane=race].on{grid-template-columns:1fr}#seTbl{columns:1}.seup{grid-template-columns:1fr;height:auto}.sechips{display:none}.setabs button{letter-spacing:.06em;font-size:12px}}
+@media (max-height:470px){#seProg{display:none}.setabs{margin:8px 0 10px}.setabs button{height:40px}}
+@media (max-height:380px){.setabs{margin:6px 0 8px}.setabs button{height:36px}#seNext .sn-l span{display:none!important}#seNext canvas{max-width:150px!important}.sechips{display:none}}
+/* Klassenwahl der Karriere: ruhiger – Status als Marke, gesperrte Klassen klar erkennbar */
+#carCards .scard .cst{border-top:0!important;margin-top:10px;padding:7px 10px!important;background:rgba(8,16,30,.6);border-left:3px solid var(--tc);font-size:12px!important;letter-spacing:.03em}
+#carCards .scard.cur{outline:2px solid #fff;outline-offset:-2px}
+#carCards .scard .ctag{position:absolute;top:10px;right:12px;font:900 10px "Titillium Web",sans-serif;letter-spacing:.16em;text-transform:uppercase;padding:3px 8px;background:var(--tc);color:#0a1424}
+#carCards .scard.locked .ctag{background:#8a8f98}
 
 /* ===== Designsprache des Tachos auf das ganze UI: Navy-Glas, hellblaue Kante oben, Zahlen weiß, Rot nur für Auswahl/Platzierung ===== */
 .card,.rpanel,.spanel,.tcard,.tm,.dcard,.hbtn,.rvar,.uprow,.mback,.mgear,.msteps,.stepper button,.big.alt{border-top-color:rgba(150,205,255,.55)!important}
@@ -795,7 +828,7 @@ th{background:#0c0c12!important;letter-spacing:.16em;font-size:10px!important;co
 #board .r .p{background:rgba(150,205,255,.1)!important}
 #board .r.me{background:linear-gradient(90deg,#fff,#dde8f5)!important}
 .hb{background:linear-gradient(180deg,rgba(26,44,72,.85),rgba(8,16,30,.85))!important;border:1px solid rgba(150,205,255,.3)!important}
-#controls .pad{background:repeating-linear-gradient(90deg,rgba(150,205,255,.04) 0 1px,transparent 1px 7px),linear-gradient(180deg,rgba(26,44,72,.5),rgba(8,16,30,.55))!important;border:1px solid rgba(150,205,255,.25)!important;border-top-color:rgba(150,205,255,.55)!important}
+#controls .pad{background:linear-gradient(180deg,rgba(26,44,72,.5),rgba(8,16,30,.55))!important;border:1px solid rgba(150,205,255,.25)!important;border-top-color:rgba(150,205,255,.55)!important}
 #controls .boostBtn{background:linear-gradient(180deg,rgba(26,44,72,.6),rgba(8,16,30,.65))!important}
 #lights{background:linear-gradient(180deg,rgba(26,44,72,.92),rgba(8,16,30,.92))!important;border:1px solid rgba(150,205,255,.35)!important}
 .seg,.chips button,.sw{background:rgba(8,16,30,.6)!important}
@@ -827,10 +860,12 @@ th{background:#0a1424!important}
 #ltime{font-size:23px!important;font-weight:900!important;letter-spacing:.02em!important;font-variant-numeric:tabular-nums;line-height:1.1}
 #lsub{font-size:10.5px!important;font-weight:700!important;letter-spacing:.06em;color:rgba(255,255,255,.62)!important;font-variant-numeric:tabular-nums}
 .hb{width:40px!important;height:40px!important;background:linear-gradient(180deg,rgba(40,40,52,.85),rgba(14,14,20,.85))!important;border:1px solid rgba(255,255,255,.14)!important;box-shadow:0 8px 18px -6px rgba(0,0,0,.6)!important}
-#speedo{filter:drop-shadow(0 10px 18px rgba(0,0,0,.5))!important;left:auto!important;transform:none!important;right:max(10px,env(safe-area-inset-right))!important;bottom:max(4px,env(safe-area-inset-bottom))!important}   /* unten rechts wie im F1-Spiel (Mitte verdeckte das eigene Auto) */
+#speedo{filter:none!important;will-change:transform;left:auto!important;transform:none!important;right:max(10px,env(safe-area-inset-right))!important;bottom:max(4px,env(safe-area-inset-bottom))!important}   /* unten rechts wie im F1-Spiel (Mitte verdeckte das eigene Auto) */
 #helmet{position:absolute;inset:0;pointer-events:none;display:none;z-index:0}
 body.cockpit.helmcam #helmet{display:block}
-#helmet svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+#helmet svg{position:absolute;inset:0;width:100%;height:100%;display:block;transform:translateZ(0)}   /* eigene, einmal gezeichnete Ebenen */
+#helmet .vrefl{position:absolute;top:0;bottom:0;left:-20%;right:-20%;will-change:transform;background:linear-gradient(135deg,transparent 42%,rgba(223,239,255,.14) 50%,rgba(255,255,255,.05) 56%,transparent 62%),radial-gradient(75% 75% at 50% -15%,transparent 55%,rgba(188,214,255,.07) 72%,transparent 80%)}
+#board{display:none!important}#tl{filter:none!important}   /* Platzierung steht im Tacho (unten Mitte) bzw. auf dem Lenkrad – die Liste oben links entfällt */
 #tc,#pos,#lap{display:none!important}   /* Rundenzeit, Position und Runde stehen jetzt im Tacho */
 
 #board{margin-top:0!important}
@@ -994,29 +1029,25 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
   </section>
 
   <section class="scr" id="scrSeason">
-    <h2 class="mh" id="seHead"></h2>
-    <div class="sgrid">
-      <div class="scol">
+    <div class="sehead"><h2 class="mh" id="seHead"></h2><div class="sechips" id="seChips"></div></div>
+    <nav class="setabs" id="seTabs"></nav>
+    <div class="sepanes">
+      <div class="sepane" data-pane="race">
         <div class="snext" id="seNext"></div>
-        <div class="spanel"><div class="field"><label>Rennwochenende</label>
-          <div class="diffbar"><span>Niveau</span><div class="seg" id="seDiff"></div></div>
-          <div class="diffbar"><span>Länge</span><div class="seg" id="seLen"></div></div></div></div>
+        <div class="seside">
+          <div class="spanel"><div class="selab">Niveau</div><div class="seg" id="seDiff"></div></div>
+          <div class="spanel"><div class="selab">Rennlänge</div><div class="seg" id="seLen"></div></div>
+          <div class="spanel seprog" id="seProg"></div>
+          <div id="seBtns" class="sbtns"></div>
+        </div>
       </div>
-      <div class="scol">
-        <div class="spanel"><div class="field"><label>Meisterschaftsstand</label><div id="seTbl"></div></div></div>
-        <div class="spanel"><div class="field"><label>Kalender</label><div class="ccal" id="seCal"></div></div></div>
-        <div id="seBtns" class="sbtns"></div>
-      </div>
+      <div class="sepane" data-pane="table"><div id="seTbl"></div></div>
+      <div class="sepane" data-pane="cal"><div class="secal" id="seCal"></div></div>
+      <div class="sepane" data-pane="up"><div class="seup"><div class="rpanel" id="upList"></div><div class="rpanel" id="upStats"></div></div></div>
     </div>
   </section>
 
-  <section class="scr" id="scrUpgrade">
-    <h2 class="mh" id="upHead">Upgrades</h2>
-    <div class="rgrid">
-      <div class="rpanel" id="upList"></div>
-      <div class="rpanel" id="upStats"></div>
-    </div>
-  </section>
+  <section class="scr" id="scrUpgrade"><h2 class="mh" id="upHead">Upgrades</h2></section>
 
   <section class="scr" id="scrRace">
     <h2 class="mh">Rennen einstellen</h2>
@@ -1761,7 +1792,7 @@ function bakeSky() {
 }
 function skyTick(dt) { SKYC.rot += dt * 0.0022; skyBox.material.uniforms.uRot.value = SKYC.rot; }
 function applySky() {
-  { const sk = TH.sky || [0x2468c4, 0x86bfee, 0xe6f0f8]; MIRMAT.color.setHex(sk[1]).lerp(new THREE.Color(sk[2]), 0.35).multiplyScalar(TH.night ? 0.22 : 0.95); }   /* Rückspiegel zeigen den Himmel dieser Strecke, nicht den Boden */
+  { const sk = TH.sky || [0x2468c4, 0x86bfee, 0xe6f0f8]; MIRMAT.emissive.setHex(sk[1]).lerp(new THREE.Color(sk[0]), 0.25).multiplyScalar(TH.night ? 0.5 : 0.8); }   /* Rückspiegel zeigen den Himmel dieser Strecke, nicht den Boden */
   const u = skyPB.material.uniforms, P = TH.phys || {};
   u.turbidity.value = P.turb ?? 4; u.rayleigh.value = P.ray ?? 1.5; u.mieCoefficient.value = P.mie ?? .005; u.mieDirectionalG.value = P.g ?? .8; u.skyGain.value = P.gain ?? 1;
   u.sunPosition.value.copy(skyMat.uniforms.sunDir.value); u.sunCosU.value = TH.sunCos ?? 0.99995667; skyMat.uniforms.sunExp.value = TH.sunExp ?? 900; skyMat.uniforms.haze.value = TH.haze ?? 0; skyMat.uniforms.hazeCol.value.setHex(TH.hazeCol ?? 0xffffff);
@@ -2475,10 +2506,10 @@ const mkWheelM = C => C ? C.lods.map((L, l) => {
   return { L: v(L.wheelL, hf), R: v(L.wheelR, hf), RL: v(L.rwheelL, hr), RR: v(L.rwheelR, hr) };
 }) : null;
 const WHEELM = mkWheelM(CARM), WHEELM2 = mkWheelM(CARM2);
-const MODELS = { f1: CARM ? { C: CARM, W: WHEELM, helm: [0.79, 0.18], rl: [0.315, -2.335], swPos: [0, 0.56, 0.68], swS: 0.82, cam: [0, 0.80, 0.22, 3.0],   /* Lenkrad IN der Cockpitwanne (vorher z 0,98 = unter dem Vorderdeck, darüber gemalt), Augenpunkt etwas weiter hinten mit leichtem Blick nach unten wie in echten Onboards */ tv: [0, 1.04, 0.02, 2.4] } : null, f2: CARM2 ? { C: CARM2, W: WHEELM2, helm: [0.80, 0.21], rl: [0.40, -2.468], rlS: [0.085, 0.075, 0.02], swPos: [0, 0.61, 0.64], swS: 0.8, cam: [0, 0.83, 0.20, 3.5],   /* swS: Lenkrad im F2 kleiner – die Kamera sitzt dort viel näher dran */ tv: [0, 1.04, 0.02, 2.4] } : null };
+const MODELS = { f1: CARM ? { C: CARM, W: WHEELM, helm: [0.79, 0.18], rl: [0.315, -2.335], swPos: [0, 0.60, 0.665], swS: 0.78, cam: [0, 0.80, 0.22, 3.0],   /* Lenkrad IN der Cockpitwanne (vorher z 0,98 = unter dem Vorderdeck, darüber gemalt), Augenpunkt etwas weiter hinten mit leichtem Blick nach unten wie in echten Onboards */ tv: [0, 1.04, 0.02, 2.4] } : null, f2: CARM2 ? { C: CARM2, W: WHEELM2, helm: [0.80, 0.21], rl: [0.40, -2.468], rlS: [0.085, 0.075, 0.02], swPos: [0, 0.61, 0.64], swS: 0.8, cam: [0, 0.83, 0.20, 3.5],   /* swS: Lenkrad im F2 kleiner – die Kamera sitzt dort viel näher dran */ tv: [0, 1.04, 0.02, 2.4] } : null };
 const COMPOUNDS = COMPOUNDS_;
 const WMAT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .88, metalness: .05, side: THREE.DoubleSide });
-const MIRMAT = new THREE.MeshStandardMaterial({ color: 0xdfe6ee, metalness: 1, roughness: .05, envMapIntensity: 1.15, side: THREE.DoubleSide });   // Spiegelglas: spiegelt die Umgebung (vorher eine einfarbig hellblaue, selbstleuchtende Fläche – im Cockpit ein weißer Klotz)
+const MIRMAT = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x86bfee, metalness: 0, roughness: 1, envMapIntensity: 0, side: THREE.DoubleSide });   /* Spiegelglas in der Himmelsfarbe der Strecke (nachts dunkel) – als Spiegel der Umgebung zeigte es Gras und Tribünen und wirkte grün */   // Spiegelglas: spiegelt die Umgebung (vorher eine einfarbig hellblaue, selbstleuchtende Fläche – im Cockpit ein weißer Klotz)
 const MATTE = new THREE.MeshStandardMaterial({ vertexColors: true, map: TEX.carbon, normalMap: TEX.carbonN, normalScale: new THREE.Vector2(.5, .5), roughness: .42, metalness: .35, side: THREE.DoubleSide });
 const col = h => new THREE.Color(h);
 function wheelGeo(w, comp) {
@@ -2613,21 +2644,27 @@ const LIVERY = {
 let haloFlatOn = false;   // TV-Kamera aktiv: Halos aller Autos einfarbig (siehe Kamera-Update)
 // Cockpit-Innenraum (Wunsch: einheitliche Farbe IM Cockpit): alles unterhalb des Cockpitrands innerhalb der Öffnung wird einfarbig dunkles Carbon –
 // vorher malte der Lackierungs-Shader Streifen, Keile und Akzentfarben auf die Innenwände. Maße aus dem Höhenraster der Modelle vermessen (Rand F1 0,62 m, F2 0,67 m).
-const COCK = { f1: { x: 0.165, z0: 0.10, z1: 0.71, y: 0.615, fl: 0.30, wd: 0.07 }, f2: { x: 0.19, z0: 0.0, z1: 0.67, y: 0.655, fl: 0.14, wd: 0.05 } }   /* z1 = knapp vor dem Lenkrad: davor bleibt die echte Karosserie (vorher bis 0,84 aufgeschnitten = dunkles Loch vor dem Lenkrad) */, COCK_COL = new THREE.Color(0x1d2026);
+const COCK = { f1: { x: 0.165, z0: 0.10, z1: 0.71, y: 0.615, fl: 0.30, wd: 0.07, wn: 0.04, zn0: 0.38, zn1: 0.52, yn: 0.625, yc: 0.645, hood: [0.655, 0.666, 0.925] },   /* wn: Öffnung auf Höhe von Lenkrad und Händen breiter (zn0..zn1 weicher Übergang) – das Lenkrad war breiter als die Öffnung und stach beim Lenken durch den Rand; hood: Abdeckung vor dem Lenkrad (Höhe hinten, vorn, Ende) */ f2: { x: 0.19, z0: 0.0, z1: 0.67, y: 0.655, fl: 0.14, wd: 0.05 } }   /* z1 = knapp vor dem Lenkrad: davor bleibt die echte Karosserie (vorher bis 0,84 aufgeschnitten = dunkles Loch vor dem Lenkrad) */, COCK_COL = new THREE.Color(0x1d2026);
 // Cockpitansicht (nur Spielerauto): Karosserieflächen INNERHALB der Öffnung (unter dem Rand) werden verworfen – das Modell hat dort beim F1 eine flache Abdeckung 4 cm unter dem Rand,
 // in der Lenkrad und Hände steckten (deshalb wurden sie früher als Overlay über das Auto gemalt und schwebten über der Nase). Statt dessen: eigene Cockpitwanne (cockTub) aus Carbon.
-const cockCutGLSL = k => { const c = COCK[k]; return '\n { float cw = ' + c.x.toFixed(3) + ' + clamp((' + c.y.toFixed(3) + ' - vCP.y) * 1.2, 0.0, ' + c.wd.toFixed(3) + '); if (abs(vCP.x) < cw && vCP.z > ' + c.z0.toFixed(3) + ' && vCP.z < ' + (c.z1 + 0.02).toFixed(3) + ' && vCP.y < ' + (c.y - 0.002).toFixed(3) + ' && vCP.y > ' + (c.fl - 0.02).toFixed(3) + ') discard; }'; };
+const cockWn = (c, z) => { if (!c.wn) return 0; const t = clamp((z - c.zn0) / (c.zn1 - c.zn0), 0, 1); return c.wn * t * t * (3 - 2 * t); };
+const cockCutGLSL = k => { const c = COCK[k], f = v => v.toFixed(3), wn = c.wn ? f(c.wn) + ' * smoothstep(' + f(c.zn0) + ', ' + f(c.zn1) + ', vCP.z)' : '0.0';
+  return '\n { float wn = ' + wn + '; float cw = ' + f(c.x) + ' + wn + clamp((' + f(c.y) + ' - vCP.y) * 1.2, 0.0, ' + f(c.wd) + '); float yt = wn > 0.0005 ? ' + f(c.yc || c.y) + ' : ' + f(c.y - 0.002) + '; if (abs(vCP.x) < cw && vCP.z > ' + f(c.z0) + ' && vCP.z < ' + f(c.z1 + 0.02) + ' && vCP.y < yt && vCP.y > ' + f(c.fl - 0.02) + ') discard; }'; };
 function cockCut(mat, k) { const m = mat.clone(), ob = mat.onBeforeCompile, key = mat.customProgramCacheKey();
   m.onBeforeCompile = (sh, r) => { if (ob) ob.call(mat, sh, r); sh.vertexShader = 'varying vec3 vCP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vCP = position;'); sh.fragmentShader = 'varying vec3 vCP;\n' + sh.fragmentShader.replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>' + cockCutGLSL(k)); };
   m.customProgramCacheKey = () => key + '|cockcut-' + k; return m; }
 const COCK_MAT = (() => { const t = TEX.carbon.clone(), n = TEX.carbonN.clone(); for (const x of [t, n]) { x.repeat.set(1, 1); x.needsUpdate = true; } return new THREE.MeshStandardMaterial({ map: t, normalMap: n, normalScale: new THREE.Vector2(.35, .35), color: 0x3a3e46, roughness: .55, metalness: .25, side: THREE.DoubleSide }); })();
 const COCK_PAD = new THREE.MeshStandardMaterial({ color: 0x24252b, roughness: .95, metalness: 0, side: THREE.DoubleSide });   // Polster/Armaturenkante: matt schwarz
-function cockTub(k, bodyCol = 0x808890, swz = 0.68) {   // Wanne: schräge Seitenwände (oben so breit wie die Öffnung, unten breiter), Boden, Spritzwand vorn mit Armaturenkante, Rückwand; UV in Metern (Carbon-Webung ~ 3 cm)
+function cockTub(k, bodyCol = 0x808890, swz = 0.68, livMat = null) {   // Wanne: schräge Seitenwände (oben so breit wie die Öffnung, unten breiter), Boden, Spritzwand vorn mit Armaturenkante, Rückwand; UV in Metern (Carbon-Webung ~ 3 cm)
   const c = COCK[k], w0 = c.x + 0.003, w1 = c.x + c.wd, yT = c.y + 0.003, fl = c.fl, z0 = c.z0 - 0.01, z1 = c.z1 + 0.012, P = [], U = [];
   const quad = (a, b, d, e) => { for (const q of [a, b, d, a, d, e]) { P.push(...q); U.push((q[2] + q[0]) * 30, (q[1] + q[0] * 0.3) * 30); } };
-  for (const s of [-1, 1]) quad([s * w0, yT, z0], [s * w0, yT, z1], [s * w1, fl, z1], [s * w1, fl, z0]);
-  quad([-w1, fl, z0], [w1, fl, z0], [w1, fl, z1], [-w1, fl, z1]);
-  quad([-w0, yT, z1], [w0, yT, z1], [w1, fl, z1 + 0.02], [-w1, fl, z1 + 0.02]);
+  // Querschnitt je Längsposition: oben so breit wie die Öffnung (am Lenkrad breiter und etwas höher), darunter rasch breiter (wie der Schnitt in der Karosserie), dann senkrecht zum Boden
+  const wT = z => w0 + cockWn(c, z), yTop = z => yT + (c.wn ? (c.yn - c.y) * cockWn(c, z) / c.wn : 0), zs = [z0]; if (c.wn) for (let i = 0; i <= 8; i++) zs.push(c.zn0 + (c.zn1 - c.zn0) * i / 8); zs.push(z1);
+  for (let i = 0; i < zs.length - 1; i++) { const za = zs[i], zb = zs[i + 1]; if (zb - za < 1e-4) continue;
+    for (const s of [-1, 1]) { const A = z => [s * wT(z), yTop(z), z], B = z => [s * (wT(z) + c.wd), yTop(z) - c.wd / 1.2, z], C = z => [s * (wT(z) + c.wd), fl, z]; quad(A(za), A(zb), B(zb), B(za)); quad(B(za), B(zb), C(zb), C(za));
+      if (yTop(za) < c.y - 0.004 && yTop(zb) < c.y - 0.004) { const F = z => [s * (wT(z) + 0.05), yTop(z), z]; quad(A(za), A(zb), F(zb), F(za)); } }   /* Blende unter dem Deck: schließt den Spalt zwischen Wannenrand und Karosseriekante (sonst Blick ins Innere der Karosserie) */
+    quad([-(wT(za) + c.wd), fl, za], [wT(za) + c.wd, fl, za], [wT(zb) + c.wd, fl, zb], [-(wT(zb) + c.wd), fl, zb]); }
+  { const wa = wT(z1), ya = c.hood ? c.hood[0] : yTop(z1), yb2 = yTop(z1) - c.wd / 1.2; quad([-wa, ya, z1], [wa, ya, z1], [wa + c.wd, yb2, z1], [-(wa + c.wd), yb2, z1]); quad([-(wa + c.wd), yb2, z1], [wa + c.wd, yb2, z1], [wa + c.wd, fl, z1], [-(wa + c.wd), fl, z1]); }   // Spritzwand vorn: senkrecht und im selben Querschnitt wie die Seitenwände – vorher schräg nach vorn und schmaler, dahinter blitzte in den Ecken die Innenseite der Karosserie durch
   quad([-w0, yT, z0], [w0, yT, z0], [w1, fl, z0], [-w1, fl, z0]);
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.computeVertexNormals();
   const grp = new THREE.Group(), tub = new THREE.Mesh(g, COCK_MAT); grp.add(tub);
@@ -2636,10 +2673,19 @@ function cockTub(k, bodyCol = 0x808890, swz = 0.68) {   // Wanne: schräge Seite
     if (k === 'f2') { const R2 = 0.2, ky = 0.16, cov = new THREE.CylinderGeometry(R2, R2, 0.75, 28, 16, true, -Math.PI / 2, Math.PI); cov.rotateX(-Math.PI / 2);   /* -90°: Bogen nach oben */ cov.scale(1, ky, 1); cov.translate(0, 0.728 - R2 * ky, 0.665 + 0.375);
       const P = cov.attributes.position; for (let i = 0; i < P.count; i++) { const z = P.getZ(i), t = clamp((z - 1.2) / 0.22, 0, 1); P.setY(i, lerp(P.getY(i), 0.66, t * t * (3 - 2 * t))); } cov.computeVertexNormals();
       grp.add(new THREE.Mesh(cov, new THREE.MeshPhysicalMaterial({ color: bodyCol, roughness: .32, metalness: .2, clearcoat: .85, clearcoatRoughness: .12 }))); }
-    for (const s2 of [-1, 1]) { const zE = swz - 0.2, pad = new THREE.CapsuleGeometry(0.045, Math.max(0.04, zE - c.z0 - 0.09), 4, 12); pad.rotateX(Math.PI / 2); pad.scale(0.8, 1.15, 1); pad.translate(s2 * (w0 - 0.03), c.y - 0.008, (c.z0 + zE) / 2);   /* Kopf-/Schulterpolster, ragen über den Rand; enden 20 cm vor dem Lenkrad (Hände frei) */ grp.add(new THREE.Mesh(pad, COCK_PAD)); } }   // Seitenpolster
-  // gepolsterter Cockpitrand rundherum (schwarzer Wulst entlang der Öffnung, vorn im Bogen um das Lenkrad)
-  { const V = THREE.Vector3, y = c.y + 0.004, zf = c.z1 + 0.01, pts = [new V(-w0, y, c.z0 - 0.02), new V(-w0, y, zf - 0.12), new V(-w0 * 0.75, y + 0.006, zf - 0.03), new V(0, y + 0.012, zf), new V(w0 * 0.75, y + 0.006, zf - 0.03), new V(w0, y, zf - 0.12), new V(w0, y, c.z0 - 0.02)];
-    grp.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, false, 'centripetal'), 64, 0.016, 8, false), COCK_PAD)); }
+ }   // (schwarze Seitenpolster entfernt: sie waren nur in der Cockpitansicht zu sehen)
+  // (kein schwarzer Randwulst mehr um die Öffnung – Wunsch: er war in keiner anderen Ansicht zu sehen; die Karosseriekante bildet den Rand)
+  // F1: lackierte Abdeckung vor dem Lenkrad – das Modell hat dort nur eine tiefer liegende, löchrige Fläche (dreieckiges Loch, in der Lackfarbe des Streifens)
+  if (c.hood) { const [ya, yb, ze] = c.hood, hw = wT(z1) + 0.02, nz = 22, nx = 20, nr = 7, rr = 0.03, HP = [], HI = [], zA = z1 - 0.012, zr = 0.80, hwz = z => { const q = clamp((z - zr) / (ze - zr), 0, 1), b = clamp((z - zA) / 0.05, 0, 1); return hw * Math.sqrt(Math.max(0.02, 1 - q * q)) * (0.875 + 0.125 * b * b * (3 - 2 * b)); };   /* hinten etwas schmaler als die Öffnung: die abgerollte Kante schneidet das Deck nicht */
+    // Querschnitt gewölbt, zu den Seiten weich auf die Höhe des Decks abfallend (keine senkrechte Schürze); vorn halbrund und nach unten gezogen; zum Fahrer hin rund abgerollt statt einer harten Kante
+    const yAt = (z, u) => { const t = clamp((z - zA) / (ze - zA), 0, 1), e = clamp((z - 0.86) / (ze - 0.86), 0, 1), a = Math.abs(u); return lerp(ya, yb, t) - 0.07 * e * e * e + 0.007 * (1 - u * u) * (1 - e) - 0.058 * a * a * a * a; };   /* Seiten tauchen klar unter das Deck (kein Flimmern an der Berührkante) */
+    const rows = [[zA, -(rr + 0.004)]];   /* endet knapp über dem Cockpitrand: darunter färbt der Lackierungs-Shader den Innenraum um (Grenze genau auf dieser Fläche = Flimmern) */ for (let k2 = 0; k2 <= nr; k2++) { const an = k2 / nr * Math.PI / 2; rows.push([zA + rr * (1 - Math.cos(an)), -rr * (1 - Math.sin(an))]); } for (let j = 1; j <= nz; j++) rows.push([zA + rr + (ze - zA - rr) * j / nz, 0]);
+    for (const [z, dy] of rows) for (let i = 0; i <= nx; i++) { const u = i / nx * 2 - 1; HP.push(u * hwz(z), yAt(Math.max(z, zA + rr), u) + dy, z); }
+    for (let j = 0; j < rows.length - 1; j++) for (let i = 0; i < nx; i++) { const a = j * (nx + 1) + i, b2 = a + 1, d = a + nx + 1, e = d + 1; HI.push(a, d, b2, b2, d, e); }
+    const hgn = new THREE.BufferGeometry(); hgn.setAttribute('position', new THREE.Float32BufferAttribute(HP, 3)); hgn.setIndex(HI); hgn.computeVertexNormals();   // gemeinsame Eckpunkte -> glatte Schattierung
+    // Lack: dasselbe Material wie die Karosserie (Lackierungs-Shader rechnet die Farbe aus der Position) -> Streifen und Farbfelder der Lackierung laufen nahtlos über die Abdeckung
+    { const n = hgn.attributes.position.count, cc = new Float32Array(n * 3), bc = new THREE.Color(bodyCol); for (let i = 0; i < n; i++) { cc[i * 3] = bc.r; cc[i * 3 + 1] = bc.g; cc[i * 3 + 2] = bc.b; } hgn.setAttribute('color', new THREE.BufferAttribute(cc, 3)); hgn.setAttribute('aCls', new THREE.BufferAttribute(new Float32Array(n), 1)); hgn.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(n * 2), 2)); }
+    grp.add(new THREE.Mesh(hgn, livMat || new THREE.MeshPhysicalMaterial({ color: bodyCol, roughness: .3, metalness: .2, clearcoat: 1, clearcoatRoughness: .08, side: THREE.DoubleSide }))); }
   grp.traverse(o => { if (o.isMesh) { o.frustumCulled = false; o.castShadow = false; } }); grp.visible = false; return grp; }
 
 const inCock = (k, x, y, z) => { const c = COCK[k]; return Math.abs(x) < c.x && z > c.z0 && z < c.z1 && y < c.y; };
@@ -6226,7 +6272,7 @@ const BOOST_NAME = 'ERS AKTIV';
 // rotem Ende), links davon Bremse- und rechts Gas-Balken, rechts die Gänge N–8 mit Drehzahl-Linie, links Fahrername und Rundenzeit.
 // Ein Zeichenverfahren für beide Fälle: o = Ellipse (cx, cy, rx, ry), Bandbreite t, Bogen th0..th1; full = mit Name/Zeit (TV-Ansicht über dem echten Halo).
 function haloDraw(g, o) {
-  const { cx, cy, rx, ry, t, th0, th1, full } = o, k = ry / rx, F = '"Titillium Web",system-ui,sans-serif', thC = Math.PI * 1.5;
+  const { cx, cy, rx, ry, t, th0, th1, full, visL = th0, visR = th1 } = o, k = ry / rx, F = '"Titillium Web",system-ui,sans-serif', thC = Math.PI * 1.5;
   const kmh = pl.v * 3.6, gi = gearP(kmh), pre = raceState === 'lights', f = clamp(pre ? 0.05 + 0.95 * (pl.rev || 0) : pl.v < 0.5 ? 0 : gi.f, 0, 1);
   const P = (th, d) => [cx + (rx - d) * Math.cos(th), cy + (ry - d * k) * Math.sin(th)], tan = th => Math.atan2(ry * Math.cos(th), -rx * Math.sin(th));
   const txt = (s2, th, d, size, col, w = 700, al = 'center') => { const [x, y] = P(th, d); g.save(); g.translate(x, y); g.rotate(tan(th)); g.font = w + ' ' + size + 'px ' + F; g.fillStyle = col; g.textAlign = al; g.textBaseline = 'middle'; g.fillText(s2, 0, 0); g.restore(); };
@@ -6243,23 +6289,25 @@ function haloDraw(g, o) {
   const nB = 8, bs = 0.2, br = pre ? 0 : (pl.brk || 0), th2 = pre ? (pl.rev || 0) : (pl.thr || 0);
   for (let i = 0; i < nB; i++) { const w = bs / nB, tl = thC - aw - (i + 1) * w, tr = thC + aw + i * w, onB = (nB - i) / nB <= br + 0.001, onT = (i + 1) / nB <= th2 + 0.001;
     quad(tl + w * 0.2, tl + w * 0.8, t * 0.2, t * 0.85, onB ? '#ff3b2f' : 'rgba(255,255,255,.12)'); quad(tr + w * 0.2, tr + w * 0.8, t * 0.2, t * 0.85, onT ? '#33e070' : 'rgba(255,255,255,.12)'); }
-  txt('BRAKE', thC - aw - bs * 0.55, t + t * 0.28, Math.max(7, t * 0.24), 'rgba(255,255,255,.8)', 600); txt('THROTTLE', thC + aw + bs * 0.55, t + t * 0.28, Math.max(7, t * 0.24), 'rgba(255,255,255,.8)', 600);
+  txt('BRAKE', thC - aw - 0.02, t + t * 0.28, Math.max(7, t * 0.24), 'rgba(255,255,255,.8)', 600, 'right'); txt('THROTTLE', thC + aw + 0.02, t + t * 0.28, Math.max(7, t * 0.24), 'rgba(255,255,255,.8)', 600, 'left');   /* bündig neben dem Tacho-Kreis: mittig gesetzt verschwand das „T“ von THROTTLE hinter dem Kreis */
   // Gänge + Drehzahl rechts
-  { const n0 = thC + aw + bs + 0.07, n1 = Math.min(th1 - 0.06, n0 + 0.5), G = ['N', 1, 2, 3, 4, 5, 6, 7, 8], cur = pl.v < 0.5 || pre ? 'N' : gi.g;
+  { const n0 = thC + aw + bs + 0.07, n1 = Math.max(n0 + 0.2, Math.min(th1 - 0.06, visR - 0.07, n0 + 0.5)), G = ['N', 1, 2, 3, 4, 5, 6, 7, 8], cur = pl.v < 0.5 || pre ? 'N' : gi.g;
     G.forEach((v, i) => { const th = n0 + (n1 - n0) * i / (G.length - 1), on = String(v) === String(cur); txt(String(v), th, t * 0.36, on ? t * 0.62 : t * 0.34, on ? '#ffffff' : 'rgba(255,255,255,.55)', on ? 800 : 600); });
     txt('GEARS', n1 + 0.035, t * 0.36, Math.max(6, t * 0.2), 'rgba(255,255,255,.6)', 600, 'left');
     g.lineWidth = Math.max(1.5, t * 0.07); g.strokeStyle = 'rgba(255,255,255,.18)'; g.beginPath(); g.ellipse(cx, cy, rx - t * 0.78, ry - t * 0.78 * k, 0, n0, n1); g.stroke();
     g.strokeStyle = f > 0.93 ? '#ff4a1a' : '#ffffff'; g.beginPath(); g.ellipse(cx, cy, rx - t * 0.78, ry - t * 0.78 * k, 0, n0, n0 + (n1 - n0) * f); g.stroke();
     txt('RPM x1000', (n0 + n1) / 2 + 0.05, t * 1.0, Math.max(6, t * 0.2), 'rgba(255,255,255,.55)', 600); }
   // links: Position, Runde, Rundenzeit (ersetzt die Anzeigen oben in der Mitte und oben links) – in der TV-Ansicht zusätzlich der Fahrername
-  { const n1 = thC - aw - bs - 0.07, n0 = th0 + 0.05, m = (n0 + n1) / 2, pos = Math.max(1, order.indexOf(pl) + 1), cur = raceState === 'race' && pl.lapsDone >= 0 && !pl.finished ? raceTime - pl.lapStart : 0;
+  { const n1 = thC - aw - bs - 0.07, n0 = Math.min(Math.max(th0 + 0.05, visL + 0.02), n1 - 0.2), pos = Math.max(1, order.indexOf(pl) + 1), cur = raceState === 'race' && pl.lapsDone >= 0 && !pl.finished ? raceTime - pl.lapStart : 0;   /* n0: erst ab dem sichtbaren Teil des Bogens – in der TV-Ansicht lag die Platzierung sonst außerhalb des Bildes bzw. unter den Lenktasten */
     g.save(); g.lineWidth = 1.4; g.strokeStyle = 'rgba(225,6,0,.9)'; g.beginPath(); g.ellipse(cx, cy, rx - t * 0.08, ry - t * 0.08 * k, 0, n0, n1); g.ellipse(cx, cy, rx - t * 0.92, ry - t * 0.92 * k, 0, n1, n0, true); g.closePath(); g.stroke();
     g.font = '800 ' + t * 0.44 + 'px ' + F; const pw = (g.measureText('P' + pos).width + t * 0.5) / (rx - t * 0.5), pe = n0 + pw;   // roter Block genau so breit wie „P16“ + Rand
     g.fillStyle = 'rgba(225,6,0,.9)'; g.beginPath(); g.ellipse(cx, cy, rx - t * 0.08, ry - t * 0.08 * k, 0, n0, pe); g.ellipse(cx, cy, rx - t * 0.92, ry - t * 0.92 * k, 0, pe, n0, true); g.closePath(); g.fill(); g.restore();
     txt('P' + pos, (n0 + pe) / 2, t * 0.5, t * 0.44, '#fff', 800);
-    const mm = (pe + 0.02 + n1) / 2, nm = String(pl.name || '').split(' ').pop().toUpperCase();
-    txt((full ? nm + '  ' : '') + 'RUNDE ' + clamp(pl.lapsDone + 1, 1, S.laps) + '/' + S.laps, mm, t * 0.3, t * 0.27, 'rgba(255,255,255,.75)', 700);
-    txt(cur ? fmt(cur) : pl.best ? fmt(pl.best) : '0:00.000', mm, t * 0.68, t * 0.4, '#fff', 800); }
+    const mm = (pe + 0.02 + n1) / 2, nm = String(pl.name || '').split(' ').pop().toUpperCase(), lapS = 'RUNDE ' + clamp(pl.lapsDone + 1, 1, S.laps) + '/' + S.laps, av = (n1 - pe - 0.04) * (rx - t * 0.5);
+    const fit = (str, size, w) => { g.font = w + ' ' + size + 'px ' + F; const m = g.measureText(str).width; return m > av ? size * av / m : size; };   // passt der Text nicht in den sichtbaren Abschnitt, wird er kleiner gesetzt
+    g.font = '700 ' + t * 0.27 + 'px ' + F; const l1 = full && g.measureText(nm + '  ' + lapS).width <= av ? nm + '  ' + lapS : lapS, tm = cur ? fmt(cur) : pl.best ? fmt(pl.best) : '0:00.000';
+    txt(l1, mm, t * 0.3, fit(l1, t * 0.27, 700), 'rgba(255,255,255,.75)', 700);
+    txt(tm, mm, t * 0.68, fit(tm, t * 0.4, 800), '#fff', 800); }
   // Tacho-Kreis oben
   g.fillStyle = 'rgba(10,16,28,.88)'; g.beginPath(); g.arc(gx, gy, r0, 0, Math.PI * 2); g.fill(); g.lineWidth = 1.2; g.strokeStyle = 'rgba(150,205,255,.5)'; g.stroke();
   { const s0 = Math.PI * 0.75, s1 = Math.PI * 2.25, fr = clamp(kmh / 350, 0, 1), rr = r0 * 0.84; g.lineCap = 'round'; g.lineWidth = Math.max(2.5, r0 * 0.11);
@@ -6285,20 +6333,22 @@ const HHC = $('#haloHud'), HHG = HHC.getContext('2d'), _hv = new THREE.Vector3()
     + '<path filter="url(#hb)" fill="#070709" fill-rule="evenodd" d="M-60,-60H1060V1060H-60Z ' + op + '"/>'   // Helmschale/Polster: alles außerhalb der Visieröffnung
     + '<path filter="url(#hb2)" d="' + op + '" fill="none" stroke="#3a3c44" stroke-opacity=".55" stroke-width="10"/>'   // Lichtkante des Polsters
     + '</svg>'
-    + visorSVG(); }
+    + visorSVG(1 + Math.floor(Math.random() * 2147483000)) + '<div class="vrefl"></div>'; }   /* Spiegelung als eigene Ebene: wird nur verschoben (Grafikkarte), nie neu gezeichnet */
 // Visier: feine Kratzer, ein paar Schmutzpunkte (Gummiabrieb, Insekten) und eine weiche Spiegelung, die beim Umschauen leicht mitwandert
-function visorSVG() { let sd = 7; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647; let sc = '', dt2 = '';
-  for (let i = 0; i < 26; i++) { const x = 80 + R() * 840, y = 90 + R() * 700, l = 30 + R() * 150, a = (R() - 0.5) * 0.9, x2 = x + Math.cos(a) * l, y2 = y + Math.sin(a) * l, cx2 = (x + x2) / 2 + (R() - 0.5) * 30, cy2 = (y + y2) / 2 + (R() - 0.5) * 30;
+function visorSVG(seed = 7) { let sd = seed % 2147483647 || 7; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647; let sc = '', dt2 = ''; R(); R();
+  const nS = 14 + Math.floor(R() * 16), nD = 8 + Math.floor(R() * 12), tilt = (R() - 0.5) * 0.8;   // Anzahl, Lage und Hauptrichtung der Kratzer bei jedem Rennen anders
+  for (let i = 0; i < nS; i++) { const x = 80 + R() * 840, y = 90 + R() * 700, l = 30 + R() * 150, a = tilt + (R() - 0.5) * 0.9, x2 = x + Math.cos(a) * l, y2 = y + Math.sin(a) * l, cx2 = (x + x2) / 2 + (R() - 0.5) * 30, cy2 = (y + y2) / 2 + (R() - 0.5) * 30;
     sc += '<path d="M' + x.toFixed(0) + ',' + y.toFixed(0) + ' Q' + cx2.toFixed(0) + ',' + cy2.toFixed(0) + ' ' + x2.toFixed(0) + ',' + y2.toFixed(0) + '" stroke="#fff" stroke-opacity="' + (0.09 + R() * 0.12).toFixed(3) + '" stroke-width="' + (0.6 + R() * 0.9).toFixed(1) + '" fill="none"/>'; }
-  for (let i = 0; i < 14; i++) { const x = 60 + R() * 880, y = 60 + R() * 820, r = 1.5 + R() * 4.5, edge = Math.min(x, 1000 - x, y, 1000 - y) < 220; if (!edge && R() < 0.6) continue;
+  for (let i = 0; i < nD; i++) { const x = 60 + R() * 880, y = 60 + R() * 820, r = 1.5 + R() * 4.5, edge = Math.min(x, 1000 - x, y, 1000 - y) < 220; if (!edge && R() < 0.6) continue;
     dt2 += '<ellipse cx="' + x.toFixed(0) + '" cy="' + y.toFixed(0) + '" rx="' + r.toFixed(1) + '" ry="' + (r * (0.6 + R() * 0.6)).toFixed(1) + '" fill="#2a2018" fill-opacity="' + (0.4 + R() * 0.35).toFixed(2) + '"/>'; }
-  return '<svg class="visor" viewBox="0 0 1000 1000" preserveAspectRatio="none"><defs><filter id="vb"><feGaussianBlur stdDeviation="1.4"/></filter><linearGradient id="vr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".42" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#dfefff" stop-opacity=".14"/><stop offset=".56" stop-color="#fff" stop-opacity=".05"/><stop offset=".62" stop-color="#fff" stop-opacity="0"/></linearGradient>'
-    + '<radialGradient id="vs" cx=".5" cy="-.15" r=".75"><stop offset=".55" stop-color="#bcd6ff" stop-opacity="0"/><stop offset=".72" stop-color="#bcd6ff" stop-opacity=".07"/><stop offset=".8" stop-color="#bcd6ff" stop-opacity="0"/></radialGradient></defs>'
-    + '<g class="vrefl"><rect x="-200" y="0" width="1400" height="1000" fill="url(#vr)"/><rect x="0" y="0" width="1000" height="1000" fill="url(#vs)"/></g>'
-    + '<g filter="url(#vb)">' + sc + dt2 + '</g></svg>'; }
+  return '<svg class="visor" viewBox="0 0 1000 1000" preserveAspectRatio="none"><defs><filter id="vb"><feGaussianBlur stdDeviation="1.4"/></filter></defs><g filter="url(#vb)">' + sc + dt2 + '</g></svg>'; }
+function visorNew() { const v = document.querySelector('#helmet .visor'); if (v) v.outerHTML = visorSVG(1 + Math.floor(Math.random() * 2147483000)); }   // neues Kratzer-/Schmutzbild (bei jedem Rennstart)
+const HH = { t: 0, on: null, obst: [], ot: 0 };
 function drawHaloHud() {
-  const on = running && S.cam === 3 && pl && pl.mesh && pl.mesh.tp; document.body.classList.toggle('tvcam', !!on); if (!on) return;
-  const dpr = Math.min(2, devicePixelRatio || 1), W = innerWidth, H = innerHeight; if (HHC.width !== Math.round(W * dpr) || HHC.height !== Math.round(H * dpr)) { HHC.width = Math.round(W * dpr); HHC.height = Math.round(H * dpr); }
+  const on = !!(running && S.cam === 3 && pl && pl.mesh && pl.mesh.tp); if (on !== HH.on) { HH.on = on; document.body.classList.toggle('tvcam', on); HH.t = 0; } if (!on) return;
+  { const tn = performance.now(); if (tn - HH.t < 30) return; HH.t = tn;   /* höchstens ~30× pro Sekunde: die Grafik ist bildschirmgroß, jedes Neuzeichnen lädt sie neu auf die Grafikkarte */
+    if (tn - HH.ot > 1000) { HH.ot = tn; HH.obst = [...document.querySelectorAll('#controls .pad, #controls .boostBtn, #tr .hb, #map')].map(e => e.getBoundingClientRect()).filter(r => r.width > 0); } }
+  const dpr = Math.min(1.5, devicePixelRatio || 1), W = innerWidth, H = innerHeight; if (HHC.width !== Math.round(W * dpr) || HHC.height !== Math.round(H * dpr)) { HHC.width = Math.round(W * dpr); HHC.height = Math.round(H * dpr); }
   const pr = (x, y, z) => { _hv.set(x, y, z); pl.mesh.g.localToWorld(_hv); _hv.project(camera); return [(_hv.x + 1) / 2 * W, (1 - _hv.y) / 2 * H]; };
   // Halo-Außenkante (vermessen am Modell): Scheitel vorn, dazu zwei Punkte weiter hinten an der Seite – Ellipse durch alle drei (Mittelpunkt per Suche)
   const isF2 = pl.mesh.tp.M === MODELS.f2, A = pr(0, isF2 ? 0.89 : 0.86, isF2 ? 0.49 : 0.76), sd = (x, y, z) => { const a = pr(x, y, z), b = pr(-x, y, z); return [Math.abs(a[0] - b[0]) / 2, (a[1] + b[1]) / 2]; };
@@ -6307,7 +6357,10 @@ function drawHaloHud() {
   for (let c = A[1] + 20; c < A[1] + H * 3; c += 2) { const r_y = c - A[1], qb = 1 - ((c - B[1]) / r_y) ** 2; if (qb <= 0.01) continue; const r_x = B[0] / Math.sqrt(qb), e = (C[0] / r_x) ** 2 + ((c - C[1]) / r_y) ** 2 - 1; if (e * e < best) { best = e * e; cy = c; rx = r_x; ry = r_y; } }
   if (!isFinite(rx) || rx < 40) return;
   HHG.setTransform(dpr, 0, 0, dpr, 0, 0); HHG.clearRect(0, 0, W, H);
-  haloDraw(HHG, { cx, cy, rx, ry, t: clamp(H * 0.085, 26, 46), th0: Math.PI + 0.02, th1: Math.PI * 2 - 0.02, full: true });
+  const t = clamp(H * 0.085, 26, 46), th0 = Math.PI + 0.02, th1 = Math.PI * 2 - 0.02, k = ry / rx;
+  const seen = th => { const x = cx + (rx - t * 0.5) * Math.cos(th), y = cy + (ry - t * 0.5 * k) * Math.sin(th); return x > 8 && x < W - 8 && y < H - 8 && !HH.obst.some(r => x > r.left - 6 && x < r.right + 6 && y > r.top - 6 && y < r.bottom + 6); };
+  let visL = th0, visR = th1; while (visL < Math.PI * 1.4 && !seen(visL)) visL += 0.01; while (visR > Math.PI * 1.6 && !seen(visR)) visR -= 0.01;   // Bogen nur dort beschriften, wo er im Bild und nicht unter den Tasten liegt
+  haloDraw(HHG, { cx, cy, rx, ry, t, th0, th1, full: true, visL, visR });
 }
 
 /* ======================= Eingabe ======================= */
@@ -6781,7 +6834,7 @@ function warmUpTrack() {
 }
 function precompile() { try { const prev = renderer.getRenderTarget(); if (composer) renderer.setRenderTarget(composer.renderTarget1); renderer.compile(scene, camera); renderer.setRenderTarget(prev); } catch (e) { console.warn('precompile', e); }
   // Materialien, die erst beim Kamerawechsel auftauchen (Cockpit: aufgeschnittene Karosserie + Wanne, TV-Kamera: einfarbiges Halo), jetzt mit übersetzen – sonst Hänger beim ersten Umschalten
-  try { const m = pl && pl.mesh; if (m) { const tp = m.tp || {}, k = tp.M === MODELS.f2 ? 'f2' : 'f1'; if (m.tp) { tp.cutGloss ||= cockCut(tp.glossMat, k); tp.cutMatte ||= cockCut(MATTE, k); if (!m.tub) { m.tub = cockTub(k, cockBodyCol(), (tp.M.swPos || [0, 0, 0.68])[2]); m.g.add(m.tub); } }
+  try { const m = pl && pl.mesh; if (m) { const tp = m.tp || {}, k = tp.M === MODELS.f2 ? 'f2' : 'f1'; if (m.tp) { tp.cutGloss ||= cockCut(tp.glossMat, k); tp.cutMatte ||= cockCut(MATTE, k); if (!m.tub) { m.tub = cockTub(k, cockBodyCol(), (tp.M.swPos || [0, 0, 0.68])[2], tp.glossMat); m.g.add(m.tub); } }
       const sc = new THREE.Scene(), add = (g, mt) => { const o = new THREE.Mesh(g, mt); o.frustumCulled = false; sc.add(o); }; if (m.tp) { add(m.body.geometry, tp.cutGloss); add(m.matte.geometry, tp.cutMatte); if (tp.haloFlat) add(tp.haloFlat, tp.haloMat); m.tub.traverse(o => { if (o.isMesh) add(o.geometry, o.material); }); }
       ARMS.f1 ||= makeArms(true, 0.033); ARMS.road ||= makeArms(false, 0.023, true);
       for (const G of [SW.g, ARMS.f1.g, ARMS.road.g]) G.traverse(o => { if (o.isMesh) add(o.geometry, o.material); }); sc.add(...scene.children.filter(o => o.isLight).map(l => l.clone())); sc.fog = scene.fog; sc.environment = scene.environment;
@@ -6821,7 +6874,7 @@ function startRace() {
   document.body.classList.toggle('noBoost', !!SERIES[SER].noBoost);
   diff = DIFF[S.diff] || DIFF.mid;
   seriesProfiles();
-  placeOnGrid(); precompile(); warmUpTrack();
+  placeOnGrid(); precompile(); warmUpTrack(); visorNew();
   DYN.acc = DYN.n = DYN.bad = DYN.calm = 0; DYN.tChg = performance.now() + 5000;   /* Auflösung in den ersten 15 s nicht umschalten: jede Umschaltung legt alle Render-Ziele neu an (Hänger genau am Start) */
   raceSongPick(false);
   $('#hud').style.visibility = ''; running = true; hadRace = true; paused = false; resultsShown = false; raceState = 'lights'; lightsT = 0; lightsOut = 5 + Math.random() * 1.4;
@@ -7166,7 +7219,7 @@ const SW = (() => {
     [[-0.052, 0xc8263a], [0, 0x2f6fd0], [0.052, 0xd9b21c]].forEach(([x, rc]) => { const y = -0.058; cyl(0.019, 0.005, x, y, 0.0355, col(rc), 24); cyl(0.0165, 0.008, x, y, 0.039, blk, 24); cyl(0.0125, 0.017, x, y, 0.049, alu, 12, 0.0115); box(0.0028, 0.011, 0.002, x, y + 0.0065, 0.0582, wht); });
     mk(mergeParts(P), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .55, metalness: .25 }), 61);
   }
-  const sc = document.createElement('canvas'); sc.width = 640; sc.height = 320; const tex = new THREE.CanvasTexture(sc); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+  const sc = document.createElement('canvas'); sc.width = 640; sc.height = 320; const tex = new THREE.CanvasTexture(sc); tex.colorSpace = THREE.SRGBColorSpace; tex.generateMipmaps = false; tex.minFilter = THREE.LinearFilter;   /* keine Mipmaps: sie wurden bei jeder Aktualisierung des Displays neu berechnet */
   mk(new THREE.PlaneGeometry(0.16, 0.08).translate(0, 0.026, 0.0378), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }), 63);
   return { g, sc, tex, t: 0 };
 })();
@@ -7296,21 +7349,21 @@ function cockBodyCol() { const T = (typeof LIVS !== 'undefined' && LIVS[pl.team]
 function cockpitInterior(on) {
   const m = pl && pl.mesh; if (cockOn && (!on || cockOn !== m)) { cockOn.body.material = cockOn.tp.glossMat; cockOn.matte.material = MATTE; if (cockOn.tub) cockOn.tub.visible = false; cockOn = null; }
   if (!on || cockOn === m) return; const tp = m.tp, k = tp.M === MODELS.f2 ? 'f2' : 'f1';
-  tp.cutGloss ||= cockCut(tp.glossMat, k); tp.cutMatte ||= cockCut(MATTE, k); if (!m.tub) { m.tub = cockTub(k, cockBodyCol(), (tp.M.swPos || [0, 0, 0.68])[2]); m.g.add(m.tub); }
+  tp.cutGloss ||= cockCut(tp.glossMat, k); tp.cutMatte ||= cockCut(MATTE, k); if (!m.tub) { m.tub = cockTub(k, cockBodyCol(), (tp.M.swPos || [0, 0, 0.68])[2], tp.glossMat); m.g.add(m.tub); }
   m.body.material = tp.cutGloss; m.matte.material = tp.cutMatte; m.tub.visible = true; cockOn = m; }
 function drawWheel(dt) {
   SW.g.visible = running && S.cam === 2 && !pl.mesh.road && !pl.mesh.kart;   // Roadster und Kart haben ihr eigenes rundes Lenkrad am Auto
   if (pl.mesh.tp) { SW.g.position.set(...(pl.mesh.tp.M.swPos || [0, 0.605, 0.98])); SW.g.scale.setScalar(pl.mesh.tp.M.swS || 1); }   // Lenkradposition je Modell (F2 sitzt weiter hinten und tiefer)
   document.body.classList.toggle('cockpit', running && S.cam === 2);
   document.body.classList.toggle('helmcam', S.helm !== false);   /* Helmrand (Einstellung „Helmrand“) */
-  if (running && S.cam === 2) { const vr = document.querySelector('#helmet .vrefl'); if (vr) vr.setAttribute('transform', 'translate(' + (-(HEAD.look || 0) * 900 - (HEAD.x || 0) * 600).toFixed(1) + ',0)'); }   /* Spiegelung wandert gegen die Kopfdrehung */
+  if (running && S.cam === 2 && S.helm !== false) { const px = Math.round(-((HEAD.look || 0) * 0.9 + (HEAD.x || 0) * 0.6) * innerWidth); if (px !== SW.vr) { SW.vr = px; (SW.vrEl ||= document.querySelector('#helmet .vrefl')).style.transform = 'translate3d(' + px + 'px,0,0)'; } }   /* Spiegelung wandert gegen die Kopfdrehung – nur als Verschiebung einer fertigen Ebene (vorher wurde das ganze Visier-SVG samt Unschärfefilter in jedem Bild neu gezeichnet = Ruckeln) */
   cockpitInterior(SW.g.visible && !!pl.mesh.tp);
   if (running && S.cam === 2 && pl.mesh.road) roadDashTick(dt);
   armsTick();
   if (!SW.g.visible) return;
   if (SW.g.parent !== pl.mesh.g) pl.mesh.g.add(SW.g); // Lenkrad sitzt fest im Auto und bewegt/wackelt mit ihm
   SW.g.rotation.set(0.45, Math.PI, -(pl.steer || 0) * SW_ROT);
-  SW.t -= dt; if (SW.t > 0) return; SW.t = 0.07;
+  SW.t -= dt; if (SW.t > 0) return; SW.t = 0.1;
   const g = SW.sc.getContext('2d'), w = 640, h = 320, kmh = Math.round(pl.v * 3.6), gi = gearInfo(kmh), F = 'system-ui,sans-serif';
   // Rahmen + Display-Hintergrund mit leichtem Raster
   g.fillStyle = '#020305'; g.fillRect(0, 0, w, h); g.fillStyle = '#07090d'; g.fillRect(14, 44, w - 28, h - 58);
@@ -7441,15 +7494,6 @@ function updateHUD(dt) {
   if (ahead && !ahead.finished) gh += '▲ ' + ahead.code + ' +' + (Math.abs(ahead.d - pl.d) / Math.max(pl.v, 25)).toFixed(1) + 's<br>';
   if (behind) gh += '▼ ' + behind.code + ' −' + (Math.abs(pl.d - behind.d) / Math.max(behind.v, 25)).toFixed(1) + 's';
   setH('#gaps', raceState === 'race' ? gh : '');
-  const show = new Set((pos <= 3 ? [0, 1, 2, 3] : [0, pos - 2, pos - 1, pos]).filter(i => i >= 0 && i < order.length));
-  let h = '', prev = -1;
-  [...show].sort((a, b) => a - b).forEach(i => {
-    if (prev >= 0 && i - prev > 1) h += '<div class="sep"></div>';
-    const c = order[i];
-    h += '<div class="r' + (c === pl ? ' me' : '') + '"><span class="p">' + (i + 1) + '</span><i style="background:' + hex(uiCol(TEAMS[c.team])) + '"></i>' + c.code + '</div>';
-    prev = i;
-  });
-  setH('#board', h);
   drawMap();
 }
 function showResults() {
@@ -7785,6 +7829,7 @@ function flagSVG(k) {
 }
 const contrast = n => { const c = new THREE.Color(n); return .3 * c.r + .59 * c.g + .11 * c.b > .5 ? '#06080c' : '#ffffff'; };
 function showScreen(k) {
+  if (k === 'upgrade') { MENU.seTab = 'up'; k = 'season'; }   // Upgrades sind jetzt ein Reiter des Saison-Bildschirms
   if (k === 'title') { setMode('quick'); CHP = null; QL = false; applyPM(); quickRestore(); }   // geladene Saison nicht in Schnelle Rennen mitnehmen (sonst zählt ein Schnelles Rennen als Karriere-Rennen)
   MENU.scr = k; $('#menu').dataset.scr = k;
   $$('#menu .scr').forEach(e => e.classList.toggle('on', e.id === 'scr' + k[0].toUpperCase() + k.slice(1)));
@@ -7796,7 +7841,7 @@ function showScreen(k) {
   nb.innerHTML = (k === 'race' ? (MENU.mode === 'tt' ? 'Zeitrennen starten' : 'Rennen starten') : k === 'name' ? 'Karriere starten' : k === 'season' ? seasonNextLabel() : car && k === 'driver' ? 'Saison starten' : 'Weiter') + ' <span>›</span>';
   renderMenu();
   if (k === 'track') { renderTracks(); renderMenu(); }   // Streckenliste je nach Klasse (Kartbahnen nur beim Kart)
-  if (k === 'title') renderTitle(); else if (k === 'series') { setSeries(SER, true); renderSeriesCards(); } else if (k === 'career') renderCareer(); else if (k === 'season') renderSeason(); else if (k === 'upgrade') renderUpgrade(); else if (k === 'name') renderName();
+  if (k === 'title') renderTitle(); else if (k === 'series') { setSeries(SER, true); renderSeriesCards(); } else if (k === 'career') renderCareer(); else if (k === 'season') renderSeason();  else if (k === 'name') renderName();
 }
 function menuNext() {
   const k = MENU.scr, car = MENU.mode === 'career';
@@ -7816,7 +7861,7 @@ function menuNext() {
 function menuBack() {
   const k = MENU.scr, car = MENU.mode === 'career';
   if (k === 'series' || k === 'career' || k === 'name') return showScreen('title');
-  if (car) { if (k === 'season') return showScreen('career'); if (k === 'upgrade') return showScreen('season'); if (k === 'team') return showScreen(CHP && CHP.done ? 'season' : 'career'); if (k === 'driver') return showScreen('team'); return showScreen('title'); }
+  if (car) { if (k === 'season') return showScreen('title'); if (k === 'team') return showScreen(CHP && CHP.done ? 'season' : 'title'); if (k === 'driver') return showScreen('team'); return showScreen('title'); }
   const i = SCR.indexOf(k); if (i > 0) showScreen(SCR[i - 1]);
 }
 // ===== Karriere-Menüs =====
@@ -7830,7 +7875,7 @@ function renderSeriesCards() {
 }
 function renderTitle() {
   const c = CAREER ? loadChamp() : null, tiers = ['kart', 'f2', 'f1'], nm = { kart: 'Kart', f2: 'F2', f1: 'F1' };
-  $('#cSub').textContent = !CAREER ? 'Vom Kart bis in die Formel 1' : CAREER.name + (c ? ' · ' + SERIES[c.ser].name + (c.done ? ' · Saison beendet' : ' · Rennen ' + (c.round + 1) + '/' + calFor(c.ser).length) : ' · Klasse wählen');
+  $('#cSub').textContent = !CAREER ? 'Vom Kart bis in die Formel 1' : CAREER.name + (c ? ' · ' + SERIES[c.ser].name + (c.done ? ' · Saison beendet' : ' · Rennen ' + (c.round + 1) + '/' + calFor(c.ser).length) : ' · ' + SERIES[careerTier()].name);
   $('#cGo').textContent = !CAREER ? 'Neue Karriere ›' : c && !c.done ? 'Fortsetzen ›' : 'Weiter ›';
   $('#cState').innerHTML = '';
 }
@@ -7845,23 +7890,26 @@ const cleanName = n => String(n ?? '').replace(/[<>&"'`]/g, '').trim().slice(0, 
 function careerCreate() {
   const nm = cleanName($('#cName').value); if (!nm) { toast('Bitte gib deinen Namen ein'); $('#cName').focus(); return; }
   CAREER = carDef(); CAREER.name = nm; CAREER.helmet = MENU.helm || 0xe10600; saveCar(); CHP = null; try { localStorage.removeItem('f1champ'); } catch (e) {}
-  showScreen('career');
+  careerEnter('kart');
 }
 function renderCareer() {
   $('#carHead').textContent = 'Karriere · ' + CAREER.name;
   const c = loadChamp(), lk = { f2: !CAREER.unlock.f2, f1: !CAREER.unlock.f1 };
   const txt = t => {
     const bestTxt = CAREER.best[t] ? 'Beste Saison: Platz ' + CAREER.best[t] : '';
-    if (lk[t]) return t === 'f2' ? 'Gesperrt – Top 3 in der Kart-Saison' : 'Gesperrt – Top 3 in der F2-Saison';
-    if (c && c.ser === t) return c.done ? 'Saison beendet: Platz ' + c.finalPos : 'Rennen ' + (c.round + 1) + '/' + calFor(t).length + ' · ' + (c.pts[c.driver] || 0) + ' Pkt · ' + ({ s: 'Kurz', m: 'Mittel', l: 'Lang' }[LEN_LAPS[c.len] ? c.len : (t === 'kart' ? 'l' : 's')]) + ' · ' + ({ easy: 'Leicht', mid: 'Mittel', hard: 'Schwer', pro: 'Profi', leg: 'Legende' }[c.diff] || '');
-    return (t === 'kart' && CAREER.slot.kart ? 'Neue Saison starten' : 'Team wählen & Saison starten') + (bestTxt ? ' · ' + bestTxt : '');
+    if (lk[t]) return t === 'f2' ? 'Freischalten: Top 3 in der Kart-Saison' : 'Freischalten: Top 3 in der F2-Saison';
+    if (c && c.ser === t) return c.done ? 'Saison beendet: Platz ' + c.finalPos : 'Fortsetzen · Rennen ' + (c.round + 1) + '/' + calFor(t).length + ' · ' + (c.pts[c.driver] || 0) + ' Punkte';
+    return t === 'kart' && CAREER.slot.kart ? 'Neue Saison starten' : 'Team wählen & Saison starten';
   };
   const sub = { kart: '3 Rennen · Genk, Wackersdorf, Silverstone', f2: calFor('f2').length + ' Rennen · Kalender 2026', f1: calFor('f1').length + ' Rennen · Upgrades' };
-  $('#carCards').innerHTML = ['kart', 'f2', 'f1'].map(t => '<button class="tcard scard' + (lk[t] ? ' locked' : '') + '" data-tier="' + t + '" style="--tc:' + TIER_COL[t] + '"><div class="sbig">' + (t === 'kart' ? 'Karts' : t === 'f2' ? 'F2' : 'F1') + (lk[t] ? ' 🔒' : '') + '</div><div class="tn">' + (t === 'kart' ? 'Kart-Meisterschaft' : t === 'f2' ? 'Formula 2' : 'Formula 1') + '</div><div class="tf">' + sub[t] + '</div><div class="cst">' + txt(t) + '</div></button>').join('');
+  $('#carCards').innerHTML = ['kart', 'f2', 'f1'].map(t => '<button class="tcard scard' + (lk[t] ? ' locked' : '') + (c && c.ser === t ? ' cur' : '') + '" data-tier="' + t + '" style="--tc:' + TIER_COL[t] + '"><span class="ctag">' + (lk[t] ? 'Gesperrt' : c && c.ser === t ? (c.done ? 'Beendet' : 'Läuft') : CAREER.best[t] ? 'Bestes: P' + CAREER.best[t] : 'Offen') + '</span><div class="sbig">' + (t === 'kart' ? 'Karts' : t === 'f2' ? 'F2' : 'F1') + '</div><div class="tn">' + (t === 'kart' ? 'Kart-Meisterschaft' : t === 'f2' ? 'Formula 2' : 'Formula 1') + '</div><div class="tf">' + sub[t] + '</div><div class="cst">' + txt(t) + '</div></button>').join('');
   $$('#carCards .scard').forEach(b => b.addEventListener('click', () => careerEnter(b.dataset.tier)));
 }
 const swapAsk = { tier: null, until: 0 };
+// Die Karriere läuft immer in der höchsten freigeschalteten Klasse – zurück in eine niedrigere Klasse wechseln geht nicht mehr (Wunsch)
+const careerTier = () => CAREER.unlock.f1 ? 'f1' : CAREER.unlock.f2 ? 'f2' : 'kart', TIER_RANK = { kart: 0, f2: 1, f1: 2 };
 function careerEnter(tier) {
+  if (TIER_RANK[tier] < TIER_RANK[careerTier()]) tier = careerTier();
   if (tier !== 'kart' && !CAREER.unlock[tier]) { toast(tier === 'f2' ? 'Gewinne einen Platz unter den Top 3 in der Kart-Saison' : 'Beende die F2-Saison unter den Top 3'); return; }
   const c = loadChamp();
   if (c && c.ser === tier) { CHP = c; return careerOpenSeason(); }
@@ -7889,46 +7937,52 @@ function careerSeasonNext() {
   if (CHP.done) { const nt = nextTier(CHP.ser); if (CHP.finalPos <= 3 && nt) { CHP = null; return careerEnter(nt); } return startSeason(CHP.ser); }
   if (CHP.phase === 'race') careerStartRace(); else careerStartQuali();
 }
+function seTab(k) { MENU.seTab = k; $$('#seTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === k)); $$('#scrSeason .sepane').forEach(p => p.classList.toggle('on', p.dataset.pane === k)); if (k === 'up') renderUpgrade(); }
 function renderSeason() {
-  const SD = SERIES[CHP.ser], T = TEAMS[CHP.team], me = CHP.driver;
-  $('#seHead').innerHTML = SD.name + ' · ' + T.name + ' · <span style="opacity:.7">' + CAREER.name + '</span>';
-  $('#seCal').innerHTML = CAL.map(([k, d], i) => { const r = CHP.races[i], cls = i < CHP.round ? 'done' : i === CHP.round && !CHP.done ? 'next' : '';
-    return '<div class="' + cls + '"><b>' + (i + 1) + '</b>' + TRACKS[k].name + flagSVG(k) + '<small>' + (r ? 'Start P' + r.q + ' → Ziel P' + r.pos : d) + '</small></div>'; }).join('');
-  const st = champStandings(), myI = st.findIndex(r => r.c.code === me), rows = st.slice(0, 8);
-  if (myI >= 8) rows.push(st[myI]);
-  $('#seTbl').innerHTML = '<table class="stbl"><tr><th>Pos</th><th></th><th>Fahrer</th><th style="text-align:right">Pkt</th></tr>' + rows.map(r => { const i = st.indexOf(r), Tm = TEAMS[r.c.team];
-    return '<tr class="' + (r.c.code === me ? 'me' : '') + '"><td class="num">' + (i + 1) + '</td><td class="bar"><i style="background:' + hex(uiCol(Tm)) + '"></i></td><td>' + r.c.name + '</td><td class="pts">' + r.pts + '</td></tr>'; }).join('') + '</table>';
-  { const nxI = Math.min(CHP.round, CAL.length - 1), nk = CAL[nxI][0], tk = TRACKS[nk], ti = TRACK_INFO[nk] || { col: '#ffffff' };
-    $('#seNext').innerHTML = '<div class="sn-l"><small>' + (CHP.done ? 'Saison beendet' : 'Nächstes Rennen · Runde ' + (CHP.round + 1) + ' von ' + CAL.length) + '</small><b>' + tk.name + '</b><span>' + tk.full + ' · ' + tk.land + flagSVG(nk) + '</span>'
+  const SD = SERIES[CHP.ser], T = TEAMS[CHP.team], me = CHP.driver, st = champStandings(), myI = st.findIndex(r => r.c.code === me), avail = CAREER.up.earned - CAREER.up.spent, hasUp = CHP.ser === 'f1';
+  $('#seHead').innerHTML = SD.name + ' · ' + T.name;
+  $('#seChips').innerHTML = '<i>' + CAREER.name + '</i><i class="hot">Platz<b>' + (myI + 1) + '</b></i><i>Punkte<b>' + (st[myI] ? st[myI].pts : 0) + '</b></i>';
+  // Reiter
+  let tab = MENU.seTab || 'race'; if (tab === 'up' && !hasUp) tab = 'race';
+  $('#seTabs').innerHTML = [['race', CHP.done ? 'Saison' : 'Rennen'], ['table', 'Tabelle'], ['cal', 'Kalender']].concat(hasUp ? [['up', 'Upgrades']] : []).map(([k, n]) => '<button data-t="' + k + '">' + n + (k === 'up' && avail > 0 ? '<em>' + avail + ' P</em>' : '') + '</button>').join('');
+  $$('#seTabs button').forEach(b => b.addEventListener('click', () => seTab(b.dataset.t)));
+  // Reiter „Kalender“
+  $('#seCal').innerHTML = CAL.map(([k, d], i) => { const r = CHP.races[i], cls = i < CHP.round ? 'done' : i === CHP.round && !CHP.done ? 'next' : 'todo';
+    return '<div class="cc ' + cls + '"><div class="ct"><span>Rennen ' + (i + 1) + (cls === 'next' ? ' · als Nächstes' : '') + '</span>' + flagSVG(k) + '</div><b>' + TRACKS[k].name + '</b><small>' + (r ? 'Start P' + r.q + ' → Ziel P' + r.pos + (r.pos <= 10 ? '<u>+' + PTS[r.pos - 1] + '</u>' : '') : d) + '</small></div>'; }).join('');
+  // Reiter „Tabelle“: alle Fahrer
+  $('#seTbl').innerHTML = st.map((r, i) => { const Tm = TEAMS[r.c.team];
+    return '<div class="strow' + (r.c.code === me ? ' me' : '') + (i < 3 ? ' top' : '') + '"><span class="n">' + (i + 1) + '</span><i style="background:' + hex(uiCol(Tm)) + '"></i><span class="nm">' + r.c.name + '</span><span class="tmn">' + (Tm.short || Tm.name || '') + '</span><span class="pt">' + r.pts + '</span></div>'; }).join('');
+  // Reiter „Rennen“
+  { const nxI = Math.min(CHP.round, CAL.length - 1), nk = CAL[nxI][0], tk = TRACKS[nk];
+    $('#seNext').innerHTML = '<div class="sn-l"><small>' + (CHP.done ? 'Saison beendet' : 'Nächstes Rennen · ' + (CHP.round + 1) + ' von ' + CAL.length) + '</small><b>' + tk.name + '</b><span>' + tk.full + ' · ' + tk.land + flagSVG(nk) + '</span>'
       + '<div class="sn-tags"><i>' + (CHP.done ? 'Platz ' + CHP.finalPos : CHP.phase === 'race' ? 'Qualifying fertig · Start P' + CHP.qpos : 'Qualifying steht an') + '</i><i>' + tk.km + '</i></div></div><canvas width="300" height="190"></canvas>';
     const cv = $('#seNext canvas'), g = cv.getContext('2d'), W2 = cv.width, H2 = cv.height; let a = 1e9, bb = -1e9, c = 1e9, d = -1e9; for (const p of tk.pts) { a = Math.min(a, p[0]); bb = Math.max(bb, p[0]); c = Math.min(c, p[1]); d = Math.max(d, p[1]); }
     const sc = Math.min((W2 - 30) / (bb - a), (H2 - 30) / (d - c)), ox = (W2 - (bb - a) * sc) / 2, oz = (H2 - (d - c) * sc) / 2, fx = x => ox + (x - a) * sc, fz = z => oz + (z - c) * sc, path = () => { g.beginPath(); tk.pts.forEach((p, q) => q ? g.lineTo(fx(p[0]), fz(p[1])) : g.moveTo(fx(p[0]), fz(p[1]))); g.closePath(); };
     g.lineJoin = 'round'; path(); g.strokeStyle = 'rgba(0,0,0,.45)'; g.lineWidth = 8; g.stroke(); path(); g.strokeStyle = '#ffffff'; g.lineWidth = 4; g.stroke(); const p0 = tk.pts[0]; g.fillStyle = '#fff'; g.beginPath(); g.arc(fx(p0[0]), fz(p0[1]), 6, 0, 7); g.fill(); g.fillStyle = '#e10600'; g.beginPath(); g.arc(fx(p0[0]), fz(p0[1]), 3.4, 0, 7); g.fill(); }
-  const avail = CAREER.up.earned - CAREER.up.spent;
   const DN = { easy: 'Leicht', mid: 'Mittel', hard: 'Schwer', pro: 'Profi', leg: 'Legende' };
   $('#seDiff').innerHTML = Object.keys(DN).map(k => '<button data-v="' + k + '" class="' + (CHP.diff === k ? 'on' : '') + '">' + DN[k] + '</button>').join('');
-  $('#seLen').innerHTML = Object.keys(LEN_LAPS).map(k => '<button data-v="' + k + '" class="' + (champLen() === k ? 'on' : '') + '">' + LEN_NAME[k] + ' · ' + careerLaps(k) + (careerLaps(k) === 1 ? ' Rd.' : ' Rd.') + '</button>').join('');
+  $('#seLen').innerHTML = Object.keys(LEN_LAPS).map(k => '<button data-v="' + k + '" class="' + (champLen() === k ? 'on' : '') + '">' + LEN_NAME[k] + ' · ' + careerLaps(k) + ' Rd.</button>').join('');
+  { const nR = CAL.length, dn = Math.min(CHP.round, nR), best = CHP.races.reduce((m, r) => r && r.pos ? Math.min(m, r.pos) : m, 99), gap = myI > 0 ? st[myI - 1].pts - st[myI].pts : 0;
+    $('#seProg').innerHTML = '<div class="selab">Saison</div><div class="sebar">' + CAL.map((_, i) => '<i class="' + (i < dn ? 'd' : i === dn && !CHP.done ? 'n' : '') + '"></i>').join('') + '</div><div class="sestats"><span><b>' + dn + '/' + nR + '</b>Rennen</span><span><b>' + (best < 99 ? 'P' + best : '–') + '</b>Bestes Ergebnis</span><span><b>' + (myI > 0 ? '−' + gap : '–') + '</b>' + (myI > 0 ? 'Pkt. auf P' + myI : 'Führung') + '</span></div>'; }
   let b = '';
   if (CHP.done) b += '<p class="seMsg">' + (CHP.finalPos === 1 ? '🏆 Meister! ' : 'Saison beendet – Platz ' + CHP.finalPos + '. ') + (CHP.endMsg || '') + '</p>';
-  if (CHP.ser === 'f1') b += '<button class="mbtn" id="seUp"><span class="mt"><b>Upgrades</b><small>' + avail + ' Punkte verfügbar</small></span></button>';
   if (CHP.done && CHP.ser !== 'kart') b += '<button class="mbtn" id="seTeam"><span class="mt"><b>Team wechseln</b><small>' + (CHP.ser === 'f1' ? 'Höchstens 1 Platz bessere Teams oder schlechtere' : 'Neues Team und anderen Teamkollegen wählen') + '</small></span></button>';
   $('#seBtns').innerHTML = b;
   $$('#seLen button').forEach(bt => bt.addEventListener('click', () => { CHP.len = bt.dataset.v; saveChamp(); $$('#seLen button').forEach(x => x.classList.toggle('on', x === bt)); }));
   $$('#seDiff button').forEach(bt => bt.addEventListener('click', () => { CHP.diff = bt.dataset.v; CAREER.diffPref = bt.dataset.v; saveChamp(); saveCar(); $$('#seDiff button').forEach(x => x.classList.toggle('on', x === bt)); }));
-  const u = $('#seUp'); if (u) u.addEventListener('click', () => showScreen('upgrade'));
   const t2 = $('#seTeam'); if (t2) t2.addEventListener('click', () => { const tier = CHP.ser; delete CAREER.slot[tier]; saveCar(); CHP = null; try { localStorage.removeItem('f1champ'); } catch (e) {} careerPickTeam(tier); });
   $('#mNext').innerHTML = seasonNextLabel() + ' <span>›</span>';
+  seTab(tab);
 }
 function renderUpgrade() {
   const avail = CAREER.up.earned - CAREER.up.spent, sel = MENU.upSel || UPG[0].id, cur = upMul();
-  $('#upHead').innerHTML = 'Upgrades · <span style="color:#ffd400">' + avail + ' Punkte</span>';
+  { const tb = $('#seTabs button[data-t="up"]'); if (tb) tb.innerHTML = 'Upgrades' + (avail > 0 ? '<em>' + avail + ' P</em>' : ''); }
   $('#upList').innerHTML = UPG.map(u => { const l = upLv(u.id), cost = UCOST[l];
     return '<div class="uprow' + (u.id === sel ? ' on' : '') + '" data-u="' + u.id + '"><div class="ut"><b>' + u.name + '</b><small>' + u.desc + '</small><div class="pips">' + Array.from({ length: UMAX }, (_, i) => '<i class="' + (i < l ? 'on' : '') + '"></i>').join('') + '</div></div>'
       + (l >= UMAX ? '<span class="umax">MAX</span>' : '<button class="ubuy" data-u="' + u.id + '"' + (avail < cost ? ' disabled' : '') + '>' + cost + ' P</button>') + '</div>'; }).join('');
   const su = UPG.find(u => u.id === sel), nl = upLv(sel), nxt = nl < UMAX ? upMul({ [sel]: nl + 1 }) : null, A = statRows(cur), B = nxt ? statRows(nxt) : null;
   $('#upStats').innerHTML = '<h3>' + su.name + ' · Stufe ' + nl + '/' + UMAX + '</h3><p class="upd">' + su.desc + '</p>' + A.map((r, i) => { const d = B ? B[i][2] - r[2] : 0, w = clamp((r[2] - .8) / .35 * 100, 4, 100);
-    return '<div class="srow"><span>' + r[0] + '</span><u><i style="width:' + w.toFixed(0) + '%"></i>' + (B && d > 0 ? '<em style="left:' + w.toFixed(0) + '%;width:' + (d / .35 * 100).toFixed(1) + '%"></em>' : '') + '</u><b>' + r[1] + (B && d > 0 ? ' <span class="up">→ ' + B[i][1] + '</span>' : '') + '</b></div>'; }).join('')
-    + '<p class="upd" style="margin-top:10px">Punkte: Rennpunkte (25-18-15…) + Qualifying-Bonus (Pole 5, P2 3, P3 1). Eine perfekte Saison (10 Siege + 10 Poles) reicht für alle Upgrades.</p>';
+    return '<div class="srow"><span>' + r[0] + '</span><u><i style="width:' + w.toFixed(0) + '%"></i>' + (B && d > 0 ? '<em style="left:' + w.toFixed(0) + '%;width:' + (d / .35 * 100).toFixed(1) + '%"></em>' : '') + '</u><b>' + r[1] + (B && d > 0 ? ' <span class="up">→ ' + B[i][1] + '</span>' : '') + '</b></div>'; }).join('');
   $$('#upList .uprow').forEach(r => r.addEventListener('click', e => { if (e.target.closest('.ubuy')) return; MENU.upSel = r.dataset.u; renderUpgrade(); }));
   $$('#upList .ubuy').forEach(b => b.addEventListener('click', () => { const id = b.dataset.u, l = upLv(id), c = UCOST[l]; if (l >= UMAX || CAREER.up.earned - CAREER.up.spent < c) return; CAREER.up.lv[id] = l + 1; CAREER.up.spent += c; MENU.upSel = id; saveCar(); applyPM(); renderUpgrade(); }));
 }
@@ -7962,7 +8016,7 @@ function buildMenu2() {
   renderTeams();
   $('#qPlay').addEventListener('click', () => { setMode('quick'); CHP = null; showScreen('series'); });
   $('#tPlay').addEventListener('click', () => { setMode('tt'); CHP = null; showScreen('series'); });
-  $('#cPlay').addEventListener('click', () => { setMode('career'); if (!CAREER) return showScreen('name'); const c = loadChamp(); if (c && !c.done) { CHP = c; return careerOpenSeason(); } showScreen('career'); });
+  $('#cPlay').addEventListener('click', () => { setMode('career'); if (!CAREER) return showScreen('name'); const c = loadChamp(); if (c && !c.done) { CHP = c; return careerOpenSeason(); } careerEnter(careerTier()); });   /* direkt in die laufende Saison bzw. in die höchste freigeschaltete Klasse – keine Klassenwahl mehr */
   $('#saveExp').addEventListener('click', () => { try { $('#saveCode').value = btoa(unescape(encodeURIComponent(JSON.stringify({ v: 1, career: CAREER, champ: loadChamp() })))); $('#saveCode').select(); try { navigator.clipboard.writeText($('#saveCode').value); } catch (e) {} toast(CAREER ? 'Spielstand exportiert (in der Zwischenablage)' : 'Noch keine Karriere vorhanden'); } catch (e) { toast('Export fehlgeschlagen'); } });
   $('#saveImp').addEventListener('click', () => { try { const o = JSON.parse(decodeURIComponent(escape(atob($('#saveCode').value.trim())))); if (!o || o.v !== 1 || !o.career || o.career.v !== 1) throw 0; CAREER = o.career; CAREER.name = cleanName(CAREER.name) || 'Fahrer'; saveCar(); if (o.champ) { CHP = o.champ; saveChamp(); } else { try { localStorage.removeItem('f1champ'); } catch (e) {} } CHP = null; SERIES._dirty = true; toast('Spielstand importiert: ' + CAREER.name); } catch (e) { toast('Ungültiger Exportcode'); } });
   $('#careerReset').addEventListener('click', e => { const b = e.currentTarget; if (b.dataset.arm) { b.dataset.arm = ''; b.textContent = 'Karriere zurücksetzen'; resetCareer(); toast('Karriere zurückgesetzt'); } else { b.dataset.arm = '1'; b.textContent = 'Wirklich löschen? Nochmal tippen'; setTimeout(() => { b.dataset.arm = ''; b.textContent = 'Karriere zurücksetzen'; }, 4000); } });
@@ -8088,7 +8142,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.20'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.21'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -8117,8 +8171,9 @@ function dynRes(raw) {
   const avg = DYN.acc / DYN.n; DYN.acc = DYN.n = 0; let ns = DYN.scale;
   // Jede Änderung legt alle Render-Ziele neu an (kurzer Hänger) – deshalb nur selten: runter erst nach 2 langsamen Fenstern (3 s), rauf erst nach 12 ruhigen (18 s), dann mindestens 10 s Pause
   const tNow = performance.now(); if (tNow - (DYN.tChg || 0) < 10000) return;
-  if (avg > 21.5) { DYN.calm = 0; if (++DYN.bad >= 2) { ns = Math.max(0.8, DYN.scale - (avg > 30 ? 0.1 : 0.05)); DYN.bad = 0; } }   /* nicht unter 80 %: sonst werden Linien und Curbs matschig */
-  else if (avg < 16.8 && DYN.scale < 1) { DYN.bad = 0; if (++DYN.calm >= 12) { ns = Math.min(1, DYN.scale + 0.05); DYN.calm = 0; } }
+  // Pendeln verhindern: musste die Auflösung kurz nach einer Erhöhung wieder gesenkt werden, wird in diesem Rennen nur noch nach sehr langer Ruhe (bzw. gar nicht mehr) erhöht – jedes Umschalten ist ein spürbarer Hänger
+  if (avg > 21.5) { DYN.calm = 0; if (++DYN.bad >= 2) { ns = Math.max(0.8, DYN.scale - (avg > 30 ? 0.1 : 0.05)); DYN.bad = 0; if (DYN.upAt && tNow - DYN.upAt < 60000) DYN.pen = (DYN.pen || 0) + 1; } }   /* nicht unter 80 %: sonst werden Linien und Curbs matschig */
+  else if (avg < 16.8 && DYN.scale < 1) { DYN.bad = 0; if (++DYN.calm >= 12 * 2 ** Math.min(4, DYN.pen || 0) && (DYN.pen || 0) < 3) { ns = Math.min(1, DYN.scale + 0.05); DYN.calm = 0; DYN.upAt = tNow; } }
   else { DYN.calm = 0; DYN.bad = 0; }
   if (Math.abs(ns - DYN.scale) > 0.01) { DYN.scale = ns; DYN.tChg = tNow; resize(); }
 }
