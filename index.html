@@ -1111,6 +1111,10 @@ body.warmhelm #helmet{display:block!important;opacity:.01}
 #closeSettings{position:relative;display:grid!important;place-items:center!important;padding:0!important;font-size:0!important;line-height:0!important;border-radius:0!important}
 #closeSettings::before,#closeSettings::after{content:"";position:absolute;left:50%;top:50%;width:16px;height:2px;margin:-1px 0 0 -8px;background:#fff}
 #closeSettings::before{transform:rotate(45deg)}#closeSettings::after{transform:rotate(-45deg)}
+
+/* Keine abgerundeten Ecken – in allen Menüs und Überlagerungen (Wunsch). Rund bleiben nur Dinge, die rund sein müssen: Schieberegler-Knopf und Farbpunkte. */
+#menu *,#menu *::before,#menu *::after,.overlay *,.overlay *::before,.overlay *::after,#loading *,.toast,#tower,#tower *,.hb{border-radius:0!important}
+.overlay input[type=range]::-webkit-slider-thumb{border-radius:50%!important}.overlay input[type=range]::-moz-range-thumb{border-radius:50%!important}
 </style>
 </head>
 <body>
@@ -2953,7 +2957,7 @@ const cockGLSL = k => { const c = COCK[k]; return '\n if (abs(vLP.x) < ' + c.x.t
 function liveryMat(tk, gloss) { const code = LIVERY[tk]; if (!code) return gloss;
   gloss.onBeforeCompile = sh => {
     sh.vertexShader = 'attribute float aCls; varying float vCls; varying vec3 vLP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vLP = position; vCls = aCls;');
-    sh.fragmentShader = 'varying float vCls; varying vec3 vLP;\n' + LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 2.5 || vCls > 6.5) diffuseColor.rgb = livery(vLP, vCls);' + cockGLSL('f1'));
+    sh.fragmentShader = 'uniform vec3 uMir; varying float vCls; varying vec3 vLP;\n' + LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 2.5 || vCls > 6.5) diffuseColor.rgb = livery(vLP, vCls);\n vec3 gN = normalize(cross(dFdx(vLP), dFdy(vLP))); float mirF = (abs(vLP.x) > 0.44 && abs(vLP.x) < 0.69 && vLP.y > 0.668 && vLP.y < 0.745 && vLP.z > 0.66 && vLP.z < 0.84 && abs(gN.z) > 0.7) ? 1.0 : 0.0; if (mirF > 0.5) diffuseColor.rgb = vec3(0.0);' /* Spiegelglas (F1): die nach hinten zeigende Fläche der Spiegelgehäuse – im Modell kein eigenes Teil – zeigt die Himmelsfarbe der Strecke */ + cockGLSL('f1')).replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n if (mirF > 0.5) totalEmissiveRadiance = uMir;'); sh.uniforms.uMir = { value: MIRMAT.emissive };
   };
   gloss.customProgramCacheKey = () => 'livery-' + tk; return gloss; }
 function teamTemplate(tk) {
@@ -7749,7 +7753,7 @@ let camTY = 0, camH = 0, orbitT = 0, camK = 0, camAcc = 0, camLat = 0, camRoll =
 function toggleCam() { S.cam = (S.cam + 1) % (pl && pl.mesh && pl.mesh.tv ? 4 : 3); save(); }   // 0 Verfolger, 1 Hubschrauber, 2 Helm/Cockpit, 3 TV-Kamera über dem Halo (nur F1/F2)
 function updateCamera(dt) {
   let tx, tz;
-  { const wn = running && S.cam === 3 ? 0.08 : running && S.cam === 2 ? 0.2 : 0.8; if (camera.near !== wn) { camera.near = wn; camera.updateProjectionMatrix(); } }   /* größere Nahgrenze = viel genauerer Tiefenpuffer in der Ferne (kein Flimmern, keine falsche Reihenfolge) */
+  { const wn = running && S.cam === 3 ? 0.08 : running && S.cam === 2 ? 0.07 : 0.8;   /* Cockpit: Nahgrenze 7 cm – bei 20 cm schnitt sie beim Umschauen und in Kurven die Cockpitflanken auf (Blick ins Innere) */ if (camera.near !== wn) { camera.near = wn; camera.updateProjectionMatrix(); } }   /* größere Nahgrenze = viel genauerer Tiefenpuffer in der Ferne (kein Flimmern, keine falsche Reihenfolge) */
   if (!running) {
     orbitT += dt; const s0 = modL(orbitT * 8 + 220), c = trackAt(s0, 0), ce = FLAT ? 0 : ELEV[c.i]; tx = c.x; tz = c.z; camTY = ce;
     const gd = Math.min(Math.abs(modL(s0 + 200) - 100), 400), lift = 3.2 * clamp(1 - (gd - 100) / 80, 0, 1);   // über der Startaufstellung etwas höher

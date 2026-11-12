@@ -79,3 +79,9 @@
 - **Studio**: LED-Wand mit Animation und Glitch-Schrift (`wallDraw`); Teamwechsel = Kamera dreht 180° auf der Stelle, Bühne mit neuem Team auf der Gegenseite (`showroomSwap`).
 - **Klassenbilder**: Kartbahn Genk, Spa (Raidillon), Singapur (Riesenrad).
 - Logos bei jedem Start frisch, Streckenwahl nur über „Weiter“, Cockpit vorgeladen, Überlagerungen im Menü-Stil.
+
+## Version 1.24
+- **F2-Modell neu aus dem Original vereinfacht** (`f2car.bin`): Kanten und Ränder bleiben erhalten, Normalen mit Knickwinkel, Halo vollständig. Frühere Nachbesserungen (Normalen, Abdeckplatte, Ersatz-Halo) entfernt.
+- **F1**: Spiegelglas in Himmelsfarbe (Shader, `uMir`); Kerben-Füllung an den Seitenkästen wieder entfernt (flackerte).
+- **Cockpit**: Nahgrenze 7 cm. **Teamwechsel**: kurzer Schwenk (~70°, 0,75 s).
+- **Menüs**: überall eckig; Titelabstand wie vor der Textentfernung; Helmfarben verteilt und in der Fahrerwahl identisch; Logo-Laden im Spiel entfernt (nur noch `logos/`).
