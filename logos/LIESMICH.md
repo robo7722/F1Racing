@@ -30,7 +30,7 @@ So tauschst du es auf GitHub:
 
 Die elf echten Teams liegen als 512 × 512 px, transparenter Hintergrund, helle Emblem-Variante ohne Schriftzug vor. Quelle: Teamlogos der offiziellen F1-Seite (formula1.com, Saison 2026, Variante „logowhite“), Leerrand abgeschnitten und quadratisch zentriert.
 
-`RON.png` ist ein eigener Entwurf im gleichen Stil: weißes, schräg gestelltes „R“ mit drei Tempo-Balken, 512 × 512 px, transparent.
+`RON.png` ist ein eigener Entwurf im gleichen Stil: weißer, schräg gestellter Schriftzug „RONE“ mit drei Tempo-Balken, 512 × 512 px, transparent.
 
 ## Formel 2 und Kart
 Kürzel mit Vorsatz `F2_` bzw. `K_`, z. B. `F2_INV.png` (Invicta), `F2_HIT.png` (Hitech). Die vollständige Liste steht in `index.html` bei `F2_TEAMS` und `KART_TEAMS`.
