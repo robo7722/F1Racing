@@ -25,3 +25,13 @@ Dateien wie bei den Logos: z. B. `liveries/MER.png`, `liveries/F2_INV.png`.
 
 ## Nächster Schritt
 Prototyp mit einem Auto: Vorlage erzeugen, Testbild auflegen, im Showroom ansehen. Danach entscheiden, ob die Qualität reicht.
+
+## Test 12.11.2026: Aufkleber auf dem Mercedes (umgesetzt)
+- `index.html`: `DECALS` (Teamlogo an festen Stellen, hier der Stern auf der Nase) und `SHEETS` (Aufkleberbogen von der Seite), beides im Lack-Programm `liveryMat`. Bisher nur für `MER` eingetragen; gilt nur für F1-Autos mit Eintrag in `LIVERY`.
+- `liveries/MER.png`: Aufkleberbogen 4096 × 1024 px, obere Hälfte linke Fahrzeugseite (Nase links), untere Hälfte rechte Seite (Nase rechts). Enthält Snapdragon, CrowdStrike, Microsoft (2×), Solera, TeamViewer, Petronas, Signify, AMG, IWC.
+- `tools/aufkleberbogen_mer.py`: schneidet die Schriftzüge aus dem offiziellen Seitenbild (formula1.com, 2026) und setzt sie an Modellkoordinaten. Positionen und Größen stehen in der Tabelle `ST`.
+- Bekannte Lücken: Startnummer und Halo-Aufkleber fehlen, IWC ist am Frontflügel kaum zu sehen, TeamViewer wird vom Cockpitrand teils verdeckt. Aufkleber von oben (Flügel, Motorabdeckung) gibt es nur als einzelnes Teamlogo.
+- Speicher: der Bogen belegt rund 22 MB Grafikspeicher. Für alle Teams wäre 2048 × 512 px je Bogen sinnvoller.
+
+## Offene Frage: Lackierung ganz über den Bogen
+Technisch möglich – der Bogen kann auch deckende Farbflächen und Streifen enthalten. Die Seitenprojektion erreicht aber nur seitliche Flächen; Oberseite und Front brauchen eigene Ansichten, für die es keine offiziellen Bilder gibt. Sinnvoll: Grundfarbe weiter berechnen, Streifen und Sponsoren über den Bogen.

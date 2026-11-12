@@ -33,7 +33,7 @@ self.addEventListener('fetch', e => {
       .catch(() => caches.match('./index.html')));
     return;
   }
-  if (/\/logos\/[^/]+\.png$/i.test(new URL(req.url).pathname)) {   // Logos (Ordner logos/): immer zuerst am Server nachfragen – neue, geänderte und gelöschte Dateien wirken beim nächsten Start; ohne Netz der letzte Stand
+  if (/\/(logos|liveries)\/[^/]+\.png$/i.test(new URL(req.url).pathname)) {   // Logos (Ordner logos/): immer zuerst am Server nachfragen – neue, geänderte und gelöschte Dateien wirken beim nächsten Start; ohne Netz der letzte Stand
     const key = req.url.split('?')[0];
     e.respondWith(fetch(key, { cache: 'no-cache' }).then(r => { const cp = r.ok ? r.clone() : null; caches.open(CACHE).then(c => cp ? c.put(key, cp) : c.delete(key)); return r; }).catch(() => caches.match(key).then(h => h || Response.error())));
     return;
