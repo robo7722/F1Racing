@@ -66,3 +66,8 @@
 - **F2-Modell**: Normalen an der Nase korrigiert (`renormCar`, Bezugshöhe an der Nase tiefer).
 - **Gelände**: Höhen der Geländebänder an der tatsächlichen Position (`foldLim`) – keine senkrechten Wände im Kurveninneren (Red Bull Ring); Hügelstärke und Höhe zwischen zwei Streckenteilen stetig.
 - **Klassenbilder**: Auto scharf, Hintergrund unscharf. Hauptmenü ohne Symbole.
+
+## Cockpit-Neubau (F1 und F2)
+- **Neues, eigenständiges Cockpit-Modell** (`cockNew`, Maße in `CK`): Wanne, Innenwände, Carbon-Einfassung, Schultern, Armaturenwulst, Vorderdeck und Flanken als ein geschlossenes Netz aus Querschnitten. Es misst nichts am Fahrzeugmodell.
+- Das Fahrzeugmodell wird in der Cockpitansicht im Kasten um das neue Modell nicht gezeichnet (`cockCutGLSL`); kurz vor der Vorderachse taucht das neue Modell 1,5 cm kleiner in die echte Nase ein.
+- Die früheren Ansätze (`cockTub`, `cockShell`, `SHELLS`) werden für F1/F2 nicht mehr verwendet und können entfernt werden.
