@@ -1,5 +1,5 @@
 // Service Worker: macht das Spiel offline-fähig und installierbar
-const CACHE = 'f1-rennen-1.22';
+const CACHE = 'f1-rennen-1.23';
 const APP = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './car.bin', './f2car.bin', './kart.bin', './textures/kart_body.jpg', './textures/kart_body_n.jpg', './textures/kart_wheel.jpg', './roadcar.bin', './menu.mp3',
   ...['asphalt_track', 'asphalt_pit_lane', 'sand_01', 'gravel_floor'].flatMap(t => ['diff', 'nor_gl'].map(m => './textures/' + t + '_' + m + '_1k.jpg')),
   ...['Grass004_Color', 'Grass004_NormalGL', 'LeafSet004_Color', 'LeafSet004_Opacity', 'LeafSet019_Color', 'LeafSet019_Opacity', 'Foliage001_Color', 'Foliage001_Opacity'].map(f => './textures/acg_' + f + '.jpg')];
@@ -31,6 +31,11 @@ self.addEventListener('fetch', e => {
   if (req.mode === 'navigate') { // Seite: zuerst Netz (Updates), sonst Cache
     e.respondWith(fetch(req.url, { cache: 'no-cache' }).then(r => { if (r.ok) { const copy = r.clone(); caches.open(CACHE).then(c => c.put('./index.html', copy)); } return r; })   // am Server nachfragen statt 10 Minuten alte Kopie zu nehmen
       .catch(() => caches.match('./index.html')));
+    return;
+  }
+  if (/\/logos\/[^/]+\.png$/i.test(new URL(req.url).pathname)) {   // Logos (Ordner logos/): immer zuerst am Server nachfragen – neue, geänderte und gelöschte Dateien wirken beim nächsten Start; ohne Netz der letzte Stand
+    const key = req.url.split('?')[0];
+    e.respondWith(fetch(key, { cache: 'no-cache' }).then(r => { const cp = r.ok ? r.clone() : null; caches.open(CACHE).then(c => cp ? c.put(key, cp) : c.delete(key)); return r; }).catch(() => caches.match(key).then(h => h || Response.error())));
     return;
   }
   if (/\/music\/[^/]+\.(mp3|ogg|m4a|aac|wav|opus)$|\/max\.mp3$/i.test(new URL(req.url).pathname)) { // Rennmusik (Ordner music/): eigener, dauerhafter Cache (bei Bedarf geladen)

@@ -1081,6 +1081,23 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 /* Hauptmenü ohne Symbole (Wunsch): die Bilder tragen die Kacheln */
 #scrTitle .hi{display:none!important}
 #scrTitle .hbtn small{max-width:none!important}
+
+body.warmhelm #helmet{display:block!important;opacity:.01}
+/* Überlagerungen (Pause, Ergebnis, Einstellungen) im Stil der Menüs: Graphitglas, 9-px-Ecken, Reiter als Kästen, Infofelder ohne roten Rand */
+.overlay .card,.overlay .cgcard{border-radius:9px!important;border:1px solid rgba(255,255,255,.16)!important;border-top-color:rgba(255,255,255,.26)!important;background:linear-gradient(180deg,rgba(58,60,66,.95),rgba(27,28,32,.97))!important;box-shadow:0 24px 60px -20px rgba(0,0,0,.8)!important}
+.overlay .card::before,.overlay .card::after{display:none!important}
+.overlay .card h2{letter-spacing:.05em!important}
+.ptabs{border:0!important;gap:6px!important;margin:10px 0 12px!important}
+.ptabs button{height:44px!important;border-radius:9px!important;background:rgba(30,32,37,.62)!important;border:1px solid var(--f1l)!important;border-bottom:3px solid transparent!important;color:rgba(255,255,255,.6)!important;font-size:13px!important}
+.ptabs button.on{background:linear-gradient(180deg,rgba(92,96,106,.95),rgba(40,42,48,.95))!important;color:#fff!important;border-color:var(--f1l2)!important;border-bottom-color:var(--f1r)!important}
+.ptabs button.on::after{display:none!important}
+.pinfo{gap:6px!important}.pinfo span{border-radius:9px!important;background:rgba(30,32,37,.7)!important;border:1px solid var(--f1l)!important;padding:5px 10px!important;letter-spacing:.06em}
+.overlay .big{border-radius:9px!important}
+.overlay .big.alt{background:linear-gradient(180deg,rgba(74,78,86,.5),rgba(40,42,48,.62))!important;border:1px solid rgba(255,255,255,.16)!important;border-top-color:rgba(255,255,255,.26)!important}
+.overlay .big.alt.danger{border-color:rgba(225,6,0,.6)!important;color:#ff6a5c!important}
+#resTable th,.stbl th{background:rgba(27,28,32,.98)!important}
+.toast{border-radius:9px!important;background:rgba(27,28,32,.96)!important;border:1px solid var(--f1l)!important;border-left:3px solid var(--f1r)!important}
+#loading{background:linear-gradient(118deg,transparent 0 46%,rgba(255,255,255,.035) 46% 63%,transparent 63%),radial-gradient(80% 70% at 50% 40%,#3a3c41,#1b1c20 70%,#0e0f12)!important}
 </style>
 </head>
 <body>
@@ -1092,7 +1109,7 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
   var put = function (sel, cls) { var el = document.querySelector(sel); if (!el) return; var g = new Image(); g.src = im.src; g.className = cls; g.alt = 'Logo'; el.innerHTML = ''; el.appendChild(g); };
   var go = function () { put('.ldLogo', 'glogo ld'); put('.logo2', 'glogo'); var m = document.getElementById('mLogo'); if (m) { m.src = im.src; m.hidden = false; } };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); };
-  im.src = 'logos/LOGO.png'; })();
+  im.src = 'logos/LOGO.png?' + Date.now().toString(36); })();
 </script>
 
 <div id="hud" class="hidden">
@@ -2648,6 +2665,16 @@ function renormCar(M, tol = 0.004, it = 2, w = 0.5) {
     g.attributes.normal.array.set(N); g.attributes.normal.needsUpdate = true; }
 }
 renormCar(CARM2);
+// F2-Halo: im Modell hat jedes Dreieck eigene Normalen (sichtbare Facetten). Normalen über gleiche Positionen mitteln -> glatte Rohre.
+function smoothGeo(g, tol = 0.003) { if (!g || !g.attributes.normal) return; const p = g.attributes.position.array, N0 = g.attributes.normal.array, n = p.length / 3, q = 1 / tol, map = new Map(), rp = new Int32Array(n), A = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) { const k = Math.round(p[i * 3] * q) + ',' + Math.round(p[i * 3 + 1] * q) + ',' + Math.round(p[i * 3 + 2] * q); let r = map.get(k); if (r === undefined) { r = i; map.set(k, i); } rp[i] = r; }
+  const ix = g.index ? g.index.array : null, nt = (ix ? ix.length : n) / 3;
+  for (let t = 0; t < nt; t++) { const a = (ix ? ix[t * 3] : t * 3) * 3, b = (ix ? ix[t * 3 + 1] : t * 3 + 1) * 3, c = (ix ? ix[t * 3 + 2] : t * 3 + 2) * 3, ux = p[b] - p[a], uy = p[b + 1] - p[a + 1], uz = p[b + 2] - p[a + 2], vx = p[c] - p[a], vy = p[c + 1] - p[a + 1], vz = p[c + 2] - p[a + 2];
+    let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; if (nx * (N0[a] + N0[b] + N0[c]) + ny * (N0[a + 1] + N0[b + 1] + N0[c + 1]) + nz * (N0[a + 2] + N0[b + 2] + N0[c + 2]) < 0) { nx = -nx; ny = -ny; nz = -nz; }
+    for (const v of [a, b, c]) { const r = rp[v / 3] * 3; A[r] += nx; A[r + 1] += ny; A[r + 2] += nz; } }
+  for (let i = 0; i < n; i++) { const r = rp[i] * 3, l = Math.hypot(A[r], A[r + 1], A[r + 2]); if (l > 1e-12) { N0[i * 3] = A[r] / l; N0[i * 3 + 1] = A[r + 1] / l; N0[i * 3 + 2] = A[r + 2] / l; } }
+  g.attributes.normal.needsUpdate = true; }
+smoothGeo(CARM2 && CARM2.halo);
 // Lack-Shader: Normale immer zum Betrachter drehen (Flächen mit verdrehter Dreiecksrichtung spiegelten sonst den Boden statt des Himmels)
 function viewFacing(sh) { sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\n if (dot(normal, vViewPosition) < 0.0) normal = -normal;\n nonPerturbedNormal = normal;'); }
 addPlate(CARM2, -0.115, 0.115, 0.69, 0.94, 0.681);
@@ -2917,7 +2944,7 @@ const cockGLSL = k => { const c = COCK[k]; return '\n if (abs(vLP.x) < ' + c.x.t
 function liveryMat(tk, gloss) { const code = LIVERY[tk]; if (!code) return gloss;
   gloss.onBeforeCompile = sh => {
     sh.vertexShader = 'attribute float aCls; varying float vCls; varying vec3 vLP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vLP = position; vCls = aCls;');
-    sh.fragmentShader = 'varying float vCls; varying vec3 vLP;\n' + LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 2.5 || vCls > 6.5) diffuseColor.rgb = livery(vLP, vCls);' + cockGLSL('f1'));
+    sh.fragmentShader = 'varying float vCls; varying vec3 vLP;\n' + LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 2.5 || vCls > 6.5) diffuseColor.rgb = livery(vLP, vCls);\n if (vLP.y < 0.25 && abs(vLP.x) > 0.3 && vLP.z > -1.3 && vLP.z < 1.45) diffuseColor.rgb = vec3(0.07, 0.08, 0.10);' /* Unterkante der Seitenkästen: im Modell wechseln dort Lack- und Carbon-Dreiecke im Zickzack. Lack-Dreiecke in dieser Zone sehen deshalb aus wie das Carbon des Unterbodens (Farbe, matt, ohne Klarlack) – die Zacken verschwinden */ + cockGLSL('f1')).replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n if (vLP.y < 0.25 && abs(vLP.x) > 0.3 && vLP.z > -1.3 && vLP.z < 1.45) roughnessFactor = 0.8;').replace('#include <lights_physical_fragment>', '#include <lights_physical_fragment>\n#ifdef USE_CLEARCOAT\n if (vLP.y < 0.25 && abs(vLP.x) > 0.3 && vLP.z > -1.3 && vLP.z < 1.45) material.clearcoat = 0.0;\n#endif');
   };
   gloss.customProgramCacheKey = () => 'livery-' + tk; return gloss; }
 function teamTemplate(tk) {
@@ -3443,6 +3470,27 @@ function envAll(o) { o.traverse(m => { if (m.material) (Array.isArray(m.material
 function makeCar(d) { const r = makeCar0(d); envAll(r.g || r); return r; }
 // Helm-Akzent (Kappe und Zierstreifen): Teamfarbe – ist die fast schwarz, eine hellere/dunklere Stufe der Helmfarbe (sonst sah der Helm von oben wie ein schwarzer Klecks aus)
 function helmAcc(helmet, acc) { const a = col(acc), h = col(helmet), lum = c => 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b; if (lum(a) > 0.03) return a; return lum(h) > 0.25 ? h.multiplyScalar(0.55) : h.lerp(col(0xffffff), 0.45); }
+// Helm (F1/F2), um den Ursprung, Blick nach +z: Schale, Kinnbügel, dunkles Visier mit Farbstreifen und Dichtung, Mittelstreifen über den Scheitel, Farbring unten,
+// Abrisskante hinten, zwei Lufteinlässe oben, Kinnbelüftung.
+function helmParts(hc, ha) { const R = 0.15, sc = g => g.scale(1, 0.97, 1.1), dk = col(0x0a0c10), gr = col(0x2a2d33), S = (r, ...a) => new THREE.SphereGeometry(r, ...a), P = [];
+  P.push([sc(S(R, 34, 24)), hc]);
+  P.push([S(0.118, 22, 12).scale(1.12, 0.55, 1.0).translate(0, -0.092, 0.075), hc]);
+  P.push([sc(S(R * 1.012, 26, 10, Math.PI / 2 - 1.0, 2.0, 1.2, 0.42)), dk]);
+  P.push([sc(S(R * 1.016, 26, 2, Math.PI / 2 - 1.0, 2.0, 1.12, 0.085)), ha]);
+  P.push([sc(S(R * 1.02, 26, 1, Math.PI / 2 - 1.04, 2.08, 1.61, 0.035)), gr]);
+  P.push([sc(S(R * 1.008, 28, 3, 2.04, 2.4, Math.PI / 2 - 0.13, 0.26).rotateZ(Math.PI / 2)), ha]);
+  P.push([sc(S(R * 1.006, 34, 2, 0, Math.PI * 2, 2.0, 0.12)), ha]);
+  P.push([box(0.12, 0.008, 0.05, 0, 0.045, -0.172, -0.35), dk]);
+  for (const sx of [-1, 1]) P.push([box(0.022, 0.008, 0.04, sx * 0.036, 0.139, 0.055, 0.32), dk]);
+  P.push([box(0.05, 0.012, 0.01, 0, -0.095, 0.196), dk]);
+  return P; }
+// Fahrer im Auto (relativ zur Helmmitte): Hals, Kopf-/Nackenstütze (HANS), Schultern, Arme zum Lenkrad, Handschuhe
+function driverParts(cs, cg) { const dk = col(0x15171b), P = [];
+  P.push([new THREE.CylinderGeometry(0.062, 0.07, 0.07, 16).translate(0, -0.165, -0.01), dk]);
+  P.push([box(0.25, 0.028, 0.13, 0, -0.19, -0.045), dk]);
+  P.push([new THREE.SphereGeometry(0.16, 22, 12).scale(1.0, 0.5, 0.72).translate(0, -0.255, 0), cs]);
+  for (const sx of [-1, 1]) { P.push([rod([sx * 0.125, -0.25, 0.03], [sx * 0.105, -0.215, 0.40], 0.036, 10), cs]); P.push([new THREE.SphereGeometry(0.04, 12, 8).translate(sx * 0.105, -0.21, 0.42), cg]); }
+  return P; }
 function makeCar0(d) {
   const T = TEAMS[d.team]; if (T.kind === 'kart' && KART) return makeKart(d, T); if (T.road && ROADBIN) return makeRoadster(d, T);
   const tp = teamTemplate(d.liv || d.team), g = new THREE.Group(); g.rotation.order = 'YXZ';
@@ -3452,8 +3500,9 @@ function makeCar0(d) {
     for (const m of [body, matte, halo]) { m.castShadow = true; g.add(m); }
     const mir = MD.C.lods[0].mirror ? new THREE.Mesh(MD.C.lods[0].mirror, MIRMAT) : null; if (mir) g.add(mir);   // Spiegelglas: verspiegelt die Umgebung (Skybox) statt Carbon
     const hAcc = helmAcc(d.helmet, T.acc);
-    const helm = mergeParts([[new THREE.SphereGeometry(0.15, 32, 24).scale(1, 0.97, 1.1).translate(0, MD.helm[0], MD.helm[1]), col(d.helmet)], [new THREE.SphereGeometry(0.1512, 32, 8, 0, Math.PI * 2, 0, 0.5).scale(1, 0.97, 1.1).translate(0, MD.helm[0], MD.helm[1]), hAcc], [new THREE.SphereGeometry(0.1513, 32, 4, 0, Math.PI * 2, 0.62, 0.1).scale(1, 0.97, 1.1).translate(0, MD.helm[0], MD.helm[1]), hAcc], [new THREE.SphereGeometry(0.1521, 24, 8, Math.PI / 2 - 0.95, 1.9, 1.22, 0.4).scale(1, 0.97, 1.1).translate(0, MD.helm[0], MD.helm[1]), col(0x0a0c10)]]);
+    const hOff = pr => pr.map(([g2, c2]) => [g2.translate(0, MD.helm[0], MD.helm[1]), c2]), helm = mergeParts(hOff(helmParts(col(d.helmet), hAcc)));
     const hm = new THREE.Mesh(helm, HELMAT); hm.castShadow = true; g.add(hm);
+    { const dv = new THREE.Mesh(mergeParts(hOff(driverParts(col(uiCol(T)), hAcc))), KDRV.suit); hm.add(dv); }   // Fahrer hängt am Helm: wird mit ihm ausgeblendet (Cockpitansicht, Fernmodell)
     const rl = new THREE.Mesh(new THREE.BoxGeometry(...(MD.rlS || [0.13, 0.045, 0.02])), RLMAT); rl.position.set(0, MD.rl[0], MD.rl[1]); g.add(rl);   /* F2: Regenlicht sitzt außen auf der Heck-Crashstruktur (vorher 6 cm im Karosserieteil versenkt) */ // Regenlicht unten am Heck (nicht am Auspuff)
     const fl = new THREE.Group(); fl.position.set(fw[0], fw[1], fw[2]); const wfl = new THREE.Mesh(W.R[1], WMAT); wfl.castShadow = true; fl.add(wfl); g.add(fl);
     const fr = new THREE.Group(); fr.position.set(-fw[0], fw[1], fw[2]); const wfr = new THREE.Mesh(W.L[1], WMAT); wfr.castShadow = true; fr.add(wfr); g.add(fr);
@@ -3517,7 +3566,7 @@ function setSeries(k, quiet) {
   placeOnGrid();
   try { renderTeams(); } catch (e) {}
 }
-window.__setSeries = setSeries; window.__dev = { get scene() { return scene; }, get camera() { return camera; }, THREE, get ALL() { return ALL; }, get pl() { return pl; }, showScreen: k => showScreen(k), MENU: () => MENU, step: dt => step(dt), cars: () => cars, startRace: () => startRace(), showResults: () => showResults(), dirt: dt => visorDirtTick(dt), terr: (x, z) => terr(x, z), surfH: (x, z) => surfH(x, z), groundY: (x, z) => groundY(x, z), prof: () => ({ N, DS, profAI, L }), S, setQL: v => { QL = v; } };
+window.__setSeries = setSeries; window.__dev = { get scene() { return scene; }, get camera() { return camera; }, THREE, get ALL() { return ALL; }, get pl() { return pl; }, showScreen: k => showScreen(k), MENU: () => MENU, step: dt => step(dt), cars: () => cars, startRace: () => startRace(), showResults: () => showResults(), dirt: dt => visorDirtTick(dt), marks: () => { const v = o => o && o.getWorldPosition ? o.getWorldPosition(new THREE.Vector3()).toArray().map(Math.round) : null; return { flyer: v(FLYER.obj), hotel: v(typeof hotelRoof !== 'undefined' && hotelRoof), wheel: v(WHEEL_ROT.obj) }; }, build: k => { buildTrack(k); placeOnGrid(); }, terr: (x, z) => terr(x, z), surfH: (x, z) => surfH(x, z), groundY: (x, z) => groundY(x, z), prof: () => ({ N, DS, profAI, L }), S, setQL: v => { QL = v; } };
 let pl = byCode(S.driver) || ALL[0];
 const cars = []; let ais = [];
 // Schatten mit vereinfachten Modellen: nur im Schatten-Durchgang tragen nahe Autos die mittlere Detailstufe (im Schattenbild nicht zu unterscheiden,
@@ -6555,7 +6604,7 @@ function drawGauge() { const g = gG; g.clearRect(0, 0, 640, 240); g.save(); g.sc
 // TV-Ansicht: die Grafik liegt auf dem echten Halo – drei Punkte des Halo-Bogens werden auf den Bildschirm projiziert, daraus die Ellipse
 const HHC = $('#haloHud'), HHG = HHC.getContext('2d'), _hv = new THREE.Vector3();
 // Helmrand in der Cockpitansicht (wie Need for Speed Shift): unscharfe Polsterung und Visierkante an den Bildrändern. Einmal als SVG gebaut (Unschärfe im SVG-Filter, statisch).
-{ const el = $('#helmet'), op = 'M60,150 C150,45 360,26 500,26 C640,26 850,45 940,150 C985,300 995,600 980,850 C950,1010 760,1070 500,1070 C240,1070 50,1010 20,850 C5,600 15,300 60,150 Z';   /* unten fast offen: Lenkrad und Hände bleiben frei */
+{ const el = $('#helmet'), op = 'M60,150 C150,45 360,26 500,26 C640,26 850,45 940,150 C985,300 995,600 980,850 C955,950 780,992 500,992 C220,992 45,950 20,850 C5,600 15,300 60,150 Z';   /* unten fast offen: Lenkrad und Hände bleiben frei */
   el.innerHTML = '<svg viewBox="0 0 1000 1000" preserveAspectRatio="none"><defs><filter id="hb" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="16"/></filter><filter id="hb2"><feGaussianBlur stdDeviation="7"/></filter>'
     + '<linearGradient id="hv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".42"/><stop offset=".22" stop-color="#000" stop-opacity="0"/><stop offset=".82" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></linearGradient></defs>'
     + '<path d="' + op + '" fill="url(#hv)"/>'   // Visier: oben leicht getönt, unten Schatten des Kinnteils
@@ -7083,7 +7132,7 @@ function precompile() { try { const prev = renderer.getRenderTarget(); if (compo
   // Materialien, die erst beim Kamerawechsel auftauchen (Cockpit: aufgeschnittene Karosserie + Wanne, TV-Kamera: einfarbiges Halo), jetzt mit übersetzen – sonst Hänger beim ersten Umschalten
   try { const m = pl && pl.mesh; if (m) { const tp = m.tp || {}, k = tp.M === MODELS.f2 ? 'f2' : 'f1'; if (m.tp) { cockBuild(m); }
       const sc = new THREE.Scene(), add = (g, mt) => { const o = new THREE.Mesh(g, mt); o.frustumCulled = false; sc.add(o); }; if (m.tp) { add(m.body.geometry, tp.cutGloss); add(m.matte.geometry, tp.cutMatte); if (tp.haloFlat) add(tp.haloFlat, tp.haloMat); m.tub.traverse(o => { if (o.isMesh) add(o.geometry, o.material); }); }
-      ARMS.f1 ||= makeArms(true, 0.033); ARMS.road ||= makeArms(false, 0.023, true);
+      ARMS.f1 ||= makeArms(true, 0.033); ARMS.road ||= makeArms(false, 0.023, true); cockLast(SW.g, true); cockLast(ARMS.f1.g, true); if (m.tp && tp.halo) { tp.haloGhost ||= haloGhostMat(tp.haloMat); add(tp.halo, tp.haloGhost); add(tp.halo, HALO_PRE); }
       for (const G of [SW.g, ARMS.f1.g, ARMS.road.g]) G.traverse(o => { if (o.isMesh) add(o.geometry, o.material); }); sc.add(...scene.children.filter(o => o.isLight).map(l => l.clone())); sc.fog = scene.fog; sc.environment = scene.environment;
       if (!WARM.rt2) WARM.rt2 = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType }); const prev = renderer.getRenderTarget(); renderer.setRenderTarget(WARM.rt2); renderer.compile(sc, camera); renderer.render(sc, camera); renderer.setRenderTarget(prev); } } catch (e) { console.warn('precompile2', e); }
   // Alles einmal winzig (4×4 Pixel) zeichnen – ohne Sichtfeld-Prüfung und mit jeder Detailstufe: lädt jede Geometrie, Instanzliste und Textur JETZT auf die Grafikkarte,
@@ -7121,7 +7170,7 @@ function startRace() {
   document.body.classList.toggle('noBoost', !!SERIES[SER].noBoost);
   diff = DIFF[S.diff] || DIFF.mid;
   seriesProfiles();
-  placeOnGrid(); precompile(); warmUpTrack(); visorNew();
+  placeOnGrid(); precompile(); warmUpTrack(); visorNew(); document.body.classList.add('warmhelm'); setTimeout(() => document.body.classList.remove('warmhelm'), 1800);   /* Helmrand einmal unsichtbar zeichnen lassen */
   DYN.acc = DYN.n = DYN.bad = DYN.calm = 0; DYN.tChg = performance.now() + 5000;   /* Auflösung in den ersten 15 s nicht umschalten: jede Umschaltung legt alle Render-Ziele neu an (Hänger genau am Start) */
   raceSongPick(false);
   $('#hud').style.visibility = ''; running = true; hadRace = true; paused = false; resultsShown = false; raceState = 'lights'; lightsT = 0; lightsOut = 5 + Math.random() * 1.4;
@@ -7598,8 +7647,8 @@ function cockBodyCol() { const T = (typeof LIVS !== 'undefined' && LIVS[pl.team]
 const COCK_RO = 990;
 function cockLast(o, on) { if (!o) return; o.traverse(x => { if (!x.isMesh || x.material === HALO_PRE || x.renderOrder >= 998) return; x.renderOrder = on ? COCK_RO : 0; if (on) for (const mt of Array.isArray(x.material) ? x.material : [x.material]) if (!mt.transparent) { mt.transparent = true; mt.needsUpdate = true; } }); }
 // Baut (einmal je Auto) alles, was nur die Cockpitansicht braucht: aufgeschnittene Karosserie-Materialien, Wanne und – beim F1 – die einheitliche Schale. EINE Stelle für Vorladen und Umschalten.
-function cockBuild(m) { const tp = m.tp, k = tp.M === MODELS.f2 ? 'f2' : 'f1'; tp.cutGloss ||= cockCut(tp.glossMat, k); tp.cutMatte ||= cockCut(MATTE, k); if (m.tub) return;
-  m.tub = cockNew(tp, k, cockBodyCol()); m.tub.visible = false; m.g.add(m.tub); }
+function cockBuild(m) { const tp = m.tp, k = tp.M === MODELS.f2 ? 'f2' : 'f1'; tp.cutGloss ||= cockCut(tp.glossMat, k); tp.cutMatte ||= cockCut(MATTE, k); tp.cutGloss.transparent = tp.cutMatte.transparent = true; if (m.tub) { return; }
+  m.tub = cockNew(tp, k, cockBodyCol()); cockLast(m.tub, true);   /* Reihenfolge und Durchsicht-Flag schon beim Bau: beim ersten Umschalten muss kein Shader neu übersetzt werden */ m.tub.visible = false; m.g.add(m.tub); }
 function cockpitInterior(on) {
   const m = pl && pl.mesh; if (cockOn && (!on || cockOn !== m)) { cockOn.body.material = cockOn.tp.glossMat; cockOn.matte.material = MATTE; cockOn.body.renderOrder = cockOn.matte.renderOrder = 0; if (cockOn.tub) cockOn.tub.visible = false; cockOn = null; }
   if (!on || cockOn === m) return; const tp = m.tp, k = tp.M === MODELS.f2 ? 'f2' : 'f1';
@@ -8083,10 +8132,10 @@ async function logoImport(files) { let ok = 0; const miss = [];
   try { localStorage.setItem('f1logos', JSON.stringify(LOGOS)); } catch (e) { toast('Speicher voll – Logos nur bis zum Neustart sichtbar'); }
   return { ok, miss }; }
 // Logos aus dem Projektordner: liegt dort logos/<Kürzel>.png (z. B. logos/MER.png, logos/F2_INV.png), ersetzt sie das gezeichnete Wappen. Fehlt die Datei, bleibt das Wappen.
-const REPO_LOGOS = {};
+const REPO_LOGOS = {}, LOGO_V = Date.now().toString(36);   /* je Start eine neue Abfrage: geänderte, neue und gelöschte Dateien im Ordner logos/ wirken sofort (kein alter Stand aus dem Zwischenspeicher) */
 function loadRepoLogos() { const keys = Object.keys(Object.assign({}, F1_TEAMS, F2_TEAMS, KART_TEAMS)); let left = keys.length, hit = 0;
   const done = () => { if (--left === 0 && hit) { try { renderTeams(); renderMenu(); if (CHP && MENU.scr === 'season') renderSeason(); } catch (e) {} } };
-  for (const k of keys) { const im = new Image(); im.onload = () => { REPO_LOGOS[k] = im.src; hit++; done(); }; im.onerror = done; im.src = 'logos/' + k + '.png'; } }
+  for (const k of keys) { const im = new Image(); im.onload = () => { REPO_LOGOS[k] = im.src; hit++; done(); }; im.onerror = done; im.src = 'logos/' + k + '.png?' + LOGO_V; } }
 function teamBadge(k) {
   if (LOGOS[k] || REPO_LOGOS[k]) return '<svg viewBox="0 0 64 64"><image href="' + (LOGOS[k] || REPO_LOGOS[k]) + '" x="3" y="3" width="58" height="58" preserveAspectRatio="xMidYMid meet"/></svg>';
   const T = TEAMS[k], c1 = hex(T.body === 0xf0f0f0 ? T.acc : T.body), c2 = hex(T.acc), c3 = hex(T.low ?? (T.tip !== T.body ? T.tip : 0x16181b));
@@ -8307,7 +8356,7 @@ function renderTracks() {
   $$('#tracks .tcard').forEach(b => {
     trkMap(b.querySelector('canvas'), TRACKS[b.dataset.trk], getComputedStyle(b).getPropertyValue('--tc') || '#e10600', 5);
     b.addEventListener('click', () => { S.track = b.dataset.trk; save(); renderMenu(); b.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); });
-    b.addEventListener('dblclick', menuNext);
+
   });
 }
 function buildMenu2() {
@@ -8396,27 +8445,43 @@ function initShowroom() {
   { const fill = new THREE.DirectionalLight(0xfff1e0, 1.1); fill.position.set(-5, 5, 9); sc.add(fill); }   /* Aufhellung von vorn links: die dem Betrachter zugewandte Seite ist nie schwarz */
   const key = new THREE.DirectionalLight(0xffffff, 3.0); key.position.set(4, 9, 6); key.castShadow = true; key.shadow.mapSize.set(1024, 1024); const kc = key.shadow.camera; kc.left = kc.bottom = -8; kc.right = kc.top = 8; kc.near = 1; kc.far = 30; key.shadow.bias = -0.0004; sc.add(key);
   const rim = new THREE.DirectionalLight(0x9fd8ff, 2.2); rim.position.set(-6, 4, -8); sc.add(rim);
-  { const cv = document.createElement('canvas'); cv.width = 2048; cv.height = 640; const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 4;
+  { const cv = document.createElement('canvas'); cv.width = 1024; cv.height = 320; const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 4;
     const wall = new THREE.Mesh(new THREE.PlaneGeometry(44, 13.75), new THREE.MeshBasicMaterial({ map: tx, fog: false, toneMapped: false })); wall.position.set(0, 6.875, -6.5); sc.add(wall); const wall2 = new THREE.Mesh(wall.geometry, wall.material); wall2.rotation.y = -Math.PI / 2; wall2.position.set(8.5, 6.875, 1.6); sc.add(wall2);   /* zweite Wand im rechten Winkel: Hintergrund der Frontalansicht (Fahrerwahl) */ SHOW.wall = { cv, tx };
     // Bewegung auf der Wand: zwei schräge Lichtbänder wandern langsam darüber (eigene, additiv gemischte Ebene – die Wandgrafik selbst wird nicht neu gezeichnet)
     const sw = canvasTex(512, 64, (g, w, h) => { g.fillStyle = '#000'; g.fillRect(0, 0, w, h); for (const [x0, bw, al] of [[90, 120, .55], [330, 46, .3]]) { const gr = g.createLinearGradient(x0, 0, x0 + bw, 0); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(.5, 'rgba(255,255,255,' + al + ')'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(x0, 0, bw, h); } });
     sw.wrapS = sw.wrapT = THREE.RepeatWrapping; sw.repeat.set(1, 1); sw.rotation = -0.38; SHOW.sweep = sw;
     const swm = new THREE.MeshBasicMaterial({ map: sw, transparent: true, opacity: .34, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, toneMapped: false });
-    const walls = [wall, wall2]; for (const wl of [wall, wall2]) { const o = new THREE.Mesh(wl.geometry, swm); o.position.copy(wl.position); o.rotation.copy(wl.rotation); o.translateZ(0.02); sc.add(o); walls.push(o); }
+    // LED-Raster: schwarze Maske mit runden Löchern (eine Leuchte je 5 cm) vor der Wandgrafik
+    const led = canvasTex(64, 64, (g, w) => { g.clearRect(0, 0, w, w); g.fillStyle = 'rgba(0,0,0,.78)'; g.fillRect(0, 0, w, w); g.globalCompositeOperation = 'destination-out'; for (let a = 0; a < 4; a++) for (let b = 0; b < 4; b++) { g.beginPath(); g.arc(a * 16 + 8, b * 16 + 8, 6.2, 0, 7); g.fill(); } g.globalCompositeOperation = 'source-over'; });
+    led.wrapS = led.wrapT = THREE.RepeatWrapping; led.repeat.set(220, 68.75); led.colorSpace = THREE.NoColorSpace;
+    const ledM = new THREE.MeshBasicMaterial({ map: led, transparent: true, depthWrite: false, fog: false, toneMapped: false });
+    const walls = [wall, wall2]; for (const wl of [wall, wall2]) { const o = new THREE.Mesh(wl.geometry, swm); o.position.copy(wl.position); o.rotation.copy(wl.rotation); o.translateZ(0.02); sc.add(o); walls.push(o);
+      const l2 = new THREE.Mesh(wl.geometry, ledM); l2.position.copy(wl.position); l2.rotation.copy(wl.rotation); l2.translateZ(0.04); l2.renderOrder = 2; sc.add(l2); walls.push(l2); }
     // Spiegelung der Wand im Boden: dieselben Flächen noch einmal, an der Bodenebene gespiegelt (der Boden ist leicht durchscheinend)
     for (const wl of walls) { const o = new THREE.Mesh(wl.geometry, wl.material); o.position.copy(wl.position); o.position.y = -wl.position.y; o.rotation.copy(wl.rotation); o.scale.y = -1; sc.add(o); } }
   SHOW.scene = sc; SHOW.cam = new THREE.PerspectiveCamera(SHOW_FOV, innerWidth / innerHeight, 0.5, 200);
 }
 // Rückwand des Showrooms: dunkles Graphit, schräge Farbflächen in der Teamfarbe, feine Linien und der Teamname als große Konturschrift
-function showroomWall(team, text) { const W = SHOW.wall; if (!W || !TEAMS[team]) return; const wk = team + '|' + (text || ''); if (W.key === wk) return; W.key = wk; const T = TEAMS[team], g = W.cv.getContext('2d'), w = W.cv.width, h = W.cv.height, c1 = hex(uiCol(T)), c2 = hex(T.acc ?? uiCol(T)), sk = h * 0.42;
-  const slab = (x0, x1, y0, y1, fill) => { g.fillStyle = fill; g.beginPath(); g.moveTo(x0 + sk * (1 - y0 / h), y0); g.lineTo(x1 + sk * (1 - y0 / h), y0); g.lineTo(x1 + sk * (1 - y1 / h), y1); g.lineTo(x0 + sk * (1 - y1 / h), y1); g.closePath(); g.fill(); };
-  { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#07090d'); gr.addColorStop(0.55, '#12151b'); gr.addColorStop(1, '#1b1f27'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }
-  { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, c1 + '00'); gr.addColorStop(0.35, c1 + 'cc'); gr.addColorStop(1, c1); slab(w * 0.36, w * 0.56, 0, h, gr); }   // große Farbfläche hinter den Autos
-  g.globalAlpha = 0.55; slab(w * 0.575, w * 0.59, 0, h, c2); g.globalAlpha = 0.9; slab(w * 0.2, w * 0.33, h * 0.78, h, c1); g.globalAlpha = 0.35; slab(w * 0.62, w * 0.9, h * 0.62, h * 0.7, c1); g.globalAlpha = 1;
-  g.strokeStyle = 'rgba(255,255,255,.16)'; g.lineWidth = 2; g.beginPath(); g.moveTo(w * 0.1, h * 0.3); g.lineTo(w * 0.3, h * 0.3); g.lineTo(w * 0.3 - 30, h * 0.3 + 40); g.moveTo(w * 0.68, h * 0.2); g.lineTo(w * 0.92, h * 0.2); g.stroke();
-  { const nm = String(text || T.short || T.name).toUpperCase(); let fs = h * 0.22; g.font = '900 ' + fs + 'px "Titillium Web",system-ui,sans-serif'; const mw = g.measureText(nm).width, lim = w * 0.25; if (mw > lim) { fs *= lim / mw; g.font = '900 ' + fs + 'px "Titillium Web",system-ui,sans-serif'; }
-    g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.lineJoin = 'round'; g.lineWidth = 4; g.strokeStyle = 'rgba(255,255,255,.62)'; g.strokeText(nm, w / 2, h * 0.9); }
-  { const gr = g.createLinearGradient(0, h * 0.8, 0, h); gr.addColorStop(0, 'rgba(5,7,11,0)'); gr.addColorStop(1, 'rgba(5,7,11,.55)'); g.fillStyle = gr; g.fillRect(0, h * 0.8, w, h * 0.2); }   // zum Boden hin abdunkeln
+function showroomWall(team, text) { const W = SHOW.wall; if (!W || !TEAMS[team]) return; const T = TEAMS[team], nm = String(text || T.short || T.name).toUpperCase(), c1 = hex(uiCol(T)), c2 = hex(T.acc ?? uiCol(T));
+  if (W.name !== nm || W.c1 !== c1) { W.t0 = SHOW.t || 0; W.pat = ((W.pat || 0) + 1) % 3; W.tp0 = SHOW.t || 0; } W.name = nm; W.c1 = c1; W.c2 = c2; W.key = team + '|' + nm; }
+// LED-Wand zeichnen (etwa 15× pro Sekunde): Farbstreifen wechseln alle paar Sekunden ihre Anordnung und schieben sich dabei über die Wand; der Name wird Zeichen für Zeichen
+// „eingetippt“ (mit Zufallszeichen davor) und zuckt ab und zu mit Farbversatz und verschobenen Zeilen (Glitch).
+const WALL_PAT = [[[.36, .56, 0, 1, 0, 1], [.575, .59, 0, 1, 1, .55], [.2, .33, .78, 1, 0, .9], [.62, .9, .62, .7, 0, .35]], [[.1, .24, 0, 1, 0, .9], [.26, .28, 0, 1, 1, .6], [.6, .86, .1, .2, 0, .4], [.5, .94, .8, 1, 0, .85]], [[.52, .78, 0, 1, 0, 1], [.44, .5, 0, 1, 1, .7], [.05, .3, .5, .58, 0, .4], [.08, .22, .86, 1, 1, .8]]];
+function wallDraw(now) { const W = SHOW.wall; if (!W || !W.c1) return; const g = W.cv.getContext('2d'), w = W.cv.width, h = W.cv.height, sk = h * 0.42, E = x => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); }, F = '"Titillium Web",system-ui,sans-serif';
+  if (now - (W.tp0 || 0) > 7) { W.tp0 = now; W.pat = ((W.pat || 0) + 1) % 3; }
+  g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#07090d'); gr.addColorStop(0.55, '#12151b'); gr.addColorStop(1, '#1b1f27'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }
+  const A = WALL_PAT[((W.pat || 0) + 2) % 3], B = WALL_PAT[W.pat || 0], f = E((now - (W.tp0 || 0)) / 0.9);
+  for (let k = 0; k < 4; k++) { const v = i => lerp(A[k][i], B[k][i], f), x0 = v(0) * w, x1 = v(1) * w, y0 = v(2) * h, y1 = v(3) * h; g.globalAlpha = v(5); g.fillStyle = B[k][4] ? W.c2 : W.c1;
+    g.beginPath(); g.moveTo(x0 + sk * (1 - y0 / h), y0); g.lineTo(x1 + sk * (1 - y0 / h), y0); g.lineTo(x1 + sk * (1 - y1 / h), y1); g.lineTo(x0 + sk * (1 - y1 / h), y1); g.closePath(); g.fill(); }
+  g.globalAlpha = 1; { const gr = g.createLinearGradient(0, 0, 0, h * 0.5); gr.addColorStop(0, 'rgba(7,9,13,.95)'); gr.addColorStop(1, 'rgba(7,9,13,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h * 0.5); }
+  const nm = W.name.trim(); if (nm) { let fs = h * 0.22; g.font = '900 ' + fs + 'px ' + F; const mw = g.measureText(nm).width, lim = w * 0.25; if (mw > lim) { fs *= lim / mw; g.font = '900 ' + fs + 'px ' + F; }
+    const t = now - (W.t0 || 0), shown = Math.floor(t * 16), x0 = w / 2 - g.measureText(nm).width / 2, yb = h * 0.9, glitch = t < nm.length / 16 + 0.3 || (now % 5.3) < 0.2, GL = '#/\\<>01X=+';
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic'; g.lineJoin = 'round';
+    const draw = (dx, stroke, fill) => { for (let i = 0; i < nm.length; i++) { if (i >= shown + 2) break; const ch = i < shown ? nm[i] : GL[Math.floor(Math.random() * GL.length)], x = x0 + g.measureText(nm.slice(0, i)).width + dx; if (fill) { g.fillStyle = fill; g.fillText(ch, x, yb); } if (stroke) { g.strokeStyle = stroke; g.strokeText(ch, x, yb); } } };
+    g.lineWidth = 2; if (glitch) { g.globalCompositeOperation = 'lighter'; draw(-5, 'rgba(255,40,60,.8)', null); draw(5, 'rgba(40,220,255,.8)', null); g.globalCompositeOperation = 'source-over'; }
+    draw(0, 'rgba(255,255,255,.85)', 'rgba(255,255,255,.16)');
+    if (glitch) for (let k = 0; k < 3; k++) { const y = Math.floor(h * (0.55 + Math.random() * 0.4)), hh = Math.floor(h * (0.02 + Math.random() * 0.04)), dx = Math.round((Math.random() - 0.5) * w * 0.05); g.drawImage(W.cv, 0, y, w, hh, dx, y, w, hh); } }
+  { const gr = g.createLinearGradient(0, h * 0.8, 0, h); gr.addColorStop(0, 'rgba(5,7,11,0)'); gr.addColorStop(1, 'rgba(5,7,11,.5)'); g.fillStyle = gr; g.fillRect(0, h * 0.8, w, h * 0.2); }
   W.tx.needsUpdate = true; }
 // Auswahl-Studio: beide Autos stehen parallel (Nase nach −x), keine Drehteller. Die Kamera fährt je Bildschirm an einen anderen Platz und schwebt dort leicht:
 // Hauptmenü: Auto schräg von vorn im Fenster der Karriere-Kachel · Teamwahl: nah, schräg von vorn, nur das erste Auto · Fahrerwahl: Fahrt nach vorn, beide Autos frontal ·
@@ -8433,7 +8498,7 @@ function showroomTeam(team) {
 // Spiegelung am Boden: das Auto noch einmal, an der Bodenebene gespiegelt, unter dem leicht durchscheinenden Hallenboden
 function showroomMirror(m) { const r = m.g.clone(true); r.position.set(0, 0, 0); r.rotation.set(0, 0, 0); r.scale.set(1, -1, 1); r.traverse(o => { o.castShadow = false; o.receiveShadow = false; if (o.isSprite) o.visible = false; }); m.g.add(r); }
 // Teamwechsel: die Kamera wird seitlich um das Auto versetzt und schwenkt weich an ihren Platz zurück
-function showroomSwing() { if (MENU.scr !== 'team' || !SHOW.cp) return; SHOW.sw = -(SHOW.sw || 1); const a = 0.42 * SHOW.sw, dx = SHOW.cp.x - SHOW.ct.x, dz = SHOW.cp.z - SHOW.ct.z; SHOW.cp.x = SHOW.ct.x + dx * Math.cos(a) - dz * Math.sin(a); SHOW.cp.z = SHOW.ct.z + dx * Math.sin(a) + dz * Math.cos(a); }
+function showroomSwing() { if (MENU.scr !== 'team' || !SHOW.cp) return; SHOW.sw = -(SHOW.sw || 1); SHOW.orbT = 0; }   // Teamwechsel: Kamera springt auf die Gegenseite und fährt in einem 180°-Bogen um das neue Auto zurück
 // Hauptmenü mit laufender Karriere: das Karriere-Auto (Klasse, Team, eigener Helm) – unabhängig davon, was im Schnellen Spiel gewählt ist
 function showroomCareer(c) { initShowroom(); const key = 'career|' + c.ser + '|' + c.team + '|' + c.driver; if (SHOW.team === key) return true; const SD = SERIES[c.ser]; if (!SD || !SD.teams[c.team]) return false;
   const T0 = TEAMS; let m; try { TEAMS = SD.teams; const d = SD.drivers.find(x => x[3] === c.team); if (!d) return false;
@@ -8450,6 +8515,7 @@ const _sp = new THREE.Vector3(), _st = new THREE.Vector3();
 function showroomFrame(dt) {
   const cam = SHOW.cam, scr = MENU.scr, W2 = innerWidth, H2 = innerHeight; SHOW.t += dt; const t = SHOW.t;
   if (SHOW.scr !== scr) { SHOW.scr = scr; showroomPick(); }
+  SHOW.wT = (SHOW.wT || 0) - dt; if (SHOW.wT <= 0) { SHOW.wT = 1 / 15; wallDraw(SHOW.t); }
   if (SHOW.sweep) SHOW.sweep.offset.x = (SHOW.sweep.offset.x - dt * 0.035) % 1;
   let ox = 0, oy = 0;
   if (scr === 'driver') { _sp.set(-34, 1.25, 1.22); _st.set(0, 0.6, 1.22); }                       // frontal auf beide Autos
@@ -8461,7 +8527,10 @@ function showroomFrame(dt) {
   else { _sp.set(-14.4, 2.38, 17.2); _st.set(-0.35, 0.5, 0); oy = 0.05; }                              // Teamwahl: nah, schräg von vorn
   _sp.x += Math.sin(t * 0.27) * 0.5; _sp.y += Math.sin(t * 0.19) * 0.1; _sp.z += Math.cos(t * 0.23) * 0.4;   // leichtes Schweben – nie ganz statisch
   if (!SHOW.cp) { SHOW.cp = _sp.clone(); SHOW.ct = _st.clone(); SHOW.ox = ox; SHOW.oy = oy; }
-  const k = 1 - Math.exp(-dt * (scr === 'title' ? 6 : 2.1)); SHOW.cp.lerp(_sp, k); SHOW.ct.lerp(_st, k); cam.position.copy(SHOW.cp); cam.lookAt(SHOW.ct);
+  const k = 1 - Math.exp(-dt * (scr === 'title' ? 6 : 2.1)); SHOW.cp.lerp(_sp, k); SHOW.ct.lerp(_st, k); cam.position.copy(SHOW.cp);
+  if (scr === 'team' && SHOW.orbT !== undefined && SHOW.orbT < 1) { SHOW.orbT = Math.min(1, SHOW.orbT + dt / 1.9); const e = 1 - SHOW.orbT, a = Math.PI * SHOW.sw * e * e * (3 - 2 * e), dx = cam.position.x - SHOW.ct.x, dz = cam.position.z - SHOW.ct.z;
+    cam.position.x = SHOW.ct.x + dx * Math.cos(a) - dz * Math.sin(a); cam.position.z = SHOW.ct.z + dx * Math.sin(a) + dz * Math.cos(a); cam.position.y += Math.sin(Math.PI * SHOW.orbT) * 1.6; }
+  cam.lookAt(SHOW.ct);
   SHOW.ox += (ox - SHOW.ox) * k; SHOW.oy += (oy - SHOW.oy) * k;
   cam.aspect = W2 / H2; cam.setViewOffset(W2, H2, SHOW.ox * W2, SHOW.oy * H2, W2, H2); cam.updateProjectionMatrix();
 }
@@ -8494,7 +8563,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.22'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.23'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
