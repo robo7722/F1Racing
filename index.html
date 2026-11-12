@@ -2848,20 +2848,56 @@ const COCK = { f1: { x: 0.165, z0: 0.10, z1: 0.71, y: 0.615, fl: 0.30, wd: 0.07,
 // in der Lenkrad und Hände steckten (deshalb wurden sie früher als Overlay über das Auto gemalt und schwebten über der Nase). Statt dessen: eigene Cockpitwanne (cockTub) aus Carbon.
 const cockWn = (c, z) => { if (!c.wn) return 0; const t = clamp((z - c.zn0) / (c.zn1 - c.zn0), 0, 1); return c.wn * t * t * (3 - 2 * t); };
 const cockCutGLSL = k => { const c = COCK[k], f = v => v.toFixed(3), wn = c.wn ? f(c.wn) + ' * smoothstep(' + f(c.zn0) + ', ' + f(c.zn1) + ', vCP.z)' : '0.0';
-  return '\n { float wn = ' + wn + '; float cw = ' + f(c.x) + ' + wn + clamp((' + f(c.y) + ' - vCP.y) * 1.2, 0.0, ' + f(c.wd) + '); float yt = wn > 0.0005 ? ' + f(c.yc || c.y) + ' : ' + f(c.y - 0.002) + '; if (abs(vCP.x) < cw && vCP.z > ' + f(c.z0) + ' && vCP.z < ' + f(c.z1 + 0.02) + ' && vCP.y < yt && vCP.y > ' + f(c.fl - 0.02) + ') discard; }'; };
+  return '\n { float wn = ' + wn + '; float cw = ' + f(c.x) + ' + wn + clamp((' + f(c.y) + ' - vCP.y) * 1.2, 0.0, ' + f(c.wd) + '); float yt = wn > 0.0005 ? ' + f(c.yc || c.y) + ' : ' + f(c.y - 0.002) + '; if (abs(vCP.x) < cw && vCP.z > ' + f(c.z0) + ' && vCP.z < ' + f(c.z1 + 0.02) + ' && vCP.y < yt && vCP.y > ' + f(c.fl - 0.02) + ') discard; }' + (k === 'f1' ? '\n { float xs = mix(' + f(SHELL.xa) + ', ' + f(SHELL.xb) + ', smoothstep(' + f(SHELL.zs0) + ', ' + f(SHELL.zs1) + ', vCP.z)); if (abs(vCP.x) < xs && vCP.z > ' + f(c.z0) + ' && vCP.z < ' + f(SHELL.zF) + ' && vCP.y > ' + f(SHELL.y0) + ' && vCP.y < ' + f(SHELL.y1) + ') discard; }' : ''); };
 function cockCut(mat, k) { const m = mat.clone(), ob = mat.onBeforeCompile, key = mat.customProgramCacheKey();
   m.onBeforeCompile = (sh, r) => { if (ob) ob.call(mat, sh, r); sh.vertexShader = 'varying vec3 vCP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vCP = position;'); sh.fragmentShader = 'varying vec3 vCP;\n' + sh.fragmentShader.replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>' + cockCutGLSL(k)); };
-  m.customProgramCacheKey = () => key + '|cockcut-' + k; return m; }
+  m.customProgramCacheKey = () => key + '|cockcut2-' + k; return m; }
 const COCK_MAT = (() => { const t = TEX.carbon.clone(), n = TEX.carbonN.clone(); for (const x of [t, n]) { x.repeat.set(1, 1); x.needsUpdate = true; } return new THREE.MeshStandardMaterial({ map: t, normalMap: n, normalScale: new THREE.Vector2(.35, .35), color: 0x3a3e46, roughness: .55, metalness: .25, side: THREE.DoubleSide }); })();
 const COCK_PAD = new THREE.MeshStandardMaterial({ color: 0x24252b, roughness: .95, metalness: 0, side: THREE.DoubleSide });   // Polster/Armaturenkante: matt schwarz
-function cockTub(k, bodyCol = 0x808890, swz = 0.68, livMat = null) {   // Wanne: schräge Seitenwände (oben so breit wie die Öffnung, unten breiter), Boden, Spritzwand vorn mit Armaturenkante, Rückwand; UV in Metern (Carbon-Webung ~ 3 cm)
+// ===== Einheitliche Cockpit-Schale (F1, nur Cockpitansicht) =====
+// Statt Abdeckung + Blenden auf dem löchrigen Modell: EINE glatte, durchgehende Fläche ersetzt das Deck rund um die Öffnung – von hinter dem Fahrer bis vor das Lenkrad.
+// Die Öffnung ist vorn rund ausgeschnitten, davor wölbt sich die Fläche zur Haube. Am Rand übernimmt sie die echte Höhe der Karosserie (einmal am Modell vermessen)
+// und taucht dann knapp darunter ab – ohne Stufe, ohne Spalt. Die Karosserie selbst wird in diesem Bereich nicht gezeichnet (cockCutGLSL).
+const SHELL = { xa: 0.262, xb: 0.2, zs0: 0.9, zs1: 0.93, zF: 0.975, y0: 0.5, y1: 0.8, rc: 0.075 };
+function cockShell(tp, bodyCol) {
+  const c = COCK.f1, G = SHELL, z0 = c.z0 - 0.01, z1 = c.z1 + 0.012, S = t => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
+  const xcAt = z => lerp(G.xa, G.xb, S((z - G.zs0) / (G.zs1 - G.zs0)));
+  // Höhe der echten Karosserie von oben gemessen (Lack + Carbon, ohne Halo und Spiegel)
+  const rc = new THREE.Raycaster(), dn = new THREE.Vector3(0, -1, 0), o = new THREE.Vector3(), bm = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
+  const src = [new THREE.Mesh(tp.lods[0].gloss, bm), new THREE.Mesh(tp.lods[0].matte, bm)]; for (const q of src) q.updateMatrixWorld();
+  const raw = (a, z) => { o.set(a, G.y1 - 0.005, z); rc.set(o, dn); let best = null; for (const h of rc.intersectObjects(src, false)) { if (h.point.y > G.y0 - 0.05) { best = h.point.y; break; } } return best ?? c.y; };
+  const wOpen = z => z >= z1 ? 0 : (c.x + 0.003 + cockWn(c, z)) * (z > z1 - G.rc ? Math.sqrt(Math.max(0, 1 - ((z - (z1 - G.rc)) / G.rc) ** 2)) : 1);
+  const rimY = z => c.y + 0.003 + (c.wn ? (c.yn - c.y) * cockWn(c, z) / c.wn : 0), hcEnd = (() => { const v = [0.07, 0.1, 0.13, 0.16].map(a => raw(a, G.zF)).sort((p, q) => p - q); return clamp((v[1] + v[2]) / 2 + 0.004, 0.64, 0.69); })(), hcY = z => lerp(0.652, hcEnd, S((z - z1) / (G.zF - z1)));   /* Haubenmitte läuft genau auf die echte Deckhöhe am vorderen Rand zu */
+  // Längsraster: Öffnung, Rundung (dichter), Haube
+  const zs = []; for (let i = 0; i < 34; i++) zs.push(lerp(z0, z1 - G.rc, i / 34)); for (let i = 0; i <= 16; i++) zs.push(z1 - G.rc * Math.cos(i / 16 * Math.PI / 2)); for (let i = 1; i <= 18; i++) zs.push(lerp(z1, G.zF, i / 18)); zs.push(G.zF + 0.03);
+  const NX = 12, NT = 3, cols = NX + 1 + NT;
+  let ho = zs.map(z => raw(xcAt(Math.min(z, G.zF)), Math.min(z, G.zF))); ho = ho.map((_, i) => { let a = 0, n = 0; for (let j = -2; j <= 2; j++) if (ho[i + j] !== undefined) { a += ho[i + j]; n++; } return a / n; });   // Randhöhe längs geglättet
+  const P = [], I = [], edge = [];
+  for (const sd of [-1, 1]) { const base = P.length / 3;
+    zs.forEach((z, r) => { const zc = Math.min(z, G.zF), xc = xcAt(zc), w = wOpen(zc), u = zc >= z1 ? 1 : zc > z1 - G.rc ? (zc - (z1 - G.rc)) / G.rc : 0, fb = S((zc - (G.zF - 0.045)) / 0.045), drop = z > G.zF ? 0.03 : 0;
+      const hood = a => lerp(hcY(zc), ho[r], S(a / xc)), eY = lerp(rimY(zc), hood(w), u * u);
+      for (let i = 0; i <= NX; i++) { const t = i / NX, a = lerp(w, xc, t); let y = lerp(lerp(eY, ho[r], S(t)), hood(a), u); if (fb > 0) y = lerp(y, raw(a, zc), fb); P.push(sd * a, y - drop, z); }
+      for (let i = 1; i <= NT; i++) { const a = xc + 0.012 * i; P.push(sd * a, raw(Math.min(a, xc + 0.004), zc) - 0.011 * i - drop, z); }   // Rand taucht unter die echte Karosserie
+      if (sd === 1 && w > 0.004) edge.push([w, eY, z]); });
+    for (let r = 0; r < zs.length - 1; r++) for (let i = 0; i < cols - 1; i++) { const a = base + r * cols + i, b2 = a + 1, d = a + cols, e = d + 1; if (sd === 1) I.push(a, d, b2, b2, d, e); else I.push(a, b2, d, b2, e, d); } }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setIndex(I); g.computeVertexNormals();
+  { const pp = g.attributes.position, nn = g.attributes.normal; for (let i = 0; i < pp.count; i++) if (Math.abs(pp.getX(i)) < 1e-5) { const ny = nn.getY(i), nz = nn.getZ(i), l = Math.hypot(ny, nz) || 1; nn.setXYZ(i, 0, ny / l, nz / l); } }   // Mittelnaht der Haube glatt
+  { const n = g.attributes.position.count, cc = new Float32Array(n * 3), bc = new THREE.Color(bodyCol); for (let i = 0; i < n; i++) { cc[i * 3] = bc.r; cc[i * 3 + 1] = bc.g; cc[i * 3 + 2] = bc.b; } g.setAttribute('color', new THREE.BufferAttribute(cc, 3)); g.setAttribute('aCls', new THREE.BufferAttribute(new Float32Array(n), 1)); g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(n * 2), 2)); }
+  if (!tp.shellMat) { const gm = tp.glossMat, sm = gm.clone(); sm.onBeforeCompile = gm.onBeforeCompile; const ck = gm.customProgramCacheKey(); sm.customProgramCacheKey = () => ck; tp.shellMat = sm; }   /* Lack wie die Karosserie, aber OHNE den Ausschnitt (sonst schneidet sich die Schale selbst weg) */
+  const grp = new THREE.Group(); grp.add(new THREE.Mesh(g, tp.shellMat));
+  // Innenkante der Öffnung: Polsterkante 7 cm nach unten, folgt genau dem Ausschnitt
+  { const Q = [], dpt = 0.075; for (const sd of [-1, 1]) for (let i = 0; i < edge.length - 1; i++) { const a = edge[i], b = edge[i + 1]; const A = [sd * a[0], a[1], a[2]], B = [sd * b[0], b[1], b[2]], A2 = [sd * (a[0] + 0.012), a[1] - dpt, a[2]], B2 = [sd * (b[0] + 0.012), b[1] - dpt, b[2]]; Q.push(...A, ...B, ...B2, ...A, ...B2, ...A2); }
+    { const a = edge[edge.length - 1]; Q.push(-a[0], a[1], a[2], a[0], a[1], a[2], a[0], a[1] - dpt, a[2] + 0.01, -a[0], a[1], a[2], a[0], a[1] - dpt, a[2] + 0.01, -a[0], a[1] - dpt, a[2] + 0.01); }
+    const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(Q, 3)); sg.computeVertexNormals(); grp.add(new THREE.Mesh(sg, COCK_PAD)); }
+  bm.dispose(); grp.traverse(x => { if (x.isMesh) { x.frustumCulled = false; x.castShadow = false; } }); return grp; }
+function cockTub(k, bodyCol = 0x808890, swz = 0.68, livMat = null, noHood = false) {   // Wanne: schräge Seitenwände (oben so breit wie die Öffnung, unten breiter), Boden, Spritzwand vorn mit Armaturenkante, Rückwand; UV in Metern (Carbon-Webung ~ 3 cm)
   const c = COCK[k], w0 = c.x + 0.003, w1 = c.x + c.wd, yT = c.y + 0.003, fl = c.fl, z0 = c.z0 - 0.01, z1 = c.z1 + 0.012, P = [], U = [];
   const quad = (a, b, d, e) => { for (const q of [a, b, d, a, d, e]) { P.push(...q); U.push((q[2] + q[0]) * 30, (q[1] + q[0] * 0.3) * 30); } };
   // Querschnitt je Längsposition: oben so breit wie die Öffnung (am Lenkrad breiter und etwas höher), darunter rasch breiter (wie der Schnitt in der Karosserie), dann senkrecht zum Boden
   const wT = z => w0 + cockWn(c, z), yTop = z => yT + (c.wn ? (c.yn - c.y) * cockWn(c, z) / c.wn : 0), zs = [z0]; if (c.wn) for (let i = 0; i <= 8; i++) zs.push(c.zn0 + (c.zn1 - c.zn0) * i / 8); zs.push(z1);
   for (let i = 0; i < zs.length - 1; i++) { const za = zs[i], zb = zs[i + 1]; if (zb - za < 1e-4) continue;
     for (const s of [-1, 1]) { const A = z => [s * wT(z), yTop(z), z], B = z => [s * (wT(z) + c.wd), yTop(z) - c.wd / 1.2, z], C = z => [s * (wT(z) + c.wd), fl, z]; quad(A(za), A(zb), B(zb), B(za)); quad(B(za), B(zb), C(zb), C(za));
-      if (yTop(za) < c.y - 0.004 && yTop(zb) < c.y - 0.004) { const F = z => [s * (wT(z) + 0.05), yTop(z), z]; quad(A(za), A(zb), F(zb), F(za)); } }   /* Blende unter dem Deck: schließt den Spalt zwischen Wannenrand und Karosseriekante (sonst Blick ins Innere der Karosserie) */
+      if (!noHood && yTop(za) < c.y - 0.004 && yTop(zb) < c.y - 0.004) { const F = z => [s * (wT(z) + 0.05), yTop(z), z]; quad(A(za), A(zb), F(zb), F(za)); } }   /* Blende unter dem Deck: schließt den Spalt zwischen Wannenrand und Karosseriekante (sonst Blick ins Innere der Karosserie) */
     quad([-(wT(za) + c.wd), fl, za], [wT(za) + c.wd, fl, za], [wT(zb) + c.wd, fl, zb], [-(wT(zb) + c.wd), fl, zb]); }
   { const wa = wT(z1), ya = c.hood ? c.hood[0] : yTop(z1), yb2 = yTop(z1) - c.wd / 1.2; quad([-wa, ya, z1], [wa, ya, z1], [wa + c.wd, yb2, z1], [-(wa + c.wd), yb2, z1]); quad([-(wa + c.wd), yb2, z1], [wa + c.wd, yb2, z1], [wa + c.wd, fl, z1], [-(wa + c.wd), fl, z1]); }   // Spritzwand vorn: senkrecht und im selben Querschnitt wie die Seitenwände – vorher schräg nach vorn und schmaler, dahinter blitzte in den Ecken die Innenseite der Karosserie durch
   quad([-w0, yT, z0], [w0, yT, z0], [w1, fl, z0], [-w1, fl, z0]);
@@ -2875,7 +2911,7 @@ function cockTub(k, bodyCol = 0x808890, swz = 0.68, livMat = null) {   // Wanne:
  }   // (schwarze Seitenpolster entfernt: sie waren nur in der Cockpitansicht zu sehen)
   // (kein schwarzer Randwulst mehr um die Öffnung – Wunsch: er war in keiner anderen Ansicht zu sehen; die Karosseriekante bildet den Rand)
   // F1: lackierte Abdeckung vor dem Lenkrad – das Modell hat dort nur eine tiefer liegende, löchrige Fläche (dreieckiges Loch, in der Lackfarbe des Streifens)
-  if (c.hood) { const [ya, yb, ze] = c.hood, hw = wT(z1) + 0.062, nz = 22, nx = 40, nr = 7, rr = 0.03, HP = [], HI = [], zA = z1 - 0.012, zr = 0.80, hwz = z => { const q = clamp((z - zr) / (ze - zr), 0, 1), b = clamp((z - zA) / 0.05, 0, 1); return hw * Math.sqrt(Math.max(0.02, 1 - q * q)) * (0.875 + 0.125 * b * b * (3 - 2 * b)); };   /* hinten etwas schmaler als die Öffnung: die abgerollte Kante schneidet das Deck nicht */
+  if (c.hood && !noHood) { const [ya, yb, ze] = c.hood, hw = wT(z1) + 0.062, nz = 22, nx = 40, nr = 7, rr = 0.03, HP = [], HI = [], zA = z1 - 0.012, zr = 0.80, hwz = z => { const q = clamp((z - zr) / (ze - zr), 0, 1), b = clamp((z - zA) / 0.05, 0, 1); return hw * Math.sqrt(Math.max(0.02, 1 - q * q)) * (0.875 + 0.125 * b * b * (3 - 2 * b)); };   /* hinten etwas schmaler als die Öffnung: die abgerollte Kante schneidet das Deck nicht */
     // Querschnitt gewölbt, zu den Seiten weich auf die Höhe des Decks abfallend (keine senkrechte Schürze); vorn halbrund und nach unten gezogen; zum Fahrer hin rund abgerollt statt einer harten Kante
     const yAt = (z, u) => { const t = clamp((z - zA) / (ze - zA), 0, 1), e = clamp((z - 0.86) / (ze - 0.86), 0, 1), a = Math.abs(u); return lerp(ya, yb, t) - 0.07 * e * e * e + 0.007 * (1 - u * u) * (1 - e) - 0.09 * Math.pow(a, 12); };   /* flach bis kurz vor den Rand, dann steil unter das Deck: das Ende der Spiegelstrebe liegt unter der Abdeckung */   /* Seiten tauchen klar unter das Deck (kein Flimmern an der Berührkante) */
     const rows = [[zA, -(rr + 0.004)]];   /* endet knapp über dem Cockpitrand: darunter färbt der Lackierungs-Shader den Innenraum um (Grenze genau auf dieser Fläche = Flimmern) */ for (let k2 = 0; k2 <= nr; k2++) { const an = k2 / nr * Math.PI / 2; rows.push([zA + rr * (1 - Math.cos(an)), -rr * (1 - Math.sin(an))]); } for (let j = 1; j <= nz; j++) rows.push([zA + rr + (ze - zA - rr) * j / nz, 0]);
@@ -7051,7 +7087,7 @@ function warmUpTrack() {
 }
 function precompile() { try { const prev = renderer.getRenderTarget(); if (composer) renderer.setRenderTarget(composer.renderTarget1); renderer.compile(scene, camera); renderer.setRenderTarget(prev); } catch (e) { console.warn('precompile', e); }
   // Materialien, die erst beim Kamerawechsel auftauchen (Cockpit: aufgeschnittene Karosserie + Wanne, TV-Kamera: einfarbiges Halo), jetzt mit übersetzen – sonst Hänger beim ersten Umschalten
-  try { const m = pl && pl.mesh; if (m) { const tp = m.tp || {}, k = tp.M === MODELS.f2 ? 'f2' : 'f1'; if (m.tp) { tp.cutGloss ||= cockCut(tp.glossMat, k); tp.cutMatte ||= cockCut(MATTE, k); if (!m.tub) { m.tub = cockTub(k, cockBodyCol(), (tp.M.swPos || [0, 0, 0.68])[2], tp.glossMat); m.g.add(m.tub); } }
+  try { const m = pl && pl.mesh; if (m) { const tp = m.tp || {}, k = tp.M === MODELS.f2 ? 'f2' : 'f1'; if (m.tp) { cockBuild(m); }
       const sc = new THREE.Scene(), add = (g, mt) => { const o = new THREE.Mesh(g, mt); o.frustumCulled = false; sc.add(o); }; if (m.tp) { add(m.body.geometry, tp.cutGloss); add(m.matte.geometry, tp.cutMatte); if (tp.haloFlat) add(tp.haloFlat, tp.haloMat); m.tub.traverse(o => { if (o.isMesh) add(o.geometry, o.material); }); }
       ARMS.f1 ||= makeArms(true, 0.033); ARMS.road ||= makeArms(false, 0.023, true);
       for (const G of [SW.g, ARMS.f1.g, ARMS.road.g]) G.traverse(o => { if (o.isMesh) add(o.geometry, o.material); }); sc.add(...scene.children.filter(o => o.isLight).map(l => l.clone())); sc.fog = scene.fog; sc.environment = scene.environment;
@@ -7567,10 +7603,14 @@ function cockBodyCol() { const T = (typeof LIVS !== 'undefined' && LIVS[pl.team]
 // bleiben aber voll deckend und schreiben Tiefe. Windschattenkegel und Luftstreifen (schreiben keine Tiefe) liegen damit nie mehr über dem Cockpit.
 const COCK_RO = 990;
 function cockLast(o, on) { if (!o) return; o.traverse(x => { if (!x.isMesh || x.material === HALO_PRE || x.renderOrder >= 998) return; x.renderOrder = on ? COCK_RO : 0; if (on) for (const mt of Array.isArray(x.material) ? x.material : [x.material]) if (!mt.transparent) { mt.transparent = true; mt.needsUpdate = true; } }); }
+// Baut (einmal je Auto) alles, was nur die Cockpitansicht braucht: aufgeschnittene Karosserie-Materialien, Wanne und – beim F1 – die einheitliche Schale. EINE Stelle für Vorladen und Umschalten.
+function cockBuild(m) { const tp = m.tp, k = tp.M === MODELS.f2 ? 'f2' : 'f1'; tp.cutGloss ||= cockCut(tp.glossMat, k); tp.cutMatte ||= cockCut(MATTE, k); if (m.tub) return;
+  m.tub = cockTub(k, cockBodyCol(), (tp.M.swPos || [0, 0, 0.68])[2], tp.glossMat, k === 'f1'); m.tub.traverse(x => { if (x.isMesh && x.material === tp.glossMat) x.material = tp.cutGloss; });
+  if (k === 'f1') m.tub.add(cockShell(tp, cockBodyCol())); m.tub.visible = false; m.g.add(m.tub); }
 function cockpitInterior(on) {
   const m = pl && pl.mesh; if (cockOn && (!on || cockOn !== m)) { cockOn.body.material = cockOn.tp.glossMat; cockOn.matte.material = MATTE; cockOn.body.renderOrder = cockOn.matte.renderOrder = 0; if (cockOn.tub) cockOn.tub.visible = false; cockOn = null; }
   if (!on || cockOn === m) return; const tp = m.tp, k = tp.M === MODELS.f2 ? 'f2' : 'f1';
-  tp.cutGloss ||= cockCut(tp.glossMat, k); tp.cutMatte ||= cockCut(MATTE, k); if (!m.tub) { m.tub = cockTub(k, cockBodyCol(), (tp.M.swPos || [0, 0, 0.68])[2], tp.glossMat); m.tub.traverse(x => { if (x.isMesh && x.material === tp.glossMat) x.material = tp.cutGloss; }); m.g.add(m.tub); }
+  cockBuild(m);
   m.body.material = tp.cutGloss; m.matte.material = tp.cutMatte; m.tub.visible = true; cockOn = m;
   tp.cutGloss.transparent = tp.cutMatte.transparent = true; m.body.renderOrder = m.matte.renderOrder = COCK_RO; cockLast(m.tub, true); cockLast(SW.g, true); if (ARMS.f1) cockLast(ARMS.f1.g, true); }
 function drawWheel(dt) {
@@ -7666,7 +7706,7 @@ function updateCamera(dt) {
       const vib = Math.min(1, p.v / 50), bob = (Math.sin(tt * 2.1) * 0.004 + Math.sin(tt * 13.7) * 0.0012 * vib) * (paused ? 0 : 1), sway = Math.sin(tt * 1.3) * 0.003;
       const cp = S.cam === 3 && p.mesh.tv ? p.mesh.tv : (p.mesh.cam || [0, 0.9, 0.36]);
       if (st) camera.position.set(cp[0], cp[1], cp[2]); else camera.position.set(cp[0] + HEAD.x + sway, cp[1] - 0.008, cp[2] + HEAD.z); m.localToWorld(camera.position);   /* Höhe fest (Wunsch): kein Wippen, kein Absenken beim Bremsen/Beschleunigen */
-      if (st) _ht.set(cp[0], cp[1] - (cp[3] ?? 0.4), 30); else _ht.set(cp[0] + HEAD.x * 0.3 + sway * 0.5, cp[1] - (cp[3] ?? 0.4) - 0.9, 30);   /* Blickhöhe fest auf der tieferen Stellung – vorher nickte der Blick beim Bremsen und Beschleunigen */ m.localToWorld(_ht); camera.up.set(0, 1, 0); camera.lookAt(_ht); if (!st) { const D = clamp(p.v * 0.9, 14, 60); let kk = 0, nn = 0; for (let ds = 6; ds <= D; ds += 3) { kk += KS[Math.floor(modL(p.sPrev + ds) / DS) % N] || 0; nn++; }   // Helmkamera: Blick zum Kurvenscheitel (Krümmung voraus × halbe Vorausschau-Distanz ≈ Winkel zum Scheitelpunkt), weich nachgeführt
+      if (st) _ht.set(cp[0], cp[1] - (cp[3] ?? 0.4), 30); else _ht.set(cp[0] + HEAD.x * 0.3 + sway * 0.5, cp[1] - (cp[3] ?? 0.4) - 0.45, 30);   /* Blickhöhe fest auf der tieferen Stellung – vorher nickte der Blick beim Bremsen und Beschleunigen */ m.localToWorld(_ht); camera.up.set(0, 1, 0); camera.lookAt(_ht); if (!st) { const D = clamp(p.v * 0.9, 14, 60); let kk = 0, nn = 0; for (let ds = 6; ds <= D; ds += 3) { kk += KS[Math.floor(modL(p.sPrev + ds) / DS) % N] || 0; nn++; }   // Helmkamera: Blick zum Kurvenscheitel (Krümmung voraus × halbe Vorausschau-Distanz ≈ Winkel zum Scheitelpunkt), weich nachgeführt
         const tgt = clamp(-(kk / Math.max(1, nn)) * D * 0.5 * 0.75, -0.26, 0.26); HEAD.look = (HEAD.look || 0) + (tgt - (HEAD.look || 0)) * Math.min(1, dt * 1.3);   /* träger (Wunsch): ~0,8 s bis zum Ziel */ camera.rotateY(HEAD.look); camera.rotateZ(HEAD.r); } if (!st && (camOrb || camPit)) { camera.rotateY(-camOrb); camera.rotateX(-camPit * 0.45); }   // Cockpit: rechter Stick = Umschauen
     }
     if (sh > 0 && !paused && S.cam !== 2 && S.cam !== 3) { camera.position.x += (Math.random() - .5) * sh; camera.position.y += (Math.random() - .5) * sh; }

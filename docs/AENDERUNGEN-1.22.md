@@ -51,3 +51,12 @@
 - **Hauptmenü**: Bilder für Schnelles Spiel, Zeitrennen, Einstellungen (`textures/menu_*.jpg`, aus dem Spiel aufgenommen); Auto in der Karriere-Kachel rechts neben der Taste.
 - **Untermenüs** in Graphitglas und Weiß statt Navy und Hellblau, fester Facetten-Hintergrund; die Strecke wird in Menüs nicht mehr gerendert.
 - **Eigenes Spiel-Logo**: `logos/LOGO.png` ersetzt den Schriftzug im Hauptmenü.
+
+## Nachtrag (sechste Runde)
+- **Cockpit F1 als einheitliche Schale** (`cockShell`): eine durchgehende Fläche ersetzt das Deck rund um die Öffnung; die Karosserie wird dort in der Cockpitansicht nicht gezeichnet (`SHELL`, `cockCutGLSL`). Randhöhen werden einmal am Modell vermessen. Wanne und Schale entstehen an einer Stelle (`cockBuild`).
+- **Cockpit zuletzt gezeichnet** (`cockLast`, Reihenfolge 990): Windschatten und Luftstreifen liegen nicht mehr darüber.
+- **Cockpit-Kamera**: Höhe und Blickneigung fest, kein Nicken beim Bremsen/Beschleunigen.
+- **Studio**: Schwenk beim Teamwechsel (`showroomSwing`), Spiegelung von Auto und Wand im Boden, wandernde Lichtbänder auf der Wand.
+- **Hauptmenü**: zeigt bei laufender Karriere das Karriere-Fahrzeug (`showroomCareer`).
+- **Klassenwahl**: Rennbilder je Klasse (`textures/class_*.jpg`, Ultra-Grafik, Tiefenunschärfe nachträglich berechnet).
+- **Knöpfe**: Pfeile und Symbole als gezeichnete Formen statt Schriftzeichen.
