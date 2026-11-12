@@ -21,3 +21,12 @@
 | Seitliches Einblenden | `HALO_GH.s0` / `s1` | 0,24 / 0,58 |
 | Schmutz-Grundrate | `visorDirtTick`, `0.16` | Spritzer je Sekunde bei 60 m/s |
 | TV-Sichtfeld | `TVFOV` | 78° |
+
+## Nachtrag (zweite Runde)
+- **Hauptmenü**: keine Kamerafahrt mehr – fester, gezeichneter Hintergrund; die Strecke wird dort nicht gerendert.
+- **Team-/Fahrerwahl**: Rückwand im Showroom in Teamfarbe mit Teamname als Konturschrift (`showroomWall`), liegt hinter den Autos.
+- **Eigene Team-Logos**: Einstellungen › „Team-Logos“ › „Logos laden“. Dateiname = Kürzel oder Teamname (`MER.png`, `ferrari.svg`, `red-bull.png`). Gespeichert nur auf dem Gerät (`localStorage`, Schlüssel `f1logos`), nicht im Projekt.
+- **Cockpit-Halo**: blendet direkt an der Kamera aus (kein Blick ins hohle Rohr).
+- **Cockpit F1**: Seitenwangen an der Abdeckung neben dem Lenkrad; Öffnung an den Händen breiter (`COCK.f1.wn` 0,055).
+- **Cockpit F2**: Öffnung an Lenkrad und Händen breiter (`COCK.f2.wn` 0,05).
+- Bewusst nicht gemacht: 1:1-Kopie der Menüs eines bestehenden Spiels. Aufbau und Stimmung sind angelehnt, die Gestaltung ist eigen.
