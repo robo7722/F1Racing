@@ -2954,12 +2954,39 @@ function cockNew(tp, k, bodyCol) {
 
 const inCock = (k, x, y, z) => { const c = COCK[k]; return Math.abs(x) < c.x && z > c.z0 && z < c.z1 && y < c.y; };
 const cockGLSL = k => { const c = COCK[k]; return '\n if (abs(vLP.x) < ' + c.x.toFixed(3) + ' && vLP.z > ' + c.z0.toFixed(3) + ' && vLP.z < ' + c.z1.toFixed(3) + ' && vLP.y < ' + c.y.toFixed(3) + ') diffuseColor.rgb = vec3(' + [COCK_COL.r, COCK_COL.g, COCK_COL.b].map(v => v.toFixed(4)).join(',') + ');'; };
+// Aufkleber (Test): Teamlogo aus logos/<Kürzel>.png als Bild auf den berechneten Lack. Je Eintrag eine Stelle am Auto (Modellkoordinaten in Metern: x quer, y hoch, z nach vorn):
+//   v: 'side' = von der Seite aufgetragen (z/y = Mitte, beide Seiten, rechts gespiegelt, damit das Logo überall richtig herum steht; x0 = erst ab diesem Abstand von der Mitte)
+//   v: 'top'  = von oben aufgetragen (x/z = Mitte, Oberkante des Logos zeigt zum Heck); s = Kantenlänge des quadratischen Logofelds
+// Fehlt die Logo-Datei, bleibt der Lack unverändert.
+const DECALS = {
+  MER: [{ v: 'top', x: 0, z: 1.5, s: 0.2 }],   // Stern auf der Nase
+};
+// Aufkleberbogen (Test): liveries/<Kürzel>.png mit allen Sponsoren, von der Seite aufgetragen. Der Bogen zeigt das Auto im Bereich z0..z1 (Länge) und y0..y1 (Höhe):
+// obere Bildhälfte = linke Fahrzeugseite (Nase links), untere Hälfte = rechte Seite (Nase rechts). Erzeugt mit tools/aufkleberbogen_mer.py.
+const SHEETS = {
+  MER: { z0: -2.45, z1: 3.15, y0: 0, y1: 1.12, zones: [[0.98, 1.36, 0, 0.4]] },   // zones: [z von, z bis, |x| von, |x| bis] – in diesem Längenabschnitt nur Flächen in diesem Abstand von der Mitte bekleben (sonst steht ein Schriftzug doppelt auf zwei hintereinander liegenden Flächen)
+};
+const DECAL_TEX = {};
+function decalUniforms(tk) { if (DECAL_TEX[tk]) return DECAL_TEX[tk];
+  const U = DECAL_TEX[tk] = { uDecal: { value: null }, uDecalOn: { value: 0 }, uSheet: { value: null }, uSheetOn: { value: 0 } };
+  const ld = (url, tx, on) => { tx.value = new THREE.TextureLoader().load(url, t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.needsUpdate = true; on.value = 1; }, undefined, () => {}); };
+  if (DECALS[tk]) ld('logos/' + tk + '.png', U.uDecal, U.uDecalOn); if (SHEETS[tk]) ld('liveries/' + tk + '.png', U.uSheet, U.uSheetOn);
+  return U; }
+function decalGLSL(tk) { const f = v => v.toFixed(4), B = SHEETS[tk]; let g = '\n { vec3 dN = normalize(vLN); vec2 dUV; vec4 dT;';
+  if (B) g += '\n  if (uSheetOn > 0.5 && dN.x * sign(vLP.x) > 0.45) { dUV = vec2((vLP.z - ' + f(B.z0) + ') / ' + f(B.z1 - B.z0) + ', (vLP.y - ' + f(B.y0) + ') / ' + f(B.y1 - B.y0) + '); if (vLP.x > 0.0) dUV.x = 1.0 - dUV.x; float dIn = (dUV.x > 0.0 && dUV.x < 1.0 && dUV.y > 0.0 && dUV.y < 1.0) ? 1.0 : 0.0; ' + (B.zones || []).map(q => 'if (vLP.z > ' + f(q[0]) + ' && vLP.z < ' + f(q[1]) + ' && (abs(vLP.x) < ' + f(q[2]) + ' || abs(vLP.x) > ' + f(q[3]) + ')) dIn = 0.0; ').join('') + 'dUV.y = clamp(dUV.y, 0.004, 0.996) * 0.5 + (vLP.x > 0.0 ? 0.5 : 0.0); dT = texture2D(uSheet, dUV) * dIn; diffuseColor.rgb = mix(diffuseColor.rgb, dT.rgb, dT.a); }';
+  g += '\n  if (uDecalOn > 0.5) {';
+  for (const d of DECALS[tk] || []) g += d.v === 'top'
+    ? '\n  if (dN.y > 0.5) { dUV = vec2(0.5 + (vLP.x - ' + f(d.x) + ') / ' + f(d.s) + ', 0.5 - (vLP.z - ' + f(d.z) + ') / ' + f(d.s) + '); dT = decalTex(dUV); diffuseColor.rgb = mix(diffuseColor.rgb, dT.rgb, dT.a); }'
+    : '\n  if (abs(dN.x) > 0.45 && abs(vLP.x) > ' + f(d.x0 || 0) + ') { dUV = vec2(0.5 - sign(vLP.x) * (vLP.z - ' + f(d.z) + ') / ' + f(d.s) + ', 0.5 + (vLP.y - ' + f(d.y) + ') / ' + f(d.s) + '); dT = decalTex(dUV); diffuseColor.rgb = mix(diffuseColor.rgb, dT.rgb, dT.a); }';
+  return g + '\n  }\n }'; }
+const DECAL_HEAD = 'uniform sampler2D uDecal, uSheet; uniform float uDecalOn, uSheetOn; varying vec3 vLN;\nvec4 decalTex(vec2 uv) { vec4 t = texture2D(uDecal, uv); return (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) ? vec4(0.0) : t; }\n';
 function liveryMat(tk, gloss) { const code = LIVERY[tk]; if (!code) return gloss;
+  const dec = DECALS[tk] || SHEETS[tk] ? decalGLSL(tk) : '';
   gloss.onBeforeCompile = sh => {
-    sh.vertexShader = 'attribute float aCls; varying float vCls; varying vec3 vLP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vLP = position; vCls = aCls;');
-    sh.fragmentShader = 'uniform vec3 uMir; varying float vCls; varying vec3 vLP;\n' + LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 2.5 || vCls > 6.5) diffuseColor.rgb = livery(vLP, vCls);\n vec3 gN = normalize(cross(dFdx(vLP), dFdy(vLP))); float mirF = (abs(vLP.x) > 0.44 && abs(vLP.x) < 0.69 && vLP.y > 0.668 && vLP.y < 0.745 && vLP.z > 0.66 && vLP.z < 0.84 && abs(gN.z) > 0.7) ? 1.0 : 0.0; if (mirF > 0.5) diffuseColor.rgb = vec3(0.0);' /* Spiegelglas (F1): die nach hinten zeigende Fläche der Spiegelgehäuse – im Modell kein eigenes Teil – zeigt die Himmelsfarbe der Strecke */ + cockGLSL('f1')).replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n if (mirF > 0.5) totalEmissiveRadiance = uMir;'); sh.uniforms.uMir = { value: MIRMAT.emissive };
+    sh.vertexShader = 'attribute float aCls; varying float vCls; varying vec3 vLP; varying vec3 vLN;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vLP = position; vCls = aCls; vLN = normal;');
+    sh.fragmentShader = 'uniform vec3 uMir; varying float vCls; varying vec3 vLP;\n' + (dec ? DECAL_HEAD : '') + LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 2.5 || vCls > 6.5) { diffuseColor.rgb = livery(vLP, vCls);' + dec + ' }\n vec3 gN = normalize(cross(dFdx(vLP), dFdy(vLP))); float mirF = (abs(vLP.x) > 0.44 && abs(vLP.x) < 0.69 && vLP.y > 0.668 && vLP.y < 0.745 && vLP.z > 0.66 && vLP.z < 0.84 && abs(gN.z) > 0.7) ? 1.0 : 0.0; if (mirF > 0.5) diffuseColor.rgb = vec3(0.0);' /* Spiegelglas (F1): die nach hinten zeigende Fläche der Spiegelgehäuse – im Modell kein eigenes Teil – zeigt die Himmelsfarbe der Strecke */ + cockGLSL('f1')).replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n if (mirF > 0.5) totalEmissiveRadiance = uMir;'); sh.uniforms.uMir = { value: MIRMAT.emissive }; if (dec) Object.assign(sh.uniforms, decalUniforms(tk));
   };
-  gloss.customProgramCacheKey = () => 'livery-' + tk; return gloss; }
+  gloss.customProgramCacheKey = () => 'livery-' + tk + (dec ? '-d' : ''); return gloss; }
 function teamTemplate(tk) {
   if (TPL[tk]) return TPL[tk];
   const T0 = LIVS[tk] || TEAMS[tk], MD = MODELS[T0.kind === 'f2' ? 'f2' : 'f1'];
