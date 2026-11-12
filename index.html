@@ -2899,6 +2899,10 @@ function cockNew(tp, k, bodyCol) {
   const grp = new THREE.Group(); grp.add(new THREE.Mesh(g, tp.shellMat)); grp.add(new THREE.Mesh(gc, COCK_MAT));
   { const w = 0.062, y0 = G.fl, y1 = hC1 - 0.003, zp = G.z1 - 0.002, pg = new THREE.BufferGeometry();   // Armaturenwand: ebene Carbonplatte in der Mitte der Vorderwand (dort laufen die Punktreihen beider Hälften zusammen – ohne Platte eine dunkle Naht)
     pg.setAttribute('position', new THREE.Float32BufferAttribute([-w, y0, zp, w, y0, zp, w, y1, zp, -w, y0, zp, w, y1, zp, -w, y1, zp], 3)); pg.setAttribute('uv', new THREE.Float32BufferAttribute([-w * 30, y0 * 30, w * 30, y0 * 30, w * 30, y1 * 30, -w * 30, y0 * 30, w * 30, y1 * 30, -w * 30, y1 * 30], 2)); pg.computeVertexNormals(); grp.add(new THREE.Mesh(pg, COCK_MAT)); }
+  // Kopfstütze/Rückwand hinter dem Fahrer: geschlossene, oben runde Polsterwand über die ganze Breite – beim Umschauen nach hinten sieht man darauf statt hinter das Ende des Cockpit-Modells
+  { const zW = -0.09, w = ckTab(G.hw, zW) - 0.002, y0 = yBk, yS = G.yR + 0.03, n = 24, Q = [0, y0, zW]; for (let i = 0; i <= n; i++) { const a2 = Math.PI * i / n, x = -w * Math.cos(a2); Q.push(x, yS + 0.5 * Math.sin(a2), zW); }
+    const ix = [0, 1, n + 1]; for (let i = 1; i <= n; i++) ix.push(0, i + 1, i); const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute(Q, 3)); wg.setIndex(ix); wg.computeVertexNormals();
+    const wm = COCK_PAD.clone(); wm.side = THREE.DoubleSide; grp.add(new THREE.Mesh(wg, wm)); }
   // Verkleidung am Fuß der Halo-Mittelstrebe: flacher, dunkler Tropfen auf dem Deck
   { const fg = new THREE.SphereGeometry(1, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2); fg.scale(0.042, 0.022, 0.11); fg.translate(0, ckTab(G.hC, G.hf) - 0.004, G.hf - 0.03); grp.add(new THREE.Mesh(fg, COCK_PAD)); }
   // Schriftzüge auf den Schultern (eigene Schrift, keine Markenlogos): links der Teamname, rechts Startnummer und Fahrerkürzel – von außen lesbar, wie bei echten Autos
