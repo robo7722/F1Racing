@@ -1083,21 +1083,18 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 #scrTitle .hbtn small{max-width:none!important}
 
 body.warmhelm #helmet{display:block!important;opacity:.01}
-/* Überlagerungen (Pause, Ergebnis, Einstellungen) im Stil der Menüs: Graphitglas, 9-px-Ecken, Reiter als Kästen, Infofelder ohne roten Rand */
-.overlay .card,.overlay .cgcard{border-radius:9px!important;border:1px solid rgba(255,255,255,.16)!important;border-top-color:rgba(255,255,255,.26)!important;background:linear-gradient(180deg,rgba(58,60,66,.95),rgba(27,28,32,.97))!important;box-shadow:0 24px 60px -20px rgba(0,0,0,.8)!important}
-.overlay .card::before,.overlay .card::after{display:none!important}
-.overlay .card h2{letter-spacing:.05em!important}
-.ptabs{border:0!important;gap:6px!important;margin:10px 0 12px!important}
-.ptabs button{height:44px!important;border-radius:9px!important;background:rgba(30,32,37,.62)!important;border:1px solid var(--f1l)!important;border-bottom:3px solid transparent!important;color:rgba(255,255,255,.6)!important;font-size:13px!important}
-.ptabs button.on{background:linear-gradient(180deg,rgba(92,96,106,.95),rgba(40,42,48,.95))!important;color:#fff!important;border-color:var(--f1l2)!important;border-bottom-color:var(--f1r)!important}
-.ptabs button.on::after{display:none!important}
-.pinfo{gap:6px!important}.pinfo span{border-radius:9px!important;background:rgba(30,32,37,.7)!important;border:1px solid var(--f1l)!important;padding:5px 10px!important;letter-spacing:.06em}
-.overlay .big{border-radius:9px!important}
-.overlay .big.alt{background:linear-gradient(180deg,rgba(74,78,86,.5),rgba(40,42,48,.62))!important;border:1px solid rgba(255,255,255,.16)!important;border-top-color:rgba(255,255,255,.26)!important}
-.overlay .big.alt.danger{border-color:rgba(225,6,0,.6)!important;color:#ff6a5c!important}
-#resTable th,.stbl th{background:rgba(27,28,32,.98)!important}
-.toast{border-radius:9px!important;background:rgba(27,28,32,.96)!important;border:1px solid var(--f1l)!important;border-left:3px solid var(--f1r)!important}
-#loading{background:linear-gradient(118deg,transparent 0 46%,rgba(255,255,255,.035) 46% 63%,transparent 63%),radial-gradient(80% 70% at 50% 40%,#3a3c41,#1b1c20 70%,#0e0f12)!important}
+/* NUR Pausenmenü und Einstellungen im Stil der Menüs: Graphitglas, 9-px-Ecken, Reiter als Kästen, Infofelder ohne roten Rand */
+:is(#pause,#settings) .card{border-radius:9px!important;border:1px solid rgba(255,255,255,.16)!important;border-top-color:rgba(255,255,255,.26)!important;background:linear-gradient(180deg,rgba(58,60,66,.95),rgba(27,28,32,.97))!important;box-shadow:0 24px 60px -20px rgba(0,0,0,.8)!important}
+:is(#pause,#settings) .card::before,:is(#pause,#settings) .card::after{display:none!important}
+:is(#pause,#settings) .card h2{letter-spacing:.05em!important}
+:is(#pause,#settings) .ptabs{border:0!important;gap:6px!important;margin:10px 0 12px!important}
+:is(#pause,#settings) .ptabs button{height:44px!important;border-radius:9px!important;background:rgba(30,32,37,.62)!important;border:1px solid var(--f1l)!important;border-bottom:3px solid transparent!important;color:rgba(255,255,255,.6)!important;font-size:13px!important}
+:is(#pause,#settings) .ptabs button.on{background:linear-gradient(180deg,rgba(92,96,106,.95),rgba(40,42,48,.95))!important;color:#fff!important;border-color:var(--f1l2)!important;border-bottom-color:var(--f1r)!important}
+:is(#pause,#settings) .ptabs button.on::after{display:none!important}
+:is(#pause,#settings) .pinfo{gap:6px!important}:is(#pause,#settings) .pinfo span{border-radius:9px!important;background:rgba(30,32,37,.7)!important;border:1px solid var(--f1l)!important;padding:5px 10px!important;letter-spacing:.06em}
+:is(#pause,#settings) .big{border-radius:9px!important}
+:is(#pause,#settings) .big.alt{background:linear-gradient(180deg,rgba(74,78,86,.5),rgba(40,42,48,.62))!important;border:1px solid rgba(255,255,255,.16)!important;border-top-color:rgba(255,255,255,.26)!important}
+:is(#pause,#settings) .big.alt.danger{border-color:rgba(225,6,0,.6)!important;color:#ff6a5c!important}
 
 .tag:empty{display:block!important;border:0!important;padding:0!important;height:0!important}   /* leere Zeile bleibt als Abstand zwischen Logo und Kacheln stehen */
 
@@ -2693,7 +2690,7 @@ function smoothGeo(g, tol = 0.003) { if (!g || !g.attributes.normal) return; con
     for (const v of [a, b, c]) { const r = rp[v / 3] * 3; A[r] += nx; A[r + 1] += ny; A[r + 2] += nz; } }
   for (let i = 0; i < n; i++) { const r = rp[i] * 3, l = Math.hypot(A[r], A[r + 1], A[r + 2]); if (l > 1e-12) { N0[i * 3] = A[r] / l; N0[i * 3 + 1] = A[r + 1] / l; N0[i * 3 + 2] = A[r + 2] / l; } }
   g.attributes.normal.needsUpdate = true; }
-smoothGeo(CARM2 && CARM2.halo);
+
 // Lack-Shader: Normale immer zum Betrachter drehen (Flächen mit verdrehter Dreiecksrichtung spiegelten sonst den Boden statt des Himmels)
 function viewFacing(sh) { sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\n if (dot(normal, vViewPosition) < 0.0) normal = -normal;\n nonPerturbedNormal = normal;'); }
 addPlate(CARM2, -0.115, 0.115, 0.69, 0.94, 0.681);
@@ -2719,7 +2716,7 @@ if (CARM2) { const pts = [], N2 = 48, tail = [[0.25, 0.62, -0.02], [0.25, 0.705,
   for (const q of tail.slice().reverse()) pts.push(new THREE.Vector3(q[0], q[1], q[2]));
   const parts = [new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, false, 'centripetal'), 160, 0.03, 16), rod([0, 0.872, 0.47], [0, 0.68, 0.89], 0.027, 16)], P = [], Nn = [], U = [], I = []; let base = 0;
   for (const g of parts) { P.push(...g.attributes.position.array); Nn.push(...g.attributes.normal.array); U.push(...g.attributes.uv.array); for (const k of g.index.array) I.push(k + base); base += g.attributes.position.count; g.dispose(); }
-  const h = new THREE.BufferGeometry(); h.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); h.setAttribute('normal', new THREE.Float32BufferAttribute(Nn, 3)); h.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); h.setIndex(I); h.userData.cls = new Uint8Array(base).fill(7); h.computeBoundingSphere(); CARM2.halo = h; }
+  const h = new THREE.BufferGeometry(); h.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); h.setAttribute('normal', new THREE.Float32BufferAttribute(Nn, 3)); h.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); h.setIndex(I); h.userData.cls = new Uint8Array(base).fill(7); h.computeBoundingSphere(); CARM2.haloCk = h; }   /* nur für die Fahreransicht – in allen Außenansichten bleibt der Halo des Modells */
 // Farben je Klasse: 0 Lack, 1 Akzent, 2 Nasenspitze, 3 Carbon, 4 dunkel, 5 Reifen, 6 Reifenmarkierung, 7 Halo
 function paintGeo(g, fn) {
   const cl = g.userData.cls, p = g.attributes.position.array, c = new Float32Array(cl.length * 3), t = new THREE.Color();
@@ -2989,7 +2986,7 @@ function teamTemplate(tk) {
         sh.fragmentShader = 'varying float vCls; varying vec3 vLP;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 0.5) { diffuseColor.rgb = vLP.z > 2.55 ? ' + v3(cT) + ' : ((vLP.z > 2.15 && vLP.y < 0.36) || (vLP.z < -1.9 && vLP.y > 0.6)) ? ' + v3(cA) + ' : ' + (T.low !== undefined ? 'vLP.y < ' + T.split.toFixed(3) + ' ? ' + v3(cLow) + ' : ' : '') + v3(cB) + '; }' + cockGLSL('f2')); };
       gloss.customProgramCacheKey = () => 'f2paint-' + tk; }   /* F2: weicher Klarlack – der scharfe Klarlack spiegelte Asphalt und Schatten als schwarze Flecken */   /* F2 auf F1-Niveau: die dunkle Umgebung (Asphalt, Horizontband) spiegelt sich weich statt schwarz */   // F2: unscharfe, schwache Spiegelung – scharfe Umgebungsspiegelung (Gras/Tribünen) wirkte fleckig-grün
     const haloMat = gloss.clone();   // Halo in der TV-Kamera: einfarbig in der Fahrzeugfarbe, ohne Lackierungs-Verlauf (Material vor dem Livery-Shader kopieren)
-    return (TPL[tk] = { model: true, M: MD, lods: MD.C.lods.map(L => ({ gloss: paintGeo(L.gloss, pc), matte: paintGeo(L.matte, pc) })), halo: paintGeo(MD.C.halo, pc), haloFlat: paintGeo(MD.C.halo, (k, x, y, z, o) => o.copy(cB)), haloMat,   /* TV-Kamera: das Halo AUS DEM MODELL in der Wagenfarbe – genau wie Version 1.00 (Wunsch). Ein fast schwarzes Halo spiegelte nur den Himmel als dünne Linie und wirkte spitz */ glossMat: liveryMat(tk, gloss) });
+    return (TPL[tk] = { model: true, M: MD, lods: MD.C.lods.map(L => ({ gloss: paintGeo(L.gloss, pc), matte: paintGeo(L.matte, pc) })), halo: paintGeo(MD.C.halo, pc), haloCk: MD.C.haloCk ? paintGeo(MD.C.haloCk, pc) : null, haloFlat: paintGeo(MD.C.halo, (k, x, y, z, o) => o.copy(cB)), haloMat,   /* TV-Kamera: das Halo AUS DEM MODELL in der Wagenfarbe – genau wie Version 1.00 (Wunsch). Ein fast schwarzes Halo spiegelte nur den Himmel als dünne Linie und wirkte spitz */ glossMat: liveryMat(tk, gloss) });
   }
   const T = TEAMS[tk];
   const cB = col(T.body), cA = col(T.acc), cT = col(T.tip), cLow = col(T.low ?? T.body), cC = col(0x5a6068), cD = col(0x16181b), cL = col(0xff1a0a), cW = col(0xe9ecef);
@@ -7823,7 +7820,7 @@ function updateCamera(dt) {
     { const flat = S.cam === 3; if (flat !== haloFlatOn) { haloFlatOn = flat; for (const c of ALL) { const m = c.mesh; if (m && m.tp && m.tp.haloFlat && m.halo) { m.halo.geometry = flat ? m.tp.haloFlat : m.tp.halo; m.halo.material = flat ? m.tp.haloMat : m.tp.glossMat; } } } }   // TV-Kamera: Halo einfarbig in Fahrzeugfarbe, ohne Verlauf
     if (pl.mesh.tp && pl.mesh.halo) { const m = pl.mesh, tp = m.tp, gh = S.cam === 2;   // Cockpit (Test): Halo bleibt sichtbar, aber als „Geister-Halo“ – halbtransparent, auf Blickhöhe fast durchsichtig, nach oben und unten zunehmend deckend
       if (gh !== !!m.haloGh) { m.haloGh = gh;
-        if (gh) { tp.haloGhost ||= haloGhostMat(tp.haloMat); if (!m.haloPre) { m.haloPre = new THREE.Mesh(tp.halo, HALO_PRE); m.haloPre.renderOrder = 998; m.haloPre.frustumCulled = false; m.g.add(m.haloPre); } m.halo.geometry = tp.halo; m.halo.material = tp.haloGhost; m.halo.renderOrder = 999; m.halo.castShadow = false; }
+        if (gh) { tp.haloGhost ||= haloGhostMat(tp.haloMat); if (!m.haloPre) { m.haloPre = new THREE.Mesh(tp.haloCk || tp.halo, HALO_PRE); m.haloPre.renderOrder = 998; m.haloPre.frustumCulled = false; m.g.add(m.haloPre); } m.halo.geometry = tp.haloCk || tp.halo; m.halo.material = tp.haloGhost; m.halo.renderOrder = 999; m.halo.castShadow = false; }
         else { m.halo.geometry = haloFlatOn ? tp.haloFlat : tp.halo; m.halo.material = haloFlatOn ? tp.haloMat : tp.glossMat; m.halo.renderOrder = 0; m.halo.castShadow = true; }
         if (m.haloPre) m.haloPre.visible = gh; } }
     if (pl.mesh.tp) pl.mesh.helm.position.set(0, S.cam === 3 ? -0.03 : 0, S.cam === 3 ? 0.06 : 0);   // TV-Kamera: Helm leicht nach vorn/unten versetzt – bleibt sichtbar, ohne an der Kamera anzuschneiden
@@ -8594,7 +8591,7 @@ function showroomFrame(dt) {
     const hb = (SHOW.hb ||= document.querySelector('#cPlay .hbody')), r = hb.getBoundingClientRect();
     if (r.width > 10) { const d = 5.4 / (0.5 * r.width / W2) / (2 * Math.tan(SHOW_FOV / 2 * Math.PI / 180) * (W2 / H2)); _sp.sub(_st).setLength(d).add(_st); ox = -((r.left + r.width * 0.71) / W2 - 0.5); oy = -((r.top + r.height * 0.46) / H2 - 0.5);   /* Auto rechts in der Kachel: links unten bleibt die Taste frei */
       const key = [r.left, r.top, r.width, r.height].map(Math.round).join(','); if (SHOW.hole !== key) { SHOW.hole = key; const st = $('#menu').style; st.setProperty('--hx', r.left + 'px'); st.setProperty('--hy', r.top + 'px'); st.setProperty('--hw', r.width + 'px'); st.setProperty('--hh', r.height + 'px'); } } }
-  else { _sp.set(-14.4, 2.38, 17.2); _st.set(-0.35, 0.5, 0); oy = 0.05; }                              // Teamwahl: nah, schräg von vorn
+  else { _sp.set(-14.4, 1.05, 17.2); _st.set(-0.35, 0.55, 0); oy = 0.03; }   /* flacher Blickwinkel: Kamera knapp über Radhöhe */                              // Teamwahl: nah, schräg von vorn
   _sp.x += Math.sin(t * 0.27) * 0.5; _sp.y += Math.sin(t * 0.19) * 0.1; _sp.z += Math.cos(t * 0.23) * 0.4;   // leichtes Schweben – nie ganz statisch
   if (!SHOW.cp) { SHOW.cp = _sp.clone(); SHOW.ct = _st.clone(); SHOW.ox = ox; SHOW.oy = oy; }
   const k = 1 - Math.exp(-dt * (scr === 'title' ? 6 : 2.1)); SHOW.cp.lerp(_sp, k); SHOW.ct.lerp(_st, k); cam.position.copy(SHOW.cp);
