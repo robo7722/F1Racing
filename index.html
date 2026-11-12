@@ -1098,6 +1098,8 @@ body.warmhelm #helmet{display:block!important;opacity:.01}
 #resTable th,.stbl th{background:rgba(27,28,32,.98)!important}
 .toast{border-radius:9px!important;background:rgba(27,28,32,.96)!important;border:1px solid var(--f1l)!important;border-left:3px solid var(--f1r)!important}
 #loading{background:linear-gradient(118deg,transparent 0 46%,rgba(255,255,255,.035) 46% 63%,transparent 63%),radial-gradient(80% 70% at 50% 40%,#3a3c41,#1b1c20 70%,#0e0f12)!important}
+
+.tag:empty{display:none!important}
 </style>
 </head>
 <body>
@@ -1157,7 +1159,7 @@ body.warmhelm #helmet{display:block!important;opacity:.01}
   <section class="scr" id="scrTitle">
     <div class="tleft">
       <div class="logo2"><div><b>FORMULA</b><span>RACING</span></div></div>
-      <p class="tag" id="sub">Saison 2026 · 22 Fahrer · 11 Teams · 10 Strecken</p>
+      <p class="tag" id="sub"></p>
       <div class="hub">
         <button class="hero" id="cPlay">
           <span class="hband"><span class="hk">Karriere</span><span class="hs" id="cSub">Vom Kart bis in die Formel 1</span></span>
@@ -8560,7 +8562,7 @@ let installEvt = null;
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('#install').classList.remove('hidden'); });
 $('#install').addEventListener('click', async () => { if (!installEvt) return; installEvt.prompt(); try { await installEvt.userChoice; } catch (e) {} installEvt = null; $('#install').classList.add('hidden'); });
 addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
-if (isIOS && !standalone) $('#sub').textContent += ' · iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
+if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
 const VERSION = '1.23'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
