@@ -38,3 +38,8 @@
 - **Logos im Repo**: PNGs in `logos/` ablegen, siehe `logos/LIESMICH.md`.
 - **Cockpit**: Abdeckung, Seitenwangen und breitere Öffnungen (F1/F2) wieder entfernt – Karosserie wie in 1.21. Der durchscheinende Halo bleibt.
 - Pfeil der Weiter-Taste als gezeichneter Winkel, exakt mittig.
+
+## Nachtrag (vierte Runde)
+- **Hauptmenü**: graue Glaskacheln mit runden Ecken; in der Karriere-Kachel steht das eigene Auto (Fenster ins Studio).
+- **Kamerafahrten im Studio** (`showroomFrame`): Teamwahl nah und schräg von vorn · Fahrerwahl: Fahrt nach vorn, beide Autos frontal · Streckenwahl: Fahrt zur Seite, Auto genau seitlich rechts. Überall leichtes Schweben.
+- **Cockpit F1**: nur die Abdeckung vor dem Lenkrad ist breiter und hat eine steile Flanke; keine Seitenwangen, Öffnung unverändert.

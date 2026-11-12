@@ -996,6 +996,24 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 /* Pfeil im weißen Feld der Weiter-Taste: als gezeichneter Winkel exakt mittig (das Schriftzeichen „›“ saß je nach Schrift zu tief und zu weit links) */
 .mnext span{font-size:0!important;line-height:0!important}
 .mnext span::before{content:"";display:block;width:7px;height:7px;border-top:3px solid var(--f1r);border-right:3px solid var(--f1r);transform:translateX(-2px) rotate(45deg)}
+
+/* ===== Hauptmenü näher an der Vorlage: dunkler Facetten-Hintergrund, graue Glaskacheln mit runden Ecken, Karriere-Kachel mit weißem Kopf und dem eigenen Auto als Bild darunter ===== */
+#menu{--hx:0px;--hy:0px;--hw:0px;--hh:0px}
+#menu[data-scr=title]::before{background:linear-gradient(118deg,transparent 0 46%,rgba(255,255,255,.035) 46% 63%,transparent 63%),linear-gradient(62deg,rgba(255,255,255,.03) 0 24%,transparent 24%),linear-gradient(152deg,transparent 0 70%,rgba(0,0,0,.35) 70%),radial-gradient(80% 70% at 50% 40%,#3a3c41,#1b1c20 70%,#0e0f12)!important}
+#menu.carbg[data-scr=title]::before{-webkit-mask:linear-gradient(#000 0 0),linear-gradient(#000 0 0) var(--hx) var(--hy)/var(--hw) var(--hh) no-repeat;-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0),linear-gradient(#000 0 0) var(--hx) var(--hy)/var(--hw) var(--hh) no-repeat;mask-composite:exclude}
+.hero,.hbtn{border-radius:9px!important}
+.hero{outline:3px solid #fff!important;outline-offset:-3px;overflow:hidden}
+.hband{background:#fff!important;padding:9px 16px 8px!important}
+.hbody{background:linear-gradient(180deg,rgba(0,0,0,0) 45%,rgba(0,0,0,.55))!important}
+#menu:not(.carbg) .hbody{background:linear-gradient(160deg,#e10600 0%,#a80400 70%,#6e0300 100%)!important}
+#menu.carbg .hero .hi{display:none}
+.hbtn{background:linear-gradient(180deg,rgba(74,78,86,.5),rgba(40,42,48,.62))!important;border:1px solid rgba(255,255,255,.16)!important;box-shadow:none!important;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.hbtn::before{display:none!important}
+.hbtn b{color:rgba(255,255,255,.78)!important}
+.hbtn:hover{background:linear-gradient(180deg,rgba(96,100,110,.6),rgba(52,54,62,.7))!important}.hbtn:hover b{color:#fff!important}
+.hi{border-radius:6px;background:linear-gradient(180deg,#e0263a,#a5101f)!important}
+.hbtn.ghost .hi{background:linear-gradient(180deg,#e0263a,#a5101f)!important}
+.hub{gap:10px!important}
 </style>
 </head>
 <body>
@@ -2785,9 +2803,9 @@ function cockTub(k, bodyCol = 0x808890, swz = 0.68, livMat = null) {   // Wanne:
  }   // (schwarze Seitenpolster entfernt: sie waren nur in der Cockpitansicht zu sehen)
   // (kein schwarzer Randwulst mehr um die Öffnung – Wunsch: er war in keiner anderen Ansicht zu sehen; die Karosseriekante bildet den Rand)
   // F1: lackierte Abdeckung vor dem Lenkrad – das Modell hat dort nur eine tiefer liegende, löchrige Fläche (dreieckiges Loch, in der Lackfarbe des Streifens)
-  if (c.hood) { const [ya, yb, ze] = c.hood, hw = wT(z1) + 0.02, nz = 22, nx = 20, nr = 7, rr = 0.03, HP = [], HI = [], zA = z1 - 0.012, zr = 0.80, hwz = z => { const q = clamp((z - zr) / (ze - zr), 0, 1), b = clamp((z - zA) / 0.05, 0, 1); return hw * Math.sqrt(Math.max(0.02, 1 - q * q)) * (0.875 + 0.125 * b * b * (3 - 2 * b)); };   /* hinten etwas schmaler als die Öffnung: die abgerollte Kante schneidet das Deck nicht */
+  if (c.hood) { const [ya, yb, ze] = c.hood, hw = wT(z1) + 0.062, nz = 22, nx = 40, nr = 7, rr = 0.03, HP = [], HI = [], zA = z1 - 0.012, zr = 0.80, hwz = z => { const q = clamp((z - zr) / (ze - zr), 0, 1), b = clamp((z - zA) / 0.05, 0, 1); return hw * Math.sqrt(Math.max(0.02, 1 - q * q)) * (0.875 + 0.125 * b * b * (3 - 2 * b)); };   /* hinten etwas schmaler als die Öffnung: die abgerollte Kante schneidet das Deck nicht */
     // Querschnitt gewölbt, zu den Seiten weich auf die Höhe des Decks abfallend (keine senkrechte Schürze); vorn halbrund und nach unten gezogen; zum Fahrer hin rund abgerollt statt einer harten Kante
-    const yAt = (z, u) => { const t = clamp((z - zA) / (ze - zA), 0, 1), e = clamp((z - 0.86) / (ze - 0.86), 0, 1), a = Math.abs(u); return lerp(ya, yb, t) - 0.07 * e * e * e + 0.007 * (1 - u * u) * (1 - e) - 0.058 * a * a * a * a; };   /* Seiten tauchen klar unter das Deck (kein Flimmern an der Berührkante) */
+    const yAt = (z, u) => { const t = clamp((z - zA) / (ze - zA), 0, 1), e = clamp((z - 0.86) / (ze - 0.86), 0, 1), a = Math.abs(u); return lerp(ya, yb, t) - 0.07 * e * e * e + 0.007 * (1 - u * u) * (1 - e) - 0.09 * Math.pow(a, 12); };   /* flach bis kurz vor den Rand, dann steil unter das Deck: das Ende der Spiegelstrebe liegt unter der Abdeckung */   /* Seiten tauchen klar unter das Deck (kein Flimmern an der Berührkante) */
     const rows = [[zA, -(rr + 0.004)]];   /* endet knapp über dem Cockpitrand: darunter färbt der Lackierungs-Shader den Innenraum um (Grenze genau auf dieser Fläche = Flimmern) */ for (let k2 = 0; k2 <= nr; k2++) { const an = k2 / nr * Math.PI / 2; rows.push([zA + rr * (1 - Math.cos(an)), -rr * (1 - Math.sin(an))]); } for (let j = 1; j <= nz; j++) rows.push([zA + rr + (ze - zA - rr) * j / nz, 0]);
     for (const [z, dy] of rows) for (let i = 0; i <= nx; i++) { const u = i / nx * 2 - 1; HP.push(u * hwz(z), yAt(Math.max(z, zA + rr), u) + dy, z); }
     for (let j = 0; j < rows.length - 1; j++) for (let i = 0; i < nx; i++) { const a = j * (nx + 1) + i, b2 = a + 1, d = a + nx + 1, e = d + 1; HI.push(a, d, b2, b2, d, e); }
@@ -7996,7 +8014,9 @@ function showScreen(k) {
   MENU.scr = k; $('#menu').dataset.scr = k;
   $$('#menu .scr').forEach(e => e.classList.toggle('on', e.id === 'scr' + k[0].toUpperCase() + k.slice(1)));
   const idx = SCR.indexOf(k); $$('#mSteps i').forEach((e, n) => { e.classList.toggle('on', n + 1 === idx); e.classList.toggle('done', n + 1 < idx); });
-  if ((k === 'team' || k === 'driver' || k === 'track') && MENU.team && TEAMS[MENU.team]) { SHOW.on = true; showroomTeam(MENU.team); showroomWall(MENU.team, k === 'track' && TRACKS[S.track] ? TRACKS[S.track].name : null); } else SHOW.on = false;
+  if ((k === 'team' || k === 'driver' || k === 'track') && MENU.team && TEAMS[MENU.team]) { SHOW.on = true; showroomTeam(MENU.team); showroomWall(MENU.team, k === 'track' && TRACKS[S.track] ? TRACKS[S.track].name : null); }
+  else if (k === 'title') { try { const d0 = byCode(S.driver) || ALL[0]; showroomTeam(d0.team); showroomWall(d0.team, ' '); SHOW.on = true; } catch (e) { SHOW.on = false; } $('#menu').classList.toggle('carbg', SHOW.on); }   // Hauptmenü: das eigene Auto steht im Fenster der Karriere-Kachel
+  else SHOW.on = false;
   const nb = $('#mNext'), car = MENU.mode === 'career';
   nb.style.display = k === 'career' || k === 'upgrade' ? 'none' : '';
   nb.classList.toggle('start', k === 'race' || k === 'name' || k === 'season');
@@ -8265,7 +8285,7 @@ function initShowroom() {
   const key = new THREE.DirectionalLight(0xffffff, 3.0); key.position.set(4, 9, 6); key.castShadow = true; key.shadow.mapSize.set(1024, 1024); const kc = key.shadow.camera; kc.left = kc.bottom = -8; kc.right = kc.top = 8; kc.near = 1; kc.far = 30; key.shadow.bias = -0.0004; sc.add(key);
   const rim = new THREE.DirectionalLight(0x9fd8ff, 2.2); rim.position.set(-6, 4, -8); sc.add(rim);
   { const cv = document.createElement('canvas'); cv.width = 2048; cv.height = 640; const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 4;
-    const wall = new THREE.Mesh(new THREE.PlaneGeometry(44, 13.75), new THREE.MeshBasicMaterial({ map: tx, fog: false, toneMapped: false })); wall.position.set(0, 6.875, -6.5); sc.add(wall); SHOW.wall = { cv, tx }; }
+    const wall = new THREE.Mesh(new THREE.PlaneGeometry(44, 13.75), new THREE.MeshBasicMaterial({ map: tx, fog: false, toneMapped: false })); wall.position.set(0, 6.875, -6.5); sc.add(wall); const wall2 = new THREE.Mesh(wall.geometry, wall.material); wall2.rotation.y = -Math.PI / 2; wall2.position.set(8.5, 6.875, 1.6); sc.add(wall2);   /* zweite Wand im rechten Winkel: Hintergrund der Frontalansicht (Fahrerwahl) */ SHOW.wall = { cv, tx }; }
   SHOW.scene = sc; SHOW.cam = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 0.1, 120);
 }
 // Rückwand des Showrooms: dunkles Graphit, schräge Farbflächen in der Teamfarbe, feine Linien und der Teamname als große Konturschrift
@@ -8279,31 +8299,39 @@ function showroomWall(team, text) { const W = SHOW.wall; if (!W || !TEAMS[team])
     g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.lineJoin = 'round'; g.lineWidth = 4; g.strokeStyle = 'rgba(255,255,255,.62)'; g.strokeText(nm, w / 2, h * 0.9); }
   { const gr = g.createLinearGradient(0, h * 0.8, 0, h); gr.addColorStop(0, 'rgba(5,7,11,0)'); gr.addColorStop(1, 'rgba(5,7,11,.55)'); g.fillStyle = gr; g.fillRect(0, h * 0.8, w, h * 0.2); }   // zum Boden hin abdunkeln
   W.tx.needsUpdate = true; }
-// Auswahl-Studio: Autos stehen fest in Seitenansicht (Nase nach links, leicht zur Kamera gedreht) – keine Drehteller, keine Rotation.
-// Teamwahl: nur das erste Auto, nah. Fahrerwahl: Kamera fährt zurück, erst dann erscheint das zweite Auto. Streckenwahl: das Auto des gewählten Fahrers rechts im Bild.
-const SHOW_POS = [[0, 0, 0], [5.4, 0, -2.6]], SHOW_ROT = -Math.PI / 2 + 0.42;
+// Auswahl-Studio: beide Autos stehen parallel (Nase nach −x), keine Drehteller. Die Kamera fährt je Bildschirm an einen anderen Platz und schwebt dort leicht:
+// Hauptmenü: Auto schräg von vorn im Fenster der Karriere-Kachel · Teamwahl: nah, schräg von vorn, nur das erste Auto · Fahrerwahl: Fahrt nach vorn, beide Autos frontal ·
+// Streckenwahl: Fahrt zur Seite, bis das gewählte Auto genau seitlich rechts im Bild steht.
+const SHOW_POS = [[0, 0, 0], [0, 0, 3.2]], SHOW_ROT = -Math.PI / 2;
 function showroomTeam(team) {
-  initShowroom(); if (SHOW.team === team) return; SHOW.team = team;
+  initShowroom(); if (SHOW.team === team && SHOW.ser === SER) return; SHOW.team = team; SHOW.ser = SER;
   for (const m of SHOW.cars) { SHOW.scene.remove(m.g); m.g.traverse(o => { if (o.isSprite) o.material.map.dispose(); }); }
   const tl = ALL.filter(c => c.team === team);
   for (const o of [...SHOW.tts, ...SHOW.rings]) o.visible = false; if (SHOW.gridRing) SHOW.gridRing.visible = false;
-  SHOW.cars = tl.map((c, n) => { const m = makeCar(c); scene.remove(m.g); m.label.visible = false; m.code = c.code; m.slot = n; m.g.position.set(SHOW_POS[n % 2][0], 0, SHOW_POS[n % 2][2]); m.g.rotation.set(0, SHOW_ROT, 0); m.g.traverse(o => { if (o.isMesh) o.castShadow = true; }); SHOW.scene.add(m.g); return m; });
+  SHOW.cars = tl.map((c, n) => { const m = makeCar(c); scene.remove(m.g); m.label.visible = false; m.code = c.code; m.slot = n; m.g.rotation.set(0, SHOW_ROT, 0); m.g.traverse(o => { if (o.isMesh) o.castShadow = true; }); SHOW.scene.add(m.g); return m; });
   showroomWall(team, null); showroomPick();
 }
-function showroomPick() { const scr = MENU.scr;
-  SHOW.cars.forEach((m, n0) => { const n = m.slot ?? n0, sel = m.code === S.driver, solo = scr === 'track' ? sel || !SHOW.cars.some(x => x.code === S.driver) && n === 0 : n === 0;
+function showroomPick() { const scr = MENU.scr, has = SHOW.cars.some(x => x.code === S.driver);
+  SHOW.cars.forEach((m, n0) => { const n = m.slot ?? n0, sel = m.code === S.driver, solo = scr === 'team' ? n === 0 : has ? sel : n === 0;
     m.g.visible = scr === 'driver' ? true : solo; const P = scr === 'driver' ? SHOW_POS[n % 2] : SHOW_POS[0]; m.g.position.set(P[0], 0, P[2]);
-    const sp = SHOW.spots[n % 2]; sp.visible = m.g.visible; sp.position.set(P[0], 8, P[2] + 2.5); sp.target.position.set(P[0], 0, P[2]); sp.intensity = scr === 'driver' ? (sel ? 60 : 10) : 30; }); }
+    const sp = SHOW.spots[n % 2]; sp.visible = m.g.visible; sp.position.set(P[0] - 2.5, 8, P[2] + 1); sp.target.position.set(P[0], 0, P[2]); sp.intensity = scr === 'driver' ? (sel ? 60 : 10) : 30; }); }
 const _sp = new THREE.Vector3(), _st = new THREE.Vector3();
 function showroomFrame(dt) {
-  const cam = SHOW.cam, scr = MENU.scr, W2 = innerWidth, H2 = innerHeight;
+  const cam = SHOW.cam, scr = MENU.scr, W2 = innerWidth, H2 = innerHeight; SHOW.t += dt; const t = SHOW.t;
   if (SHOW.scr !== scr) { SHOW.scr = scr; showroomPick(); }
-  // Zielkamera je Bildschirm; weiche Fahrt dazwischen (Herauszoomen von der Team- zur Fahrerwahl)
-  if (scr === 'driver') { _sp.set(2.3, 1.55, 15.5); _st.set(2.5, 0.75, -1); } else { _sp.set(-0.5, 1.2, 10.2); _st.set(0.1, 0.62, 0); }
-  if (!SHOW.cp) { SHOW.cp = _sp.clone(); SHOW.ct = _st.clone(); SHOW.ox = 0; }
-  const k = 1 - Math.exp(-dt * 3.2); SHOW.cp.lerp(_sp, k); SHOW.ct.lerp(_st, k); cam.position.copy(SHOW.cp); cam.lookAt(SHOW.ct);
-  const ox = scr === 'track' ? -0.2 : 0; SHOW.ox += (ox - SHOW.ox) * k;   // Streckenwahl: Auto nach rechts, links steht die Infotafel
-  cam.aspect = W2 / H2; cam.setViewOffset(W2, H2, SHOW.ox * W2, H2 * (scr === 'driver' ? 0.0 : scr === 'track' ? 0.0 : 0.05), W2, H2); cam.updateProjectionMatrix();
+  let ox = 0, oy = 0;
+  if (scr === 'driver') { _sp.set(-12.6, 1.75, 1.6); _st.set(0, 0.62, 1.6); }                       // frontal auf beide Autos
+  else if (scr === 'track') { _sp.set(0.15, 0.92, 9.3); _st.set(0.15, 0.6, 0); ox = -0.26; oy = 0.06; }   // genau von der Seite, Auto rechts neben der Infotafel
+  else if (scr === 'title') { _st.set(-0.2, 0.55, 0); _sp.set(-5.4, 1.15, 7.0);
+    const hb = (SHOW.hb ||= document.querySelector('#cPlay .hbody')), r = hb.getBoundingClientRect();
+    if (r.width > 10) { const d = 5.4 / (0.6 * r.width / W2) / (2 * Math.tan(15 * Math.PI / 180) * (W2 / H2)); _sp.sub(_st).setLength(d).add(_st); ox = -((r.left + r.width * 0.62) / W2 - 0.5); oy = -((r.top + r.height * 0.5) / H2 - 0.5);
+      const key = [r.left, r.top, r.width, r.height].map(Math.round).join(','); if (SHOW.hole !== key) { SHOW.hole = key; const st = $('#menu').style; st.setProperty('--hx', r.left + 'px'); st.setProperty('--hy', r.top + 'px'); st.setProperty('--hw', r.width + 'px'); st.setProperty('--hh', r.height + 'px'); } } }
+  else { _sp.set(-5.6, 1.2, 6.4); _st.set(-0.35, 0.5, 0); oy = 0.05; }                              // Teamwahl: nah, schräg von vorn
+  _sp.x += Math.sin(t * 0.27) * 0.22; _sp.y += Math.sin(t * 0.19) * 0.05; _sp.z += Math.cos(t * 0.23) * 0.18;   // leichtes Schweben – nie ganz statisch
+  if (!SHOW.cp) { SHOW.cp = _sp.clone(); SHOW.ct = _st.clone(); SHOW.ox = ox; SHOW.oy = oy; }
+  const k = 1 - Math.exp(-dt * (scr === 'title' ? 6 : 2.1)); SHOW.cp.lerp(_sp, k); SHOW.ct.lerp(_st, k); cam.position.copy(SHOW.cp); cam.lookAt(SHOW.ct);
+  SHOW.ox += (ox - SHOW.ox) * k; SHOW.oy += (oy - SHOW.oy) * k;
+  cam.aspect = W2 / H2; cam.setViewOffset(W2, H2, SHOW.ox * W2, SHOW.oy * H2, W2, H2); cam.updateProjectionMatrix();
 }
 $$('[data-step]').forEach(b => b.addEventListener('click', () => {
   const k = b.dataset.step, dd = +b.dataset.d;
@@ -8429,7 +8457,7 @@ function tick(now, forced) {
   if (HORIZ) { HORIZ.position.x = camera.position.x; HORIZ.position.z = camera.position.z; }
   // Pause: das Bild steht still, also nur zwei Bilder zeichnen und dann die Grafikkarte schonen
   if (running && paused) { if (pauseDrawn >= 2) return; pauseDrawn++; } else pauseDrawn = 0;
-  if (!window.__norender && !(!running && MENU.scr === 'title' && !$('#menu').classList.contains('hidden'))) {   /* Hauptmenü: fester Hintergrund statt Kamerafahrt – dort wird die Strecke nicht gerendert (spart Akku) */ if (SHOW.on && !running && !$('#menu').classList.contains('hidden')) { showroomFrame(dt); const bo = BAKE.u.bakeOn.value, et = ENVP.tex; BAKE.u.bakeOn.value = 0; if (SHOW.env) ENVP.tex = SHOW.env; renderer.render(SHOW.scene, SHOW.cam); ENVP.tex = et; BAKE.u.bakeOn.value = bo;   /* im Showroom spiegelt sich das Studio, nicht die Strecke */ } else if (composer) { syncAoCam(); composer.render(dt); } else renderer.render(scene, camera); }
+  if (!window.__norender && !(!running && MENU.scr === 'title' && !SHOW.on && !$('#menu').classList.contains('hidden'))) {   /* Hauptmenü: fester Hintergrund statt Kamerafahrt – dort wird die Strecke nicht gerendert (spart Akku) */ if (SHOW.on && !running && !$('#menu').classList.contains('hidden')) { showroomFrame(dt); const bo = BAKE.u.bakeOn.value, et = ENVP.tex; BAKE.u.bakeOn.value = 0; if (SHOW.env) ENVP.tex = SHOW.env; renderer.render(SHOW.scene, SHOW.cam); ENVP.tex = et; BAKE.u.bakeOn.value = bo;   /* im Showroom spiegelt sich das Studio, nicht die Strecke */ } else if (composer) { syncAoCam(); composer.render(dt); } else renderer.render(scene, camera); }
 }
 applyGfx();
 buildTrack(TRACKS[S.track] && (!TRACKS[S.track].extra || S.nos) && !TRACKS[S.track].kartOnly ? S.track : (S.track = 'monza'));placeOnGrid(); buildMenu(); renderMenu();
