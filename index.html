@@ -1099,7 +1099,10 @@ body.warmhelm #helmet{display:block!important;opacity:.01}
 .toast{border-radius:9px!important;background:rgba(27,28,32,.96)!important;border:1px solid var(--f1l)!important;border-left:3px solid var(--f1r)!important}
 #loading{background:linear-gradient(118deg,transparent 0 46%,rgba(255,255,255,.035) 46% 63%,transparent 63%),radial-gradient(80% 70% at 50% 40%,#3a3c41,#1b1c20 70%,#0e0f12)!important}
 
-.tag:empty{display:none!important}
+.tag:empty{display:block!important;border:0!important;padding:0!important;height:0!important}   /* leere Zeile bleibt als Abstand zwischen Logo und Kacheln stehen */
+
+/* Klassenwahl: gewählte Karte bleibt an ihrem Platz (kein Anheben/Hüpfen) */
+#serCards .scard,#serCards .scard.on,#carCards .scard,#carCards .scard.on{transform:none!important;transition:border-color .2s,background .2s!important}
 </style>
 </head>
 <body>
@@ -2667,6 +2670,20 @@ function renormCar(M, tol = 0.004, it = 2, w = 0.5) {
     g.attributes.normal.array.set(N); g.attributes.normal.needsUpdate = true; }
 }
 renormCar(CARM2);
+// F1-Modell: an der Unterkante der Seitenkästen (und an den Leitblechen davor) endet die Lackfläche im Netz als Sägezahn – zwischen den Zähnen fehlen Dreiecke, dahinter sah man den Unterboden.
+// Reparatur am Netz: an offenen Rändern in dieser Zone jede Kerbe (Randpunkt, an dem die Fläche über 180° einnimmt und dessen beide Randnachbarn nahe beieinander liegen) mit einem Dreieck schließen.
+function fillNotches(g, zone, passes = 3) { if (!g || !g.index) return 0; const p = g.attributes.position.array, q = 2000; let ix = Array.from(g.index.array), added = 0;
+  const wid = new Map(), W = new Int32Array(p.length / 3); for (let i = 0; i < W.length; i++) { const k = Math.round(p[i * 3] * q) + ',' + Math.round(p[i * 3 + 1] * q) + ',' + Math.round(p[i * 3 + 2] * q); let r = wid.get(k); if (r === undefined) { r = wid.size; wid.set(k, r); } W[i] = r; }
+  const ang = (a, b, c) => { const ux = p[a * 3] - p[b * 3], uy = p[a * 3 + 1] - p[b * 3 + 1], uz = p[a * 3 + 2] - p[b * 3 + 2], vx = p[c * 3] - p[b * 3], vy = p[c * 3 + 1] - p[b * 3 + 1], vz = p[c * 3 + 2] - p[b * 3 + 2]; return Math.acos(clamp((ux * vx + uy * vy + uz * vz) / (Math.hypot(ux, uy, uz) * Math.hypot(vx, vy, vz) || 1), -1, 1)); };
+  const inZ = i => zone(p[i * 3], p[i * 3 + 1], p[i * 3 + 2]), len = (a, b) => Math.hypot(p[a * 3] - p[b * 3], p[a * 3 + 1] - p[b * 3 + 1], p[a * 3 + 2] - p[b * 3 + 2]);
+  for (let ps = 0; ps < passes; ps++) { const cnt = new Map(), dir = [], inner = new Map();
+    for (let t = 0; t < ix.length; t += 3) for (let k = 0; k < 3; k++) { const a = ix[t + k], b = ix[t + (k + 1) % 3], c = ix[t + (k + 2) % 3], wa = W[a], wb = W[b]; if (wa === wb) continue; const key = wa < wb ? wa + '_' + wb : wb + '_' + wa; cnt.set(key, (cnt.get(key) || 0) + 1); dir.push([a, b, key]); inner.set(wa, (inner.get(wa) || 0) + ang(c, a, b)); }
+    const out = new Map(), inc = new Map(); for (const [a, b, key] of dir) if (cnt.get(key) === 1) { out.set(W[a], out.has(W[a]) ? null : [a, b]); inc.set(W[b], inc.has(W[b]) ? null : [a, b]); }
+    const add = [], used = new Set(); for (const [wv, e1] of inc) { const e2 = out.get(wv); if (!e1 || !e2) continue; const u = e1[0], v = e1[1], w = e2[1]; if (W[u] === W[w] || used.has(W[u]) || used.has(wv) || used.has(W[w])) continue; if (!inZ(u) || !inZ(v) || !inZ(w)) continue;
+      if ((inner.get(wv) || 0) < Math.PI * 1.02 || ang(u, v, w) > 2.7 || len(u, w) > 0.22) continue; add.push(v, u, w); used.add(W[u]); used.add(wv); used.add(W[w]); }
+    if (!add.length) break; ix = ix.concat(add); added += add.length / 3; }
+  if (added) g.setIndex(ix); return added; }
+if (CARM) for (const Lv of CARM.lods) fillNotches(Lv.gloss, (x, y, z) => Math.abs(x) > 0.3 && y < 0.34 && z > -1.4 && z < 1.6);
 // F2-Halo: im Modell hat jedes Dreieck eigene Normalen (sichtbare Facetten). Normalen über gleiche Positionen mitteln -> glatte Rohre.
 function smoothGeo(g, tol = 0.003) { if (!g || !g.attributes.normal) return; const p = g.attributes.position.array, N0 = g.attributes.normal.array, n = p.length / 3, q = 1 / tol, map = new Map(), rp = new Int32Array(n), A = new Float32Array(n * 3);
   for (let i = 0; i < n; i++) { const k = Math.round(p[i * 3] * q) + ',' + Math.round(p[i * 3 + 1] * q) + ',' + Math.round(p[i * 3 + 2] * q); let r = map.get(k); if (r === undefined) { r = i; map.set(k, i); } rp[i] = r; }
@@ -2694,6 +2711,12 @@ function straightenWheels(C) { if (!C) return;
     g0.rotateZ(ang); } }
 for (let it = 0; it < 8; it++) straightenWheels(CARM2);   // mehrere Durchgänge: jeder rechnet den Rest-Sturz neu aus, bis die Achse sauber auf X liegt
 if (CARM2 && !CARM2.halo) { const h = new THREE.BufferGeometry(); h.setAttribute('position', new THREE.BufferAttribute(new Float32Array(9), 3)); h.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(9), 3)); h.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(6), 2)); h.setIndex([0, 1, 2]); h.userData.cls = new Uint8Array([7, 7, 7]); h.computeBoundingSphere(); CARM2.halo = h; }
+// F2-Halo neu modelliert: der Halo aus dem Modell war ein ausgefranstes, löchriges Netz (sichtbare Dreiecke, hinten ohne Anschluss). Jetzt ein glatter Rohrbügel entlang der vermessenen Form,
+// Mittelstrebe bis ins Vorderdeck, die hinteren Enden laufen nach unten in die Karosserie (verbunden – auch mit dem Cockpit-Modell der Fahreransicht).
+if (CARM2) { const V = a => new THREE.Vector3(a[0], a[1], a[2]), L = [[0.31, 0.6, -0.1], [0.3, 0.735, 0.03], [0.285, 0.785, 0.2], [0.24, 0.845, 0.31], [0.14, 0.868, 0.42]], pts = [...L.map(a => V([-a[0], a[1], a[2]])), V([0, 0.872, 0.47]), ...L.slice().reverse().map(V)];
+  const parts = [new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.5), 110, 0.03, 16), rod([0, 0.868, 0.465], [0, 0.68, 0.89], 0.027, 16)], P = [], Nn = [], U = [], I = []; let base = 0;
+  for (const g of parts) { P.push(...g.attributes.position.array); Nn.push(...g.attributes.normal.array); U.push(...g.attributes.uv.array); for (const k of g.index.array) I.push(k + base); base += g.attributes.position.count; g.dispose(); }
+  const h = new THREE.BufferGeometry(); h.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); h.setAttribute('normal', new THREE.Float32BufferAttribute(Nn, 3)); h.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); h.setIndex(I); h.userData.cls = new Uint8Array(base).fill(7); h.computeBoundingSphere(); CARM2.halo = h; }
 // Farben je Klasse: 0 Lack, 1 Akzent, 2 Nasenspitze, 3 Carbon, 4 dunkel, 5 Reifen, 6 Reifenmarkierung, 7 Halo
 function paintGeo(g, fn) {
   const cl = g.userData.cls, p = g.attributes.position.array, c = new Float32Array(cl.length * 3), t = new THREE.Color();
@@ -2946,7 +2969,7 @@ const cockGLSL = k => { const c = COCK[k]; return '\n if (abs(vLP.x) < ' + c.x.t
 function liveryMat(tk, gloss) { const code = LIVERY[tk]; if (!code) return gloss;
   gloss.onBeforeCompile = sh => {
     sh.vertexShader = 'attribute float aCls; varying float vCls; varying vec3 vLP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vLP = position; vCls = aCls;');
-    sh.fragmentShader = 'varying float vCls; varying vec3 vLP;\n' + LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 2.5 || vCls > 6.5) diffuseColor.rgb = livery(vLP, vCls);\n if (vLP.y < 0.25 && abs(vLP.x) > 0.3 && vLP.z > -1.3 && vLP.z < 1.45) diffuseColor.rgb = vec3(0.07, 0.08, 0.10);' /* Unterkante der Seitenkästen: im Modell wechseln dort Lack- und Carbon-Dreiecke im Zickzack. Lack-Dreiecke in dieser Zone sehen deshalb aus wie das Carbon des Unterbodens (Farbe, matt, ohne Klarlack) – die Zacken verschwinden */ + cockGLSL('f1')).replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n if (vLP.y < 0.25 && abs(vLP.x) > 0.3 && vLP.z > -1.3 && vLP.z < 1.45) roughnessFactor = 0.8;').replace('#include <lights_physical_fragment>', '#include <lights_physical_fragment>\n#ifdef USE_CLEARCOAT\n if (vLP.y < 0.25 && abs(vLP.x) > 0.3 && vLP.z > -1.3 && vLP.z < 1.45) material.clearcoat = 0.0;\n#endif');
+    sh.fragmentShader = 'varying float vCls; varying vec3 vLP;\n' + LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 2.5 || vCls > 6.5) diffuseColor.rgb = livery(vLP, vCls);' + cockGLSL('f1'));
   };
   gloss.customProgramCacheKey = () => 'livery-' + tk; return gloss; }
 function teamTemplate(tk) {
@@ -8461,7 +8484,9 @@ function initShowroom() {
       const l2 = new THREE.Mesh(wl.geometry, ledM); l2.position.copy(wl.position); l2.rotation.copy(wl.rotation); l2.translateZ(0.04); l2.renderOrder = 2; sc.add(l2); walls.push(l2); }
     // Spiegelung der Wand im Boden: dieselben Flächen noch einmal, an der Bodenebene gespiegelt (der Boden ist leicht durchscheinend)
     for (const wl of walls) { const o = new THREE.Mesh(wl.geometry, wl.material); o.position.copy(wl.position); o.position.y = -wl.position.y; o.rotation.copy(wl.rotation); o.scale.y = -1; sc.add(o); } }
-  SHOW.scene = sc; SHOW.cam = new THREE.PerspectiveCamera(SHOW_FOV, innerWidth / innerHeight, 0.5, 200);
+  // Alles (Raum, Licht, Autos) hängt an EINER Bühnengruppe: sie lässt sich als Ganzes um die Kamera drehen (Teamwechsel: das neue Team steht „auf der anderen Seite des Raums“)
+  { const st = new THREE.Group(); for (const o of [...sc.children]) { st.add(o); if (o.isLight && o.target && !o.target.parent) st.add(o.target); } sc.add(st); SHOW.stage = st; }
+  SHOW.scene = sc; SHOW.cam = new THREE.PerspectiveCamera(SHOW_FOV, innerWidth / innerHeight, 0.5, 400);
 }
 // Rückwand des Showrooms: dunkles Graphit, schräge Farbflächen in der Teamfarbe, feine Linien und der Teamname als große Konturschrift
 function showroomWall(team, text) { const W = SHOW.wall; if (!W || !TEAMS[team]) return; const T = TEAMS[team], nm = String(text || T.short || T.name).toUpperCase(), c1 = hex(uiCol(T)), c2 = hex(T.acc ?? uiCol(T));
@@ -8490,29 +8515,35 @@ function wallDraw(now) { const W = SHOW.wall; if (!W || !W.c1) return; const g =
 // Streckenwahl: Fahrt zur Seite, bis das gewählte Auto genau seitlich rechts im Bild steht.
 const SHOW_POS = [[0, 0, 0], [0, 0, 2.45]], SHOW_ROT = -Math.PI / 2;   /* Fahrerwahl: Autos dicht nebeneinander – passen zwischen die Fahrertafeln */
 function showroomTeam(team) {
-  initShowroom(); if (SHOW.team === team && SHOW.ser === SER) return; SHOW.team = team; SHOW.ser = SER;
-  for (const m of SHOW.cars) { SHOW.scene.remove(m.g); m.g.traverse(o => { if (o.isSprite) o.material.map.dispose(); }); }
+  initShowroom(); if (SHOW.team === team && SHOW.ser === SER) return; const swing = MENU.scr === 'team' && !!SHOW.cp && SHOW.cars.length > 0 && SHOW.ser === SER && TEAMS[SHOW.team]; SHOW.team = team; SHOW.ser = SER;
+  const drop = L => { for (const m of L) { SHOW.stage.remove(m.g); m.g.traverse(o => { if (o.isSprite) o.material.map.dispose(); }); } };
+  if (swing && !SHOW.old) { SHOW.old = SHOW.cars; SHOW.orbT = 0; } else drop(SHOW.cars);   // Teamwechsel: das bisherige Auto bleibt stehen, bis die Kamera weggeschwenkt ist
   const tl = ALL.filter(c => c.team === team);
   for (const o of [...SHOW.tts, ...SHOW.rings]) o.visible = false; if (SHOW.gridRing) SHOW.gridRing.visible = false;
-  SHOW.cars = tl.map((c, n) => { const m = makeCar(c); scene.remove(m.g); m.label.visible = false; m.code = c.code; m.slot = n; m.g.rotation.set(0, SHOW_ROT, 0); m.g.traverse(o => { if (o.isMesh) o.castShadow = true; }); showroomMirror(m); SHOW.scene.add(m.g); return m; });
-  showroomWall(team, null); showroomPick(); showroomSwing();
+  SHOW.cars = tl.map((c, n) => { const m = makeCar(c); scene.remove(m.g); m.label.visible = false; m.code = c.code; m.slot = n; m.g.rotation.set(0, SHOW_ROT, 0); m.g.traverse(o => { if (o.isMesh) o.castShadow = true; }); showroomMirror(m); SHOW.stage.add(m.g); return m; });
+  if (SHOW.old) SHOW.pendWall = team; else showroomWall(team, null); showroomPick();
 }
+// Mitte des Schwenks (Kamera schaut quer in den leeren Raum): altes Auto weg, neues sichtbar, und die ganze Bühne wird um die Kamera auf die Gegenseite gedreht.
+// Die Kamera selbst bleibt an ihrem Platz und dreht sich nur – am Ende des 180°-Schwenks steht das neue Team vor ihr.
+function showroomSwap(flip) { if (!SHOW.old) return; for (const m of SHOW.old) { SHOW.stage.remove(m.g); m.g.traverse(o => { if (o.isSprite) o.material.map.dispose(); }); } SHOW.old = null;
+  if (flip) { const st = SHOW.stage; st.updateMatrixWorld(); const W = SHOW.cp.clone().applyMatrix4(st.matrixWorld); SHOW.flip = !SHOW.flip; st.rotation.y = SHOW.flip ? Math.PI : 0; st.position.set(SHOW.flip ? W.x + SHOW.cp.x : W.x - SHOW.cp.x, 0, SHOW.flip ? W.z + SHOW.cp.z : W.z - SHOW.cp.z); st.updateMatrixWorld(true); }
+  if (SHOW.pendWall) { showroomWall(SHOW.pendWall, null); SHOW.pendWall = null; } showroomPick(); }
 // Spiegelung am Boden: das Auto noch einmal, an der Bodenebene gespiegelt, unter dem leicht durchscheinenden Hallenboden
 function showroomMirror(m) { const r = m.g.clone(true); r.position.set(0, 0, 0); r.rotation.set(0, 0, 0); r.scale.set(1, -1, 1); r.traverse(o => { o.castShadow = false; o.receiveShadow = false; if (o.isSprite) o.visible = false; }); m.g.add(r); }
 // Teamwechsel: die Kamera wird seitlich um das Auto versetzt und schwenkt weich an ihren Platz zurück
-function showroomSwing() { if (MENU.scr !== 'team' || !SHOW.cp) return; SHOW.sw = -(SHOW.sw || 1); SHOW.orbT = 0; }   // Teamwechsel: Kamera springt auf die Gegenseite und fährt in einem 180°-Bogen um das neue Auto zurück
+function showroomSwing() {}
 // Hauptmenü mit laufender Karriere: das Karriere-Auto (Klasse, Team, eigener Helm) – unabhängig davon, was im Schnellen Spiel gewählt ist
 function showroomCareer(c) { initShowroom(); const key = 'career|' + c.ser + '|' + c.team + '|' + c.driver; if (SHOW.team === key) return true; const SD = SERIES[c.ser]; if (!SD || !SD.teams[c.team]) return false;
   const T0 = TEAMS; let m; try { TEAMS = SD.teams; const d = SD.drivers.find(x => x[3] === c.team); if (!d) return false;
       m = makeCar({ code: c.driver, name: CAREER.name, num: d[2], team: c.team, helmet: CAREER.helmet || d[4], liv: d[5] ? 'F2_' + d[5] : undefined }); SHOW.wall.key = null; showroomWall(c.team, ' '); } catch (e) { return false; } finally { TEAMS = T0; }
-  for (const o of SHOW.cars) { SHOW.scene.remove(o.g); o.g.traverse(x => { if (x.isSprite) x.material.map.dispose(); }); }
+  for (const o of SHOW.cars) { SHOW.stage.remove(o.g); o.g.traverse(x => { if (x.isSprite) x.material.map.dispose(); }); }
   for (const o of [...SHOW.tts, ...SHOW.rings]) o.visible = false; if (SHOW.gridRing) SHOW.gridRing.visible = false;
-  scene.remove(m.g); m.label.visible = false; m.code = c.driver; m.slot = 0; m.g.rotation.set(0, SHOW_ROT, 0); m.g.traverse(o => { if (o.isMesh) o.castShadow = true; }); showroomMirror(m); SHOW.scene.add(m.g);
+  scene.remove(m.g); m.label.visible = false; m.code = c.driver; m.slot = 0; m.g.rotation.set(0, SHOW_ROT, 0); m.g.traverse(o => { if (o.isMesh) o.castShadow = true; }); showroomMirror(m); SHOW.stage.add(m.g);
   SHOW.cars = [m]; SHOW.team = key; SHOW.ser = SER; showroomPick(); return true; }
 function showroomPick() { const scr = MENU.scr, has = SHOW.cars.some(x => x.code === S.driver);
   SHOW.cars.forEach((m, n0) => { const n = m.slot ?? n0, sel = m.code === S.driver, solo = scr === 'team' ? n === 0 : has ? sel : n === 0;
     m.g.visible = scr === 'driver' ? true : solo; const P = scr === 'driver' ? SHOW_POS[n % 2] : SHOW_POS[0]; m.g.position.set(P[0], 0, P[2]);
-    const sp = SHOW.spots[n % 2]; sp.visible = m.g.visible; sp.position.set(P[0] - 2.5, 8, P[2] + 1); sp.target.position.set(P[0], 0, P[2]); sp.intensity = scr === 'driver' ? (sel ? 60 : 10) : 30; }); }
+    const sp = SHOW.spots[n % 2]; sp.visible = m.g.visible; sp.position.set(P[0] - 2.5, 8, P[2] + 1); sp.target.position.set(P[0], 0, P[2]); sp.intensity = scr === 'driver' ? (sel ? 60 : 10) : 30; }); if (SHOW.old) for (const m of SHOW.cars) m.g.visible = false; }
 const _sp = new THREE.Vector3(), _st = new THREE.Vector3();
 function showroomFrame(dt) {
   const cam = SHOW.cam, scr = MENU.scr, W2 = innerWidth, H2 = innerHeight; SHOW.t += dt; const t = SHOW.t;
@@ -8530,9 +8561,10 @@ function showroomFrame(dt) {
   _sp.x += Math.sin(t * 0.27) * 0.5; _sp.y += Math.sin(t * 0.19) * 0.1; _sp.z += Math.cos(t * 0.23) * 0.4;   // leichtes Schweben – nie ganz statisch
   if (!SHOW.cp) { SHOW.cp = _sp.clone(); SHOW.ct = _st.clone(); SHOW.ox = ox; SHOW.oy = oy; }
   const k = 1 - Math.exp(-dt * (scr === 'title' ? 6 : 2.1)); SHOW.cp.lerp(_sp, k); SHOW.ct.lerp(_st, k); cam.position.copy(SHOW.cp);
-  if (scr === 'team' && SHOW.orbT !== undefined && SHOW.orbT < 1) { SHOW.orbT = Math.min(1, SHOW.orbT + dt / 1.9); const e = 1 - SHOW.orbT, a = Math.PI * SHOW.sw * e * e * (3 - 2 * e), dx = cam.position.x - SHOW.ct.x, dz = cam.position.z - SHOW.ct.z;
-    cam.position.x = SHOW.ct.x + dx * Math.cos(a) - dz * Math.sin(a); cam.position.z = SHOW.ct.z + dx * Math.sin(a) + dz * Math.cos(a); cam.position.y += Math.sin(Math.PI * SHOW.orbT) * 1.6; }
-  cam.lookAt(SHOW.ct);
+  _st.copy(SHOW.ct); if (SHOW.old && scr !== 'team') { showroomSwap(false); SHOW.orbT = 1; }
+  if (scr === 'team' && SHOW.orbT !== undefined && SHOW.orbT < 1) { const o0 = SHOW.orbT; SHOW.orbT = Math.min(1, o0 + dt / 1.8); if (o0 < 0.5 && SHOW.orbT >= 0.5) showroomSwap(true);
+    const q = SHOW.orbT, e = q * q * (3 - 2 * q), a = q < 0.5 ? Math.PI * e : Math.PI * e - Math.PI, dx = SHOW.ct.x - cam.position.x, dz = SHOW.ct.z - cam.position.z; _st.x = cam.position.x + dx * Math.cos(a) - dz * Math.sin(a); _st.z = cam.position.z + dx * Math.sin(a) + dz * Math.cos(a); }
+  SHOW.stage.updateMatrixWorld(); cam.position.applyMatrix4(SHOW.stage.matrixWorld); _st.applyMatrix4(SHOW.stage.matrixWorld); cam.lookAt(_st);
   SHOW.ox += (ox - SHOW.ox) * k; SHOW.oy += (oy - SHOW.oy) * k;
   cam.aspect = W2 / H2; cam.setViewOffset(W2, H2, SHOW.ox * W2, SHOW.oy * H2, W2, H2); cam.updateProjectionMatrix();
 }
