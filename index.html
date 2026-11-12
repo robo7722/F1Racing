@@ -2871,16 +2871,16 @@ function cockShell(tp, bodyCol) {
   const src = [new THREE.Mesh(tp.lods[0].gloss, bm), new THREE.Mesh(tp.lods[0].matte, bm)]; for (const q of src) q.updateMatrixWorld();
   const raw = (a, z) => { o.set(a, G.y1 - 0.005, z); rc.set(o, dn); let best = null; for (const h of rc.intersectObjects(src, false)) { if (h.point.y > G.y0 - 0.05) { best = h.point.y; break; } } return best ?? c.y; };
   const wOpen = z => z >= z1 ? 0 : (c.x + 0.003 + cockWn(c, z)) * (z > z1 - G.rc ? Math.sqrt(Math.max(0, 1 - ((z - (z1 - G.rc)) / G.rc) ** 2)) : 1);
-  const rimY = z => c.y + 0.003 + (c.wn ? (c.yn - c.y) * cockWn(c, z) / c.wn : 0), hcEnd = (() => { const v = [0.07, 0.1, 0.13, 0.16].map(a => raw(a, G.zF)).sort((p, q) => p - q); return clamp((v[1] + v[2]) / 2 + 0.004, 0.64, 0.69); })(), hcY = z => lerp(0.652, hcEnd, S((z - z1) / (G.zF - z1)));   /* Haubenmitte läuft genau auf die echte Deckhöhe am vorderen Rand zu */
+  const rise = z => 0.062 * S((z - z0) / 0.1) * (1 - 0.5 * S((z - 0.42) / 0.3)), rimY = z => c.y + 0.003 + (c.wn ? (c.yn - c.y) * cockWn(c, z) / c.wn : 0) + rise(z),   /* Flanken hochgezogen (Schulterhöhe), nach vorn zum Armaturenwulst abfallend – wie bei einem echten Monocoque */ hcEnd = (() => { const v = [0.07, 0.1, 0.13, 0.16].map(a => raw(a, G.zF)).sort((p, q) => p - q); return clamp((v[1] + v[2]) / 2 + 0.004, 0.64, 0.69); })(), hcY = z => lerp(0.652 + 0.03, hcEnd, S((z - z1) / (G.zF - z1)));   /* Haubenmitte läuft genau auf die echte Deckhöhe am vorderen Rand zu */
   // Längsraster: Öffnung, Rundung (dichter), Haube
   const zs = []; for (let i = 0; i < 34; i++) zs.push(lerp(z0, z1 - G.rc, i / 34)); for (let i = 0; i <= 16; i++) zs.push(z1 - G.rc * Math.cos(i / 16 * Math.PI / 2)); for (let i = 1; i <= 18; i++) zs.push(lerp(z1, G.zF, i / 18)); zs.push(G.zF + 0.03);
   const NX = 12, NT = 3, cols = NX + 1 + NT;
   let ho = zs.map(z => raw(xcAt(Math.min(z, G.zF)), Math.min(z, G.zF))); ho = ho.map((_, i) => { let a = 0, n = 0; for (let j = -2; j <= 2; j++) if (ho[i + j] !== undefined) { a += ho[i + j]; n++; } return a / n; });   // Randhöhe längs geglättet
-  const P = [], I = [], edge = [];
+  const P = [], I = [], edge = [], lipRow = [];
   for (const sd of [-1, 1]) { const base = P.length / 3;
     zs.forEach((z, r) => { const zc = Math.min(z, G.zF), xc = xcAt(zc), w = wOpen(zc), u = zc >= z1 ? 1 : zc > z1 - G.rc ? (zc - (z1 - G.rc)) / G.rc : 0, fb = S((zc - (G.zF - 0.045)) / 0.045), drop = z > G.zF ? 0.03 : 0;
       const hood = a => lerp(hcY(zc), ho[r], S(a / xc)), eY = lerp(rimY(zc), hood(w), u * u);
-      for (let i = 0; i <= NX; i++) { const t = i / NX, a = lerp(w, xc, t); let y = lerp(lerp(eY, ho[r], S(t)), hood(a), u); if (fb > 0) y = lerp(y, raw(a, zc), fb); P.push(sd * a, y - drop, z); }
+      const tp2 = t => Math.pow(t, 0.75); for (let i = 0; i <= NX; i++) { const t = i / NX, a = lerp(w, xc, t); let y = lerp(lerp(eY, ho[r], S(tp2(t))), hood(a), u); if (fb > 0) y = lerp(y, raw(a, zc), fb); P.push(sd * a, y - drop, z); if (sd === 1 && i === 2 && w > 0.004) lipRow.push([a, y, z]); }
       for (let i = 1; i <= NT; i++) { const a = xc + 0.012 * i; P.push(sd * a, raw(Math.min(a, xc + 0.004), zc) - 0.011 * i - drop, z); }   // Rand taucht unter die echte Karosserie
       if (sd === 1 && w > 0.004) edge.push([w, eY, z]); });
     for (let r = 0; r < zs.length - 1; r++) for (let i = 0; i < cols - 1; i++) { const a = base + r * cols + i, b2 = a + 1, d = a + cols, e = d + 1; if (sd === 1) I.push(a, d, b2, b2, d, e); else I.push(a, b2, d, b2, e, d); } }
@@ -2890,9 +2890,13 @@ function cockShell(tp, bodyCol) {
   if (!tp.shellMat) { const gm = tp.glossMat, sm = gm.clone(); sm.onBeforeCompile = gm.onBeforeCompile; const ck = gm.customProgramCacheKey(); sm.customProgramCacheKey = () => ck; tp.shellMat = sm; }   /* Lack wie die Karosserie, aber OHNE den Ausschnitt (sonst schneidet sich die Schale selbst weg) */
   const grp = new THREE.Group(); grp.add(new THREE.Mesh(g, tp.shellMat));
   // Innenkante der Öffnung: Polsterkante 7 cm nach unten, folgt genau dem Ausschnitt
-  { const Q = [], dpt = 0.075; for (const sd of [-1, 1]) for (let i = 0; i < edge.length - 1; i++) { const a = edge[i], b = edge[i + 1]; const A = [sd * a[0], a[1], a[2]], B = [sd * b[0], b[1], b[2]], A2 = [sd * (a[0] + 0.012), a[1] - dpt, a[2]], B2 = [sd * (b[0] + 0.012), b[1] - dpt, b[2]]; Q.push(...A, ...B, ...B2, ...A, ...B2, ...A2); }
+  { const Q = [], dpt = 0.095; for (const sd of [-1, 1]) for (let i = 0; i < edge.length - 1; i++) { const a = edge[i], b = edge[i + 1]; const A = [sd * a[0], a[1], a[2]], B = [sd * b[0], b[1], b[2]], A2 = [sd * (a[0] + 0.012), a[1] - dpt, a[2]], B2 = [sd * (b[0] + 0.012), b[1] - dpt, b[2]]; Q.push(...A, ...B, ...B2, ...A, ...B2, ...A2); }
     { const a = edge[edge.length - 1]; Q.push(-a[0], a[1], a[2], a[0], a[1], a[2], a[0], a[1] - dpt, a[2] + 0.01, -a[0], a[1], a[2], a[0], a[1] - dpt, a[2] + 0.01, -a[0], a[1] - dpt, a[2] + 0.01); }
-    const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(Q, 3)); sg.computeVertexNormals(); grp.add(new THREE.Mesh(sg, COCK_PAD)); }
+    const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(Q, 3)); sg.computeVertexNormals(); grp.add(new THREE.Mesh(sg, COCK_PAD));
+    // dunkle Carbon-Einfassung oben auf dem Rand der Öffnung (Seiten und Bogen vor dem Lenkrad), 4 mm über der Lackfläche
+    const L = [], LU = [], up = 0.004, n2 = Math.min(edge.length, lipRow.length); for (const sd of [-1, 1]) for (let i = 0; i < n2 - 1; i++) { const a = edge[i], b = edge[i + 1], c2 = lipRow[i], d = lipRow[i + 1]; for (const q of [a, b, d, a, d, c2]) { L.push(sd * q[0], q[1] + up, q[2]); LU.push(q[0] * 30, q[2] * 30); } }
+    if (n2 > 1) { const a = edge[n2 - 1], c2 = lipRow[n2 - 1]; for (const q of [[-a[0], a[1], a[2]], [a[0], a[1], a[2]], [c2[0], c2[1], c2[2] + 0.012], [-a[0], a[1], a[2]], [c2[0], c2[1], c2[2] + 0.012], [-c2[0], c2[1], c2[2] + 0.012]]) { L.push(q[0], q[1] + up, q[2]); LU.push(q[0] * 30, q[2] * 30); } }
+    const lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.Float32BufferAttribute(L, 3)); lg.setAttribute('uv', new THREE.Float32BufferAttribute(LU, 2)); lg.computeVertexNormals(); grp.add(new THREE.Mesh(lg, COCK_MAT)); }
   bm.dispose(); grp.traverse(x => { if (x.isMesh) { x.frustumCulled = false; x.castShadow = false; } }); return grp; }
 function cockTub(k, bodyCol = 0x808890, swz = 0.68, livMat = null, noHood = false) {   // Wanne: schräge Seitenwände (oben so breit wie die Öffnung, unten breiter), Boden, Spritzwand vorn mit Armaturenkante, Rückwand; UV in Metern (Carbon-Webung ~ 3 cm)
   const c = COCK[k], w0 = c.x + 0.003, w1 = c.x + c.wd, yT = c.y + 0.003, fl = c.fl, z0 = c.z0 - 0.01, z1 = c.z1 + 0.012, P = [], U = [];
