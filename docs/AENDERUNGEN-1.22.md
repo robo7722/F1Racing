@@ -94,3 +94,10 @@
 - **Menü**: Titel-Logo mittig zwischen Rand und Kacheln; Klassenwahl ohne Haken und ohne Helligkeitswechsel, Fotos F2/F1 gespiegelt, Klassen-Logos aus `logos/KART.png`, `F2.png`, `F1.png`; Schrittleiste: Zahl und Text auf einer Grundlinie, mehr Luft hinter „Rennen“.
 - **Studio**: Boden schwarz mit Spiegelung; Teamwechsel mit weicher Blende (Unschärfe + Abdunkeln zur Mitte des Schwenks).
 
+## Version 1.26
+- **Teamwechsel**: Bewegungsunschärfe wie bei offenem Verschluss – nur waagrecht (SVG-Filter `#mbx`, `feGaussianBlur stdDeviation="x 0"` auf der Zeichenfläche), Stärke = Schwenkgeschwindigkeit; kein Abdunkeln mehr.
+- **F2-Cockpit**: Carbon-Teile über dem Kopf (y > 0,86 im Halo-Bereich) werden in der Cockpitansicht nicht gezeichnet (`cockCutGLSL`).
+- **Helmansicht**: Visieröffnung endet unten früher (mehr Kinnbügel im Bild).
+- **Einstellungen aus dem Menü**: es wird nichts neu gezeichnet – vorher lief dahinter die Strecke des letzten Rennens weiter.
+- **Klassen-Logos**: `logos/F2.png` ohne Schriftzug, 3× hochskaliert mit geschärften Kanten (zwei Flächenfarben).
+
