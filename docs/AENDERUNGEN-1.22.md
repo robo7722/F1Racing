@@ -85,3 +85,12 @@
 - **F1**: Spiegelglas in Himmelsfarbe (Shader, `uMir`); Kerben-Füllung an den Seitenkästen wieder entfernt (flackerte).
 - **Cockpit**: Nahgrenze 7 cm. **Teamwechsel**: kurzer Schwenk (~70°, 0,75 s).
 - **Menüs**: überall eckig; Titelabstand wie vor der Textentfernung; Helmfarben verteilt und in der Fahrerwahl identisch; Logo-Laden im Spiel entfernt (nur noch `logos/`).
+
+## Version 1.25
+- **F1-Modell neu aus dem Original** („F1 2026 concept (polygon model)“, Qvist_designs, CC-BY-4.0; 1,16 Mio. Dreiecke, ein Netz ohne Materialien). Ursache der Zacken: Lack/Carbon war früher je Dreieck zugeordnet. Jetzt: Karosserie je Detailstufe als Ganzes vereinfacht (78k / 24k / 7,5k), danach **exakt entlang fester Linien geschnitten** (Boden-Oberkante je Längsposition, Querlenker, Heck, Flügel, Nase, Halo, Cockpit-Innenwand) und erst dann je Dreieck klassifiziert. Räder unverändert aus dem alten `car.bin` übernommen. Spiegelglas als eigenes Teil (`mirror`), Shader-Regel `mirF` stillgelegt.
+- Umwandlungsskripte (nur in der Sitzung, nicht im Repo): `f1dec.py` (Vereinfachen), `f1cls.py` (Schnittfelder + Klassen), `f1conv.py` (Schreiben). Achsen: Spiel-x = Quelle-z, y = y + 31 mm, z = 1770 mm − x.
+- **F1-Lackierungen**: dunkle Unterkante (`y < 0,15…0,2`) bei 7 Teams entfernt – der Lack reicht bis zum Carbon-Boden.
+- **F2-Lackierungen** nach den offiziellen Testfotos 2026 (Barcelona): Prema oben rot/unten weiß, AIX Kupfer mit Leuchtgrün, VAR Orange mit Schwarz, Trident weiß/blau/rot. Übrige Teams passten bzw. waren auf den Fotos nicht eindeutig zu sehen.
+- **Menü**: Titel-Logo mittig zwischen Rand und Kacheln; Klassenwahl ohne Haken und ohne Helligkeitswechsel, Fotos F2/F1 gespiegelt, Klassen-Logos aus `logos/KART.png`, `F2.png`, `F1.png`; Schrittleiste: Zahl und Text auf einer Grundlinie, mehr Luft hinter „Rennen“.
+- **Studio**: Boden schwarz mit Spiegelung; Teamwechsel mit weicher Blende (Unschärfe + Abdunkeln zur Mitte des Schwenks).
+

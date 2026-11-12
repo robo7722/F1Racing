@@ -1096,6 +1096,10 @@ body.warmhelm #helmet{display:block!important;opacity:.01}
 :is(#pause,#settings) .big.alt{background:linear-gradient(180deg,rgba(74,78,86,.5),rgba(40,42,48,.62))!important;border:1px solid rgba(255,255,255,.16)!important;border-top-color:rgba(255,255,255,.26)!important}
 :is(#pause,#settings) .big.alt.danger{border-color:rgba(225,6,0,.6)!important;color:#ff6a5c!important}
 
+#scrTitle.on{align-items:stretch!important}#scrTitle .tleft{display:flex;flex-direction:column;justify-content:flex-end;min-height:0}#scrTitle .logo2{flex:1 1 auto;min-height:0;align-items:center;margin-top:-10px}#scrTitle .tag:empty{display:none}   /* Logo genau mittig zwischen oberem Rand und Kacheln */
+#menu .msteps i{align-items:baseline!important;line-height:40px}#menu .msteps i b{font-size:12px!important;line-height:inherit}#menu .msteps i:last-child{padding-right:26px!important}   /* Schrittleiste: Zahl und Text auf einer Grundlinie, hinter dem letzten Eintrag mehr Luft */
+#serCards .sbig img{display:none;height:clamp(40px,14vh,92px);max-width:86%;object-fit:contain;object-position:left bottom;filter:drop-shadow(0 4px 14px rgba(0,0,0,.7))}#serCards .sbig.hasimg img{display:block}#serCards .sbig.hasimg span{display:none}#serCards .sbig img.inv{filter:invert(1);mix-blend-mode:screen}   /* Klassen-Logo aus logos/F1.png, F2.png, KART.png – fehlt die Datei, bleibt der Schriftzug */
+#serCards .scard.on .sbg{filter:brightness(.78) saturate(1.08)!important}#serCards .scard .chk{display:none!important}#serCards .scard[data-ser=f2] .sbg,#serCards .scard[data-ser=f1] .sbg{scale:-1 1}   /* Auswahl nur über Rahmen und Haken – das Bild wird nicht mehr heller/dunkler geschaltet */
 .tag:empty{visibility:hidden}.tag:empty::before{content:"\00a0"}   /* leere Zeile behält exakt Höhe und Abstände der früheren Textzeile: Logo und Kacheln stehen wie zuvor */
 
 /* Klassenwahl: gewählte Karte bleibt an ihrem Platz (kein Anheben/Hüpfen) */
@@ -1343,7 +1347,8 @@ body.warmhelm #helmet{display:block!important;opacity:.01}
       <p class="hint left">Die Karriere wird nach jedem Qualifying, Rennen und Upgrade im Browser gespeichert. Mit dem Exportcode kannst du den Spielstand sichern oder auf ein anderes Gerät übertragen.</p></div>
     <div class="field" style="margin-top:12px"><label>Credits</label>
       <p class="hint left">Titelmusik: Alegend – Evermore (freetouse.com) · Rennmusik (alle Titel): <span id="creditSongs"></span></p>
-      <p class="hint left">Streckendaten: TUM racetrack-database (LGPL-3.0), bacinger/f1-circuits (MIT) · Wahrzeichen-Lage: © OpenStreetMap-Mitwirkende (ODbL)</p></div>
+      <p class="hint left">Streckendaten: TUM racetrack-database (LGPL-3.0), bacinger/f1-circuits (MIT) · Wahrzeichen-Lage: © OpenStreetMap-Mitwirkende (ODbL)</p>
+      <p class="hint left">F1-Fahrzeugmodell: basiert auf „F1 2026 concept (polygon model)“ von Qvist_designs (sketchfab.com/Qvist_Designs), CC-BY-4.0 – vereinfacht und in Lack/Carbon aufgeteilt</p></div>
   </section></div>
   <button class="big" id="settingsDone">Fertig</button>
 </div></div>
@@ -1458,13 +1463,13 @@ const LIV = {
   DAM2: { body: 0x1f6fd8, acc: 0x0c2a66, tip: 0x0c2a66, metal: .3, low: 0x0c2a66, split: .3 },
   PINK: { body: 0xf4a3c8, acc: 0x1456b8, tip: 0xf4a3c8, metal: .25 },
   ORA: { body: 0xff8000, acc: 0x16181b, tip: 0xff8000, metal: .25 },
-  ITA: { body: 0xd10a0a, acc: 0xf0f0f0, tip: 0x1c8c3c, metal: .25 },
-  ITA2: { body: 0xd10a0a, acc: 0x1c8c3c, tip: 0xf0f0f0, metal: .25 },
+  ITA: { body: 0xd10a0a, acc: 0xd10a0a, tip: 0xf0f0f0, metal: .25, low: 0xf0f0f0, split: .36 },   /* Testfotos 2026: oben rot, Seitenkästen und Unterteil weiß */
+  ITA2: { body: 0xd10a0a, acc: 0xf0f0f0, tip: 0xf0f0f0, metal: .25, low: 0xf0f0f0, split: .36 },
   BLK: { body: 0x15171a, acc: 0x2b2e33, tip: 0x15171a, metal: .35 },
   GREY: { body: 0x9aa0a8, acc: 0x1a1c20, tip: 0x1a1c20, metal: .5, low: 0x1a1c20, split: .3 },
-  AIX: { body: 0x8a5a40, acc: 0x1c9a4a, tip: 0x3a2b22, metal: .4 },
-  VAR: { body: 0x131417, acc: 0xff6a00, tip: 0xff6a00, metal: .3 },
-  TRI: { body: 0x1d3a9e, acc: 0xd8102c, tip: 0xf0f0f0, metal: .3 },
+  AIX: { body: 0x8a5234, acc: 0x25d94a, tip: 0x25d94a, metal: .55 },   /* Testfotos 2026: Kupfer mit leuchtgrünen Flügeln und Nase */
+  VAR: { body: 0xf2562a, acc: 0x131417, tip: 0x131417, metal: .25 },   /* VAR fährt 2026 in Orange mit schwarzen Flügeln */
+  TRI: { body: 0xf0f0f0, acc: 0xd8102c, tip: 0xd8102c, metal: .3, low: 0x1d3a9e, split: .5 },   /* Testfotos 2026: Nase rot, Seiten blau, Motorabdeckung weiß */
 };
 const F2_DRIVERS = [
   ['CAM', 'Rafael Câmara', 1, 'F2_INV', 0xf2d100, 'INV1'], ['DUR', 'Joshua Dürksen', 2, 'F2_INV', 0xd8102c, 'INV'],
@@ -2811,14 +2816,14 @@ const LIVERY = {
   // Ferrari SF-26: Rot; großes weißes Feld oben auf Motorabdeckung und Airbox vom Cockpit bis übers Seitenkasten-Ende; dunkel unten; schwarze Flügel
   FER: `vec3 R = ${lc(0xc90f0f)}, W = ${lc(0xf3f3f1)}, K = ${lc(0x141416)};
     vec3 col = R; float wt = aaS(p.y - 0.57 - 0.05 * clamp(p.z + 1.0, 0.0, 1.0)) * band(p.z + 0.5 * (p.y - 0.6), -1.0, 0.38);   /* weißes Feld bis ~60 % der Seitenhöhe hinunter */
-    col = mix(col, W, wt); col = mix(col, K, 1.0 - aaS(p.y - 0.2));
+    col = mix(col, W, wt);
     col = mix(col, K, (1.0 - aaS(p.y - 0.38)) * band(p.z, 0.75, 1.55) * aaS(abs(p.x) - 0.3));   // dunkler Seitenkasten-Einlass
     if (c > 0.5 && c < 1.5) col = K; return col;`,
   // McLaren MCL40: Papaya; großer schwarzer Keil auf Motorabdeckung und oberem Seitenkasten – vorn hinter dem Cockpit hoch, nach hinten unten auslaufend; Unterboden schwarz
   MCL: `vec3 P = ${lc(0xff7a00)}, A = ${lc(0x1c1e22)};
     vec3 col = P; float yl = 0.62 + 0.19 * clamp(p.z - 0.3, -1.7, 0.0);
     float keil = aaS(p.y - yl) * band(p.z, -2.0, 0.3) * (1.0 - aaS(p.y - 1.0));
-    col = mix(col, A, keil); col = mix(col, A, 1.0 - aaS(p.y - 0.16));
+    col = mix(col, A, keil);
     if (c > 0.5 && c < 1.5) col = mix(A, P, aaS(p.y - 0.6)); return col;`,
   // Red Bull RB22: dunkles, glänzendes Marineblau; Rot mit gelber Scheibe oben auf der Motorabdeckung hinter der Airbox; rot-gelbe Nasenspitze
   RBR: `vec3 N = ${lc(0x18204f)}, B = ${lc(0x23308a)}, Rd = ${lc(0xd8102c)}, Y = ${lc(0xffc906)};
@@ -2829,7 +2834,7 @@ const LIVERY = {
   // Racing Bulls VCARB 03: Weiß; Blau unten, nach hinten bis zur Motorabdeckung ansteigend; oben dunkel mit rot-gelbem Feld; Carbon-Unterboden
   RB: `vec3 W = ${lc(0xf2f3f6)}, Bm = ${lc(0x1f3fc4)}, Cb = ${lc(0x1b1c20)}, Rd = ${lc(0xd8102c)}, Y = ${lc(0xffc906)};
     float yb = 0.36 + 0.42 * smoothstep(0.7, -1.7, p.z) * aaS(abs(p.x) - 0.15);
-    vec3 col = mix(Bm, W, aaS(p.y - yb)); col = mix(col, Cb, 1.0 - aaS(p.y - 0.18));
+    vec3 col = mix(Bm, W, aaS(p.y - yb));
     float top = aaS(p.y - 0.88) * band(p.z, -1.2, 0.1); col = mix(col, Cb, top); col = mix(col, Rd, top * band(p.z, -0.95, -0.15) * aaS(p.y - 0.95)); col = mix(col, Y, top * (1.0 - aaS(length(vec2(p.z + 0.1, p.y - 1.0)) - 0.09)));
     if (c > 0.5 && c < 1.5) col = Bm; if (c > 1.5 && c < 2.5) col = mix(Rd, Y, aaS(p.z - 2.95)); return col;`,
   // Aston Martin AMR26: Grün; schwarzer Keil unten am Seitenkasten mit dünner Lime-Linie an der Kante; Lime-Strich unten an der Nase; schwarzer Frontflügel
@@ -2843,24 +2848,24 @@ const LIVERY = {
     vec3 col = B; float sd = aaS(abs(p.x) - 0.22);
     col = mix(col, Sk, band(p.y + 0.03 * p.z, 0.39, 0.48) * band(p.z, -1.1, 0.75) * sd);
     col = mix(col, W, band(p.y + 0.03 * p.z, 0.28, 0.39) * band(p.z, -1.8, -0.1) * sd);
-    col = mix(col, K, 1.0 - aaS(p.y - 0.2)); col = mix(col, K, (1.0 - aaS(p.y - 0.39)) * band(p.z, -0.1, 1.6) * sd);
+    col = mix(col, K, (1.0 - aaS(p.y - 0.39)) * band(p.z, -0.1, 1.6) * sd);
     if (c > 0.5 && c < 1.5) col = mix(W, B, aaS(p.y - 0.85)); return col;`,
   // Alpine A526: helles Alpine-Blau; pinker Schrägbalken über die hintere Motorabdeckung, pinke Nasenfront und Frontflügel, pinker Heckflügel; schwarzes Heck unten
   ALP: `vec3 B = ${lc(0x2a7fd9)}, Pk = ${lc(0xff78c4)}, K = ${lc(0x101216)};
     vec3 col = B; col = mix(col, K, (1.0 - aaS(p.y - 0.45 - 0.2 * clamp(-1.0 - p.z, 0.0, 1.0))) * (1.0 - aaS(p.z + 0.9)));
     col = mix(col, Pk, band(p.z + 0.8 * (p.y - 0.6), -1.2, -0.62) * aaS(p.y - 0.42));   /* großer pinker Schrägbalken mitten auf der hinteren Motorabdeckung */
-    col = mix(col, Pk, aaS(p.z - 2.45) * (1.0 - aaS(p.y - 0.36))); col = mix(col, K, 1.0 - aaS(p.y - 0.15));
+    col = mix(col, Pk, aaS(p.z - 2.45) * (1.0 - aaS(p.y - 0.36)));
     if (c > 0.5 && c < 1.5) col = Pk; if (c > 1.5 && c < 2.5) col = Pk; if (c > 6.5) col = Pk; return col;`,
   // Haas VF-26: fast ganz weiß; rotes Feld oben auf der Motorabdeckung, rote Linie längs über Seitenkasten und Cockpit-Seite; dunkler Unterboden
   HAA: `vec3 W = ${lc(0xeceef1)}, K = ${lc(0x16181b)}, Rd = ${lc(0xd2201e)};
     vec3 col = W; col = mix(col, Rd, aaS(p.y - 0.84) * band(p.z, -1.5, 0.15));
     col = mix(col, K, aaS(p.y - 0.82) * (1.0 - aaS(p.y - 0.84)) * band(p.z, -1.5, 0.15));
-    col = mix(col, Rd, band(p.y + 0.02 * p.z, 0.67, 0.72) * band(p.z, -1.9, 0.9) * aaS(abs(p.x) - 0.15)); col = mix(col, K, 1.0 - aaS(p.y - 0.18));
+    col = mix(col, Rd, band(p.y + 0.02 * p.z, 0.67, 0.72) * band(p.z, -1.9, 0.9) * aaS(abs(p.x) - 0.15));
     if (c > 0.5 && c < 1.5) col = mix(K, W, aaS(p.y - 0.3)); return col;`,
   // Audi R26: Titan vorn bis zur senkrechten Kante mitten am Seitenkasten, dahinter roter Block am Seitenkasten, Motorabdeckung oben und Heck schwarz
   AUD: `vec3 Ti = ${lc(0xb3b7bc)}, Ar = ${lc(0xe32b1c)}, K = ${lc(0x131417)};
     vec3 col = mix(K, Ti, aaS(p.z + 0.2)); float red = band(p.z, -1.1, -0.2) * aaS(p.y - 0.15) * (1.0 - aaS(p.y - 0.65 + 0.12 * clamp(-0.6 - p.z, 0.0, 1.0))) * aaS(abs(p.x) - 0.15);
-    col = mix(col, Ar, red); col = mix(col, K, 1.0 - aaS(p.y - 0.15));
+    col = mix(col, Ar, red);
     if (c > 0.5 && c < 1.5) col = K; return col;`,
   // Cadillac MAC-26 (offizielles Seitenbild, links und rechts gleich): Nase/Frontflügel silber-chrom, Vorderwagen schwarz, Cockpit/Airbox/Motorabdeckung weiß, weißer Schwung im Seitenkasten,
   // schwarze Pixelstreifen und schwarze Finne am Heck, Heckflügel weiß mit silbernen Endplatten, Unterboden/Diffusor schwarz
@@ -2957,7 +2962,7 @@ const cockGLSL = k => { const c = COCK[k]; return '\n if (abs(vLP.x) < ' + c.x.t
 function liveryMat(tk, gloss) { const code = LIVERY[tk]; if (!code) return gloss;
   gloss.onBeforeCompile = sh => {
     sh.vertexShader = 'attribute float aCls; varying float vCls; varying vec3 vLP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vLP = position; vCls = aCls;');
-    sh.fragmentShader = 'uniform vec3 uMir; varying float vCls; varying vec3 vLP;\n' + LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 2.5 || vCls > 6.5) diffuseColor.rgb = livery(vLP, vCls);\n vec3 gN = normalize(cross(dFdx(vLP), dFdy(vLP))); float mirF = (abs(vLP.x) > 0.44 && abs(vLP.x) < 0.69 && vLP.y > 0.668 && vLP.y < 0.745 && vLP.z > 0.66 && vLP.z < 0.84 && abs(gN.z) > 0.7) ? 1.0 : 0.0; if (mirF > 0.5) diffuseColor.rgb = vec3(0.0);' /* Spiegelglas (F1): die nach hinten zeigende Fläche der Spiegelgehäuse – im Modell kein eigenes Teil – zeigt die Himmelsfarbe der Strecke */ + cockGLSL('f1')).replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n if (mirF > 0.5) totalEmissiveRadiance = uMir;'); sh.uniforms.uMir = { value: MIRMAT.emissive };
+    sh.fragmentShader = 'uniform vec3 uMir; varying float vCls; varying vec3 vLP;\n' + LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 2.5 || vCls > 6.5) diffuseColor.rgb = livery(vLP, vCls);\n vec3 gN = normalize(cross(dFdx(vLP), dFdy(vLP))); float mirF = 0.0;   /* Spiegelglas ist jetzt ein eigenes Teil im Modell (Chunk mirror) */ if (mirF > 0.5) diffuseColor.rgb = vec3(0.0);' /* Spiegelglas (F1): die nach hinten zeigende Fläche der Spiegelgehäuse – im Modell kein eigenes Teil – zeigt die Himmelsfarbe der Strecke */ + cockGLSL('f1')).replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n if (mirF > 0.5) totalEmissiveRadiance = uMir;'); sh.uniforms.uMir = { value: MIRMAT.emissive };
   };
   gloss.customProgramCacheKey = () => 'livery-' + tk; return gloss; }
 function teamTemplate(tk) {
@@ -8246,7 +8251,8 @@ const TIER_ICO = { kart: '🏁', f2: '2', f1: '1' };
 function renderSeriesCards() {
   $('#serHead').textContent = MENU.mode === 'tt' ? 'Zeitrennen – Fahrzeugklasse' : 'Schnelles Spiel – Fahrzeugklasse';
   const info = { kart: ['Rennkart', 'Leicht · wendig · sehr kurvenstark'], f2: ['Formula 2', 'Dallara F2 2024 · 22 Fahrer · 11 Teams'], f1: ['Formula 1', 'Saison 2026 · 22 Fahrer · 11 Teams'] };
-  $('#serCards').innerHTML = ['kart', 'f2', 'f1'].map(t => '<button class="tcard scard' + (t === SER ? ' on' : '') + '" data-ser="' + t + '" style="--tc:' + TIER_COL[t] + '"><i class="sbg" style="background-image:url(textures/class_' + t + '.jpg?v=3)"></i><span class="chk">✓</span><div class="sbig">' + (t === 'kart' ? 'GoKart' : t === 'f2' ? 'F2' : 'F1') + '</div><div class="tn">' + info[t][0] + '</div><div class="tf">' + info[t][1] + '</div></button>').join('');
+  $('#serCards').innerHTML = ['kart', 'f2', 'f1'].map(t => '<button class="tcard scard' + (t === SER ? ' on' : '') + '" data-ser="' + t + '" style="--tc:' + TIER_COL[t] + '"><i class="sbg" style="background-image:url(textures/class_' + t + '.jpg?v=3)"></i><span class="chk">✓</span><div class="sbig"><img alt="" src="logos/' + (t === 'kart' ? 'KART' : t.toUpperCase()) + '.png?' + LOGO_V + '"' + (t === 'f1' ? ' data-fb="logos/LOGO.png?' + LOGO_V + '"' : '') + '><span>' + (t === 'kart' ? 'GoKart' : t === 'f2' ? 'F2' : 'F1') + '</span></div><div class="tn">' + info[t][0] + '</div><div class="tf">' + info[t][1] + '</div></button>').join('');
+  $$('#serCards .sbig img').forEach(im => { im.onload = () => { try { const c = document.createElement('canvas'); c.width = c.height = 16; const g = c.getContext('2d'); g.drawImage(im, 0, 0, 16, 16); const d = g.getImageData(0, 0, 16, 16).data; let sat = 0; for (let i = 0; i < d.length; i += 4) sat = Math.max(sat, Math.max(d[i], d[i + 1], d[i + 2]) - Math.min(d[i], d[i + 1], d[i + 2])); if (d[3] > 200 && d[0] > 200 && d[1] > 200 && d[2] > 200 && sat < 40) im.classList.add('inv'); } catch (e) {} im.parentNode.classList.add('hasimg'); }; im.onerror = () => { const fb = im.dataset.fb; if (fb) { delete im.dataset.fb; im.src = fb; } else im.style.display = 'none'; }; });
   $$('#serCards .scard').forEach(b => b.addEventListener('click', () => { setSeries(b.dataset.ser); MENU.team = null; $$('#serCards .scard').forEach(x => x.classList.toggle('on', x === b)); }));
 }
 function renderTitle() {
@@ -8464,7 +8470,7 @@ function initShowroom() {
     pm(22, 2.2, 0, 2.2, 16, 0, 0, 2.4); pm(6, 6, -9, 8, 7, 0, Math.PI / 2, 4.5); pm(6, 6, 9, 8, 7, 0, Math.PI / 2, 4.5);   /* Lichtband vorn + zwei Softboxen: lange, weiche Glanzlichter auf Lack und Carbon */
     SHOW.env = sc.environment = pmrem.fromScene(es, 0.02).texture;
   }
-  const floor = new THREE.Mesh(new THREE.CircleGeometry(40, 96).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x0b0e13, roughness: .32, metalness: .55, envMapIntensity: .6, transparent: true, opacity: .8 })); floor.receiveShadow = true;   /* leicht durchscheinend: darunter liegt das gespiegelte Auto */ sc.add(floor);
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(40, 96).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x000000, roughness: .22, metalness: 0, envMapIntensity: .12, transparent: true, opacity: .74 })); floor.receiveShadow = true;   /* leicht durchscheinend: darunter liegt das gespiegelte Auto */ sc.add(floor);
   const grid = new THREE.Mesh(new THREE.RingGeometry(7.5, 7.56, 128).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xe10600, transparent: true, opacity: .25 })); grid.position.y = 0.01; sc.add(grid); SHOW.gridRing = grid;
   for (const x of [-3.15, 3.15]) {
     const tt = new THREE.Mesh(new THREE.CylinderGeometry(3.0, 3.1, 0.12, 96), new THREE.MeshStandardMaterial({ color: 0x14181f, roughness: .25, metalness: .8 })); tt.position.set(x, 0.06, 0); tt.receiveShadow = true; sc.add(tt); (SHOW.tts ||= []).push(tt);
@@ -8567,8 +8573,9 @@ function showroomFrame(dt) {
   _sp.x += Math.sin(t * 0.27) * 0.5; _sp.y += Math.sin(t * 0.19) * 0.1; _sp.z += Math.cos(t * 0.23) * 0.4;   // leichtes Schweben – nie ganz statisch
   if (!SHOW.cp) { SHOW.cp = _sp.clone(); SHOW.ct = _st.clone(); SHOW.ox = ox; SHOW.oy = oy; }
   const k = 1 - Math.exp(-dt * (scr === 'title' ? 6 : 2.1)); SHOW.cp.lerp(_sp, k); SHOW.ct.lerp(_st, k); cam.position.copy(SHOW.cp);
-  _st.copy(SHOW.ct); if (SHOW.old && scr !== 'team') { showroomSwap(false); SHOW.orbT = 1; }
+  _st.copy(SHOW.ct); if (SHOW.old && scr !== 'team') { showroomSwap(false); SHOW.orbT = 1; renderer.domElement.style.filter = ''; renderer.domElement.style.transform = ''; }
   if (scr === 'team' && SHOW.orbT !== undefined && SHOW.orbT < 1) { const o0 = SHOW.orbT; SHOW.orbT = Math.min(1, o0 + dt / 0.75); if (o0 < 0.5 && SHOW.orbT >= 0.5) showroomSwap(true);
+    { const bl = Math.sin(Math.PI * SHOW.orbT), cs = renderer.domElement.style; cs.filter = SHOW.orbT < 1 ? 'blur(' + (bl * 16).toFixed(1) + 'px) brightness(' + (1 - 0.45 * bl * bl).toFixed(3) + ')' : ''; cs.transform = SHOW.orbT < 1 ? 'scale(' + (1 + 0.05 * bl).toFixed(4) + ')' : ''; }   /* weiche Blende: der Schwenk verwischt und dunkelt zur Mitte hin ab – der Autowechsel selbst ist nicht zu sehen */
     const q = SHOW.orbT, e = q * q * (3 - 2 * q), a = q < 0.5 ? SHOW_SW * e : SHOW_SW * e - SHOW_SW, dx = SHOW.ct.x - cam.position.x, dz = SHOW.ct.z - cam.position.z; _st.x = cam.position.x + dx * Math.cos(a) - dz * Math.sin(a); _st.z = cam.position.z + dx * Math.sin(a) + dz * Math.cos(a); }
   SHOW.stage.updateMatrixWorld(); cam.position.applyMatrix4(SHOW.stage.matrixWorld); _st.applyMatrix4(SHOW.stage.matrixWorld); cam.lookAt(_st);
   SHOW.ox += (ox - SHOW.ox) * k; SHOW.oy += (oy - SHOW.oy) * k;
@@ -8603,7 +8610,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.24'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.25'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

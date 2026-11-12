@@ -31,4 +31,11 @@ So tauschst du es auf GitHub:
 ## Formel 2 und Kart
 Kürzel mit Vorsatz `F2_` bzw. `K_`, z. B. `F2_INV.png` (Invicta), `F2_HIT.png` (Hitech). Die vollständige Liste steht in `index.html` bei `F2_TEAMS` und `KART_TEAMS`.
 
-Logos, die du in den Einstellungen auf dem Gerät lädst, haben Vorrang vor diesen Dateien.
+## Klassen-Logos (Klassenwahl „Kart / F2 / F1“)
+Ersetzen den großen Schriftzug auf der jeweiligen Karte.
+
+- `KART.png` – Kart (z. B. CIK Karting World Championship)
+- `F2.png` – Formel 2
+- `F1.png` – Formel 1 (fehlt die Datei, wird `LOGO.png` verwendet)
+
+Am besten PNG mit **transparentem Hintergrund** und hellem Motiv. Ein rein schwarzes Logo auf weißem Grund (ohne Transparenz) setzt das Spiel selbst in Weiß um; farbige Logos brauchen einen transparenten Hintergrund, sonst erscheint ein weißer Kasten.
