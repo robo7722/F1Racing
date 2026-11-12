@@ -60,3 +60,9 @@
 - **Hauptmenü**: zeigt bei laufender Karriere das Karriere-Fahrzeug (`showroomCareer`).
 - **Klassenwahl**: Rennbilder je Klasse (`textures/class_*.jpg`, Ultra-Grafik, Tiefenunschärfe nachträglich berechnet).
 - **Knöpfe**: Pfeile und Symbole als gezeichnete Formen statt Schriftzeichen.
+
+## Nachtrag (siebte Runde)
+- **Cockpit-Schale nach Referenz, für F1 und F2** (`SHELLS`, `cockShell`): Schultern steigen von der Öffnung nach außen an, Carbon-Einfassung der Öffnung, breite Blende vor dem Lenkrad. Randhöhen per Median gegen Ausreißer geglättet.
+- **F2-Modell**: Normalen an der Nase korrigiert (`renormCar`, Bezugshöhe an der Nase tiefer).
+- **Gelände**: Höhen der Geländebänder an der tatsächlichen Position (`foldLim`) – keine senkrechten Wände im Kurveninneren (Red Bull Ring); Hügelstärke und Höhe zwischen zwei Streckenteilen stetig.
+- **Klassenbilder**: Auto scharf, Hintergrund unscharf. Hauptmenü ohne Symbole.
