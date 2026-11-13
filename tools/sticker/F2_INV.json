@@ -2,9 +2,7 @@
  "kind": "f2",
  "team": "F2_INV",
  "driver": "DUR",
- "drivers": [
-  "DUR"
- ],
+ "drivers": ["DUR", "CAM"],
  "photo": "https://res.cloudinary.com/prod-f2f3/v1770000000/common/f2/2026/invictaracing/2026invictaracingcarleft.png",
  "rear": [
   3080,
@@ -42,7 +40,9 @@
    "kind": "key",
    "key": "#161616",
    "color": "#14161b",
-   "tol": 110
+   "tol": 110,
+   "smooth": 10,
+   "holes": false
   },
   {
    "name": "fl_kasten",
@@ -55,7 +55,9 @@
    "kind": "key",
    "key": "#161616",
    "color": "#14161b",
-   "tol": 110
+   "tol": 110,
+   "smooth": 10,
+   "holes": false
   },
   {
    "name": "paraguay",

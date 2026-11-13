@@ -1478,10 +1478,10 @@ const LIV = {
   TRI: { body: 0xf0f0f0, acc: 0xd8102c, tip: 0xd8102c, metal: .3, low: 0x1d3a9e, split: .5 },   /* Testfotos 2026: Nase rot, Seiten blau, Motorabdeckung weiß */
 };
 const F2_DRIVERS = [
-  ['CAM', 'Rafael Câmara', 1, 'F2_INV', 0xf2d100, 'INV1'], ['DUR', 'Joshua Dürksen', 2, 'F2_INV', 0xd8102c, 'INV'],
+  ['CAM', 'Rafael Câmara', 1, 'F2_INV', 0xf2d100, 'INV'], ['DUR', 'Joshua Dürksen', 2, 'F2_INV', 0xd8102c, 'INV'],
   ['MIY', 'Ritomo Miyata', 3, 'F2_HIT', 0xf0f0f0, 'HIT'], ['HER', 'Colton Herta', 4, 'F2_HIT', 0x1d3a9e, 'HIT'],
-  ['LEO', 'Noel León', 5, 'F2_CAM', 0x1c8c3c, 'CAMW'], ['TSO', 'Nikola Tsolov', 6, 'F2_CAM', 0xf0f0f0, 'CAMR'],
-  ['BEG', 'Dino Beganovic', 7, 'F2_DAM', 0x1d6fb8, 'DAM'], ['BIL', 'Roman Biliński', 8, 'F2_DAM', 0xd8102c, 'DAM2'],
+  ['LEO', 'Noel León', 5, 'F2_CAM', 0x1c8c3c, 'CAMW'], ['TSO', 'Nikola Tsolov', 6, 'F2_CAM', 0xf0f0f0, 'CAMW'],
+  ['BEG', 'Dino Beganovic', 7, 'F2_DAM', 0x1d6fb8, 'DAM'], ['BIL', 'Roman Biliński', 8, 'F2_DAM', 0xd8102c, 'DAM'],
   ['MIN', 'Gabriele Minì', 9, 'F2_MPM', 0x1c8c3c, 'PINK'], ['GOE', 'Oliver Goethe', 10, 'F2_MPM', 0x16181b, 'ORA'],
   ['MON', 'Sebastián Montoya', 11, 'F2_PRE', 0xf5c400, 'ITA'], ['BOY', 'Mari Boya', 12, 'F2_PRE', 0xd8102c, 'ITA2'],
   ['STE', 'Martinius Stenshorne', 14, 'F2_ROD', 0xd8102c, 'BLK'], ['DUN', 'Alex Dunne', 15, 'F2_ROD', 0x1c8c3c, 'PINK'],
@@ -8957,7 +8957,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.47'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.48'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
