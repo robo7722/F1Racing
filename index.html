@@ -3011,7 +3011,9 @@ function numDecalTex(ser, num) { const k = ser + '_' + num; if (NUM_TEX[k]) retu
   if (NUM_FILES.has(k)) { const t = NUM_TEX[k] = new THREE.TextureLoader().load('liveries/num/' + k + '.png'); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; }
   const t = NUM_TEX[k] = canvasTex(256, 128, (g, w, h) => { g.clearRect(0, 0, w, h); g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
     let px = 118; g.font = 'italic 900 ' + px + 'px "Titillium Web",system-ui,sans-serif'; const tw = g.measureText(String(num)).width; if (tw > w * 0.9) { px = Math.floor(px * w * 0.9 / tw); g.font = 'italic 900 ' + px + 'px "Titillium Web",system-ui,sans-serif'; }
-    g.fillText(String(num), w / 2, h / 2 + px * 0.04); }); t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; return t; }
+    const x0 = w / 2, y0 = h / 2 + px * 0.04; g.fillText(String(num), x0, y0);
+    try { const d = g.getImageData(0, 0, w, h).data; let sx = 0, sy = 0, sa = 0; for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const a = d[(j * w + i) * 4 + 3]; sx += a * i; sy += a * j; sa += a; }   // optisch mittig (Schwerpunkt), wie die Nummern-Grafiken und die Kart-Nummern
+      if (sa > 0) { const lim = (v, m) => Math.max(-m, Math.min(m, v)), dx = lim((w - 1) / 2 - sx / sa, 10), dy = lim((h - 1) / 2 - sy / sa, 8); g.clearRect(0, 0, w, h); g.fillText(String(num), x0 + dx, y0 + dy); } } catch (e) {} }); t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; return t; }
 function numMat(tp, tk, num) { const N = NUMS[tk]; if (!N || num === undefined || !tp.glossMat.livHook) return tp.glossMat; const nm = tp.nm || (tp.nm = {}); if (nm[num]) return nm[num];
   const base = tp.glossMat, m = base.clone(), tex = numDecalTex(LIVMAN[tk].kind, num), cl = new THREE.Color(N.color || '#ffffff');
   const hook = base.livHook; m.onBeforeCompile = (sh, r) => { hook(sh, r); sh.uniforms.uNum = { value: tex }; sh.uniforms.uNumOn = { value: 1 }; sh.uniforms.uNumCol = { value: cl }; }; m.customProgramCacheKey = base.customProgramCacheKey; return (nm[num] = m); }
@@ -3490,8 +3492,11 @@ const KNUM_TEX = {};
 function kartNumMat(base, num) { if (num === undefined || !base.kartHook) return base; const nm = base.knm || (base.knm = {}); if (nm[num]) return nm[num];
   const tex = KNUM_TEX[num] || (KNUM_TEX[num] = (() => { const draw = g => { g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, 128, 128); g.fillStyle = '#000'; g.textAlign = 'left'; g.textBaseline = 'alphabetic';   // gerade Ziffern (wie auf echten Nummernfeldern), nach ihrer tatsächlichen Größe eingepasst und mittig – kursive Ziffern ragten aus dem Feld
       const f = q => '900 ' + q + 'px "Titillium Web",system-ui,sans-serif', box = () => { const m = g.measureText(String(num)); return { l: m.actualBoundingBoxLeft, r: m.actualBoundingBoxRight, a: m.actualBoundingBoxAscent, d: m.actualBoundingBoxDescent }; };
-      let px = 110; g.font = f(px); let b = box(); const k = Math.min(100 / (b.l + b.r), 96 / (b.a + b.d), 1); if (k < 1) { px = Math.floor(px * k); g.font = f(px); b = box(); }
-      g.fillText(String(num), 64 - (b.l + b.r) / 2 + b.l, 64 + (b.a + b.d) / 2 - b.d); };
+      let px = 110; g.font = f(px); let b = box(); const k = Math.min(90 / (b.l + b.r), 92 / (b.a + b.d), 1); if (k < 1) { px = Math.floor(px * k); g.font = f(px); b = box(); }
+      const x = 64 - (b.l + b.r) / 2 + b.l, y = 64 + (b.a + b.d) / 2 - b.d; g.fillText(String(num), x, y);
+      // optisch mittig: nach dem Schwerpunkt der Ziffern ausrichten, nicht nach ihrem Umriss (eine 1 mit Fähnchen oder eine 7 wirken sonst verschoben)
+      try { const d = g.getImageData(0, 0, 128, 128).data; let sx = 0, sy = 0, sa = 0; for (let j = 0; j < 128; j++) for (let i = 0; i < 128; i++) { const a = d[(j * 128 + i) * 4 + 3]; sx += a * i; sy += a * j; sa += a; }
+        if (sa > 0) { const lim = (v, m) => Math.max(-m, Math.min(m, v)), dx = lim(63.5 - sx / sa, Math.max(0, (124 - (b.l + b.r)) / 2)), dy = lim(63.5 - sy / sa, Math.max(0, (124 - (b.a + b.d)) / 2)); g.clearRect(0, 0, 128, 128); g.fillText(String(num), x + dx, y + dy); } } catch (e) {} };
     const t = canvasTex(128, 128, draw); t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { draw(t.image.getContext('2d')); t.needsUpdate = true; }); return t; })());
   const m = base.clone(), hook = base.kartHook; m.onBeforeCompile = (sh, r) => { hook(sh, r); sh.uniforms.uKNum = { value: tex }; sh.uniforms.uKNumOn = { value: 1 }; }; m.customProgramCacheKey = base.customProgramCacheKey; return (nm[num] = m); }
 function kartMat(tk, T) {
