@@ -116,3 +116,11 @@
 - **F1-Spiegel im Cockpit**: Halterblatt und sein Fuß stammen wieder vollständig aus dem Originalmodell (Ausnahme im Ausschnitt: z 0,742–0,868, y 0,646–0,712, |x| > 0,20); ein selbst modellierter Sockel wurde verworfen.
 - **Cockpit-Kamera** 8 cm näher am Lenkrad (F1 z 0,30, F2 z 0,28).
 - 1.29: Blinken nach dem Übergang zur Klassenwahl behoben – die Klasse `fromtitle` wird nicht mehr per Zeitgeber entfernt (das startete die normale Einblend-Animation erneut), sondern erst beim nächsten Bildschirmwechsel.
+
+## Version 1.30
+- **F1-Halo**: eigenes Teil aus dem feinen Netz (260k) geschnitten und auf 3600 Dreiecke vereinfacht, weiche Normalen (Knick ab 68°) – vorher 1344 Dreiecke mit 40°-Knick, in der Cockpitansicht als Facetten sichtbar.
+- **Normalen allgemein** (`creased` in `f1conv.py`): Splitterdreiecke an den Schnittlinien bilden keine eigene Normalengruppe mehr.
+- **F1-Spiegel im Cockpit**: Halterblatt und Wulst aus dem Original bleiben nur oberhalb der Deckfläche des Cockpit-Modells stehen (gleiche Formel wie `cockNew`, +4 mm) – saubere Schnittlinie, kein Flimmern doppelter Flächen.
+- **Helmrand**: Vorzeichnen (`warmhelm`, fast unsichtbar) greift nicht mehr, wenn die Cockpitansicht schon aktiv ist.
+- **Kart**: Fahrer tragen denselben Helm wie F1/F2 (`helmGeoNew` + `helmMat`), auf Kart-Größe skaliert.
+
