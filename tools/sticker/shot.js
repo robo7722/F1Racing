@@ -8,6 +8,7 @@ const ROOT = path.resolve(__dirname, '../..'); const [key, out, views = 'L,R'] =
 const cfg = JSON.parse(fs.readFileSync(path.join(__dirname, key + '.json'), 'utf8'));
 const V = { L: [[30, 0.9, 0.35], [0, 0.55, 0.35], 6], Lf: [[14, 1.0, 1.9], [0, 0.45, 1.9], 5], Lm: [[14, 1.1, 0.2], [0, 0.6, 0.2], 5], Lr: [[14, 1.1, -1.5], [0, 0.65, -1.5], 5],
   top: [[0.01, 24, 0.3], [0, 0.5, 0.3], 8], f34: [[9, 3, 12], [0, 0.5, 0.5], 14], r34: [[9, 3, -12], [0, 0.5, -0.3], 14] };
+Object.assign(V, { kL: [[9, 0.5, 0], [0, 0.3, 0], 9], kR: [[-9, 0.5, 0], [0, 0.3, 0], 9], kF: [[0, 1.2, 9], [0, 0.3, 0], 9], kB: [[0, 1.2, -9], [0, 0.3, 0], 9], kT: [[0.01, 9, 0], [0, 0.3, 0], 11], kF34: [[5, 2.5, 7], [0, 0.3, 0], 9], kB34: [[-5, 2.5, -7], [0, 0.3, 0], 9] });   // Karts (kleiner)
 for (const k of ['L', 'Lf', 'Lm', 'Lr', 'f34', 'r34']) V[k.replace('L', 'R').replace(/^([fr])34$/, '$134R')] = [[-V[k][0][0], V[k][0][1], V[k][0][2]], V[k][1], V[k][2]];
 const MIME = { html: 'text/html', js: 'text/javascript', json: 'application/json', png: 'image/png', jpg: 'image/jpeg', bin: 'application/octet-stream', mp3: 'audio/mpeg', webmanifest: 'application/manifest+json', svg: 'image/svg+xml' };
 // Höchstens zwei Aufnahmen gleichzeitig (jede braucht viel Rechenzeit): Platz in /tmp/f1shot-slots belegen, sonst warten
