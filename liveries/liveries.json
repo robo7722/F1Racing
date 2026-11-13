@@ -412,7 +412,7 @@
    "tip": 790037,
    "metal": 0.55
   },
-  "glsl": "vec3 S = #b3bacd; vec3 K = #0c0e15; vec3 col = S;\nif (p.z > 1.85 && abs(p.x) > 0.17) col = K;\nfloat yb = 0.424 - 0.25 * (p.z - 1.75);\nif (p.z > 1.75 && abs(p.x) < 0.17) col = mix(K, col, aaS(p.y - yb));\nif (p.z > 1.55 && p.z < 2.45 && abs(p.x) < 0.07 && p.y > yb) col = K;\nif (p.y > 0.86 && p.z > -0.62 && p.z < 0.1) col = K;\nif (p.z < -1.93) col = K;\nreturn col;"
+  "glsl": "vec3 S = #b3bacd; vec3 K = #0c0e15; vec3 col = S;\nif (p.z > 1.85 && abs(p.x) > 0.17) col = K;\nfloat yb = 0.424 - 0.25 * (p.z - 1.75);\nif (p.z > 1.75 && abs(p.x) < 0.17) col = mix(K, col, aaS(p.y - yb));\nif (p.z > 1.55 && p.z < 2.45 && abs(p.x) < 0.07 && p.y > yb) col = K;\nif (p.z < 0.1 && p.z > -0.8) col = mix(col, K, aaS(p.y - (p.z > -0.18 ? 0.85 : 0.85 + (-0.18 - p.z) * 0.30)));\nif (p.y > 0.72 && p.z > 0.0 && p.z < 0.95) col = K;\nif (p.z < -1.93) col = K;\nreturn col;"
  },
  "F2_INV": {
   "kind": "f2",

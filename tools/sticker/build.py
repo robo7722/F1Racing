@@ -75,6 +75,16 @@ def cut(img, st):
         rgb = np.clip((a - bg * (1 - al[..., None])) / np.maximum(al[..., None], 0.08), 0, 255)
     return Image.fromarray(np.dstack([rgb, al * 255]).astype(np.uint8), 'RGBA')
 
+def bleed(sheet, rounds=12):
+    """Farbe der Aufkleber in die durchsichtige Umgebung ziehen (Deckkraft bleibt 0): sonst mischt die Grafikkarte am Rand Weiß hinein -> heller Saum."""
+    a = np.asarray(sheet).astype(np.float32); rgb, al = a[..., :3].copy(), a[..., 3]; have = al > 0
+    for _ in range(rounds):
+        acc = np.zeros_like(rgb); cnt = np.zeros(al.shape, np.float32)
+        for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
+            h = np.roll(have, (dy, dx), (0, 1)); acc += np.roll(rgb, (dy, dx), (0, 1)) * h[..., None]; cnt += h
+        new = (~have) & (cnt > 0); rgb[new] = acc[new] / cnt[new][:, None]; have = have | new
+    return Image.fromarray(np.dstack([rgb, al]).astype(np.uint8), 'RGBA')
+
 def build(key):
     cfg = json.load(open(os.path.join(HERE, key + '.json'), encoding='utf-8')); kind = cfg['kind']
     Z0, Z1, Y0, Y1 = BOX[kind]; zr, zf, wy = WHEEL[kind]
@@ -96,6 +106,7 @@ def build(key):
             if side in ('both', 'L'): sheet.alpha_composite(pl, (max(0, round((Z1 - cz) * pxm_x - w / 2)), max(0, yy)))
             if side in ('both', 'R'): sheet.alpha_composite(pr, (max(0, round((cz - Z0) * pxm_x - w / 2)), max(0, HH + yy)))
             print('  %-14s z %.2f  y %.2f  Breite %.2f m' % (st.get('name', '?'), cz, cy, wm))
+        sheet = bleed(sheet)
         os.makedirs(os.path.join(ROOT, 'liveries'), exist_ok=True); sheet.save(os.path.join(ROOT, 'liveries', key + '.png'), optimize=True)
         bg = Image.new('RGB', sheet.size, tuple(hexrgb(cfg.get('previewBg', '#24262c')))); bg.paste(sheet, (0, 0), sheet); bg.save(os.path.join(CACHE, key + '_bogen.png'))
     print('ok', key)

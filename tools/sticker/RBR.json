@@ -31,8 +31,8 @@
   {"name": "carlyle", "box": [2485, 360, 2720, 397], "kind": "w"},
   {"name": "1password", "box": [2493, 435, 2692, 478], "kind": "w"},
   {"name": "mobil_nase", "box": [3405, 568, 3577, 632], "kind": "w", "at": [2.58, 0.215], "w": 0.2},
-  {"name": "mobil_nase_o", "box": [3440, 580, 3490, 630], "kind": "key", "key": "#e0132b", "color": "#e8202c", "side": "R", "at": [2.546, 0.21], "w": 0.058, "mirror": false},
-  {"name": "mobil_nase_o_l", "box": [3440, 580, 3490, 630], "kind": "key", "key": "#e0132b", "color": "#e8202c", "side": "L", "at": [2.614, 0.21], "w": 0.058, "mirror": false}
+  {"name": "mobil_nase_o", "box": [3440, 580, 3490, 630], "kind": "key", "key": "#e0132b", "color": "#e8202c", "side": "R", "at": [2.563, 0.21], "w": 0.062, "mirror": false},
+  {"name": "mobil_nase_o_l", "box": [3440, 580, 3490, 630], "kind": "key", "key": "#e0132b", "color": "#e8202c", "side": "L", "at": [2.597, 0.21], "w": 0.062, "mirror": false}
  ],
  "logoFile": "RBR",
  "logos": [{"v": "top", "x": 0, "z": 1.6, "s": 0.2}],
