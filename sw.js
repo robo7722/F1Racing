@@ -1,5 +1,5 @@
 // Service Worker: macht das Spiel offline-fähig und installierbar
-const CACHE = 'f1-rennen-1.31';
+const CACHE = 'f1-rennen-1.32';
 const APP = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './car.bin', './f2car.bin', './kart.bin', './textures/kart_body.jpg', './textures/kart_body_n.jpg', './textures/kart_wheel.jpg', './roadcar.bin', './menu.mp3',
   ...['asphalt_track', 'asphalt_pit_lane', 'sand_01', 'gravel_floor'].flatMap(t => ['diff', 'nor_gl'].map(m => './textures/' + t + '_' + m + '_1k.jpg')),
   ...['Grass004_Color', 'Grass004_NormalGL', 'LeafSet004_Color', 'LeafSet004_Opacity', 'LeafSet019_Color', 'LeafSet019_Opacity', 'Foliage001_Color', 'Foliage001_Opacity'].map(f => './textures/acg_' + f + '.jpg')];
@@ -15,7 +15,7 @@ self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(APP.map(u => new Request(u, { cache: 'reload' }))).then(() => Promise.all(LIBS.map(u => c.add(u).catch(() => {}))))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE && k !== 'fr-music').map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE && k !== 'fr-music' && k !== 'fr-logos').map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 // Audio aus dem Cache: Safari/iOS fragt mit "Range" an und erwartet eine Teilantwort (206) – eine volle 200-Antwort spielt dort nicht
 async function ranged(req, hit) {
@@ -24,6 +24,7 @@ async function ranged(req, hit) {
   if (!(a <= b) || a >= n) return new Response(null, { status: 416, headers: { 'Content-Range': 'bytes */' + n } });
   return new Response(buf.slice(a, b + 1), { status: 206, headers: { 'Content-Type': hit.headers.get('Content-Type') || 'audio/mpeg', 'Content-Range': 'bytes ' + a + '-' + b + '/' + n, 'Content-Length': String(b - a + 1), 'Accept-Ranges': 'bytes' } });
 }
+const LSEEN = new Set();   // Logos, bei denen in dieser Sitzung schon nach einer neuen Fassung gefragt wurde
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
@@ -33,9 +34,14 @@ self.addEventListener('fetch', e => {
       .catch(() => caches.match('./index.html')));
     return;
   }
-  if (/\/(logos|liveries)\/[^/]+\.png$/i.test(new URL(req.url).pathname)) {   // Logos (Ordner logos/): immer zuerst am Server nachfragen – neue, geänderte und gelöschte Dateien wirken beim nächsten Start; ohne Netz der letzte Stand
+  if (/\/(logos|liveries)\/[^/]+\.png$/i.test(new URL(req.url).pathname)) {   // Logos (Ordner logos/): aus dem eigenen Dauer-Cache, ohne erneutes Laden. Je Sitzung fragt der Service Worker einmal im Hintergrund nach, ob sich die Datei geändert hat – neue, geänderte und gelöschte Dateien gelten ab dem nächsten Start
     const key = req.url.split('?')[0];
-    e.respondWith(fetch(key, { cache: 'no-cache' }).then(r => { const cp = r.ok ? r.clone() : null; caches.open(CACHE).then(c => cp ? c.put(key, cp) : c.delete(key)); return r; }).catch(() => caches.match(key).then(h => h || Response.error())));
+    e.respondWith(caches.open('fr-logos').then(c => c.match(key).then(hit => {
+      if (hit && LSEEN.has(key)) return hit;
+      const net = fetch(key, { cache: 'no-cache' }).then(r => { LSEEN.add(key); if (r.ok || r.status === 404) c.put(key, r.clone()); return r; });   // auch „gibt es nicht“ merken: sonst würde nach jedem fehlenden Logo neu gefragt
+      if (hit) { e.waitUntil(net.catch(() => {})); return hit; }
+      return net;
+    })));
     return;
   }
   if (/\/music\/[^/]+\.(mp3|ogg|m4a|aac|wav|opus)$|\/max\.mp3$/i.test(new URL(req.url).pathname)) { // Rennmusik (Ordner music/): eigener, dauerhafter Cache (bei Bedarf geladen)

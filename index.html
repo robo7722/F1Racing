@@ -1136,7 +1136,7 @@ body.warmhelm #helmet{display:block!important;opacity:.01}
   var put = function (sel, cls) { var el = document.querySelector(sel); if (!el) return; var g = new Image(); g.src = im.src; g.className = cls; g.alt = 'Logo'; el.innerHTML = ''; el.appendChild(g); };
   var go = function () { put('.ldLogo', 'glogo ld'); put('.logo2', 'glogo'); var m = document.getElementById('mLogo'); if (m) { m.src = im.src; m.hidden = false; } };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); };
-  im.src = 'logos/LOGO.png?' + Date.now().toString(36); })();
+  im.src = 'logos/LOGO.png'; })();
 </script>
 
 <div id="hud" class="hidden">
@@ -8243,10 +8243,10 @@ const FLAG_OLD = { mc: ['#ce1126', '#ffffff', '#ffffff'], sil: ['#012169', '#fff
 // eigene Team-Embleme (keine echten Logos): Form + Farben + Kürzel
 const LOGOS = {}; try { localStorage.removeItem('f1logos'); } catch (e) {}   // Logos kommen nur noch aus dem Projektordner logos/ (früher zusätzlich auf dem Gerät ladbar)
 // Logos aus dem Projektordner: liegt dort logos/<Kürzel>.png (z. B. logos/MER.png, logos/F2_INV.png), ersetzt sie das gezeichnete Wappen. Fehlt die Datei, bleibt das Wappen.
-const REPO_LOGOS = {}, LOGO_V = Date.now().toString(36);   /* je Start eine neue Abfrage: geänderte, neue und gelöschte Dateien im Ordner logos/ wirken sofort (kein alter Stand aus dem Zwischenspeicher) */
+const REPO_LOGOS = {};   /* feste Adressen ohne Zeitstempel: Logos bleiben im Speicher (Service Worker, eigener Dauer-Cache) und werden nicht bei jedem Start neu geladen; geänderte Dateien holt der Service Worker im Hintergrund, sie gelten ab dem nächsten Start */
 function loadRepoLogos() { const keys = Object.keys(Object.assign({}, F1_TEAMS, F2_TEAMS, KART_TEAMS)); let left = keys.length, hit = 0;
   const done = () => { if (--left === 0 && hit) { try { renderTeams(); renderMenu(); if (CHP && MENU.scr === 'season') renderSeason(); } catch (e) {} } };
-  for (const k of keys) { const im = new Image(); im.onload = () => { REPO_LOGOS[k] = im.src; hit++; done(); }; im.onerror = done; im.src = 'logos/' + k + '.png?' + LOGO_V; } }
+  for (const k of keys) { const im = new Image(); im.onload = () => { REPO_LOGOS[k] = im.src; hit++; done(); }; im.onerror = done; im.src = 'logos/' + k + '.png'; } }
 function teamBadge(k) {
   if (LOGOS[k] || REPO_LOGOS[k]) return '<svg viewBox="0 0 64 64"><image href="' + (LOGOS[k] || REPO_LOGOS[k]) + '" x="3" y="3" width="58" height="58" preserveAspectRatio="xMidYMid meet"/></svg>';
   const T = TEAMS[k], c1 = hex(T.body === 0xf0f0f0 ? T.acc : T.body), c2 = hex(T.acc), c3 = hex(T.low ?? (T.tip !== T.body ? T.tip : 0x16181b));
@@ -8324,7 +8324,7 @@ const TIER_ICO = { kart: '🏁', f2: '2', f1: '1' };
 function renderSeriesCards() {
   $('#serHead').textContent = MENU.mode === 'tt' ? 'Zeitrennen – Fahrzeugklasse' : 'Schnelles Spiel – Fahrzeugklasse';
   const info = { kart: ['Rennkart', 'Leicht · wendig · sehr kurvenstark'], f2: ['Formula 2', 'Dallara F2 2024 · 22 Fahrer · 11 Teams'], f1: ['Formula 1', 'Saison 2026 · 22 Fahrer · 11 Teams'] };
-  $('#serCards').innerHTML = ['kart', 'f2', 'f1'].map(t => '<button class="tcard scard' + (t === SER ? ' on' : '') + '" data-ser="' + t + '" style="--tc:' + TIER_COL[t] + '"><i class="sbg" style="background-image:url(textures/class_' + t + '.jpg?v=3)"></i><span class="chk">✓</span><div class="sbig"><img alt="" src="logos/' + (t === 'kart' ? 'KART' : t.toUpperCase()) + '.png?' + LOGO_V + '"' + (t === 'f1' ? ' data-fb="logos/LOGO.png?' + LOGO_V + '"' : '') + '><span>' + (t === 'kart' ? 'GoKart' : t === 'f2' ? 'F2' : 'F1') + '</span></div><div class="tn">' + info[t][0] + '</div><div class="tf">' + info[t][1] + '</div></button>').join('');
+  $('#serCards').innerHTML = ['kart', 'f2', 'f1'].map(t => '<button class="tcard scard' + (t === SER ? ' on' : '') + '" data-ser="' + t + '" style="--tc:' + TIER_COL[t] + '"><i class="sbg" style="background-image:url(textures/class_' + t + '.jpg?v=3)"></i><span class="chk">✓</span><div class="sbig"><img alt="" src="logos/' + (t === 'kart' ? 'KART' : t.toUpperCase()) + '.png"' + (t === 'f1' ? ' data-fb="logos/LOGO.png"' : '') + '><span>' + (t === 'kart' ? 'GoKart' : t === 'f2' ? 'F2' : 'F1') + '</span></div><div class="tn">' + info[t][0] + '</div><div class="tf">' + info[t][1] + '</div></button>').join('');
   $$('#serCards .sbig img').forEach(im => { im.onload = () => { try { const c = document.createElement('canvas'); c.width = c.height = 16; const g = c.getContext('2d'); g.drawImage(im, 0, 0, 16, 16); const d = g.getImageData(0, 0, 16, 16).data; let sat = 0; for (let i = 0; i < d.length; i += 4) sat = Math.max(sat, Math.max(d[i], d[i + 1], d[i + 2]) - Math.min(d[i], d[i + 1], d[i + 2])); if (d[3] > 200 && d[0] > 200 && d[1] > 200 && d[2] > 200 && sat < 40) im.classList.add('inv'); else { let n = 0, l = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 128) { n++; l += d[i] + d[i + 1] + d[i + 2]; } if (n && l / n / 3 < 70 && sat < 60) im.classList.add('wht'); } } catch (e) {} im.parentNode.classList.add('hasimg'); }; im.onerror = () => { const fb = im.dataset.fb; if (fb) { delete im.dataset.fb; im.src = fb; } else im.style.display = 'none'; }; });
   $$('#serCards .scard').forEach(b => b.addEventListener('click', () => { setSeries(b.dataset.ser); MENU.team = null; $$('#serCards .scard').forEach(x => x.classList.toggle('on', x === b)); }));
 }
