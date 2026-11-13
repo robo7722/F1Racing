@@ -115,4 +115,4 @@
 - **Übergang aus dem Hauptmenü**: Wischer-Streifen entfernt; stattdessen kommt der Inhalt weich aus der Unschärfe nach vorn (`mzoom`), die obere Leiste gleitet ein (`mdrop`).
 - **F1-Spiegel im Cockpit**: Halterblatt und sein Fuß stammen wieder vollständig aus dem Originalmodell (Ausnahme im Ausschnitt: z 0,742–0,868, y 0,646–0,712, |x| > 0,20); ein selbst modellierter Sockel wurde verworfen.
 - **Cockpit-Kamera** 8 cm näher am Lenkrad (F1 z 0,30, F2 z 0,28).
-
+- 1.29: Blinken nach dem Übergang zur Klassenwahl behoben – die Klasse `fromtitle` wird nicht mehr per Zeitgeber entfernt (das startete die normale Einblend-Animation erneut), sondern erst beim nächsten Bildschirmwechsel.

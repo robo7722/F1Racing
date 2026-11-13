@@ -8243,7 +8243,7 @@ const contrast = n => { const c = new THREE.Color(n); return .3 * c.r + .59 * c.
 function showScreen(k) {
   if (k === 'upgrade') { MENU.seTab = 'up'; k = 'season'; }   // Upgrades sind jetzt ein Reiter des Saison-Bildschirms
   if (k === 'title') { setMode('quick'); CHP = null; QL = false; applyPM(); quickRestore(); }   // geladene Saison nicht in Schnelle Rennen mitnehmen (sonst zählt ein Schnelles Rennen als Karriere-Rennen)
-  if (MENU.scr === 'title' && k !== 'title' && !$('#menu').classList.contains('hidden')) { const mn = $('#menu'); mn.classList.remove('fromtitle'); void mn.offsetWidth; mn.classList.add('fromtitle'); clearTimeout(mn._ft); mn._ft = setTimeout(() => mn.classList.remove('fromtitle'), 650); }
+  { const mn = $('#menu'), ft = MENU.scr === 'title' && k !== 'title' && !mn.classList.contains('hidden'); if (ft || MENU.scr !== k) mn.classList.toggle('fromtitle', ft); }   /* die Klasse bleibt bis zum nächsten Bildschirmwechsel stehen: wurde sie per Zeitgeber entfernt, wechselte die Animation zurück auf die normale Einblendung und lief noch einmal ab (Blinken) */
   MENU.scr = k; $('#menu').dataset.scr = k;
   $$('#menu .scr').forEach(e => e.classList.toggle('on', e.id === 'scr' + k[0].toUpperCase() + k.slice(1)));
   const idx = SCR.indexOf(k); $$('#mSteps i').forEach((e, n) => { e.classList.toggle('on', n + 1 === idx); e.classList.toggle('done', n + 1 < idx); });
@@ -8647,7 +8647,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.28'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.29'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
