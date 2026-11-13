@@ -108,4 +108,5 @@
 - **TV-Kamera**: zeigt jetzt das modellierte Cockpit mit Lenkrad und Armen (gleiche Umschaltung wie Cockpitansicht).
 - **Cockpit F1**: Spiegelhalter werden nicht mehr mit ausgeschnitten. **F2**: Carbon über dem Kopf nur ausgeblendet, wenn es näher als 42 cm an der Kamera liegt.
 - **Tempo-Streifen** weiter außen und viel schwächer; Einblendung „Runde n: Zeit“/„Letzte Runde“ entfernt.
+- Nachtrag: Ausnahme für die F1-Spiegelhalter im Cockpit-Ausschnitt nach innen und unten erweitert (y > 0,625, |x| > 0,215) – der Halter reicht bis in die Karosserie. Versuch mit Handschuh-Modell aus einer Vorlage (um den Griff geformt) auf Wunsch verworfen; es bleiben die bisherigen Hände.
 
