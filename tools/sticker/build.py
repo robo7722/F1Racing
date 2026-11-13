@@ -16,6 +16,7 @@ Beschreibung (JSON):
                      color "#rrggbb" (w/d/key: andere Farbe), at [z, y] Mitte am Modell in Metern (sonst aus dem Foto umgerechnet),
                      w Breite und h Höhe in Metern (sonst aus dem Foto; nur w -> Seitenverhältnis bleibt), dz/dy Verschiebung in Metern,
                      side "both" | "L" | "R", thr [lo, hi] Schwellen 0..1,
+                     mask [[x0,y0,x1,y1], ...]: nur diese Teilkästen innerhalb von box verwenden (schräge Schrift),
                      mirror true/false: auf der anderen Fahrzeugseite spiegelverkehrt auftragen (Standard: true bei "key", sonst false) }
             Reihenfolge = Schichtung: zuerst die großen Farbflächen, danach die Schriftzüge.
   number    Startnummer (Grafik im Design des Fahrers, kommt je Fahrer aus liveries/num/): { "color": "#rrggbb",
@@ -73,6 +74,10 @@ def cut(img, st):
         edge = np.concatenate([a[:2].reshape(-1, 3), a[-2:].reshape(-1, 3), a[:, :2].reshape(-1, 3), a[:, -2:].reshape(-1, 3)])
         bg = np.median(edge, axis=0); al = auto(np.abs(a - bg).max(2))
         rgb = np.clip((a - bg * (1 - al[..., None])) / np.maximum(al[..., None], 0.08), 0, 255)
+    if st.get('mask'):                              # nur diese Teilkästen des Ausschnitts gelten (für schräg laufende Schrift, die kein gerader Kasten knapp umschließt)
+        keep = np.zeros(al.shape, bool)
+        for mx0, my0, mx1, my1 in st['mask']: keep[max(0, int(my0) - y0):max(0, int(my1) - y0), max(0, int(mx0) - x0):max(0, int(mx1) - x0)] = True
+        al = al * keep
     return Image.fromarray(np.dstack([rgb, al * 255]).astype(np.uint8), 'RGBA')
 
 def bleed(sheet, rounds=12):
