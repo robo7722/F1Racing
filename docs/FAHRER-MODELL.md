@@ -53,6 +53,15 @@ Prüfansicht: `fahrer/kart_vorschau.html?debug` färbt Rückseiten grün – so 
 - Gewebe-Relief und Strickrippen werden ausgeblendet, sobald sie feiner als ein Bildpunkt sind (Pixelmuster/Flimmern auf dem Handy).
 - Getestet mit vollem Einschlag in beide Richtungen (vorher nur halber Einschlag – deshalb übersehen).
 
+## v1.51 – kein Clipping
+Geprüft rechnerisch (Punkte aus dem laufenden Spiel ausgelesen, Windungszahl gegen Körper und Kart) bei Einschlag −1, −0,5, 0, 0,5, 1:
+- **Kamera**: nichts näher als 40 cm im Bild – kein Abschneiden an der Nahgrenze, auch beim Umschauen.
+- **Hand in den Oberschenkel** bei vollem Einschlag (≈3 cm): Oberschenkel flacher gelegt (Knie tiefer, wie beim echten Kart).
+- **Ellbogen in die Hüfte** beim unteren Arm: Ellbogen-Pol jetzt außen-unten statt unten.
+- **Gesäß/Oberschenkel in der Sitzschale** (bis 7 mm): Punkte im Kart werden im Bauskript auf die Oberfläche + 2 mm geschoben.
+- Ergebnis: 0 Punkte Hand↔Bein, 0 Anzug↔Kart, Arm↔Rumpf nur 1 Punkt 1,4 mm am Schultergelenk (fließender Übergang derselben Fläche).
+- Beabsichtigte Überlappungen bleiben: Handschuh-Stulpe über dem Bündchen, Faust um den Lenkradkranz.
+
 ## Offen / Ideen
 - Lenkrad dreht sich beim Lenken, die Hände nicht (war beim alten Fahrer genauso).
 - Leichte Knautschfalten an der Hüfte durch das Biegen (im Sitz kaum sichtbar).

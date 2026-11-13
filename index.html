@@ -3627,7 +3627,7 @@ function kartArmsIK(out, spin) {   // out: 7 Matrix4 (Bindhaltung -> aktuell), s
     // Ellbogen-Ebene aus der Bindhaltung (Pol = Ellbogen relativ zur Linie Schulter–Hand)
     X.u.copy(wr).sub(sh).normalize(); const pole = X.v.copy(el).sub(sh); pole.addScaledVector(X.u, -pole.dot(X.u));
     const d0 = X.e.copy(X.t).sub(sh), d = Math.min(Math.max(d0.length(), Math.abs(L1 - L2) + 1e-3), (L1 + L2) * 0.999); X.u.copy(d0).normalize();
-    pole.normalize().multiplyScalar(0.4).add(_ikV3.set(0.45 * mir * -1, -1, -0.1).normalize());   // Ellbogen bleibt unten-außen (echte Fahrer heben ihn beim Einlenken kaum)
+    pole.normalize().multiplyScalar(0.4).add(_ikV3.set(-1.0 * mir, -0.4, -0.1).normalize());   // Ellbogen weicht nach außen-unten aus (nicht in die Hüfte, nicht zur Kamera hoch)
     pole.addScaledVector(X.u, -pole.dot(X.u)).normalize();
     const a1 = (L1 * L1 - L2 * L2 + d * d) / (2 * d), hh = Math.sqrt(Math.max(L1 * L1 - a1 * a1, 0));
     const eN = X.e.copy(sh).addScaledVector(X.u, a1).addScaledVector(pole, hh);           // neuer Ellbogen

@@ -422,9 +422,9 @@ def pose_kart(V, F, S):
         f = (lambda p: p) if s < 0 else mir
         # Beine: Knie hoch, Unterschenkel nach vorn-unten zu den Pedalen, Füße aufgestellt
         hip = hipT + f(j['hip'] - j['pelvis'])
-        dth = nrm(f(np.array([-0.08, 0.32, 1.0]))); Rth = rot_between(bones['thigh' + sfx][1] - bones['thigh' + sfx][0], dth)
+        dth = nrm(f(np.array([-0.10, 0.05, 1.0]))); Rth = rot_between(bones['thigh' + sfx][1] - bones['thigh' + sfx][0], dth)
         knee = hip + dth * np.linalg.norm(j['knee'] - j['hip'])
-        dsh = nrm(f(np.array([0.03, -0.42, 1.0]))); Rsh = rot_between(bones['shin' + sfx][1] - bones['shin' + sfx][0], dsh)
+        dsh = nrm(f(np.array([0.03, -0.20, 1.0]))); Rsh = rot_between(bones['shin' + sfx][1] - bones['shin' + sfx][0], dsh)
         ankle = knee + dsh * np.linalg.norm(j['ankle'] - j['knee'])
         dft = nrm(f(np.array([-0.05, 0.75, 0.55])))
         Rft = rot_between(Rsh @ (bones['foot' + sfx][1] - bones['foot' + sfx][0]), dft) @ Rsh
@@ -595,6 +595,19 @@ def main():
     for sx in (-1, 1): zone = np.maximum(zone, 1 - sst(0.03, 0.06, np.linalg.norm(kV - np.array([sx * 0.11, 0.79, -0.035]), axis=1)))
     kV = taubin_zone(kV, kF, zone, 60)
     Pk, info = pose_kart(kV * S, kF, S)
+    # Nichts im Kart: Punkte, die (z. B. unter dem Gesäß) in Sitzschale/Karosserie stecken, auf deren Oberfläche + 2 mm schieben, Umgebung weich mitnehmen
+    import igl
+    bk = open(os.path.join(ROOT, 'kart.bin'), 'rb').read(); hl = struct.unpack('<I', bk[:4])[0]; hk = json.loads(bk[4:4 + hl]); cb = [c for c in hk['chunks'] if c['name'] == 'body'][0]
+    KP = np.frombuffer(bk, np.float32, cb['nv'] * 3, 4 + hl + cb['pos']).reshape(-1, 3).astype(float); KI = np.frombuffer(bk, np.uint32 if cb.get('i32') else np.uint16, cb['ni'], 4 + hl + cb['idx']).reshape(-1, 3).astype(np.int64)
+    km = trimesh.Trimesh(KP, KI, process=False)
+    for _ in range(3):
+        inside = np.abs(igl.fast_winding_number(KP, KI, Pk)) > 0.5
+        if not inside.any(): break
+        cp, dist, tri = trimesh.proximity.closest_point(km, Pk[inside])
+        nn = (cp - Pk[inside]) / np.maximum(dist, 1e-9)[:, None]                          # vom Punkt (innen) zur Oberfläche = nach außen
+        delta = np.zeros_like(Pk); delta[inside] = cp + nn * 0.002 - Pk[inside]
+        Pk = Pk + delta
+        print(f'Sitz: {int(inside.sum())} Punkte aus dem Kart geschoben (max {dist.max() * 1000:.1f} mm)')
     # Übergang Rumpf/Arm (Schulter, Achsel) glätten: dort wird am stärksten gebogen, kleine Knautschfalten verschwinden
     aw = info['aw']['R'] + info['aw']['L']; Pk = taubin_zone(Pk, kF, np.clip(aw * (1 - aw) * 4, 0, 1) * (kV[:, 1] > 0.55), 30)
     Pk = unfold(Pk, kF, tag='gebogen')                                                 # letzte kleine Falten lokal glätten
