@@ -142,3 +142,11 @@
 - `cockCutGLSL` F1: Vor der Öffnung wird vom Fahrzeugmodell nur noch verworfen, was innerhalb des Cockpit-Modells liegt (gleiche Formel wie die Deckfläche). Die Sonderregel für den Spiegelhalter entfällt. F2 unverändert.
 
 **Geprüft:** Racing Bulls in Monza, Cockpit-Kamera und Nahaufnahmen des Spiegelfußes von innen und außen (Streifen und Zickzack weg), TV-Kamera F1, F2-Cockpit. Flimmern in Bewegung lässt sich im Testbrowser nicht beurteilen.
+
+## Version 1.38 – Spiegelträger wieder schlank
+
+**Anlass:** In 1.37 kam der Spiegelträger unvereinfacht aus dem Original – knapp 17 700 Dreiecke mehr in der höchsten Detailstufe. Frage: „Warum so viele Dreiecke mehr?" → gezielt nachvereinfachen.
+
+**Änderung (`f1conv.py`, Funktion `splice`):** Der Ausschnitt aus dem Original (12 200 Dreiecke nach Entfernen der haarfeinen Dreiecke und der Vorderkanten-Ebene) wird behutsam auf 4 000 vereinfacht: Eckpunkte bleiben auf Originalpunkten (`optimalplacement=False`), Ränder zur Karosserie bleiben stehen. So geraten Ober- und Unterseite des 2 mm dünnen Blatts nicht mehr ineinander. Die Kastenschnitte greifen nur noch 8 cm um den Ausschnitt (vorher 30 cm – unnötig zerteilte Dreiecke).
+
+**Ergebnis:** LOD 0 Lack 59 200 → 47 000 Dreiecke (vor 1.37: 42 500), `car.bin` 2,45 → 2,31 MB. Nahaufnahmen von innen und außen sowie Cockpit-Kamera: Blatt und Fuß so glatt wie in 1.37, kein Fächer, kein Zickzack.
