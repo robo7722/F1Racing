@@ -18,7 +18,7 @@ A = [
   dict(bild='grafik', sicht='L', a=-0.7257, b=0.7043, w=2.091), dict(bild='grafik', sicht='R', a=-0.7257, b=0.7043, w=2.091, flip=True),
   dict(bild='nemec', sicht='L', a=-0.36, b=1.065, w=0.21, teil='glas'), dict(bild='nemec', sicht='R', a=-0.36, b=1.065, w=0.21, teil='glas'),
   # nur links: Pentagramm auf dem Tankdeckel, MAZDASPEED an der vorderen Stoßstangenecke
-  dict(bild='pentagramm', sicht='L', a=-1.72, b=0.935, w=0.235, auto=True), dict(bild='mazdaspeed', sicht='L', a=2.05, b=0.55, w=0.27, rot=9, auto=True),
+  dict(bild='pentagramm', sicht='L', a=-1.69, b=0.913, w=0.205, auto=True), dict(bild='mazdaspeed', sicht='L', a=2.05, b=0.55, w=0.27, rot=9, auto=True),
   # nur rechts: 666 vor dem Vorderrad
   dict(bild='n666', sicht='R', a=1.99, b=0.52, w=0.2, auto=True),
   # Haube, Frontlippe, Heck, Windschutzscheibe
