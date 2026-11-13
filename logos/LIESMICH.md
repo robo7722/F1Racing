@@ -48,3 +48,8 @@ Ersetzen den großen Schriftzug auf der jeweiligen Karte.
 - `F1.png` – Formel 1 (fehlt die Datei, wird `LOGO.png` verwendet)
 
 Am besten PNG mit **transparentem Hintergrund** und hellem Motiv. Ein rein schwarzes Logo auf weißem Grund (ohne Transparenz) setzt das Spiel selbst in Weiß um; farbige Logos brauchen einen transparenten Hintergrund, sonst erscheint ein weißer Kasten.
+
+### Kart (vorhanden)
+`K_NOV.png` Nova Kart Team · `K_APX.png` Apex Racing · `K_BLZ.png` Blitz Kart · `K_CRS.png` Crest Motorsport · `K_DRG.png` Drago Corse · `K_ECL.png` Eclipse Karting · `K_FUS.png` Fusion Team · `K_GRF.png` Griffin Racing · `K_HZN.png` Horizon Kart · `K_ION.png` Ion Karting
+
+Eigene Entwürfe für die erfundenen Kart-Teams im Stil der übrigen Logos: weißes Emblem (Stern, Gipfel, Blitz, Wappen, Flamme, Mondsichel, Sechsecke, Flügel, Sonne am Horizont, Atom) mit dem Teamnamen darunter, 512 × 512 px, transparent.

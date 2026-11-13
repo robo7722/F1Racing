@@ -159,7 +159,7 @@ Die Änderungen aus 1.37 und 1.38 sind zurückgenommen: `car.bin` ist wieder die
 
 Damit ist auch der gestreifte Fächer am Fuß des Spiegelträgers wieder da (Ursache siehe Abschnitt 1.37). Die Konvertierung mit den Korrekturen liegt nur im Arbeitsordner der Sitzung, nicht im Repo; die beiden Stände stehen in der Git-Historie (`0594740` = 1.37, `5b60a48` = 1.38).
 
-## Version 1.39 – gerade Nase wie 1.36, Spiegelträger sauber wie 1.38
+## Version 1.40 – gerade Nase wie 1.36, Spiegelträger sauber wie 1.38
 
 **Rückmeldung zu 1.37/1.38:** Der Knick nach unten zwischen Cockpit und Nase störte – die Nase war nicht mehr gerade. Er entstand dort, wo das verkürzte Cockpit-Modell unter die Originalnase abtauchte.
 

@@ -3434,6 +3434,36 @@ const KART = (() => {
     return { parts, w: hdr.wheels };
   } catch (e) { console.warn('kart.bin', e); return null; }
 })();
+// Kart-Fahrer (kartfahrer.bin, gebaut von tools/fahrer/build_fahrer.py): Tripo-Körper im Rennanzug in Sitzhaltung + zwei Handschuhe als EIN Netz.
+// Je Eckpunkt: aReg (0 Körper, 3 Handschuh) und aRy (Höhe in Ruhehaltung, daraus Gürtel und Schuhe im Shader). helm = Mitte des Helms.
+const KFBIN = await fetch('./kartfahrer.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null);
+const KFAHRER = (() => {
+  if (!KFBIN) return null;
+  try {
+    const hl = new DataView(KFBIN).getUint32(0, true), h = JSON.parse(new TextDecoder().decode(new Uint8Array(KFBIN, 4, hl))), b = 4 + hl, g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(KFBIN, b + h.pos, h.nv * 3).slice(), 3));
+    g.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(KFBIN, b + h.nrm, h.nv * 3).slice(), 3));
+    g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(KFBIN, b + h.uv, h.nv * 2).slice(), 2));
+    g.setAttribute('aReg', new THREE.BufferAttribute(Float32Array.from(new Uint8Array(KFBIN, b + h.reg, h.nv)), 1));
+    g.setAttribute('aRy', new THREE.BufferAttribute(new Float32Array(KFBIN, b + h.ry, h.nv).slice(), 1));
+    g.setIndex(new THREE.BufferAttribute((h.i32 ? new Uint32Array(KFBIN, b + h.idx, h.ni) : new Uint16Array(KFBIN, b + h.idx, h.ni)).slice(), 1));
+    g.computeBoundingSphere();
+    return { geo: g, helm: h.helm, tilt: h.helmTilt || 0 };
+  } catch (e) { console.warn('kartfahrer.bin', e); return null; }
+})();
+const KFMAT = {};
+function kartFahrerMat(tk, suit, acc) {   // Atlas: links helle Stoff-Schattierung des Anzugs, rechts Handschuh (Rot der Vorlage -> Weiß); eingefärbt mit den Teamfarben
+  if (KFMAT[tk]) return KFMAT[tk];
+  if (!KFMAT.tex) { const ld = (u, srgb) => { const t = new THREE.TextureLoader().load(u); t.anisotropy = 4; if (srgb) t.colorSpace = THREE.SRGBColorSpace; return t; }; KFMAT.tex = ld('textures/kart_fahrer.jpg', true); KFMAT.nrm = ld('textures/kart_fahrer_n.jpg', false); }
+  const U = { uSuit: { value: suit }, uAcc: { value: acc }, uShoe: { value: col(0x15171a) } };
+  const m = new THREE.MeshStandardMaterial({ map: KFMAT.tex, normalMap: KFMAT.nrm, normalScale: new THREE.Vector2(.8, .8), roughness: .78, side: THREE.DoubleSide });
+  m.onBeforeCompile = sh => { Object.assign(sh.uniforms, U);
+    sh.vertexShader = 'attribute float aReg; attribute float aRy; varying float vReg; varying float vRy;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vReg = aReg; vRy = aRy;');
+    sh.fragmentShader = 'uniform vec3 uSuit, uAcc, uShoe; varying float vReg; varying float vRy;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+      { vec3 c = vReg > 1.5 ? uAcc : vRy < 0.072 ? uShoe : (vRy > 0.548 && vRy < 0.592) ? uAcc : uSuit; diffuseColor.rgb *= c; }`); };   /* Handschuh: Akzent · Schuhe dunkel · Gürtel Akzent · sonst Anzug */
+  m.customProgramCacheKey = () => 'kartFahrer';
+  return (KFMAT[tk] = m);
+}
 const KTEX = {};
 function kartTex() {
   if (KTEX.body) return KTEX;
@@ -3514,6 +3544,14 @@ function kartMat(tk, T) {
 // Fahrer und Lenkrad sind je EIN Netz mit Farben je Eckpunkt (vorher 16 + 13 Einzelteile je Kart -> bei 20 Karts rund 1000 Zeichenaufrufe pro Bild)
 const KDRV = { suit: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .72 }), helm: new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .22, metalness: .1, clearcoat: 1, clearcoatRoughness: .08 }), wheel: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .6, metalness: .25 }) };
 function kartDriver(d, T) {
+  if (KFAHRER) {   // Fahrer aus kartfahrer.bin (sitzend, Hände am Lenkradkranz); der Helm ist derselbe wie bei F1/F2, ohne das Anbauteil unter dem Visier
+    const g = new THREE.Group(), base = T.body === 0xdfe3e8 || T.body === 0xf0f0f0 ? T.acc : T.body, trim = helmAcc(base, T.acc === T.body ? 0xf0f0f0 : T.acc);
+    const body = new THREE.Mesh(KFAHRER.geo, kartFahrerMat(d.team, col(base), trim)); body.castShadow = true; g.add(body);
+    const helm = new THREE.Group(), shell = new THREE.Mesh(helmGeoNew(), helmMat(d, helmAcc(d.helmet, T.acc), true)); shell.scale.setScalar(1.1); shell.castShadow = true;
+    helm.position.fromArray(KFAHRER.helm); helm.rotation.x = KFAHRER.tilt; helm.add(shell); g.add(helm);
+    return g;
+  }
+  // (bisheriger, aus Grundformen gebauter Fahrer – nur noch Rückfall, falls kartfahrer.bin fehlt)
   // Menschliche Figur statt Röhrenmännchen: Rumpf als Rotationskörper mit Taille, Brustkorb und Schultern (oval), Gliedmaßen verjüngt mit Muskelbauch,
   // Hände als Fäuste mit Daumen, Rennstiefel, dazu typische Kart-Ausrüstung (Rippenschutz-Weste, Nackenstütze). Alles ein Netz mit Farben je Eckpunkt.
   const SC = 0.013, K3 = (x, y, z) => new THREE.Vector3(x * SC, z * SC, -y * SC), g = new THREE.Group(), parts = [], UP = new THREE.Vector3(0, 1, 0);
@@ -3602,7 +3640,7 @@ function makeKart(d, T) {
   const hous = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.078, 0.022), new THREE.MeshStandardMaterial({ color: 0x15171a, roughness: .5 })); hous.position.set(0, 0.124, -0.062);
   const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.138, 0.066), new THREE.MeshBasicMaterial({ map: dtex, toneMapped: false })); scr.position.set(0, 0, 0.0115); hous.add(scr); swPivot.add(stalk, hous);
   const rl = new THREE.Object3D(), label = carLabel(d, T); label.position.y = 1.35; g.add(label); scene.add(g);
-  return { g, fl, fr, wfl, wfr, rr, label, helm: drv, rl, kart: true, wr: 0.2, swSpin, sw: swPivot, dcv, dtex, dT: 0, cam: [0, 0.74, -0.5, 0.3], camS: 0.72 };
+  return { g, fl, fr, wfl, wfr, rr, label, helm: drv, rl, kart: true, wr: 0.2, swSpin, sw: swPivot, dcv, dtex, dT: 0, cam: KFAHRER ? [0, KFAHRER.helm[1] + 0.03, KFAHRER.helm[2] + 0.06, 0.3] : [0, 0.74, -0.5, 0.3], camS: 0.72 };   /* Cockpit: Augen im Helm des Fahrers */
 }
 function envAll(o) { o.traverse(m => { if (m.material) (Array.isArray(m.material) ? m.material : [m.material]).forEach(x => { x.userData.env = true; }); }); return o; }   // Autos behalten volle Spiegelungen
 function makeCar(d) { const r = makeCar0(d); envAll(r.g || r); return r; }
@@ -3626,7 +3664,7 @@ const HELM_DESIGN = { RUS: [0x16307a, 0x00d2be, 0xf2f2f2, 2, 0x0a1a2a], ANT: [0x
   OCO: [0xff5fa2, 0xf2f2f2, 0x1440b0, 2, 0x141418], BEA: [0xff5a1f, 0xf2f2f2, 0x1a2a8a, 3, 0x101418], HUL: [0xf4f4f4, 0x111111, 0xd81e2c, 1, 0x101010], BOR: [0x0a8a3a, 0xf6d400, 0x1a4ac0, 3, 0x14140a],
   PER: [0xc79a2a, 0x101a50, 0xd81e2c, 5, 0x0a1028], BOT: [0x1f9cff, 0x101418, 0xf2f2f2, 2, 0x0a1420], NEM: [0x3a3d44, 0xe10600, 0xf2f2f2, 0, 0x100808] };
 for (const d of F1_DRIVERS) if (HELM_DESIGN[d[0]]) d[4] = HELM_DESIGN[d[0]][0];   // Helmfarbe in Fahrerwahl, Tabellen und Kart = Grundfarbe des Helmdesigns
-function helmMat(d, hAcc) { const D = HELM_DESIGN[d.code], h = [...String(d.code || 'X')].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 9973, 7), cs = D ? D.slice(0, 3).map(col) : [col(d.helmet), hAcc.clone(), col(0xf2f2f2)], pat = D ? D[3] : h % 7, vis = col(D ? D[4] : 0x0c1016);
+function helmMat(d, hAcc, noChin = false) { /* noChin: Anbauteil unter dem Visier (Zone 3 am Kinn) weglassen */ const D = HELM_DESIGN[d.code], h = [...String(d.code || 'X')].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 9973, 7), cs = D ? D.slice(0, 3).map(col) : [col(d.helmet), hAcc.clone(), col(0xf2f2f2)], pat = D ? D[3] : h % 7, vis = col(D ? D[4] : 0x0c1016);
   const m = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: .24, metalness: .1, clearcoat: 1, clearcoatRoughness: .08, side: THREE.DoubleSide });
   m.onBeforeCompile = sh => { sh.uniforms.uA = { value: cs[0] }; sh.uniforms.uB = { value: cs[1] }; sh.uniforms.uC = { value: cs[2] }; sh.uniforms.uV = { value: vis }; sh.uniforms.uPat = { value: pat };
     sh.vertexShader = 'attribute float aZone; varying float vHZ; varying vec3 vHP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vHP = position / 0.15; vHZ = aZone;');
@@ -3639,9 +3677,9 @@ function helmMat(d, hAcc) { const D = HELM_DESIGN[d.code], h = [...String(d.code
         else if (uPat == 4) { c = p.x < -0.2 ? uA : p.x < 0.2 ? uB : uC; c = mix(uA, c, smoothstep(0.1, 0.1 + w, p.y + 0.2 * p.z)); }
         else if (uPat == 5) { float a = abs(p.x) - 0.25 * p.y; c = mix(c, uC, smoothstep(0.52, 0.52 + w, a)); c = mix(c, uB, smoothstep(0.6, 0.6 + w, a)); }
         else { float e = p.y - 0.12 * p.z; c = mix(c, uB, (1.0 - smoothstep(0.09, 0.09 + w, abs(e - 0.42)))); c = mix(c, uC, (1.0 - smoothstep(0.07, 0.07 + w, abs(e - 0.2)))); }
-        if (vHZ > 1.5 && vHZ < 2.5) discard; if (vHZ > 2.5) c = vec3(0.012); else if (vHZ > 0.5) c = uV;
+        if (vHZ > 1.5 && vHZ < 2.5) discard; ${noChin ? 'if (vHZ > 2.5 && p.z > 0.6 && p.y > -0.76 && p.y < -0.2) discard;' : ''} if (vHZ > 2.5) c = vec3(0.012); else if (vHZ > 0.5) c = uV;
         diffuseColor.rgb = c; }`); };
-  m.customProgramCacheKey = () => 'helmLiv'; return m; }
+  m.customProgramCacheKey = () => noChin ? 'helmLivK' : 'helmLiv'; return m; }
 // (älterer, aus Grundkörpern gebauter Helm – nicht mehr verwendet)
 // Helm (F1/F2), um den Ursprung, Blick nach +z: Schale, Kinnbügel, dunkles Visier mit Farbstreifen und Dichtung, Mittelstreifen über den Scheitel, Farbring unten,
 // Abrisskante hinten, zwei Lufteinlässe oben, Kinnbelüftung.
@@ -8773,7 +8811,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.39'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.40'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
