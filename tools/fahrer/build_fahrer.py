@@ -140,9 +140,14 @@ def load_glove():
 G_WRIST = np.array([-0.4, -15.5, 9.3]); G_S = 0.0092                              # Vorlagen-Einheit -> Meter (bei H = 1,78)
 
 
-def glove_shape(gV, Rb, y0=-1.0):
-    """Stulpe kürzen/leicht weiten (steckt im Ärmel) und Finger um eine Achse vor der Handfläche krümmen."""
+def glove_shape(gV, Rb, y0=-1.0, kurz=True):
+    """Stulpe kürzen/leicht weiten (steckt im Ärmel) und Finger um eine Achse vor der Handfläche krümmen.
+    kurz=False (Kart): Stulpe bleibt lang – sie wird danach an den Ärmel angepasst (fit_gauntlet)."""
     gV = gV.copy()
+    if not kurz:
+        yy = np.maximum(gV[:, 1] - y0, 0); zax = 9.3 + Rb; d = zax - gV[:, 2]; m = yy > 0
+        gV[m, 1] = y0 + d[m] * np.sin(yy[m] / Rb); gV[m, 2] = zax - d[m] * np.cos(yy[m] / Rb)
+        return gV, np.array([-0.4, y0, zax])
     t = np.clip((-14.5 - gV[:, 1]) / 2.5, 0, 1); t = t * t * (3 - 2 * t)
     gV[:, 0] = G_WRIST[0] + (gV[:, 0] - G_WRIST[0]) * (1 + 0.05 * t)
     gV[:, 2] = G_WRIST[2] + (gV[:, 2] - G_WRIST[2]) * (1 + 0.15 * t)
@@ -179,8 +184,17 @@ def seg_dist(P, a, b):
     ab = b - a; t = np.clip(((P - a) @ ab) / (ab @ ab), 0, 1); return np.linalg.norm(P - (a + t[:, None] * ab), axis=1)
 
 
-def pose_kart(V, S):
-    """V: Körper in Metern (Ruhehaltung, Maßstab S). Gibt gebogene Eckpunkte, Helm-Anker und Handgelenk-Ziele zurück."""
+def arm_masks(V, F, S):
+    """Arme in Ruhehaltung: seitlich einer höhenabhängigen Grenze |x| > t(y). Die Grenze liegt in der gemessenen Lücke zwischen
+    hängendem Arm und Rumpf/Hüfte (Tripo-Vorlage). Ein fester Wert erwischte die Hüftseite neben der Hand – die wurde mit zum Lenkrad gezogen."""
+    x, y = V[:, 0] / S, V[:, 1] / S
+    t = np.interp(y, [0.40, 0.54, 0.57, 0.60, 0.635, 0.66, 0.80], [0.106, 0.106, 0.095, 0.089, 0.089, 0.100, 0.100])
+    band = (y > 0.40) & (y < 0.80)
+    return band & (x < -t), band & (x > t)
+
+
+def pose_kart(V, F, S):
+    """V: Körper in Metern (Ruhehaltung, Maßstab S). Gibt gebogene Eckpunkte und Anker (Helm, Griff) zurück."""
     j = {k: v * S for k, v in J.items()}
     bones = {}                                                                         # name: (Kopf, Ende)
     for s, sfx in ((-1, 'R'), (1, 'L')):
@@ -188,72 +202,82 @@ def pose_kart(V, S):
         bones['thigh' + sfx] = (f(j['hip']), f(j['knee'])); bones['shin' + sfx] = (f(j['knee']), f(j['ankle'])); bones['foot' + sfx] = (f(j['ankle']), f(j['toe']))
         bones['uarm' + sfx] = (f(j['sh']), f(j['el'])); bones['farm' + sfx] = (f(j['el']), f(j['wr']))
     bones['spine'] = (j['pelvis'], j['neck'])
+    M = np.diag([-1.0, 1, 1])
 
-    # ---- Zielhaltung (Kart-Koordinaten: vorne +z, rechts -x) ----
-    hipT = np.array([0, 0.19, -0.30]); lean = np.radians(24)
-    Rsp = rot_x(-lean)                                                                 # Rumpf nach hinten gelehnt
-    T = {'spine': (Rsp, hipT)}                                                          # Knochen: (Drehung, Zielposition des Kopfs)
     # Lenkrad (aus makeKart): Mitte (0, 0.5005, 0.1235), Achsen axx=(-1,0,0), az=nrm(0,29,-36), ay=az×axx, Kranzradius 0.188
     az = nrm(np.array([0, 29, -36.0])); axx = np.array([-1.0, 0, 0]); ay = np.cross(az, axx); C = np.array([0, 0.5005, 0.1235])
-    out = {'grip': {}}
+    grip = C + axx * 0.188 + ay * (-0.02); Xg = ay                                       # rechte Hand bei 3 Uhr (Welt -x), Daumen entlang des Kranzes
+    L1, L2 = np.linalg.norm(j['el'] - j['sh']), np.linalg.norm(j['wr'] - j['el'])
+
+    # ---- Haltung wie beim echten Kartfahren: Rumpf leicht zurück, Oberarme hängen, Ellbogen ~90° unten-außen, Unterarme nach vorn ----
+    lean = np.radians(12); Rsp = rot_x(-lean)
+
+    def solve_arm(hipT):
+        sh = hipT + Rsp @ (j['sh'] - j['pelvis'])
+        Yg = -az
+        for _ in range(5):                                                               # Handgelenk folgt dem Unterarm (gerades Handgelenk)
+            Zg = np.cross(Xg, Yg); wristT = glove_wrist_world(grip, Xg, Yg, Zg, S)
+            dvec = wristT - sh; dist = min(np.linalg.norm(dvec), (L1 + L2) * 0.999); u = nrm(dvec)
+            a = (L1 ** 2 - L2 ** 2 + dist ** 2) / (2 * dist); r = np.sqrt(max(L1 ** 2 - a ** 2, 0)); c0 = sh + u * a
+            e1 = nrm(np.cross(u, [0, 1, 0])); e2 = np.cross(u, e1); best = None
+            for ang in np.linspace(0, 2 * np.pi, 144, endpoint=False):
+                el = c0 + r * (np.cos(ang) * e1 + np.sin(ang) * e2)
+                sc = np.dot(nrm(el - c0), nrm(np.array([-0.45, -1.0, -0.15])))       # Ellbogen nach unten und außen (rechts = -x)
+                if best is None or sc > best[0]: best = (sc, el)
+            el = best[1]; fa = nrm(wristT - el)
+            Yg = nrm(fa - np.dot(fa, Xg) * Xg)
+        return sh, el, wristT, Yg, np.linalg.norm(wristT - sh)
+
+    # Sitzposition: so weit nach vorn, dass die Arme gut angewinkelt sind (Abstand Schulter–Hand ≈ 72 % der Armlänge), im Sitz bleiben
+    best = None
+    for hz in np.linspace(-0.36, -0.16, 41):
+        hipT = np.array([0, 0.19, hz]); r = solve_arm(hipT)
+        sc = -abs(r[4] / (L1 + L2) - 0.72)
+        if best is None or sc > best[0]: best = (sc, hipT, r)
+    hipT, (sh, el, wristT, Yg, dist) = best[1], best[2]
+    out = {'reach': {'R': (dist, L1 + L2), 'L': (dist, L1 + L2)}, 'hip': hipT}
+    Rua = rot_between(bones['uarmR'][1] - bones['uarmR'][0], el - sh)
+    wr_reached = el + nrm(wristT - el) * L2
+    Rfa = rot_between(bones['farmR'][1] - bones['farmR'][0], wr_reached - el)
+    T = {'spine': (Rsp, hipT), 'uarmR': (Rua, sh), 'farmR': (Rfa, el), 'uarmL': (M @ Rua @ M, M @ sh), 'farmL': (M @ Rfa @ M, M @ el)}
+    out['grip'] = (grip, Xg, Yg, np.cross(Xg, Yg))
+    out['wrist'] = {'R': (wr_reached, wristT), 'L': (M @ wr_reached, M @ wristT)}
+    out['elbow'] = el; out['shoulder'] = sh
     for s, sfx in ((-1, 'R'), (1, 'L')):
         f = (lambda p: p) if s < 0 else mir
-        # Beine: Oberschenkel leicht nach vorn-oben, Unterschenkel nach vorn zu den Pedalen, Füße aufgestellt
+        # Beine: Knie hoch, Unterschenkel nach vorn-unten zu den Pedalen, Füße aufgestellt
         hip = hipT + f(j['hip'] - j['pelvis'])
-        dth = nrm(f(np.array([-0.06, 0.20, 1.0]))) ; Rth = rot_between(bones['thigh' + sfx][1] - bones['thigh' + sfx][0], dth)
+        dth = nrm(f(np.array([-0.08, 0.32, 1.0]))); Rth = rot_between(bones['thigh' + sfx][1] - bones['thigh' + sfx][0], dth)
         knee = hip + dth * np.linalg.norm(j['knee'] - j['hip'])
-        dsh = nrm(f(np.array([0.02, -0.30, 1.0]))); Rsh = rot_between(bones['shin' + sfx][1] - bones['shin' + sfx][0], dsh)
+        dsh = nrm(f(np.array([0.03, -0.42, 1.0]))); Rsh = rot_between(bones['shin' + sfx][1] - bones['shin' + sfx][0], dsh)
         ankle = knee + dsh * np.linalg.norm(j['ankle'] - j['knee'])
-        dft = nrm(f(np.array([-0.05, 0.75, 0.55]))); Rft = rot_between(bones['foot' + sfx][1] - bones['foot' + sfx][0], dft) @ Rsh
+        dft = nrm(f(np.array([-0.05, 0.75, 0.55])))
         Rft = rot_between(Rsh @ (bones['foot' + sfx][1] - bones['foot' + sfx][0]), dft) @ Rsh
         T['thigh' + sfx] = (Rth, hip); T['shin' + sfx] = (Rsh, knee); T['foot' + sfx] = (Rft, ankle)
-        # Arme: Griff bei 9/3 Uhr; Hand außen am Kranz, Finger umfassen ihn nach innen
-        # rechte Hand: lokales +x des Lenkrads = Welt -x; Wrap-Achse entlang des Kranzes (ay), Finger nach vorn (-az), Handfläche nach innen.
-        # Linke Hand = Spiegelbild der rechten (x -> -x).
-        Mx = np.array([-1.0, 1, 1])
-        grip = C + axx * 0.188 + ay * (-0.02); Xg = ay; Yg = -az; Zg = np.cross(Xg, Yg)
-        if sfx == 'R': out['grip'] = (grip, Xg, Yg, Zg)
-        wristT = glove_wrist_world(grip, Xg, Yg, Zg, S)
-        if s > 0: wristT = wristT * Mx; Yg = Yg * Mx
-        sh = hipT + Rsp @ f(j['sh'] - j['pelvis'])
-        L1, L2 = np.linalg.norm(j['el'] - j['sh']), np.linalg.norm(j['wr'] - j['el'])
-        dvec = wristT - sh; dist = np.linalg.norm(dvec)
-        out.setdefault('reach', {})[sfx] = (dist, L1 + L2)
-        dist_c = min(dist, (L1 + L2) * 0.999)
-        # Ellbogen auf dem IK-Kreis: so wählen, dass der Unterarm möglichst in Richtung der Hand zeigt (-Yg) und nach außen/unten
-        u = nrm(dvec); a = (L1 ** 2 - L2 ** 2 + dist_c ** 2) / (2 * dist_c); r = np.sqrt(max(L1 ** 2 - a ** 2, 0)); c0 = sh + u * a
-        e1 = nrm(np.cross(u, [0, 1, 0])); e2 = np.cross(u, e1); best = None
-        for ang in np.linspace(0, 2 * np.pi, 72, endpoint=False):
-            el = c0 + r * (np.cos(ang) * e1 + np.sin(ang) * e2); fa = nrm(wristT - el)
-            sc = np.dot(fa, Yg) * 1.0 + np.dot(nrm(el - sh), np.array([-s * 0.6, -1, 0.2])) * 0.6
-            if best is None or sc > best[0]: best = (sc, el)
-        el = best[1]
-        Rua = rot_between(bones['uarm' + sfx][1] - bones['uarm' + sfx][0], el - sh)
-        wr_reached = el + nrm(wristT - el) * L2
-        Rfa = rot_between(bones['farm' + sfx][1] - bones['farm' + sfx][0], wr_reached - el)
-        T['uarm' + sfx] = (Rua, sh); T['farm' + sfx] = (Rfa, el)
-        out.setdefault('wrist', {})[sfx] = (wr_reached, wristT)
 
     # ---- Gewichte: Abstand zu den erlaubten Knochen je Körperbereich ----
     P = V; x, y = P[:, 0] / S, P[:, 1] / S
     names = list(bones.keys()); D = np.stack([seg_dist(P, *bones[n]) for n in names], 1)
     allow = np.zeros_like(D, bool); ix = {n: i for i, n in enumerate(names)}
-    armR = (x < -0.104) & (y < 0.80) & (y > 0.40); armL = (x > 0.104) & (y < 0.80) & (y > 0.40)
-    leg = y < 0.55
+    armR, armL = arm_masks(V, F, S)
+    leg = y < 0.535                                                                     # Beine erst unterhalb des Gürtels (sonst zieht der Oberschenkel ihn an der Hüftseite herunter)
     for i, n in enumerate(names):
         sfx = n[-1]; sideMask = (x < 0.004) if sfx == 'R' else (x > -0.004)
         if n.startswith(('uarm', 'farm')):
-            allow[:, i] = (armR if sfx == 'R' else armL) | (((x < -0.07) if sfx == 'R' else (x > 0.07)) & (y > 0.72) & (y < 0.83))
+            am = armR if sfx == 'R' else armL
+            allow[:, i] = am | (((x < -0.085) if sfx == 'R' else (x > 0.085)) & (y > 0.74) & (y < 0.83))   # Schulterkappe weich überblenden
+            if n.startswith('farm'): allow[:, i] = am
         elif n.startswith(('thigh', 'shin', 'foot')):
             allow[:, i] = leg & sideMask & ~(armR | armL)
         else:
-            allow[:, i] = ~(armR | armL) & (y > 0.40)
+            allow[:, i] = ~(armR | armL) & (y > 0.42)
     allow[:, ix['spine']] |= ~allow.any(1)
     W = np.where(allow, 1 / (D + 0.012) ** 6, 0); W /= W.sum(1, keepdims=True)
     Vn = np.zeros_like(P)
     for i, n in enumerate(names):
         R, head = T[n]; Vn += W[:, i:i + 1] * ((P - bones[n][0]) @ R.T + head)
-    out['head'] = hipT + Rsp @ (j['neck'] - j['pelvis']) + (j['head'] - j['neck'])   # Kopf aufrecht auf dem zurückgelehnten Hals (Blick nach vorn); out['lean'] = lean; out['T'] = T; out['bones'] = bones
+    out['head'] = hipT + Rsp @ (j['neck'] - j['pelvis']) + (j['head'] - j['neck'])   # Kopf aufrecht auf dem Hals (Blick nach vorn)
+    out['lean'] = lean; out['arms'] = (armR, armL)
     return Vn, out
 
 
@@ -261,17 +285,41 @@ Y0_KART = -4.5                                                                  
 
 
 def glove_wrist_world(grip, Xg, Yg, Zg, S):
-    gV, ax = glove_shape(G_WRIST[None], RB_KART, Y0_KART)
+    gV, ax = glove_shape(G_WRIST[None], RB_KART, Y0_KART, kurz=False)
     p = (G_WRIST - ax) * G_S * S / H
     R = np.stack([Xg, Yg, Zg], 1)
     return grip + R @ p
+
+
+def fit_gauntlet(gw, gy, arm_pts, c, ax, S):
+    """Lückenlos: Stulpe des Handschuhs an den Ärmel anpassen. gw = Handschuh (Welt), gy = Höhe in der Vorlage (Stulpe < -13),
+    arm_pts = Unterarm-Eckpunkte (Welt), c = Handgelenk, ax = Unterarmrichtung (Ellbogen -> Hand).
+    Ab dem Handgelenk wächst der Querschnitt auf 97 % des Ärmels (je Richtung um die Achse gemessen) und reicht ~8 cm in den Ärmel."""
+    e1 = nrm(np.cross(ax, [0, 1, 0])); e2 = np.cross(ax, e1)
+    def polar(P):
+        d = P - c; a = d @ ax; rv = d - np.outer(a, ax); return a, np.arctan2(rv @ e2, rv @ e1), np.linalg.norm(rv, axis=1)
+    a, th, r = polar(arm_pts); sel = (a > -0.035) & (a < -0.005)                  # Ärmelende (Schnitt liegt ~1,5 cm vor dem Handgelenk)
+    nb = 24; bins = ((th[sel] + np.pi) / (2 * np.pi) * nb).astype(int) % nb; Rs = np.full(nb, np.inf)
+    for b, rr in zip(bins, r[sel]): Rs[b] = min(Rs[b], rr)
+    for k in range(nb):                                                            # leere Richtungen aus den Nachbarn
+        if not np.isfinite(Rs[k]): Rs[k] = np.nanmin(np.where(np.isfinite(Rs), Rs, np.nan))
+    Rs = (Rs + np.roll(Rs, 1) + np.roll(Rs, -1)) / 3
+    out = gw.copy(); g = gy < -12.5
+    ga, gth, gr = polar(gw[g])
+    w = np.clip((-12.5 - gy[g]) / 3.0, 0, 1); w = w * w * (3 - 2 * w)                # weich vom Handrücken in die Stulpe
+    tgt = np.interp((gth + np.pi) / (2 * np.pi) * nb, np.arange(nb + 1), np.append(Rs, Rs[0])) * 0.97
+    nr = gr + (tgt - gr) * w
+    na = np.where(gy[g] < -15.5, -0.012 + (gy[g] + 15.5) * G_S * S / H, ga * (1 - w) + np.minimum(ga, -0.004) * w)
+    dirs = np.outer(np.cos(gth), e1) + np.outer(np.sin(gth), e2)
+    out[g] = c + np.outer(na, ax) + dirs * nr[:, None]
+    return out
 
 
 RB_KART = 2.9                                                                          # Krümmungsradius der Faust (Vorlagen-Einheiten)
 
 
 def place_glove(gV0, gF, grip, Xg, Yg, Zg, S):
-    gV, ax = glove_shape(gV0, RB_KART, Y0_KART)
+    gV, ax = glove_shape(gV0, RB_KART, Y0_KART, kurz=False)
     p = (gV - ax) * G_S * S / H
     R = np.stack([Xg, Yg, Zg], 1)
     return grip + p @ R.T, gF
@@ -315,8 +363,9 @@ def main():
     # ---- Kart-Fahrer ----
     S = H * 1.10                                                                        # Kart ist größer gebaut (Helm dort ~0,33 m hoch)
     kV, kF, kUV = decimate(V, F, UV, 9000)
-    Pk, info = pose_kart(kV * S, S)
+    Pk, info = pose_kart(kV * S, kF, S)
     for k, (d, L) in info['reach'].items(): print(f'Reichweite {k}: Abstand {d:.3f} m, Armlänge {L:.3f} m')
+    print('Sitzpunkt', np.round(info['hip'], 3), 'Schulter', np.round(info['shoulder'], 3), 'Ellbogen', np.round(info['elbow'], 3), 'Arm-Eckpunkte', int(info['arms'][0].sum()), int(info['arms'][1].sum()))
     # Bereiche: 0 Körper, 3 Handschuh. Dazu je Eckpunkt die Höhe in Ruhehaltung (normiert): daraus zieht der Shader
     # Gürtel (0,548…0,592) und Schuhe (< 0,072) pixelgenau – Farbwechsel je Eckpunkt gäbe bei ~9000 Dreiecken Treppenkanten.
     reg = np.zeros(len(kV), np.uint8); ry = kV[:, 1].astype(np.float32)
@@ -326,6 +375,8 @@ def main():
     parts_V, parts_F, parts_UV, parts_R, parts_Y = [Pk], [kF], [kUV * np.array([0.5, 1.0])], [reg], [ry]
     off = len(Pk)
     gvR, gfR = place_glove(hV, hF, *info['grip'], S)
+    armR = info['arms'][0]; el = info['elbow']; wr = info['wrist']['R'][0]
+    gvR = fit_gauntlet(gvR, hV[:, 1], Pk[armR], wr, nrm(wr - el), S)
     # Prüfung: Abstand der Handschuh-Eckpunkte zur Kranz-Mittellinie (Kranzrohr 0,021 m) – Faust soll ihn umschließen, nicht durchdringen
     az_ = nrm(np.array([0, 29, -36.0])); Cw = np.array([0, 0.5005, 0.1235]); rel = gvR - Cw; rp = rel - np.outer(rel @ az_, az_)
     ring = Cw + 0.188 * rp / np.linalg.norm(rp, axis=1, keepdims=True); dr = np.linalg.norm(gvR - ring, axis=1)
@@ -344,7 +395,11 @@ def main():
     atn = Image.new('RGB', (1024, 512), (128, 128, 255)); atn.paste(nor.resize((512, 512), Image.LANCZOS), (0, 0))
     atl.save(os.path.join(ROOT, 'textures', 'kart_fahrer.jpg'), quality=86); atn.save(os.path.join(ROOT, 'textures', 'kart_fahrer_n.jpg'), quality=90)
     # Binärformat wie kart.bin: [u32 Länge][JSON-Kopf][Daten]
-    blobs, hdr = [], {'nv': len(AV), 'ni': AF.size, 'helm': np.round(info['head'], 4).tolist(), 'helmTilt': 0.0}
+    # Helm lückenlos auf den Hals: Unterkante 4,5 cm unter dem oberen Ende des Halses (Kragen), mittig über dem Hals, leicht nach vorn
+    nk = Pk[kV[:, 1] > 0.845]; HB_BOTTOM = 0.154 * 1.1                                 # Helm-Unterkante unter der Mitte (Spielhelm × 1,1)
+    helm = np.array([0.0, nk[:, 1].max() - 0.045 + HB_BOTTOM, (nk[:, 2].min() + nk[:, 2].max()) / 2 + 0.02])
+    print('Hals oben', np.round(nk[:, 1].max(), 3), '→ Helm', np.round(helm, 3), '(vorher', np.round(info['head'], 3), ')')
+    blobs, hdr = [], {'nv': len(AV), 'ni': AF.size, 'helm': np.round(helm, 4).tolist(), 'helmTilt': 0.0}
     def put(name, arr):
         off = sum(len(b) for b in blobs); b = arr.tobytes(); b += b'\0' * (-len(b) % 4); blobs.append(b); hdr[name] = off
     put('pos', AV.astype(np.float32)); put('nrm', N.astype(np.float32)); put('uv', AUV.astype(np.float32)); put('reg', AR.astype(np.uint8)); put('ry', AY.astype(np.float32))
