@@ -3305,6 +3305,7 @@ function roadMats(paint) {
     clearglass: P({ color: 0xdfe6ea, roughness: .05, metalness: .1, transparent: true, opacity: .35, depthWrite: false }),
     redglass: new THREE.MeshStandardMaterial({ color: 0x6e0808, emissive: 0xff1a10, emissiveIntensity: .15, roughness: .15, metalness: .1 }),
     orangeglass: new THREE.MeshStandardMaterial({ color: 0x9a4a06, roughness: .15, metalness: .1 }),
+    smoke: new THREE.MeshStandardMaterial({ color: 0x17130f, roughness: .12, metalness: .2 }),   // abgedunkelte Seitenblinker
     tire: new THREE.MeshStandardMaterial({ color: 0x18191b, roughness: .9 }),
     rim: new THREE.MeshStandardMaterial({ color: 0x101113, roughness: .3, metalness: .7 }),
     Material__1: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .5 }),
@@ -3411,9 +3412,12 @@ let RDS = null;
 function makeRoadster(d, T) {
   if (!RDS) { RDS = loadRoadCar(ROADBIN); RDS.mats = roadMats(roadPaint()); RDS.plates = roadPlates(RDS);
     RDS.wheelG = RDS.parts.filter(p => p.w >= 0 && p.w < 4).map(p => { const c = RDS.wc[p.w], g2 = p.g.clone(); g2.translate(-c[0], -c[1], -c[2]); return { w: p.w, m: p.m, g: g2, c }; }); }
+  if (!RDS.smoked) { RDS.smoked = true; const og = RDS.parts.find(p => p.m === 'orangeglass' && !(p.w >= 0));   // Seitenblinker in den Kotflügeln (z um 1,0) abdunkeln, übrige Blinker bleiben orange
+    if (og) { const ix = og.g.index.array, P = og.g.attributes.position, A = [], B = []; for (let i = 0; i < ix.length; i += 3) { const z = P.getZ(ix[i]); (z > 0.6 && z < 1.4 ? B : A).push(ix[i], ix[i + 1], ix[i + 2]); }
+      og.g.setIndex(A.concat(B)); og.g.clearGroups(); og.g.addGroup(0, A.length, 0); og.g.addGroup(A.length, B.length, 1); og.multi = [RDS.mats.orangeglass, RDS.mats.smoke]; } }
   const D = RDS, M = D.mats, g = new THREE.Group(); g.rotation.order = 'YXZ';
   const brakeMat = M.redglass.clone();
-  for (const p of D.parts) { if (p.w >= 0) continue; const mat = p.m === 'redglass' ? brakeMat : M[p.m]; if (!mat) continue; const m = new THREE.Mesh(p.g, mat); m.castShadow = !mat.transparent; m.receiveShadow = true; g.add(m); }
+  for (const p of D.parts) { if (p.w >= 0) continue; const mat = p.multi || (p.m === 'redglass' ? brakeMat : M[p.m]); if (!mat) continue; const m = new THREE.Mesh(p.g, mat); m.castShadow = !mat.transparent; m.receiveShadow = true; g.add(m); }
   for (const [pg, pm] of D.plates) g.add(new THREE.Mesh(pg, pm));
   if (ROADSTK) { D.stk ||= roadStickers(); const m = new THREE.Mesh(D.stk.g, D.stk.m); m.renderOrder = 3; g.add(m); if (D.stk.sp) { const q = new THREE.Mesh(D.stk.sp, M.carpaint_second); q.castShadow = true; g.add(q); } }
   const zr = D.wc.find(c => c[2] < 0)[2], fl = new THREE.Group(), fr = new THREE.Group(), rr = new THREE.Group(), wfl = new THREE.Group(), wfr = new THREE.Group();
