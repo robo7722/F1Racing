@@ -124,3 +124,6 @@
 - **Helmrand**: Vorzeichnen (`warmhelm`, fast unsichtbar) greift nicht mehr, wenn die Cockpitansicht schon aktiv ist.
 - **Kart**: Fahrer tragen denselben Helm wie F1/F2 (`helmGeoNew` + `helmMat`), auf Kart-Größe skaliert.
 
+## Version 1.36
+- **Flimmern an Nase/Flanken in der Cockpitansicht (F1)**: Die Flanken des Cockpit-Modells lagen deckungsgleich auf der Haut des neuen Fahrzeugmodells (Breitentabelle `CK.hw` stammt vom alten Netz). Jetzt liegen sie 6 mm außerhalb, und das Fahrzeugmodell wird bis +3 mm statt −4 mm verworfen – keine doppelten Flächen mehr; Querlenker stoßen sauber durch.
+
