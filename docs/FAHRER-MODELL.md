@@ -1,6 +1,6 @@
 # Rennfahrer-Modell
 
-Stand: 13.11.2026 (v1.45) – Kart-Fahrer im Spiel eingebaut, stehende Figur als Vorschau.
+Stand: 13.11.2026 (v1.49) – Kart-Fahrer im Spiel eingebaut, stehende Figur als Vorschau.
 
 ## Dateien
 - `kartfahrer.bin` – sitzender Kart-Fahrer fürs Spiel: Körper + beide Handschuhe als EIN Netz (~14 200 Dreiecke).
@@ -40,7 +40,7 @@ Prüfansicht: `fahrer/kart_vorschau.html?debug` färbt Rückseiten grün – so 
 - Helm: derselbe wie F1/F2 (`helmMat(…, true)`), beim Kart ohne das Anbauteil unter dem Visier.
 - Cockpitkamera der Karts sitzt auf Augenhöhe im Helm (`cam` aus `KFAHRER.helm`).
 
-## v1.45 – Sitz, Cockpit, Lenken, Helme
+## v1.49 – Sitz, Cockpit, Lenken, Helme
 - **Sitz**: Sitzposition aus der Sitzschale in `kart.bin` berechnet (`kart_seat`): Gesäß liegt auf der Pfanne, Rücken an der Lehne (je ~3 mm Abstand), nichts dringt ein. Neigung 14°.
 - **Lenkrad** rückt dafür 12 cm entlang der Lenksäule zum Fahrer (verstellbare Säule, `swExt` in `kartfahrer.bin`), mit Verlängerungsrohr – so sind die Arme leicht gebeugt.
 - **Cockpitansicht Kart**: Kamera tiefer (9 cm unter der Helmmitte) und Blick ~24° nach unten: Lenkrad, Display und beide Hände im Bild. Die alten eingeblendeten Arme sind beim neuen Fahrer aus; man sieht die echten Arme des Modells.

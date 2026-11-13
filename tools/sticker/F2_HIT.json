@@ -2,11 +2,25 @@
  "kind": "f2",
  "team": "F2_HIT",
  "driver": "MIY",
- "drivers": ["MIY", "HER"],
+ "drivers": [
+  "MIY",
+  "HER"
+ ],
  "photo": "https://res.cloudinary.com/prod-f2f3/v1770000000/common/f2/2026/hitech/2026hitechcarleft.png",
- "rear": [3083, 568],
- "front": [860, 568],
- "liv": {"body": "#a0a8bc", "acc": "#0c0e15", "tip": "#0c0e15", "metal": 0.6},
+ "rear": [
+  3083,
+  568
+ ],
+ "front": [
+  860,
+  568
+ ],
+ "liv": {
+  "body": "#a0a8bc",
+  "acc": "#0c0e15",
+  "tip": "#0c0e15",
+  "metal": 0.6
+ },
  "glsl": [
   "vec3 S = #a0a8bc; vec3 K = #0c0e15; vec3 col = S;",
   "if (p.z > 1.85 && abs(p.x) > 0.17) col = K;",
@@ -30,8 +44,8 @@
   {"name": "fl_finne8", "box": [2685, 128, 2735, 300], "kind": "key", "key": "#161616", "color": "#0c0e15", "tol": 110, "dy": 0.04},
   {"name": "fl_finne9", "box": [2735, 128, 2785, 300], "kind": "key", "key": "#161616", "color": "#0c0e15", "tol": 110, "dy": 0.04},
   {"name": "fl_finne_w", "box": [2255, 150, 2750, 300], "kind": "key", "key": "#ffffff", "tol": 28, "dy": 0.04},
-  {"name": "fl_heck", "box": [2490, 372, 2750, 640], "kind": "key", "key": "#161616", "color": "#0c0e15", "tol": 100},
-  {"name": "fl_heck_w", "box": [2490, 372, 2750, 640], "kind": "key", "key": "#ffffff", "tol": 28},
+  {"name": "fl_heck", "box": [2490, 372, 2750, 640], "kind": "key", "key": "#161616", "color": "#0c0e15", "tol": 100, "smooth": 8, "holes": false},
+  {"name": "fl_heck_w", "box": [2490, 372, 2750, 640], "kind": "key", "key": "#ffffff", "tol": 28, "smooth": 8, "holes": false},
   {"name": "pirelli", "box": [278, 622, 482, 690], "kind": "c", "at": [2.06, 0.26], "w": 0.27},
   {"name": "gainbridge", "box": [1090, 400, 1355, 445], "kind": "d", "at": [0.86, 0.455], "w": 0.36},
   {"name": "corescientific", "box": [1855, 333, 2030, 368], "kind": "d", "at": [-0.1, 0.555], "thr": [0.3, 0.7]},
@@ -63,5 +77,21 @@
   {"name": "claro", "box": [2008, 150, 2160, 200], "kind": "w", "at": [-0.4, 0.93], "w": 0.2},
   {"name": "ifs", "box": [3250, 262, 3410, 325], "kind": "w", "at": [-2.12, 0.8], "w": 0.22}
  ],
- "number": {"color": "#e6e9f2", "spots": [{"v": "side", "z": -2.12, "y": 0.64, "s": 0.17}, {"v": "top", "x": 0, "z": 1.95, "s": 0.1}]}
+ "number": {
+  "color": "#e6e9f2",
+  "spots": [
+   {
+    "v": "side",
+    "z": -2.12,
+    "y": 0.64,
+    "s": 0.17
+   },
+   {
+    "v": "top",
+    "x": 0,
+    "z": 1.95,
+    "s": 0.1
+   }
+  ]
+ }
 }

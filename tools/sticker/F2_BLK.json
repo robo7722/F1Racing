@@ -37,7 +37,9 @@
    "kind": "key",
    "key": "#e6eaee",
    "tol": 120,
-   "color": "#e9edf1"
+   "color": "#e9edf1",
+   "smooth": 12,
+   "holes": false
   },
   {
    "name": "nase_linie",
@@ -50,7 +52,9 @@
    "kind": "key",
    "key": "#f0f0f0",
    "tol": 60,
-   "color": "#e9edf1"
+   "color": "#e9edf1",
+   "smooth": 4,
+   "holes": false
   },
   {
    "name": "cockpit_linie",
@@ -63,7 +67,9 @@
    "kind": "key",
    "key": "#f0f0f0",
    "tol": 60,
-   "color": "#e9edf1"
+   "color": "#e9edf1",
+   "smooth": 4,
+   "holes": false
   },
   {
    "name": "pirelli",

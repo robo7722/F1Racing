@@ -180,3 +180,20 @@ Damit ist auch der gestreifte Fächer am Fuß des Spiegelträgers wieder da (Urs
 **Änderung:** In diesem Abschnitt bleibt das Original ganz stehen (Bedingung „oberhalb der Deckfläche" entfällt). Cache-Schlüssel `cocknew15`. Eine engere Variante (nur |x| > 0,26) schloss die Lücke nur halb.
 
 **Geprüft:** Racing Bulls in Monza – Nahaufnahme aus Fahrersicht links und rechts, Cockpit-Kamera, Außenansicht der Stelle: Lücke zu, keine Streifen, Nase gerade.
+
+## Version 1.47 – Strecken nach QC-Bot-Lauf korrigiert, QC-Bot im Repo
+
+**Anlass:** Erster Lauf des QC-Bots (`qc/run.py`) über alle 13 Strecken (Außenansicht): Rasen im Auslauf, flimmernde Flächen, Clipping-Meldungen.
+
+**Strecken:**
+- Spielberg/Montréal (`runoffKind: 'paved'`): `surface()` meldet außerhalb der Auslaufflächen Gras (neue Masken `PVBL`/`PVBR`) – dort liegt sichtbar Rasen.
+- Kurveninneres: Bodenstreifen enden bei `foldLim` (75 % des Radius). Eingeschlossene Lücken füllt `fillGroundHoles` jetzt auch mit Auslauf (vorher nur Kies); Kies jenseits von `foldLim` zählt in `surface()` als Gras.
+- Schürze unter Mauer/Bande endet bei 0 statt 0,02 m (2 cm deckungsgleich mit der Bande = Flimmern an allen Banden).
+- Himmelswürfel genau auf der Fernebene (`z = w` statt `0.99999 w`): bei Cockpit-Nahgrenze 7 cm übermalte der Himmel alles ab ~5 km (Bergkette am Red Bull Ring).
+- Geländebänder, die an einen Nachbarast stoßen, senken sich zum Außenrand um 8 mm ab: überlappende Bänder lagen exakt gleich hoch (Monaco, Pflaster-Flimmern).
+
+**Prüfhelfer:** `__clipAll`/`__onRoad` überspringen auf Null skalierte Instanzen und Punkte > 1 m unter der Fahrbahn; Fairmont-Insel ausgenommen. `__go` kennt den Menüschritt „Fahrer“. Bild-Hook `__qcF` in `tick()` wieder da, `__qcApi` zeigt zusätzliche Masken.
+
+**QC-Bot:** Edge ohne Anmeldung/Erweiterungen (sonst wurde der Spiel-Tab angehalten), Sperre gegen zwei gleichzeitige Läufe, Rundumblick mit der Fernebene des Spiels.
+
+**Geprüft:** alle 13 Strecken mit dem Bot – 10 OK, Rest nur ein Rasenfleck am Red Bull Ring (2964 m, an der Leitplanke) und Ruckler im Hintergrundbetrieb, die nicht an festen Stellen auftreten.
