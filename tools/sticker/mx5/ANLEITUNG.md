@@ -7,7 +7,7 @@ Ziel: Der Roadster im Spiel trägt die Aufkleber des echten Autos, 1:1 nach den 
 Anders als bei den F1- und F2-Autos (Bogen wird im Shader von der Seite aufprojiziert) sind die Roadster-Aufkleber ein **eigenes dünnes Netz**, das 3 mm über Lack bzw. Scheibe liegt:
 
 - `liveries/MX5.png` – Bogen 2048 × 2048 mit allen Aufklebern (weiß bzw. schwarz auf durchsichtig).
-- `liveries/MX5.json` – fertiges Netz: Punkte (`p`, in 1/10 mm), Bogen-Koordinaten (`uv`, in 1/8192), Dreiecke (`i`).
+- `liveries/MX5.json` – fertiges Netz: Punkte (`p`, in 1/10 mm), Bogen-Koordinaten (`uv`, in 1/8192), Dreiecke (`i`); dazu `sp` = Dreiecke der schwarzen Abrisskante am Heck.
 - `index.html`: `ROADSTK` lädt beide Dateien, `roadStickers()` baut daraus ein Netz mit einem Material, `makeRoadster()` hängt es ans Auto. Kostet einen Zeichenaufruf, keine Rechenzeit im Shader.
 - Fehlt eine der Dateien, zeichnet `roadPaint()` wie früher die grobe Fassung in die Lack-Textur.
 
@@ -42,7 +42,11 @@ Die Liste `A` in `bauen.py` legt je Aufkleber fest: Bild, Blickrichtung (`L R T 
 | @Natsukithemiata | Frontlippe | Nachtfoto frontal |
 | Limitless Society | Heck links unter der Rückleuchte | Hallenfoto |
 | Fisch 666 | Heck rechts unter der Rückleuchte | Nachtfoto |
-| スピードハンターズ | Windschutzscheibe oben | Hallenfoto |
+| スピードハンターズ | Windschutzscheibe oben | frontales Nachtfoto |
+| Abrisskante (schwarz) mit BLACKLIST an beiden Enden | Kofferraumdeckel hinten | Geometrie in `bauen.py` (`spoiler()`), Aufkleber aus dem Heckfoto; Schrift von vorn lesbar wie am echten Auto |
+| BLACKLIST-Krone | hängt am Innenspiegel (freies Schild, beidseitig) | Logo-Vorlage |
+| Anime-Motiv 運のよい! | Heckscheibe links | Produktbild |
+| schwarze Streifen (Paar) | Haube außen, breit an der Scheibe, spitz nach vorn | Produktbild; Lage nach den Fotos geschätzt |
 
 Das Modell ist rund 1,157-mal so groß wie das echte Auto; alle Maße sind Modellmaße.
 
@@ -57,6 +61,6 @@ Die Skripte in `foto/` sind die Arbeitsfassung, mit der die Einzelbilder aus den
 
 ## Offen
 
-- Nicht übernommen: BLACKLIST-Aufkleber am Heckspoiler (das Modell hat keinen Spoiler), „southsiderz" über der rechten Rückleuchte (im Foto zu klein), die kleinen Plaketten in der Windschutzscheibe, die weißen Dreiecke neben dem vorderen Kennzeichen (nur auf einem älteren Foto).
+- Nicht übernommen: „southsiderz" über der rechten Rückleuchte (im Foto zu klein), die kleinen Plaketten in der Windschutzscheibe, die weißen Dreiecke neben dem vorderen Kennzeichen (nur auf einem älteren Foto).
 - Hinteres Kennzeichen bleibt „RONE 666".
 - Nur im Showroom geprüft, nicht im Rennen und nicht auf einem echten Handy.
