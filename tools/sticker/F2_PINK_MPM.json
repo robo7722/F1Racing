@@ -1,0 +1,103 @@
+{
+ "kind": "f2",
+ "team": "F2_MPM",
+ "driver": "MIN",
+ "drivers": [
+  "MIN"
+ ],
+ "photo": "https://res.cloudinary.com/prod-f2f3/v1770000000/common/f2/2026/mpmotorsport/2026mpmotorsportcarleft.png",
+ "rear": [
+  3080,
+  572
+ ],
+ "front": [
+  852,
+  572
+ ],
+ "liv": {
+  "body": "#f29ac4",
+  "acc": "#d8232a",
+  "tip": "#f29ac4",
+  "metal": 0.25
+ },
+ "glsl": [
+  "vec3 P = #f29ac4; vec3 N = #151c36; vec3 R = #d8232a; vec3 col = P;",
+  "float rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.6);",
+  "col = mix(col, R, rw * aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.57)));",
+  "col = mix(col, N, aaS(abs(p.x) - 0.86) * aaS(p.z - 1.6) * (1.0 - aaS(p.y - 0.55)));",
+  "return col;"
+ ],
+ "stickers": [
+  {
+   "name": "prop_text",
+   "box": [
+    2294,
+    375,
+    2624,
+    443
+   ],
+   "kind": "w",
+   "color": "#151c36",
+   "dy": -0.09
+  },
+  {
+   "name": "kroon",
+   "box": [
+    2006,
+    132,
+    2114,
+    198
+   ],
+   "kind": "c",
+   "thr": [
+    0.25,
+    0.6
+   ]
+  },
+  {
+   "name": "itq",
+   "box": [
+    378,
+    530,
+    495,
+    605
+   ],
+   "kind": "w",
+   "at": [
+    1.99,
+    0.33
+   ]
+  },
+  {
+   "name": "pirelli",
+   "box": [
+    230,
+    606,
+    438,
+    685
+   ],
+   "kind": "c",
+   "at": [
+    2.2,
+    0.24
+   ]
+  }
+ ],
+ "number": {
+  "color": "#151c36",
+  "spots": [
+   {
+    "v": "side",
+    "z": -2.1,
+    "y": 0.62,
+    "s": 0.2
+   },
+   {
+    "v": "top",
+    "x": 0,
+    "z": 1.9,
+    "s": 0.13
+   }
+  ]
+ }
+}

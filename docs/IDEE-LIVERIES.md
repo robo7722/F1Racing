@@ -35,3 +35,10 @@ Prototyp mit einem Auto: Vorlage erzeugen, Testbild auflegen, im Showroom ansehe
 
 ## Offene Frage: Lackierung ganz über den Bogen
 Technisch möglich – der Bogen kann auch deckende Farbflächen und Streifen enthalten. Die Seitenprojektion erreicht aber nur seitliche Flächen; Oberseite und Front brauchen eigene Ansichten, für die es keine offiziellen Bilder gibt. Sinnvoll: Grundfarbe weiter berechnen, Streifen und Sponsoren über den Bogen.
+
+## Stand 13.11.2026: Aufkleber für alle F1- und F2-Autos (umgesetzt)
+- Alle Angaben je Auto stehen in `tools/sticker/<Kürzel>.json`; daraus baut `tools/sticker/build.py` den Bogen `liveries/<Kürzel>.png` und die Datei `liveries/liveries.json`, die das Spiel liest. Anleitung: `tools/sticker/ANLEITUNG.md`.
+- 11 F1-Teams und 18 F2-Lackierungen: Grundfarbe, große Farbflächen und Sponsoren aus den offiziellen Seitenfotos, Startnummer im Design des Fahrers (`liveries/num/`), kein Aufkleber auf dem Halo. Der MX-5 bleibt unverändert.
+- F2: jedes Auto mit eigenem Design hat ein eigenes Kürzel; die früher geteilte Pink-Lackierung ist aufgeteilt in `F2_PINK_MPM`, `F2_PINK_ROD`, `F2_PINK_ART`.
+- Nur geschätzt oder unvollständig (kein Seitenfoto): Invicta #1, Campos #6, DAMS #8, MP #9, Prema #12 (Grün laut Miami-Fotos), Rodin #15, ART #16. Der BWT-Schriftzug der pinken Rodin- und ART-Autos ist als Schrift erzeugt, nicht aus einem Foto.
+- Bögen sind 2048 × 1024 px; Geräte mit Touch-Bedienung laden sie in halber Auflösung.

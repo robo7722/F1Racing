@@ -1136,7 +1136,7 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
   var put = function (sel, cls) { var el = document.querySelector(sel); if (!el) return; var g = new Image(); g.src = im.src; g.className = cls; g.alt = 'Logo'; el.innerHTML = ''; el.appendChild(g); };
   var go = function () { put('.ldLogo', 'glogo ld'); put('.logo2', 'glogo'); var m = document.getElementById('mLogo'); if (m) { m.src = im.src; m.hidden = false; } };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); };
-  im.src = 'logos/LOGO.png?' + Date.now().toString(36); })();
+  im.src = 'logos/LOGO.png'; })();
 </script>
 
 <div id="hud" class="hidden">
@@ -1514,11 +1514,12 @@ const KART_DRIVERS = [
   ['ONY', 'Oskar Nyberg', 6, 'K_HZN', 0xe0007a], ['NBE', 'Nils Brenner', 77, 'K_HZN', 0xf0f0f0],
   ['KTA', 'Kai Tanaka', 10, 'K_ION', 0x1456b8], ['ACO', 'Ari Cohen', 31, 'K_ION', 0xdfe3e8],
 ];
+// mass: Fahrzeuggewicht mit Fahrer in kg (für Kollisionen); die Kollisionsmaße werden aus dem 3D-Modell gemessen (hitboxOf)
 // ph: Fahrzeugleistung gegenüber dem F1-Basismodell (Topspeed, Kurvengrip, Bremse, Beschleunigung); laps: Renndauer im Karrieremodus
 const SERIES = {
-  kart: { id: 'kart', name: 'GoKart', sub: 'Rennkart · Sprint-Rennen', teams: KART_TEAMS, drivers: KART_DRIVERS, ph: { top: 0.5, grip: 0.5, brk: 0.5, acc: 1.12 }, laps: 3, cal: ['genk', 'wack', 'sil'], noBoost: true, cl: 2.3, cw: 1.55, hw: 0.85 },
-  f2:   { id: 'f2',   name: 'Formula 2', sub: 'FIA Formula 2 · Saison 2026', teams: F2_TEAMS, drivers: F2_DRIVERS, ph: { top: 0.93, grip: 0.9, brk: 0.92, acc: 0.9 }, laps: 4, cal: ['mel', 'mtl', 'mc', 'rbr', 'sil', 'spa', 'monza', 'yas'], noBoost: true, cl: 4.9, cw: 1.78, hw: 0.98 },
-  f1:   { id: 'f1',   name: 'Formula 1', sub: 'FIA Formula 1 · Saison 2026', teams: F1_TEAMS, drivers: F1_DRIVERS, ph: { top: 1, grip: 1, brk: 1, acc: 1 }, laps: 3, cal: null, noBoost: false },
+  kart: { id: 'kart', name: 'GoKart', sub: 'Rennkart · Sprint-Rennen', teams: KART_TEAMS, drivers: KART_DRIVERS, ph: { top: 0.5, grip: 0.5, brk: 0.5, acc: 1.12 }, laps: 3, cal: ['genk', 'wack', 'sil'], noBoost: true, mass: 165 },
+  f2:   { id: 'f2',   name: 'Formula 2', sub: 'FIA Formula 2 · Saison 2026', teams: F2_TEAMS, drivers: F2_DRIVERS, ph: { top: 0.93, grip: 0.9, brk: 0.92, acc: 0.9 }, laps: 4, cal: ['mel', 'mtl', 'mc', 'rbr', 'sil', 'spa', 'monza', 'yas'], noBoost: true, mass: 795 },
+  f1:   { id: 'f1',   name: 'Formula 1', sub: 'FIA Formula 1 · Saison 2026', teams: F1_TEAMS, drivers: F1_DRIVERS, ph: { top: 1, grip: 1, brk: 1, acc: 1 }, laps: 3, cal: null, noBoost: false, mass: 800 },
 };
 const LIVS = {}; for (const k in LIV) LIVS['F2_' + k] = { kind: 'f2', ...LIV[k] };
 let SER = 'f1', TEAMS = F1_TEAMS, DRIVERS = F1_DRIVERS, SERPH = SERIES.f1.ph;
@@ -1639,7 +1640,7 @@ THEMES.wack.look = { sh: [0.92, 1.0, 1.08], hi: [1.03, 1.04, 0.97], sat: 1.12, c
 
 /* ======================= Konstanten ======================= */
 const VTOP = 95, BRAKE = 44, GRIP = 46, HALF = 7;
-let CL = 5.4, CW = 1.95, CARHW = 1.1;   // Kollisionsmaße (Länge/Breite) und halbe Breite für die Bande – je Klasse (Kart kleiner)
+let CL = 5.4, CW = 1.95, CARHW = 1.1;   // Maße des größten Fahrzeugs im Feld (Länge/Breite/halbe Breite) – aus den Modellen gemessen (fieldDims), nur noch für die KI-Abstände
 const DIFF = { easy: { aLat: 36, brake: 40, top: .99 }, mid: { aLat: 44, brake: 44, top: 1 }, hard: { aLat: 47.5, brake: 46, top: 1.015, grip: 1.07, brk: 1.05, acc: 1.04 },
   pro: { aLat: 58, brake: 56, top: 1.065, grip: 1.3, brk: 1.3, acc: 1.28 }, leg: { aLat: 65, brake: 62, top: 1.1, grip: 1.45, brk: 1.42, acc: 1.4 } };
 const accel = (v, vmax = VTOP) => Math.max(0, 11.5 * (1 - Math.pow(v / vmax, 2.2)));
@@ -2965,38 +2966,61 @@ function cockNew(tp, k, bodyCol) {
 
 const inCock = (k, x, y, z) => { const c = COCK[k]; return Math.abs(x) < c.x && z > c.z0 && z < c.z1 && y < c.y; };
 const cockGLSL = k => { const c = COCK[k]; return '\n if (abs(vLP.x) < ' + c.x.toFixed(3) + ' && vLP.z > ' + c.z0.toFixed(3) + ' && vLP.z < ' + c.z1.toFixed(3) + ' && vLP.y < ' + c.y.toFixed(3) + ') diffuseColor.rgb = vec3(' + [COCK_COL.r, COCK_COL.g, COCK_COL.b].map(v => v.toFixed(4)).join(',') + ');'; };
-// Aufkleber (Test): Teamlogo aus logos/<Kürzel>.png als Bild auf den berechneten Lack. Je Eintrag eine Stelle am Auto (Modellkoordinaten in Metern: x quer, y hoch, z nach vorn):
-//   v: 'side' = von der Seite aufgetragen (z/y = Mitte, beide Seiten, rechts gespiegelt, damit das Logo überall richtig herum steht; x0 = erst ab diesem Abstand von der Mitte)
-//   v: 'top'  = von oben aufgetragen (x/z = Mitte, Oberkante des Logos zeigt zum Heck); s = Kantenlänge des quadratischen Logofelds
-// Fehlt die Logo-Datei, bleibt der Lack unverändert.
-const DECALS = {
-  MER: [{ v: 'top', x: 0, z: 1.5, s: 0.2 }],   // Stern auf der Nase
-};
-// Aufkleberbogen (Test): liveries/<Kürzel>.png mit allen Sponsoren, von der Seite aufgetragen. Der Bogen zeigt das Auto im Bereich z0..z1 (Länge) und y0..y1 (Höhe):
-// obere Bildhälfte = linke Fahrzeugseite (Nase links), untere Hälfte = rechte Seite (Nase rechts). Erzeugt mit tools/aufkleberbogen_mer.py.
-const SHEETS = {
-  MER: { z0: -2.45, z1: 3.15, y0: 0, y1: 1.12, zones: [[0.98, 1.36, 0, 0.4]] },   // zones: [z von, z bis, |x| von, |x| bis] – in diesem Längenabschnitt nur Flächen in diesem Abstand von der Mitte bekleben (sonst steht ein Schriftzug doppelt auf zwei hintereinander liegenden Flächen)
-};
-const DECAL_TEX = {};
+// Aufkleber: Bilder auf dem berechneten Lack. Alle Angaben je Auto stehen in liveries/liveries.json (erzeugt von tools/sticker/build.py aus tools/sticker/<Kürzel>.json):
+//   sheet  = es gibt einen Aufkleberbogen liveries/<Kürzel>.png mit den Sponsoren, von der Seite aufgetragen. Der Bogen zeigt das Auto im Bereich SHEET_BOX (z = Länge, y = Höhe):
+//            obere Bildhälfte = linke Fahrzeugseite (+x, Nase links), untere Hälfte = rechte Seite (Nase rechts)
+//   zones  = [z von, z bis, |x| von, |x| bis]: in diesem Längenabschnitt nur Flächen in diesem Abstand von der Mitte bekleben (sonst steht ein Schriftzug doppelt auf zwei hintereinander liegenden Flächen)
+//   logos  = Teamlogo logos/<logoFile>.png an festen Stellen: v 'top' = von oben (x/z = Mitte, Oberkante zeigt zum Heck), v 'side' = von der Seite (z/y = Mitte, ab Abstand x0 von der Mitte); s = Kantenlänge
+//   num    = Startnummer des Fahrers als Aufkleber: color = Farbe, list = Stellen wie bei logos, aber s = Ziffernhöhe (Feld doppelt so breit); x0/x1 = nur Flächen in diesem Abstand von der Mitte
+//   drivers = F2-Fahrerkürzel, die diese Lackierung bekommen (für eigene Kürzel, z. B. wenn sich bisher mehrere Teams eine Lackierung teilten)
+//   liv    = Farben der F2-Lackierung (überschreibt LIV), glsl = eigenes Lack-Programm (überschreibt LIVERY; Farben als #rrggbb)
+// Fehlt die Datei oder ein Bild, bleibt der Lack unverändert. Kürzel: F1 = Team (MER), F2 = 'F2_' + Lackierung (F2_INV1).
+const LIVMAN = await fetch('./liveries/liveries.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : {}).catch(() => ({}));
+const SHEET_BOX = { f1: { z0: -2.45, z1: 3.15, y0: 0, y1: 1.12 }, f2: { z0: -2.6, z1: 3.0, y0: 0, y1: 1.2 } };
+const DECALS = {}, SHEETS = {}, NUMS = {};
+for (const k in LIVMAN) { const m = LIVMAN[k]; if (!m || !SHEET_BOX[m.kind]) continue;
+  if (m.sheet) SHEETS[k] = { ...SHEET_BOX[m.kind], zones: m.zones || [] };
+  if (m.logos && m.logos.length && m.logoFile) { DECALS[k] = m.logos; DECALS[k].file = m.logoFile; }
+  if (m.num && m.num.list && m.num.list.length) NUMS[k] = m.num;
+  if (m.liv && LIVS[k]) Object.assign(LIVS[k], m.liv); else if (m.liv && m.kind === 'f2') LIVS[k] = { kind: 'f2', metal: .25, ...m.liv };   // neue F2-Lackierung nur aus der Datei
+  if (m.kind === 'f2') for (const c of m.drivers || []) { const d = F2_DRIVERS.find(x => x[0] === c); if (d && LIVS[k]) d[5] = k.slice(3); }   // drivers = Fahrer, die diese Lackierung fahren
+  if (m.glsl) LIVERY[k] = m.glsl.replace(/#([0-9a-f]{6})/gi, (q, h) => lc(parseInt(h, 16))); }
+const DECAL_TEX = {}, DECAL_SMALL = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
 function decalUniforms(tk) { if (DECAL_TEX[tk]) return DECAL_TEX[tk];
-  const U = DECAL_TEX[tk] = { uDecal: { value: null }, uDecalOn: { value: 0 }, uSheet: { value: null }, uSheetOn: { value: 0 } };
-  const ld = (url, tx, on) => { tx.value = new THREE.TextureLoader().load(url, t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.needsUpdate = true; on.value = 1; }, undefined, () => {}); };
-  if (DECALS[tk]) ld('logos/' + tk + '.png', U.uDecal, U.uDecalOn); if (SHEETS[tk]) ld('liveries/' + tk + '.png', U.uSheet, U.uSheetOn);
+  const U = DECAL_TEX[tk] = { uDecal: { value: null }, uDecalOn: { value: 0 }, uSheet: { value: null }, uSheetOn: { value: 0 }, uNum: { value: null }, uNumOn: { value: 0 }, uNumCol: { value: new THREE.Color(1, 1, 1) } };
+  const ld = (url, tx, on) => { tx.value = new THREE.TextureLoader().load(url, t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+    if (DECAL_SMALL && t.image && t.image.width > 1024) { const c = document.createElement('canvas'); c.width = t.image.width >> 1; c.height = t.image.height >> 1; c.getContext('2d').drawImage(t.image, 0, 0, c.width, c.height); t.image = c; }   // Handy/Tablet: halbe Auflösung spart drei Viertel des Grafikspeichers (ein Feld hat bis zu 16 Bögen)
+    t.needsUpdate = true; on.value = 1; }, undefined, () => {}); };
+  if (DECALS[tk]) ld('logos/' + DECALS[tk].file + '.png', U.uDecal, U.uDecalOn); if (SHEETS[tk]) ld('liveries/' + tk + '.png', U.uSheet, U.uSheetOn);
   return U; }
-function decalGLSL(tk) { const f = v => v.toFixed(4), B = SHEETS[tk]; let g = '\n { vec3 dN = normalize(vLN); vec2 dUV; vec4 dT;';
+const hasDecal = tk => !!(DECALS[tk] || SHEETS[tk] || NUMS[tk]);
+function decalGLSL(tk) { const f = v => (+v).toFixed(4), B = SHEETS[tk]; let g = '\n { vec3 dN = normalize(vLN); vec2 dUV; vec4 dT;';
   if (B) g += '\n  if (uSheetOn > 0.5 && dN.x * sign(vLP.x) > 0.45) { dUV = vec2((vLP.z - ' + f(B.z0) + ') / ' + f(B.z1 - B.z0) + ', (vLP.y - ' + f(B.y0) + ') / ' + f(B.y1 - B.y0) + '); if (vLP.x > 0.0) dUV.x = 1.0 - dUV.x; float dIn = (dUV.x > 0.0 && dUV.x < 1.0 && dUV.y > 0.0 && dUV.y < 1.0) ? 1.0 : 0.0; ' + (B.zones || []).map(q => 'if (vLP.z > ' + f(q[0]) + ' && vLP.z < ' + f(q[1]) + ' && (abs(vLP.x) < ' + f(q[2]) + ' || abs(vLP.x) > ' + f(q[3]) + ')) dIn = 0.0; ').join('') + 'dUV.y = clamp(dUV.y, 0.004, 0.996) * 0.5 + (vLP.x > 0.0 ? 0.5 : 0.0); dT = texture2D(uSheet, dUV) * dIn; diffuseColor.rgb = mix(diffuseColor.rgb, dT.rgb, dT.a); }';
-  g += '\n  if (uDecalOn > 0.5) {';
-  for (const d of DECALS[tk] || []) g += d.v === 'top'
-    ? '\n  if (dN.y > 0.5) { dUV = vec2(0.5 + (vLP.x - ' + f(d.x) + ') / ' + f(d.s) + ', 0.5 - (vLP.z - ' + f(d.z) + ') / ' + f(d.s) + '); dT = decalTex(dUV); diffuseColor.rgb = mix(diffuseColor.rgb, dT.rgb, dT.a); }'
-    : '\n  if (abs(dN.x) > 0.45 && abs(vLP.x) > ' + f(d.x0 || 0) + ') { dUV = vec2(0.5 - sign(vLP.x) * (vLP.z - ' + f(d.z) + ') / ' + f(d.s) + ', 0.5 + (vLP.y - ' + f(d.y) + ') / ' + f(d.s) + '); dT = decalTex(dUV); diffuseColor.rgb = mix(diffuseColor.rgb, dT.rgb, dT.a); }';
-  return g + '\n  }\n }'; }
-const DECAL_HEAD = 'uniform sampler2D uDecal, uSheet; uniform float uDecalOn, uSheetOn; varying vec3 vLN;\nvec4 decalTex(vec2 uv) { vec4 t = texture2D(uDecal, uv); return (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) ? vec4(0.0) : t; }\n';
+  const spot = (d, smp, on, asp) => (d.v === 'top'
+    ? '\n  if (' + on + ' > 0.5 && dN.y > 0.5) { dUV = vec2(0.5 + (vLP.x - ' + f(d.x || 0) + ') / ' + f(d.s * asp) + ', 0.5 - (vLP.z - ' + f(d.z) + ') / ' + f(d.s) + ');'
+    : '\n  if (' + on + ' > 0.5 && dN.x * sign(vLP.x) > 0.45 && abs(vLP.x) > ' + f(d.x0 || 0) + ' && abs(vLP.x) < ' + f(d.x1 || 9) + ') { dUV = vec2(0.5 - sign(vLP.x) * (vLP.z - ' + f(d.z) + ') / ' + f(d.s * asp) + ', 0.5 + (vLP.y - ' + f(d.y) + ') / ' + f(d.s) + ');')
+    + ' dT = decalTex(' + smp + ', dUV); diffuseColor.rgb = mix(diffuseColor.rgb, ' + (asp > 1 ? (d.color ? lc(parseInt(String(d.color).replace('#', ''), 16)) : 'uNumCol') : 'dT.rgb') + ', dT.a); }';   /* Nummer: eigene Farbe je Stelle möglich (color), sonst die Nummernfarbe des Autos */
+  for (const d of DECALS[tk] || []) g += spot(d, 'uDecal', 'uDecalOn', 1);
+  for (const d of (NUMS[tk] || {}).list || []) g += spot(d, 'uNum', 'uNumOn', 2);
+  return g + '\n }'; }
+const DECAL_HEAD = 'uniform sampler2D uDecal, uSheet, uNum; uniform float uDecalOn, uSheetOn, uNumOn; uniform vec3 uNumCol; varying vec3 vLN;\nvec4 decalTex(sampler2D sm, vec2 uv) { vec4 t = texture2D(sm, uv); return (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) ? vec4(0.0) : t; }\n';
+// Startnummer: je Fahrer ein eigenes Lack-Material (gleiches Programm, eigene Nummern-Textur)
+const NUM_TEX = {}, NUM_FILES = new Set(LIVMAN._num || []);   // Nummern im Design der Fahrer: liveries/num/<f1|f2>_<Nummer>.png (weiß); sonst zeichnet das Spiel die Nummer selbst
+function numDecalTex(ser, num) { const k = ser + '_' + num; if (NUM_TEX[k]) return NUM_TEX[k];
+  if (NUM_FILES.has(k)) { const t = NUM_TEX[k] = new THREE.TextureLoader().load('liveries/num/' + k + '.png'); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; }
+  const t = NUM_TEX[k] = canvasTex(256, 128, (g, w, h) => { g.clearRect(0, 0, w, h); g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    let px = 118; g.font = 'italic 900 ' + px + 'px "Titillium Web",system-ui,sans-serif'; const tw = g.measureText(String(num)).width; if (tw > w * 0.9) { px = Math.floor(px * w * 0.9 / tw); g.font = 'italic 900 ' + px + 'px "Titillium Web",system-ui,sans-serif'; }
+    g.fillText(String(num), w / 2, h / 2 + px * 0.04); }); t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; return t; }
+function numMat(tp, tk, num) { const N = NUMS[tk]; if (!N || num === undefined || !tp.glossMat.livHook) return tp.glossMat; const nm = tp.nm || (tp.nm = {}); if (nm[num]) return nm[num];
+  const base = tp.glossMat, m = base.clone(), tex = numDecalTex(LIVMAN[tk].kind, num), cl = new THREE.Color(N.color || '#ffffff');
+  const hook = base.livHook; m.onBeforeCompile = (sh, r) => { hook(sh, r); sh.uniforms.uNum = { value: tex }; sh.uniforms.uNumOn = { value: 1 }; sh.uniforms.uNumCol = { value: cl }; }; m.customProgramCacheKey = base.customProgramCacheKey; return (nm[num] = m); }
 function liveryMat(tk, gloss) { const code = LIVERY[tk]; if (!code) return gloss;
-  const dec = DECALS[tk] || SHEETS[tk] ? decalGLSL(tk) : '';
+  const dec = hasDecal(tk) ? decalGLSL(tk) : '';
   gloss.onBeforeCompile = sh => {
     sh.vertexShader = 'attribute float aCls; varying float vCls; varying vec3 vLP; varying vec3 vLN;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vLP = position; vCls = aCls; vLN = normal;');
-    sh.fragmentShader = 'uniform vec3 uMir; varying float vCls; varying vec3 vLP;\n' + (dec ? DECAL_HEAD : '') + LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 2.5 || vCls > 6.5) { diffuseColor.rgb = livery(vLP, vCls);' + dec + ' }\n vec3 gN = normalize(cross(dFdx(vLP), dFdy(vLP))); float mirF = 0.0;   /* Spiegelglas ist jetzt ein eigenes Teil im Modell (Chunk mirror) */ if (mirF > 0.5) diffuseColor.rgb = vec3(0.0);' /* Spiegelglas (F1): die nach hinten zeigende Fläche der Spiegelgehäuse – im Modell kein eigenes Teil – zeigt die Himmelsfarbe der Strecke */ + cockGLSL('f1')).replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n if (mirF > 0.5) totalEmissiveRadiance = uMir;'); sh.uniforms.uMir = { value: MIRMAT.emissive }; if (dec) Object.assign(sh.uniforms, decalUniforms(tk));
+    sh.fragmentShader = 'uniform vec3 uMir; varying float vCls; varying vec3 vLP;\n' + (dec ? DECAL_HEAD : '') + LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 2.5 || vCls > 6.5) { diffuseColor.rgb = livery(vLP, vCls);' + (dec ? ' if (vCls < 2.5) {' + dec + ' }' : '') + ' }\n vec3 gN = normalize(cross(dFdx(vLP), dFdy(vLP))); float mirF = 0.0;   /* Spiegelglas ist jetzt ein eigenes Teil im Modell (Chunk mirror) */ if (mirF > 0.5) diffuseColor.rgb = vec3(0.0);' /* Spiegelglas (F1): die nach hinten zeigende Fläche der Spiegelgehäuse – im Modell kein eigenes Teil – zeigt die Himmelsfarbe der Strecke */ + cockGLSL('f1')).replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n if (mirF > 0.5) totalEmissiveRadiance = uMir;'); sh.uniforms.uMir = { value: MIRMAT.emissive }; if (dec) Object.assign(sh.uniforms, decalUniforms(tk));
   };
+  gloss.livHook = gloss.onBeforeCompile;   /* unveränderte Fassung für die Nummern-Materialien (numMat) – andere Stellen hängen sich später an onBeforeCompile an */
   gloss.customProgramCacheKey = () => 'livery-' + tk + (dec ? '-d' : ''); return gloss; }
 function teamTemplate(tk) {
   if (TPL[tk]) return TPL[tk];
@@ -3007,10 +3031,12 @@ function teamTemplate(tk) {
     const gloss = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: isF2 ? .32 : .3, metalness: T.metal * (isF2 ? 0.6 : 0.7), clearcoat: isF2 ? .85 : 1, clearcoatRoughness: isF2 ? .12 : .06, envMapIntensity: isF2 ? 1.15 : 1.25, side: THREE.DoubleSide });   /* F2: Normalen sind jetzt bereinigt (renormCar) – der Lack darf fast so klar spiegeln wie beim F1 */
     if (isF2) {   // Farbfelder (Nase, Flügel, Unterteil) im Shader je Bildpunkt statt je Eckpunkt -> gerade, scharfe Farbgrenzen statt gezackter Dreieckskanten
       const v3 = c => 'vec3(' + c.r.toFixed(4) + ',' + c.g.toFixed(4) + ',' + c.b.toFixed(4) + ')';
+      const dec = hasDecal(tk) ? decalGLSL(tk) : '', code = LIVERY[tk];   // Aufkleber und (falls in liveries.json hinterlegt) eigenes Lack-Programm
       gloss.onBeforeCompile = sh => { viewFacing(sh);
-        sh.vertexShader = 'attribute float aCls; varying float vCls; varying vec3 vLP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vLP = position; vCls = aCls;');
-        sh.fragmentShader = 'varying float vCls; varying vec3 vLP;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 0.5) { diffuseColor.rgb = vLP.z > 2.55 ? ' + v3(cT) + ' : ((vLP.z > 2.15 && vLP.y < 0.36) || (vLP.z < -1.9 && vLP.y > 0.6)) ? ' + v3(cA) + ' : ' + (T.low !== undefined ? 'vLP.y < ' + T.split.toFixed(3) + ' ? ' + v3(cLow) + ' : ' : '') + v3(cB) + '; }' + cockGLSL('f2')); };
-      gloss.customProgramCacheKey = () => 'f2paint-' + tk; }   /* F2: weicher Klarlack – der scharfe Klarlack spiegelte Asphalt und Schatten als schwarze Flecken */   /* F2 auf F1-Niveau: die dunkle Umgebung (Asphalt, Horizontband) spiegelt sich weich statt schwarz */   // F2: unscharfe, schwache Spiegelung – scharfe Umgebungsspiegelung (Gras/Tribünen) wirkte fleckig-grün
+        sh.vertexShader = 'attribute float aCls; varying float vCls; varying vec3 vLP; varying vec3 vLN;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vLP = position; vCls = aCls; vLN = normal;');
+        sh.fragmentShader = 'varying float vCls; varying vec3 vLP;\n' + (dec ? DECAL_HEAD : 'varying vec3 vLN;\n') + (code ? LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' : '') + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 0.5) { diffuseColor.rgb = vLP.z > 2.55 ? ' + v3(cT) + ' : ((vLP.z > 2.15 && vLP.y < 0.36) || (vLP.z < -1.9 && vLP.y > 0.6)) ? ' + v3(cA) + ' : ' + (T.low !== undefined ? 'vLP.y < ' + T.split.toFixed(3) + ' ? ' + v3(cLow) + ' : ' : '') + v3(cB) + ';' + (code ? ' diffuseColor.rgb = livery(vLP, vCls);' : '') + dec + ' }' + cockGLSL('f2')); if (dec) Object.assign(sh.uniforms, decalUniforms(tk)); };
+      gloss.livHook = gloss.onBeforeCompile;
+      gloss.customProgramCacheKey = () => 'f2paint-' + tk + (LIVERY[tk] ? '-l' : '') + (hasDecal(tk) ? '-d' : ''); }   /* F2: weicher Klarlack – der scharfe Klarlack spiegelte Asphalt und Schatten als schwarze Flecken */   /* F2 auf F1-Niveau: die dunkle Umgebung (Asphalt, Horizontband) spiegelt sich weich statt schwarz */   // F2: unscharfe, schwache Spiegelung – scharfe Umgebungsspiegelung (Gras/Tribünen) wirkte fleckig-grün
     const haloMat = gloss.clone();   // Halo in der TV-Kamera: einfarbig in der Fahrzeugfarbe, ohne Lackierungs-Verlauf (Material vor dem Livery-Shader kopieren)
     return (TPL[tk] = { model: true, M: MD, lods: MD.C.lods.map(L => ({ gloss: paintGeo(L.gloss, pc), matte: paintGeo(L.matte, pc) })), halo: paintGeo(MD.C.halo, pc), haloCk: MD.C.haloCk ? paintGeo(MD.C.haloCk, pc) : null, haloFlat: paintGeo(MD.C.halo, (k, x, y, z, o) => o.copy(cB)), haloMat,   /* TV-Kamera: das Halo AUS DEM MODELL in der Wagenfarbe – genau wie Version 1.00 (Wunsch). Ein fast schwarzes Halo spiegelte nur den Himmel als dünne Linie und wirkte spitz */ glossMat: liveryMat(tk, gloss) });
   }
@@ -3580,7 +3606,7 @@ function makeCar0(d) {
   const tp = teamTemplate(d.liv || d.team), g = new THREE.Group(); g.rotation.order = 'YXZ';
   if (tp.model) {
     const MD = tp.M, L = tp.lods[0], W = MD.W[0], fw = MD.C.fw;
-    const body = new THREE.Mesh(L.gloss, tp.glossMat), matte = new THREE.Mesh(L.matte, MATTE), halo = new THREE.Mesh(haloFlatOn ? tp.haloFlat : tp.halo, haloFlatOn ? tp.haloMat : tp.glossMat);
+    const body = new THREE.Mesh(L.gloss, numMat(tp, d.liv || d.team, d.num)), matte = new THREE.Mesh(L.matte, MATTE), halo = new THREE.Mesh(haloFlatOn ? tp.haloFlat : tp.halo, haloFlatOn ? tp.haloMat : tp.glossMat);
     for (const m of [body, matte, halo]) { m.castShadow = true; g.add(m); }
     const mir = MD.C.lods[0].mirror ? new THREE.Mesh(MD.C.lods[0].mirror, MIRMAT) : null; if (mir) g.add(mir);   // Spiegelglas: verspiegelt die Umgebung (Skybox) statt Carbon
     const hAcc = helmAcc(d.helmet, T.acc);
@@ -3628,9 +3654,19 @@ function carLabel(d, T) {
 
 const buildAll = () => DRIVERS.map(d => {
   const c = { code: d[0], name: d[1], num: d[2], team: d[3], helmet: d[4], skill: skillOf(d), liv: d[5] ? 'F2_' + d[5] : undefined };
-  c.mesh = makeCar(c); return c;
+  c.mesh = makeCar(c); c.hb = hitboxOf(c.mesh); c.mass = TEAMS[c.team].road ? STREET.m : (SERIES[SER].mass || 800); return c;
 });
-let ALL = buildAll();
+// Hitbox aus dem 3D-Modell gemessen: halbe Breite (über die Reifen), Bug (zf) und Heck (zr) ab Fahrzeugursprung. Schilder (Sprites) und durchsichtige Hilfsflächen zählen nicht.
+function hitboxOf(m) {
+  const g = m.g, bb = new THREE.Box3(), b = new THREE.Box3(), inv = new THREE.Matrix4(), rel = new THREE.Matrix4(); g.updateMatrixWorld(true); inv.copy(g.matrixWorld).invert();
+  g.traverse(o => { if (!o.isMesh || !o.geometry || !o.geometry.attributes.position || o.userData.noHit) return; const mt = o.material; if (mt && mt.transparent && mt.depthWrite === false) return;
+    if (!o.geometry.boundingBox) o.geometry.computeBoundingBox(); b.copy(o.geometry.boundingBox).applyMatrix4(rel.multiplyMatrices(inv, o.matrixWorld)); bb.union(b); });
+  if (bb.isEmpty()) return { hw: 1, zf: 2.8, zr: -2.8 };
+  return { hw: Math.max(Math.abs(bb.min.x), Math.abs(bb.max.x)), zf: bb.max.z, zr: bb.min.z };
+}
+// Maße des Feldes für die KI (Abstand halten, Spurwahl): größtes Fahrzeug der Klasse
+function fieldDims() { CL = 0; CW = 0; for (const c of ALL) { if (TEAMS[c.team].road && ALL.length > 1) continue; CL = Math.max(CL, c.hb.zf - c.hb.zr); CW = Math.max(CW, c.hb.hw * 2); } CARHW = CW / 2; }
+let ALL = buildAll(); fieldDims();
 const byCode = k => ALL.find(c => c.code === k);
 // Serie wechseln (Kart / F2 / F1): Fahrerfeld, Teams, Fahrzeugmodelle und Leistungsfaktoren
 function setSeries(k, quiet) {
@@ -3639,9 +3675,9 @@ function setSeries(k, quiet) {
   SERIES._dirty = false;
   for (const c of ALL) { scene.remove(c.mesh.g); if (c.mesh.label && c.mesh.label.material.map) c.mesh.label.material.map.dispose(); }
   if (SER && SER !== k) { (S.drv ||= {})[SER] = S.driver; }
-  const prevSer = SER; SER = k; const SD = SERIES[k]; TEAMS = SD.teams; SERPH = SD.ph; CL = SD.cl || 5.4; CW = SD.cw || 1.95; CARHW = SD.hw || 1.1;
+  const prevSer = SER; SER = k; const SD = SERIES[k]; TEAMS = SD.teams; SERPH = SD.ph;
   DRIVERS = SD.drivers.map(x => x.slice()); if (typeof applyCareerSlot === 'function') applyCareerSlot(k, DRIVERS);
-  ALL = buildAll(); cars.length = 0; ais = [];
+  ALL = buildAll(); fieldDims(); cars.length = 0; ais = [];
   const want = k === prevSer ? S.driver : (S.drv || {})[k]; S.driver = ALL.find(c => c.code === want) ? want : ALL[0].code;
   pl = byCode(S.driver) || ALL[0]; S.grid = clamp(S.grid, 1, fieldSize()); MENU.team = pl.team;
   S.lastSer = k; if (!quiet) save();
@@ -7180,7 +7216,7 @@ function placeOnGrid() {
   const TT = (S.mode === 'tt' && !CHP) || QL;   // Zeitfahren: allein auf der Strecke, von der Pole
   (TT ? [DRIVERS.find(d => d[0] === pl.code)] : gridOrder()).forEach((d, j) => {
     const c = byCode(d[0]), s = QL ? -220 : slotS(j), p = trackAt(s, slotLat(j));
-    Object.assign(c, { isPlayer: c === pl, d: s, v: 0, startD: s, gridLat: slotLat(j), yawKick: 0, pushV: 0, lat: slotLat(j), latT: slotLat(j), latV: 0, home: (Math.random() - .5) * 3, laneT: 0,
+    Object.assign(c, { isPlayer: c === pl, d: s, v: 0, startD: s, gridLat: slotLat(j), yawKick: 0, sx: 0, sz: 0, lat: slotLat(j), latT: slotLat(j), latV: 0, home: (Math.random() - .5) * 3, laneT: 0,
       lapsDone: -1, lapStart: 0, last: 0, best: 0, lapTimes: [], finished: false, finishTime: 0, finishLaps: 0, grid: j + 1,
       react: 0.05 + Math.random() * 0.15, form: Math.random() * 0.006, phase: Math.random() * 6.28, thrS: 0, brkS: 0, slip: 0, slipS: 0, blkPrev: null, ovr: null, lineK: 0.85 + Math.random() * 0.15, idx: p.i, x: p.x, z: p.z, h: p.h, steer: 0, brk: 0, sPrev: modL(s), wallCd: 0, stuckT: 0, wrongT: 0, thr: 0, spin: 0 });
     const comp = c === pl ? 1 : Math.floor(Math.random() * 3);
@@ -7328,7 +7364,7 @@ function projectCar(c) {
 }
 function resetCar(c) {
   const p = trackAt(c.idx * DS + 5, 0);
-  c.x = p.x; c.z = p.z; c.h = p.h; c.v = 0; c.steer = 0; c.stuckT = 0; c.wrongT = 0;
+  c.x = p.x; c.z = p.z; c.h = p.h; c.v = 0; c.sx = c.sz = 0; c.yawKick = 0; c.steer = 0; c.stuckT = 0; c.wrongT = 0;
   if (c === pl) camH = p.h;
   projectCar(c);
 }
@@ -7372,17 +7408,26 @@ function carStep(c, thr, brk, dt, limit) {
   c.yawR = -c.steer * yawMax;   // tatsächliche Gierrate (für die Kamera)
   c.h -= c.steer * yawMax * dt;
   if (c.yawKick) { c.h += c.yawKick * dt; c.yawKick *= Math.exp(-3.4 * dt); if (Math.abs(c.yawKick) < 0.004) c.yawKick = 0; }   // Drehimpuls nach Kontakt klingt ab
-  if (c.pushV) { c.x += RX[c.idx] * c.pushV * dt; c.z += RZ[c.idx] * c.pushV * dt; c.pushV *= Math.exp(-4 * dt); if (Math.abs(c.pushV) < 0.02) c.pushV = 0; }
+  // Rutschen nach Kontakt (Weltkoordinaten): der Anteil in Fahrtrichtung geht ins Tempo, den Queranteil bauen die Reifen ab –
+  // Seitenkraft steigt mit der Rutschgeschwindigkeit und sättigt an der Haftgrenze (weniger Grip auf Gras/Kies = weiter rutschen)
+  if (c.sx || c.sz) { const fx = Math.sin(c.h), fz = Math.cos(c.h); let la = c.sx * fz - c.sz * fx; c.v = Math.max(0, c.v + c.sx * fx + c.sz * fz);
+    const dec = tyreGrip(c, sf) * Math.tanh(Math.abs(la) / 1.2) * dt; la = Math.abs(la) <= dec || Math.abs(la) < 0.02 ? 0 : la - Math.sign(la) * dec;
+    c.sx = fz * la; c.sz = -fx * la; c.x += c.sx * dt; c.z += c.sz * dt; }
   c.x += Math.sin(c.h) * c.v * dt; c.z += Math.cos(c.h) * c.v * dt;
   projectCar(c);
   wallCheck(c, dt);
 }
+// Quer-Haftgrenze der Reifen in m/s²: mechanischer Grip + Abtrieb (wächst mit dem Tempo), mal Fahrzeug- und Untergrundfaktor
+function tyreGrip(c, sf) { return (c.gripMul || 1) * (sf || SURF[c.surf] || SURF.road)[3] * (13 + (GRIP - 13) * Math.min(1, c.v * c.v / 4900)); }
 function wallCheck(c, dt) {
   c.wallCd -= dt;
-  const side = c.lat >= 0 ? 1 : -1, lim = wallAt(c.idx, side) - CARHW;
-  if (Math.abs(c.lat) > lim) {
-    const i = c.idx, push = Math.abs(c.lat) - lim;
+  // Hitbox gegen die Bande: gedrehtes Rechteck (schräg stehendes Auto braucht mehr Platz), Mittelpunkt der Box statt Fahrzeugursprung
+  const hb = c.hb, i0 = c.idx, fr = Math.sin(c.h) * RX[i0] + Math.cos(c.h) * RZ[i0], ft = Math.sin(c.h) * TX[i0] + Math.cos(c.h) * TZ[i0];
+  const latC = c.lat + fr * (hb.zf + hb.zr) / 2, side = latC >= 0 ? 1 : -1, lim = wallAt(c.idx, side) - (hb.hw * Math.abs(ft) + (hb.zf - hb.zr) / 2 * Math.abs(fr));
+  if (Math.abs(latC) > lim) {
+    const i = c.idx, push = Math.abs(latC) - lim;
     c.x -= RX[i] * side * push; c.z -= RZ[i] * side * push;
+    { const so = (c.sx * RX[i] + c.sz * RZ[i]) * side; if (so > 0) { c.sx -= RX[i] * side * so; c.sz -= RZ[i] * side * so; } }   // Rutschen endet an der Bande
     const th = Math.atan2(TX[i], TZ[i]), dh = wrapA(th - c.h);
     const impact = Math.abs(Math.sin(dh)) * c.v;
     if (Math.abs(dh) < Math.PI / 2) c.h += dh * (1 - Math.exp(-22 * dt));
@@ -7473,45 +7518,64 @@ function updateAI(c, dt, prof = profAI, top = diff.top) {
   stuckCheck(c, dt);
 }
 
-// Kollisionen: paarweise in Streckenkoordinaten, ohne Überschwingen (für alle Autos gleich)
-function shiftLat(c, dx) { c.x += RX[c.idx] * dx; c.z += RZ[c.idx] * dx; c.lat += dx; }
-function shiftD(c, dx) { c.x += TX[c.idx] * dx; c.z += TZ[c.idx] * dx; c.d += dx; c.sPrev = modL(c.sPrev + dx); }
-// Kollisionen: beide Autos gleich schwer (≈ 800 kg). Seitlich: Querimpuls (Auto rutscht weg) + Drehimpuls je nach Trefferpunkt;
-// Auffahren: weitgehend unelastisch, Energieverlust, bei versetztem Treffer dreht sich das getroffene Heck weg.
+// Kollisionen: jedes Auto ist ein gedrehtes Rechteck in den Maßen seines Modells (c.hb), geprüft in Weltkoordinaten (Trennachsen-Test).
+// Physik: Stoß mit Impulserhaltung – jedes Auto bekommt die Geschwindigkeitsänderung Impuls / eigene Masse (schwere Autos schieben leichte weg).
+// Der Anteil in Fahrtrichtung ändert das Tempo, der Queranteil lässt das Auto rutschen; die Reifen bauen das Rutschen je nach Grip ab (carStep).
+// Wer dauerhaft gegen ein anderes Auto lenkt, schiebt es: es gewinnt die Seite mit mehr Reifenkraft (Masse × Grip), auf Gras/Kies hält der Gegner weniger dagegen.
+// Tempo: es zählt die Aufprallgeschwindigkeit am Kontakt (Fahrt + Rutschen beider Autos). Leichte Berührungen federn etwas zurück, harte Einschläge sind fast
+// unelastisch (Karosserie verformt sich, Energie geht verloren) und drehen das Auto stärker.
+// Trifft der Stoß neben dem Schwerpunkt, dreht sich das Auto (Hebelarm / Trägheitsmoment), gedämpft durch die Reifen.
+const COLL = { e: 0.25, mu: 0.3, yaw: 0.07, yawHard: 0.3, yawMax: 1.1 };   // yaw: Drehanteil bei leichtem Kontakt (Reifen halten das Auto gerade), yawHard: zusätzlich bei hartem Einschlag (ab ca. 3 m/s Stoß)
+function carBox(c) { const hb = c.hb, fx = Math.sin(c.h), fz = Math.cos(c.h), zc = (hb.zf + hb.zr) / 2; return { cx: c.x + fx * zc, cz: c.z + fz * zc, fx, fz, hl: (hb.zf - hb.zr) / 2, hw: hb.hw }; }
+function boxCorners(o) { const out = []; for (const [u, w] of [[1, 1], [1, -1], [-1, -1], [-1, 1]]) out.push([o.cx + o.fx * o.hl * u + o.fz * o.hw * w, o.cz + o.fz * o.hl * u - o.fx * o.hw * w]); return out; }
+function inBox(o, x, z, tol = 0.03) { const dx = x - o.cx, dz = z - o.cz; return Math.abs(dx * o.fx + dz * o.fz) <= o.hl + tol && Math.abs(dx * o.fz - dz * o.fx) <= o.hw + tol; }
+// Überlappung zweier Boxen: null oder { nx, nz (von A nach B), ov (Eindringtiefe), px, pz (Kontaktpunkt) }
+function boxHit(A, B) {
+  const dx = B.cx - A.cx, dz = B.cz - A.cz; let ov = 1e9, nx = 0, nz = 0;
+  for (const [ax, az] of [[A.fx, A.fz], [A.fz, -A.fx], [B.fx, B.fz], [B.fz, -B.fx]]) {
+    const rA = A.hl * Math.abs(A.fx * ax + A.fz * az) + A.hw * Math.abs(A.fz * ax - A.fx * az), rB = B.hl * Math.abs(B.fx * ax + B.fz * az) + B.hw * Math.abs(B.fz * ax - B.fx * az);
+    const d = dx * ax + dz * az, o = rA + rB - Math.abs(d); if (o <= 0) return null;
+    if (o < ov) { ov = o; const s = d >= 0 ? 1 : -1; nx = ax * s; nz = az * s; }
+  }
+  let px = 0, pz = 0, n = 0; for (const [x, z] of boxCorners(A)) if (inBox(B, x, z)) { px += x; pz += z; n++; } for (const [x, z] of boxCorners(B)) if (inBox(A, x, z)) { px += x; pz += z; n++; }
+  if (n) { px /= n; pz /= n; } else { px = (A.cx + B.cx) / 2; pz = (A.cz + B.cz) / 2; }
+  return { nx, nz, ov, px, pz };
+}
+// Geschwindigkeitsänderung (Welt) auf ein Auto anwenden: längs -> Tempo, quer -> Rutschen; Angriffspunkt neben dem Schwerpunkt -> Drehung
+function kickCar(c, box, dvx, dvz, px, pz) {
+  const lon = dvx * box.fx + dvz * box.fz, la = dvx * box.fz - dvz * box.fx;
+  c.v = Math.max(0, c.v + lon); c.sx = (c.sx || 0) + box.fz * la; c.sz = (c.sz || 0) - box.fx * la;
+  const rx = px - box.cx, rz = pz - box.cz, I = (4 * box.hl * box.hl + 4 * box.hw * box.hw) / 12;   // Trägheitsmoment je kg (Rechteck)
+  const yk = COLL.yaw + COLL.yawHard * clamp((Math.hypot(dvx, dvz) - 3) / 10, 0, 1);
+  c.yawKick = clamp((c.yawKick || 0) - (rx * dvz - rz * dvx) / I * yk, -COLL.yawMax, COLL.yawMax);
+}
 function collisions() {
-  let hit = 0;
+  let hit = 0; const boxes = cars.map(carBox);
   for (let it = 0; it < 2; it++) for (let a = 0; a < cars.length; a++) for (let b = a + 1; b < cars.length; b++) {
-    const A = cars[a], B = cars[b];
-    const da = wrapL(B.d - A.d); if (Math.abs(da) >= CL) continue;
-    const dl = B.lat - A.lat; if (Math.abs(dl) >= CW) continue;
-    const pa = CL - Math.abs(da), pw = CW - Math.abs(dl), first = it === 0;
-    if (pw / CW < pa / CL) {   // seitlicher Kontakt
-      const s = dl >= 0 ? 1 : -1, corr = pw / 2;
-      shiftLat(A, -s * corr); shiftLat(B, s * corr);
-      if (first) {
-        const dvv = Math.abs(A.v - B.v), j = clamp(pw * 7 + dvv * 0.08, 0.6, 5);
-        A.pushV = (A.pushV || 0) - s * j * 0.12; B.pushV = (B.pushV || 0) + s * j * 0.12;   // v31: Mittelweg zwischen v29 und v30
-        const k = clamp(pw * 0.17 + dvv * 0.006, 0, 0.15) * (Math.abs(da) > 1.2 ? 1 : 0.35), sg = da >= 0 ? 1 : -1;
-        A.yawKick = (A.yawKick || 0) + s * sg * k; B.yawKick = (B.yawKick || 0) + s * sg * k;
-        const avg = (A.v + B.v) / 2, loss = 1 - clamp(pw * 0.015 + dvv * 0.0005, 0.001, 0.015); A.v += (avg - A.v) * 0.08; B.v += (avg - B.v) * 0.08; A.v *= loss; B.v *= loss;
-        if (A === pl || B === pl) hit = Math.max(hit, clamp(j / 4, 0.3, 1));
-      }
-    } else {   // Auffahren
-      const s = da >= 0 ? 1 : -1, corr = pa / 2;
-      shiftD(A, -s * corr); shiftD(B, s * corr);
-      const rear = s > 0 ? A : B, front = s > 0 ? B : A;
-      if (first && rear.v > front.v) {
-        const dv = rear.v - front.v, m = (rear.v + front.v) / 2, e = 0.18; rear.v = m - dv * e / 2; front.v = m + dv * e / 2;
-        const loss = 1 - Math.min(0.025, dv * 0.001); rear.v *= loss; front.v *= loss;
-        const off = clamp((front.lat - rear.lat) / CW, -1, 1), sp = clamp(dv * 0.01, 0, 0.28) * off;   // versetzter Treffer -> Dreher
-        front.yawKick = (front.yawKick || 0) - sp; rear.yawKick = (rear.yawKick || 0) + sp * 0.4;
-        front.pushV = (front.pushV || 0) + off * dv * 0.015; rear.pushV = (rear.pushV || 0) - off * dv * 0.008;
-        if (rear === pl || front === pl) hit = Math.max(hit, clamp(dv / 12, 0.3, 1));
-      }
+    const A = cars[a], B = cars[b], oa = boxes[a], ob = boxes[b];
+    { const dx = ob.cx - oa.cx, dz = ob.cz - oa.cz, r = oa.hl + oa.hw + ob.hl + ob.hw; if (dx * dx + dz * dz > r * r) continue; }
+    const h = boxHit(oa, ob); if (!h) continue;
+    const mA = A.mass || 800, mB = B.mass || 800, im = 1 / mA + 1 / mB, { nx, nz } = h;
+    // Relativgeschwindigkeit (Fahrt + Rutschen) am Kontakt
+    const rvx = (ob.fx * B.v + (B.sx || 0)) - (oa.fx * A.v + (A.sx || 0)), rvz = (ob.fz * B.v + (B.sz || 0)) - (oa.fz * A.v + (A.sz || 0)), vn = rvx * nx + rvz * nz;
+    if (vn < 0) {
+      const e = COLL.e * (1 - 0.7 * clamp((-vn - 2) / 13, 0, 1)), j = -(1 + e) * vn / im, tx = -nz, tz = nx, vt = rvx * tx + rvz * tz, jt = clamp(-vt / im, -COLL.mu * j, COLL.mu * j);   // Normalstoß + Reibung der Karosserien aneinander
+      const Jx = nx * j + tx * jt, Jz = nz * j + tz * jt;
+      kickCar(A, oa, -Jx / mA, -Jz / mA, h.px, h.pz); kickCar(B, ob, Jx / mB, Jz / mB, h.px, h.pz);
+      if (A === pl || B === pl) { const dv = Math.hypot(Jx, Jz) / (A === pl ? mA : mB); if (dv > 0.6) hit = Math.max(hit, clamp(dv / 7, 0.3, 1)); }
     }
+    // Überlappung auflösen: das leichtere Auto weicht weiter aus
+    const sA = h.ov * mB / (mA + mB), sB = h.ov * mA / (mA + mB);
+    A.x -= nx * sA; A.z -= nz * sA; B.x += nx * sB; B.z += nz * sB; projectCar(A); projectCar(B);
+    boxes[a] = carBox(A); boxes[b] = carBox(B);
   }
   if (hit && bumpCd <= 0) { bump(hit); bumpCd = 0.35; }
 }
+// Test: Hitboxen je Fahrzeug (Maße) und als Drahtrahmen am Modell ein-/ausblenden
+window.__hb = ser => { if (ser && !running) setSeries(ser, true); const m = new Map(); for (const c of ALL) { const k = 'hw ' + c.hb.hw.toFixed(2) + ' bug ' + c.hb.zf.toFixed(2) + ' heck ' + c.hb.zr.toFixed(2) + ' kg ' + c.mass; m.set(k, (m.get(k) || 0) + 1); } return { ser: SER, CL: +CL.toFixed(2), CW: +CW.toFixed(2), boxes: [...m] }; };
+window.__cars = () => cars;
+window.__hbShow = (on = true) => { for (const c of ALL) { const g = c.mesh.g; if (g.userData.hbLine) { g.remove(g.userData.hbLine); g.userData.hbLine = null; } if (!on) continue; const hb = c.hb, y = 0.5, p = [[hb.hw, hb.zf], [hb.hw, hb.zr], [-hb.hw, hb.zr], [-hb.hw, hb.zf]].flatMap(q => [q[0], y, q[1]]);
+    const ln = new THREE.LineLoop(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(p, 3)), new THREE.LineBasicMaterial({ color: 0x00ff66, depthTest: false })); ln.renderOrder = 999; ln.userData.noHit = true; g.add(ln); g.userData.hbLine = ln; } };
 
 function lapCheck(c) {
   const nl = Math.floor(c.d / L);
@@ -8202,10 +8266,10 @@ const FLAG_OLD = { mc: ['#ce1126', '#ffffff', '#ffffff'], sil: ['#012169', '#fff
 // eigene Team-Embleme (keine echten Logos): Form + Farben + Kürzel
 const LOGOS = {}; try { localStorage.removeItem('f1logos'); } catch (e) {}   // Logos kommen nur noch aus dem Projektordner logos/ (früher zusätzlich auf dem Gerät ladbar)
 // Logos aus dem Projektordner: liegt dort logos/<Kürzel>.png (z. B. logos/MER.png, logos/F2_INV.png), ersetzt sie das gezeichnete Wappen. Fehlt die Datei, bleibt das Wappen.
-const REPO_LOGOS = {}, LOGO_V = Date.now().toString(36);   /* je Start eine neue Abfrage: geänderte, neue und gelöschte Dateien im Ordner logos/ wirken sofort (kein alter Stand aus dem Zwischenspeicher) */
+const REPO_LOGOS = {};   /* feste Adressen ohne Zeitstempel: Logos bleiben im Speicher (Service Worker, eigener Dauer-Cache) und werden nicht bei jedem Start neu geladen; geänderte Dateien holt der Service Worker im Hintergrund, sie gelten ab dem nächsten Start */
 function loadRepoLogos() { const keys = Object.keys(Object.assign({}, F1_TEAMS, F2_TEAMS, KART_TEAMS)); let left = keys.length, hit = 0;
   const done = () => { if (--left === 0 && hit) { try { renderTeams(); renderMenu(); if (CHP && MENU.scr === 'season') renderSeason(); } catch (e) {} } };
-  for (const k of keys) { const im = new Image(); im.onload = () => { REPO_LOGOS[k] = im.src; hit++; done(); }; im.onerror = done; im.src = 'logos/' + k + '.png?' + LOGO_V; } }
+  for (const k of keys) { const im = new Image(); im.onload = () => { REPO_LOGOS[k] = im.src; hit++; done(); }; im.onerror = done; im.src = 'logos/' + k + '.png'; } }
 function teamBadge(k) {
   if (LOGOS[k] || REPO_LOGOS[k]) return '<svg viewBox="0 0 64 64"><image href="' + (LOGOS[k] || REPO_LOGOS[k]) + '" x="3" y="3" width="58" height="58" preserveAspectRatio="xMidYMid meet"/></svg>';
   const T = TEAMS[k], c1 = hex(T.body === 0xf0f0f0 ? T.acc : T.body), c2 = hex(T.acc), c3 = hex(T.low ?? (T.tip !== T.body ? T.tip : 0x16181b));
@@ -8283,7 +8347,7 @@ const TIER_ICO = { kart: '🏁', f2: '2', f1: '1' };
 function renderSeriesCards() {
   $('#serHead').textContent = MENU.mode === 'tt' ? 'Zeitrennen – Fahrzeugklasse' : 'Schnelles Spiel – Fahrzeugklasse';
   const info = { kart: ['Rennkart', 'Leicht · wendig · sehr kurvenstark'], f2: ['Formula 2', 'Dallara F2 2024 · 22 Fahrer · 11 Teams'], f1: ['Formula 1', 'Saison 2026 · 22 Fahrer · 11 Teams'] };
-  $('#serCards').innerHTML = ['kart', 'f2', 'f1'].map(t => '<button class="tcard scard' + (t === SER ? ' on' : '') + '" data-ser="' + t + '" style="--tc:' + TIER_COL[t] + '"><i class="sbg" style="background-image:url(textures/class_' + t + '.jpg?v=3)"></i><span class="chk">✓</span><div class="sbig"><img alt="" src="logos/' + (t === 'kart' ? 'KART' : t.toUpperCase()) + '.png?' + LOGO_V + '"' + (t === 'f1' ? ' data-fb="logos/LOGO.png?' + LOGO_V + '"' : '') + '><span>' + (t === 'kart' ? 'GoKart' : t === 'f2' ? 'F2' : 'F1') + '</span></div><div class="tn">' + info[t][0] + '</div><div class="tf">' + info[t][1] + '</div></button>').join('');
+  $('#serCards').innerHTML = ['kart', 'f2', 'f1'].map(t => '<button class="tcard scard' + (t === SER ? ' on' : '') + '" data-ser="' + t + '" style="--tc:' + TIER_COL[t] + '"><i class="sbg" style="background-image:url(textures/class_' + t + '.jpg?v=3)"></i><span class="chk">✓</span><div class="sbig"><img alt="" src="logos/' + (t === 'kart' ? 'KART' : t.toUpperCase()) + '.png"' + (t === 'f1' ? ' data-fb="logos/LOGO.png"' : '') + '><span>' + (t === 'kart' ? 'GoKart' : t === 'f2' ? 'F2' : 'F1') + '</span></div><div class="tn">' + info[t][0] + '</div><div class="tf">' + info[t][1] + '</div></button>').join('');
   $$('#serCards .sbig img').forEach(im => { im.onload = () => { try { const c = document.createElement('canvas'); c.width = c.height = 16; const g = c.getContext('2d'); g.drawImage(im, 0, 0, 16, 16); const d = g.getImageData(0, 0, 16, 16).data; let sat = 0; for (let i = 0; i < d.length; i += 4) sat = Math.max(sat, Math.max(d[i], d[i + 1], d[i + 2]) - Math.min(d[i], d[i + 1], d[i + 2])); if (d[3] > 200 && d[0] > 200 && d[1] > 200 && d[2] > 200 && sat < 40) im.classList.add('inv'); else { let n = 0, l = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 128) { n++; l += d[i] + d[i + 1] + d[i + 2]; } if (n && l / n / 3 < 70 && sat < 60) im.classList.add('wht'); } } catch (e) {} im.parentNode.classList.add('hasimg'); }; im.onerror = () => { const fb = im.dataset.fb; if (fb) { delete im.dataset.fb; im.src = fb; } else im.style.display = 'none'; }; });
   $$('#serCards .scard').forEach(b => b.addEventListener('click', () => { setSeries(b.dataset.ser); MENU.team = null; $$('#serCards .scard').forEach(x => x.classList.toggle('on', x === b)); }));
 }
@@ -8526,7 +8590,8 @@ function initShowroom() {
     const walls = [wall, wall2]; for (const wl of [wall, wall2]) { const o = new THREE.Mesh(wl.geometry, swm); o.position.copy(wl.position); o.rotation.copy(wl.rotation); o.translateZ(0.02); sc.add(o); walls.push(o);
       const l2 = new THREE.Mesh(wl.geometry, ledM); l2.position.copy(wl.position); l2.rotation.copy(wl.rotation); l2.translateZ(0.04); l2.renderOrder = 2; sc.add(l2); walls.push(l2); }
     // Spiegelung der Wand im Boden: dieselben Flächen noch einmal, an der Bodenebene gespiegelt (der Boden ist leicht durchscheinend)
-    const dim = new Map(); for (const wl of walls) { let mm = dim.get(wl.material); if (!mm) { mm = wl.material.clone(); mm.color.multiplyScalar(0.10); if (mm.opacity < 1) mm.opacity *= 0.5; dim.set(wl.material, mm); }   /* Spiegelbild der Wand stark abgedunkelt: der Boden bleibt bei jedem Team schwarz, die Wandfarbe schimmert nur noch */ const o = new THREE.Mesh(wl.geometry, mm); o.position.copy(wl.position); o.position.y = -wl.position.y; o.rotation.copy(wl.rotation); o.scale.y = -1; sc.add(o); } }
+    const MIRK = 1.5, mirGeo = wall.geometry.clone(); { const ps = mirGeo.attributes.position, cl = new Float32Array(ps.count * 3); for (let k = 0; k < ps.count; k++) { const f = clamp(0.5 - ps.getY(k) / 13.75, 0, 1), v = 0.12 + 0.88 * f * f; cl[k * 3] = cl[k * 3 + 1] = cl[k * 3 + 2] = v; } mirGeo.setAttribute('color', new THREE.BufferAttribute(cl, 3)); }   /* Helligkeit der Spiegelung: unten (an der Bodenlinie) voll, oben (= vorn beim Betrachter) fast aus */
+    const dim = new Map(); for (const wl of walls) { let mm = dim.get(wl.material); if (!mm) { mm = wl.material.clone(); mm.color.multiplyScalar(MIRK); mm.vertexColors = true; if (mm.opacity < 1) mm.opacity *= 0.5; dim.set(wl.material, mm); }   /* Spiegelbild der Wand: der Boden bleibt schwarz, spiegelt die Wand aber sichtbar – am Fuß der Wand kräftig, zum Betrachter hin läuft die Spiegelung aus */ const o = new THREE.Mesh(mirGeo, mm); o.position.copy(wl.position); o.position.y = -wl.position.y; o.rotation.copy(wl.rotation); o.scale.y = -1; sc.add(o); } }
   // Alles (Raum, Licht, Autos) hängt an EINER Bühnengruppe: sie lässt sich als Ganzes um die Kamera drehen (Teamwechsel: das neue Team steht „auf der anderen Seite des Raums“)
   { const st = new THREE.Group(); for (const o of [...sc.children]) { st.add(o); if (o.isLight && o.target && !o.target.parent) st.add(o.target); } sc.add(st); SHOW.stage = st; }
   SHOW.scene = sc; SHOW.cam = new THREE.PerspectiveCamera(SHOW_FOV, innerWidth / innerHeight, 0.5, 400);
@@ -8645,7 +8710,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.30'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.35'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

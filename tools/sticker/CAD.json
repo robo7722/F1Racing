@@ -1,0 +1,20 @@
+{
+ "kind": "f1",
+ "photo": "https://media.formula1.com/image/upload/v1740000001/common/f1/2026/cadillac/2026cadillaccarright.png",
+ "rear": [520, 570],
+ "front": [3120, 570],
+ "glsl": ["vec3 K = #0d0e10, W = #e8e8e8, G = #b9bec4;", "vec3 col = K;", "if (c < 6.5 && p.z < -1.74 && p.y > 0.73) col = W;", "if (c < 6.5 && p.z > 2.05 && abs(p.x) > 0.2 && p.y < 0.35) col = G;", "if (c < 6.5 && p.z > 2.55) col = G;", "return col;"],
+ "logoFile": "CAD",
+ "logos": [{"v": "top", "x": 0, "z": 1.5, "s": 0.2}],
+ "number": {"color": "#ffffff", "spots": [{"v": "side", "z": -0.8, "y": 0.83, "s": 0.09}, {"v": "top", "x": 0, "z": 2.0, "s": 0.13}]},
+ "stickers": [
+  {"name": "pixel", "box": [745, 296, 1100, 500], "kind": "key", "key": "#666666", "tol": 60, "color": "#74777a"},
+  {"name": "pixel2", "box": [1100, 296, 1240, 440], "kind": "key", "key": "#666666", "tol": 60, "color": "#74777a"},
+  {"name": "keil", "box": [2385, 398, 2810, 445], "kind": "key", "key": "#d8d8d8", "tol": 70, "color": "#e8e8e8"},
+  {"name": "cadillac", "box": [2405, 348, 2675, 400], "kind": "key", "key": "#d8d8d8", "tol": 70, "color": "#e8e8e8", "mirror": false},
+  {"name": "ifs", "box": [118, 140, 365, 250], "kind": "d", "at": [-2.06, 0.86], "w": 0.34},
+  {"name": "wappen", "box": [1250, 180, 1553, 277], "kind": "w"},
+  {"name": "corescientific", "box": [1540, 315, 1936, 385], "kind": "w"},
+  {"name": "twg", "box": [1320, 465, 1885, 623], "kind": "w"}
+ ]
+}

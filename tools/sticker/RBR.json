@@ -1,0 +1,40 @@
+{
+ "kind": "f1",
+ "photo": "https://media.formula1.com/image/upload/v1740000001/common/f1/2026/redbullracing/2026redbullracingcarright.png",
+ "rear": [525, 568],
+ "front": [3122, 568],
+ "glsl": [
+  "vec3 N = #0b1236, B = #101f8c, K = #14151a;",
+  "vec3 col = mix(N, B, max(smoothstep(0.40, 0.56, p.y), aaS(p.z - 1.2)));",
+  "col = mix(col, #ffc906, band(p.z, -0.28, 0.05) * aaS(p.y - 0.88) * (1.0 - aaS(abs(p.x) - 0.11)));",
+  "if (p.z < -1.9) col = mix(K, B, aaS(p.y - 0.72));",
+  "if (c > 0.5 && c < 1.5) col = p.z > 1.9 ? B : mix(K, B, aaS(p.y - 0.72));",
+  "if (c > 1.5 && c < 2.5) col = B;",
+  "if (c > 6.5) col = K;",
+  "return col;"
+ ],
+ "stickers": [
+  {"name": "bulle_rot", "box": [1000, 85, 1790, 300], "kind": "key", "key": "#e0132b", "color": "#d8102c"},
+  {"name": "sonne", "box": [1300, 85, 1790, 290], "kind": "key", "key": "#e8d053", "color": "#ffc906"},
+  {"name": "bulle_weiss", "box": [1000, 85, 1720, 300], "kind": "key", "key": "#e7e8e6", "color": "#ffffff", "tol": 50},
+  {"name": "redbull_rot", "box": [1085, 322, 1535, 442], "kind": "key", "key": "#e0132b", "color": "#d8102c", "mirror": false},
+  {"name": "redbull_weiss", "box": [1085, 322, 1535, 442], "kind": "key", "key": "#e7e8e6", "color": "#ffffff", "tol": 50, "mirror": false},
+  {"name": "nummernfeld", "box": [800, 190, 900, 280], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#ffffff", "at": [-1.12, 0.76], "w": 0.17, "h": 0.125},
+  {"name": "mobil1", "box": [70, 160, 390, 240], "kind": "w"},
+  {"name": "mobil1_o", "box": [140, 180, 200, 238], "kind": "key", "key": "#e0132b", "color": "#e8202c", "side": "R", "mirror": false},
+  {"name": "mobil1_o_l", "box": [140, 180, 200, 238], "kind": "key", "key": "#e0132b", "color": "#e8202c", "side": "L", "dz": 0.157, "mirror": false},
+  {"name": "heineken", "box": [155, 280, 350, 385], "kind": "w"},
+  {"name": "ford", "box": [793, 376, 917, 434], "kind": "w"},
+  {"name": "rokt", "box": [1680, 290, 1885, 352], "kind": "w"},
+  {"name": "oracle", "box": [1175, 458, 1945, 617], "kind": "w"},
+  {"name": "siemens", "box": [1255, 640, 1685, 676], "kind": "w"},
+  {"name": "carlyle", "box": [2485, 360, 2720, 397], "kind": "w"},
+  {"name": "1password", "box": [2493, 435, 2692, 478], "kind": "w"},
+  {"name": "mobil_nase", "box": [3405, 568, 3577, 632], "kind": "w", "at": [2.58, 0.215], "w": 0.2},
+  {"name": "mobil_nase_o", "box": [3440, 580, 3490, 630], "kind": "key", "key": "#e0132b", "color": "#e8202c", "side": "R", "at": [2.563, 0.21], "w": 0.062, "mirror": false},
+  {"name": "mobil_nase_o_l", "box": [3440, 580, 3490, 630], "kind": "key", "key": "#e0132b", "color": "#e8202c", "side": "L", "at": [2.597, 0.21], "w": 0.062, "mirror": false}
+ ],
+ "logoFile": "RBR",
+ "logos": [{"v": "top", "x": 0, "z": 1.6, "s": 0.2}],
+ "number": {"color": "#d8102c", "spots": [{"v": "side", "z": -1.12, "y": 0.76, "s": 0.1}, {"v": "top", "x": 0, "z": 2.1, "s": 0.13}]}
+}

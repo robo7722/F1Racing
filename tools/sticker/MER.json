@@ -1,0 +1,35 @@
+{
+ "kind": "f1",
+ "photo": "https://media.formula1.com/image/upload/v1740000001/common/f1/2026/mercedes/2026mercedescarright.png",
+ "rear": [523, 563],
+ "front": [3104, 563],
+ "stickers": [
+  {"name": "streifen_l", "box": [1080, 360, 1296, 545], "kind": "key", "key": "#8a8a8a", "tol": 70, "color": "#a4aab0"},
+  {"name": "streifen_r", "box": [1296, 360, 1975, 480], "kind": "key", "key": "#8a8a8a", "tol": 70, "color": "#a4aab0"},
+  {"name": "schwung", "box": [960, 372, 2160, 582], "kind": "key", "key": "#32c2b8", "color": "#19b8ab"},
+  {"kind": "key", "key": "#b0b0b0", "tol": 110, "color": "#c3c8cd", "name": "chassis_silber_a", "box": [2365, 335, 2890, 450]},
+  {"kind": "key", "key": "#b0b0b0", "tol": 110, "color": "#c3c8cd", "name": "chassis_silber_b", "box": [2365, 450, 2470, 500]},
+  {"kind": "key", "key": "#b0b0b0", "tol": 110, "color": "#c3c8cd", "name": "chassis_silber_c", "box": [2470, 450, 2890, 500], "side": "R"},
+  {"name": "chassis_tuerkis", "box": [2385, 350, 2890, 432], "kind": "key", "key": "#57cec4", "color": "#19b8ab"},
+  {"name": "snapdragon", "box": [40, 157, 436, 253], "kind": "w", "at": [-2.06, 0.86], "w": 0.42},
+  {"name": "crowdstrike", "box": [88, 289, 379, 336], "kind": "w", "at": [-2.06, 0.71], "w": 0.32},
+  {"name": "microsoft", "box": [1447, 99, 1751, 176], "kind": "c", "at": [-0.36, 0.9], "w": 0.36},
+  {"name": "solera", "box": [1342, 192, 1569, 237], "kind": "w", "at": [-0.67, 0.8], "w": 0.22},
+  {"name": "teamviewer", "box": [1457, 283, 1866, 360], "kind": "w", "at": [-0.26, 0.805], "w": 0.38},
+  {"name": "petronas", "box": [1294, 483, 1991, 579], "kind": "w"},
+  {"name": "signify", "box": [2205, 573, 2490, 662], "kind": "w", "at": [0.83, 0.28], "w": 0.36},
+  {"name": "amg", "box": [2477, 456, 2727, 488], "kind": "d", "color": "#c3c8cd", "side": "L"},
+  {"name": "iwc", "box": [3398, 563, 3546, 633], "kind": "w", "at": [2.46, 0.26], "w": 0.14},
+  {"name": "microsoft2", "box": [3510, 633, 3763, 704], "kind": "c", "at": [2.7, 0.21], "w": 0.24}
+ ],
+ "zones": [[0.98, 1.36, 0, 0.4]],
+ "logoFile": "MER",
+ "logos": [{"v": "top", "x": 0, "z": 1.5, "s": 0.2}],
+ "number": {"color": "#00d2be", "spots": [{"v": "side", "z": -1.31, "y": 0.73, "s": 0.085}, {"v": "top", "x": 0, "z": 2.0, "s": 0.13}]},
+ "glsl": [
+  "vec3 K = #0d0f12, T = #00a19c;",
+  "vec3 col = K;",
+  "if (c > 0.5 && c < 1.5) col = mix(K, T, band(p.y, 0.98, 1.02));",
+  "return col;"
+ ]
+}

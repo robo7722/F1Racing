@@ -1,0 +1,17 @@
+{
+ "kind": "f1",
+ "photo": "https://media.formula1.com/image/upload/v1740000001/common/f1/2026/audi/2026audicarright.png",
+ "rear": [535, 590],
+ "front": [3118, 587],
+ "glsl": ["vec3 Ti = #adb1b6, K = #131417;", "vec3 col = mix(K, Ti, aaS(p.z + 0.19));", "if (c < 6.5 && p.z > 2.05 && abs(p.x) > 0.2 && p.y < 0.35) col = K;", "return col;"],
+ "number": {"color": "#e32b1c", "spots": [{"v": "side", "z": -0.78, "y": 0.84, "s": 0.14}, {"v": "top", "x": 0, "z": 2.0, "s": 0.13}]},
+ "stickers": [
+  {"name": "rot_block", "box": [985, 270, 1592, 665], "kind": "key", "key": "#f02a26", "color": "#e32b1c"},
+  {"name": "ringe", "box": [1335, 160, 1540, 237], "kind": "key", "key": "#f02a26", "color": "#e32b1c", "mirror": false},
+  {"name": "bp", "box": [786, 196, 940, 279], "kind": "c"},
+  {"name": "visitqatar", "box": [1635, 118, 1777, 190], "kind": "d", "at": [-0.07, 0.93]},
+  {"name": "castrol", "box": [1708, 288, 1916, 337], "kind": "d"},
+  {"name": "revolut", "box": [1640, 420, 2037, 517], "kind": "d", "at": [0.40, 0.52], "w": 0.42},
+  {"name": "nexo", "box": [2365, 388, 2640, 452], "kind": "d"}
+ ]
+}

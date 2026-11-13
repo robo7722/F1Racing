@@ -1,0 +1,129 @@
+{
+ "kind": "f2",
+ "team": "F2_ART",
+ "driver": "MAI",
+ "drivers": [
+  "MAI"
+ ],
+ "photo": "https://res.cloudinary.com/prod-f2f3/c_lpad,w_4400,h_880,g_west,b_transparent/l_text:Arial_300_bold:BWT,co_rgb:1b3f9c/fl_layer_apply,g_east,x_40/v1770000000/common/f2/2026/artgrandprix/2026artgrandprixcarleft.png",
+ "rear": [
+  3072,
+  565
+ ],
+ "front": [
+  848,
+  565
+ ],
+ "liv": {
+  "body": "#ec84ba",
+  "acc": "#ec84ba",
+  "tip": "#ec84ba",
+  "metal": 0.25
+ },
+ "glsl": [
+  "vec3 col = #ec84ba;",
+  "return col;"
+ ],
+ "stickers": [
+  {
+   "name": "linie_nase",
+   "box": [
+    490,
+    430,
+    650,
+    510
+   ],
+   "kind": "key",
+   "key": "#f01e1e",
+   "color": "#1b2a6b"
+  },
+  {
+   "name": "linie_cockpit",
+   "box": [
+    1020,
+    352,
+    1376,
+    422
+   ],
+   "kind": "key",
+   "key": "#f01e1e",
+   "color": "#1b2a6b"
+  },
+  {
+   "name": "bwt",
+   "box": [
+    3690,
+    320,
+    4375,
+    560
+   ],
+   "kind": "key",
+   "key": "#1b3f9c",
+   "mirror": false,
+   "at": [
+    -0.2,
+    0.4
+   ],
+   "w": 0.7
+  },
+  {
+   "name": "pirelli",
+   "box": [
+    277,
+    595,
+    485,
+    669
+   ],
+   "kind": "c"
+  },
+  {
+   "name": "richardmille",
+   "box": [
+    2226,
+    360,
+    2622,
+    414
+   ],
+   "kind": "w",
+   "color": "#1b2a6b",
+   "thr": [
+    0.62,
+    0.92
+   ],
+   "dz": -0.12,
+   "dy": 0.03
+  },
+  {
+   "name": "yacco",
+   "box": [
+    2003,
+    138,
+    2127,
+    197
+   ],
+   "kind": "w",
+   "color": "#1b2a6b",
+   "thr": [
+    0.62,
+    0.92
+   ]
+  }
+ ],
+ "number": {
+  "color": "#15171a",
+  "spots": [
+   {
+    "v": "side",
+    "z": -2.09,
+    "y": 0.62,
+    "s": 0.15
+   },
+   {
+    "v": "top",
+    "x": 0,
+    "z": 2.1,
+    "s": 0.12
+   }
+  ]
+ }
+}
