@@ -47,6 +47,12 @@ Prüfansicht: `fahrer/kart_vorschau.html?debug` färbt Rückseiten grün – so 
 - **Lenken**: Arme mit Skelett (7 Knochen, Gewichte im Bauskript, Skinning im Shader). `kartArmsIK` je Bild: Hand bleibt am Kranz und dreht mit dem Lenkrad, Schulter fest, Ober-/Unterarm starr – der Ellbogen ergibt sich aus der Zwei-Knochen-IK und bleibt in seiner Ebene.
 - **Helme (alle Karts)**: Das Anbauteil unter dem Visier wurde vorher weggeschnitten → Loch mit Blick ins Helminnere (dunkle, „komische“ Formen, am deutlichsten bei hellen/blauen Helmen). Jetzt `helmGeoKart`: Kinnteil auf die Schalenform gelegt und in Helmfarbe, eingelassene Lüftungsschlitze glatt schattiert, Visier nur von vorn. Rest: zwei winzige Lüftungspunkte, nur aus nächster Nähe sichtbar.
 
+## v1.50 – Korrektur nach Handy-Screenshot
+- Lenkrad drehte beim Kart mit vollem Einschlag um 92° (`steer × 1,6`) – die Hand landete über dem Lenkrad, der Arm lag quer vor dem Gesicht. Jetzt `KART_SW_ROT = 0,7` (~40°) für Karts mit neuem Fahrer.
+- Ellbogen-Pol nach unten-außen gezogen (Ellbogen bleibt beim Einlenken unten).
+- Gewebe-Relief und Strickrippen werden ausgeblendet, sobald sie feiner als ein Bildpunkt sind (Pixelmuster/Flimmern auf dem Handy).
+- Getestet mit vollem Einschlag in beide Richtungen (vorher nur halber Einschlag – deshalb übersehen).
+
 ## Offen / Ideen
 - Lenkrad dreht sich beim Lenken, die Hände nicht (war beim alten Fahrer genauso).
 - Leichte Knautschfalten an der Hüfte durch das Biegen (im Sitz kaum sichtbar).
