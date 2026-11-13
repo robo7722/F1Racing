@@ -17,7 +17,9 @@
   "col = mix(col, Y, aaS(p.y - 0.86) * band(p.z, -0.28, 0.15));",
   "vec3 Bm = #1740b8;",
   "col = mix(col, Bm, (1.0 - aaS(p.y - 0.26)) * band(p.z, -0.6, 0.7));",
-  "col = mix(col, Bm, (1.0 - aaS(p.y - 0.62)) * (1.0 - aaS(p.z + 1.15)));",
+  "col = mix(col, Bm, (1.0 - aaS(p.y - 0.58)) * band(p.z, -1.9, -0.9));",
+  "col = mix(col, Cb, aaS(p.y - 0.70) * (1.0 - aaS(p.z + 1.02)));",
+  "col = mix(col, Cb, 1.0 - aaS(p.z + 1.92));",
   "col = mix(col, Cb, 1.0 - aaS(p.y - 0.15));",
   "if (c > 0.5 && c < 1.5) col = mix(Cb, W, aaS(p.z - 1.9));",
   "if (c > 1.5 && c < 2.5) col = W;",
@@ -146,10 +148,10 @@
    ],
    "kind": "d",
    "at": [
-    2.38,
+    2.68,
     0.24
    ],
-   "w": 0.28
+   "w": 0.34
   }
  ],
  "number": {
@@ -157,9 +159,9 @@
   "spots": [
    {
     "v": "side",
-    "z": -1.17,
-    "y": 0.79,
-    "s": 0.15
+    "z": -1.29,
+    "y": 0.765,
+    "s": 0.1
    },
    {
     "v": "top",

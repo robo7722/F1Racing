@@ -6,11 +6,12 @@
  "glsl": [
   "vec3 P = #ff7a00, A = #0e0f11, T = #0d5f85;",
   "vec3 col = A;",
-  "float og = max(1.0 - aaS(p.z - (-1.30 + (0.86 - p.y))), aaS(p.z - 0.95));",
+  "float og = max(1.0 - aaS(p.z - (-1.30 + (0.86 - p.y))), aaS(p.z - ((p.y < 0.56 && abs(p.x) > 0.3) ? 1.45 : 0.95)));",
   "og = max(og, aaS(p.y - 0.58) * aaS(p.z - (-0.30 + (0.86 - p.y) * 0.87)));",
   "col = mix(col, P, og);",
   "col = mix(col, T, aaS(p.y - 0.84) * aaS(p.z - (-0.48 + 0.94 * (0.99 - p.y))) * (1.0 - aaS(p.z - 0.06)));",
-  "if (c > 0.5 && c < 1.5) col = p.z > 1.9 ? P : mix(A, P, aaS(p.y - 0.72));",
+  "if (p.z < -1.9) col = mix(A, P, aaS(p.y - 0.72));",
+  "if (c > 0.5 && c < 1.5) col = p.z > 1.5 ? P : mix(A, P, aaS(p.y - 0.72));",
   "if (c > 1.5 && c < 2.5) col = P;",
   "if (c > 6.5) col = A;",
   "return col;"

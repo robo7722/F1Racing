@@ -3,7 +3,7 @@
  "photo": "https://media.formula1.com/image/upload/v1740000001/common/f1/2026/williams/2026williamscarright.png",
  "rear": [553, 563],
  "front": [3068, 552],
- "glsl": ["vec3 B = #1846d8, W = #f4f6fa, K = #14161c;", "vec3 col = B; float sd = aaS(abs(p.x) - 0.22);", "col = mix(col, K, (1.0 - aaS(p.y - 0.28)) * sd);", "col = mix(col, K, (1.0 - aaS(p.y - 0.5)) * band(p.z, 0.6, 1.7) * sd);", "col = mix(col, K, aaS(p.y - 0.9) * band(p.z, -0.5, 0.0));", "if (c > 0.5 && c < 1.5) col = p.z > 1.0 ? K : mix(W, #0c1e9a, aaS(p.y - 0.8));", "if (c > 1.5 && c < 2.5) col = K;", "return col;"],
+ "glsl": ["vec3 B = #1846d8, W = #f4f6fa, K = #14161c;", "vec3 col = B; float sd = aaS(abs(p.x) - 0.22);", "col = mix(col, K, (1.0 - aaS(p.y - 0.28)) * sd);", "col = mix(col, K, (1.0 - aaS(p.y - 0.56)) * band(p.z, 0.6, 1.55) * aaS(abs(p.x) - 0.1));", "col = mix(col, K, aaS(p.y - 0.9) * band(p.z, -0.5, 0.0));", "if (p.z < -1.72 && p.y > 0.36) col = mix(W, #0c1e9a, aaS(p.y - 0.78));", "if (p.z > 2.2 && p.y < 0.36) col = K;", "if (c > 1.5 && c < 2.5) col = K;", "return col;"],
  "stickers": [
   {"name": "weiss", "box": [1020, 470, 1965, 640], "kind": "key", "key": "#d9d9da", "color": "#f4f6fa", "tol": 60, "side": "R"},
   {"name": "weiss_L000", "box": [1020, 470, 1026, 640], "kind": "key", "key": "#d9d9da", "color": "#f4f6fa", "tol": 60, "side": "L"},
@@ -789,21 +789,21 @@
   {"name": "airbox_f_L056", "box": [1674, 133, 1680, 172], "kind": "key", "key": "#ffffff", "color": "#14161c", "tol": 90, "side": "L"},
   {"name": "airbox_f_L057", "box": [1678, 133, 1682, 172], "kind": "key", "key": "#ffffff", "color": "#14161c", "tol": 90, "side": "L"},
   {"name": "komatsu_fl", "box": [110, 143, 462, 207], "kind": "w", "at": [-2.06, 0.88], "w": 0.42},
-  {"name": "wilkinson", "box": [813, 198, 957, 267], "kind": "w"},
+  {"name": "wilkinson", "box": [813, 198, 957, 267], "kind": "w", "at": [-0.95, 0.77]},
   {"name": "atlassian_logo", "box": [1105, 185, 1245, 308], "kind": "w"},
   {"name": "atlassian", "box": [925, 328, 1424, 392], "kind": "w"},
   {"name": "duracell", "box": [1450, 133, 1682, 172], "kind": "w"},
   {"name": "kraken", "box": [1556, 316, 1744, 358], "kind": "w"},
   {"name": "claude", "box": [1760, 306, 1964, 356], "kind": "c"},
   {"name": "barclays", "box": [1606, 452, 2070, 532], "kind": "w"},
-  {"name": "komatsu", "box": [1113, 520, 1524, 607], "kind": "d", "color": "#0c1e8c", "thr": [0.2, 0.45]},
+  {"name": "komatsu", "box": [1113, 520, 1524, 607], "kind": "d", "color": "#0c1e8c", "thr": [0.2, 0.45], "dz": -0.05, "w": 0.5},
   {"name": "brillio", "box": [2438, 338, 2580, 400], "kind": "w"},
   {"name": "stephens", "box": [2430, 416, 2656, 478], "kind": "w"},
-  {"name": "betway", "box": [3382, 612, 3570, 668], "kind": "w", "at": [2.38, 0.29], "w": 0.2},
-  {"name": "jackpot", "box": [3352, 672, 3620, 708], "kind": "w", "at": [2.42, 0.21], "w": 0.28}
+  {"name": "betway", "box": [3382, 612, 3570, 668], "kind": "w", "at": [2.55, 0.29], "w": 0.2},
+  {"name": "jackpot", "box": [3352, 672, 3620, 708], "kind": "w", "at": [2.55, 0.215], "w": 0.24}
  ],
  "zones": [[0.98, 1.36, 0, 0.4]],
  "logoFile": "WIL",
  "logos": [{"v": "top", "x": 0, "z": 1.5, "s": 0.2}],
- "number": {"color": "#ffffff", "spots": [{"v": "side", "z": -1.55, "y": 0.82, "s": 0.2}, {"v": "top", "x": 0, "z": 2.0, "s": 0.13}]}
+ "number": {"color": "#ffffff", "spots": [{"v": "side", "z": -1.22, "y": 0.72, "s": 0.1}, {"v": "top", "x": 0, "z": 2.0, "s": 0.13}]}
 }

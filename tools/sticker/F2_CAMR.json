@@ -1,0 +1,26 @@
+{
+ "kind": "f2",
+ "team": "F2_CAM",
+ "driver": "TSO",
+ "drivers": ["TSO"],
+ "photo": "https://res.cloudinary.com/prod-f2f3/v1770000000/common/f2/2026/camposracing/2026camposracingcarleft.png",
+ "rear": [3065, 562],
+ "front": [850, 565],
+ "liv": {"body": "#121a3c", "acc": "#121a3c", "tip": "#ffc906", "metal": 0.25},
+ "glsl": [
+  "vec3 navy = #121a3c; vec3 yel = #ffc906; vec3 red = #d8102c; vec3 blk = #0b0d14;",
+  "bool fw = p.z > 2.15 && p.y < 0.36 && abs(p.x) > 0.2; bool rw = p.z < -1.9 && p.y > 0.6;",
+  "if (fw) return blk;",
+  "if (rw) return navy;",
+  "vec3 col = navy;",
+  "if (p.z > 2.55) col = yel;",
+  "if (p.z > 1.76 && p.z < 1.98 && abs(p.x) < 0.14 && p.y > 0.33) col = red;",
+  "if (p.z > -0.75 && p.z < -0.3 && p.y > 0.8 && p.y < 1.0) col = yel;",
+  "return col;"
+ ],
+ "stickers": [
+  {"name": "pirelli_grund", "box": [302, 567, 497, 629], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#ffd500"},
+  {"name": "pirelli", "box": [302, 567, 497, 629], "kind": "key", "key": "#e3001b", "color": "#e3001b"}
+ ],
+ "number": {"color": "#ffffff", "spots": [{"v": "side", "z": -2.07, "y": 0.6, "s": 0.16}, {"v": "top", "x": 0, "z": 1.87, "s": 0.11}]}
+}
