@@ -10,35 +10,24 @@
   566
  ],
  "glsl": [
-  "vec3 W = #f2f3f6, Cb = #1b1c20, Y = #f4cf2e;",
+  "vec3 W = #f2f3f6, Cb = #1b1c20, Y = #f4cf2e, Bm = #1740b8;",
   "vec3 col = W;",
   "float yl = 0.67 + 0.545 * clamp(p.z + 1.26, -0.3, 0.44) + 0.15 * clamp(p.z + 0.82, 0.0, 0.55);",
   "col = mix(col, Cb, aaS(p.y - yl) * (1.0 - aaS(p.z + 0.28)));",
   "col = mix(col, Y, aaS(p.y - 0.86) * band(p.z, -0.28, 0.15));",
-  "vec3 Bm = #1740b8;",
-  "col = mix(col, Bm, (1.0 - aaS(p.y - 0.26)) * band(p.z, -0.6, 0.7));",
-  "col = mix(col, Bm, (1.0 - aaS(p.y - 0.58)) * band(p.z, -1.9, -0.9));",
+  "// Blau wie am echten Auto, als glatte Kurven am Modell: unten entlang, vorn am Seitenkasten hoch, hinten als Keil ueber dem weissen Feld mit dem VISA-Schriftzug",
+  "float Lb = 0.232 - 0.053 * clamp((p.z + 0.948) / 0.483, 0.0, 1.0) + 0.106 * clamp((p.z + 0.465) / 0.463, 0.0, 1.0) + 0.105 * clamp((p.z + 0.002) / 0.378, 0.0, 1.0) + 0.189 * clamp((p.z - 0.376) / 0.126, 0.0, 1.0) + 0.063 * clamp((p.z - 0.502) / 0.337, 0.0, 1.0);",
+  "float Ub = 0.495 + 0.073 * clamp((-0.549 - p.z) / 0.399, 0.0, 1.0) + 0.106 * clamp((-0.948 - p.z) / 0.368, 0.0, 1.0) + 0.10 * clamp((-1.316 - p.z) / 0.35, 0.0, 1.0);",
+  "float yb = 0.20 + 0.07 * clamp((p.z + 1.0) / 0.052, 0.0, 1.0) + 0.151 * clamp((p.z + 0.948) / 0.105, 0.0, 1.0) + 0.074 * clamp((p.z + 0.843) / 0.294, 0.0, 1.0);",
+  "float bl = max((1.0 - aaS(p.y - Lb)) * (1.0 - aaS(p.z - 0.9)), (1.0 - aaS(p.y - Ub)) * aaS(p.y - yb) * (1.0 - aaS(p.z + 0.549)));",
+  "col = mix(col, Bm, bl * aaS(p.z + 1.62));",
+  "col = mix(col, Cb, band(p.z, 0.6, 1.34) * (1.0 - aaS(p.y - 0.345)));",
   "col = mix(col, Cb, aaS(p.y - 0.70) * (1.0 - aaS(p.z + 1.02)));",
   "col = mix(col, Cb, 1.0 - aaS(p.z + 1.92));",
   "col = mix(col, Cb, 1.0 - aaS(p.y - 0.15));",
-  "if (c > 0.5 && c < 1.5) col = mix(Cb, W, aaS(p.z - 1.9));",
-  "if (c > 1.5 && c < 2.5) col = W;",
   "return col;"
  ],
  "stickers": [
-  {
-   "name": "blau",
-   "box": [
-    835,
-    300,
-    2385,
-    705
-   ],
-   "kind": "key",
-   "key": "#0638a0",
-   "color": "#1740b8",
-   "tol": 32
-  },
   {
    "name": "blaunase",
    "box": [
@@ -65,16 +54,41 @@
    "color": "#f4cf2e"
   },
   {
-   "name": "rot",
+   "name": "bulle",
    "box": [
     985,
     88,
     1705,
+    279
+   ],
+   "kind": "key",
+   "key": "#d8102c",
+   "color": "#d8102c"
+  },
+  {
+   "name": "bulle2",
+   "box": [
+    985,
+    279,
+    1090,
     372
    ],
    "kind": "key",
    "key": "#d8102c",
    "color": "#d8102c"
+  },
+  {
+   "name": "redbull",
+   "box": [
+    1090,
+    279,
+    1435,
+    372
+   ],
+   "kind": "key",
+   "key": "#d8102c",
+   "color": "#d8102c",
+   "mirror": false
   },
   {
    "name": "hugo",
@@ -155,74 +169,37 @@
    "w": 0.34
   },
   {
-   "name": "visa_weg1",
+   "name": "visa",
    "box": [
-    1245,
-    478,
-    1440,
-    652
-   ],
-   "kind": "key",
-   "key": "#0638a0",
-   "color": "#f2f3f6",
-   "tol": 32,
-   "side": "L"
-  },
-  {
-   "name": "visa_weg2",
-   "box": [
-    1440,
-    452,
-    1790,
-    612
-   ],
-   "kind": "key",
-   "key": "#0638a0",
-   "color": "#f2f3f6",
-   "tol": 32,
-   "side": "L"
-  },
-  {
-   "name": "visa_l",
-   "box": [
-    1245,
-    470,
-    1790,
-    652
+    1238,
+    455,
+    1795,
+    655
    ],
    "kind": "key",
    "key": "#0638a0",
    "color": "#1740b8",
    "tol": 32,
-   "side": "L",
-   "mirror": false
-  },
-  {
-   "name": "rbtext_weg",
-   "box": [
-    1090,
-    278,
-    1435,
-    372
+   "mirror": false,
+   "mask": [
+    [
+     1238,
+     478,
+     1445,
+     655
+    ],
+    [
+     1445,
+     455,
+     1795,
+     606
+    ]
    ],
-   "kind": "key",
-   "key": "#d8102c",
-   "color": "#f2f3f6",
-   "side": "L"
-  },
-  {
-   "name": "rbtext_l",
-   "box": [
-    1090,
-    278,
-    1435,
-    372
+   "at": [
+    -0.25,
+    0.435
    ],
-   "kind": "key",
-   "key": "#d8102c",
-   "color": "#d8102c",
-   "side": "L",
-   "mirror": false
+   "w": 0.62
   }
  ],
  "number": {

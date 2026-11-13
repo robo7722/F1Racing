@@ -3014,7 +3014,9 @@ function numDecalTex(ser, num) { const k = ser + '_' + num; if (NUM_TEX[k]) retu
   if (NUM_FILES.has(k)) { const t = NUM_TEX[k] = new THREE.TextureLoader().load('liveries/num/' + k + '.png'); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; }
   const t = NUM_TEX[k] = canvasTex(256, 128, (g, w, h) => { g.clearRect(0, 0, w, h); g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
     let px = 118; g.font = 'italic 900 ' + px + 'px "Titillium Web",system-ui,sans-serif'; const tw = g.measureText(String(num)).width; if (tw > w * 0.9) { px = Math.floor(px * w * 0.9 / tw); g.font = 'italic 900 ' + px + 'px "Titillium Web",system-ui,sans-serif'; }
-    g.fillText(String(num), w / 2, h / 2 + px * 0.04); }); t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; return t; }
+    const x0 = w / 2, y0 = h / 2 + px * 0.04; g.fillText(String(num), x0, y0);
+    try { const d = g.getImageData(0, 0, w, h).data; let sx = 0, sy = 0, sa = 0; for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const a = d[(j * w + i) * 4 + 3]; sx += a * i; sy += a * j; sa += a; }   // optisch mittig (Schwerpunkt), wie die Nummern-Grafiken und die Kart-Nummern
+      if (sa > 0) { const lim = (v, m) => Math.max(-m, Math.min(m, v)), dx = lim((w - 1) / 2 - sx / sa, 10), dy = lim((h - 1) / 2 - sy / sa, 8); g.clearRect(0, 0, w, h); g.fillText(String(num), x0 + dx, y0 + dy); } } catch (e) {} }); t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; return t; }
 function numMat(tp, tk, num) { const N = NUMS[tk]; if (!N || num === undefined || !tp.glossMat.livHook) return tp.glossMat; const nm = tp.nm || (tp.nm = {}); if (nm[num]) return nm[num];
   const base = tp.glossMat, m = base.clone(), tex = numDecalTex(LIVMAN[tk].kind, num), cl = new THREE.Color(N.color || '#ffffff');
   const hook = base.livHook; m.onBeforeCompile = (sh, r) => { hook(sh, r); sh.uniforms.uNum = { value: tex }; sh.uniforms.uNumOn = { value: 1 }; sh.uniforms.uNumCol = { value: cl }; }; m.customProgramCacheKey = base.customProgramCacheKey; return (nm[num] = m); }
@@ -3444,12 +3446,72 @@ function kartTex() {
   return KTEX;
 }
 const KMAT = {};
+// ===== Kart-Aufkleber (erfunden, an echte Rennkarts angelehnt): Zierstreifen in den Teamfarben, Team-Schriftzug, erfundene Ausrüster, gelbe Nummernfelder =====
+// Gezeichnet wird in die Abwicklung der Karosserie-Textur (1024 x 1024, oben links = 0/0). KART_UV nennt die lackierten Teile darin.
+// Bereiche in der Abwicklung (Pixel bei 1024): Seitenkasten links/rechts (oben = Oberseite, unten = Außenfläche), Frontschürze, Nummerntafel vorn.
+// Die Aufkleber-Textur deckt nur die untere Hälfte der Abwicklung ab (dort liegen alle Lackteile) – doppelte Schärfe bei gleichem Speicher.
+const KART_UV = { podL: [279, 436], podR: [479, 637], podTop: [896, 929], podFace: [931, 958], front: [18, 552, 348, 636], nas: [136, 797, 241, 953] };   // am Modell ausgemessen: pod = x von/bis, podTop/podFace = Zeilen der Oberseite/Aussenflaeche
+const KART_PLATES = [[150, 800, 227, 852], [396, 932, 435, 957], [480, 932, 519, 957]];   // Nummernfelder: Tafel vorn, hinteres Ende beider Seitenkästen
+const KART_NUM_GLSL = ' if (uKNumOn > 0.5) { vec2 kp = vec2(vMapUv.x, 1.0 - vMapUv.y) * 1024.0; vec2 kq; vec4 kn;' + KART_PLATES.map(r => { const w = r[2] - r[0], h = r[3] - r[1], a = w / h, f = v => v.toFixed(3);   // Ziffern unverzerrt mittig ins Feld
+  return ' if (kp.x > ' + f(r[0]) + ' && kp.x < ' + f(r[2]) + ' && kp.y > ' + f(r[1]) + ' && kp.y < ' + f(r[3]) + ') { kq = vec2((kp.x - ' + f(r[0]) + ') / ' + f(w) + ', (kp.y - ' + f(r[1]) + ') / ' + f(h) + '); kq = vec2((kq.x - 0.5) * ' + f(Math.max(a, 1)) + ' + 0.5, (kq.y - 0.5) * ' + f(Math.max(1 / a, 1)) + ' + 0.5); kn = (kq.x > 0.0 && kq.x < 1.0 && kq.y > 0.0 && kq.y < 1.0) ? texture2D(uKNum, vec2(kq.x, 1.0 - kq.y)) : vec4(0.0); diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.02), kn.a); }'; }).join('') + ' }';
+const KART_SPONSORS = ['KESTREL', 'TORQ', 'HALDEN', 'LUMO OIL', 'BRENNER', 'AXON', 'PULSAR', 'NORDFUEL', 'VOLTIX', 'ZENIT', 'RAPTA', 'MERIDIAN'];   // erfundene Ausrüster
+function kartStickerDraw(g, tk, T) { const ti = Math.max(0, Object.keys(KART_TEAMS).indexOf(tk)), name = T.name.split(' ')[0].toUpperCase();
+  const cB = new THREE.Color(T.body), lumB = .3 * cB.r + .59 * cB.g + .11 * cB.b, ink = lumB > .5 ? '#14161b' : '#f4f5f7', acc = hex(T.acc), accInk = (() => { const c = new THREE.Color(T.acc); return .3 * c.r + .59 * c.g + .11 * c.b > .5 ? '#14161b' : '#f4f5f7'; })();
+  const third = ti % 3 === 0 ? '#ffd400' : ti % 3 === 1 ? '#f4f5f7' : '#14161b', sp = n => KART_SPONSORS[(ti * 3 + n) % KART_SPONSORS.length], F = 'italic 900 ', FF = 'px "Titillium Web",system-ui,sans-serif';
+  g.setTransform(2, 0, 0, 2, 0, -1024); g.clearRect(0, 512, 1024, 512); g.textBaseline = 'middle'; g.lineJoin = 'miter';
+  const clip = (x0, y0, x1, y1, fn) => { g.save(); g.beginPath(); g.rect(x0, y0, x1 - x0, y1 - y0); g.clip(); fn(); g.restore(); };
+  const slash = (x, y0, y1, w, lean, c) => { g.fillStyle = c; g.beginPath(); g.moveTo(x, y1); g.lineTo(x + w, y1); g.lineTo(x + w + lean, y0); g.lineTo(x + lean, y0); g.closePath(); g.fill(); };
+  const plate = r => { g.fillStyle = '#ffd400'; const rr = 4; g.beginPath(); g.moveTo(r[0] + rr, r[1]); g.arcTo(r[2], r[1], r[2], r[3], rr); g.arcTo(r[2], r[3], r[0], r[3], rr); g.arcTo(r[0], r[3], r[0], r[1], rr); g.arcTo(r[0], r[1], r[2], r[1], rr); g.fill(); g.strokeStyle = '#14161b'; g.lineWidth = 1.2; g.stroke(); };
+  // Zierform je Team (fünf Arten), d = +1: Fahrtrichtung nach links in der Abwicklung, -1: nach rechts
+  const deco = (x0, y0, x1, y1, d) => clip(x0, y0, x1, y1, () => { const w = x1 - x0, h = y1 - y0, st = ti % 5, X = t => d > 0 ? x0 + w * t : x1 - w * t, L = d * h * 0.7;
+    if (st === 0) { slash(X(0.5) - 9, y0, y1, 18, -L, acc); slash(X(0.5) + 16 * d - 4, y0, y1, 8, -L, third); slash(X(0.5) + 30 * d - 2, y0, y1, 4, -L, acc); }
+    else if (st === 1) { for (let k = 0; k < 3; k++) { g.strokeStyle = k === 1 ? third : acc; g.lineWidth = 7 - k * 1.5; g.beginPath(); const cx = X(0.34 + k * 0.13); g.moveTo(cx + d * h * 0.45, y0 - 2); g.lineTo(cx, (y0 + y1) / 2); g.lineTo(cx + d * h * 0.45, y1 + 2); g.stroke(); } }
+    else if (st === 2) { g.fillStyle = acc; g.beginPath(); g.moveTo(X(0), y0 + h * 0.62); g.bezierCurveTo(X(0.35), y0 + h * 0.2, X(0.6), y0 + h * 1.0, X(1), y0 + h * 0.3); g.lineTo(X(1), y0 + h * 0.52); g.bezierCurveTo(X(0.6), y0 + h * 1.25, X(0.35), y0 + h * 0.45, X(0), y0 + h * 0.84); g.closePath(); g.fill(); g.strokeStyle = third; g.lineWidth = 2; g.beginPath(); g.moveTo(X(0), y0 + h * 0.9); g.bezierCurveTo(X(0.35), y0 + h * 0.52, X(0.6), y0 + h * 1.3, X(1), y0 + h * 0.6); g.stroke(); }
+    else if (st === 3) { const q = h / 4; for (let c = 0; c < 6; c++) for (let r = 0; r < 4; r++) if ((c + r) % 2 === 0) { g.globalAlpha = 1 - c / 6.5; g.fillStyle = r % 2 ? third : acc; g.fillRect(d > 0 ? X(0.3) + c * q : X(0.3) - (c + 1) * q, y0 + r * q, q, q); } g.globalAlpha = 1; }
+    else { g.fillStyle = acc; g.beginPath(); g.moveTo(X(0.28), y1 + 1); g.lineTo(X(0.5), y0 - 1); g.lineTo(X(1), y0 - 1); g.lineTo(X(1), y1 + 1); g.closePath(); g.fill(); slash(X(0.28) - (d > 0 ? 12 : -6), y0, y1, 5, d * h * 0.6 * (w / h > 2 ? 1 : 0.9), third); } });
+  const word = (cx, cy, px, mw, lw, c1 = ink) => { g.font = F + px + FF; g.textAlign = 'center'; const tw = g.measureText(name).width; g.save(); g.translate(cx, cy + px * 0.04); if (tw > mw) g.scale(mw / tw, 1); g.lineWidth = lw; g.strokeStyle = acc; if (lw) g.strokeText(name, 0, 0); g.fillStyle = c1; g.fillText(name, 0, 0); g.restore(); };
+  // Seitenkästen: die Oberseite ist in der Abwicklung quer gestaucht (33 Zeilen für 30 cm) -> dort mit 0,55-facher Höhe zeichnen, damit nichts verzerrt.
+  // Oberseite: Zierform über die ganze Länge, mittig der Team-Schriftzug. Außenfläche: Schriftzug mittig im freien Teil, hinten das gelbe Nummernfeld.
+  for (const [k, d] of [['podL', 1], ['podR', -1]]) { const [x0, x1] = KART_UV[k], w = x1 - x0, [t0, t1] = KART_UV.podTop, [f0, f1] = KART_UV.podFace, tc = (t0 + t1) / 2, th = (t1 - t0) / 0.55;
+    clip(x0, t0, x1, t1, () => { g.save(); g.translate(0, tc); g.scale(1, 0.55); g.translate(0, -tc); deco(x0, tc - th / 2, x1, tc + th / 2, d); word(x0 + w / 2, tc, 40, w - 30, 5); g.restore(); });
+    g.fillStyle = acc; g.fillRect(x0, f0 - 1.5, w, 2);
+    const fx0 = d > 0 ? x0 : x0 + 44, fx1 = d > 0 ? x1 - 44 : x1; word((fx0 + fx1) / 2, (f0 + f1) / 2 + 0.5, 23, fx1 - fx0 - 10, 2); }
+  // Frontschürze: die Mitte verdeckt die Nummerntafel -> Team-Schriftzug je einmal links und rechts, außen eine kleine Zierform, unten mittig die Ausrüster
+  { const [x0, y0, x1, y1] = KART_UV.front, cx = (x0 + x1) / 2;
+    deco(x0 + 4, y0 + 10, x0 + 44, y0 + 52, -1); deco(x1 - 44, y0 + 10, x1 - 4, y0 + 52, 1);
+    word((x0 + 44 + cx - 26) / 2, y0 + 31, 30, cx - 26 - x0 - 50, 3); word((cx + 26 + x1 - 44) / 2, y0 + 31, 30, cx - 26 - x0 - 50, 3);
+    g.fillStyle = acc; g.fillRect(cx - 80, y0 + 55, 160, 2.5);
+    g.font = F + 11 + FF; g.textAlign = 'center'; g.fillStyle = ink; g.fillText(sp(2) + '  ·  ' + sp(0), cx, y0 + 69); }
+  // Nummerntafel vorn: die Tafel ist oben breit (38 cm) und läuft nach unten zu einem schmalen Steg (16 cm) zusammen -> das gelbe Nummernfeld sitzt oben,
+  // wo auch zweistellige Nummern ganz auf die Vorderseite passen; darunter schmal der Streifen in Akzentfarbe mit dem Schriftzug. Alles auf der Mittellinie.
+  { const [x0, y0, x1, y1] = KART_UV.nas, cx = (x0 + x1) / 2; g.fillStyle = acc; g.fillRect(x0, y0 + 61, x1 - x0, 24); g.fillStyle = third; g.fillRect(x0, y0 + 87, x1 - x0, 3);
+    word(cx, y0 + 73, 17, 48, 0, accInk);
+    g.font = F + 8 + FF; g.textAlign = 'center'; g.fillStyle = ink; const tw = g.measureText(sp(1)).width; g.save(); g.translate(cx, y0 + 100); if (tw > 36) g.scale(36 / tw, 1); g.fillText(sp(1), 0, 0); g.restore(); }
+  for (const r of KART_PLATES) plate(r); }
+function kartStickerTex(tk, T) { const t = canvasTex(2048, 1024, g => kartStickerDraw(g, tk, T)); t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.anisotropy = 8;
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { kartStickerDraw(t.image.getContext('2d'), tk, T); t.needsUpdate = true; });   // noch einmal mit der Spielschrift, sobald sie geladen ist
+  return t; }
+const KNUM_TEX = {};
+function kartNumMat(base, num) { if (num === undefined || !base.kartHook) return base; const nm = base.knm || (base.knm = {}); if (nm[num]) return nm[num];
+  const tex = KNUM_TEX[num] || (KNUM_TEX[num] = (() => { const draw = g => { g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, 128, 128); g.fillStyle = '#000'; g.textAlign = 'left'; g.textBaseline = 'alphabetic';   // gerade Ziffern (wie auf echten Nummernfeldern), nach ihrer tatsächlichen Größe eingepasst und mittig – kursive Ziffern ragten aus dem Feld
+      const f = q => '900 ' + q + 'px "Titillium Web",system-ui,sans-serif', box = () => { const m = g.measureText(String(num)); return { l: m.actualBoundingBoxLeft, r: m.actualBoundingBoxRight, a: m.actualBoundingBoxAscent, d: m.actualBoundingBoxDescent }; };
+      let px = 110; g.font = f(px); let b = box(); const k = Math.min(90 / (b.l + b.r), 92 / (b.a + b.d), 1); if (k < 1) { px = Math.floor(px * k); g.font = f(px); b = box(); }
+      const x = 64 - (b.l + b.r) / 2 + b.l, y = 64 + (b.a + b.d) / 2 - b.d; g.fillText(String(num), x, y);
+      // optisch mittig: nach dem Schwerpunkt der Ziffern ausrichten, nicht nach ihrem Umriss (eine 1 mit Fähnchen oder eine 7 wirken sonst verschoben)
+      try { const d = g.getImageData(0, 0, 128, 128).data; let sx = 0, sy = 0, sa = 0; for (let j = 0; j < 128; j++) for (let i = 0; i < 128; i++) { const a = d[(j * 128 + i) * 4 + 3]; sx += a * i; sy += a * j; sa += a; }
+        if (sa > 0) { const lim = (v, m) => Math.max(-m, Math.min(m, v)), dx = lim(63.5 - sx / sa, Math.max(0, (124 - (b.l + b.r)) / 2)), dy = lim(63.5 - sy / sa, Math.max(0, (124 - (b.a + b.d)) / 2)); g.clearRect(0, 0, 128, 128); g.fillText(String(num), x + dx, y + dy); } } catch (e) {} };
+    const t = canvasTex(128, 128, draw); t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { draw(t.image.getContext('2d')); t.needsUpdate = true; }); return t; })());
+  const m = base.clone(), hook = base.kartHook; m.onBeforeCompile = (sh, r) => { hook(sh, r); sh.uniforms.uKNum = { value: tex }; sh.uniforms.uKNumOn = { value: 1 }; }; m.customProgramCacheKey = base.customProgramCacheKey; return (nm[num] = m); }
 function kartMat(tk, T) {
   if (KMAT[tk]) return KMAT[tk];
   const kt = kartTex(), m = new THREE.MeshStandardMaterial({ map: kt.body, normalMap: kt.nrm, normalScale: new THREE.Vector2(.6, .6), color: new THREE.Color(T.body), roughness: .4, metalness: .2, side: THREE.DoubleSide });
   // blaue Lackflächen der Vorlage werden in der Teamfarbe eingefärbt (Abnutzung/Schatten der Textur bleiben erhalten), Aufkleber & Carbon bleiben unverändert
-  m.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', 'vec4 sd = texture2D(map, vMapUv); float bl = smoothstep(0.03, 0.14, sd.b - max(sd.r, sd.g)); float lu = dot(sd.rgb, vec3(0.3, 0.59, 0.11)); diffuseColor = vec4(mix(sd.rgb, diffuse * (0.3 + 1.25 * lu), bl), 1.0);'); };
-  m.customProgramCacheKey = () => 'kartpaint';
+  // Aufkleber-Satz des Teams (kartStickerTex) über dem Lack; die Startnummer des Fahrers kommt je Kart über ein eigenes Material dazu (kartNumMat)
+  const stk = kartStickerTex(tk, T);
+  m.onBeforeCompile = sh => { sh.uniforms.uStk = { value: stk }; sh.uniforms.uKNum = { value: null }; sh.uniforms.uKNumOn = { value: 0 };
+    sh.fragmentShader = 'uniform sampler2D uStk, uKNum; uniform float uKNumOn;\n' + sh.fragmentShader.replace('#include <map_fragment>', 'vec4 sd = texture2D(map, vMapUv); float bl = smoothstep(0.03, 0.14, sd.b - max(sd.r, sd.g)); float lu = dot(sd.rgb, vec3(0.3, 0.59, 0.11)); diffuseColor = vec4(mix(sd.rgb, diffuse * (0.3 + 1.25 * lu), bl), 1.0);\n if (vMapUv.y < 0.5) { vec4 kst = texture2D(uStk, vec2(vMapUv.x, vMapUv.y * 2.0)); diffuseColor.rgb = mix(diffuseColor.rgb, kst.rgb * (0.6 + 0.55 * lu), kst.a); }' + KART_NUM_GLSL); };
+  m.kartHook = m.onBeforeCompile;
+  m.customProgramCacheKey = () => 'kartpaint2';
   return (KMAT[tk] = m);
 }
 // Fahrer und Lenkrad sind je EIN Netz mit Farben je Eckpunkt (vorher 16 + 13 Einzelteile je Kart -> bei 20 Karts rund 1000 Zeichenaufrufe pro Bild)
@@ -3525,7 +3587,7 @@ function kartSteeringWheel(T) {   // Kart-Lenkrad: Kranz mit Markierung und Grif
 }
 function makeKart(d, T) {
   const K = KART, tk = d.team, g = new THREE.Group(); g.rotation.order = 'YXZ'; kartTex();
-  const mat = kartMat(tk, T), mm = (n, mt) => { const m = new THREE.Mesh(K.parts[n], mt); m.castShadow = true; m.receiveShadow = true; return m; };
+  const mat = kartNumMat(kartMat(tk, T), d.num), mm = (n, mt) => { const m = new THREE.Mesh(K.parts[n], mt); m.castShadow = true; m.receiveShadow = true; return m; };
   g.add(mm('body', mat));
   const wm = KTEX.wmat, W = K.w;
   const fl = new THREE.Group(), fr = new THREE.Group(), rr = new THREE.Group();
