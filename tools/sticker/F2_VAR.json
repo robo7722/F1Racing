@@ -45,12 +45,12 @@
   ]
  },
  "stickers": [
-  {"name": "nase", "box": [100, 430, 625, 625], "kind": "key", "key": "#ff5a00", "tol": 14},
-  {"name": "cockpit", "box": [1020, 340, 1500, 430], "kind": "key", "key": "#ff5a00", "tol": 14},
-  {"name": "schwungA", "box": [1640, 400, 2480, 560], "kind": "key", "key": "#ff5a00", "tol": 14},
-  {"name": "schwungB", "box": [1742, 560, 1940, 640], "kind": "key", "key": "#ff5a00", "tol": 14},
-  {"name": "schwungC", "box": [1790, 640, 1940, 745], "kind": "key", "key": "#ff5a00", "tol": 14},
-  {"name": "linien", "box": [2380, 185, 2850, 455], "kind": "key", "key": "#ff5a00", "tol": 14},
+  {"name": "nase", "box": [100, 430, 625, 625], "kind": "key", "key": "#ff5a00", "tol": 14, "smooth": 4, "holes": false},
+  {"name": "cockpit", "box": [1020, 340, 1500, 430], "kind": "key", "key": "#ff5a00", "tol": 14, "smooth": 8, "holes": false},
+  {"name": "schwungA", "box": [1640, 400, 2480, 560], "kind": "key", "key": "#ff5a00", "tol": 14, "smooth": 10, "holes": false},
+  {"name": "schwungB", "box": [1742, 560, 1940, 640], "kind": "key", "key": "#ff5a00", "tol": 14, "smooth": 10, "holes": false},
+  {"name": "schwungC", "box": [1790, 640, 1940, 745], "kind": "key", "key": "#ff5a00", "tol": 14, "smooth": 10, "holes": false},
+  {"name": "linien", "box": [2380, 185, 2850, 455], "kind": "key", "key": "#ff5a00", "tol": 14, "smooth": 4, "holes": false},
   {"name": "pirelli", "box": [286, 632, 474, 685], "kind": "w"},
   {"name": "var", "box": [1262, 398, 1348, 437], "kind": "w"},
   {"name": "balius", "box": [1240, 446, 1378, 487], "kind": "w"},

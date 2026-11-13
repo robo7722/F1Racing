@@ -40,12 +40,19 @@ Technisch möglich – der Bogen kann auch deckende Farbflächen und Streifen en
 - Alle Angaben je Auto stehen in `tools/sticker/<Kürzel>.json`; daraus baut `tools/sticker/build.py` den Bogen `liveries/<Kürzel>.png` und die Datei `liveries/liveries.json`, die das Spiel liest. Anleitung: `tools/sticker/ANLEITUNG.md`.
 - 11 F1-Teams und 18 F2-Lackierungen: Grundfarbe, große Farbflächen und Sponsoren aus den offiziellen Seitenfotos, Startnummer im Design des Fahrers (`liveries/num/`), kein Aufkleber auf dem Halo. Der MX-5 bleibt unverändert.
 - F2: jedes Auto mit eigenem Design hat ein eigenes Kürzel; die früher geteilte Pink-Lackierung ist aufgeteilt in `F2_PINK_MPM`, `F2_PINK_ROD`, `F2_PINK_ART`.
-- Nur geschätzt oder unvollständig (kein Seitenfoto): Invicta #1, Campos #6, DAMS #8, MP #9, Prema #12 (Grün laut Miami-Fotos), Rodin #15, ART #16. Der BWT-Schriftzug der pinken Rodin- und ART-Autos ist als Schrift erzeugt, nicht aus einem Foto.
+- Nur geschätzt oder unvollständig (kein Seitenfoto): Invicta #1, Campos #6, DAMS #8, MP #9, Prema #12 (Grün laut Miami-Fotos), Rodin #15, ART #16. (Stand später: siehe Abschnitt „F2: Farbflächen geglättet, zweite Autos“.) Der BWT-Schriftzug der pinken Rodin- und ART-Autos ist als Schrift erzeugt, nicht aus einem Foto.
 - Bögen sind 2048 × 1024 px; Geräte mit Touch-Bedienung laden sie in halber Auflösung.
 
 ## Stand 13.11.2026 (2): Racing Bulls und Karts
 - Racing Bulls: die blaue Fläche kommt jetzt als glatte Kurven aus der Grundfarbe (`glsl` in `tools/sticker/RB.json`) statt als Ausschnitt aus dem Foto; VISA und „Red Bull“ sind eigene, nicht gespiegelte Schriftzüge. `build.py` kennt dafür `mask` (Teilkästen für schräge Schrift).
 - Karts: erfundener Aufklebersatz je Team, im Spiel gezeichnet (`kartStickerDraw` in `index.html`, keine Bilddateien): Zierform in fünf Arten, Team-Schriftzug auf Seitenkästen, Frontschürze und Nummerntafel, erfundene Ausrüster (`KART_SPONSORS`), gelbe Nummernfelder mit der Startnummer des Fahrers. Die Lage der Flächen in der Textur steht in `KART_UV` und `KART_PLATES` (am Modell ausgemessen).
+
+## F2: Farbflächen geglättet, zweite Autos – 13.11.2026 (3)
+- Problem: große Farbflächen kamen als Fotoausschnitt (`kind: key`) mit Schatten, Spiegelungen und Lücken aufs Auto und wirkten abgehackt (Trident Rot/Blau, VAR-Schwung, Prema-Bänder, DAMS-Hellblau, MP-Schwarz, Rodin-Haube, Campos-Weiß).
+- Lösung wie bei Racing Bulls, aber automatisch: `build.py` kennt `smooth` (+ `holes`, `grow`), siehe `tools/sticker/ANLEITUNG.md`. Gesetzt bei AIX, BLK, CAMW, DAM, GREY, HIT, INV, ITA, ORA, PINK_ART, TRI, VAR. Prema #11 hat zusätzlich den SAGA-Schriftzug.
+- Zweite Autos ohne eigenes Foto fahren jetzt die Lackierung des Teamkollegen (Wunsch des Nutzers): Câmara #1 = Invicta wie Dürksen, Tsolov #6 = Campos wie León, Biliński #8 = DAMS wie Beganović. `F2_INV1`, `F2_CAMR`, `F2_DAM2` gelöscht, Fahrer in `drivers` der ersten Lackierung.
+- Neue Fotoquellen: Rennfotos in den Artikeln von fiaformula2.com (Fahrerseiten `/en/drivers/<name>` verlinken Artikel; Bilder unter `res.cloudinary.com/prod-f2f3/image/upload/c_limit,w_1600/f2/global/articles/…`). Gefunden: MP #9 und ART #16 pink mit rotem Windhager-Heckflügel, Prema #12 grün (Aston-Martin-Farben, gelbgrüner Strich an der Nase). Keine Fotos gefunden für Câmara #1, Tsolov #6, Biliński #8, Dunne #15.
+- Rodin #15 (Dunne): kein Foto, aber Berichte (Alpine-Akademie, pinke BWT-Lackierung) und der Rennanzug passen zu Pink – deshalb pink geblieben, roter Heckflügel wie bei den anderen pinken Alpine-Autos (Annahme).
 
 ## Roadster (RONE Racing) – echte Aufkleber, November 2026
 

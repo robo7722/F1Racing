@@ -83,6 +83,7 @@ Reihenfolge = Schichtung: zuerst große Farbflächen, dann Schriftzüge.
 - `"kind": "w"` – helle Schrift auf dunklem Grund → rein weiß (`color` für andere Farbe).
 - `"kind": "d"` – dunkle Schrift auf hellem Grund → schwarz (`color` für andere Farbe).
 - `"kind": "c"` – mehrfarbige Logos: Farben bleiben, der Untergrund (Randfarbe des Ausschnitts) wird durchsichtig. Ausschnitt knapp, aber mit 3–6 Pixel einfarbigem Rand.
+- `smooth` (nur `key`): glättet die Fläche wie gezeichnet – Lücken durch Schatten und Spiegelungen schließen, Fransen und Inseln weg, Rand als glatte Kurve. Wert = Rundung in Foto-Pixeln: 8–12 für große Flächen, 4–6 für schmale Streifen (größere Werte lassen dünne Linien verschwinden). `"holes": false` lässt Löcher offen (Schrift, die durch die Fläche schaut); `"grow": 4…8` schiebt die Fläche unter die Nachbarfläche, damit zwischen zwei Farben keine dunkle Fuge bleibt (bei der **unteren** Schicht setzen). Für große Flächen fast immer sinnvoll – ohne wirken sie im Spiel abgehackt.
 - `thr: [lo, hi]` (0…1) verschiebt die Schwelle, wenn Schrift zu dünn (kleiner) oder Untergrund mit drin ist (größer). Standard `[0.45, 0.85]`.
 - `side`: `"L"` oder `"R"`, wenn etwas nur auf eine Seite gehört.
 - `mirror`: Formen laufen auf der anderen Fahrzeugseite spiegelverkehrt, Schrift nicht. `key`-Flächen werden deshalb automatisch gespiegelt, alles andere nicht; mit `"mirror": true/false` lässt sich das je Aufkleber umstellen (z. B. `true` für ein Bildzeichen, `false` für eine Farbfläche mit Schrift darin).

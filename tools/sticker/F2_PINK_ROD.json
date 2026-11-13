@@ -16,12 +16,15 @@
  ],
  "liv": {
   "body": "#ec84ba",
-  "acc": "#ec84ba",
+  "acc": "#d8232a",
   "tip": "#ec84ba",
   "metal": 0.25
  },
  "glsl": [
-  "vec3 col = #ec84ba;",
+  "vec3 P = #ec84ba; vec3 R = #d8232a; vec3 col = P;",
+  "// Heckflügel oben rot wie bei den anderen pinken Alpine-Autos (Fotos MP #9 und ART #16, Monza/Baku 2026)",
+  "float rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.6);",
+  "col = mix(col, R, rw * aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.57)));",
   "return col;"
  ],
  "stickers": [

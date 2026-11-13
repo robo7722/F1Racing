@@ -42,7 +42,10 @@
    "kind": "key",
    "key": "#e0e0e0",
    "tol": 95,
-   "color": "#f2f2f2"
+   "color": "#f2f2f2",
+   "smooth": 10,
+   "holes": false,
+   "grow": 6
   },
   {
    "name": "weiss_heck",
@@ -55,7 +58,10 @@
    "kind": "key",
    "key": "#e0e0e0",
    "tol": 95,
-   "color": "#f2f2f2"
+   "color": "#f2f2f2",
+   "smooth": 10,
+   "holes": false,
+   "grow": 6
   },
   {
    "name": "weiss_heck2",
@@ -68,7 +74,10 @@
    "kind": "key",
    "key": "#e0e0e0",
    "tol": 95,
-   "color": "#f2f2f2"
+   "color": "#f2f2f2",
+   "smooth": 6,
+   "holes": false,
+   "grow": 4
   },
   {
    "name": "weiss_nase",
@@ -81,7 +90,10 @@
    "kind": "key",
    "key": "#e0e0e0",
    "tol": 95,
-   "color": "#f2f2f2"
+   "color": "#f2f2f2",
+   "smooth": 8,
+   "holes": false,
+   "grow": 4
   },
   {
    "name": "gruen_finne",
@@ -94,7 +106,9 @@
    "kind": "key",
    "key": "#0aa040",
    "tol": 45,
-   "color": "#0a9a3c"
+   "color": "#0a9a3c",
+   "smooth": 10,
+   "holes": false
   },
   {
    "name": "gruen_heck",
@@ -107,7 +121,9 @@
    "kind": "key",
    "key": "#0aa040",
    "tol": 45,
-   "color": "#0a9a3c"
+   "color": "#0a9a3c",
+   "smooth": 10,
+   "holes": false
   },
   {
    "name": "gruen_nase",
@@ -120,7 +136,9 @@
    "kind": "key",
    "key": "#0aa040",
    "tol": 45,
-   "color": "#0a9a3c"
+   "color": "#0a9a3c",
+   "smooth": 8,
+   "holes": false
   },
   {
    "name": "gruen_cockpit",
@@ -133,7 +151,9 @@
    "kind": "key",
    "key": "#0aa040",
    "tol": 45,
-   "color": "#0a9a3c"
+   "color": "#0a9a3c",
+   "smooth": 5,
+   "holes": false
   },
   {
    "name": "quimicolor",
@@ -146,6 +166,21 @@
    "kind": "c",
    "dy": -0.03,
    "w": 0.3
+  },
+  {
+   "name": "saga",
+   "box": [
+    2258,
+    346,
+    2464,
+    442
+   ],
+   "kind": "d",
+   "at": [
+    -0.66,
+    0.43
+   ],
+   "w": 0.26
   },
   {
    "name": "claro",
