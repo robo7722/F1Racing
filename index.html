@@ -2967,38 +2967,59 @@ function cockNew(tp, k, bodyCol) {
 
 const inCock = (k, x, y, z) => { const c = COCK[k]; return Math.abs(x) < c.x && z > c.z0 && z < c.z1 && y < c.y; };
 const cockGLSL = k => { const c = COCK[k]; return '\n if (abs(vLP.x) < ' + c.x.toFixed(3) + ' && vLP.z > ' + c.z0.toFixed(3) + ' && vLP.z < ' + c.z1.toFixed(3) + ' && vLP.y < ' + c.y.toFixed(3) + ') diffuseColor.rgb = vec3(' + [COCK_COL.r, COCK_COL.g, COCK_COL.b].map(v => v.toFixed(4)).join(',') + ');'; };
-// Aufkleber (Test): Teamlogo aus logos/<Kürzel>.png als Bild auf den berechneten Lack. Je Eintrag eine Stelle am Auto (Modellkoordinaten in Metern: x quer, y hoch, z nach vorn):
-//   v: 'side' = von der Seite aufgetragen (z/y = Mitte, beide Seiten, rechts gespiegelt, damit das Logo überall richtig herum steht; x0 = erst ab diesem Abstand von der Mitte)
-//   v: 'top'  = von oben aufgetragen (x/z = Mitte, Oberkante des Logos zeigt zum Heck); s = Kantenlänge des quadratischen Logofelds
-// Fehlt die Logo-Datei, bleibt der Lack unverändert.
-const DECALS = {
-  MER: [{ v: 'top', x: 0, z: 1.5, s: 0.2 }],   // Stern auf der Nase
-};
-// Aufkleberbogen (Test): liveries/<Kürzel>.png mit allen Sponsoren, von der Seite aufgetragen. Der Bogen zeigt das Auto im Bereich z0..z1 (Länge) und y0..y1 (Höhe):
-// obere Bildhälfte = linke Fahrzeugseite (Nase links), untere Hälfte = rechte Seite (Nase rechts). Erzeugt mit tools/aufkleberbogen_mer.py.
-const SHEETS = {
-  MER: { z0: -2.45, z1: 3.15, y0: 0, y1: 1.12, zones: [[0.98, 1.36, 0, 0.4]] },   // zones: [z von, z bis, |x| von, |x| bis] – in diesem Längenabschnitt nur Flächen in diesem Abstand von der Mitte bekleben (sonst steht ein Schriftzug doppelt auf zwei hintereinander liegenden Flächen)
-};
+// Aufkleber: Bilder auf dem berechneten Lack. Alle Angaben je Auto stehen in liveries/liveries.json (erzeugt von tools/sticker/build.py aus tools/sticker/<Kürzel>.json):
+//   sheet  = es gibt einen Aufkleberbogen liveries/<Kürzel>.png mit den Sponsoren, von der Seite aufgetragen. Der Bogen zeigt das Auto im Bereich SHEET_BOX (z = Länge, y = Höhe):
+//            obere Bildhälfte = linke Fahrzeugseite (+x, Nase links), untere Hälfte = rechte Seite (Nase rechts)
+//   zones  = [z von, z bis, |x| von, |x| bis]: in diesem Längenabschnitt nur Flächen in diesem Abstand von der Mitte bekleben (sonst steht ein Schriftzug doppelt auf zwei hintereinander liegenden Flächen)
+//   logos  = Teamlogo logos/<logoFile>.png an festen Stellen: v 'top' = von oben (x/z = Mitte, Oberkante zeigt zum Heck), v 'side' = von der Seite (z/y = Mitte, ab Abstand x0 von der Mitte); s = Kantenlänge
+//   num    = Startnummer des Fahrers als Aufkleber: color = Farbe, list = Stellen wie bei logos, aber s = Ziffernhöhe (Feld doppelt so breit); x0/x1 = nur Flächen in diesem Abstand von der Mitte
+//   drivers = F2-Fahrerkürzel, die diese Lackierung bekommen (für eigene Kürzel, z. B. wenn sich bisher mehrere Teams eine Lackierung teilten)
+//   liv    = Farben der F2-Lackierung (überschreibt LIV), glsl = eigenes Lack-Programm (überschreibt LIVERY; Farben als #rrggbb)
+// Fehlt die Datei oder ein Bild, bleibt der Lack unverändert. Kürzel: F1 = Team (MER), F2 = 'F2_' + Lackierung (F2_INV1).
+const LIVMAN = await fetch('./liveries/liveries.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : {}).catch(() => ({}));
+const SHEET_BOX = { f1: { z0: -2.45, z1: 3.15, y0: 0, y1: 1.12 }, f2: { z0: -2.6, z1: 3.0, y0: 0, y1: 1.2 } };
+const DECALS = {}, SHEETS = {}, NUMS = {};
+for (const k in LIVMAN) { const m = LIVMAN[k]; if (!m || !SHEET_BOX[m.kind]) continue;
+  if (m.sheet) SHEETS[k] = { ...SHEET_BOX[m.kind], zones: m.zones || [] };
+  if (m.logos && m.logos.length && m.logoFile) { DECALS[k] = m.logos; DECALS[k].file = m.logoFile; }
+  if (m.num && m.num.list && m.num.list.length) NUMS[k] = m.num;
+  if (m.liv && LIVS[k]) Object.assign(LIVS[k], m.liv); else if (m.liv && m.kind === 'f2') LIVS[k] = { kind: 'f2', metal: .25, ...m.liv };   // neue F2-Lackierung nur aus der Datei
+  if (m.kind === 'f2') for (const c of m.drivers || []) { const d = F2_DRIVERS.find(x => x[0] === c); if (d && LIVS[k]) d[5] = k.slice(3); }   // drivers = Fahrer, die diese Lackierung fahren
+  if (m.glsl) LIVERY[k] = m.glsl.replace(/#([0-9a-f]{6})/gi, (q, h) => lc(parseInt(h, 16))); }
 const DECAL_TEX = {};
 function decalUniforms(tk) { if (DECAL_TEX[tk]) return DECAL_TEX[tk];
-  const U = DECAL_TEX[tk] = { uDecal: { value: null }, uDecalOn: { value: 0 }, uSheet: { value: null }, uSheetOn: { value: 0 } };
+  const U = DECAL_TEX[tk] = { uDecal: { value: null }, uDecalOn: { value: 0 }, uSheet: { value: null }, uSheetOn: { value: 0 }, uNum: { value: null }, uNumOn: { value: 0 }, uNumCol: { value: new THREE.Color(1, 1, 1) } };
   const ld = (url, tx, on) => { tx.value = new THREE.TextureLoader().load(url, t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.needsUpdate = true; on.value = 1; }, undefined, () => {}); };
-  if (DECALS[tk]) ld('logos/' + tk + '.png', U.uDecal, U.uDecalOn); if (SHEETS[tk]) ld('liveries/' + tk + '.png', U.uSheet, U.uSheetOn);
+  if (DECALS[tk]) ld('logos/' + DECALS[tk].file + '.png', U.uDecal, U.uDecalOn); if (SHEETS[tk]) ld('liveries/' + tk + '.png', U.uSheet, U.uSheetOn);
   return U; }
-function decalGLSL(tk) { const f = v => v.toFixed(4), B = SHEETS[tk]; let g = '\n { vec3 dN = normalize(vLN); vec2 dUV; vec4 dT;';
+const hasDecal = tk => !!(DECALS[tk] || SHEETS[tk] || NUMS[tk]);
+function decalGLSL(tk) { const f = v => (+v).toFixed(4), B = SHEETS[tk]; let g = '\n { vec3 dN = normalize(vLN); vec2 dUV; vec4 dT;';
   if (B) g += '\n  if (uSheetOn > 0.5 && dN.x * sign(vLP.x) > 0.45) { dUV = vec2((vLP.z - ' + f(B.z0) + ') / ' + f(B.z1 - B.z0) + ', (vLP.y - ' + f(B.y0) + ') / ' + f(B.y1 - B.y0) + '); if (vLP.x > 0.0) dUV.x = 1.0 - dUV.x; float dIn = (dUV.x > 0.0 && dUV.x < 1.0 && dUV.y > 0.0 && dUV.y < 1.0) ? 1.0 : 0.0; ' + (B.zones || []).map(q => 'if (vLP.z > ' + f(q[0]) + ' && vLP.z < ' + f(q[1]) + ' && (abs(vLP.x) < ' + f(q[2]) + ' || abs(vLP.x) > ' + f(q[3]) + ')) dIn = 0.0; ').join('') + 'dUV.y = clamp(dUV.y, 0.004, 0.996) * 0.5 + (vLP.x > 0.0 ? 0.5 : 0.0); dT = texture2D(uSheet, dUV) * dIn; diffuseColor.rgb = mix(diffuseColor.rgb, dT.rgb, dT.a); }';
-  g += '\n  if (uDecalOn > 0.5) {';
-  for (const d of DECALS[tk] || []) g += d.v === 'top'
-    ? '\n  if (dN.y > 0.5) { dUV = vec2(0.5 + (vLP.x - ' + f(d.x) + ') / ' + f(d.s) + ', 0.5 - (vLP.z - ' + f(d.z) + ') / ' + f(d.s) + '); dT = decalTex(dUV); diffuseColor.rgb = mix(diffuseColor.rgb, dT.rgb, dT.a); }'
-    : '\n  if (abs(dN.x) > 0.45 && abs(vLP.x) > ' + f(d.x0 || 0) + ') { dUV = vec2(0.5 - sign(vLP.x) * (vLP.z - ' + f(d.z) + ') / ' + f(d.s) + ', 0.5 + (vLP.y - ' + f(d.y) + ') / ' + f(d.s) + '); dT = decalTex(dUV); diffuseColor.rgb = mix(diffuseColor.rgb, dT.rgb, dT.a); }';
-  return g + '\n  }\n }'; }
-const DECAL_HEAD = 'uniform sampler2D uDecal, uSheet; uniform float uDecalOn, uSheetOn; varying vec3 vLN;\nvec4 decalTex(vec2 uv) { vec4 t = texture2D(uDecal, uv); return (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) ? vec4(0.0) : t; }\n';
+  const spot = (d, smp, on, asp) => (d.v === 'top'
+    ? '\n  if (' + on + ' > 0.5 && dN.y > 0.5) { dUV = vec2(0.5 + (vLP.x - ' + f(d.x || 0) + ') / ' + f(d.s * asp) + ', 0.5 - (vLP.z - ' + f(d.z) + ') / ' + f(d.s) + ');'
+    : '\n  if (' + on + ' > 0.5 && dN.x * sign(vLP.x) > 0.45 && abs(vLP.x) > ' + f(d.x0 || 0) + ' && abs(vLP.x) < ' + f(d.x1 || 9) + ') { dUV = vec2(0.5 - sign(vLP.x) * (vLP.z - ' + f(d.z) + ') / ' + f(d.s * asp) + ', 0.5 + (vLP.y - ' + f(d.y) + ') / ' + f(d.s) + ');')
+    + ' dT = decalTex(' + smp + ', dUV); diffuseColor.rgb = mix(diffuseColor.rgb, ' + (asp > 1 ? 'uNumCol' : 'dT.rgb') + ', dT.a); }';
+  for (const d of DECALS[tk] || []) g += spot(d, 'uDecal', 'uDecalOn', 1);
+  for (const d of (NUMS[tk] || {}).list || []) g += spot(d, 'uNum', 'uNumOn', 2);
+  return g + '\n }'; }
+const DECAL_HEAD = 'uniform sampler2D uDecal, uSheet, uNum; uniform float uDecalOn, uSheetOn, uNumOn; uniform vec3 uNumCol; varying vec3 vLN;\nvec4 decalTex(sampler2D sm, vec2 uv) { vec4 t = texture2D(sm, uv); return (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) ? vec4(0.0) : t; }\n';
+// Startnummer: je Fahrer ein eigenes Lack-Material (gleiches Programm, eigene Nummern-Textur)
+const NUM_TEX = {}, NUM_FILES = new Set(LIVMAN._num || []);   // Nummern im Design der Fahrer: liveries/num/<f1|f2>_<Nummer>.png (weiß); sonst zeichnet das Spiel die Nummer selbst
+function numDecalTex(ser, num) { const k = ser + '_' + num; if (NUM_TEX[k]) return NUM_TEX[k];
+  if (NUM_FILES.has(k)) { const t = NUM_TEX[k] = new THREE.TextureLoader().load('liveries/num/' + k + '.png'); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; }
+  const t = NUM_TEX[k] = canvasTex(256, 128, (g, w, h) => { g.clearRect(0, 0, w, h); g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    let px = 118; g.font = 'italic 900 ' + px + 'px "Titillium Web",system-ui,sans-serif'; const tw = g.measureText(String(num)).width; if (tw > w * 0.9) { px = Math.floor(px * w * 0.9 / tw); g.font = 'italic 900 ' + px + 'px "Titillium Web",system-ui,sans-serif'; }
+    g.fillText(String(num), w / 2, h / 2 + px * 0.04); }); t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; return t; }
+function numMat(tp, tk, num) { const N = NUMS[tk]; if (!N || num === undefined || !tp.glossMat.livHook) return tp.glossMat; const nm = tp.nm || (tp.nm = {}); if (nm[num]) return nm[num];
+  const base = tp.glossMat, m = base.clone(), tex = numDecalTex(LIVMAN[tk].kind, num), cl = new THREE.Color(N.color || '#ffffff');
+  const hook = base.livHook; m.onBeforeCompile = (sh, r) => { hook(sh, r); sh.uniforms.uNum = { value: tex }; sh.uniforms.uNumOn = { value: 1 }; sh.uniforms.uNumCol = { value: cl }; }; m.customProgramCacheKey = base.customProgramCacheKey; return (nm[num] = m); }
 function liveryMat(tk, gloss) { const code = LIVERY[tk]; if (!code) return gloss;
-  const dec = DECALS[tk] || SHEETS[tk] ? decalGLSL(tk) : '';
+  const dec = hasDecal(tk) ? decalGLSL(tk) : '';
   gloss.onBeforeCompile = sh => {
     sh.vertexShader = 'attribute float aCls; varying float vCls; varying vec3 vLP; varying vec3 vLN;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vLP = position; vCls = aCls; vLN = normal;');
-    sh.fragmentShader = 'uniform vec3 uMir; varying float vCls; varying vec3 vLP;\n' + (dec ? DECAL_HEAD : '') + LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 2.5 || vCls > 6.5) { diffuseColor.rgb = livery(vLP, vCls);' + dec + ' }\n vec3 gN = normalize(cross(dFdx(vLP), dFdy(vLP))); float mirF = 0.0;   /* Spiegelglas ist jetzt ein eigenes Teil im Modell (Chunk mirror) */ if (mirF > 0.5) diffuseColor.rgb = vec3(0.0);' /* Spiegelglas (F1): die nach hinten zeigende Fläche der Spiegelgehäuse – im Modell kein eigenes Teil – zeigt die Himmelsfarbe der Strecke */ + cockGLSL('f1')).replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n if (mirF > 0.5) totalEmissiveRadiance = uMir;'); sh.uniforms.uMir = { value: MIRMAT.emissive }; if (dec) Object.assign(sh.uniforms, decalUniforms(tk));
+    sh.fragmentShader = 'uniform vec3 uMir; varying float vCls; varying vec3 vLP;\n' + (dec ? DECAL_HEAD : '') + LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 2.5 || vCls > 6.5) { diffuseColor.rgb = livery(vLP, vCls);' + (dec ? ' if (vCls < 2.5) {' + dec + ' }' : '') + ' }\n vec3 gN = normalize(cross(dFdx(vLP), dFdy(vLP))); float mirF = 0.0;   /* Spiegelglas ist jetzt ein eigenes Teil im Modell (Chunk mirror) */ if (mirF > 0.5) diffuseColor.rgb = vec3(0.0);' /* Spiegelglas (F1): die nach hinten zeigende Fläche der Spiegelgehäuse – im Modell kein eigenes Teil – zeigt die Himmelsfarbe der Strecke */ + cockGLSL('f1')).replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n if (mirF > 0.5) totalEmissiveRadiance = uMir;'); sh.uniforms.uMir = { value: MIRMAT.emissive }; if (dec) Object.assign(sh.uniforms, decalUniforms(tk));
   };
+  gloss.livHook = gloss.onBeforeCompile;   /* unveränderte Fassung für die Nummern-Materialien (numMat) – andere Stellen hängen sich später an onBeforeCompile an */
   gloss.customProgramCacheKey = () => 'livery-' + tk + (dec ? '-d' : ''); return gloss; }
 function teamTemplate(tk) {
   if (TPL[tk]) return TPL[tk];
@@ -3009,10 +3030,12 @@ function teamTemplate(tk) {
     const gloss = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: isF2 ? .32 : .3, metalness: T.metal * (isF2 ? 0.6 : 0.7), clearcoat: isF2 ? .85 : 1, clearcoatRoughness: isF2 ? .12 : .06, envMapIntensity: isF2 ? 1.15 : 1.25, side: THREE.DoubleSide });   /* F2: Normalen sind jetzt bereinigt (renormCar) – der Lack darf fast so klar spiegeln wie beim F1 */
     if (isF2) {   // Farbfelder (Nase, Flügel, Unterteil) im Shader je Bildpunkt statt je Eckpunkt -> gerade, scharfe Farbgrenzen statt gezackter Dreieckskanten
       const v3 = c => 'vec3(' + c.r.toFixed(4) + ',' + c.g.toFixed(4) + ',' + c.b.toFixed(4) + ')';
+      const dec = hasDecal(tk) ? decalGLSL(tk) : '', code = LIVERY[tk];   // Aufkleber und (falls in liveries.json hinterlegt) eigenes Lack-Programm
       gloss.onBeforeCompile = sh => { viewFacing(sh);
-        sh.vertexShader = 'attribute float aCls; varying float vCls; varying vec3 vLP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vLP = position; vCls = aCls;');
-        sh.fragmentShader = 'varying float vCls; varying vec3 vLP;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 0.5) { diffuseColor.rgb = vLP.z > 2.55 ? ' + v3(cT) + ' : ((vLP.z > 2.15 && vLP.y < 0.36) || (vLP.z < -1.9 && vLP.y > 0.6)) ? ' + v3(cA) + ' : ' + (T.low !== undefined ? 'vLP.y < ' + T.split.toFixed(3) + ' ? ' + v3(cLow) + ' : ' : '') + v3(cB) + '; }' + cockGLSL('f2')); };
-      gloss.customProgramCacheKey = () => 'f2paint-' + tk; }   /* F2: weicher Klarlack – der scharfe Klarlack spiegelte Asphalt und Schatten als schwarze Flecken */   /* F2 auf F1-Niveau: die dunkle Umgebung (Asphalt, Horizontband) spiegelt sich weich statt schwarz */   // F2: unscharfe, schwache Spiegelung – scharfe Umgebungsspiegelung (Gras/Tribünen) wirkte fleckig-grün
+        sh.vertexShader = 'attribute float aCls; varying float vCls; varying vec3 vLP; varying vec3 vLN;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vLP = position; vCls = aCls; vLN = normal;');
+        sh.fragmentShader = 'varying float vCls; varying vec3 vLP;\n' + (dec ? DECAL_HEAD : 'varying vec3 vLN;\n') + (code ? LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' : '') + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 0.5) { diffuseColor.rgb = vLP.z > 2.55 ? ' + v3(cT) + ' : ((vLP.z > 2.15 && vLP.y < 0.36) || (vLP.z < -1.9 && vLP.y > 0.6)) ? ' + v3(cA) + ' : ' + (T.low !== undefined ? 'vLP.y < ' + T.split.toFixed(3) + ' ? ' + v3(cLow) + ' : ' : '') + v3(cB) + ';' + (code ? ' diffuseColor.rgb = livery(vLP, vCls);' : '') + dec + ' }' + cockGLSL('f2')); if (dec) Object.assign(sh.uniforms, decalUniforms(tk)); };
+      gloss.livHook = gloss.onBeforeCompile;
+      gloss.customProgramCacheKey = () => 'f2paint-' + tk + (LIVERY[tk] ? '-l' : '') + (hasDecal(tk) ? '-d' : ''); }   /* F2: weicher Klarlack – der scharfe Klarlack spiegelte Asphalt und Schatten als schwarze Flecken */   /* F2 auf F1-Niveau: die dunkle Umgebung (Asphalt, Horizontband) spiegelt sich weich statt schwarz */   // F2: unscharfe, schwache Spiegelung – scharfe Umgebungsspiegelung (Gras/Tribünen) wirkte fleckig-grün
     const haloMat = gloss.clone();   // Halo in der TV-Kamera: einfarbig in der Fahrzeugfarbe, ohne Lackierungs-Verlauf (Material vor dem Livery-Shader kopieren)
     return (TPL[tk] = { model: true, M: MD, lods: MD.C.lods.map(L => ({ gloss: paintGeo(L.gloss, pc), matte: paintGeo(L.matte, pc) })), halo: paintGeo(MD.C.halo, pc), haloCk: MD.C.haloCk ? paintGeo(MD.C.haloCk, pc) : null, haloFlat: paintGeo(MD.C.halo, (k, x, y, z, o) => o.copy(cB)), haloMat,   /* TV-Kamera: das Halo AUS DEM MODELL in der Wagenfarbe – genau wie Version 1.00 (Wunsch). Ein fast schwarzes Halo spiegelte nur den Himmel als dünne Linie und wirkte spitz */ glossMat: liveryMat(tk, gloss) });
   }
@@ -3584,7 +3607,7 @@ function makeCar0(d) {
   const tp = teamTemplate(d.liv || d.team), g = new THREE.Group(); g.rotation.order = 'YXZ';
   if (tp.model) {
     const MD = tp.M, L = tp.lods[0], W = MD.W[0], fw = MD.C.fw;
-    const body = new THREE.Mesh(L.gloss, tp.glossMat), matte = new THREE.Mesh(L.matte, MATTE), halo = new THREE.Mesh(haloFlatOn ? tp.haloFlat : tp.halo, haloFlatOn ? tp.haloMat : tp.glossMat);
+    const body = new THREE.Mesh(L.gloss, numMat(tp, d.liv || d.team, d.num)), matte = new THREE.Mesh(L.matte, MATTE), halo = new THREE.Mesh(haloFlatOn ? tp.haloFlat : tp.halo, haloFlatOn ? tp.haloMat : tp.glossMat);
     for (const m of [body, matte, halo]) { m.castShadow = true; g.add(m); }
     const mir = MD.C.lods[0].mirror ? new THREE.Mesh(MD.C.lods[0].mirror, MIRMAT) : null; if (mir) g.add(mir);   // Spiegelglas: verspiegelt die Umgebung (Skybox) statt Carbon
     const hAcc = helmAcc(d.helmet, T.acc);
