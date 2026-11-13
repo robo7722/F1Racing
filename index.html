@@ -3678,30 +3678,66 @@ function kartFahrerMat(tk, suit, acc) {
 // Ober- und Unterarm starr mit fester Länge – der Ellbogen ergibt sich aus der Zwei-Knochen-IK und bleibt in seiner Ebene (hebt/senkt sich natürlich).
 const _ik = { q: new THREE.Quaternion(), q2: new THREE.Quaternion(), r: new THREE.Quaternion(), v: new THREE.Vector3(), t: new THREE.Vector3(), e: new THREE.Vector3(), u: new THREE.Vector3(), p: new THREE.Vector3(), a: new THREE.Vector3(), b: new THREE.Vector3(), m: new THREE.Matrix4() };
 function kartArmsIK(out, spin) {   // out: 7 Matrix4 (Bindhaltung -> aktuell), spin: Lenkraddrehung (rad)
+  // Hand: dreht mit dem Lenkrad UND zusätzlich um das Kranzrohr (wie eine echte Hand, die am Griff „rollt“), so dass sie in Linie mit dem
+  // Unterarm bleibt – kein Abknicken im Handgelenk, keine Stulpe im Bündchen. Arm: Zwei-Knochen-IK auf das so gefundene Handgelenk.
   const K = KFAHRER, C = K.swC, X = _ik; out[0].identity();
-  X.r.setFromAxisAngle(K.swAx, spin);
+  X.r.setFromAxisAngle(K.swAx, spin * 0.8);   // Hände folgen dem Kranz zu 80 % – der Kranz gleitet etwas durch die Faust (wie beim echten Fahren bei viel Einschlag)
   for (let side = 0; side < 2; side++) {
-    const mir = side ? -1 : 1, sh = X.a.copy(K.arm[0]).setX(K.arm[0].x * mir), el = X.b.copy(K.arm[1]).setX(K.arm[1].x * mir), wr = X.p.copy(K.arm[2]).setX(K.arm[2].x * mir);
-    const L1 = sh.distanceTo(el), L2 = el.distanceTo(wr), o = side ? 4 : 1;
-    // Ziel: Handgelenk um die Lenkradachse gedreht
-    X.t.copy(wr).sub(C).applyQuaternion(X.r).add(C);
-    // Ellbogen-Ebene aus der Bindhaltung (Pol = Ellbogen relativ zur Linie Schulter–Hand)
-    X.u.copy(wr).sub(sh).normalize(); const pole = X.v.copy(el).sub(sh); pole.addScaledVector(X.u, -pole.dot(X.u));
-    const d0 = X.e.copy(X.t).sub(sh), d = Math.min(Math.max(d0.length(), Math.abs(L1 - L2) + 1e-3), (L1 + L2) * 0.999); X.u.copy(d0).normalize();
-    pole.normalize().multiplyScalar(0.4).add(_ikV3.set(-1.0 * mir, -0.4, -0.1).normalize());   // Ellbogen weicht nach außen-unten aus (nicht in die Hüfte, nicht zur Kamera hoch)
-    pole.addScaledVector(X.u, -pole.dot(X.u)).normalize();
-    const a1 = (L1 * L1 - L2 * L2 + d * d) / (2 * d), hh = Math.sqrt(Math.max(L1 * L1 - a1 * a1, 0));
-    const eN = X.e.copy(sh).addScaledVector(X.u, a1).addScaledVector(pole, hh);           // neuer Ellbogen
-    // Oberarm: Drehung, die (el - sh) auf (eN - sh) bringt
+    const mir = side ? -1 : 1, o = side ? 4 : 1;
+    const sh = _ikA.copy(K.arm[0]).setX(K.arm[0].x * mir), el = _ikB.copy(K.arm[1]).setX(K.arm[1].x * mir), wr = _ikW.copy(K.arm[2]).setX(K.arm[2].x * mir);
+    const L1 = sh.distanceTo(el), L2 = el.distanceTo(wr);
+    // Griffpunkt in Bindhaltung (nächster Kranzpunkt zum Handgelenk) und dessen Lage nach der Lenkraddrehung
+    const rel = _ikG.copy(wr).sub(C); rel.addScaledVector(K.swAx, -rel.dot(K.swAx)).setLength(0.188);
+    const G0 = _ikG0.copy(C).add(rel), G = _ikGr.copy(G0).sub(C).applyQuaternion(X.r).add(C);
+    const tng = _ikT.crossVectors(K.swAx, _ikV1.copy(G).sub(C)).normalize();              // Kranz-Tangente am Griff (Rohrachse)
+    const hand0 = _ikH0.copy(wr).sub(el).normalize();                                      // Unterarm-/Handrichtung in Bindhaltung
+    let phi = 0;
+    for (let it = 0; it < 6; it++) {
+      X.q2.setFromAxisAngle(tng, phi).multiply(X.r);                                       // Handdrehung: Lenkrad, dann um das Rohr
+      X.t.copy(wr).sub(G0).applyQuaternion(X.q2).add(G);                                   // Handgelenk-Ziel
+      // IK: Ellbogen auf dem möglichen Kreis so wählen, dass der Unterarm in Linie mit der Hand steht (kein seitliches Abknicken),
+      // dabei nahe an der Ruhehaltung, nicht über Schulterhöhe-10 cm und nicht nach innen in den Rumpf
+      const d0 = X.e.copy(X.t).sub(sh), d = Math.min(Math.max(d0.length(), Math.abs(L1 - L2) + 1e-3), (L1 + L2) * 0.999); X.u.copy(d0).normalize();
+      const a1 = (L1 * L1 - L2 * L2 + d * d) / (2 * d), hh = Math.sqrt(Math.max(L1 * L1 - a1 * a1, 0));
+      const e1 = _ikE1.set(0, 1, 0).cross(X.u).normalize(), e2 = _ikE2.crossVectors(X.u, e1);
+      const hDir = _ikHD.copy(hand0).applyQuaternion(X.q2);
+      let best = 1e9;
+      for (let k = 0; k < 48; k++) { const an = k / 48 * Math.PI * 2, ca = Math.cos(an), sa = Math.sin(an);
+        const E = _ikV1.copy(sh).addScaledVector(X.u, a1).addScaledVector(e1, ca * hh).addScaledVector(e2, sa * hh);
+        const fa = _ikV2.copy(X.t).sub(E).normalize(), swing = Math.acos(Math.min(1, Math.max(-1, fa.dot(hDir))));
+        const dev = E.distanceTo(el) / L1, up = Math.max(0, E.y - (sh.y - 0.10)), inn = Math.max(0, mir * (E.x - (sh.x - mir * 0.02)));
+        const low = Math.max(0, 0.53 - E.y) * Math.max(0, 0.27 - Math.abs(E.x)) * 400, back = Math.max(0, (sh.z + 0.17) - E.z);   // nicht in die Hüfte, nicht nach hinten
+        const sc = swing * 1.0 + dev * 0.8 + up * 20 + inn * 20 + low * 20 + back * 20;
+        if (sc < best) { best = sc; _ikEN.copy(E); } }
+      // Fehlwinkel zwischen Hand (gedreht) und tatsächlichem Unterarm, gemessen um die Rohrachse -> phi nachführen
+      const hNow = _ikV1.copy(hand0).applyQuaternion(X.q2), fa = _ikV2.copy(X.t).sub(_ikEN).normalize();
+      hNow.addScaledVector(tng, -hNow.dot(tng)); fa.addScaledVector(tng, -fa.dot(tng));
+      if (hNow.lengthSq() < 1e-8 || fa.lengthSq() < 1e-8) break;
+      hNow.normalize(); fa.normalize(); const err = Math.atan2(_ikV3.crossVectors(hNow, fa).dot(tng), hNow.dot(fa));
+      phi += err; phi = Math.max(-1.2, Math.min(1.2, phi));
+      if (Math.abs(err) < 1e-3) break;
+    }
+    const eN = _ikEN;
     X.q.setFromUnitVectors(X.v.copy(el).sub(sh).normalize(), _ikV1.copy(eN).sub(sh).normalize());
     out[o].makeRotationFromQuaternion(X.q); out[o].setPosition(_ikV2.copy(sh).sub(_ikV3.copy(sh).applyQuaternion(X.q)));
-    // Unterarm: erst wie der Oberarm, dann (gedrehte Bind-Richtung) auf (Ziel - eN)
-    _ikV1.copy(wr).sub(el).applyQuaternion(X.q).normalize(); X.q2.setFromUnitVectors(_ikV1, _ikV2.copy(X.t).sub(eN).normalize()).multiply(X.q);
+    // Unterarm: Richtung (Ellbogen -> Handgelenk) und Verdrehung um die eigene Achse wie die Hand (Unterarm-Rotation, verhindert Knick am Bündchen)
+    _ikV1.copy(wr).sub(el).applyQuaternion(X.q).normalize(); X.e.copy(X.t).sub(eN).normalize();
+    const q1 = _ikQ1.setFromUnitVectors(_ikV1, X.e).multiply(X.q);                        // nur Richtung
+    // Verdrehung: Hand-Seitenrichtung (Rohrachse) auf die Unterarm-Ebene projizieren und halb übernehmen
+    const sideB = _ikV2.copy(K.swAx).cross(_ikV3.copy(wr).sub(el)).normalize().applyQuaternion(q1);
+    const sideH = _ikV3.copy(K.swAx).cross(_ikH0).normalize().applyQuaternion(X.q2);
+    sideB.addScaledVector(X.e, -sideB.dot(X.e)); sideH.addScaledVector(X.e, -sideH.dot(X.e));
+    let tw = 0; if (sideB.lengthSq() > 1e-8 && sideH.lengthSq() > 1e-8) { sideB.normalize(); sideH.normalize(); tw = Math.atan2(_ikV1.crossVectors(sideB, sideH).dot(X.e), sideB.dot(sideH)); }
+    X.q2.setFromAxisAngle(X.e, tw).multiply(q1);                                           // Unterarm-Drehung (Elle/Speiche) übernimmt die Verdrehung ganz
     out[o + 1].makeRotationFromQuaternion(X.q2); out[o + 1].setPosition(_ikV2.copy(eN).sub(_ikV3.copy(el).applyQuaternion(X.q2)));
-    // Hand: dreht mit dem Lenkrad um dessen Achse
-    out[o + 2].makeRotationFromQuaternion(X.r); out[o + 2].setPosition(_ikV2.copy(C).sub(_ikV3.copy(C).applyQuaternion(X.r)));
+    // Hand
+    X.q2.setFromAxisAngle(tng, phi).multiply(X.r);
+    out[o + 2].makeRotationFromQuaternion(X.q2); out[o + 2].setPosition(_ikV2.copy(G).sub(_ikV3.copy(G0).applyQuaternion(X.q2)));
+    out.wristBend = out.wristBend || []; out.wristBend[side] = phi;
   }
 }
+const _ikE1 = new THREE.Vector3(), _ikE2 = new THREE.Vector3(), _ikHD = new THREE.Vector3(), _ikA = new THREE.Vector3(), _ikB = new THREE.Vector3(), _ikW = new THREE.Vector3(), _ikG = new THREE.Vector3(), _ikG0 = new THREE.Vector3(), _ikGr = new THREE.Vector3(),
+  _ikT = new THREE.Vector3(), _ikH0 = new THREE.Vector3(), _ikEN = new THREE.Vector3(), _ikQ1 = new THREE.Quaternion();
 const _ikV1 = new THREE.Vector3(), _ikV2 = new THREE.Vector3(), _ikV3 = new THREE.Vector3();
 // KFMAT-END
 const KTEX = {}; let KTUBE = null; const KART_SW_ROT = 0.7;   // sichtbare Lenkraddrehung (rad) bei vollem Einschlag, Kart mit neuem Fahrer (~40°)
@@ -3890,8 +3926,8 @@ function makeKart(d, T) {
   const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.138, 0.066), new THREE.MeshBasicMaterial({ map: dtex, toneMapped: false })); scr.position.set(0, 0, 0.0115); hous.add(scr); swPivot.add(stalk, hous);
   const rl = new THREE.Object3D(), label = carLabel(d, T); label.position.y = 1.35; g.add(label); scene.add(g);
   // helm: was in der Cockpitansicht ausgeblendet wird – beim neuen Fahrer nur der Helm (Körper, Arme und Hände bleiben sichtbar).
-  // Cockpit: Augen etwas tiefer und vor der Helmmitte, Blick ~24° nach unten – Lenkrad und Hände im Bild (cam[3] = Blicksenkung, siehe Helmkamera).
-  return { g, fl, fr, wfl, wfr, rr, label, helm: kf ? drv.userData.helm : drv, rl, kart: true, kartFahrer: !!kf, wr: 0.2, swSpin, sw: swPivot, dcv, dtex, dT: 0, cam: kf ? [0, KFAHRER.helm[1] - 0.09, KFAHRER.helm[2] + 0.12, 13] : [0, 0.74, -0.5, 0.3], camS: 0.72 };   /* Cockpit: Augen im Helm des Fahrers */
+  // Cockpit: Augen knapp unter der Helmmitte (Visierhöhe), Blick ~21° nach unten – Lenkrad und Hände im Bild (cam[3] = Blicksenkung, siehe Helmkamera).
+  return { g, fl, fr, wfl, wfr, rr, label, helm: kf ? drv.userData.helm : drv, rl, kart: true, kartFahrer: !!kf, wr: 0.2, swSpin, sw: swPivot, dcv, dtex, dT: 0, cam: kf ? [0, KFAHRER.helm[1] - 0.03, KFAHRER.helm[2] + 0.12, 15.5] : [0, 0.74, -0.5, 0.3], camS: 0.72 };   /* Cockpit: Augen im Helm des Fahrers */
 }
 function envAll(o) { o.traverse(m => { if (m.material) (Array.isArray(m.material) ? m.material : [m.material]).forEach(x => { x.userData.env = true; }); }); return o; }   // Autos behalten volle Spiegelungen
 function makeCar(d) { const r = makeCar0(d); envAll(r.g || r); return r; }
@@ -9174,7 +9210,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.54'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.55'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

@@ -498,8 +498,29 @@ def pose_kart(V, F, S):
 Y0_KART = -4.5                                                                         # Faust: Krümmung ab den Fingerwurzeln
 
 
+def bend_hand(gV, yp, R1, yf, R2, amax, zs=9.0):
+    """Hand um den Kranz legen: Mittellinie (z = zs) läuft bis yp gerade (Handballen), dann Handfläche mit Radius R1 leicht gewölbt
+    bis zur Fingerwurzel yf, dann Finger mit Radius R2 um den Kranz (Gesamtwinkel höchstens amax, danach gerade weiter).
+    Krümmung zur Handflächenseite (+z). Gibt (verformte Punkte, Mittelpunkt des Fingerbogens = Kranzmitte) zurück."""
+    ys = np.linspace(-30.0, 15.0, 4000); ds = ys[1] - ys[0]                               # fester Bereich (auch für einzelne Punkte)
+    Sp = np.zeros((len(ys), 2)); T = np.zeros((len(ys), 2)); Nn = np.zeros((len(ys), 2)); ang = 0.0
+    Sp[0] = [ys[0], zs]; T[0] = [1, 0]; Nn[0] = [0, 1]
+    for i in range(1, len(ys)):
+        y = ys[i - 1]; k = 0.0 if y < yp else (1 / R1 if y < yf else 1 / R2)
+        if ang >= amax: k = 0.0
+        ang += k * ds; T[i] = [np.cos(ang), np.sin(ang)]; Nn[i] = [-np.sin(ang), np.cos(ang)]; Sp[i] = Sp[i - 1] + T[i - 1] * ds
+    i_f = np.searchsorted(ys, yf); C = Sp[i_f] + Nn[i_f] * R2                          # Mitte des Fingerbogens
+    idx = np.clip(np.searchsorted(ys, gV[:, 1]), 0, len(ys) - 1); h = gV[:, 2] - zs
+    out = gV.copy(); P2 = Sp[idx] + Nn[idx] * h[:, None]; out[:, 1] = P2[:, 0]; out[:, 2] = P2[:, 1]
+    return out, np.array([-0.4, C[0], C[1]])
+
+
+# Griff: Kranz liegt am Daumenballen in der Handfläche (y ≈ -8), Handfläche leicht gewölbt, Finger greifen ganz herum
+FIST = dict(yp=-6.0, R1=3.6, yf=-1.5, R2=3.5, amax=4.6)
+
+
 def glove_wrist_world(grip, Xg, Yg, Zg, S):
-    gV, ax = glove_shape(G_WRIST[None], RB_KART, Y0_KART, kurz=False)
+    gV, ax = bend_hand(G_WRIST[None], **FIST)
     p = (G_WRIST - ax) * G_S * S / H
     R = np.stack([Xg, Yg, Zg], 1)
     return grip + R @ p
@@ -527,7 +548,8 @@ RB_KART = 2.9                                                                   
 
 
 def place_glove(gV0, gF, grip, Xg, Yg, Zg, S):
-    gV, ax = glove_shape(gV0, RB_KART, Y0_KART, kurz=False)
+    gV, ax = glove_shape(gV0, RB_KART, Y0_KART, kurz=False)                              # Stulpe (kurz=False: nur Krümmung, wird gleich ersetzt)
+    gV, ax = bend_hand(gV0, **FIST)
     p = (gV - ax) * G_S * S / H
     R = np.stack([Xg, Yg, Zg], 1)
     return grip + p @ R.T, gF
