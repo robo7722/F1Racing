@@ -64,6 +64,7 @@ Die Skripte in `foto/` sind die Arbeitsfassung, mit der die Einzelbilder aus den
 ## Sonstiges am Auto
 
 - Seitenblinker in den Kotflügeln sind abgedunkelt (`smoke` in `roadMats`, Aufteilung in `makeRoadster`).
+- Karosserie ist um 3,2 cm tiefergelegt (`ROAD_DROP`), die Antenne ist auf einen kurzen Stummel gestaucht (beides in `makeRoadster`).
 - Das Pentagramm hat keine schwarze Scheibe: nur weiße Linien auf dem roten Tankdeckel.
 
 ## Offen
