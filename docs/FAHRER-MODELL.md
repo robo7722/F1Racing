@@ -1,10 +1,11 @@
 # Rennfahrer-Modell
 
-Stand: 13.11.2026 (v1.43) – Kart-Fahrer im Spiel eingebaut, stehende Figur als Vorschau.
+Stand: 13.11.2026 (v1.44) – Kart-Fahrer im Spiel eingebaut, stehende Figur als Vorschau.
 
 ## Dateien
 - `kartfahrer.bin` – sitzender Kart-Fahrer fürs Spiel: Körper + beide Handschuhe als EIN Netz (~14 200 Dreiecke).
-- `textures/kart_fahrer.jpg`, `textures/kart_fahrer_n.jpg` – Atlas 1024×512: links Anzug (helle Stoff-Schattierung), rechts Handschuh; Normalen.
+- `textures/kart_fahrer.jpg` – Atlas 1024×512: links Anzug (helle Stoff-Schattierung), rechts Handschuh.
+- `textures/kart_stoff.jpg` – kachelbares Nomex-Köpergewebe (Höhenkarte 256², vom Bauskript erzeugt).
 - `fahrer/fahrer.glb`, `fahrer/handschuh.glb` – stehende Figur (24 000 Dreiecke), `fahrer/vorschau.html` zeigt sie mit unserem Helm.
 - `fahrer/kart_vorschau.html` – Prüfansicht: Kart + Kart-Fahrer + Lenkradkranz (gleiche Lade-Logik wie im Spiel).
 - `tools/fahrer/build_fahrer.py <quellordner>` – baut alles neu. Quellordner: `model.obj`, `base.jpg`, `normal.jpg` (Tripo), `glove.kmz`. Vorlagen nicht im Repo (OBJ 25 MB). Braucht numpy, pillow, scipy, trimesh, pymeshlab, libigl, scikit-image (+ Systempaket libopengl0).
@@ -29,10 +30,15 @@ Prüfansicht: `fahrer/kart_vorschau.html?debug` färbt Rückseiten grün – so 
 
 ## Im Spiel (`index.html`)
 - `KFAHRER` lädt `kartfahrer.bin`; `kartDriver()` nutzt ihn, der alte aus Grundformen gebaute Fahrer bleibt als Rückfall.
-- `kartFahrerMat()` färbt im Shader: Anzug = Teamfarbe, Gürtel und Handschuhe = Akzentfarbe, Schuhe dunkel. Gürtel/Schuhe aus der Höhe in Ruhehaltung je Eckpunkt (`aRy`) → gerade Kanten.
-- Helm: derselbe wie F1/F2 (`helmMat(…, true)`), beim Kart ohne das Anbauteil unter dem Visier. F1/F2 haben es noch.
-- Cockpitkamera der Karts sitzt jetzt auf Augenhöhe im Helm (`cam` aus `KFAHRER.helm`).
-- `sw.js`: neue Dateien im Offline-Cache, Cache `f1-rennen-1.43`.
+- **Anzugmaterial** `kartFahrerMat()` (Abschnitt `KFMAT-START … KFMAT-END`, die Prüfansicht liest genau diesen Abschnitt):
+  - MeshPhysicalMaterial mit **Sheen** (Stoffglanz), Rauheit je Bereich: Stoff 0,86, Strick 0,8, Handschuh (Wildleder) 0,62, Schuhe (Glattleder) 0,38, Reißverschluss Metall.
+  - **Gewebe**: Köper-Höhenkarte dreiseitig auf die *Ruhe*-Position projiziert (Gewebe wandert beim Sitzen mit dem Stoff mit), als Relief über Bildschirm-Ableitungen (Bump), ca. 1,6 cm je Kachel.
+  - **Design je Bildpunkt aus der Ruhe-Position** (`aRest`, `aRN`): Seitenstreifen an Rumpf, Ärmeln und Hosenbeinen (Akzentfarbe), Schulterpasse, Gürtel, Strickkragen, Reißverschluss vorn, Stretch-Einsätze mit Rippen (unterer Rücken, Achsel innen, Kniekehle), Strickbündchen an Ärmeln und Hosenbeinen, weiße Aufnäher (Brust, Gürtel – ohne Logos).
+  - **Nähte** als Rillen im Relief und etwas dunkler.
+  - Arm/Rumpf/Bein werden je Bildpunkt aus der Ruhe-Position bestimmt (gleiche Grenze wie `arm_masks`), nicht je Eckpunkt – sonst gezackte Kanten.
+- **Behoben (v1.44):** gezackte weiße Linie seitlich am Körper/über die Schultern. Ursache: Arme hatten `aRy = 0,5` als „kein Gürtel“, an der Grenze zum Rumpf lief der Wert über die Gürtelhöhe → dünner Gürtelstreifen. Jetzt eigener Bereich `aReg` (0 Rumpf, 1 Arm, 2 Bein, 3 Handschuh).
+- Helm: derselbe wie F1/F2 (`helmMat(…, true)`), beim Kart ohne das Anbauteil unter dem Visier.
+- Cockpitkamera der Karts sitzt auf Augenhöhe im Helm (`cam` aus `KFAHRER.helm`).
 
 ## Offen / Ideen
 - Lenkrad dreht sich beim Lenken, die Hände nicht (war beim alten Fahrer genauso).
