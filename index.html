@@ -3275,8 +3275,8 @@ function lodFadePrep(m) {
 const lodF = (o, v, inv) => o.traverse(x => { if (x.isMesh) for (const mt of Array.isArray(x.material) ? x.material : [x.material]) if (mt.userData.lodF) mt.userData.lodF.value.set(v, inv); });
 function lodFadeEnd(m) { const f = m.lf; if (!f) return; m.lf = null; if (m.gh) for (const k in m.gh) { m.gh[k].visible = false; lodF(m.gh[k], 0, 0); } lodF(m.g, 0, 0); }
 function lodFadeApply(m) { const f = m.lf, t = Math.max(0.002, Math.min(0.998, f.t));
-  if (f.x) { for (const k in m.gh) { lodF(m[k], t, 0); lodF(m.gh[k], 1 - t, 1); }   /* nur die getauschten Netze (Halo, Helm, Spiegel bleiben unverändert stehen) */ for (const k of ['wfl', 'wfr', 'wrl', 'wrr']) m.gh[k].rotation.x = m[k].rotation.x; }   // neue Stufe in den eigenen Netzen, alte in den Geistern
-  else { const inc = f.to === 2 ? [m.far] : m.detail, out = f.to === 2 ? m.detail : [m.far]; for (const o of inc) lodF(o, t, 0); for (const o of out) lodF(o, 1 - t, 1); } }
+  if (f.x) { for (const k in m.gh) { lodF(m[k], 0, 0); lodF(m.gh[k], 1 - t, 1); }   /* nur die getauschten Netze (Halo, Helm, Spiegel bleiben unverändert stehen) */ for (const k of ['wfl', 'wfr', 'wrl', 'wrr']) m.gh[k].rotation.x = m[k].rotation.x; }   // neue Stufe in den eigenen Netzen, alte in den Geistern
+  else { const inc = f.to === 2 ? [m.far] : m.detail, out = f.to === 2 ? m.detail : [m.far]; for (const o of inc) lodF(o, 0, 0); for (const o of out) lodF(o, 1 - t, 1); } }   /* neue Stufe sofort voll, nur die alte löst sich auf: wo sich die Umrisse unterscheiden, entstehen keine Löcher (sonst schien die Fahrbahn mit ihren Linien durchs Auto) */
 function lodStep(m, want, dt) {
   if (m.lf) { m.lf.t += dt / LOD_FADE; if (m.lf.t >= 1) { const to = m.lf.to; lodFadeEnd(m); setLod(m, to, true); } else lodFadeApply(m); return; }
   if (want === m.lod) return;
@@ -4548,44 +4548,55 @@ function distFade(m, d0, d1) {
   m.customProgramCacheKey = function () { return (pk ? pk.call(this) : '') + '|fade' + d0 + '_' + d1; };
   return m;
 }
-// Ferne Bäume als Bildtafeln: beim Laden wird je Baumart (Laub-/Nadelbaum) EIN Bild aus dem 3D-Modell gerendert – mit dem Licht der Strecke.
-// Ab ~150 m zeigt jeder Baum dieses Bild auf einer Tafel, die sich zur Kamera dreht (zwei Zeichenaufrufe für den ganzen Hintergrundwald statt
-// fünf je Waldkachel). Zwischen 150 und 190 m teilen sich 3D-Baum und Tafel die Pixel per Punktraster: kein Aufploppen, keine Doppelbilder.
-let TREESPR = null; const TREESPR_RT = [];
+// Ferne Bäume als Bildtafeln: beim Laden wird jedes Baummodell (nah mit Laubflächen / fern einfach, je Laub- und Nadelbaum) aus 8 Richtungen gerendert –
+// mit dem Licht der Strecke. Ab 200 m zeigt jeder Baum die Ansicht seines eigenen Modells, die zu seiner Drehung passt, auf einer Tafel, die sich zur Kamera
+// dreht (4 Zeichenaufrufe für den ganzen Hintergrundwald). Zwischen 200 und 260 m teilen sich 3D-Baum und Tafel die Pixel per Punktraster.
+let TREESPR = null; const TREESPR_RT = [], TREE_VIEWS = 8;
+// Bild eines Baums aus 8 Richtungen (je 45°) nebeneinander: die Tafel zeigt später die Ansicht, die zur Drehung des Baums passt – so deckt sie sich
+// beim Überblenden mit dem 3D-Baum. Licht immer von der Seite (wie beim 3D-Baum aus der Ferne), dafür dreht sich der Baum statt der Kamera.
 function treeImpostor(parts, W, H) {
-  const sc = new THREE.Scene(); for (const [g, m] of parts) { const o = new THREE.Mesh(g, m); o.frustumCulled = false; sc.add(o); }
+  const sc = new THREE.Scene(), tree = new THREE.Group(); for (const [g, m] of parts) { const o = new THREE.Mesh(g, m); o.frustumCulled = false; tree.add(o); } sc.add(tree);
   let sd = new THREE.Vector3(1, 1, 0.3);
   for (const l of scene.children.filter(o => o.isLight)) { const c = l.clone(); c.castShadow = false;
     if (l.isDirectionalLight) { const d = l.position.clone().sub(l.target.position).normalize(); if (l === sun) sd = d.clone(); c.position.copy(d).multiplyScalar(60); c.target.position.set(0, 0, 0); sc.add(c.target); } sc.add(c); }
   sc.environment = scene.environment; sc.fog = null; sc.background = null;
-  const cd = new THREE.Vector2(-sd.z, sd.x); if (cd.lengthSq() < 1e-4) cd.set(1, 0); cd.normalize();   // Blick quer zur Sonne: halb beleuchtet, passt aus jeder Richtung
+  const cd = new THREE.Vector2(-sd.z, sd.x); if (cd.lengthSq() < 1e-4) cd.set(1, 0); cd.normalize(); const a0 = Math.atan2(cd.x, cd.y);   // Blick quer zur Sonne
   const cam = new THREE.OrthographicCamera(-W / 2, W / 2, H, 0, 0.1, 300); cam.position.set(cd.x * 80, 0, cd.y * 80); cam.lookAt(0, 0, 0); cam.updateMatrixWorld();
-  const rt = new THREE.WebGLRenderTarget(256, Math.round(256 * H / W / 32) * 32 || 256, { type: THREE.HalfFloatType, samples: 4, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter }); TREESPR_RT.push(rt);
+  const cw = 288, ch = Math.min(1024, Math.round(cw * H / W / 8) * 8 || cw), n = TREE_VIEWS;
+  const rt = new THREE.WebGLRenderTarget(cw * n, ch, { samples: 4, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter, colorSpace: THREE.SRGBColorSpace }); TREESPR_RT.push(rt);   // sRGB 8 bit: halber Speicher, keine Farbstufen
   const prev = renderer.getRenderTarget(), cc0 = renderer.getClearColor(new THREE.Color()), ca0 = renderer.getClearAlpha(), sa = renderer.shadowMap.autoUpdate, bo = BAKE.u.bakeOn.value;
   renderer.shadowMap.autoUpdate = false; BAKE.u.bakeOn.value = 0;   // keine gebackenen Schatten vom Weltursprung aufs Bild
-  renderer.setRenderTarget(rt); renderer.setClearColor(0x2c3a22, 0); renderer.clear(); renderer.render(sc, cam);   // dunkelgrüne, unsichtbare Füllfarbe: kein schwarzer Rand in den Mip-Stufen
+  renderer.setRenderTarget(rt); renderer.setClearColor(0x2c3a22, 0); renderer.clear();   // dunkelgrüne, unsichtbare Füllfarbe: kein schwarzer Rand in den Mip-Stufen
+  rt.scissorTest = true;
+  for (let k = 0; k < n; k++) { tree.rotation.y = a0 - k * 2 * Math.PI / n; tree.updateMatrixWorld(true); rt.viewport.set(k * cw, 0, cw, ch); rt.scissor.set(k * cw, 0, cw, ch); renderer.setRenderTarget(rt); renderer.render(sc, cam); }   // Ansicht k = Kamera unter dem Winkel k·45° im Baum-Koordinatensystem
+  rt.scissorTest = false; rt.viewport.set(0, 0, cw * n, ch); rt.scissor.set(0, 0, cw * n, ch);
   renderer.setRenderTarget(prev); renderer.setClearColor(cc0, ca0); renderer.shadowMap.autoUpdate = sa; BAKE.u.bakeOn.value = bo;
   return rt.texture;
 }
 function treeSprites() {
   for (const rt of TREESPR_RT.splice(0)) rt.dispose();
-  const T = TREESPR; if (!T || !(T.sprC.length + T.sprL.length)) return;
-  const v = new THREE.Vector3(), sc = new THREE.Vector3(), q = new THREE.Quaternion(), m4 = new THREE.Matrix4();
-  for (const [kind, list] of [['con', T.sprC], ['leaf', T.sprL]]) { if (!list.length) continue;
-    const bb = new THREE.Box3(); for (const [g] of T.parts[kind]) { if (!g.boundingBox) g.computeBoundingBox(); bb.union(g.boundingBox); }
-    const W = 2 * Math.max(-bb.min.x, bb.max.x, -bb.min.z, bb.max.z) * 1.04, H = bb.max.y * 1.03, tex = treeImpostor(T.parts[kind], W, H);
+  const T = TREESPR; if (!T) return;
+  const v = new THREE.Vector3(), sc = new THREE.Vector3(), q = new THREE.Quaternion(), m4 = new THREE.Matrix4(), n = TREE_VIEWS;
+  for (const kind of Object.keys(T.lists)) { const list = T.lists[kind]; if (!list.length) continue;
+    let r = 0, H = 0; for (const [g] of T.parts[kind]) { const P = g.attributes.position; for (let i = 0; i < P.count; i++) { r = Math.max(r, Math.hypot(P.getX(i), P.getZ(i))); H = Math.max(H, P.getY(i)); } }
+    const W = 2 * r * 1.03; H *= 1.03; const tex = treeImpostor(T.parts[kind], W, H);
     const mat = new THREE.MeshBasicMaterial({ map: tex, alphaTest: 0.42, side: THREE.DoubleSide });
     mat.onBeforeCompile = sh => {
-      sh.vertexShader = 'varying float vTD;\n' + sh.vertexShader.replace('#include <project_vertex>', `
+      sh.vertexShader = 'varying float vTD; varying float vTK;\n' + sh.vertexShader.replace('#include <project_vertex>', `
         vec4 tcW = modelMatrix * instanceMatrix * vec4( 0.0, 0.0, 0.0, 1.0 ); float tsx = length( instanceMatrix[0].xyz ), tsy = length( instanceMatrix[1].xyz );
         vec2 tcv = cameraPosition.xz - tcW.xz; vec2 trg = normalize( vec2( tcv.y, -tcv.x ) + 1e-5 ); vTD = length( cameraPosition - tcW.xyz );
+        vec2 tc0 = normalize( vec2( instanceMatrix[0].x, -instanceMatrix[0].z ) + 1e-6 );   // Drehung des Baums: (cos, sin)
+        float tla = atan( tc0.x * tcv.x - tc0.y * tcv.y, tc0.y * tcv.x + tc0.x * tcv.y );   // Blickrichtung zur Kamera im Baum-Koordinatensystem
+        vTK = mod( floor( tla / ${(2 * Math.PI / n).toFixed(6)} + 0.5 ), ${n.toFixed(1)} );
         vec3 tw = tcW.xyz + vec3( trg.x, 0.0, trg.y ) * position.x * tsx + vec3( 0.0, position.y * tsy, 0.0 );
         if ( vTD < ${T.D0.toFixed(1)} || vTD > ${(TRK.nos ? 1000 : 1e6).toFixed(1)} ) tw = tcW.xyz;   // nah (3D-Baum) bzw. Nordschleife jenseits 1 km (Waldkante): Tafel auf einen Punkt
         vec4 mvPosition = viewMatrix * vec4( tw, 1.0 ); gl_Position = projectionMatrix * mvPosition;`);
-      sh.fragmentShader = 'varying float vTD;\n' + sh.fragmentShader.replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
+      sh.fragmentShader = 'varying float vTD; varying float vTK;\n' + sh.fragmentShader.replace('#include <map_fragment>', `
+        vec4 sampledDiffuseColor = texture2D( map, vec2( ( floor( vTK + 0.5 ) + clamp( vMapUv.x, 0.004, 0.996 ) ) / ${n.toFixed(1)}, vMapUv.y ) ); diffuseColor *= sampledDiffuseColor;`)
+        .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
         { float tsn = fract( 52.9829189 * fract( dot( gl_FragCoord.xy, vec2( 0.06711056, 0.00583715 ) ) ) ); if ( tsn <= 1.0 - smoothstep( ${T.D0.toFixed(1)}, ${T.D1.toFixed(1)}, vTD ) + 0.001 ) discard; }`);   // genau die Punkte, die der 3D-Baum dort verwirft
     };
-    mat.customProgramCacheKey = () => 'treeSpr' + T.D0 + '_' + T.D1 + (TRK.nos ? 'n' : '');
+    mat.customProgramCacheKey = () => 'treeSpr' + n + '_' + T.D0 + '_' + T.D1 + (TRK.nos ? 'n' : '');
     const im = new THREE.InstancedMesh(new THREE.PlaneGeometry(W, H).translate(0, H / 2, 0), mat, list.length);
     list.forEach(([M, c], k) => { M.decompose(v, q, sc); v.y += placeY(v.x, v.z); m4.compose(v, q, sc); im.setMatrixAt(k, m4); im.setColorAt(k, c); });
     im.computeBoundingSphere(); im.castShadow = im.receiveShadow = false; im.userData = { noChunk: true, treeSpr: true }; trackGroup.add(im);
@@ -6924,15 +6935,18 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       for (const g of [cardB, cardC]) if (g) g.userData.lod = [[null, 130]];   /* Flächen verschwinden genau dann, wenn der Kern auf die einfache Stufe wechselt */
       ball.userData.lod = [[ballLo, 130], [ballFar, 300]]; cone.userData.lod = [[coneLo, 130], [coneFar, 260]]; ballLo.userData.lod = [[ballFar, 300]]; coneLo.userData.lod = [[coneFar, 130]]; trunk.userData.lod = [[trunkFar, 90], [null, 450]];   /* Stufen wechseln früher: ab 130 m ist der Unterschied nicht mehr zu sehen */
       if (TRK.nos) { for (const g of [ball, cone]) g.userData.lod.push([null, 1000]); for (const g of [ballLo, coneLo]) g.userData.lod.push([null, 1000]); trunk.userData.lod = [[trunkFar, 120], [null, 450]]; }   // Nordschleife: Waldkante übernimmt die Ferne
-      const SD0 = 150, SD1 = 190;   // ab hier Bildtafeln statt 3D-Bäumen (Überblendung SD0..SD1 per Punktraster, siehe treeSprites)
+      const SD0 = 200, SD1 = 260;   // ab hier Bildtafeln statt 3D-Bäumen (Überblendung SD0..SD1 per Punktraster, siehe treeSprites)
       const SPR = !window.__noTreeSpr;   // Testschalter: alte Darstellung (3D bis zum Horizont)
-      if (SPR) for (const g of [ball, cone, ballLo, coneLo, trunk]) g.userData.lod = g.userData.lod.filter(([, D]) => D < SD1).concat([[null, SD1]]);
+      // Mit Bildtafeln: jeder Baum behält seine Form (nahe mit Laubflächen, ferne als einfache Krone) bis zur Tafel – nur EIN Übergang, kein Zwischenschritt
+      // (vorher: Laubflächen lösten sich bei 92–128 m auf – Himmel schien als helle Punkte durch – und danach wechselte die Krone zweimal die Form)
+      if (SPR) { for (const g of [cardB, cardC, ball, cone, ballLo, coneLo]) if (g) g.userData.lod = [[null, SD1]]; trunk.userData.lod = [[trunkFar, 150], [null, SD1]]; }
       const ic = new THREE.InstancedMesh(cone, needleMat, place.length), ib = new THREE.InstancedMesh(ball, leafMat, place.length), it = new THREE.InstancedMesh(trunk, lam({ map: TEX.bark, normalMap: TEX.barkN, normalScale: new THREE.Vector2(1.3, 1.3), color: 0xffffff, roughness: .95 }), place.length);
       const icL = new THREE.InstancedMesh(coneLo, needleMat, place.length), ibL = new THREE.InstancedMesh(ballLo, leafMat, place.length);
-      if (SPR) for (const mt of new Set([needleMat, leafMat, it.material])) distFade(mt, SD0, SD1);   /* 3D-Bäume lösen sich zwischen 150 und 190 m auf, die Bildtafeln füllen genau diese Punkte */
-      const sprC = [], sprL = []; if (SPR) TREESPR = { sprC, sprL, D0: SD0, D1: SD1, parts: { con: [[coneLo, needleMat], [trunk, it.material]], leaf: [[ballLo, leafMat], [trunk, it.material]] } };
-      const cardM = (t) => distFade(lam({ map: t, alphaTest: 0.42, side: THREE.DoubleSide, roughness: .85, color: 0xffffff }), 92, 128);   /* Laubflächen lösen sich vor dem Wechsel der Detailstufe auf */
+      if (SPR) for (const mt of new Set([needleMat, leafMat, it.material])) distFade(mt, SD0, SD1);   /* 3D-Bäume lösen sich zwischen 200 und 260 m auf, die Bildtafeln füllen genau diese Punkte */
+      const cardM = (t) => distFade(lam({ map: t, alphaTest: 0.42, side: THREE.DoubleSide, roughness: .85, color: 0xffffff }), SPR ? SD0 : 92, SPR ? SD1 : 128);   /* Laubflächen: mit Tafeln erst beim Übergang zur Tafel */
       const icS = cardC ? new THREE.InstancedMesh(cardC, cardM(FOL.cardC), place.length) : null, ibS = cardB ? new THREE.InstancedMesh(cardB, cardM(FOL.card), place.length) : null;
+      const SPL = { nc: [], nl: [], fc: [], fl: [] }, bark = it.material;   // Tafeln je Modell: nah (mit Laubflächen) / fern (einfache Krone), je Nadel-/Laubbaum
+      if (SPR) TREESPR = { lists: SPL, D0: SD0, D1: SD1, parts: { nc: [[cone, needleMat], ...(icS ? [[cardC, icS.material]] : []), [trunk, bark]], nl: [[ball, leafMat], ...(ibS ? [[cardB, ibS.material]] : []), [trunk, bark]], fc: [[coneLo, needleMat], [trunk, bark]], fl: [[ballLo, leafMat], [trunk, bark]] } };
       const nearCap = S.gfx === 'ultra' ? 4200 : hi ? 2800 : 800, conF = TH.conifer ?? 0.33; let nearN = 0, aL = 0, bL = 0;
       const dTrk = place.map(([x, z]) => nearestDist(x, z)[0]), dCut = Math.min(95, Float32Array.from(dTrk).sort()[Math.min(place.length - 1, nearCap)] ?? 95);   /* die detaillierten Bäume gehen an die streckennächsten (vorher: an die ersten in der Liste) */
       let a = 0, b = 0;
@@ -6944,7 +6958,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         const isCon = Math.random() < conF;
         if (isCon) { const M2 = near ? ic : icL, n2 = near ? a++ : aL++; M2.setMatrixAt(n2, m4); M2.setColorAt(n2, cc.setHSL(CN.hsl[0] + Math.random() * .05, CN.hsl[1], CN.hsl[2] + Math.random() * .15)); if (near && icS) { icS.setMatrixAt(n2, m4); icS.setColorAt(n2, cc); } }
         else { const M2 = near ? ib : ibL, n2 = near ? b++ : bL++; M2.setMatrixAt(n2, m4); M2.setColorAt(n2, cc.setHSL(LF.hsl[0] + Math.random() * .08, LF.hsl[1], LF.hsl[2] + Math.random() * .2)); if (near && ibS) { ibS.setMatrixAt(n2, m4); ibS.setColorAt(n2, cc); } }
-        (isCon ? sprC : sprL).push([m4.clone(), cc.clone()]);
+        SPL[(near ? 'n' : 'f') + (isCon ? 'c' : 'l')].push([m4.clone(), cc.clone()]);
       });
       ic.count = a; ib.count = b; icL.count = aL; ibL.count = bL; ic.castShadow = ib.castShadow = true; trackGroup.add(ic, ib, it, icL, ibL);
       if (icS) { icS.count = a; if (a) trackGroup.add(icS); } if (ibS) { ibS.count = b; if (b) trackGroup.add(ibS); }
@@ -9210,7 +9224,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.55'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.56'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
