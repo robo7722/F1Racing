@@ -2998,7 +2998,7 @@ function decalGLSL(tk) { const f = v => (+v).toFixed(4), B = SHEETS[tk]; let g =
   const spot = (d, smp, on, asp) => (d.v === 'top'
     ? '\n  if (' + on + ' > 0.5 && dN.y > 0.5) { dUV = vec2(0.5 + (vLP.x - ' + f(d.x || 0) + ') / ' + f(d.s * asp) + ', 0.5 - (vLP.z - ' + f(d.z) + ') / ' + f(d.s) + ');'
     : '\n  if (' + on + ' > 0.5 && dN.x * sign(vLP.x) > 0.45 && abs(vLP.x) > ' + f(d.x0 || 0) + ' && abs(vLP.x) < ' + f(d.x1 || 9) + ') { dUV = vec2(0.5 - sign(vLP.x) * (vLP.z - ' + f(d.z) + ') / ' + f(d.s * asp) + ', 0.5 + (vLP.y - ' + f(d.y) + ') / ' + f(d.s) + ');')
-    + ' dT = decalTex(' + smp + ', dUV); diffuseColor.rgb = mix(diffuseColor.rgb, ' + (asp > 1 ? 'uNumCol' : 'dT.rgb') + ', dT.a); }';
+    + ' dT = decalTex(' + smp + ', dUV); diffuseColor.rgb = mix(diffuseColor.rgb, ' + (asp > 1 ? (d.color ? lc(parseInt(String(d.color).replace('#', ''), 16)) : 'uNumCol') : 'dT.rgb') + ', dT.a); }';   /* Nummer: eigene Farbe je Stelle möglich (color), sonst die Nummernfarbe des Autos */
   for (const d of DECALS[tk] || []) g += spot(d, 'uDecal', 'uDecalOn', 1);
   for (const d of (NUMS[tk] || {}).list || []) g += spot(d, 'uNum', 'uNumOn', 2);
   return g + '\n }'; }
