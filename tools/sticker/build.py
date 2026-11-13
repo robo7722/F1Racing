@@ -17,6 +17,10 @@ Beschreibung (JSON):
                      w Breite und h Höhe in Metern (sonst aus dem Foto; nur w -> Seitenverhältnis bleibt), dz/dy Verschiebung in Metern,
                      side "both" | "L" | "R", thr [lo, hi] Schwellen 0..1,
                      mask [[x0,y0,x1,y1], ...]: nur diese Teilkästen innerhalb von box verwenden (schräge Schrift),
+                     smooth r: Farbfläche glätten (Rundung r in Foto-Pixeln, etwa 6 … 14) – Lücken, Fransen und Inseln weg, Rand als glatte Kurve;
+                     holes false: Löcher (Schrift in der Fläche) offen lassen; grow n: Fläche um n Foto-Pixel vergrößern (unter die Nachbarfläche, gegen dunkle Fugen),
+                     poly [[x,y], ...]: Vieleck in Foto-Pixeln begrenzt die Fläche; mit fill true ist das Vieleck selbst die Fläche in "color"
+                       (für Farbflächen mit geraden oder schrägen Kanten – sauberer als jeder Fotoausschnitt; box darf dann fehlen),
                      mirror true/false: auf der anderen Fahrzeugseite spiegelverkehrt auftragen (Standard: true bei "key", sonst false) }
             Reihenfolge = Schichtung: zuerst die großen Farbflächen, danach die Schriftzüge.
   number    Startnummer (Grafik im Design des Fahrers, kommt je Fahrer aus liveries/num/): { "color": "#rrggbb",
@@ -70,15 +74,40 @@ def cut(img, st):
         else:
             tol = st.get('tol', 60); dd = np.sqrt(((a - key) ** 2).sum(2)); al = np.clip((tol - dd) / (tol * 0.3), 0, 1)
         rgb = np.empty_like(a); rgb[:] = hexrgb(st.get('color', st['key']))
+        if st.get('smooth'): al = smooth(al, st['smooth'], st.get('holes', True), st.get('grow', 0))
     else:                                          # Farben behalten: Abstand zur Randfarbe des Ausschnitts
         edge = np.concatenate([a[:2].reshape(-1, 3), a[-2:].reshape(-1, 3), a[:, :2].reshape(-1, 3), a[:, -2:].reshape(-1, 3)])
         bg = np.median(edge, axis=0); al = auto(np.abs(a - bg).max(2))
         rgb = np.clip((a - bg * (1 - al[..., None])) / np.maximum(al[..., None], 0.08), 0, 255)
+    if st.get('poly'):                              # Vieleck (Foto-Pixel): Fläche sauber begrenzen; mit "fill": true ist es die Fläche selbst (wie gezeichnet)
+        from PIL import ImageDraw
+        k = 4; pm = Image.new('L', ((x1 - x0) * k, (y1 - y0) * k), 0)
+        ImageDraw.Draw(pm).polygon([((px - x0) * k, (py - y0) * k) for px, py in st['poly']], fill=255)
+        pm = np.asarray(pm.resize((x1 - x0, y1 - y0), Image.LANCZOS)).astype(np.float32) / 255
+        al = pm if st.get('fill') else al * pm
+        if kind != 'key' and st.get('fill'): rgb = np.empty_like(a); rgb[:] = hexrgb(st.get('color', '#ffffff'))
     if st.get('mask'):                              # nur diese Teilkästen des Ausschnitts gelten (für schräg laufende Schrift, die kein gerader Kasten knapp umschließt)
         keep = np.zeros(al.shape, bool)
         for mx0, my0, mx1, my1 in st['mask']: keep[max(0, int(my0) - y0):max(0, int(my1) - y0), max(0, int(mx0) - x0):max(0, int(mx1) - x0)] = True
         al = al * keep
     return Image.fromarray(np.dstack([rgb, al * 255]).astype(np.uint8), 'RGBA')
+
+def smooth(al, r, holes=True, grow=0):
+    """Farbfläche glätten (wie gezeichnete Kurven statt Fotoausschnitt): Lücken durch Schatten, Spiegelungen und Schrift schließen,
+    Fransen und Inseln entfernen, Rand rund ziehen. r = Rundung in Foto-Pixeln (etwa 4 … 15)."""
+    from scipy import ndimage as nd
+    r = max(1, int(r)); p = 3 * r
+    m = np.pad(al > 0.5, p, mode='edge')
+    yy, xx = np.mgrid[-r:r + 1, -r:r + 1]; disk = xx * xx + yy * yy <= r * r
+    m = nd.binary_closing(m, disk)
+    if holes: m = nd.binary_fill_holes(m)
+    q = max(1, r // 2); yq, xq = np.mgrid[-q:q + 1, -q:q + 1]; m = nd.binary_opening(m, xq * xq + yq * yq <= q * q)   # schmale Linien bleiben
+    lab, n = nd.label(m)
+    if n > 1:                                      # kleine Inseln (Spiegelungen, Reste) weg
+        size = nd.sum(m, lab, range(1, n + 1)); m = np.isin(lab, 1 + np.flatnonzero(size >= max(size.max() * 0.04, 4 * r * r)))
+    if grow: m = nd.binary_dilation(m, iterations=int(grow))   # unter die Nachbarfläche schieben: keine dunkle Fuge zwischen zwei Farben
+    s = nd.gaussian_filter(m.astype(np.float32), r * 0.5)
+    return np.clip((s - 0.5) * 6.0 + 0.5, 0, 1)[p:-p, p:-p]
 
 def bleed(sheet, rounds=12):
     """Farbe der Aufkleber in die durchsichtige Umgebung ziehen (Deckkraft bleibt 0): sonst mischt die Grafikkarte am Rand Weiß hinein -> heller Saum."""
@@ -90,6 +119,11 @@ def bleed(sheet, rounds=12):
         new = (~have) & (cnt > 0); rgb[new] = acc[new] / cnt[new][:, None]; have = have | new
     return Image.fromarray(np.dstack([rgb, al]).astype(np.uint8), 'RGBA')
 
+def boxof(st):
+    if 'box' not in st and st.get('poly'):
+        xs, ys = [p[0] for p in st['poly']], [p[1] for p in st['poly']]; st['box'] = [min(xs) - 2, min(ys) - 2, max(xs) + 2, max(ys) + 2]
+    return st
+
 def build(key):
     cfg = json.load(open(os.path.join(HERE, key + '.json'), encoding='utf-8')); kind = cfg['kind']
     Z0, Z1, Y0, Y1 = BOX[kind]; zr, zf, wy = WHEEL[kind]
@@ -99,7 +133,7 @@ def build(key):
         sc = abs(fx - rx) / (zf - zr); d = 1 if fx > rx else -1; cyp = (ry + fy) / 2          # Pixel je Meter, Fahrtrichtung im Foto
         pxm_x, pxm_y = W / (Z1 - Z0), HH / (Y1 - Y0)
         for st in cfg['stickers']:
-            x0, y0, x1, y1 = st['box']; p = cut(img, st)
+            st = boxof(st); x0, y0, x1, y1 = st['box']; p = cut(img, st)
             cz = zr + ((x0 + x1) / 2 - rx) * d / sc; cy = wy + (cyp - (y0 + y1) / 2) / sc
             if 'at' in st: cz, cy = st['at']
             cz += st.get('dz', 0); cy += st.get('dy', 0); wm = st.get('w', (x1 - x0) / sc)

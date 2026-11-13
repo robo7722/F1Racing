@@ -34,7 +34,9 @@
     510
    ],
    "kind": "key",
-   "key": "#f01e1e"
+   "key": "#f01e1e",
+   "smooth": 5,
+   "holes": false
   },
   {
    "name": "rot_cockpit",
@@ -45,7 +47,9 @@
     422
    ],
    "kind": "key",
-   "key": "#f01e1e"
+   "key": "#f01e1e",
+   "smooth": 5,
+   "holes": false
   },
   {
    "name": "rot_seite_a",
@@ -56,7 +60,9 @@
     480
    ],
    "kind": "key",
-   "key": "#f01e1e"
+   "key": "#f01e1e",
+   "smooth": 5,
+   "holes": false
   },
   {
    "name": "rot_seite",
@@ -67,7 +73,9 @@
     722
    ],
    "kind": "key",
-   "key": "#f01e1e"
+   "key": "#f01e1e",
+   "smooth": 8,
+   "holes": false
   },
   {
    "name": "aas_feld",
@@ -84,7 +92,9 @@
     -0.315,
     0.275
    ],
-   "w": 0.562
+   "w": 0.562,
+   "smooth": 6,
+   "holes": false
   },
   {
    "name": "aas",

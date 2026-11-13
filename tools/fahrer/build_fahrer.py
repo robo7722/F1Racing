@@ -324,6 +324,21 @@ def taubin_zone(V, F, zone, iters=40):
     return Vk[key]
 
 
+def kart_seat():
+    """Innenfläche der Sitzschale aus kart.bin: Punkte + Normalen (zum Fahrer hin), nur Sitzbereich (Mitte, hinter dem Lenkrad)."""
+    b = open(os.path.join(ROOT, 'kart.bin'), 'rb').read(); hl = struct.unpack('<I', b[:4])[0]; h = json.loads(b[4:4 + hl]); base = 4 + hl
+    c = [c for c in h['chunks'] if c['name'] == 'body'][0]
+    P = np.frombuffer(b, np.float32, c['nv'] * 3, base + c['pos']).reshape(-1, 3).astype(float)
+    I = np.frombuffer(b, np.uint32 if c.get('i32') else np.uint16, c['ni'], base + c['idx']).reshape(-1, 3).astype(int)
+    T = P[I]; cen = T.mean(1); sel = (np.abs(cen[:, 0]) < 0.17) & (cen[:, 2] < 0.05) & (cen[:, 2] > -0.75) & (cen[:, 1] > 0.1) & (cen[:, 1] < 0.75)
+    m = trimesh.Trimesh(P, I[sel], process=False); pts, fi = trimesh.sample.sample_surface_even(m, 6000, seed=2); n = m.face_normals[fi]
+    inner = np.array([0, 0.45, -0.25])                                                    # Punkt im Sitzraum: Normalen zu ihm hin drehen
+    n = n * np.sign(np.einsum('ij,ij->i', inner - pts, n))[:, None]
+    # nur die dem Fahrer zugewandte Schalenseite: Pfanne (Normale nach oben) und Lehne (Normale nach vorn)
+    keep = ((n[:, 1] > 0.5) | ((n[:, 2] > 0.5) & (n[:, 1] > -0.2))) & (np.abs(pts[:, 0]) < 0.11)   # ohne Oberkante der Lehne (Normale schräg nach unten)              # Mitte der Schale (ohne Oberkanten der Seitenwangen)
+    return pts[keep], n[keep]
+
+
 def pose_kart(V, F, S):
     """V: Körper in Metern (Ruhehaltung, Maßstab S). Gibt gebogene Eckpunkte und Anker (Helm, Griff) zurück."""
     j = {k: v * S for k, v in J.items()}
@@ -341,7 +356,7 @@ def pose_kart(V, F, S):
     L1, L2 = np.linalg.norm(j['el'] - j['sh']), np.linalg.norm(j['wr'] - j['el'])
 
     # ---- Haltung wie beim echten Kartfahren: Rumpf leicht zurück, Oberarme hängen, Ellbogen ~90° unten-außen, Unterarme nach vorn ----
-    lean = np.radians(12); Rsp = rot_x(-lean)
+    lean = np.radians(19); Rsp = rot_x(-lean)                                          # Rumpf liegt an der Lehne (die ist ~18° geneigt)
 
     def solve_arm(hipT):
         sh = hipT + Rsp @ (j['sh'] - j['pelvis'])
@@ -365,29 +380,51 @@ def pose_kart(V, F, S):
             Yg = nrm(fa * (1 - t) + yp * t); Xh = nrm(Xg - np.dot(Xg, Yg) * Yg)           # Rest: Kranz läuft schräg durch die Hand (wie in echt)
         return sh, el, wristT, (Xh, Yg), np.linalg.norm(wristT - sh)
 
-    # Sitzposition: so weit nach vorn, dass die Arme gut angewinkelt sind (Abstand Schulter–Hand ≈ 72 % der Armlänge), im Sitz bleiben
+    # Sitzposition aus der Sitzschale: Gesäß auf der Pfanne, Rücken an der Lehne – ohne einzudringen (Rumpf-Punkte gegen die Schalen-Innenfläche)
+    from scipy.spatial import cKDTree
+    sp, sn = kart_seat(); kd = cKDTree(sp)
+    xr, yr = V[:, 0] / S, V[:, 1] / S
+    torso = (np.abs(V[:, 0]) < 0.10) & (yr > 0.465) & (yr < 0.80); Pt = V[torso] - j['pelvis']   # Gesäß + Rücken (darunter: Oberschenkel, die gehen im Sitzen nach vorn)
+    butt, back = Pt[:, 1] < (0.56 - 0.5) * S, Pt[:, 1] > (0.62 - 0.5) * S
     best = None
-    for hz in np.linspace(-0.36, -0.16, 41):
-        hipT = np.array([0, 0.19, hz]); r = solve_arm(hipT)
-        sc = -abs(r[4] / (L1 + L2) - 0.72)
-        if best is None or sc > best[0]: best = (sc, hipT, r)
-    hipT, (sh, el, wristT, (Xh, Yg), dist) = best[1], best[2]
+    for lean_d in range(12, 23, 1):
+        Rl = rot_x(-np.radians(lean_d)); Q0 = Pt @ Rl.T
+        for hz in np.linspace(-0.52, -0.25, 28):
+            for hy in np.linspace(0.18, 0.34, 33):
+                Q = Q0 + [0, hy, hz]; _, k = kd.query(Q); d = np.einsum('ij,ij->i', Q - sp[k], sn[k])
+                pen = np.clip(-d, 0, None)
+                # Gesäß liegt auf der Pfanne UND Rücken liegt an der Lehne (je die 25 nächsten Punkte ≈ 3 mm Abstand), nichts dringt ein
+                cb = ((np.sort(d[butt])[:25] - 0.003) ** 2).mean(); cr = ((np.sort(d[back])[:25] - 0.003) ** 2).mean()
+                sc = (pen ** 2).sum() * 4e4 + (cb + cr) * 1e4
+                if best is None or sc < best[0]: best = (sc, lean_d, np.array([0, hy, hz]), pen.max(), np.sort(d[back])[0], np.sort(d[butt])[0])
+    lean = np.radians(best[1]); Rsp = rot_x(-lean); hipT = best[2]
+    print(f'Sitz: Neigung {best[1]}°, Becken bei y {hipT[1]:.3f} z {hipT[2]:.3f}, größtes Eindringen {best[3] * 1000:.1f} mm, Abstand Rücken {best[4] * 1000:.0f} mm, Gesäß {best[5] * 1000:.0f} mm')
+    # Lenkrad entlang der Lenksäule (Achse az) zum Fahrer schieben, bis die Arme leicht gebeugt sind (Schulter–Hand ≈ 88 % der Armlänge),
+    # wie bei einer verstellbaren Kart-Lenksäule. Im Spiel: swExt im Kopf von kartfahrer.bin, dazu ein Verlängerungsrohr.
+    sh_w = hipT + Rsp @ (j['sh'] - j['pelvis']); C0 = C.copy(); sw_ext = 0.0
+    for ext in np.arange(0.0, 0.2, 0.005):
+        g_ = C0 + az * ext + axx * 0.188 + ay * (-0.02); wr_ = glove_wrist_world(g_, Xg, -az, np.cross(Xg, -az), S)
+        sw_ext = ext
+        if np.linalg.norm(wr_ - sh_w) / (L1 + L2) <= 0.88: break
+    C = C0 + az * sw_ext; grip = C + axx * 0.188 + ay * (-0.02)
+    print(f'Lenkrad {sw_ext * 100:.1f} cm entlang der Lenksäule zum Fahrer')
+    sh, el, wristT, (Xh, Yg), dist = solve_arm(hipT)
     print(f'Hand: Daumenachse weicht {np.degrees(np.arccos(np.clip(np.dot(Xh, Xg), -1, 1))):.0f}° vom Kranz ab, Handgelenk-Knick {np.degrees(np.arccos(np.clip(np.dot(Yg, nrm(wristT - el)), -1, 1))):.0f}°')
     out = {'reach': {'R': (dist, L1 + L2), 'L': (dist, L1 + L2)}, 'hip': hipT}
     Rua = rot_between(bones['uarmR'][1] - bones['uarmR'][0], el - sh)
     wr_reached = el + nrm(wristT - el) * L2
     Rfa = rot_between(bones['farmR'][1] - bones['farmR'][0], wr_reached - el)
     T = {'spine': (Rsp, hipT), 'uarmR': (Rua, sh), 'farmR': (Rfa, el), 'uarmL': (M @ Rua @ M, M @ sh), 'farmL': (M @ Rfa @ M, M @ el)}
-    out['grip'] = (grip, Xh, Yg, np.cross(Xh, Yg))
+    out['grip'] = (grip, Xh, Yg, np.cross(Xh, Yg)); out['swExt'] = float(sw_ext); out['C'] = C
     out['wrist'] = {'R': (wr_reached, wristT), 'L': (M @ wr_reached, M @ wristT)}
     out['elbow'] = el; out['shoulder'] = sh
     for s, sfx in ((-1, 'R'), (1, 'L')):
         f = (lambda p: p) if s < 0 else mir
         # Beine: Knie hoch, Unterschenkel nach vorn-unten zu den Pedalen, Füße aufgestellt
         hip = hipT + f(j['hip'] - j['pelvis'])
-        dth = nrm(f(np.array([-0.08, 0.32, 1.0]))); Rth = rot_between(bones['thigh' + sfx][1] - bones['thigh' + sfx][0], dth)
+        dth = nrm(f(np.array([-0.10, 0.05, 1.0]))); Rth = rot_between(bones['thigh' + sfx][1] - bones['thigh' + sfx][0], dth)
         knee = hip + dth * np.linalg.norm(j['knee'] - j['hip'])
-        dsh = nrm(f(np.array([0.03, -0.42, 1.0]))); Rsh = rot_between(bones['shin' + sfx][1] - bones['shin' + sfx][0], dsh)
+        dsh = nrm(f(np.array([0.03, -0.20, 1.0]))); Rsh = rot_between(bones['shin' + sfx][1] - bones['shin' + sfx][0], dsh)
         ankle = knee + dsh * np.linalg.norm(j['ankle'] - j['knee'])
         dft = nrm(f(np.array([-0.05, 0.75, 0.55])))
         Rft = rot_between(Rsh @ (bones['foot' + sfx][1] - bones['foot' + sfx][0]), dft) @ Rsh
@@ -558,6 +595,19 @@ def main():
     for sx in (-1, 1): zone = np.maximum(zone, 1 - sst(0.03, 0.06, np.linalg.norm(kV - np.array([sx * 0.11, 0.79, -0.035]), axis=1)))
     kV = taubin_zone(kV, kF, zone, 60)
     Pk, info = pose_kart(kV * S, kF, S)
+    # Nichts im Kart: Punkte, die (z. B. unter dem Gesäß) in Sitzschale/Karosserie stecken, auf deren Oberfläche + 2 mm schieben, Umgebung weich mitnehmen
+    import igl
+    bk = open(os.path.join(ROOT, 'kart.bin'), 'rb').read(); hl = struct.unpack('<I', bk[:4])[0]; hk = json.loads(bk[4:4 + hl]); cb = [c for c in hk['chunks'] if c['name'] == 'body'][0]
+    KP = np.frombuffer(bk, np.float32, cb['nv'] * 3, 4 + hl + cb['pos']).reshape(-1, 3).astype(float); KI = np.frombuffer(bk, np.uint32 if cb.get('i32') else np.uint16, cb['ni'], 4 + hl + cb['idx']).reshape(-1, 3).astype(np.int64)
+    km = trimesh.Trimesh(KP, KI, process=False)
+    for _ in range(3):
+        inside = np.abs(igl.fast_winding_number(KP, KI, Pk)) > 0.5
+        if not inside.any(): break
+        cp, dist, tri = trimesh.proximity.closest_point(km, Pk[inside])
+        nn = (cp - Pk[inside]) / np.maximum(dist, 1e-9)[:, None]                          # vom Punkt (innen) zur Oberfläche = nach außen
+        delta = np.zeros_like(Pk); delta[inside] = cp + nn * 0.002 - Pk[inside]
+        Pk = Pk + delta
+        print(f'Sitz: {int(inside.sum())} Punkte aus dem Kart geschoben (max {dist.max() * 1000:.1f} mm)')
     # Übergang Rumpf/Arm (Schulter, Achsel) glätten: dort wird am stärksten gebogen, kleine Knautschfalten verschwinden
     aw = info['aw']['R'] + info['aw']['L']; Pk = taubin_zone(Pk, kF, np.clip(aw * (1 - aw) * 4, 0, 1) * (kV[:, 1] > 0.55), 30)
     Pk = unfold(Pk, kF, tag='gebogen')                                                 # letzte kleine Falten lokal glätten
@@ -600,17 +650,28 @@ def main():
     reg[(kV[:, 1] < 0.535) & ~(info['arms'][0] | info['arms'][1])] = 2
     reg[info['arms'][0] | info['arms'][1]] = 1
     rest = kV.astype(np.float32); rn = smooth_normals(kV, kF).astype(np.float32)
+    # Arm-Skelett fürs Lenken (Skinning im Shader): Knochen 0 Rumpf, 1/2/3 Oberarm/Unterarm/Hand rechts, 4/5/6 links.
+    # Gewichte aus der Ruhe-Position entlang des Arms: u = 0 Schulter … 1 Ellbogen … 2 Handgelenk; weiche Übergänge an Schulter, Ellbogen, Bündchen.
+    sst = lambda a, b, v: (lambda t: t * t * (3 - 2 * t))(np.clip((v - a) / (b - a), 0, 1))
+    bi = np.zeros((len(kV), 4), np.uint8); bw = np.zeros((len(kV), 4), np.float32); bw[:, 0] = 1
+    for k, f, b0 in ((0, lambda q: q, 1), (1, mir, 4)):
+        m = info['arms'][k]; sh_, el_, wr_ = f(J['sh']), f(J['el']), f(J['wr'])
+        tpu = ((kV - sh_) @ (el_ - sh_)) / np.dot(el_ - sh_, el_ - sh_); tfu = ((kV - el_) @ (wr_ - el_)) / np.dot(wr_ - el_, wr_ - el_)
+        u = np.where(tfu > 0, 1 + tfu, tpu)
+        wa = sst(-0.15, 0.3, u); wf = sst(0.85, 1.15, u); wh = sst(1.82, 1.97, u)
+        W4 = np.stack([1 - wa, wa * (1 - wf), wa * wf * (1 - wh), wa * wf * wh], 1)
+        bi[m] = [0, b0, b0 + 1, b0 + 2]; bw[m] = W4[m]
     # Handschuhe (verkleinert) an beide Hände
     hV, hF, hUV = decimate(gV0, gF0, gUV0, 1600)
     parts_V, parts_F, parts_UV, parts_R, parts_Y = [Pk], [kF], [kUV * np.array([0.5, 1.0])], [reg], [ry]
-    parts_P, parts_N = [rest], [rn]
+    parts_P, parts_N, parts_BI, parts_BW = [rest], [rn], [bi], [bw]
     off = len(Pk)
     armPts = Pk[info['arms'][0]]                                                       # Ärmel (für die Stulpe), nach dem Engziehen
     gvR, gfR = place_glove(hV, hF, *info['grip'], S)
     armR = info['arms'][0]; el = info['elbow']; wr = info['wrist']['R'][0]
     gvR = fit_gauntlet(gvR, hV[:, 1], armPts, wr, nrm(wr - el), S)
     # Prüfung: Abstand der Handschuh-Eckpunkte zur Kranz-Mittellinie (Kranzrohr 0,021 m) – Faust soll ihn umschließen, nicht durchdringen
-    az_ = nrm(np.array([0, 29, -36.0])); Cw = np.array([0, 0.5005, 0.1235]); rel = gvR - Cw; rp = rel - np.outer(rel @ az_, az_)
+    az_ = nrm(np.array([0, 29, -36.0])); Cw = info['C']; rel = gvR - Cw; rp = rel - np.outer(rel @ az_, az_)
     ring = Cw + 0.188 * rp / np.linalg.norm(rp, axis=1, keepdims=True); dr = np.linalg.norm(gvR - ring, axis=1)
     near = dr < 0.06
     print(f'Handschuh–Kranz: kleinster Abstand {dr.min():.3f} m, Eckpunkte im Rohr {int((dr < 0.019).sum())}, Winkelabdeckung um den Kranz', end=' ')
@@ -618,7 +679,7 @@ def main():
     ang = np.degrees(np.arctan2(d @ az_, np.sum(d * u1, 1)))[near]; print(f'{np.ptp(ang):.0f}°')
     for s, sfx in ((-1, 'R'), (1, 'L')):
         pv, pf = (gvR, gfR) if s < 0 else (gvR * np.array([-1.0, 1, 1]), gfR[:, ::-1])   # linke Hand gespiegelt
-        parts_V.append(pv); parts_F.append(pf + off); parts_UV.append(hUV * np.array([0.5, 1.0]) + np.array([0.5, 0.0])); parts_R.append(np.full(len(pv), 3, np.uint8)); parts_Y.append(np.full(len(pv), -1, np.float32)); parts_P.append(np.zeros((len(pv), 3), np.float32)); parts_N.append(np.tile([0, 1, 0], (len(pv), 1)).astype(np.float32)); off += len(pv)
+        parts_V.append(pv); parts_F.append(pf + off); parts_UV.append(hUV * np.array([0.5, 1.0]) + np.array([0.5, 0.0])); parts_R.append(np.full(len(pv), 3, np.uint8)); parts_Y.append(np.full(len(pv), -1, np.float32)); parts_P.append(np.zeros((len(pv), 3), np.float32)); parts_BI.append(np.tile([0, 3 if s < 0 else 6, 0, 0], (len(pv), 1)).astype(np.uint8)); parts_BW.append(np.tile([0, 1, 0, 0], (len(pv), 1)).astype(np.float32)); parts_N.append(np.tile([0, 1, 0], (len(pv), 1)).astype(np.float32)); off += len(pv)
         print(f'Handgelenk {sfx}: Arm endet bei {np.round(info["wrist"][sfx][0], 3)}, Handschuh bei {np.round(info["wrist"][sfx][1], 3)}')
     AV, AF, AUV, AR, AY = np.vstack(parts_V), np.vstack(parts_F), np.vstack(parts_UV), np.concatenate(parts_R), np.concatenate(parts_Y)
     N = smooth_normals(AV, AF)
@@ -631,11 +692,16 @@ def main():
     nk = Pk[kV[:, 1] > 0.845]; HB_BOTTOM = 0.154 * 1.1                                 # Helm-Unterkante unter der Mitte (Spielhelm × 1,1)
     helm = np.array([0.0, nk[:, 1].max() - 0.045 + HB_BOTTOM, (nk[:, 2].min() + nk[:, 2].max()) / 2 + 0.02])
     print('Hals oben', np.round(nk[:, 1].max(), 3), '→ Helm', np.round(helm, 3), '(vorher', np.round(info['head'], 3), ')')
-    blobs, hdr = [], {'nv': len(AV), 'ni': AF.size, 'helm': np.round(helm, 4).tolist(), 'helmTilt': 0.0}
+    blobs, hdr = [], {'nv': len(AV), 'ni': AF.size, 'helm': np.round(helm, 4).tolist(), 'helmTilt': 0.0, 'swExt': round(info['swExt'], 4)}
     def put(name, arr):
         off = sum(len(b) for b in blobs); b = arr.tobytes(); b += b'\0' * (-len(b) % 4); blobs.append(b); hdr[name] = off
     put('pos', AV.astype(np.float32)); put('nrm', N.astype(np.float32)); put('uv', AUV.astype(np.float32)); put('reg', AR.astype(np.uint8)); put('ry', AY.astype(np.float32))
     put('rest', np.vstack(parts_P).astype(np.float32)); put('rn', np.round(np.vstack(parts_N) * 127).astype(np.int8))
+    BW = np.vstack(parts_BW); BW /= BW.sum(1, keepdims=True)
+    put('bi', np.vstack(parts_BI).astype(np.uint8)); put('bw', np.round(BW * 255).astype(np.uint8))
+    shP, elP, wrP = info['shoulder'], info['elbow'], info['wrist']['R'][0]
+    hdr['arm'] = [np.round(v, 4).tolist() for v in (shP, elP, wrP)]                       # Gelenke rechts (Sitzhaltung); links = gespiegelt
+    hdr['swC'] = np.round(info['C'], 4).tolist(); hdr['swAx'] = np.round(nrm(np.array([0, 29, -36.0])), 5).tolist()
     put('idx', AF.astype(np.uint16 if len(AV) < 65536 else np.uint32).reshape(-1)); hdr['i32'] = len(AV) >= 65536
     hj = json.dumps(hdr).encode(); hj += b' ' * (-len(hj) % 4)
     with open(os.path.join(ROOT, 'kartfahrer.bin'), 'wb') as fo: fo.write(struct.pack('<I', len(hj)) + hj + b''.join(blobs))

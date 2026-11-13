@@ -1,6 +1,6 @@
 # Rennfahrer-Modell
 
-Stand: 13.11.2026 (v1.44) – Kart-Fahrer im Spiel eingebaut, stehende Figur als Vorschau.
+Stand: 13.11.2026 (v1.51) – Kart-Fahrer im Spiel eingebaut, stehende Figur als Vorschau.
 
 ## Dateien
 - `kartfahrer.bin` – sitzender Kart-Fahrer fürs Spiel: Körper + beide Handschuhe als EIN Netz (~14 200 Dreiecke).
@@ -39,6 +39,28 @@ Prüfansicht: `fahrer/kart_vorschau.html?debug` färbt Rückseiten grün – so 
 - **Behoben (v1.44):** gezackte weiße Linie seitlich am Körper/über die Schultern. Ursache: Arme hatten `aRy = 0,5` als „kein Gürtel“, an der Grenze zum Rumpf lief der Wert über die Gürtelhöhe → dünner Gürtelstreifen. Jetzt eigener Bereich `aReg` (0 Rumpf, 1 Arm, 2 Bein, 3 Handschuh).
 - Helm: derselbe wie F1/F2 (`helmMat(…, true)`), beim Kart ohne das Anbauteil unter dem Visier.
 - Cockpitkamera der Karts sitzt auf Augenhöhe im Helm (`cam` aus `KFAHRER.helm`).
+
+## v1.49 – Sitz, Cockpit, Lenken, Helme
+- **Sitz**: Sitzposition aus der Sitzschale in `kart.bin` berechnet (`kart_seat`): Gesäß liegt auf der Pfanne, Rücken an der Lehne (je ~3 mm Abstand), nichts dringt ein. Neigung 14°.
+- **Lenkrad** rückt dafür 12 cm entlang der Lenksäule zum Fahrer (verstellbare Säule, `swExt` in `kartfahrer.bin`), mit Verlängerungsrohr – so sind die Arme leicht gebeugt.
+- **Cockpitansicht Kart**: Kamera tiefer (9 cm unter der Helmmitte) und Blick ~24° nach unten: Lenkrad, Display und beide Hände im Bild. Die alten eingeblendeten Arme sind beim neuen Fahrer aus; man sieht die echten Arme des Modells.
+- **Lenken**: Arme mit Skelett (7 Knochen, Gewichte im Bauskript, Skinning im Shader). `kartArmsIK` je Bild: Hand bleibt am Kranz und dreht mit dem Lenkrad, Schulter fest, Ober-/Unterarm starr – der Ellbogen ergibt sich aus der Zwei-Knochen-IK und bleibt in seiner Ebene.
+- **Helme (alle Karts)**: Das Anbauteil unter dem Visier wurde vorher weggeschnitten → Loch mit Blick ins Helminnere (dunkle, „komische“ Formen, am deutlichsten bei hellen/blauen Helmen). Jetzt `helmGeoKart`: Kinnteil auf die Schalenform gelegt und in Helmfarbe, eingelassene Lüftungsschlitze glatt schattiert, Visier nur von vorn. Rest: zwei winzige Lüftungspunkte, nur aus nächster Nähe sichtbar.
+
+## v1.50 – Korrektur nach Handy-Screenshot
+- Lenkrad drehte beim Kart mit vollem Einschlag um 92° (`steer × 1,6`) – die Hand landete über dem Lenkrad, der Arm lag quer vor dem Gesicht. Jetzt `KART_SW_ROT = 0,7` (~40°) für Karts mit neuem Fahrer.
+- Ellbogen-Pol nach unten-außen gezogen (Ellbogen bleibt beim Einlenken unten).
+- Gewebe-Relief und Strickrippen werden ausgeblendet, sobald sie feiner als ein Bildpunkt sind (Pixelmuster/Flimmern auf dem Handy).
+- Getestet mit vollem Einschlag in beide Richtungen (vorher nur halber Einschlag – deshalb übersehen).
+
+## v1.51 – kein Clipping
+Geprüft rechnerisch (Punkte aus dem laufenden Spiel ausgelesen, Windungszahl gegen Körper und Kart) bei Einschlag −1, −0,5, 0, 0,5, 1:
+- **Kamera**: nichts näher als 40 cm im Bild – kein Abschneiden an der Nahgrenze, auch beim Umschauen.
+- **Hand in den Oberschenkel** bei vollem Einschlag (≈3 cm): Oberschenkel flacher gelegt (Knie tiefer, wie beim echten Kart).
+- **Ellbogen in die Hüfte** beim unteren Arm: Ellbogen-Pol jetzt außen-unten statt unten.
+- **Gesäß/Oberschenkel in der Sitzschale** (bis 7 mm): Punkte im Kart werden im Bauskript auf die Oberfläche + 2 mm geschoben.
+- Ergebnis: 0 Punkte Hand↔Bein, 0 Anzug↔Kart, Arm↔Rumpf nur 1 Punkt 1,4 mm am Schultergelenk (fließender Übergang derselben Fläche).
+- Beabsichtigte Überlappungen bleiben: Handschuh-Stulpe über dem Bündchen, Faust um den Lenkradkranz.
 
 ## Offen / Ideen
 - Lenkrad dreht sich beim Lenken, die Hände nicht (war beim alten Fahrer genauso).

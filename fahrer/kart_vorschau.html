@@ -31,12 +31,15 @@ g.setAttribute('aReg', new THREE.BufferAttribute(Float32Array.from(new Uint8Arra
 g.setAttribute('aRy', new THREE.BufferAttribute(new Float32Array(fb, fbase + fh.ry, fh.nv), 1));
 g.setAttribute('aRest', new THREE.BufferAttribute(new Float32Array(fb, fbase + fh.rest, fh.nv * 3), 3));
 g.setAttribute('aRN', new THREE.BufferAttribute(new Int8Array(fb, fbase + fh.rn, fh.nv * 3), 3, true));
+g.setAttribute('aBi', new THREE.BufferAttribute(Float32Array.from(new Uint8Array(fb, fbase + fh.bi, fh.nv * 4)), 4)); g.setAttribute('aBw', new THREE.BufferAttribute(new Uint8Array(fb, fbase + fh.bw, fh.nv * 4), 4, true));
+sw.position.addScaledVector(az, fh.swExt || 0); const spin = -(+q.get('steer') || 0) * 1.6; sw.children[0].rotation.z = spin;   // Lenkrad wie im Spiel versetzt; ?steer=-1…1
 // Material aus dem Spiel (Abschnitt KFMAT-START … KFMAT-END in index.html), Texturpfade eine Ebene höher
 const src = await fetch('../index.html').then(x => x.text()), part = src.slice(src.indexOf('// KFMAT-START'), src.indexOf('// KFMAT-END')).replaceAll("'textures/", "'../textures/");
-const kartFahrerMat = new Function('THREE', 'col', part + '\nreturn kartFahrerMat;')(THREE, h => new THREE.Color(h));
+const KFAHRER = { swC: new THREE.Vector3(...fh.swC), swAx: new THREE.Vector3(...fh.swAx), arm: fh.arm.map(a => new THREE.Vector3(...a)) };
+const { kartFahrerMat, kartArmsIK } = new Function('THREE', 'col', 'KFAHRER', part + '\nreturn { kartFahrerMat, kartArmsIK };')(THREE, h => new THREE.Color(h), KFAHRER);
 const team = { suit: q.get('suit') || 'c8101c', acc: q.get('acc') || 'f0f0f0' };
 if (q.has('debug')) { s.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0xcc3333, roughness: .75, side: THREE.FrontSide }))); s.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.BackSide }))); }   // Prüfung: Rückseiten grün
-else s.add(new THREE.Mesh(g, kartFahrerMat('T', new THREE.Color('#' + team.suit), new THREE.Color('#' + team.acc))));
+else { const mt = kartFahrerMat('T', new THREE.Color('#' + team.suit), new THREE.Color('#' + team.acc)); kartArmsIK(mt.userData.U.uBone.value, spin); s.add(new THREE.Mesh(g, mt)); }
 // Helm
 const dec = (b, Ty) => { const s2 = atob(b), u = new Uint8Array(s2.length); for (let i = 0; i < u.length; i++) u[i] = s2.charCodeAt(i); return new Ty(u.buffer); };
 const p16 = dec(HELM_BIN.p, Int16Array), n8 = dec(HELM_BIN.n, Int8Array), z8 = dec(HELM_BIN.z, Uint8Array), ix = dec(HELM_BIN.i, Uint16Array), n = z8.length, P = new Float32Array(n * 3), N = new Float32Array(n * 3);
