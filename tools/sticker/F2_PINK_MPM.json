@@ -23,7 +23,8 @@
  "glsl": [
   "vec3 P = #f29ac4; vec3 N = #151c36; vec3 R = #d8232a; vec3 col = P;",
   "float rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.6);",
-  "col = mix(col, N, rw); col = mix(col, R, rw * aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.40)));",
+  "col = mix(col, R, rw * aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.57)));",
+  "col = mix(col, N, band(p.z, 1.75, 2.45) * (1.0 - aaS(p.y - 0.31)) * (1.0 - aaS(abs(p.x) - 0.3)));",
   "return col;"
  ],
  "stickers": [
@@ -67,7 +68,10 @@
     605
    ],
    "kind": "w",
-   "color": "#151c36"
+   "at": [
+    1.93,
+    0.245
+   ]
   },
   {
    "name": "pirelli",
@@ -77,17 +81,29 @@
     438,
     685
    ],
-   "kind": "c"
+   "kind": "c",
+   "at": [
+    2.22,
+    0.21
+   ]
   }
+ ],
+ "zones": [
+  [
+   1.75,
+   2.8,
+   0,
+   0.45
+  ]
  ],
  "number": {
   "color": "#151c36",
   "spots": [
    {
     "v": "side",
-    "z": -1.2,
-    "y": 0.8,
-    "s": 0.18
+    "z": -2.1,
+    "y": 0.62,
+    "s": 0.2
    },
    {
     "v": "top",

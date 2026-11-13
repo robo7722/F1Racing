@@ -24,11 +24,19 @@
  },
  "glsl": [
   "vec3 R = #e01010; vec3 W = #f2f2f2; vec3 G = #0a9a3c; vec3 col = R; float sd = aaS(abs(p.x) - 0.15);",
-  "col = mix(col, W, sd * band(p.z, -0.255, 0.093) * band(p.y, 0.56, 0.66));",
-  "col = mix(col, W, sd * band(p.z, -0.831, -0.535) * band(p.y, 0.48, 0.615));",
-  "col = mix(col, W, sd * band(p.z, -1.206, -0.978) * band(p.y, 0.431, 0.526));",
-  "col = mix(col, G, sd * band(p.z, -1.099, -0.849) * band(p.y, 0.152, 0.339));",
+  "float yu = 0.655 - 0.146 * clamp(-0.6 - p.z, 0.0, 1.0); float yl = max(0.385, 0.555 + 0.19 * p.z);",
+  "col = mix(col, W, sd * band(p.z, -1.3, 0.1) * band(p.y, yl, yu));",
+  "col = mix(col, G, sd * (1.0 - aaS(p.z + 0.78 + 0.42 * (0.41 - p.y))) * (1.0 - aaS(p.y - yl + 0.01)) * aaS(p.z + 1.5));",
+  "col = mix(col, G, band(p.z, -1.35, -0.47) * aaS(p.y - 0.71 + 0.08 * clamp((-0.45 - p.z) / 0.65, 0.0, 1.0)));",
   "return col;"
+ ],
+ "zones": [
+  [
+   1.9,
+   2.8,
+   0,
+   0.45
+  ]
  ],
  "stickers": [
   {
@@ -143,7 +151,9 @@
     2068,
     386
    ],
-   "kind": "c"
+   "kind": "c",
+   "dy": -0.03,
+   "w": 0.3
   },
   {
    "name": "saga",
@@ -153,7 +163,8 @@
     2466,
     442
    ],
-   "kind": "d"
+   "kind": "d",
+   "dy": -0.035
   },
   {
    "name": "claro",
@@ -163,7 +174,8 @@
     2726,
     476
    ],
-   "kind": "c"
+   "kind": "c",
+   "dy": -0.03
   },
   {
    "name": "pony",
@@ -203,7 +215,11 @@
     2440,
     733
    ],
-   "kind": "w"
+   "kind": "w",
+   "at": [
+    -0.25,
+    0.19
+   ]
   },
   {
    "name": "crc",
@@ -213,7 +229,11 @@
     380,
     702
    ],
-   "kind": "w"
+   "kind": "w",
+   "at": [
+    2.3,
+    0.2
+   ]
   },
   {
    "name": "pirelli",

@@ -23,8 +23,9 @@
  "glsl": [
   "vec3 O = #ff5a08; vec3 K = #141518; vec3 col = O;",
   "col = mix(col, K, aaS(p.z - 2.0));",
+  "col = mix(col, K, band(p.z, -1.4, -0.42) * aaS(p.y - 0.873 - 0.25 * (p.z + 0.413)));",
   "float rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.6);",
-  "col = mix(col, K, rw * (1.0 - aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.40))));",
+  "col = mix(col, K, rw * (1.0 - aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.57))));",
   "return col;"
  ],
  "stickers": [
@@ -122,6 +123,14 @@
    ],
    "kind": "c"
   }
+ ],
+ "zones": [
+  [
+   1.9,
+   2.8,
+   0,
+   0.45
+  ]
  ],
  "logoFile": "F2_MPM",
  "logos": [
