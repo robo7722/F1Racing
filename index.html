@@ -1675,8 +1675,9 @@ function foliageMat(m) {
       { vec3 fL = directionalLights[ 0 ].direction, fV = normalize( vViewPosition ), fC = directionalLights[ 0 ].color * diffuseColor.rgb * RECIPROCAL_PI;
         float fNL = dot( normal, fL ), fWrap = clamp( ( fNL + 0.6 ) / 1.6, 0.0, 1.0 ) - clamp( fNL, 0.0, 1.0 ), fBack = pow( clamp( dot( fV, - fL ), 0.0, 1.0 ), 3.0 );
         reflectedLight.directDiffuse += fC * ( fWrap * 0.5 + fBack * 0.8 * ( 0.35 + 0.65 * clamp( 1.0 - fNL, 0.0, 1.0 ) ) ) * vec3( 0.95, 1.1, 0.55 ); }
-      #endif`); };
-  m.customProgramCacheKey = function () { return (pk ? pk.call(this) : '') + '|fol'; };
+      #endif
+      reflectedLight.directSpecular *= 0.08; reflectedLight.indirectSpecular *= 0.25;   // kein Glanz auf Laub: schräg gesehene Laubflächen spiegelten den Himmel – in der Ferne helle/weiße Punkte in den Kronen`); };
+  m.customProgramCacheKey = function () { return (pk ? pk.call(this) : '') + '|fol2'; };
   return m;
 }
 // Asphalt: bei flachem Blick spiegelt die raue Oberfläche den hellen Horizont (Fresnel) – die Fahrbahn wird zur Ferne hin heller statt gleichmäßig schwarz
@@ -4402,6 +4403,10 @@ function mcCone(x, z) { const px = PX, pz = PZ, elev = ELEV, spi = SPI, wl = WL,
 function mcNear(x, z, t, W) { const b = Math.min(mcBase(x, z, ELEV[t.j]), mcCone(x, z)); let g = clamp((t.d - W - 1) / 12, 0, 1); g = g * g * (3 - 2 * g); return lerp(Math.min(b, ELEV[t.j]), b, g); }
 // Tribünen-Grundfläche (Monaco): innerhalb eben auf Streckenhöhe, außen über 16 m weich in den Hang
 function padH(x, z, h) { for (const P of MC_PADS) { const dx = x - P.x, dz = z - P.z; if (dx * dx + dz * dz > P.r * P.r) continue; const lx = dx * P.c - dz * P.s, lz = dx * P.s + dz * P.c, ox = Math.max(-2 - lx, lx - (P.dep + 3), 0), oz = Math.max(Math.abs(lz) - P.len / 2 - 2, 0), d = Math.hypot(ox, oz); if (d >= 16) continue; let f = 1 - d / 16; f = f * f * (3 - 2 * f); if (h > P.y) h = lerp(h, P.y, f); } return h; }
+// Kamera nie unter Fahrbahn oder Gelände: in Senken und hinter Kuppen (Eau Rouge) lag die Verfolgerkamera sonst unter dem Asphalt –
+// sie rechnet ihre Höhe nur aus der Steigung am Auto. Untergrenze = Fahrbahn (mit Querneigung) bzw. Gelände an der Kameraposition + 0,6 m.
+function camFloor(m = 0.6) { if (FLAT || !N) return; const c = camera.position, [d, j] = nearestDist(c.x, c.z), lat = (c.x - PX[j]) * RX[j] + (c.z - PZ[j]) * RZ[j];
+  let y = groundY(c.x, c.z); if (Math.abs(lat) < Math.max(WL[j], WR[j]) + 3) y = Math.max(y, ELEV[j] + bankY(j, lat)); if (c.y < y + m) c.y = y + m; }
 function groundY(x, z) { const px = PX, pz = PZ, rx = RX, rz = RZ, wl = WL, wr = WR; if (FLAT) return 0; if (MC_SEA && MC_SEA(x, z)) return -3;   /* Meeresboden unter dem Hafen */ const t = terr(x, z), j = t.j, latS = (x - px[j]) * rx[j] + (z - pz[j]) * rz[j], W = latS < 0 ? wl[j] : wr[j], bw = BANDW ? BANDW[latS < 0 ? 0 : 1][j] : BAND, f = clamp((t.d - (W + Math.min(BAND, bw + 4) - 32)) / 30, 0, 1);   /* nur absenken, wo ein Geländeband darüber liegt – sonst schweben Kies und Bäume über einer Senke */ let y = surfH(x, z, t) - 4 * (1 - f * f * (3 - 2 * f)); if (TRK.mc && t.d < W + 30) { let g = clamp((t.d - W - 4) / 26, 0, 1); g = g * g * (3 - 2 * g); y = lerp(Math.min(y, mcLow(x, z) - 3), y, g); } return y; }   /* nur direkt hinter den Mauern absenken, weich auslaufend – sonst Falten im Boden zwischen den Streckenteilen */
 // Monaco: Stützmauer an der Außenkante der Geländebänder – nur wo das Gelände dahinter wirklich tiefer liegt und nie am/im Wasser (Hafen, Meer)
 function mcTerraceWalls(inMarina) {
@@ -4580,7 +4585,7 @@ function treeSprites() {
   for (const kind of Object.keys(T.lists)) { const list = T.lists[kind]; if (!list.length) continue;
     let r = 0, H = 0; for (const [g] of T.parts[kind]) { const P = g.attributes.position; for (let i = 0; i < P.count; i++) { r = Math.max(r, Math.hypot(P.getX(i), P.getZ(i))); H = Math.max(H, P.getY(i)); } }
     const W = 2 * r * 1.03; H *= 1.03; const tex = treeImpostor(T.parts[kind], W, H);
-    const mat = new THREE.MeshBasicMaterial({ map: tex, alphaTest: 0.42, side: THREE.DoubleSide });
+    const mat = new THREE.MeshBasicMaterial({ map: tex, alphaTest: 0.42, alphaToCoverage: true, side: THREE.DoubleSide });
     mat.onBeforeCompile = sh => {
       sh.vertexShader = 'varying float vTD; varying float vTK;\n' + sh.vertexShader.replace('#include <project_vertex>', `
         vec4 tcW = modelMatrix * instanceMatrix * vec4( 0.0, 0.0, 0.0, 1.0 ); float tsx = length( instanceMatrix[0].xyz ), tsy = length( instanceMatrix[1].xyz );
@@ -4761,7 +4766,10 @@ function vStrip(off, y0, y1, mat, opt = {}) {
   const m = new THREE.Mesh(g, mat); m.receiveShadow = true; m.castShadow = !!opt.cast; m.userData.strip = true; trackGroup.add(m); return m;
 }
 const lam = (o) => { const m = new THREE.MeshStandardMaterial({ roughness: .9, metalness: 0, envMapIntensity: .9, ...o }); return o && o.map && o.map.userData.fol ? foliageMat(m) : o && o.map && o.map.userData.gv ? groundVar(m, o.map.userData.gv) : o && o.map === TEX.runoff ? sheenMat(m, TH && TH.night ? 0.1 : 0.28) : m; };
-const po = n => ({ polygonOffset: true, polygonOffsetFactor: n, polygonOffsetUnits: n, side: THREE.DoubleSide });
+// Bodenschichten (Fahrbahn, Linien, Curbs, Auslauf) nach vorn ziehen: neigungsabhängiger Anteil (factor) nur noch ein Viertel – er wächst bei flachem Blick
+// enorm (Helmkamera 0,9 m hoch: voller Wert = bei 50 m rund 8 m Versatz) und malte Asphalt und Linien über den Unterboden der Autos davor. Ganz ohne ihn
+// verschwanden exakt auf Fahrbahnhöhe liegende Markierungen (Startplätze); der feste Anteil (units) gleicht den Rest aus.
+const po = n => ({ polygonOffset: true, polygonOffsetFactor: n < 0 ? n * 0.25 : n, polygonOffsetUnits: n < 0 ? n * 4 : n, side: THREE.DoubleSide });
 function texRep(t, rx, ry) { const c = t.clone(); c.needsUpdate = true; c.repeat.set(rx, ry); return c; }
 
 // Auslaufzonen (Spa): Höhenfeld vorbelegen und glätten – eigene Funktionen, damit der JIT sie optimiert
@@ -6943,7 +6951,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       const ic = new THREE.InstancedMesh(cone, needleMat, place.length), ib = new THREE.InstancedMesh(ball, leafMat, place.length), it = new THREE.InstancedMesh(trunk, lam({ map: TEX.bark, normalMap: TEX.barkN, normalScale: new THREE.Vector2(1.3, 1.3), color: 0xffffff, roughness: .95 }), place.length);
       const icL = new THREE.InstancedMesh(coneLo, needleMat, place.length), ibL = new THREE.InstancedMesh(ballLo, leafMat, place.length);
       if (SPR) for (const mt of new Set([needleMat, leafMat, it.material])) distFade(mt, SD0, SD1);   /* 3D-Bäume lösen sich zwischen 200 und 260 m auf, die Bildtafeln füllen genau diese Punkte */
-      const cardM = (t) => distFade(lam({ map: t, alphaTest: 0.42, side: THREE.DoubleSide, roughness: .85, color: 0xffffff }), SPR ? SD0 : 92, SPR ? SD1 : 128);   /* Laubflächen: mit Tafeln erst beim Übergang zur Tafel */
+      const cardM = (t) => distFade(lam({ map: t, alphaTest: 0.42, alphaToCoverage: true, side: THREE.DoubleSide, roughness: .85, color: 0xffffff }), SPR ? SD0 : 92, SPR ? SD1 : 128);   /* Kantenglättung der Laubränder (wie beim Rasen): kein Himmel-Glitzern in einzelnen Pixeln */   /* Laubflächen: mit Tafeln erst beim Übergang zur Tafel */
       const icS = cardC ? new THREE.InstancedMesh(cardC, cardM(FOL.cardC), place.length) : null, ibS = cardB ? new THREE.InstancedMesh(cardB, cardM(FOL.card), place.length) : null;
       const SPL = { nc: [], nl: [], fc: [], fl: [] }, bark = it.material;   // Tafeln je Modell: nah (mit Laubflächen) / fern (einfache Krone), je Nadel-/Laubbaum
       if (SPR) TREESPR = { lists: SPL, D0: SD0, D1: SD1, parts: { nc: [[cone, needleMat], ...(icS ? [[cardC, icS.material]] : []), [trunk, bark]], nl: [[ball, leafMat], ...(ibS ? [[cardB, ibS.material]] : []), [trunk, bark]], fc: [[coneLo, needleMat], [trunk, bark]], fl: [[ballLo, leafMat], [trunk, bark]] } };
@@ -8395,10 +8403,11 @@ function updateCamera(dt) {
     if (S.cam === 0) {
       const rdc = p.mesh.road ? 1 : 0, cs = p.mesh.camS || 1, dd = (lerp(3.9, 5.5, clamp(camK, -0.2, 1.08)) + rdc * 1.0) * cs, hh = (lerp(1.4, 1.85, clamp(camK, 0, 1.08)) + rdc * 0.45) * cs + (cs < 1 ? 0.28 : 0), rx2 = -fz, rz2 = fx;
       camera.position.set(p.x - fx * dd + rx2 * camLat, hh - camPit * 2.2 + ey - sl * dd + Math.sin(performance.now() / 70) * clamp((p.v - 75) / 20, 0, 1) * 0.015, p.z - fz * dd + rz2 * camLat);
+      camFloor();
       camera.lookAt(p.x + fx * 2.6 + rx2 * camLat * 0.25, lerp(0.55, 0.38, clamp(camK, 0, 1)) + rdc * 0.45 + ey + sl * 2.6, p.z + fz * 2.6 + rz2 * camLat * 0.25);
       camera.rotateZ(camRoll);
     }
-    else if (S.cam === 1) { camera.position.set(p.x - fx * 12, 4.4 - camPit * 3 + ey - sl * 12, p.z - fz * 12); camera.lookAt(p.x + fx * 4, 0.3 + ey + sl * 4, p.z + fz * 4); }
+    else if (S.cam === 1) { camera.position.set(p.x - fx * 12, 4.4 - camPit * 3 + ey - sl * 12, p.z - fz * 12); camFloor(); camera.lookAt(p.x + fx * 4, 0.3 + ey + sl * 4, p.z + fz * 4); }
     else { // Helmkamera: Kopf bewegt sich leicht relativ zum Auto (Fliehkraft, Bremsen, Vibration)
       const m = p.mesh.g;
       const st = S.cam === 3;   // TV-Kamera: fest am Auto montiert – kein Kopfwackeln, keine Vibration, kein Umschauen
@@ -9224,7 +9233,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.56'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.57'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
