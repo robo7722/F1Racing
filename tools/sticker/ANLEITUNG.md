@@ -73,7 +73,7 @@ F2 zusätzlich: `"kind": "f2"`, `"team": "F2_INV"`, `"driver": "DUR"` (Fahrer f�
 Mitte des Hinter- und Vorderrads im Foto (Pixel). Daraus wird jede `box` automatisch an die passende Stelle des Modells gerechnet. Weil das Modell nicht genau die Form des echten Autos hat, sitzt manches danach daneben – dann je Aufkleber mit `at` (Mitte z, y), `w`/`h` (Breite/Höhe in Metern) oder `dz`/`dy` (verschieben) nachhelfen.
 
 ### `glsl` – Grundfarbe
-Rumpf von `vec3 livery(vec3 p, float c)`; muss mit `return <vec3>;` enden. `p` = Punkt am Modell in Metern, `c` = Teileklasse (F1: 0 Lack, 1 Flügel/Anbauteile, 2 Nasenspitze, 7 Halo; F2: immer 0 – dort Flügel über die Lage bestimmen: Frontflügel `p.z > 2.15 && p.y < 0.36`, Nasenspitze `p.z > 2.55`, Heckflügel `p.z < -1.9 && p.y > 0.6`).
+Rumpf von `vec3 livery(vec3 p, float c)`; muss mit `return <vec3>;` enden. `p` = Punkt am Modell in Metern, `c` = Teileklasse (F1: fast alles ist 0 = Lack, 7 = Halo – Flügel und Nase deshalb auch beim F1 über die Lage bestimmen; F2: immer 0 – dort Flügel über die Lage bestimmen: Frontflügel `p.z > 2.15 && p.y < 0.36`, Nasenspitze `p.z > 2.55`, Heckflügel `p.z < -1.9 && p.y > 0.6`).
 Farben als `#rrggbb`. Hilfen: `aaS(d)` = weiche Kante (0 unter, 1 über d = 0), `band(d, a, b)` = 1 zwischen a und b; `mix`, `clamp`, `abs`, `smoothstep` wie üblich.
 Bei F1 steht das bisherige Programm in `index.html` unter `const LIVERY = {` → `<Kürzel>:` – als Ausgangspunkt lesen (dort steht `${lc(0x…)}` statt `#…`). **Alles, was jetzt als Aufkleber von der Seite kommt, aus dem Programm entfernen** (sonst steht es doppelt und leicht versetzt). Flächen auf der Oberseite (Motorabdeckung von oben, Nase von oben) dürfen bleiben, wenn sie zum echten Auto passen. Das Halo (`c > 6.5`) einfarbig lassen.
 
@@ -85,6 +85,7 @@ Reihenfolge = Schichtung: zuerst große Farbflächen, dann Schriftzüge.
 - `"kind": "c"` – mehrfarbige Logos: Farben bleiben, der Untergrund (Randfarbe des Ausschnitts) wird durchsichtig. Ausschnitt knapp, aber mit 3–6 Pixel einfarbigem Rand.
 - `thr: [lo, hi]` (0…1) verschiebt die Schwelle, wenn Schrift zu dünn (kleiner) oder Untergrund mit drin ist (größer). Standard `[0.45, 0.85]`.
 - `side`: `"L"` oder `"R"`, wenn etwas nur auf eine Seite gehört.
+- `mirror`: Formen laufen auf der anderen Fahrzeugseite spiegelverkehrt, Schrift nicht. `key`-Flächen werden deshalb automatisch gespiegelt, alles andere nicht; mit `"mirror": true/false` lässt sich das je Aufkleber umstellen (z. B. `true` für ein Bildzeichen, `false` für eine Farbfläche mit Schrift darin).
 
 Der Bogen hat rund 370 Pixel je Meter: Schriftzüge unter etwa 8 cm Breite lohnen nicht. Reifenbeschriftung, Halo-Aufkleber und die **Startnummer aus dem Foto nicht ausschneiden**.
 

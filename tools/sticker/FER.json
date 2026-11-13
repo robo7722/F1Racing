@@ -9,7 +9,7 @@
   "col = mix(col, W, aaS(p.y - 0.72) * aaS(p.z + 0.45 + 1.2 * (p.y - 0.6)) * (1.0 - aaS(p.z - 0.30)));",
   "col = mix(col, K, (1.0 - aaS(p.y - 0.545)) * band(p.z, 0.80, 1.75));",
   "col = mix(col, K, (1.0 - aaS(p.y - 0.43)) * band(p.z, 0.55, 0.81));",
-  "if (p.z < -1.72 && p.y > 0.42) col = K;",
+  "if (p.z < -1.72 && p.y > 0.2) col = K;",
   "if (p.z > 2.1 && p.y < 0.30) col = K;",
   "if (c > 0.5 && c < 1.5) col = K;",
   "if (c > 1.5 && c < 2.5) col = K;",
@@ -298,13 +298,13 @@
   {"name": "scudetto", "box": [2412, 354, 2466, 412], "kind": "c"},
   {"name": "richardmille", "box": [2488, 372, 2728, 410], "kind": "w"},
   {"name": "oiir", "box": [2536, 438, 2664, 504], "kind": "w"},
-  {"name": "ambipar", "box": [2258, 606, 2530, 676], "kind": "w", "at": [0.83, 0.28], "w": 0.34},
+  {"name": "ambipar", "box": [2258, 606, 2530, 676], "kind": "w", "at": [0.8, 0.28], "w": 0.3},
   {"name": "vpower", "box": [84, 136, 400, 216], "kind": "c"},
   {"name": "peroni", "box": [122, 252, 354, 350], "kind": "w"},
-  {"name": "unicredit2", "box": [3428, 652, 3704, 722], "kind": "c"}
+  {"name": "unicredit2", "box": [3428, 652, 3704, 722], "kind": "c", "at": [2.52, 0.2], "w": 0.3}
  ],
  "zones": [[0.98, 1.36, 0, 0.4]],
- "number": {"color": "#ffffff", "spots": [{"v": "side", "z": -1.16, "y": 0.72, "s": 0.11}, {"v": "top", "x": 0, "z": 2.0, "s": 0.13}]},
+ "number": {"color": "#ffffff", "spots": [{"v": "side", "z": -1.31, "y": 0.73, "s": 0.085}, {"v": "top", "x": 0, "z": 2.0, "s": 0.13}]},
  "logoFile": "FER",
  "logos": [{"v": "top", "x": 0, "z": 1.5, "s": 0.16}]
 }

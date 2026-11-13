@@ -89,7 +89,7 @@
     }
    ]
   },
-  "glsl": "vec3 Ti = #bfc2c6, K = #131417;\nvec3 col = mix(K, Ti, aaS(p.z + 0.19));\nif (c > 0.5 && c < 1.5) col = K;\nreturn col;"
+  "glsl": "vec3 Ti = #adb1b6, K = #131417;\nvec3 col = mix(K, Ti, aaS(p.z + 0.19));\nif (c > 0.5 && c < 1.5) col = K;\nif (c < 6.5 && p.z > 2.05 && abs(p.x) > 0.2 && p.y < 0.35) col = K;\nreturn col;"
  },
  "CAD": {
   "kind": "f1",
@@ -120,7 +120,7 @@
     }
    ]
   },
-  "glsl": "vec3 K = #0d0e10, W = #e8e8e8, G = #b9bec4;\nvec3 col = K;\nif (c > 0.5 && c < 1.5) col = p.z < -1.85 ? mix(K, W, aaS(p.y - 0.73)) : (p.z > 2.0 ? G : K);\nif (c > 1.5 && c < 2.5) col = G;\nreturn col;"
+  "glsl": "vec3 K = #0d0e10, W = #e8e8e8, G = #b9bec4;\nvec3 col = K;\nif (c > 0.5 && c < 1.5) col = p.z < -1.85 ? mix(K, W, aaS(p.y - 0.73)) : K;\nif (c > 1.5 && c < 2.5) col = G;\nif (c < 6.5 && p.z > 2.05 && abs(p.x) > 0.2 && p.y < 0.35) col = G;\nreturn col;"
  },
  "F2_AIX": {
   "kind": "f2",
@@ -764,9 +764,9 @@
    "list": [
     {
      "v": "side",
-     "z": -1.16,
-     "y": 0.72,
-     "s": 0.11
+     "z": -1.31,
+     "y": 0.73,
+     "s": 0.085
     },
     {
      "v": "top",
@@ -776,7 +776,7 @@
     }
    ]
   },
-  "glsl": "vec3 R = #cf1018, W = #f3f3f1, K = #141416;\nvec3 col = R;\ncol = mix(col, W, aaS(p.y - 0.72) * aaS(p.z + 0.45 + 1.2 * (p.y - 0.6)) * (1.0 - aaS(p.z - 0.30)));\ncol = mix(col, K, (1.0 - aaS(p.y - 0.545)) * band(p.z, 0.80, 1.75));\ncol = mix(col, K, (1.0 - aaS(p.y - 0.43)) * band(p.z, 0.55, 0.81));\nif (p.z < -1.72 && p.y > 0.42) col = K;\nif (p.z > 2.1 && p.y < 0.30) col = K;\nif (c > 0.5 && c < 1.5) col = K;\nif (c > 1.5 && c < 2.5) col = K;\nif (c > 6.5) col = K;\nreturn col;"
+  "glsl": "vec3 R = #cf1018, W = #f3f3f1, K = #141416;\nvec3 col = R;\ncol = mix(col, W, aaS(p.y - 0.72) * aaS(p.z + 0.45 + 1.2 * (p.y - 0.6)) * (1.0 - aaS(p.z - 0.30)));\ncol = mix(col, K, (1.0 - aaS(p.y - 0.545)) * band(p.z, 0.80, 1.75));\ncol = mix(col, K, (1.0 - aaS(p.y - 0.43)) * band(p.z, 0.55, 0.81));\nif (p.z < -1.72 && p.y > 0.2) col = K;\nif (p.z > 2.1 && p.y < 0.30) col = K;\nif (c > 0.5 && c < 1.5) col = K;\nif (c > 1.5 && c < 2.5) col = K;\nif (c > 6.5) col = K;\nreturn col;"
  },
  "HAA": {
   "kind": "f1",
@@ -798,7 +798,7 @@
     }
    ]
   },
-  "glsl": "vec3 W = #eceef1, K = #16181b;\nvec3 col = W;\nif (c > 0.5 && c < 1.5) col = p.z > 2.0 ? W : mix(K, W, aaS(p.y - 0.3));\nreturn col;"
+  "glsl": "vec3 W = #eceef1, K = #16181b, Rd = #e5161a;\nvec3 col = W;\nif (c < 0.5) col = mix(col, Rd, aaS(p.y - 0.86) * band(p.z, -0.32, 0.03));\nif (c > 0.5 && c < 1.5) col = p.z > 1.0 ? W : mix(K, W, aaS(p.y - 0.3));\nreturn col;"
  },
  "MCL": {
   "kind": "f1",
@@ -809,8 +809,8 @@
     {
      "v": "side",
      "z": 2.6,
-     "y": 0.31,
-     "s": 0.1
+     "y": 0.21,
+     "s": 0.085
     },
     {
      "v": "top",
@@ -847,9 +847,9 @@
    "list": [
     {
      "v": "side",
-     "z": -1.14,
-     "y": 0.76,
-     "s": 0.11
+     "z": -1.31,
+     "y": 0.73,
+     "s": 0.085
     },
     {
      "v": "top",

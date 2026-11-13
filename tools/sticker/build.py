@@ -15,7 +15,8 @@ Beschreibung (JSON):
                           (für die großen farbigen Streifen und Flächen der Lackierung; "tol" = Toleranz, Standard 28 Grad Farbton bzw. 60 bei Grau/Weiß/Schwarz),
                      color "#rrggbb" (w/d/key: andere Farbe), at [z, y] Mitte am Modell in Metern (sonst aus dem Foto umgerechnet),
                      w Breite und h Höhe in Metern (sonst aus dem Foto; nur w -> Seitenverhältnis bleibt), dz/dy Verschiebung in Metern,
-                     side "both" | "L" | "R", thr [lo, hi] Schwellen 0..1 }
+                     side "both" | "L" | "R", thr [lo, hi] Schwellen 0..1,
+                     mirror true/false: auf der anderen Fahrzeugseite spiegelverkehrt auftragen (Standard: true bei "key", sonst false) }
             Reihenfolge = Schichtung: zuerst die großen Farbflächen, danach die Schriftzüge.
   number    Startnummer (Grafik im Design des Fahrers, kommt je Fahrer aus liveries/num/): { "color": "#rrggbb",
               "spots": [ { "v": "side", "z": -1.5, "y": 0.8, "s": 0.16 }, { "v": "top", "x": 0, "z": 1.9, "s": 0.12 } ] }   s = Ziffernhöhe in Metern; x0/x1 = Tiefenbereich
@@ -89,8 +90,11 @@ def build(key):
             cz += st.get('dz', 0); cy += st.get('dy', 0); wm = st.get('w', (x1 - x0) / sc)
             hm = st.get('h', wm * p.height / p.width); w = max(1, round(wm * pxm_x)); h = max(1, round(hm * pxm_y)); p = p.resize((w, h), Image.LANCZOS)
             yy = round((Y1 - cy) * pxm_y - h / 2); side = st.get('side', 'both')
-            if side in ('both', 'L'): sheet.alpha_composite(p, (max(0, round((Z1 - cz) * pxm_x - w / 2)), max(0, yy)))
-            if side in ('both', 'R'): sheet.alpha_composite(p, (max(0, round((cz - Z0) * pxm_x - w / 2)), max(0, HH + yy)))
+            # Formen (Farbflächen) laufen auf der anderen Fahrzeugseite spiegelverkehrt, Schrift nicht: "mirror" (Standard: nur bei kind "key")
+            mir = st.get('mirror', st.get('kind') == 'key'); pm = p.transpose(Image.FLIP_LEFT_RIGHT) if mir else p
+            pl, pr = (pm, p) if d > 0 else (p, pm)                                         # Foto mit Nase rechts zeigt die rechte Seite, mit Nase links die linke
+            if side in ('both', 'L'): sheet.alpha_composite(pl, (max(0, round((Z1 - cz) * pxm_x - w / 2)), max(0, yy)))
+            if side in ('both', 'R'): sheet.alpha_composite(pr, (max(0, round((cz - Z0) * pxm_x - w / 2)), max(0, HH + yy)))
             print('  %-14s z %.2f  y %.2f  Breite %.2f m' % (st.get('name', '?'), cz, cy, wm))
         os.makedirs(os.path.join(ROOT, 'liveries'), exist_ok=True); sheet.save(os.path.join(ROOT, 'liveries', key + '.png'), optimize=True)
         bg = Image.new('RGB', sheet.size, tuple(hexrgb(cfg.get('previewBg', '#24262c')))); bg.paste(sheet, (0, 0), sheet); bg.save(os.path.join(CACHE, key + '_bogen.png'))
