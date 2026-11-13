@@ -1,23 +1,30 @@
-# Rennfahrer-Modell (stehende Figur)
+# Rennfahrer-Modell
 
-Stand: 13.11.2026 – Vorschau fertig, noch nicht im Spiel eingebaut.
+Stand: 13.11.2026 (v1.36) – Kart-Fahrer im Spiel eingebaut, stehende Figur als Vorschau.
 
 ## Dateien
-- `fahrer/fahrer.glb` – Körper im Rennanzug (Tripo-Vorlage), 1,78 m, Füße auf y = 0, Blick nach +z. Ohne Kopf und Hände.
-- `fahrer/handschuh.glb` – rechter Handschuh, schon an die rechte Hand gesetzt. Links = gespiegelt (`scale.x = -1`).
-- `fahrer/vorschau.html` – Vorschau mit unserem Spiel-Helm (`HELM_BIN`, Design wie NEM). Braucht `helm_bin.js` (Kopie aus `index.html`).
-- `tools/fahrer/build_fahrer.py <quellordner>` – baut beide GLB neu. Quellordner: `model.obj`, `base.jpg`, `normal.jpg` (Tripo), `glove.kmz` (Handschuh). Die Vorlagen liegen nicht im Repo (OBJ 25 MB).
+- `kartfahrer.bin` – sitzender Kart-Fahrer fürs Spiel: Körper + beide Handschuhe als EIN Netz (~12 200 Dreiecke, 435 KB).
+- `textures/kart_fahrer.jpg`, `textures/kart_fahrer_n.jpg` – Atlas 1024×512: links Anzug (helle Stoff-Schattierung), rechts Handschuh; Normalen.
+- `fahrer/fahrer.glb`, `fahrer/handschuh.glb` – stehende Figur (24 000 Dreiecke), `fahrer/vorschau.html` zeigt sie mit unserem Helm.
+- `fahrer/kart_vorschau.html` – Prüfansicht: Kart + Kart-Fahrer + Lenkradkranz (gleiche Lade-Logik wie im Spiel).
+- `tools/fahrer/build_fahrer.py <quellordner>` – baut alles neu. Quellordner: `model.obj`, `base.jpg`, `normal.jpg` (Tripo), `glove.kmz`. Vorlagen nicht im Repo (OBJ 25 MB). Braucht numpy, pillow, scipy, trimesh, pymeshlab (+ Systempaket libopengl0).
 
-## Was das Skript macht
-- Tripo-Körper: auf 1,78 m skaliert, lose Splitter-Dreiecke entfernt, Kopf mit Tripo-Helm entfernt (unser Helm kommt drauf), Hände ab dem Ärmelbündchen entfernt.
-- Handschuh: gedreht (Finger nach unten, Handfläche zum Oberschenkel, Daumen nach vorn), Hand leicht nach vorn geneigt, Finger locker gekrümmt (Biegung ab der Knöchellinie, ~40° an den Spitzen). Stulpe gekürzt: steckt unter dem Ärmel, das Bündchen liegt darüber; was ganz im Ärmel verschwindet, ist abgeschnitten.
-- Logo-Schriftzug auf der Klett-Lasche des Handschuhs rot übermalt (war durch die Verformung ein weißer Fleck).
-- Helm (nur Vorschau): Anbauteil unter dem Visier (Zone 3 am Kinn) wird im Shader verworfen. Im Spiel selbst ist es noch drin.
+## Ablauf im Skript
+1. **Körper aufräumen**: Splitter-Dreiecke, Kopf mit Tripo-Helm und Hände weg. Ärmel werden mit einer Ebene quer zum Unterarm geschnitten (gerade Kante statt ausgefranst).
+2. **Textur säubern**: Logos, Schriftzüge und dunkle Fehlstellen (Fersen, Achseln, Seitennähte) erkannt (dunkler als Umgebung / farbig) und von außen aufgefüllt. Übrig bleibt eine helle Schattierung → keine Sponsoren-Logos mehr.
+3. **Verkleinern** mit Erhalt der Textur (MeshLab-Kantenzusammenlegung): 204 000 → 9 000 Dreiecke (Kart) bzw. 24 000 (stehend). Normalen über UV-Nähte gemittelt.
+4. **Sitzhaltung**: einfaches Skelett (Rumpf, Ober-/Unterarm, Ober-/Unterschenkel, Fuß), Gewichte nach Abstand je Körperbereich. Rumpf 24° zurückgelehnt, Beine nach vorn zu den Pedalen, Arme per Zwei-Knochen-IK an den Lenkradkranz (9/3 Uhr). Kart-Maßstab 1,1 (Kart ist größer gebaut; Helm dort 0,33 m).
+5. **Handschuhe**: Faust um den Kranz (Krümmung ab den Fingerwurzeln, Radius passend zum Kranzrohr; Skript prüft den Abstand), linke Hand gespiegelt. Rot der Vorlage → Weiß, damit sie in Teamfarbe eingefärbt werden. Logo-Schriftzug auf der Lasche übermalt.
 
-## Offen
-- Textur des Anzugs: dunkle Fehlstellen an den Stiefelfersen, unter den Achseln, an den Seitennähten – noch nicht ausgebessert.
-- Ärmelende leicht ausgefranst (Schnittkante der Tripo-Hand), von Nahem sichtbar.
-- 16 nicht-mannigfaltige Kanten im Netz (unsichtbar, nicht repariert).
-- Textur trägt echte Sponsoren-Logos (privat ok, öffentlich bedenken).
-- Größe: Körper ~210 000 Dreiecke – für Handys später verkleinern.
-- Einbau ins Spiel (z. B. Podium/Showroom) und Teamfarben steht noch aus.
+## Im Spiel (`index.html`)
+- `KFAHRER` lädt `kartfahrer.bin`; `kartDriver()` nutzt ihn, der alte aus Grundformen gebaute Fahrer bleibt als Rückfall.
+- `kartFahrerMat()` färbt im Shader: Anzug = Teamfarbe, Gürtel und Handschuhe = Akzentfarbe, Schuhe dunkel. Gürtel/Schuhe aus der Höhe in Ruhehaltung je Eckpunkt (`aRy`) → gerade Kanten.
+- Helm: derselbe wie F1/F2 (`helmMat(…, true)`), beim Kart ohne das Anbauteil unter dem Visier. F1/F2 haben es noch.
+- Cockpitkamera der Karts sitzt jetzt auf Augenhöhe im Helm (`cam` aus `KFAHRER.helm`).
+- `sw.js`: neue Dateien im Offline-Cache, Cache `f1-rennen-1.36`.
+
+## Offen / Ideen
+- Lenkrad dreht sich beim Lenken, die Hände nicht (war beim alten Fahrer genauso).
+- Leichte Knautschfalten an der Hüfte durch das Biegen (im Sitz kaum sichtbar).
+- F1/F2: Kinnteil am Helm ggf. auch entfernen.
+- Stehende Figur könnte fürs Podium/Showroom eingebaut werden.

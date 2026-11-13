@@ -25,6 +25,7 @@ const rim = new THREE.DirectionalLight(0xcfe0ff, 1.8); rim.position.set(-2.5, 2.
 const floor = new THREE.Mesh(new THREE.CircleGeometry(3, 64).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x24282e, roughness: .7 })); floor.receiveShadow = true; s.add(floor);
 const sh = o => { o.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); return o; };
 const L = new GLTFLoader(), [body, glove] = await Promise.all([L.loadAsync('fahrer.glb'), L.loadAsync('handschuh.glb')]);
+body.scene.traverse(m => { if (m.isMesh) m.material.color.set(q.get('farbe') ? '#' + q.get('farbe') : '#c8101c'); });   // Anzug-Textur ist eine helle Stoff-Schattierung: Farbe kommt hier (im Spiel: Teamfarbe)
 s.add(sh(body.scene));
 const gR = sh(glove.scene), gL = gR.clone(); gL.scale.x = -1; s.add(gR, gL);   // linker Handschuh = gespiegelter rechter
 // Helm aus dem Spiel (HELM_BIN, Design wie Fahrer NEM)
