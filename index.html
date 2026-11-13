@@ -3215,6 +3215,7 @@ function roadPaint() {
   const TX = z => W / 2 + (z + 2.4) / 4.8 * W / 2, TY = x => (x + 1.1) / 2.2 * H;                            // Oberseite: z -> x, x -> y
   g.fillStyle = '#8f0c16'; g.fillRect(0, 0, W, H);   // Grundlack: tiefes Metallic-Rot mit feinen Flakes
   for (let k = 0; k < 140000; k++) { const v = Math.random(); g.fillStyle = v < .5 ? `rgba(255,70,70,${Math.random() * .1})` : `rgba(40,0,0,${Math.random() * .12})`; g.fillRect(Math.random() * W, Math.random() * H, 2, 2); }
+  if (!ROADSTK) {   // Ersatz, falls die echten Aufkleber (liveries/MX5.*) nicht geladen werden konnten: grob nachgezeichnet
   for (const side of [1, -1]) {
     const P = (z, y) => [SX(z), SY(y, side)];
     g.fillStyle = '#0b0b0d'; g.beginPath();   // schwarzer Pfeil: breit am hinteren Kotflügel, spitz in der Türmitte
@@ -3271,6 +3272,7 @@ function roadPaint() {
     sym([[0.14, -0.13], [0.15, -0.2], [0.12, -0.22], [0.11, -0.27], [0.07, -0.29], [0.05, -0.33], [0.03, -0.36]], lw);
     sym([[0.09, -0.17], [0.08, -0.23], [0.06, -0.26]], lw * .7);
     g.restore(); }
+  }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.flipY = false; t.anisotropy = 8; return t;
 }
 function roadPlate(front) {
@@ -3393,6 +3395,17 @@ function roadSteeringWheel() {
 }
 
 const ROADBIN = await fetch('./roadcar.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null);
+// Aufkleber des Roadsters, 1:1 von den Fotos des echten Autos (gebaut von tools/sticker/mx5/bauen.py): Bogen MX5.png + fertiges Netz MX5.json,
+// das 3 mm über Lack bzw. Scheibe liegt. Fehlt eine der Dateien, zeichnet roadPaint() die alte, grobe Fassung.
+const ROADSTK = !ROADBIN ? null : await Promise.all([fetch('./liveries/MX5.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = './liveries/MX5.png'; })]).then(([j, img]) => j && img ? { j, img } : null);
+function roadStickers() {
+  const { j, img } = ROADSTK, g = new THREE.BufferGeometry(), p = new Float32Array(j.p.length), uv = new Float32Array(j.uv.length);
+  for (let i = 0; i < p.length; i++) p[i] = j.p[i] / j.q; for (let i = 0; i < uv.length; i++) uv[i] = j.uv[i] / 8192;
+  g.setAttribute('position', new THREE.BufferAttribute(p, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(j.i); g.computeVertexNormals(); g.computeBoundingSphere();
+  const t = new THREE.Texture(img); t.colorSpace = THREE.SRGBColorSpace; t.flipY = false; t.anisotropy = 8; t.needsUpdate = true;
+  return { g, m: new THREE.MeshStandardMaterial({ map: t, transparent: true, alphaTest: 0.03, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4, roughness: .5, metalness: 0 }) };
+}
 let RDS = null;
 function makeRoadster(d, T) {
   if (!RDS) { RDS = loadRoadCar(ROADBIN); RDS.mats = roadMats(roadPaint()); RDS.plates = roadPlates(RDS);
@@ -3401,6 +3414,7 @@ function makeRoadster(d, T) {
   const brakeMat = M.redglass.clone();
   for (const p of D.parts) { if (p.w >= 0) continue; const mat = p.m === 'redglass' ? brakeMat : M[p.m]; if (!mat) continue; const m = new THREE.Mesh(p.g, mat); m.castShadow = !mat.transparent; m.receiveShadow = true; g.add(m); }
   for (const [pg, pm] of D.plates) g.add(new THREE.Mesh(pg, pm));
+  if (ROADSTK) { D.stk ||= roadStickers(); const m = new THREE.Mesh(D.stk.g, D.stk.m); m.renderOrder = 3; g.add(m); }
   const zr = D.wc.find(c => c[2] < 0)[2], fl = new THREE.Group(), fr = new THREE.Group(), rr = new THREE.Group(), wfl = new THREE.Group(), wfr = new THREE.Group();
   for (const wc of D.wc) if (wc[2] > 0) { if (wc[0] > 0) fl.position.set(wc[0], wc[1], wc[2]); else fr.position.set(wc[0], wc[1], wc[2]); }
   rr.position.set(0, D.wr, zr); fl.add(wfl); fr.add(wfr); g.add(fl, fr, rr);
