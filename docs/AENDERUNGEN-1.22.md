@@ -150,3 +150,11 @@
 **Änderung (`f1conv.py`, Funktion `splice`):** Der Ausschnitt aus dem Original (12 200 Dreiecke nach Entfernen der haarfeinen Dreiecke und der Vorderkanten-Ebene) wird behutsam auf 4 000 vereinfacht: Eckpunkte bleiben auf Originalpunkten (`optimalplacement=False`), Ränder zur Karosserie bleiben stehen. So geraten Ober- und Unterseite des 2 mm dünnen Blatts nicht mehr ineinander. Die Kastenschnitte greifen nur noch 8 cm um den Ausschnitt (vorher 30 cm – unnötig zerteilte Dreiecke).
 
 **Ergebnis:** LOD 0 Lack 59 200 → 47 000 Dreiecke (vor 1.37: 42 500), `car.bin` 2,45 → 2,31 MB. Nahaufnahmen von innen und außen sowie Cockpit-Kamera: Blatt und Fuß so glatt wie in 1.37, kein Fächer, kein Zickzack.
+
+## Zurück auf Version 1.36 (1.37 und 1.38 zurückgenommen)
+
+**Wunsch:** „Kehren wir zurück zu Version 1.36."
+
+Die Änderungen aus 1.37 und 1.38 sind zurückgenommen: `car.bin` ist wieder die Datei aus 1.36 (bytegleich), das F1-Cockpit-Modell reicht wieder bis 1,82 m, `cockCutGLSL` hat wieder die Sonderregel für den Spiegelhalter. Die Aufkleber- und Startnummern-Änderungen der anderen Sitzung bleiben erhalten.
+
+Damit ist auch der gestreifte Fächer am Fuß des Spiegelträgers wieder da (Ursache siehe Abschnitt 1.37). Die Konvertierung mit den Korrekturen liegt nur im Arbeitsordner der Sitzung, nicht im Repo; die beiden Stände stehen in der Git-Historie (`0594740` = 1.37, `5b60a48` = 1.38).
