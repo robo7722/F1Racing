@@ -1971,7 +1971,7 @@ function applyLook() {
 }
 function basePR() { const dpr = devicePixelRatio || 1; if (S.gfx === 'low') return Math.min(dpr, 1); if (S.gfx === 'ultra') return Math.min(dpr, isTouch ? 2.25 : 2.5);
   // Hoch: nach Pixelbudget statt fester Stufe – Handy ~0,9 MP (z. B. S26 Ultra ≈ 1,55×), großes Laptop-/Monitorbild ~2,4 MP; jeder Vollbild-Durchgang kostet je Pixel
-  const budget = isTouch ? 0.9e6 : 2.4e6; return Math.min(dpr, 1.75, Math.max(1, Math.sqrt(budget / Math.max(1, innerWidth * innerHeight)))); }   /* Hoch: auf hochauflösenden Displays mit geringerer Renderauflösung + Nachschärfen (jeder Vollbild-Durchgang kostet auf Handy-/Laptop-GPUs viel) – Ultra rendert in voller Auflösung */
+  const budget = isTouch ? 0.75e6 : 2.4e6;   /* Handy 0,75 MP (vorher 0,9): 17 % weniger Pixel, Nachschärfen gleicht aus */ return Math.min(dpr, 1.75, Math.max(1, Math.sqrt(budget / Math.max(1, innerWidth * innerHeight)))); }   /* Hoch: auf hochauflösenden Displays mit geringerer Renderauflösung + Nachschärfen (jeder Vollbild-Durchgang kostet auf Handy-/Laptop-GPUs viel) – Ultra rendert in voller Auflösung */
 function applyGfx() {
   const hi = S.gfx !== 'low', ultra = S.gfx === 'ultra';
   renderer.setPixelRatio(basePR() * (typeof DYN !== 'undefined' ? DYN.scale : 1));
@@ -3258,7 +3258,36 @@ function numberTex(num, bg) {
     g.font = 'italic 900 62px system-ui,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(String(num), w / 2, h / 2 + 3);
   });
 }
+const CAR_LOD = [10, 35], LOD_HYS = 1.5, LOD_FADE = 0.35;   // Abstand (m) zur Kamera: darunter volle Stufe / mittlere Stufe, darüber Fernmodell (± Schaltlücke gegen Hin- und Herspringen)
+// Weiche Überblendung zwischen den Stufen statt Aufploppen: alte und neue Stufe ~0,35 s gleichzeitig, per Punktraster (wie beim Rasen) einander
+// ergänzend – jeder Pixel zeigt genau eine der beiden. Dafür hat jedes Netz eines Autos eine eigene Materialkopie (gleicher Shader, nichts wird neu übersetzt).
+function lodFadeMat(mt) { if (!mt || mt.userData.lodF) return mt; mt.userData.lodF = { value: new THREE.Vector2(0, 0) }; const prev = mt.onBeforeCompile, pk = mt.customProgramCacheKey; mt.__lfBase = [prev, mt.hasOwnProperty('customProgramCacheKey') ? pk : null];   /* für weitere Kopien: Haken ohne Überblendung (sonst stünde uLodF doppelt im Shader) */
+  mt.onBeforeCompile = function (sh, r) { if (prev) prev.call(this, sh, r); sh.uniforms.uLodF = this.userData.lodF;
+    sh.fragmentShader = 'uniform vec2 uLodF;\n' + sh.fragmentShader.replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
+      if ( uLodF.x > 0.0 ) { float lfn = fract( 52.9829189 * fract( dot( gl_FragCoord.xy, vec2( 0.06711056, 0.00583715 ) ) ) ); if ( uLodF.y > 0.5 ) lfn = 1.0 - lfn; if ( lfn >= uLodF.x ) discard; }`); };
+  mt.customProgramCacheKey = function () { return (pk ? pk.call(this) : '') + '|lodF'; }; return mt; }
+const lodMatCopy = mt => { const c = mt.clone(), [obc, pk] = mt.__lfBase || [mt.onBeforeCompile, mt.hasOwnProperty('customProgramCacheKey') ? mt.customProgramCacheKey : null]; c.onBeforeCompile = obc; if (pk) c.customProgramCacheKey = pk; delete c.userData.lodF; return lodFadeMat(c); };
+function lodFadePrep(m) {
+  m.g.traverse(o => { if (o.isMesh && !o.userData.lfMat) { o.userData.lfMat = true; o.material = Array.isArray(o.material) ? o.material.map(lodMatCopy) : lodMatCopy(o.material); } });
+  const gh = mm => { const o = new THREE.Mesh(mm.geometry, lodMatCopy(mm.material)); o.position.copy(mm.position); o.quaternion.copy(mm.quaternion); o.scale.copy(mm.scale); o.visible = false; o.userData.lfMat = true; mm.parent.add(o); return o; };
+  m.gh = { body: gh(m.body), matte: gh(m.matte), wfl: gh(m.wfl), wfr: gh(m.wfr), wrl: gh(m.wrl), wrr: gh(m.wrr) };   // Geister: halten während der Überblendung volle/mittlere Stufe
+}
+const lodF = (o, v, inv) => o.traverse(x => { if (x.isMesh) for (const mt of Array.isArray(x.material) ? x.material : [x.material]) if (mt.userData.lodF) mt.userData.lodF.value.set(v, inv); });
+function lodFadeEnd(m) { const f = m.lf; if (!f) return; m.lf = null; if (m.gh) for (const k in m.gh) { m.gh[k].visible = false; lodF(m.gh[k], 0, 0); } lodF(m.g, 0, 0); }
+function lodFadeApply(m) { const f = m.lf, t = Math.max(0.002, Math.min(0.998, f.t));
+  if (f.x) { for (const k in m.gh) { lodF(m[k], t, 0); lodF(m.gh[k], 1 - t, 1); }   /* nur die getauschten Netze (Halo, Helm, Spiegel bleiben unverändert stehen) */ for (const k of ['wfl', 'wfr', 'wrl', 'wrr']) m.gh[k].rotation.x = m[k].rotation.x; }   // neue Stufe in den eigenen Netzen, alte in den Geistern
+  else { const inc = f.to === 2 ? [m.far] : m.detail, out = f.to === 2 ? m.detail : [m.far]; for (const o of inc) lodF(o, t, 0); for (const o of out) lodF(o, 1 - t, 1); } }
+function lodStep(m, want, dt) {
+  if (m.lf) { m.lf.t += dt / LOD_FADE; if (m.lf.t >= 1) { const to = m.lf.to; lodFadeEnd(m); setLod(m, to, true); } else lodFadeApply(m); return; }
+  if (want === m.lod) return;
+  if (!m.gh || window.__noLodFade || Math.abs(want - m.lod) > 1 || window.__noFar) { setLod(m, want); return; }   // Sprung über zwei Stufen (Kamerawechsel): sofort
+  const from = m.lod, x = Math.max(from, want) === 1;   // x: volle <-> mittlere Stufe (Geometrie tauschen), sonst mittlere <-> Fernmodell
+  if (x) { setLod(m, want); const L = m.tp.lods[from], W = m.tp.M.W[from], G = m.gh; G.body.geometry = L.gloss; G.matte.geometry = L.matte; G.wfl.geometry = W.R[m.comp]; G.wfr.geometry = W.L[m.comp]; G.wrl.geometry = W.RL[m.comp]; G.wrr.geometry = W.RR[m.comp]; for (const k in G) G[k].visible = true; }
+  else { setLod(m, 1, true); m.far.visible = true; for (const o of m.detail) o.visible = true; }   // beide sichtbar; m.lod bleibt 1 bis zum Ende (Schatten nutzt die mittlere Stufe)
+  m.lf = { from, to: want, x, t: 0 }; lodFadeApply(m);
+}
 function setLod(m, l, force) {
+  if (force) lodFadeEnd(m);
   if (!m.tp || (!force && m.lod === l)) return; m.lod = l; const L = m.tp.lods[l], W = m.tp.M.W[l];
   m.body.geometry = L.gloss; m.matte.geometry = L.matte; m.wfl.geometry = W.R[m.comp]; m.wfr.geometry = W.L[m.comp]; m.wrl.geometry = W.RL[m.comp]; m.wrr.geometry = W.RR[m.comp];
   if (m.far) { const f = l === 2 && !window.__noFar; m.far.visible = f; for (const o of m.detail) o.visible = !f; }
@@ -3965,7 +3994,8 @@ function makeCar0(d) {
     const label = carLabel(d, T); g.add(label); scene.add(g);
     // Fernmodell: ab 120 m ist das ganze Auto EIN Netz mit EINEM Zeichenaufruf (statt Karosserie, Carbon, Halo, Helm, Spiegel und vier Rädern einzeln)
     const far = new THREE.Mesh(tp.far || (tp.far = farCarGeo(tp, T)), tp.glossMat); far.visible = false; g.add(far);
-    return { g, fl, fr, wfl, wfr, rr, wrl, wrr, label, helm: hm, rl, body, matte, halo, tp, lod: 0, comp: 1, cam: MD.cam, tv: MD.tv, far, detail: [body, matte, halo, hm, fl, fr, rr].concat(mir ? [mir] : []) };
+    const M0 = { g, fl, fr, wfl, wfr, rr, wrl, wrr, label, helm: hm, rl, body, matte, halo, tp, lod: 0, comp: 1, cam: MD.cam, tv: MD.tv, far, detail: [body, matte, halo, hm, fl, fr, rr].concat(mir ? [mir] : []) };
+    lodFadePrep(M0); return M0;
   }
   const body = new THREE.Mesh(tp.gloss, tp.glossMat), matte = new THREE.Mesh(tp.matte, MATTE);
   body.castShadow = matte.castShadow = true; g.add(body, matte);
@@ -4482,6 +4512,49 @@ function distFade(m, d0, d1) {
   m.customProgramCacheKey = function () { return (pk ? pk.call(this) : '') + '|fade' + d0 + '_' + d1; };
   return m;
 }
+// Ferne Bäume als Bildtafeln: beim Laden wird je Baumart (Laub-/Nadelbaum) EIN Bild aus dem 3D-Modell gerendert – mit dem Licht der Strecke.
+// Ab ~150 m zeigt jeder Baum dieses Bild auf einer Tafel, die sich zur Kamera dreht (zwei Zeichenaufrufe für den ganzen Hintergrundwald statt
+// fünf je Waldkachel). Zwischen 150 und 190 m teilen sich 3D-Baum und Tafel die Pixel per Punktraster: kein Aufploppen, keine Doppelbilder.
+let TREESPR = null; const TREESPR_RT = [];
+function treeImpostor(parts, W, H) {
+  const sc = new THREE.Scene(); for (const [g, m] of parts) { const o = new THREE.Mesh(g, m); o.frustumCulled = false; sc.add(o); }
+  let sd = new THREE.Vector3(1, 1, 0.3);
+  for (const l of scene.children.filter(o => o.isLight)) { const c = l.clone(); c.castShadow = false;
+    if (l.isDirectionalLight) { const d = l.position.clone().sub(l.target.position).normalize(); if (l === sun) sd = d.clone(); c.position.copy(d).multiplyScalar(60); c.target.position.set(0, 0, 0); sc.add(c.target); } sc.add(c); }
+  sc.environment = scene.environment; sc.fog = null; sc.background = null;
+  const cd = new THREE.Vector2(-sd.z, sd.x); if (cd.lengthSq() < 1e-4) cd.set(1, 0); cd.normalize();   // Blick quer zur Sonne: halb beleuchtet, passt aus jeder Richtung
+  const cam = new THREE.OrthographicCamera(-W / 2, W / 2, H, 0, 0.1, 300); cam.position.set(cd.x * 80, 0, cd.y * 80); cam.lookAt(0, 0, 0); cam.updateMatrixWorld();
+  const rt = new THREE.WebGLRenderTarget(256, Math.round(256 * H / W / 32) * 32 || 256, { type: THREE.HalfFloatType, samples: 4, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter }); TREESPR_RT.push(rt);
+  const prev = renderer.getRenderTarget(), cc0 = renderer.getClearColor(new THREE.Color()), ca0 = renderer.getClearAlpha(), sa = renderer.shadowMap.autoUpdate, bo = BAKE.u.bakeOn.value;
+  renderer.shadowMap.autoUpdate = false; BAKE.u.bakeOn.value = 0;   // keine gebackenen Schatten vom Weltursprung aufs Bild
+  renderer.setRenderTarget(rt); renderer.setClearColor(0x2c3a22, 0); renderer.clear(); renderer.render(sc, cam);   // dunkelgrüne, unsichtbare Füllfarbe: kein schwarzer Rand in den Mip-Stufen
+  renderer.setRenderTarget(prev); renderer.setClearColor(cc0, ca0); renderer.shadowMap.autoUpdate = sa; BAKE.u.bakeOn.value = bo;
+  return rt.texture;
+}
+function treeSprites() {
+  for (const rt of TREESPR_RT.splice(0)) rt.dispose();
+  const T = TREESPR; if (!T || !(T.sprC.length + T.sprL.length)) return;
+  const v = new THREE.Vector3(), sc = new THREE.Vector3(), q = new THREE.Quaternion(), m4 = new THREE.Matrix4();
+  for (const [kind, list] of [['con', T.sprC], ['leaf', T.sprL]]) { if (!list.length) continue;
+    const bb = new THREE.Box3(); for (const [g] of T.parts[kind]) { if (!g.boundingBox) g.computeBoundingBox(); bb.union(g.boundingBox); }
+    const W = 2 * Math.max(-bb.min.x, bb.max.x, -bb.min.z, bb.max.z) * 1.04, H = bb.max.y * 1.03, tex = treeImpostor(T.parts[kind], W, H);
+    const mat = new THREE.MeshBasicMaterial({ map: tex, alphaTest: 0.42, side: THREE.DoubleSide });
+    mat.onBeforeCompile = sh => {
+      sh.vertexShader = 'varying float vTD;\n' + sh.vertexShader.replace('#include <project_vertex>', `
+        vec4 tcW = modelMatrix * instanceMatrix * vec4( 0.0, 0.0, 0.0, 1.0 ); float tsx = length( instanceMatrix[0].xyz ), tsy = length( instanceMatrix[1].xyz );
+        vec2 tcv = cameraPosition.xz - tcW.xz; vec2 trg = normalize( vec2( tcv.y, -tcv.x ) + 1e-5 ); vTD = length( cameraPosition - tcW.xyz );
+        vec3 tw = tcW.xyz + vec3( trg.x, 0.0, trg.y ) * position.x * tsx + vec3( 0.0, position.y * tsy, 0.0 );
+        if ( vTD < ${T.D0.toFixed(1)} || vTD > ${(TRK.nos ? 1000 : 1e6).toFixed(1)} ) tw = tcW.xyz;   // nah (3D-Baum) bzw. Nordschleife jenseits 1 km (Waldkante): Tafel auf einen Punkt
+        vec4 mvPosition = viewMatrix * vec4( tw, 1.0 ); gl_Position = projectionMatrix * mvPosition;`);
+      sh.fragmentShader = 'varying float vTD;\n' + sh.fragmentShader.replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
+        { float tsn = fract( 52.9829189 * fract( dot( gl_FragCoord.xy, vec2( 0.06711056, 0.00583715 ) ) ) ); if ( tsn <= 1.0 - smoothstep( ${T.D0.toFixed(1)}, ${T.D1.toFixed(1)}, vTD ) + 0.001 ) discard; }`);   // genau die Punkte, die der 3D-Baum dort verwirft
+    };
+    mat.customProgramCacheKey = () => 'treeSpr' + T.D0 + '_' + T.D1 + (TRK.nos ? 'n' : '');
+    const im = new THREE.InstancedMesh(new THREE.PlaneGeometry(W, H).translate(0, H / 2, 0), mat, list.length);
+    list.forEach(([M, c], k) => { M.decompose(v, q, sc); v.y += placeY(v.x, v.z); m4.compose(v, q, sc); im.setMatrixAt(k, m4); im.setColorAt(k, c); });
+    im.computeBoundingSphere(); im.castShadow = im.receiveShadow = false; im.userData = { noChunk: true, treeSpr: true }; trackGroup.add(im);
+  }
+}
 // Plastischer Rasen: kleine Grasbüschel (zwei gekreuzte, halb durchsichtige Flächen mit Halmen) auf ALLEN Grasflächen innerhalb der Absperrung
 // (dicht in Fahrbahnnähe, nach außen lockerer). Je 40 m Strecke und Seite eine Instanz-Gruppe; blendet zwischen 40 und 68 m weich ein.
 function grassTufts() {
@@ -4693,7 +4766,7 @@ function buildTrack(key) { BID++;
     const hp = TRK.hd.pts, hw = TRK.hd.hw, el = TRK.hd.el, m = hp.length; let j = 0; HW = new Float32Array(N); ELEV = new Float32Array(N); MJ = new Int32Array(N);
     for (let i = 0; i < N; i++) { let best = 1e18, bj = j; for (let k = -6; k <= 14; k++) { const q = (j + k + m) % m, dx = PX[i] - hp[q][0], dz = PZ[i] - hp[q][1], d = dx * dx + dz * dz; if (d < best) { best = d; bj = q; } } j = bj; HW[i] = Math.max(3.8, hw[j]); if (el) ELEV[i] = el[j]; MJ[i] = j; }
     HW = filt(HW, 8, 'avg'); FLAT = !el; if (el) ELEV = filt(filt(ELEV, 6, 'avg'), 6, 'avg');
-    MC_SEA = null; BANDS = []; HORIZ = null; BANDW = null; MC_TERR = [];
+    MC_SEA = null; BANDS = []; HORIZ = null; BANDW = null; MC_TERR = []; TREESPR = null;
     if (!el && TRK.mc) {   // Monaco: echtes Höhenprofil – vom Hafen (2–3 m) die Beau-Rivage-Steigung hinauf zum Casino (~45 m), über Mirabeau und Fairmont hinab zum Portier, durch den Tunnel zurück ans Meer
       const M = TRK.mc, sAt = p => spiNear(p[0], p[1])[1] * DS, sc = L / 3337, sCas = sAt(M.casino), sFai = sAt(M.fairmont), tA = M.tun[0] * L, tB = M.tun[1] * L, pl = M.pool || [0.73, 0.785], sRa = (M.rasc ?? 0.9) * L;
       const K = [[0, 2.5], [150 * sc, 3], [260 * sc, 4.5], [sCas - 230, 36], [sCas - 110, 43], [sCas, 45], [sCas + 120, 44], [(sCas + sFai) / 2, 37], [sFai, 27], [tA - 70, 13], [tA, 10], [(tA + tB) / 2, 8], [tB, 5], [tB + 120, 3], [pl[0] * L - 150, 2.5], [pl[0] * L, 2.5], [pl[1] * L, 2.5], [sRa, 2.5], [(sRa + L) / 2, 2.5], [L, 2.5]].sort((a, b) => a[0] - b[0]);
@@ -6815,8 +6888,13 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       for (const g of [cardB, cardC]) if (g) g.userData.lod = [[null, 130]];   /* Flächen verschwinden genau dann, wenn der Kern auf die einfache Stufe wechselt */
       ball.userData.lod = [[ballLo, 130], [ballFar, 300]]; cone.userData.lod = [[coneLo, 130], [coneFar, 260]]; ballLo.userData.lod = [[ballFar, 300]]; coneLo.userData.lod = [[coneFar, 130]]; trunk.userData.lod = [[trunkFar, 90], [null, 450]];   /* Stufen wechseln früher: ab 130 m ist der Unterschied nicht mehr zu sehen */
       if (TRK.nos) { for (const g of [ball, cone]) g.userData.lod.push([null, 1000]); for (const g of [ballLo, coneLo]) g.userData.lod.push([null, 1000]); trunk.userData.lod = [[trunkFar, 120], [null, 450]]; }   // Nordschleife: Waldkante übernimmt die Ferne
+      const SD0 = 150, SD1 = 190;   // ab hier Bildtafeln statt 3D-Bäumen (Überblendung SD0..SD1 per Punktraster, siehe treeSprites)
+      const SPR = !window.__noTreeSpr;   // Testschalter: alte Darstellung (3D bis zum Horizont)
+      if (SPR) for (const g of [ball, cone, ballLo, coneLo, trunk]) g.userData.lod = g.userData.lod.filter(([, D]) => D < SD1).concat([[null, SD1]]);
       const ic = new THREE.InstancedMesh(cone, needleMat, place.length), ib = new THREE.InstancedMesh(ball, leafMat, place.length), it = new THREE.InstancedMesh(trunk, lam({ map: TEX.bark, normalMap: TEX.barkN, normalScale: new THREE.Vector2(1.3, 1.3), color: 0xffffff, roughness: .95 }), place.length);
       const icL = new THREE.InstancedMesh(coneLo, needleMat, place.length), ibL = new THREE.InstancedMesh(ballLo, leafMat, place.length);
+      if (SPR) for (const mt of new Set([needleMat, leafMat, it.material])) distFade(mt, SD0, SD1);   /* 3D-Bäume lösen sich zwischen 150 und 190 m auf, die Bildtafeln füllen genau diese Punkte */
+      const sprC = [], sprL = []; if (SPR) TREESPR = { sprC, sprL, D0: SD0, D1: SD1, parts: { con: [[coneLo, needleMat], [trunk, it.material]], leaf: [[ballLo, leafMat], [trunk, it.material]] } };
       const cardM = (t) => distFade(lam({ map: t, alphaTest: 0.42, side: THREE.DoubleSide, roughness: .85, color: 0xffffff }), 92, 128);   /* Laubflächen lösen sich vor dem Wechsel der Detailstufe auf */
       const icS = cardC ? new THREE.InstancedMesh(cardC, cardM(FOL.cardC), place.length) : null, ibS = cardB ? new THREE.InstancedMesh(cardB, cardM(FOL.card), place.length) : null;
       const nearCap = S.gfx === 'ultra' ? 4200 : hi ? 2800 : 800, conF = TH.conifer ?? 0.33; let nearN = 0, aL = 0, bL = 0;
@@ -6830,6 +6908,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         const isCon = Math.random() < conF;
         if (isCon) { const M2 = near ? ic : icL, n2 = near ? a++ : aL++; M2.setMatrixAt(n2, m4); M2.setColorAt(n2, cc.setHSL(CN.hsl[0] + Math.random() * .05, CN.hsl[1], CN.hsl[2] + Math.random() * .15)); if (near && icS) { icS.setMatrixAt(n2, m4); icS.setColorAt(n2, cc); } }
         else { const M2 = near ? ib : ibL, n2 = near ? b++ : bL++; M2.setMatrixAt(n2, m4); M2.setColorAt(n2, cc.setHSL(LF.hsl[0] + Math.random() * .08, LF.hsl[1], LF.hsl[2] + Math.random() * .2)); if (near && ibS) { ibS.setMatrixAt(n2, m4); ibS.setColorAt(n2, cc); } }
+        (isCon ? sprC : sprL).push([m4.clone(), cc.clone()]);
       });
       ic.count = a; ib.count = b; icL.count = aL; ibL.count = bL; ic.castShadow = ib.castShadow = true; trackGroup.add(ic, ib, it, icL, ibL);
       if (icS) { icS.count = a; if (a) trackGroup.add(icS); } if (ibS) { ibS.count = b; if (b) trackGroup.add(ibS); }
@@ -6877,6 +6956,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   applyLook();
   buildMapBase();
   { const _bt1 = performance.now(); bakeShadows(); window.__btms = [Math.round(_bt1 - _bt0), Math.round(performance.now() - _bt1)]; }
+  try { treeSprites(); } catch (e) { console.warn('treeSprites', e); } TREESPR = null;
   trackGroup.traverse(o => { if (o.material) for (const m of Array.isArray(o.material) ? o.material : [o.material]) if (m.normalMap && m.normalMap.anisotropy > 4) { m.normalMap.anisotropy = 4; if (m.normalMap.image) m.normalMap.needsUpdate = true; } });   /* Reliefkarten: feine Struktur mittelt sich in der Ferne ohnehin aus – 4-fach reicht */
   buildEvict(trackGroup); for (const e of EVICT) e.m.userData.evRef = e;
   // feste Objekte (Bäume, Felsen, Absperrungen, Gebäude …): Positionen nur einmal beim Laden berechnen, nicht mehr in jedem Bild
@@ -7627,7 +7707,8 @@ function warmUpTrack() {
   } catch (e) { console.warn('warmUp', e); }
   window.__warmMs = Math.round(performance.now() - t0);
 }
-function precompile() { try { const prev = renderer.getRenderTarget(); if (composer) renderer.setRenderTarget(composer.renderTarget1); renderer.compile(scene, camera); renderer.setRenderTarget(prev); } catch (e) { console.warn('precompile', e); }
+function precompile() { const hid = []; for (const c of cars) { const m = c.mesh; if (!m) continue; for (const o of [m.far, ...(m.gh ? Object.values(m.gh) : [])]) if (o && !o.visible) { o.visible = true; hid.push(o); } }   /* Fernmodell und Überblend-Geister sind anfangs unsichtbar: Shader trotzdem jetzt übersetzen */
+  try { const prev = renderer.getRenderTarget(); if (composer) renderer.setRenderTarget(composer.renderTarget1); renderer.compile(scene, camera); renderer.setRenderTarget(prev); } catch (e) { console.warn('precompile', e); } finally { for (const o of hid) o.visible = false; }
   // Materialien, die erst beim Kamerawechsel auftauchen (Cockpit: aufgeschnittene Karosserie + Wanne, TV-Kamera: einfarbiges Halo), jetzt mit übersetzen – sonst Hänger beim ersten Umschalten
   try { const m = pl && pl.mesh; if (m) { const tp = m.tp || {}, k = tp.M === MODELS.f2 ? 'f2' : 'f1'; if (m.tp) { cockBuild(m); }
       const sc = new THREE.Scene(), add = (g, mt) => { const o = new THREE.Mesh(g, mt); o.frustumCulled = false; sc.add(o); }; if (m.tp) { add(m.body.geometry, tp.cutGloss); add(m.matte.geometry, tp.cutMatte); if (tp.haloFlat) add(tp.haloFlat, tp.haloMat); m.tub.traverse(o => { if (o.isMesh) add(o.geometry, o.material); }); }
@@ -8012,7 +8093,8 @@ function updateMeshes(dt) {
     else m.rl.visible = running && c.v > 25 && ((c.thr || 0) < 0.6 || c.brk > 0.1) && ((performance.now() / 110) | 0) % 2 === 0;
     m.wfl.rotation.x = m.wfr.rotation.x = m.rr.rotation.x = c.spin;
     if (m.sw) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z; m.sw.visible = c === pl || dx * dx + dz * dz < 625; }   /* Kart: Lenkrad (viele kleine Teile) nur aus der Nähe zeichnen */
-    if (m.tp) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z, d2 = dx * dx + dz * dz; setLod(m, c === pl || d2 < 13 * 13 ? 0 : d2 < 46 * 46 ? 1 : 2);   /* volle Modellstufe (50.000 Dreiecke) nur für den Spieler und Autos unter 13 m */   /* Detailstufen früher: weniger Dreiecke bei vollem Starterfeld */ }
+    if (m.tp) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z, d2 = dx * dx + dz * dz; const LD = window.__carLod || CAR_LOD, cur = m.lf ? m.lf.to : m.lod, b0 = LD[0] + (cur >= 1 ? -LOD_HYS : LOD_HYS), b1 = LD[1] + (cur >= 2 ? -LOD_HYS : LOD_HYS);
+      if (c === pl) { if (m.lod !== 0 || m.lf) setLod(m, 0, true); } else lodStep(m, d2 < b0 * b0 ? 0 : d2 < b1 * b1 ? 1 : 2, dt);   /* volle Modellstufe (50.000 Dreiecke) nur für den Spieler und Autos unter 13 m */   /* Detailstufen früher: weniger Dreiecke bei vollem Starterfeld */ }
   }
 }
 
@@ -9092,7 +9174,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.53'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.54'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
