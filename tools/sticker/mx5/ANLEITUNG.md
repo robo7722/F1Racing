@@ -41,12 +41,14 @@ Die Liste `A` in `bauen.py` legt je Aufkleber fest: Bild, Blickrichtung (`L R T 
 | Oni-Maske 死神谷 | Haube | Nachtfoto frontal, senkrecht um 1,146 gestreckt |
 | @Natsukithemiata | Frontlippe | Nachtfoto frontal |
 | Limitless Society | Heck links unter der Rückleuchte | Hallenfoto |
+| southsiderz (Fraktur) | Heck rechts oben, neben der Rückleuchte | Heckfoto |
 | Fisch 666 | Heck rechts unter der Rückleuchte | Nachtfoto |
 | スピードハンターズ | Windschutzscheibe oben | frontales Nachtfoto |
 | Abrisskante (schwarz) mit BLACKLIST an beiden Enden | Kofferraumdeckel hinten | Geometrie in `bauen.py` (`spoiler()`), Aufkleber aus dem Heckfoto; Schrift von vorn lesbar wie am echten Auto |
 | BLACKLIST-Krone | hängt am Innenspiegel (freies Schild, beidseitig) | Logo-Vorlage |
 | Anime-Motiv 運のよい! | Heckscheibe links | Produktbild |
-| schwarze Streifen (Paar) | Haube außen, breit an der Scheibe, spitz nach vorn | Produktbild; Lage nach den Fotos geschätzt |
+| Anfängerzeichen (gelb-grün) | Heckscheibe rechts | gezeichnet |
+| schwarze Streifen (Paar) | Haube ganz außen entlang der Haubenkante, breit an der Scheibe, spitz nach vorn | Produktbild; Lage nach den Fotos geschätzt |
 
 Das Modell ist rund 1,157-mal so groß wie das echte Auto; alle Maße sind Modellmaße.
 
@@ -59,8 +61,13 @@ Die Skripte in `foto/` sind die Arbeitsfassung, mit der die Einzelbilder aus den
 - `graf.py`: schwarze Grafik als Maske („nicht rot und dunkel").
 - `pent.py`: Ellipse des Rings finden, zum Kreis entzerren.
 
+## Sonstiges am Auto
+
+- Seitenblinker in den Kotflügeln sind abgedunkelt (`smoke` in `roadMats`, Aufteilung in `makeRoadster`).
+- Das Pentagramm hat keine schwarze Scheibe: nur weiße Linien auf dem roten Tankdeckel.
+
 ## Offen
 
-- Nicht übernommen: „southsiderz" über der rechten Rückleuchte (im Foto zu klein), die kleinen Plaketten in der Windschutzscheibe, die weißen Dreiecke neben dem vorderen Kennzeichen (nur auf einem älteren Foto).
+- Nicht übernommen: die kleinen Plaketten in der Windschutzscheibe, die weißen Dreiecke neben dem vorderen Kennzeichen (nur auf einem älteren Foto).
 - Hinteres Kennzeichen bleibt „RONE 666".
 - Nur im Showroom geprüft, nicht im Rennen und nicht auf einem echten Handy.

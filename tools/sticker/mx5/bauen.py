@@ -25,9 +25,10 @@ A = [
   dict(bild='oni', sicht='T', a=0, b=1.53, w=0.435), dict(bild='insta', sicht='F', a=0, b=0.228, w=0.32),
   dict(bild='limitless', sicht='B', a=0.5, b=0.665, w=0.31), dict(bild='mazdaspeed', sicht='B', a=0.5, b=0.585, w=0.34), dict(bild='fisch', sicht='B', a=-0.5, b=0.63, w=0.27),
   dict(bild='banner', sicht='F', a=0, b=1.262, w=1.06, teil='glas'),
-  # Anime-Motiv in der Heckscheibe links, schwarze Streifen auf der Haube (breit an der Scheibe, spitz nach vorn, rechts gespiegelt)
-  dict(bild='anime', sicht='B', a=0.33, b=1.175, w=0.15, teil='glas'),
-  dict(bild='streifen', sicht='T', a=-0.56, b=1.03, w=0.15, rot=-7), dict(bild='streifen', sicht='T', a=0.56, b=1.03, w=0.15, rot=7, flip=True),
+  # Anime-Motiv in der Heckscheibe links, Anfängerzeichen rechts, schwarze Streifen auf der Haube (breit an der Scheibe, spitz nach vorn, entlang der Haubenkante, rechts gespiegelt)
+  dict(bild='anime', sicht='B', a=0.31, b=1.18, w=0.25, rot=6, teil='glas', auto=True), dict(bild='anfaenger', sicht='B', a=-0.37, b=1.155, w=0.06, teil='glas', auto=True),
+  dict(bild='streifen', sicht='T', a=-0.69, b=0.87, w=0.125, rot=2.5), dict(bild='streifen', sicht='T', a=0.69, b=0.87, w=0.125, rot=-2.5, flip=True),
+  dict(bild='southsiderz', sicht='B', a=-0.3, b=0.905, w=0.25),
   # BLACKLIST-Krone: hängt frei am Innenspiegel (frei = Mitte x, y, z; Vorderseite zeigt nach vorn, Rückseite seitenrichtig zum Fahrer)
   dict(bild='krone', frei=(0.03, 1.18, -0.05), w=0.1, rot=-4),
 ]
