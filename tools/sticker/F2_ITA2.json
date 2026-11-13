@@ -26,14 +26,6 @@
   "col = mix(col, K, rw * aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.57)));",
   "return col;"
  ],
- "zones": [
-  [
-   1.9,
-   2.8,
-   0,
-   0.45
-  ]
- ],
  "stickers": [
   {
    "name": "partner",

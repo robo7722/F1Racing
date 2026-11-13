@@ -341,9 +341,9 @@
    "list": [
     {
      "v": "side",
-     "z": -2.02,
-     "y": 0.55,
-     "s": 0.17
+     "z": -2.09,
+     "y": 0.62,
+     "s": 0.15
     },
     {
      "v": "top",
@@ -461,14 +461,6 @@
  "F2_ITA": {
   "kind": "f2",
   "sheet": true,
-  "zones": [
-   [
-    1.9,
-    2.8,
-    0,
-    0.45
-   ]
-  ],
   "num": {
    "color": "#d8d8dc",
    "list": [
@@ -502,14 +494,6 @@
  "F2_ITA2": {
   "kind": "f2",
   "sheet": true,
-  "zones": [
-   [
-    1.9,
-    2.8,
-    0,
-    0.45
-   ]
-  ],
   "num": {
    "color": "#ffffff",
    "list": [
@@ -541,14 +525,6 @@
  "F2_ORA": {
   "kind": "f2",
   "sheet": true,
-  "zones": [
-   [
-    1.9,
-    2.8,
-    0,
-    0.45
-   ]
-  ],
   "logoFile": "F2_MPM",
   "logos": [
    {
@@ -584,7 +560,7 @@
    "tip": 1316120,
    "metal": 0.25
   },
-  "glsl": "vec3 O = #ff5a08; vec3 K = #141518; vec3 col = O;\ncol = mix(col, K, aaS(p.z - 2.0));\ncol = mix(col, K, band(p.z, -1.4, -0.42) * aaS(p.y - 0.873 - 0.25 * (p.z + 0.413)));\nfloat rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.6);\ncol = mix(col, K, rw * (1.0 - aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.57))));\nreturn col;"
+  "glsl": "vec3 O = #ff5a08; vec3 K = #141518; vec3 col = O;\ncol = mix(col, K, aaS(p.z - 2.0));\ncol = mix(col, K, band(p.z, -1.4, -0.42) * aaS(p.y - 0.925 - 0.25 * (p.z + 0.413)));\nfloat rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.6);\ncol = mix(col, K, rw * (1.0 - aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.57))));\nreturn col;"
  },
  "F2_PINK_ART": {
   "kind": "f2",
@@ -594,9 +570,9 @@
    "list": [
     {
      "v": "side",
-     "z": -2.02,
-     "y": 0.55,
-     "s": 0.17
+     "z": -2.09,
+     "y": 0.62,
+     "s": 0.15
     },
     {
      "v": "top",
@@ -620,14 +596,6 @@
  "F2_PINK_MPM": {
   "kind": "f2",
   "sheet": true,
-  "zones": [
-   [
-    1.75,
-    2.8,
-    0,
-    0.45
-   ]
-  ],
   "num": {
    "color": "#151c36",
    "list": [

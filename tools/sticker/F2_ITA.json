@@ -30,14 +30,6 @@
   "col = mix(col, G, band(p.z, -1.35, -0.47) * aaS(p.y - 0.71 + 0.08 * clamp((-0.45 - p.z) / 0.65, 0.0, 1.0)));",
   "return col;"
  ],
- "zones": [
-  [
-   1.9,
-   2.8,
-   0,
-   0.45
-  ]
- ],
  "stickers": [
   {
    "name": "weiss_band",

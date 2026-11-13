@@ -5,7 +5,7 @@
  "drivers": [
   "INT"
  ],
- "photo": "https://res.cloudinary.com/prod-f2f3/c_lpad,w_8000,h_880,g_west,b_transparent/l_common:f2:2026:artgrandprix:2026artgrandprixcarleft/a_hflip/fl_layer_apply,g_west,x_3520/l_text:Arial_300_bold:BWT,co_rgb:1b3f9c/fl_layer_apply,g_east,x_40/v1770000000/common/f2/2026/artgrandprix/2026artgrandprixcarleft.png",
+ "photo": "https://res.cloudinary.com/prod-f2f3/c_lpad,w_4400,h_880,g_west,b_transparent/l_text:Arial_300_bold:BWT,co_rgb:1b3f9c/fl_layer_apply,g_east,x_40/v1770000000/common/f2/2026/artgrandprix/2026artgrandprixcarleft.png",
  "rear": [
   3072,
   565
@@ -34,30 +34,7 @@
     510
    ],
    "kind": "key",
-   "key": "#f01e1e",
-   "at": [
-    1.827,
-    0.431
-   ],
-   "w": 0.226,
-   "side": "L"
-  },
-  {
-   "name": "rot_nase_R",
-   "box": [
-    6390,
-    430,
-    6550,
-    510
-   ],
-   "kind": "key",
-   "key": "#f01e1e",
-   "at": [
-    1.827,
-    0.431
-   ],
-   "w": 0.226,
-   "side": "R"
+   "key": "#f01e1e"
   },
   {
    "name": "rot_cockpit",
@@ -68,30 +45,7 @@
     422
    ],
    "kind": "key",
-   "key": "#f01e1e",
-   "at": [
-    0.938,
-    0.549
-   ],
-   "w": 0.504,
-   "side": "L"
-  },
-  {
-   "name": "rot_cockpit_R",
-   "box": [
-    5664,
-    352,
-    6020,
-    422
-   ],
-   "kind": "key",
-   "key": "#f01e1e",
-   "at": [
-    0.938,
-    0.549
-   ],
-   "w": 0.504,
-   "side": "R"
+   "key": "#f01e1e"
   },
   {
    "name": "rot_seite_a",
@@ -102,30 +56,7 @@
     480
    ],
    "kind": "key",
-   "key": "#f01e1e",
-   "at": [
-    -0.554,
-    0.453
-   ],
-   "w": 0.178,
-   "side": "L"
-  },
-  {
-   "name": "rot_seite_a_R",
-   "box": [
-    4724,
-    430,
-    4850,
-    480
-   ],
-   "kind": "key",
-   "key": "#f01e1e",
-   "at": [
-    -0.554,
-    0.453
-   ],
-   "w": 0.178,
-   "side": "R"
+   "key": "#f01e1e"
   },
   {
    "name": "rot_seite",
@@ -136,30 +67,7 @@
     722
    ],
    "kind": "key",
-   "key": "#f01e1e",
-   "at": [
-    -0.929,
-    0.274
-   ],
-   "w": 0.576,
-   "side": "L"
-  },
-  {
-   "name": "rot_seite_R",
-   "box": [
-    4318,
-    440,
-    4725,
-    722
-   ],
-   "kind": "key",
-   "key": "#f01e1e",
-   "at": [
-    -0.929,
-    0.274
-   ],
-   "w": 0.576,
-   "side": "R"
+   "key": "#f01e1e"
   },
   {
    "name": "aas_feld",
@@ -170,7 +78,13 @@
     724
    ],
    "kind": "key",
-   "key": "#f01e1e"
+   "key": "#f01e1e",
+   "mirror": false,
+   "at": [
+    -0.315,
+    0.275
+   ],
+   "w": 0.562
   },
   {
    "name": "aas",
@@ -184,7 +98,12 @@
    "thr": [
     0.62,
     0.92
-   ]
+   ],
+   "at": [
+    -0.323,
+    0.42
+   ],
+   "w": 0.546
   },
   {
    "name": "motorsport",
@@ -194,7 +113,12 @@
     2302,
     706
    ],
-   "kind": "w"
+   "kind": "w",
+   "at": [
+    -0.325,
+    0.275
+   ],
+   "w": 0.519
   },
   {
    "name": "pirelli",
@@ -266,7 +190,9 @@
    "thr": [
     0.62,
     0.92
-   ]
+   ],
+   "dz": -0.12,
+   "dy": 0.03
   },
   {
    "name": "bangchak",
@@ -312,9 +238,9 @@
   "spots": [
    {
     "v": "side",
-    "z": -2.02,
-    "y": 0.55,
-    "s": 0.17
+    "z": -2.09,
+    "y": 0.62,
+    "s": 0.15
    },
    {
     "v": "top",

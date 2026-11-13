@@ -18,15 +18,15 @@
   "return col;"
  ],
  "stickers": [
-  {"name": "grund_haube", "box": [2000, 135, 2285, 300], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#0c1a52"},
   {"name": "nase_hell", "box": [90, 430, 560, 692], "kind": "key", "key": "#4fb0ff", "color": "#45a8f0", "tol": 18},
-  {"name": "chassis_hell", "box": [1115, 350, 1420, 530], "kind": "key", "key": "#4fb0ff", "color": "#45a8f0", "tol": 18},
-  {"name": "seite_d0", "box": [2000, 110, 2760, 380], "kind": "key", "key": "#000a2e", "color": "#0c1a52", "tol": 40},
-  {"name": "seite_d1", "box": [1740, 380, 2470, 742], "kind": "key", "key": "#000a2e", "color": "#0c1a52", "tol": 40},
-  {"name": "seite_d2", "box": [2470, 380, 2600, 500], "kind": "key", "key": "#000a2e", "color": "#0c1a52", "tol": 40},
-  {"name": "seite_h0", "box": [2000, 110, 2760, 380], "kind": "key", "key": "#4fb0ff", "color": "#45a8f0", "tol": 18},
-  {"name": "seite_h1", "box": [1740, 380, 2470, 700], "kind": "key", "key": "#4fb0ff", "color": "#45a8f0", "tol": 18},
-  {"name": "seite_h2", "box": [2470, 380, 2600, 500], "kind": "key", "key": "#4fb0ff", "color": "#45a8f0", "tol": 18},
+  {"name": "chassis_hell", "box": [1115, 365, 1260, 530], "kind": "key", "key": "#4fb0ff", "color": "#45a8f0", "tol": 18},
+  {"name": "haube_muster", "box": [2000, 110, 2760, 380], "kind": "key", "key": "#000a2e", "color": "#0c1a52", "tol": 40},
+  {"name": "haube_hell", "box": [2000, 110, 2760, 380], "kind": "key", "key": "#4fb0ff", "color": "#45a8f0", "tol": 18},
+  {"name": "kasten_hell", "box": [1850, 410, 2470, 700], "kind": "key", "key": "#4fb0ff", "color": "#45a8f0", "tol": 18},
+  {"name": "kasten_hell2", "box": [2470, 380, 2600, 500], "kind": "key", "key": "#4fb0ff", "color": "#45a8f0", "tol": 18},
+  {"name": "grund_haube", "box": [2000, 135, 2230, 300], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#0c1a52"},
+  {"name": "loch_erho", "box": [1864, 494, 2228, 670], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#45a8f0"},
+  {"name": "loch_volito", "box": [2245, 360, 2495, 432], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#45a8f0"},
   {"name": "grund_reihe", "box": [1866, 692, 2486, 738], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#0c1a52", "at": [-0.45, 0.205], "w": 0.8},
   {"name": "pirelli", "box": [308, 638, 477, 685], "kind": "w"},
   {"name": "lucasoil_reihe", "box": [1866, 692, 2486, 738], "kind": "w", "at": [-0.45, 0.205], "w": 0.8}

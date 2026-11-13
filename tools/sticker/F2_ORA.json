@@ -23,7 +23,7 @@
  "glsl": [
   "vec3 O = #ff5a08; vec3 K = #141518; vec3 col = O;",
   "col = mix(col, K, aaS(p.z - 2.0));",
-  "col = mix(col, K, band(p.z, -1.4, -0.42) * aaS(p.y - 0.873 - 0.25 * (p.z + 0.413)));",
+  "col = mix(col, K, band(p.z, -1.4, -0.42) * aaS(p.y - 0.925 - 0.25 * (p.z + 0.413)));",
   "float rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.6);",
   "col = mix(col, K, rw * (1.0 - aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.57))));",
   "return col;"
@@ -71,7 +71,8 @@
     2210,
     388
    ],
-   "kind": "w"
+   "kind": "w",
+   "dy": -0.05
   },
   {
    "name": "prop",
@@ -81,7 +82,8 @@
     2622,
     447
    ],
-   "kind": "c"
+   "kind": "c",
+   "dy": -0.05
   },
   {
    "name": "adac",
@@ -96,10 +98,10 @@
   {
    "name": "kroon",
    "box": [
-    2014,
-    140,
-    2106,
-    190
+    2006,
+    132,
+    2114,
+    198
    ],
    "kind": "c"
   },
@@ -123,14 +125,6 @@
    ],
    "kind": "c"
   }
- ],
- "zones": [
-  [
-   1.9,
-   2.8,
-   0,
-   0.45
-  ]
  ],
  "logoFile": "F2_MPM",
  "logos": [

@@ -5,7 +5,7 @@
  "drivers": [
   "MAI"
  ],
- "photo": "https://res.cloudinary.com/prod-f2f3/c_lpad,w_8000,h_880,g_west,b_transparent/l_common:f2:2026:artgrandprix:2026artgrandprixcarleft/a_hflip/fl_layer_apply,g_west,x_3520/l_text:Arial_300_bold:BWT,co_rgb:1b3f9c/fl_layer_apply,g_east,x_40/v1770000000/common/f2/2026/artgrandprix/2026artgrandprixcarleft.png",
+ "photo": "https://res.cloudinary.com/prod-f2f3/c_lpad,w_4400,h_880,g_west,b_transparent/l_text:Arial_300_bold:BWT,co_rgb:1b3f9c/fl_layer_apply,g_east,x_40/v1770000000/common/f2/2026/artgrandprix/2026artgrandprixcarleft.png",
  "rear": [
   3072,
   565
@@ -35,31 +35,7 @@
    ],
    "kind": "key",
    "key": "#f01e1e",
-   "color": "#1b2a6b",
-   "at": [
-    1.827,
-    0.431
-   ],
-   "w": 0.226,
-   "side": "L"
-  },
-  {
-   "name": "linie_nase_R",
-   "box": [
-    6390,
-    430,
-    6550,
-    510
-   ],
-   "kind": "key",
-   "key": "#f01e1e",
-   "color": "#1b2a6b",
-   "at": [
-    1.827,
-    0.431
-   ],
-   "w": 0.226,
-   "side": "R"
+   "color": "#1b2a6b"
   },
   {
    "name": "linie_cockpit",
@@ -71,47 +47,24 @@
    ],
    "kind": "key",
    "key": "#f01e1e",
-   "color": "#1b2a6b",
-   "at": [
-    0.938,
-    0.549
-   ],
-   "w": 0.504,
-   "side": "L"
-  },
-  {
-   "name": "linie_cockpit_R",
-   "box": [
-    5664,
-    352,
-    6020,
-    422
-   ],
-   "kind": "key",
-   "key": "#f01e1e",
-   "color": "#1b2a6b",
-   "at": [
-    0.938,
-    0.549
-   ],
-   "w": 0.504,
-   "side": "R"
+   "color": "#1b2a6b"
   },
   {
    "name": "bwt",
    "box": [
-    7290,
+    3690,
     320,
-    7975,
+    4375,
     560
    ],
    "kind": "key",
    "key": "#1b3f9c",
+   "mirror": false,
    "at": [
-    -0.35,
-    0.42
+    -0.2,
+    0.4
    ],
-   "w": 0.78
+   "w": 0.7
   },
   {
    "name": "pirelli",
@@ -136,7 +89,9 @@
    "thr": [
     0.62,
     0.92
-   ]
+   ],
+   "dz": -0.12,
+   "dy": 0.03
   },
   {
    "name": "yacco",
@@ -159,9 +114,9 @@
   "spots": [
    {
     "v": "side",
-    "z": -2.02,
-    "y": 0.55,
-    "s": 0.17
+    "z": -2.09,
+    "y": 0.62,
+    "s": 0.15
    },
    {
     "v": "top",

@@ -19,7 +19,7 @@
  ],
  "stickers": [
   {"name": "fl_chassis", "box": [1110, 400, 1455, 625], "kind": "key", "key": "#161616", "color": "#14161b", "tol": 110},
-  {"name": "fl_kasten", "box": [2235, 520, 2790, 692], "kind": "key", "key": "#161616", "color": "#14161b", "tol": 110},
+  {"name": "fl_kasten", "box": [2440, 520, 2790, 692], "kind": "key", "key": "#161616", "color": "#14161b", "tol": 110},
   {"name": "paraguay", "box": [272, 572, 500, 645], "kind": "c", "at": [2.08, 0.355], "w": 0.3},
   {"name": "pirelli", "box": [202, 664, 416, 732], "kind": "c", "at": [2.06, 0.225], "w": 0.26},
   {"name": "pech_grund", "box": [1214, 456, 1396, 564], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#14161b"},

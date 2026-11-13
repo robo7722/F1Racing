@@ -5,7 +5,7 @@
  "drivers": [
   "DUN"
  ],
- "photo": "https://res.cloudinary.com/prod-f2f3/c_lpad,w_8000,h_880,g_west,b_transparent/l_common:f2:2026:rodinmotorsport:2026rodinmotorsportcarleft/a_hflip/fl_layer_apply,g_west,x_3520/l_text:Arial_300_bold:BWT,co_rgb:1b3f9c/fl_layer_apply,g_east,x_40/v1770000000/common/f2/2026/rodinmotorsport/2026rodinmotorsportcarleft.png",
+ "photo": "https://res.cloudinary.com/prod-f2f3/c_lpad,w_4400,h_880,g_west,b_transparent/l_text:Arial_300_bold:BWT,co_rgb:1b3f9c/fl_layer_apply,g_east,x_40/v1770000000/common/f2/2026/rodinmotorsport/2026rodinmotorsportcarleft.png",
  "rear": [
   3075,
   570
@@ -28,18 +28,19 @@
   {
    "name": "bwt",
    "box": [
-    7290,
+    3690,
     320,
-    7975,
+    4375,
     560
    ],
    "kind": "key",
    "key": "#1b3f9c",
+   "mirror": false,
    "at": [
-    -0.35,
-    0.42
+    -0.2,
+    0.4
    ],
-   "w": 0.78
+   "w": 0.7
   },
   {
    "name": "pirelli",
