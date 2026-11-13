@@ -2,7 +2,7 @@
 
 Aufruf:  python3 tools/fahrer/build_fahrer.py <quellordner>
 Quellordner: model.obj, base.jpg, normal.jpg (Körper, Tripo) und glove.kmz (Handschuh).
-Braucht: numpy, pillow, scipy, trimesh, pymeshlab.
+Braucht: numpy, pillow, scipy, trimesh, pymeshlab, libigl, scikit-image (+ Systempaket libopengl0).
 
 Ergebnis:
   fahrer/fahrer.glb, fahrer/handschuh.glb   stehende Figur (Vorschau: fahrer/vorschau.html; Kart-Prüfansicht: fahrer/kart_vorschau.html)
@@ -14,8 +14,10 @@ Ablauf:
   2. Textur säubern: Logos, Schriftzüge und dunkle Fehlstellen (Fersen, Achseln, Seitennähte) entfernen.
      Übrig bleibt eine helle Stoff-Schattierung, die im Spiel mit den Teamfarben eingefärbt wird.
   3. Verkleinern (Kantenzusammenlegung mit Erhalt der Textur).
-  4. Kart: Figur über ein einfaches Skelett in die Sitzhaltung biegen (Rumpf zurückgelehnt, Beine nach vorn,
-     Hände am Lenkrad per Zwei-Knochen-IK), Handschuhe zur Faust um den Lenkradkranz gekrümmt.
+  4. Kart: Ruhehaltung als geschlossene Außenhülle neu aufbauen (Windungszahl, libigl) – die Vorlage hat Doppelwände, Futter
+     und abstehende Schulterklappen, die beim Biegen als Löcher/Schlitze erschienen. Dann über ein einfaches Skelett in die
+     Sitzhaltung biegen (Arme gedreht statt linear gemischt, Hände per Zwei-Knochen-IK am Lenkradkranz, Handgelenk gerade),
+     Bündchen eng ziehen, Handschuhe zur Faust um den Kranz gekrümmt und mit der Stulpe über das Bündchen gelegt.
 """
 import sys, os, io, json, zipfile, struct
 import numpy as np, trimesh, pymeshlab
@@ -30,7 +32,7 @@ H = 1.78                                   # Körpergröße der stehenden Figur 
 # ---------- Gelenke der Tripo-Vorlage (normiert, rechte Körperseite = -x, Blick +z) ----------
 J = {'hip': (-0.050, 0.500, -0.003), 'knee': (-0.054, 0.280, -0.015), 'ankle': (-0.054, 0.070, -0.040), 'toe': (-0.060, 0.020, 0.075),
      'pelvis': (0.0, 0.500, -0.005), 'neck': (0.0, 0.830, -0.030), 'head': (0.0, 0.912, 0.008),
-     'sh': (-0.105, 0.790, -0.040), 'el': (-0.125, 0.605, -0.056), 'wr': (-0.137, 0.475, -0.002)}
+     'sh': (-0.100, 0.768, -0.040), 'el': (-0.125, 0.605, -0.056), 'wr': (-0.137, 0.475, -0.002)}
 J = {k: np.array(v) for k, v in J.items()}
 mir = lambda p: p * np.array([-1, 1, 1])
 
@@ -99,27 +101,19 @@ def clean_texture():
 # 3. Verkleinern mit Erhalt der Textur
 # ======================================================================================
 def decimate(V, F, UV, target):
+    """Nur die Form verkleinern (UV-Nähte zählen nicht als feste Kanten – das faltete sonst an Schultern/Oberkörper Dreiecke um),
+    danach die Texturkoordinaten vom Originalnetz holen (nächster Punkt, baryzentrisch). Die Anzug-Textur ist fast einfarbig,
+    Nähte fallen dabei nicht auf."""
     w = trimesh.Trimesh(V, F, process=False); w.merge_vertices(merge_tex=True, merge_norm=True)
-    # verschweißte Positionen, UV je Ecke (Wedge) aus dem Original
-    wuv = UV[F].reshape(-1, 2)
-    # über eine OBJ-Datei laden: so kennt MeshLab die Textur je Fläche (direkt übergebene UV gelten als "ohne Textur")
-    import tempfile
-    tmp = tempfile.mkdtemp(); Image.new('RGB', (4, 4)).save(os.path.join(tmp, 't.png'))
-    with open(os.path.join(tmp, 'm.mtl'), 'w') as fo: fo.write('newmtl m\nmap_Kd t.png\n')
-    with open(os.path.join(tmp, 'm.obj'), 'w') as fo:
-        fo.write('mtllib m.mtl\n'); fo.write(''.join(f'v {a:.6f} {b:.6f} {c:.6f}\n' for a, b, c in w.vertices))
-        fo.write(''.join(f'vt {a:.6f} {b:.6f}\n' for a, b in wuv)); fo.write('usemtl m\n')
-        fo.write(''.join(f'f {a + 1}/{3 * i + 1} {b + 1}/{3 * i + 2} {c + 1}/{3 * i + 3}\n' for i, (a, b, c) in enumerate(w.faces)))
-    ms = pymeshlab.MeshSet(); ms.load_new_mesh(os.path.join(tmp, 'm.obj'))
-    ms.meshing_decimation_quadric_edge_collapse_with_texture(targetfacenum=int(target), qualitythr=0.5, extratcoordw=1.0, preserveboundary=True, boundaryweight=2.0, optimalplacement=True, preservenormal=True, planarquadric=True)
-    m = ms.current_mesh()
-    v, f, t = m.vertex_matrix(), m.face_matrix(), m.wedge_tex_coord_matrix().reshape(-1, 3, 2)
-    # Ecken mit gleicher Position+UV zusammenfassen -> Eckpunkte je UV
-    key = np.round(np.hstack([np.repeat(f.reshape(-1, 1), 1, 1), t.reshape(-1, 2) * 8192]), 0)
-    uniq, inv = np.unique(key, axis=0, return_inverse=True)
-    inv = inv.reshape(-1)
-    V2 = v[uniq[:, 0].astype(int)]; UV2 = uniq[:, 1:] / 8192; F2 = inv.reshape(-1, 3)
-    return V2, F2, UV2
+    ms = pymeshlab.MeshSet(); ms.add_mesh(pymeshlab.Mesh(vertex_matrix=w.vertices, face_matrix=w.faces))
+    ms.meshing_decimation_quadric_edge_collapse(targetfacenum=int(target), qualitythr=0.6, preserveboundary=True, boundaryweight=2.0, preservenormal=True, preservetopology=True, optimalplacement=True, planarquadric=True, autoclean=True)
+    m = ms.current_mesh(); v, f = m.vertex_matrix(), m.face_matrix()
+    orig = trimesh.Trimesh(V, F, process=False)
+    _, _, tri = trimesh.proximity.closest_point(orig, v)
+    bc = trimesh.triangles.points_to_barycentric(V[F[tri]], v)
+    uv = np.einsum('ij,ijk->ik', bc, UV[F[tri]])
+    used = np.unique(f); remap = -np.ones(len(v), int); remap[used] = np.arange(len(used))
+    return v[used], remap[f], uv[used]
 
 
 # ======================================================================================
@@ -190,7 +184,143 @@ def arm_masks(V, F, S):
     x, y = V[:, 0] / S, V[:, 1] / S
     t = np.interp(y, [0.40, 0.54, 0.57, 0.60, 0.635, 0.66, 0.80], [0.106, 0.106, 0.095, 0.089, 0.089, 0.100, 0.100])
     band = (y > 0.40) & (y < 0.80)
-    return band & (x < -t), band & (x > t)
+    mR, mL = band & (x < -t), band & (x > t)
+    if getattr(remesh_winding, 'arm', None) is not None and len(remesh_winding.arm[0]) == len(V):
+        # Hülle: Arm und Hüfte sind dort getrennt (freigeschnitten) -> unterhalb y = 0,60 ist der Arm ein eigenes zusammenhängendes Stück
+        from scipy.sparse import coo_matrix
+        from scipy.sparse.csgraph import connected_components
+        low = y < 0.60; e = np.vstack([F[:, [0, 1]], F[:, [1, 2]], F[:, [2, 0]]]); e = e[low[e[:, 0]] & low[e[:, 1]]]
+        n = len(V); _, lab = connected_components(coo_matrix((np.ones(len(e)), (e[:, 0], e[:, 1])), shape=(n, n)), directed=False)
+        for k, sx in enumerate((-1, 1)):
+            wr = mir(J['wr']) if sx > 0 else J['wr']
+            seed = np.argmin(np.linalg.norm(V / S - wr, axis=1) + (~low) * 9)
+            comp = (lab == lab[seed]) & low
+            if comp.sum() > 0.3 * low.sum(): continue                                     # doch verbunden: feste Grenze behalten
+            if k == 0: mR = np.where(low, comp & band, mR)
+            else: mL = np.where(low, comp & band, mL)
+    return mR, mL
+
+
+def remesh_winding(P, F, UV, target, h=0.0015, close_above=(0.66, 0.016), extra=None):
+    """Ruhehaltung als saubere, geschlossene Außenhülle neu aufbauen. „Innen“ = verallgemeinerte Windungszahl (libigl) – robust gegen
+    die Macken der Vorlage: offene Stellen, doppelwandige Ärmel, im Rumpf steckende Ärmelflächen. Beim Biegen klappten genau diese
+    Innenflächen als Schlitze/Trichter an Schulter und Kragen heraus. Danach glatt vernetzen, verkleinern, UV vom Original holen."""
+    import igl
+    from skimage.measure import marching_cubes
+    lo = P.min(0) - 4 * h; dims = np.ceil((P.max(0) - P.min(0)) / h).astype(int) + 9
+    gx, gy, gz = [lo[a] + np.arange(dims[a]) * h for a in range(3)]
+    Q = np.stack(np.meshgrid(gx, gy, gz, indexing='ij'), -1).reshape(-1, 3)
+    w = igl.fast_winding_number(np.ascontiguousarray(P, dtype=np.float64), np.ascontiguousarray(F, dtype=np.int64), Q).reshape(dims)
+    inside = np.abs(w) > 0.5
+    # Die Vorlage hat im Oberkörper eine innere Futterschicht (vom Kragen abwärts): dort hebt sich die Windungszahl auf, der Rumpf
+    # wäre hohl. Jede waagerechte Scheibe einzeln füllen – ein Ring im Querschnitt wird so zur vollen Fläche, Arme bleiben eigene Flecken.
+    for jj in range(dims[1]): inside[:, jj, :] = ndimage.binary_fill_holes(inside[:, jj, :])
+    f = inside
+    if close_above:
+        # Spalt zwischen Rücken/Brust und Oberarm schließen (reicht in der Vorlage hinten bis zur Schulter hoch) – nur oberhalb close_above[0],
+        # darunter bleibt die echte Lücke zwischen hängendem Arm und Hüfte offen
+        y0, rr = close_above; r = int(round(rr / h)); ball = np.linalg.norm(np.indices((2 * r + 1,) * 3) - r, axis=0) <= r + 0.01
+        closed = ndimage.binary_closing(np.pad(inside, r), structure=ball)[r:-r, r:-r, r:-r]
+        f = inside | (closed & (gy > y0)[None, :, None])                                   # nur ja/nein (Zwischenwerte gaben dünne Häutchen mit Löchern)
+    f = ndimage.binary_fill_holes(f)
+    if close_above:
+        # Lücke zwischen hängendem Arm und Hüfte (in der Vorlage nur ~3 mm) freischneiden, sonst verschmilzt die Hülle dort und der
+        # Arm zieht beim Biegen eine Hautfalte von der Hüfte mit. Je Höhenscheibe ist der Arm in der Vorlage ein eigener Fleck:
+        # den Fleck um die Armachse nehmen, 2 Voxel Abstand zum Rest freiräumen, und ihn als Arm-Maske fürs Biegen merken.
+        armvox = np.zeros_like(f)
+        for sx in (-1, 1):
+            for jj in np.where((gy > J['wr'][1] - 0.004) & (gy < 0.62))[0]:                # nur wo es Ärmel gibt (Hand ist abgeschnitten)
+                t_ = np.clip((gy[jj] - J['wr'][1]) / (J['el'][1] - J['wr'][1]), 0, 1); c = J['wr'] + (J['el'] - J['wr']) * t_
+                ci, ck = int(round((sx * -c[0] - lo[0]) / h)), int(round((c[2] - lo[2]) / h))
+                lab, n = ndimage.label(inside[:, jj, :])
+                if n == 0: continue
+                l0 = lab[ci, ck]
+                if l0 == 0:                                                               # Achse knapp daneben: nächsten Fleck nehmen
+                    ii, kk = np.nonzero(lab); d = (ii - ci) ** 2 + (kk - ck) ** 2
+                    if d.min() > 9: continue
+                    l0 = lab[ii[d.argmin()], kk[d.argmin()]]
+                arm = lab == l0
+                if arm.sum() > 0.4 * (lab > 0).sum(): continue                            # mit dem Rumpf verbunden (Achsel): nicht trennen
+                armvox[:, jj, :] |= arm
+                f[:, jj, :] &= arm | ~ndimage.binary_dilation(arm, iterations=2)
+        # dünne Finnen entfernen (morphologisches Öffnen): offene Einzelflächen der Vorlage – v. a. die Schulterklappen – ergeben in der
+        # Windungszahl hauchdünne, abstehende Platten, die beim Biegen knautschen
+        ro = 3; ball2 = np.linalg.norm(np.indices((2 * ro + 1,) * 3) - ro, axis=0) <= ro + 0.01
+        op = ndimage.binary_opening(np.pad(f, ro), structure=ball2)[ro:-ro, ro:-ro, ro:-ro]
+        reg = (np.abs(gx) > 0.08)[:, None, None] & ((gy > 0.74) & (gy < 0.84))[None, :, None]   # nur die Schulterkappen
+        f = np.where(reg, op, f)
+    f = ndimage.gaussian_filter(f.astype(np.float32), 0.8)
+    v, fc, _, _ = marching_cubes(f, 0.5)
+    v = v * h + lo; fc = fc[:, ::-1]
+    m0 = trimesh.Trimesh(v, fc, process=False); parts = m0.split(only_watertight=False)
+    m0 = max(parts, key=lambda q: q.area)                                                  # nur die Hülle selbst (keine Krümel)
+    ms = pymeshlab.MeshSet(); ms.add_mesh(pymeshlab.Mesh(vertex_matrix=m0.vertices, face_matrix=m0.faces))
+    ms.meshing_decimation_quadric_edge_collapse(targetfacenum=int(target), qualitythr=0.7, preservenormal=True, preservetopology=True, optimalplacement=True, planarquadric=True, autoclean=True)
+    ms.apply_coord_taubin_smoothing(stepsmoothnum=4)
+    m = ms.current_mesh(); v, fc = m.vertex_matrix(), m.face_matrix()
+    src = trimesh.Trimesh(P, F, process=False)
+    _, dist, tri = trimesh.proximity.closest_point(src, v)
+    bc = np.clip(trimesh.triangles.points_to_barycentric(P[F[tri]], v), 0, 1); bc /= bc.sum(1, keepdims=True)
+    uv = np.einsum('ij,ijk->ik', bc, UV[F[tri]])
+    # Dreiecke, deren Ecken auf verschiedenen UV-Inseln landen, würden quer über die Textur interpolieren (Streifen, Logo-Reste);
+    # ebenso neu geschlossene Flächen (weit von der Vorlage): beide bekommen die UV einer sauberen Stoffstelle
+    far = dist > 2.5 * h
+    span = np.zeros(len(v), bool)
+    tuv = uv[fc]; big = (np.ptp(tuv[:, :, 0], 1) > 0.06) | (np.ptp(tuv[:, :, 1], 1) > 0.06)
+    span[np.unique(fc[big])] = True
+    clean = np.median(uv[~far & ~span], axis=0)
+    uv[far | span] = clean
+    print(f'UV ersetzt: {int(far.sum())} neue Flächenpunkte, {int(span.sum())} an Inselgrenzen')
+    if close_above:                                                                        # Arm-Maske für die neuen Eckpunkte (Ruhehaltung)
+        av = ndimage.binary_dilation(armvox, iterations=2); q = np.clip(np.round((v - lo) / h).astype(int), 0, np.array(av.shape) - 1)
+        isarm = av[q[:, 0], q[:, 1], q[:, 2]]; remesh_winding.arm = (isarm & (v[:, 0] < 0), isarm & (v[:, 0] > 0))
+    mm = trimesh.Trimesh(v, fc, process=False)
+    print(f'Hülle: {len(fc)} Dreiecke, geschlossen: {mm.is_watertight}, Teile verworfen: {len(parts) - 1}, Euler {mm.euler_number}')
+    if extra is not None: return v, fc, uv, np.einsum('ij,ijk->ik', bc, extra[F[tri]])
+    return v, fc, uv
+
+
+def unfold(V, F, rounds=40, tag=''):
+    """Eingeklappte Flächen reparieren: Dreiecke, deren Normale gegen die geglättete Umgebung zeigt (Falte), samt 2 Ringen Nachbarn
+    lokal glätten, bis keine mehr übrig sind. Die Tripo-Vorlage hat solche Falten in Achsel, Gürtel und Brust; beim Biegen der Arme
+    kamen sie als Risse/Mulden zum Vorschein. Es wird nichts gelöscht – keine neuen Löcher."""
+    key = np.unique(np.round(V, 6), axis=0, return_inverse=True)[1].reshape(-1); nk = key.max() + 1
+    Fk = key[F]
+    from scipy.sparse import coo_matrix, diags
+    e = np.vstack([Fk[:, [0, 1]], Fk[:, [1, 2]], Fk[:, [2, 0]]]); e = e[e[:, 0] != e[:, 1]]
+    A = coo_matrix((np.ones(2 * len(e)), (np.r_[e[:, 0], e[:, 1]], np.r_[e[:, 1], e[:, 0]])), shape=(nk, nk)).tocsr(); A.data[:] = 1
+    Avg = diags(1 / np.maximum(np.asarray(A.sum(1)).ravel(), 1)) @ A
+    Vk = np.zeros((nk, 3)); np.add.at(Vk, key, V); Vk /= np.bincount(key, minlength=nk)[:, None]
+    def bad_faces():
+        fn = np.cross(Vk[Fk[:, 1]] - Vk[Fk[:, 0]], Vk[Fk[:, 2]] - Vk[Fk[:, 0]]); fa = np.linalg.norm(fn, axis=1); fn = fn / np.maximum(fa, 1e-12)[:, None]
+        acc = np.zeros((nk, 3)); np.add.at(acc, Fk.reshape(-1), np.repeat(fn * fa[:, None], 3, 0)); N = acc / np.maximum(np.linalg.norm(acc, axis=1, keepdims=True), 1e-12)
+        nb = Avg @ N; nb = nb / np.maximum(np.linalg.norm(nb, axis=1, keepdims=True), 1e-12)
+        return np.einsum('ij,ij->i', fn, nb[Fk].mean(1)) < 0.05
+    b0 = int(bad_faces().sum())
+    for _ in range(rounds):
+        bad = bad_faces()
+        if not bad.any(): break
+        m = np.zeros(nk); m[np.unique(Fk[bad])] = 1
+        for _ in range(2): m = np.maximum(m, (A @ m > 0).astype(float))
+        m = m[:, None]
+        for _ in range(3): Vk = Vk + 0.5 * m * (Avg @ Vk - Vk)
+    b1 = int(bad_faces().sum())
+    if tag: print(f'Falten {tag}: {b0} -> {b1}')
+    return Vk[key]
+
+
+def taubin_zone(V, F, zone, iters=40):
+    """Taubin-Glättung (schrumpft nicht) nur dort, wo zone > 0 (weich gewichtet)."""
+    key = np.unique(np.round(V, 6), axis=0, return_inverse=True)[1].reshape(-1); nk = key.max() + 1
+    from scipy.sparse import coo_matrix, diags
+    e = key[np.vstack([F[:, [0, 1]], F[:, [1, 2]], F[:, [2, 0]]])]; e = e[e[:, 0] != e[:, 1]]
+    A = coo_matrix((np.ones(2 * len(e)), (np.r_[e[:, 0], e[:, 1]], np.r_[e[:, 1], e[:, 0]])), shape=(nk, nk)).tocsr(); A.data[:] = 1
+    Avg = diags(1 / np.maximum(np.asarray(A.sum(1)).ravel(), 1)) @ A
+    Vk = np.zeros((nk, 3)); np.add.at(Vk, key, V); Vk /= np.bincount(key, minlength=nk)[:, None]
+    zk = np.zeros(nk); np.maximum.at(zk, key, zone); zk = zk[:, None]
+    for _ in range(iters):
+        Vk = Vk + 0.6 * zk * (Avg @ Vk - Vk); Vk = Vk - 0.63 * zk * (Avg @ Vk - Vk)
+    return Vk[key]
 
 
 def pose_kart(V, F, S):
@@ -214,19 +344,25 @@ def pose_kart(V, F, S):
 
     def solve_arm(hipT):
         sh = hipT + Rsp @ (j['sh'] - j['pelvis'])
-        Yg = -az
-        for _ in range(5):                                                               # Handgelenk folgt dem Unterarm (gerades Handgelenk)
-            Zg = np.cross(Xg, Yg); wristT = glove_wrist_world(grip, Xg, Yg, Zg, S)
+        Yg = -az; Xh = Xg
+        for _ in range(8):                                                               # ganze Hand in Verlängerung des Unterarms (gerades Handgelenk)
+            Zg = np.cross(Xh, Yg); wristT = glove_wrist_world(grip, Xh, Yg, Zg, S)
             dvec = wristT - sh; dist = min(np.linalg.norm(dvec), (L1 + L2) * 0.999); u = nrm(dvec)
             a = (L1 ** 2 - L2 ** 2 + dist ** 2) / (2 * dist); r = np.sqrt(max(L1 ** 2 - a ** 2, 0)); c0 = sh + u * a
             e1 = nrm(np.cross(u, [0, 1, 0])); e2 = np.cross(u, e1); best = None
             for ang in np.linspace(0, 2 * np.pi, 144, endpoint=False):
                 el = c0 + r * (np.cos(ang) * e1 + np.sin(ang) * e2)
-                sc = np.dot(nrm(el - c0), nrm(np.array([-0.45, -1.0, -0.15])))       # Ellbogen nach unten und außen (rechts = -x)
+                fa_ = nrm(wristT - el)
+                # natürliche Zone: Ellbogen klar unter der Schulter, leicht außen (nicht abgespreizt, nicht im Rumpf)
+                pen = max(0.0, el[1] - (sh[1] - 0.22)) + max(0.0, el[0] - (sh[0] - 0.03)) + max(0.0, (sh[0] - 0.14) - el[0])
+                sc = -abs(np.dot(fa_, Xg)) - 8.0 * pen                                     # darin: Unterarm möglichst quer zum Kranz
                 if best is None or sc > best[0]: best = (sc, el)
             el = best[1]; fa = nrm(wristT - el)
-            Yg = nrm(fa - np.dot(fa, Xg) * Xg)
-        return sh, el, wristT, Yg, np.linalg.norm(wristT - sh)
+            # Hand: zwischen „gerade zum Unterarm“ und „Daumen entlang des Kranzes“ – Handgelenk höchstens ~15° abgewinkelt
+            yp = nrm(fa - np.dot(fa, Xg) * Xg); ang = np.arccos(np.clip(np.dot(fa, yp), -1, 1))
+            t = 1.0 if ang < 1e-6 else min(1.0, np.radians(15) / ang)                  # Anteil Richtung „Kranz“: höchstens 15° Knick
+            Yg = nrm(fa * (1 - t) + yp * t); Xh = nrm(Xg - np.dot(Xg, Yg) * Yg)           # Rest: Kranz läuft schräg durch die Hand (wie in echt)
+        return sh, el, wristT, (Xh, Yg), np.linalg.norm(wristT - sh)
 
     # Sitzposition: so weit nach vorn, dass die Arme gut angewinkelt sind (Abstand Schulter–Hand ≈ 72 % der Armlänge), im Sitz bleiben
     best = None
@@ -234,13 +370,14 @@ def pose_kart(V, F, S):
         hipT = np.array([0, 0.19, hz]); r = solve_arm(hipT)
         sc = -abs(r[4] / (L1 + L2) - 0.72)
         if best is None or sc > best[0]: best = (sc, hipT, r)
-    hipT, (sh, el, wristT, Yg, dist) = best[1], best[2]
+    hipT, (sh, el, wristT, (Xh, Yg), dist) = best[1], best[2]
+    print(f'Hand: Daumenachse weicht {np.degrees(np.arccos(np.clip(np.dot(Xh, Xg), -1, 1))):.0f}° vom Kranz ab, Handgelenk-Knick {np.degrees(np.arccos(np.clip(np.dot(Yg, nrm(wristT - el)), -1, 1))):.0f}°')
     out = {'reach': {'R': (dist, L1 + L2), 'L': (dist, L1 + L2)}, 'hip': hipT}
     Rua = rot_between(bones['uarmR'][1] - bones['uarmR'][0], el - sh)
     wr_reached = el + nrm(wristT - el) * L2
     Rfa = rot_between(bones['farmR'][1] - bones['farmR'][0], wr_reached - el)
     T = {'spine': (Rsp, hipT), 'uarmR': (Rua, sh), 'farmR': (Rfa, el), 'uarmL': (M @ Rua @ M, M @ sh), 'farmL': (M @ Rfa @ M, M @ el)}
-    out['grip'] = (grip, Xg, Yg, np.cross(Xg, Yg))
+    out['grip'] = (grip, Xh, Yg, np.cross(Xh, Yg))
     out['wrist'] = {'R': (wr_reached, wristT), 'L': (M @ wr_reached, M @ wristT)}
     out['elbow'] = el; out['shoulder'] = sh
     for s, sfx in ((-1, 'R'), (1, 'L')):
@@ -255,29 +392,68 @@ def pose_kart(V, F, S):
         Rft = rot_between(Rsh @ (bones['foot' + sfx][1] - bones['foot' + sfx][0]), dft) @ Rsh
         T['thigh' + sfx] = (Rth, hip); T['shin' + sfx] = (Rsh, knee); T['foot' + sfx] = (Rft, ankle)
 
-    # ---- Gewichte: Abstand zu den erlaubten Knochen je Körperbereich ----
+    # ---- Verformung ----
+    # Rumpf + Beine: lineares Mischen der Knochen (dort wird wenig gebogen).
+    # Arme: gewichtetes DREHEN um Schulter und Ellbogen (Rotation wird mit dem Gewicht skaliert). Lineares Mischen ließ an der
+    # Schulter die Fläche einknicken (Kerbe/Schlitz hinten an der Schulter) und am Ellbogen einfallen.
     P = V; x, y = P[:, 0] / S, P[:, 1] / S
-    names = list(bones.keys()); D = np.stack([seg_dist(P, *bones[n]) for n in names], 1)
-    allow = np.zeros_like(D, bool); ix = {n: i for i, n in enumerate(names)}
+    names = list(bones.keys()); D = np.stack([seg_dist(P, *bones[n]) for n in names], 1); ix = {n: i for i, n in enumerate(names)}
+    sstep = lambda a, b, v: (lambda t: t * t * (3 - 2 * t))(np.clip((v - a) / (b - a), 0, 1))
     armR, armL = arm_masks(V, F, S)
-    leg = y < 0.535                                                                     # Beine erst unterhalb des Gürtels (sonst zieht der Oberschenkel ihn an der Hüftseite herunter)
-    for i, n in enumerate(names):
-        sfx = n[-1]; sideMask = (x < 0.004) if sfx == 'R' else (x > -0.004)
-        if n.startswith(('uarm', 'farm')):
-            am = armR if sfx == 'R' else armL
-            allow[:, i] = am | (((x < -0.085) if sfx == 'R' else (x > 0.085)) & (y > 0.74) & (y < 0.83))   # Schulterkappe weich überblenden
-            if n.startswith('farm'): allow[:, i] = am
-        elif n.startswith(('thigh', 'shin', 'foot')):
-            allow[:, i] = leg & sideMask & ~(armR | armL)
-        else:
-            allow[:, i] = ~(armR | armL) & (y > 0.42)
-    allow[:, ix['spine']] |= ~allow.any(1)
-    W = np.where(allow, 1 / (D + 0.012) ** 6, 0); W /= W.sum(1, keepdims=True)
-    Vn = np.zeros_like(P)
-    for i, n in enumerate(names):
-        R, head = T[n]; Vn += W[:, i:i + 1] * ((P - bones[n][0]) @ R.T + head)
+    key = np.unique(np.round(V, 5), axis=0, return_inverse=True)[1].reshape(-1); nk = key.max() + 1
+    from scipy.sparse import coo_matrix, diags
+    e = key[np.vstack([F[:, [0, 1]], F[:, [1, 2]], F[:, [2, 0]]])]; e = e[e[:, 0] != e[:, 1]]
+    A = coo_matrix((np.ones(2 * len(e)), (np.r_[e[:, 0], e[:, 1]], np.r_[e[:, 1], e[:, 0]])), shape=(nk, nk)).tocsr(); A.data[:] = 1
+    Avg = diags(1 / np.maximum(np.asarray(A.sum(1)).ravel(), 1)) @ A
+    el_len = np.mean(np.linalg.norm(V[F[:, 0]] - V[F[:, 1]], axis=1)) / S
+    def smooth(vals, radius, fixed=None):
+        vk = np.zeros(nk); np.add.at(vk, key, vals); vk /= np.bincount(key, minlength=nk)
+        fk = None
+        if fixed is not None: fk = np.zeros(nk, bool); np.logical_or.at(fk, key, fixed); f0 = vk.copy()
+        for _ in range(int(np.clip((radius / el_len) ** 2, 4, 600))):
+            vk = 0.5 * vk + 0.5 * (Avg @ vk)
+            if fk is not None: vk[fk] = f0[fk]
+        return vk[key]
+    # Körper (Rumpf/Beine) linear
+    def inv(cols):
+        Wc = np.zeros_like(D)
+        for n in cols: Wc[:, ix[n]] = 1 / (D[:, ix[n]] + 0.012) ** 6
+        return Wc
+    Wb = inv(['spine'])
+    for s, sfx in ((-1, 'R'), (1, 'L')):
+        legm = (y < 0.535) & ((x < 0.004) if s < 0 else (x > -0.004))
+        for n in ('thigh', 'shin', 'foot'): Wb[:, ix[n + sfx]] = np.where(legm, 1 / (D[:, ix[n + sfx]] + 0.012) ** 6, 0)
+    Wb /= Wb.sum(1, keepdims=True)
+    for k in range(Wb.shape[1]): Wb[:, k] = smooth(Wb[:, k], 0.03)
+    Wb /= Wb.sum(1, keepdims=True)
+    Vb = np.zeros_like(P)
+    for n in names:
+        if n.startswith(('uarm', 'farm')): continue
+        R_, head = T[n]; Vb += Wb[:, ix[n]:ix[n] + 1] * ((P - bones[n][0]) @ R_.T + head)
+    Vsp = (P - bones['spine'][0]) @ Rsp.T + hipT                                        # reiner Rumpf
+    def rpow(R_, t):                                                                   # Drehung R_ zum Anteil t (je Punkt)
+        rv = Rot.from_matrix(R_).as_rotvec(); return Rot.from_rotvec(np.outer(t, rv)).as_matrix()
+    from scipy.spatial.transform import Rotation as Rot
+    Vn = Vb.copy(); W = Wb; out['aw'] = {}
+    for s, sfx, am in ((-1, 'R', armR), (1, 'L', armL)):
+        shR, elR = bones['uarm' + sfx]; wrR = bones['farm' + sfx][1]
+        Rua, sh_t = T['uarm' + sfx]; Rfa, _ = T['farm' + sfx]
+        ax_ = elR - shR; tp = ((P - shR) @ ax_) / (ax_ @ ax_)
+        # Arm-Anteil: unten (echter Spalt zur Hüfte) hart über die Maske, an der Schulter weich entlang der Oberarmachse
+        rad = sstep(0.086, 0.112, s * x) * (1 - sstep(0.76, 0.80, y)) + sstep(0.76, 0.80, y) * sstep(0.03, 0.09, s * x)
+        aw = np.where(y < 0.60, am.astype(float), sstep(-0.35, 0.40, tp) * rad)
+        aw = smooth(aw, 0.035, fixed=(y < 0.57))
+        fw = sstep(0.82, 1.12, tp) * (aw > 0.5)                                          # Unterarm-Anteil um den Ellbogen
+        fw = smooth(fw, 0.02)
+        out['aw'][sfx] = aw
+        E = Rua.T @ Rfa                                                                  # Ellbogen-Drehung im Ruhe-Rahmen
+        Pe = elR + np.einsum('nij,nj->ni', rpow(E, fw), P - elR)
+        Rr = Rua @ Rsp.T                                                                 # Arm relativ zum Rumpf
+        qa = np.einsum('nij,nj->ni', rpow(Rr, aw), (Pe - shR) @ Rsp.T) + sh_t
+        side = aw > 1e-4
+        Vn[side] = qa[side] + (Vb[side] - Vsp[side]) * (1 - aw[side])[:, None]          # Bein-Anteil des Körpers wirkt nicht auf den Arm
     out['head'] = hipT + Rsp @ (j['neck'] - j['pelvis']) + (j['head'] - j['neck'])   # Kopf aufrecht auf dem Hals (Blick nach vorn)
-    out['lean'] = lean; out['arms'] = (armR, armL)
+    out['lean'] = lean; out['arms'] = (armR, armL); out['names'] = names
     return Vn, out
 
 
@@ -292,24 +468,18 @@ def glove_wrist_world(grip, Xg, Yg, Zg, S):
 
 
 def fit_gauntlet(gw, gy, arm_pts, c, ax, S):
-    """Lückenlos: Stulpe des Handschuhs an den Ärmel anpassen. gw = Handschuh (Welt), gy = Höhe in der Vorlage (Stulpe < -13),
-    arm_pts = Unterarm-Eckpunkte (Welt), c = Handgelenk, ax = Unterarmrichtung (Ellbogen -> Hand).
-    Ab dem Handgelenk wächst der Querschnitt auf 97 % des Ärmels (je Richtung um die Achse gemessen) und reicht ~8 cm in den Ärmel."""
+    """Lückenlos: Stulpe des Handschuhs über das Ärmelbündchen legen. gw = Handschuh (Welt), gy = Höhe in der Vorlage (Stulpe < -13),
+    c = Handgelenk, ax = Unterarmrichtung (Ellbogen -> Hand). Das Bündchen ist vorher auf r = 3 cm eingezogen (main); die Stulpe wird
+    rund mit r = 3,45 cm darübergelegt und endet ~4,5 cm vor dem Handgelenk. arm_pts bleibt für spätere Anpassungen in der Signatur."""
     e1 = nrm(np.cross(ax, [0, 1, 0])); e2 = np.cross(ax, e1)
     def polar(P):
         d = P - c; a = d @ ax; rv = d - np.outer(a, ax); return a, np.arctan2(rv @ e2, rv @ e1), np.linalg.norm(rv, axis=1)
-    a, th, r = polar(arm_pts); sel = (a > -0.035) & (a < -0.005)                  # Ärmelende (Schnitt liegt ~1,5 cm vor dem Handgelenk)
-    nb = 24; bins = ((th[sel] + np.pi) / (2 * np.pi) * nb).astype(int) % nb; Rs = np.full(nb, np.inf)
-    for b, rr in zip(bins, r[sel]): Rs[b] = min(Rs[b], rr)
-    for k in range(nb):                                                            # leere Richtungen aus den Nachbarn
-        if not np.isfinite(Rs[k]): Rs[k] = np.nanmin(np.where(np.isfinite(Rs), Rs, np.nan))
-    Rs = (Rs + np.roll(Rs, 1) + np.roll(Rs, -1)) / 3
     out = gw.copy(); g = gy < -12.5
     ga, gth, gr = polar(gw[g])
     w = np.clip((-12.5 - gy[g]) / 3.0, 0, 1); w = w * w * (3 - 2 * w)                # weich vom Handrücken in die Stulpe
-    tgt = np.interp((gth + np.pi) / (2 * np.pi) * nb, np.arange(nb + 1), np.append(Rs, Rs[0])) * 0.97
+    tgt = np.full(len(gth), 0.030 + 0.0045)                                          # Stulpe rund, knapp ÜBER dem eng gezogenen Bündchen (r 3 cm)
     nr = gr + (tgt - gr) * w
-    na = np.where(gy[g] < -15.5, -0.012 + (gy[g] + 15.5) * G_S * S / H, ga * (1 - w) + np.minimum(ga, -0.004) * w)
+    na = np.where(gy[g] < -15.5, -0.012 + (gy[g] + 15.5) * G_S * S / H * 0.4, ga * (1 - w) + np.minimum(ga, -0.004) * w)   # endet ~4,5 cm vor dem Handgelenk
     dirs = np.outer(np.cos(gth), e1) + np.outer(np.sin(gth), e2)
     out[g] = c + np.outer(na, ax) + dirs * nr[:, None]
     return out
@@ -362,21 +532,61 @@ def main():
 
     # ---- Kart-Fahrer ----
     S = H * 1.10                                                                        # Kart ist größer gebaut (Helm dort ~0,33 m hoch)
-    kV, kF, kUV = decimate(V, F, UV, 9000)
+    # Ruhehaltung als geschlossene Hülle neu aufbauen: Die Vorlage hat an der Ärmelnaht innen liegende, überlappende Flächen
+    # (Ärmel steckt im Rumpf). Beim Biegen klappten die als Schlitze/Trichter heraus. Die Hülle kennt nur noch die Außenfläche.
+    V0 = unfold(V, F, tag='Original')
+    kV, kF, kUV = remesh_winding(V0, F, UV, 11000)
+    # Schulterklappen (Epauletten) der Vorlage oben außen auf den Schultern: abstehende Kanten, die beim Biegen knautschen -> glatt bügeln
+    sst = lambda a, b, v: (lambda t: t * t * (3 - 2 * t))(np.clip((v - a) / (b - a), 0, 1))
+    zone = np.zeros(len(kV))
+    for sx in (-1, 1): zone = np.maximum(zone, 1 - sst(0.03, 0.06, np.linalg.norm(kV - np.array([sx * 0.11, 0.79, -0.035]), axis=1)))
+    kV = taubin_zone(kV, kF, zone, 60)
     Pk, info = pose_kart(kV * S, kF, S)
+    # Übergang Rumpf/Arm (Schulter, Achsel) glätten: dort wird am stärksten gebogen, kleine Knautschfalten verschwinden
+    aw = info['aw']['R'] + info['aw']['L']; Pk = taubin_zone(Pk, kF, np.clip(aw * (1 - aw) * 4, 0, 1) * (kV[:, 1] > 0.55), 30)
+    Pk = unfold(Pk, kF, tag='gebogen')                                                 # letzte kleine Falten lokal glätten
+    # Gestauchte Stellen (vorn an der Schulter, wenn der Arm nach vorn schwingt): Dreiecke schrumpfen stark oder klappen um.
+    # Dort kräftig glätten (Taubin, schrumpft nicht) – die Knitter verschwinden, die Form bleibt.
+    for _ in range(3):
+        def comp():
+            a0 = np.linalg.norm(np.cross((kV * S)[kF[:, 1]] - (kV * S)[kF[:, 0]], (kV * S)[kF[:, 2]] - (kV * S)[kF[:, 0]]), axis=1)
+            n1 = np.cross(Pk[kF[:, 1]] - Pk[kF[:, 0]], Pk[kF[:, 2]] - Pk[kF[:, 0]]); a1 = np.linalg.norm(n1, axis=1)
+            N = smooth_normals(Pk, kF); flip = np.einsum('ij,ij->i', n1 / np.maximum(a1, 1e-12)[:, None], N[kF].mean(1)) < 0.3
+            return (a1 / np.maximum(a0, 1e-12) < 0.55) | flip
+        bad = comp(); z = np.zeros(len(Pk)); z[np.unique(kF[bad])] = 1
+        zk = z.copy()
+        for _ in range(3):                                                             # Zone um 3 Ringe erweitern, weich
+            e = np.vstack([kF[:, [0, 1]], kF[:, [1, 2]], kF[:, [2, 0]]]); nz = zk.copy(); np.maximum.at(nz, e[:, 0], zk[e[:, 1]] * 0.8); np.maximum.at(nz, e[:, 1], zk[e[:, 0]] * 0.8); zk = nz
+        print(f'gestaucht: {int(bad.sum())} Dreiecke')
+        if not bad.any(): break
+        Pk = taubin_zone(Pk, kF, zk * (kV[:, 1] > 0.5), 40)
+    # Ärmelende eng ans Handgelenk (wie ein Strickbündchen): die Vorlage hat dort einen weiten, doppelwandigen Ärmel, der wie eine
+    # Glocke abstand. Der Handschuh geht danach ÜBER das Bündchen (wie bei echten Rennhandschuhen).
+    Mx = np.array([-1.0, 1, 1]); sst = lambda a, b, v: (lambda t: t * t * (3 - 2 * t))(np.clip((v - a) / (b - a), 0, 1))
+    for k, sfx in enumerate(('R', 'L')):
+        wr = info['wrist'][sfx][0]; el = info['elbow'] if sfx == 'R' else info['elbow'] * Mx; ax = nrm(wr - el)
+        m = info['arms'][k]; P = Pk[m]; d = P - wr; a = d @ ax; rv = d - np.outer(a, ax); r = np.linalg.norm(rv, axis=1)
+        # Bündchen: ab 7,5 cm vor dem Handgelenk auf einen runden Querschnitt (r ≈ 3 cm) einziehen; das Ende (geschlossene Kappe der
+        # Hülle) als flache, runde Kappe kurz hinter dem Handgelenk – vorher wurden einzelne Punkte der Kappe zu Zacken ausgezogen
+        t = sst(-0.075, -0.035, a); rs = 0.030
+        nr = r * (1 - t) + np.minimum(r, rs) * t
+        cap = a > -0.012; na = np.where(cap, -0.012 + (a + 0.012) * 0.2, a)
+        nr = np.where(cap, np.minimum(nr, rs * np.sqrt(np.clip(1 - ((a + 0.012) / 0.03) ** 2, 0.05, 1))), nr)
+        Pk[m] = wr + np.outer(na, ax) + rv * (nr / np.maximum(r, 1e-9))[:, None]
     for k, (d, L) in info['reach'].items(): print(f'Reichweite {k}: Abstand {d:.3f} m, Armlänge {L:.3f} m')
     print('Sitzpunkt', np.round(info['hip'], 3), 'Schulter', np.round(info['shoulder'], 3), 'Ellbogen', np.round(info['elbow'], 3), 'Arm-Eckpunkte', int(info['arms'][0].sum()), int(info['arms'][1].sum()))
     # Bereiche: 0 Körper, 3 Handschuh. Dazu je Eckpunkt die Höhe in Ruhehaltung (normiert): daraus zieht der Shader
     # Gürtel (0,548…0,592) und Schuhe (< 0,072) pixelgenau – Farbwechsel je Eckpunkt gäbe bei ~9000 Dreiecken Treppenkanten.
     reg = np.zeros(len(kV), np.uint8); ry = kV[:, 1].astype(np.float32)
-    ry[(np.abs(kV[:, 0]) > 0.104) & (kV[:, 1] > 0.3)] = 0.5                         # Arme: kein Gürtelband auf den Unterarmen
+    ry[info['arms'][0] | info['arms'][1] | ((np.abs(kV[:, 0]) > 0.104) & (kV[:, 1] > 0.3))] = 0.5   # Arme: kein Gürtelband auf den Unterarmen
     # Handschuhe (verkleinert) an beide Hände
     hV, hF, hUV = decimate(gV0, gF0, gUV0, 1600)
     parts_V, parts_F, parts_UV, parts_R, parts_Y = [Pk], [kF], [kUV * np.array([0.5, 1.0])], [reg], [ry]
     off = len(Pk)
+    armPts = Pk[info['arms'][0]]                                                       # Ärmel (für die Stulpe), nach dem Engziehen
     gvR, gfR = place_glove(hV, hF, *info['grip'], S)
     armR = info['arms'][0]; el = info['elbow']; wr = info['wrist']['R'][0]
-    gvR = fit_gauntlet(gvR, hV[:, 1], Pk[armR], wr, nrm(wr - el), S)
+    gvR = fit_gauntlet(gvR, hV[:, 1], armPts, wr, nrm(wr - el), S)
     # Prüfung: Abstand der Handschuh-Eckpunkte zur Kranz-Mittellinie (Kranzrohr 0,021 m) – Faust soll ihn umschließen, nicht durchdringen
     az_ = nrm(np.array([0, 29, -36.0])); Cw = np.array([0, 0.5005, 0.1235]); rel = gvR - Cw; rp = rel - np.outer(rel @ az_, az_)
     ring = Cw + 0.188 * rp / np.linalg.norm(rp, axis=1, keepdims=True); dr = np.linalg.norm(gvR - ring, axis=1)
@@ -392,7 +602,7 @@ def main():
     N = smooth_normals(AV, AF)
     # Atlas: links Anzug-Schattierung, rechts Handschuh; Normalen links Anzug, rechts flach
     atl = Image.new('RGB', (1024, 512)); atl.paste(tex.resize((512, 512), Image.LANCZOS), (0, 0)); atl.paste(glove_texture(gtex).resize((512, 512), Image.LANCZOS), (512, 0))
-    atn = Image.new('RGB', (1024, 512), (128, 128, 255)); atn.paste(nor.resize((512, 512), Image.LANCZOS), (0, 0))
+    atn = Image.new('RGB', (1024, 512), (128, 128, 255))                                 # flach: UV kommen vom Originalnetz, Normalen-Details würden an Nähten streifen
     atl.save(os.path.join(ROOT, 'textures', 'kart_fahrer.jpg'), quality=86); atn.save(os.path.join(ROOT, 'textures', 'kart_fahrer_n.jpg'), quality=90)
     # Binärformat wie kart.bin: [u32 Länge][JSON-Kopf][Daten]
     # Helm lückenlos auf den Hals: Unterkante 4,5 cm unter dem oberen Ende des Halses (Kragen), mittig über dem Hals, leicht nach vorn

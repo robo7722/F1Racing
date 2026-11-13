@@ -30,7 +30,8 @@ g.setIndex(new THREE.BufferAttribute(fh.i32 ? new Uint32Array(fb, fbase + fh.idx
 const reg = new Uint8Array(fb, fbase + fh.reg, fh.nv), ry = new Float32Array(fb, fbase + fh.ry, fh.nv), cc = new Float32Array(fh.nv * 3), C = [0xc8101c, 0xf2c200, 0x1a1a1d].map(h => new THREE.Color(h));   // grob je Eckpunkt (im Spiel pixelgenau im Shader)
 for (let i = 0; i < fh.nv; i++) C[reg[i] > 1 ? 1 : ry[i] >= 0 && ry[i] < 0.072 ? 2 : ry[i] > 0.548 && ry[i] < 0.592 ? 1 : 0].toArray(cc, i * 3); g.setAttribute('color', new THREE.BufferAttribute(cc, 3));
 const map = tl.load('../textures/kart_fahrer.jpg'); map.colorSpace = THREE.SRGBColorSpace;
-s.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map, normalMap: tl.load('../textures/kart_fahrer_n.jpg'), vertexColors: true, roughness: .75, side: THREE.DoubleSide })));
+if (q.has('debug')) { s.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .75, side: THREE.FrontSide }))); s.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.BackSide }))); }   // Prüfung: Rückseiten grün
+else s.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map, normalMap: tl.load('../textures/kart_fahrer_n.jpg'), vertexColors: true, roughness: .75, side: THREE.DoubleSide })));
 // Helm
 const dec = (b, Ty) => { const s2 = atob(b), u = new Uint8Array(s2.length); for (let i = 0; i < u.length; i++) u[i] = s2.charCodeAt(i); return new Ty(u.buffer); };
 const p16 = dec(HELM_BIN.p, Int16Array), n8 = dec(HELM_BIN.n, Int8Array), z8 = dec(HELM_BIN.z, Uint8Array), ix = dec(HELM_BIN.i, Uint16Array), n = z8.length, P = new Float32Array(n * 3), N = new Float32Array(n * 3);
@@ -41,7 +42,7 @@ hg.setAttribute('aZone', new THREE.BufferAttribute(Float32Array.from(z8), 1));
 const hmat = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .25, clearcoat: 1, side: THREE.DoubleSide });
 hmat.onBeforeCompile = sh => {   // wie helmMat im Spiel: Zone 2 (Heckspoiler-Innenteil) und Kinnteil unter dem Visier ausblenden
   sh.vertexShader = 'attribute float aZone; varying float vHZ; varying vec3 vHP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vHP = position / 0.15; vHZ = aZone;');
-  sh.fragmentShader = 'varying float vHZ; varying vec3 vHP;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n vec3 p = vHP; if (vHZ > 1.5 && vHZ < 2.5) discard; if (vHZ > 2.5 && p.z > 0.6 && p.y > -0.76 && p.y < -0.2) discard;'); };
+  sh.fragmentShader = 'varying float vHZ; varying vec3 vHP;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n vec3 p = vHP; if (vHZ > 1.5 && vHZ < 2.5) discard; if (vHZ > 2.5 && ((p.z > 0.6 && p.y > -0.76 && p.y < -0.2) || p.y < -0.8)) discard;'); };
 const helm = new THREE.Mesh(hg, hmat); helm.position.fromArray(fh.helm); helm.rotation.x = fh.helmTilt; helm.scale.setScalar(1.1); s.add(helm);
 addEventListener('resize', () => { cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); r.setSize(innerWidth, innerHeight); });
 r.setAnimationLoop(() => { ctl.update(); r.render(s, cam); }); setTimeout(() => window.__ready = true, 1500);
