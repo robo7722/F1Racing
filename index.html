@@ -3487,7 +3487,10 @@ function kartStickerTex(tk, T) { const t = canvasTex(2048, 1024, g => kartSticke
   return t; }
 const KNUM_TEX = {};
 function kartNumMat(base, num) { if (num === undefined || !base.kartHook) return base; const nm = base.knm || (base.knm = {}); if (nm[num]) return nm[num];
-  const tex = KNUM_TEX[num] || (KNUM_TEX[num] = (() => { const draw = g => { g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, 128, 128); g.fillStyle = '#000'; g.textAlign = 'center'; g.textBaseline = 'middle'; let px = 100; const f = q => 'italic 900 ' + q + 'px "Titillium Web",system-ui,sans-serif'; g.font = f(px); const tw = g.measureText(String(num)).width; if (tw > 112) { px = Math.floor(px * 112 / tw); g.font = f(px); } g.fillText(String(num), 64, 68); };
+  const tex = KNUM_TEX[num] || (KNUM_TEX[num] = (() => { const draw = g => { g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, 128, 128); g.fillStyle = '#000'; g.textAlign = 'left'; g.textBaseline = 'alphabetic';   // gerade Ziffern (wie auf echten Nummernfeldern), nach ihrer tatsächlichen Größe eingepasst und mittig – kursive Ziffern ragten aus dem Feld
+      const f = q => '900 ' + q + 'px "Titillium Web",system-ui,sans-serif', box = () => { const m = g.measureText(String(num)); return { l: m.actualBoundingBoxLeft, r: m.actualBoundingBoxRight, a: m.actualBoundingBoxAscent, d: m.actualBoundingBoxDescent }; };
+      let px = 110; g.font = f(px); let b = box(); const k = Math.min(100 / (b.l + b.r), 96 / (b.a + b.d), 1); if (k < 1) { px = Math.floor(px * k); g.font = f(px); b = box(); }
+      g.fillText(String(num), 64 - (b.l + b.r) / 2 + b.l, 64 + (b.a + b.d) / 2 - b.d); };
     const t = canvasTex(128, 128, draw); t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { draw(t.image.getContext('2d')); t.needsUpdate = true; }); return t; })());
   const m = base.clone(), hook = base.kartHook; m.onBeforeCompile = (sh, r) => { hook(sh, r); sh.uniforms.uKNum = { value: tex }; sh.uniforms.uKNumOn = { value: 1 }; }; m.customProgramCacheKey = base.customProgramCacheKey; return (nm[num] = m); }
 function kartMat(tk, T) {
