@@ -11,6 +11,69 @@
  ],
  "stickers": [
   {
+   "name": "streifen_l",
+   "box": [
+    1080,
+    360,
+    1296,
+    545
+   ],
+   "kind": "key",
+   "key": "#8a8a8a",
+   "tol": 70,
+   "color": "#a4aab0"
+  },
+  {
+   "name": "streifen_r",
+   "box": [
+    1296,
+    360,
+    1975,
+    480
+   ],
+   "kind": "key",
+   "key": "#8a8a8a",
+   "tol": 70,
+   "color": "#a4aab0"
+  },
+  {
+   "name": "schwung",
+   "box": [
+    960,
+    372,
+    2160,
+    582
+   ],
+   "kind": "key",
+   "key": "#32c2b8",
+   "color": "#19b8ab"
+  },
+  {
+   "name": "chassis_silber",
+   "box": [
+    2365,
+    335,
+    2890,
+    500
+   ],
+   "kind": "key",
+   "key": "#b0b0b0",
+   "tol": 110,
+   "color": "#c3c8cd"
+  },
+  {
+   "name": "chassis_tuerkis",
+   "box": [
+    2385,
+    350,
+    2890,
+    432
+   ],
+   "kind": "key",
+   "key": "#57cec4",
+   "color": "#19b8ab"
+  },
+  {
    "name": "snapdragon",
    "box": [
     40,
@@ -93,12 +156,7 @@
     1991,
     579
    ],
-   "kind": "w",
-   "at": [
-    -0.12,
-    0.37
-   ],
-   "w": 0.86
+   "kind": "w"
   },
   {
    "name": "signify",
@@ -123,13 +181,7 @@
     2727,
     488
    ],
-   "kind": "d",
-   "color": "#ffffff",
-   "at": [
-    1.17,
-    0.47
-   ],
-   "w": 0.33
+   "kind": "d"
   },
   {
    "name": "iwc",
@@ -184,9 +236,9 @@
   "spots": [
    {
     "v": "side",
-    "z": -1.55,
-    "y": 0.82,
-    "s": 0.2
+    "z": -1.14,
+    "y": 0.8,
+    "s": 0.12
    },
    {
     "v": "top",
@@ -195,5 +247,11 @@
     "s": 0.13
    }
   ]
- }
+ },
+ "glsl": [
+  "vec3 K = #0d0f12, T = #00a19c;",
+  "vec3 col = K;",
+  "if (c > 0.5 && c < 1.5) col = mix(K, T, band(p.y, 0.98, 1.02));",
+  "return col;"
+ ]
 }
