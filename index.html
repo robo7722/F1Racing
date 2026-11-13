@@ -3446,7 +3446,7 @@ const KMAT = {};
 // Bereiche in der Abwicklung (Pixel bei 1024): Seitenkasten links/rechts (oben = Oberseite, unten = Außenfläche), Frontschürze, Nummerntafel vorn.
 // Die Aufkleber-Textur deckt nur die untere Hälfte der Abwicklung ab (dort liegen alle Lackteile) – doppelte Schärfe bei gleichem Speicher.
 const KART_UV = { podL: [279, 436], podR: [479, 637], podTop: [896, 929], podFace: [931, 958], front: [18, 552, 348, 636], nas: [136, 797, 241, 953] };   // am Modell ausgemessen: pod = x von/bis, podTop/podFace = Zeilen der Oberseite/Aussenflaeche
-const KART_PLATES = [[146, 868, 231, 946], [396, 932, 435, 957], [480, 932, 519, 957]];   // Nummernfelder: Tafel vorn, hinteres Ende beider Seitenkästen
+const KART_PLATES = [[150, 800, 227, 852], [396, 932, 435, 957], [480, 932, 519, 957]];   // Nummernfelder: Tafel vorn, hinteres Ende beider Seitenkästen
 const KART_NUM_GLSL = ' if (uKNumOn > 0.5) { vec2 kp = vec2(vMapUv.x, 1.0 - vMapUv.y) * 1024.0; vec2 kq; vec4 kn;' + KART_PLATES.map(r => { const w = r[2] - r[0], h = r[3] - r[1], a = w / h, f = v => v.toFixed(3);   // Ziffern unverzerrt mittig ins Feld
   return ' if (kp.x > ' + f(r[0]) + ' && kp.x < ' + f(r[2]) + ' && kp.y > ' + f(r[1]) + ' && kp.y < ' + f(r[3]) + ') { kq = vec2((kp.x - ' + f(r[0]) + ') / ' + f(w) + ', (kp.y - ' + f(r[1]) + ') / ' + f(h) + '); kq = vec2((kq.x - 0.5) * ' + f(Math.max(a, 1)) + ' + 0.5, (kq.y - 0.5) * ' + f(Math.max(1 / a, 1)) + ' + 0.5); kn = (kq.x > 0.0 && kq.x < 1.0 && kq.y > 0.0 && kq.y < 1.0) ? texture2D(uKNum, vec2(kq.x, 1.0 - kq.y)) : vec4(0.0); diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.02), kn.a); }'; }).join('') + ' }';
 const KART_SPONSORS = ['KESTREL', 'TORQ', 'HALDEN', 'LUMO OIL', 'BRENNER', 'AXON', 'PULSAR', 'NORDFUEL', 'VOLTIX', 'ZENIT', 'RAPTA', 'MERIDIAN'];   // erfundene Ausrüster
@@ -3477,10 +3477,11 @@ function kartStickerDraw(g, tk, T) { const ti = Math.max(0, Object.keys(KART_TEA
     word((x0 + 44 + cx - 26) / 2, y0 + 31, 30, cx - 26 - x0 - 50, 3); word((cx + 26 + x1 - 44) / 2, y0 + 31, 30, cx - 26 - x0 - 50, 3);
     g.fillStyle = acc; g.fillRect(cx - 80, y0 + 55, 160, 2.5);
     g.font = F + 11 + FF; g.textAlign = 'center'; g.fillStyle = ink; g.fillText(sp(2) + '  ·  ' + sp(0), cx, y0 + 69); }
-  // Nummerntafel vorn: oben Streifen in Akzentfarbe mit Schriftzug, darunter Ausrüster und das gelbe Feld – alles auf der Mittellinie
-  { const [x0, y0, x1, y1] = KART_UV.nas, cx = (x0 + x1) / 2; g.fillStyle = acc; g.fillRect(x0, y0 + 12, x1 - x0, 30); g.fillStyle = third; g.fillRect(x0, y0 + 44, x1 - x0, 4);
-    word(cx, y0 + 27, 21, x1 - x0 - 22, 0, accInk);
-    g.font = F + 9 + FF; g.textAlign = 'center'; g.fillStyle = ink; g.fillText(sp(1), cx, y0 + 59); }
+  // Nummerntafel vorn: die Tafel ist oben breit (38 cm) und läuft nach unten zu einem schmalen Steg (16 cm) zusammen -> das gelbe Nummernfeld sitzt oben,
+  // wo auch zweistellige Nummern ganz auf die Vorderseite passen; darunter schmal der Streifen in Akzentfarbe mit dem Schriftzug. Alles auf der Mittellinie.
+  { const [x0, y0, x1, y1] = KART_UV.nas, cx = (x0 + x1) / 2; g.fillStyle = acc; g.fillRect(x0, y0 + 61, x1 - x0, 24); g.fillStyle = third; g.fillRect(x0, y0 + 87, x1 - x0, 3);
+    word(cx, y0 + 73, 17, 48, 0, accInk);
+    g.font = F + 8 + FF; g.textAlign = 'center'; g.fillStyle = ink; const tw = g.measureText(sp(1)).width; g.save(); g.translate(cx, y0 + 100); if (tw > 36) g.scale(36 / tw, 1); g.fillText(sp(1), 0, 0); g.restore(); }
   for (const r of KART_PLATES) plate(r); }
 function kartStickerTex(tk, T) { const t = canvasTex(2048, 1024, g => kartStickerDraw(g, tk, T)); t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.anisotropy = 8;
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { kartStickerDraw(t.image.getContext('2d'), tk, T); t.needsUpdate = true; });   // noch einmal mit der Spielschrift, sobald sie geladen ist
