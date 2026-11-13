@@ -127,3 +127,18 @@
 ## Version 1.36
 - **Flimmern an Nase/Flanken in der Cockpitansicht (F1)**: Die Flanken des Cockpit-Modells lagen deckungsgleich auf der Haut des neuen Fahrzeugmodells (Breitentabelle `CK.hw` stammt vom alten Netz). Jetzt liegen sie 6 mm außerhalb, und das Fahrzeugmodell wird bis +3 mm statt −4 mm verworfen – keine doppelten Flächen mehr; Querlenker stoßen sauber durch.
 
+
+## Version 1.37 – F1-Cockpit: Spiegelträger sauber, Nase aus dem Original
+
+**Anlass:** Bildschirmfoto vom Gerät – links und rechts vor dem Lenkrad gestreifte, ausgefranste Flächen, die beim Fahren flimmern. Die Korrektur aus 1.36 (Cockpit-Flanken 6 mm nach außen) hatte die Stelle nicht getroffen.
+
+**Ursache (per Strahltest im laufenden Spiel bestimmt):** Die Stelle ist der Fuß des Spiegelträgers, nicht der Querlenker.
+- Das Blatt des Spiegelträgers ist im Original nur 2 mm dick und steckt mit einem Klotz in der Karosserie. Seine Vorderkante (Ebene z = 0,7614 m) ist im Original mit haarfeinen Dreiecken ohne Fläche vernetzt. Beim Vereinfachen wurden daraus breite, übereinander liegende Dreiecke – ein gestreifter Fächer unter dem Blatt, der flimmert. Er war auch von außen sichtbar.
+- Zusätzlich gerieten beim Vereinfachen Ober- und Unterseite des dünnen Blatts ineinander (Zickzack am Fuß).
+
+**Änderungen:**
+- `car.bin` (Konvertierung `f1conv.py`): In der höchsten Detailstufe kommt der Spiegelträger samt Fuß (Kasten |x| 0,20–0,47, y 0,60–0,70, z 0,74–0,87) unvereinfacht aus dem Originalnetz; haarfeine Dreiecke ohne Fläche und alles in der Ebene der Vorderkante entfallen (alle Detailstufen). LOD 0 Lack: 42 500 → 59 200 Dreiecke, Datei 2,25 → 2,45 MB.
+- Cockpit-Modell F1 (`CK.f1`): reicht nur noch bis 0,885 m (vorher 1,82 m). Davor steht die unveränderte Originalnase – der Nachbau wich dort bis zu 2 cm vom Original ab. Auf den letzten 7 cm taucht das Cockpit-Modell unter die echte Haut ab (`zS`, `sx`, `sy`), beide schneiden sich in einer klaren Linie.
+- `cockCutGLSL` F1: Vor der Öffnung wird vom Fahrzeugmodell nur noch verworfen, was innerhalb des Cockpit-Modells liegt (gleiche Formel wie die Deckfläche). Die Sonderregel für den Spiegelhalter entfällt. F2 unverändert.
+
+**Geprüft:** Racing Bulls in Monza, Cockpit-Kamera und Nahaufnahmen des Spiegelfußes von innen und außen (Streifen und Zickzack weg), TV-Kamera F1, F2-Cockpit. Flimmern in Bewegung lässt sich im Testbrowser nicht beurteilen.
