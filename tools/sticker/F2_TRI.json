@@ -28,7 +28,7 @@
   "vec3 col = p.y > yr ? #ee1018 : #1512a8;",
   "if (p.z < -0.2 && p.z > -1.4 && p.y > 0.67) col = #eceef2;",
   "if (p.z > 2.15 && p.y < 0.36) col = #1512a8;",
-  "if (p.z < -1.9 && p.y > 0.6) col = (abs(p.x) > 0.44 && p.y < 0.8) ? #1512a8 : #15171a;",
+  "if (p.z < -1.9 && p.y > 0.6) col = (abs(p.x) > 0.52 && p.y < 0.85) ? #1512a8 : #15171a;",
   "return col;"
  ],
  "number": {
