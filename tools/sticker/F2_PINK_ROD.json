@@ -15,13 +15,13 @@
   572
  ],
  "liv": {
-  "body": "#f09cc8",
-  "acc": "#f09cc8",
-  "tip": "#f09cc8",
+  "body": "#ec84ba",
+  "acc": "#ec84ba",
+  "tip": "#ec84ba",
   "metal": 0.25
  },
  "glsl": [
-  "vec3 col = #f09cc8;",
+  "vec3 col = #ec84ba;",
   "return col;"
  ],
  "stickers": [
@@ -59,9 +59,9 @@
   "spots": [
    {
     "v": "side",
-    "z": -1.13,
-    "y": 0.47,
-    "s": 0.2
+    "z": -0.92,
+    "y": 0.37,
+    "s": 0.16
    },
    {
     "v": "top",

@@ -130,9 +130,9 @@
    "list": [
     {
      "v": "side",
-     "z": -2.1,
-     "y": 0.55,
-     "s": 0.15
+     "z": -2.13,
+     "y": 0.76,
+     "s": 0.13
     },
     {
      "v": "top",
@@ -152,7 +152,7 @@
    "tip": 3457576,
    "metal": 0.3
   },
-  "glsl": "vec3 col = #34c228;\nif (p.z < -1.9 && p.y > 0.6 && abs(p.x) < 0.52) col = #15171a;\nreturn col;"
+  "glsl": "vec3 col = #34c228;\nif (p.z < -1.9 && p.y > 0.6 && abs(p.x) < 0.52) col = #15171a;\nif (p.z > -1.95 && p.z < -0.6 && p.y < 0.5 && (p.y - 0.42) < -1.53 * (p.z + 0.90)) col = #15171a;\nreturn col;"
  },
  "F2_BLK": {
   "kind": "f2",
@@ -171,9 +171,9 @@
    "list": [
     {
      "v": "side",
-     "z": -1.13,
-     "y": 0.47,
-     "s": 0.2
+     "z": -0.92,
+     "y": 0.37,
+     "s": 0.16
     },
     {
      "v": "top",
@@ -489,7 +489,7 @@
    "split": 0.36,
    "metal": 0.25
   },
-  "glsl": "vec3 R = #e01010; vec3 W = #f2f2f2; vec3 G = #0a9a3c; vec3 col = R; float sd = aaS(abs(p.x) - 0.15);\nfloat yu = 0.655 - 0.146 * clamp(-0.6 - p.z, 0.0, 1.0); float yl = max(0.385, 0.555 + 0.19 * p.z);\ncol = mix(col, W, sd * band(p.z, -1.3, 0.1) * band(p.y, yl, yu));\ncol = mix(col, G, sd * (1.0 - aaS(p.z + 0.78 + 0.42 * (0.41 - p.y))) * (1.0 - aaS(p.y - yl + 0.01)) * aaS(p.z + 1.5));\ncol = mix(col, G, band(p.z, -1.35, -0.47) * aaS(p.y - 0.71 + 0.08 * clamp((-0.45 - p.z) / 0.65, 0.0, 1.0)));\nreturn col;"
+  "glsl": "vec3 R = #e01010; vec3 W = #f2f2f2; vec3 G = #0a9a3c; vec3 col = R; float sd = aaS(abs(p.x) - 0.15);\nfloat yu = 0.655 - 0.146 * clamp(-0.6 - p.z, 0.0, 1.0); float yl = max(0.385, 0.555 + 0.19 * p.z);\ncol = mix(col, W, sd * band(p.z, -1.45, 0.35) * band(p.y, yl, yu));\ncol = mix(col, G, sd * (1.0 - aaS(p.z + 0.78 + 0.42 * (0.41 - p.y))) * (1.0 - aaS(p.y - yl + 0.01)) * aaS(p.z + 1.5));\ncol = mix(col, G, band(p.z, -1.7, -0.47) * aaS(p.y - 0.71 + 0.08 * clamp((-0.45 - p.z) / 0.65, 0.0, 1.0)));\nreturn col;"
  },
  "F2_ITA2": {
   "kind": "f2",
@@ -560,7 +560,7 @@
    "tip": 1316120,
    "metal": 0.25
   },
-  "glsl": "vec3 O = #ff5a08; vec3 K = #141518; vec3 col = O;\ncol = mix(col, K, aaS(p.z - 2.0));\ncol = mix(col, K, band(p.z, -1.4, -0.42) * aaS(p.y - 0.925 - 0.25 * (p.z + 0.413)));\nfloat rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.6);\ncol = mix(col, K, rw * (1.0 - aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.57))));\nreturn col;"
+  "glsl": "vec3 O = #ff5a08; vec3 K = #141518; vec3 col = O;\ncol = mix(col, K, aaS(p.z - 2.0)); col = mix(col, K, aaS(abs(p.x) - 0.86) * aaS(p.z - 1.6) * (1.0 - aaS(p.y - 0.55)));\ncol = mix(col, K, band(p.z, -1.4, -0.42) * aaS(p.y - 0.925 - 0.25 * (p.z + 0.413)));\nfloat rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.6);\ncol = mix(col, K, rw * (1.0 - aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.57))));\nreturn col;"
  },
  "F2_PINK_ART": {
   "kind": "f2",
@@ -586,12 +586,12 @@
    "MAI"
   ],
   "liv": {
-   "body": 15768776,
-   "acc": 15768776,
-   "tip": 15768776,
+   "body": 15500474,
+   "acc": 15500474,
+   "tip": 15500474,
    "metal": 0.25
   },
-  "glsl": "vec3 col = #f09cc8;\nreturn col;"
+  "glsl": "vec3 col = #ec84ba;\nreturn col;"
  },
  "F2_PINK_MPM": {
   "kind": "f2",
@@ -622,7 +622,7 @@
    "tip": 15899332,
    "metal": 0.25
   },
-  "glsl": "vec3 P = #f29ac4; vec3 N = #151c36; vec3 R = #d8232a; vec3 col = P;\nfloat rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.6);\ncol = mix(col, R, rw * aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.57)));\ncol = mix(col, N, band(p.z, 1.75, 2.45) * (1.0 - aaS(p.y - 0.31)) * (1.0 - aaS(abs(p.x) - 0.3)));\nreturn col;"
+  "glsl": "vec3 P = #f29ac4; vec3 N = #151c36; vec3 R = #d8232a; vec3 col = P;\nfloat rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.6);\ncol = mix(col, R, rw * aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.57)));\ncol = mix(col, N, aaS(abs(p.x) - 0.86) * aaS(p.z - 1.6) * (1.0 - aaS(p.y - 0.55)));\nreturn col;"
  },
  "F2_PINK_ROD": {
   "kind": "f2",
@@ -632,9 +632,9 @@
    "list": [
     {
      "v": "side",
-     "z": -1.13,
-     "y": 0.47,
-     "s": 0.2
+     "z": -0.92,
+     "y": 0.37,
+     "s": 0.16
     },
     {
      "v": "top",
@@ -648,12 +648,12 @@
    "DUN"
   ],
   "liv": {
-   "body": 15768776,
-   "acc": 15768776,
-   "tip": 15768776,
+   "body": 15500474,
+   "acc": 15500474,
+   "tip": 15500474,
    "metal": 0.25
   },
-  "glsl": "vec3 col = #f09cc8;\nreturn col;"
+  "glsl": "vec3 col = #ec84ba;\nreturn col;"
  },
  "F2_TRI": {
   "kind": "f2",
@@ -687,13 +687,13 @@
    "tip": 15527666,
    "metal": 0.3
   },
-  "glsl": "float yr = p.z > 1.2 ? mix(0.535, 0.30, clamp((p.z - 1.2) / 1.4, 0.0, 1.0)) : (p.z > -0.6 ? 0.535 : mix(0.535, 0.33, clamp((-0.6 - p.z) / 0.8, 0.0, 1.0)));\nvec3 col = mix(#1512a8, #ee1018, aaS(p.y - yr));\nif (p.z > 0.5 && p.z < 2.6) col = mix(col, #eceef2, band(p.y - yr, -0.011, 0.011));\nif (p.z < -0.2 && p.z > -1.4 && p.y > 0.67) col = #eceef2;\nif (p.z > 2.15 && p.y < 0.36 && abs(p.x) > 0.14) col = #1512a8;\nif (p.z < -1.9 && p.y > 0.6) col = (abs(p.x) > 0.52 && p.y < 0.85) ? #1512a8 : #15171a;\nreturn col;"
+  "glsl": "float yr = p.z > 1.2 ? mix(0.535, 0.30, clamp((p.z - 1.2) / 1.4, 0.0, 1.0)) : (p.z > -0.6 ? 0.535 : mix(0.535, 0.33, clamp((-0.6 - p.z) / 0.8, 0.0, 1.0)));\nyr = mix(yr, 0.72, aaS(abs(p.x) - 0.36) * band(p.z, -1.35, 0.75));\nvec3 col = mix(#1512a8, #ee1018, aaS(p.y - yr));\nif (p.z > 0.5 && p.z < 2.6) col = mix(col, #eceef2, band(p.y - yr, -0.011, 0.011));\nif (p.z < -0.2 && p.z > -1.4 && p.y > 0.67) col = #eceef2;\nif (p.z > 2.15 && p.y < 0.36 && abs(p.x) > 0.14) col = #1512a8;\nif (p.z < -1.9 && p.y > 0.6) col = (abs(p.x) > 0.52 && p.y < 0.85) ? #1512a8 : #15171a;\nreturn col;"
  },
  "F2_VAR": {
   "kind": "f2",
   "sheet": true,
   "num": {
-   "color": "#aab0bd",
+   "color": "#c3c8d2",
    "list": [
     {
      "v": "side",
@@ -719,7 +719,7 @@
    "tip": 1513499,
    "metal": 0.5
   },
-  "glsl": "vec3 col = #17181b;\nif (p.z > 0.6 && p.z < 2.45 && abs(p.x) < 0.09 && p.y > 0.25) col = #ff5a00;\nif (p.z < -1.9 && p.y > 0.95 && abs(p.x) < 0.52) col = #ff5a00;\nreturn col;"
+  "glsl": "vec3 col = #17181b;\nif (p.z > 0.85 && p.z < 2.45 && abs(p.x) < 0.09 && p.y > 0.25) col = #ff5a00;\nif (p.z < -1.9 && p.y > 0.95 && abs(p.x) < 0.52) col = #ff5a00;\nreturn col;"
  },
  "FER": {
   "kind": "f1",

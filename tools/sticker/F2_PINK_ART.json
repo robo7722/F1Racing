@@ -15,13 +15,13 @@
   565
  ],
  "liv": {
-  "body": "#f09cc8",
-  "acc": "#f09cc8",
-  "tip": "#f09cc8",
+  "body": "#ec84ba",
+  "acc": "#ec84ba",
+  "tip": "#ec84ba",
   "metal": 0.25
  },
  "glsl": [
-  "vec3 col = #f09cc8;",
+  "vec3 col = #ec84ba;",
   "return col;"
  ],
  "stickers": [
