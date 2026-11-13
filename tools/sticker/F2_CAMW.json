@@ -33,12 +33,12 @@
   {"name": "grund_aless", "box": [1920, 455, 2385, 708], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#f2f3f5", "at": [-0.45, 0.37], "w": 0.56},
   {"name": "aless_grau", "box": [1920, 455, 2385, 708], "kind": "key", "key": "#56606a", "color": "#56636f", "tol": 60, "at": [-0.45, 0.37], "w": 0.56, "mirror": false},
   {"name": "aless_rot", "box": [1920, 455, 2385, 708], "kind": "key", "key": "#db0000", "color": "#dc1018", "at": [-0.45, 0.37], "w": 0.56, "mirror": false},
-  {"name": "heraldo", "box": [2180, 205, 2482, 296], "kind": "d", "thr": [0.3, 0.7]},
-  {"name": "griffincore", "box": [1832, 328, 2155, 388], "kind": "d", "thr": [0.3, 0.7]},
+  {"name": "heraldo", "box": [2180, 205, 2482, 296], "kind": "d", "thr": [0.3, 0.7], "dy": 0.045},
+  {"name": "griffincore", "box": [1832, 328, 2155, 388], "kind": "d", "thr": [0.3, 0.7], "at": [0.13, 0.5]},
   {"name": "fipresta", "box": [1210, 425, 1415, 492], "kind": "w"},
   {"name": "telcel", "box": [1242, 494, 1378, 546], "kind": "w"},
   {"name": "pirelli_grund", "box": [302, 567, 497, 629], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#ffd500"},
   {"name": "pirelli", "box": [302, 567, 497, 629], "kind": "key", "key": "#e3001b", "color": "#e3001b", "mirror": false}
  ],
- "number": {"color": "#101114", "spots": [{"v": "side", "z": -0.82, "y": 0.56, "s": 0.15}, {"v": "top", "x": 0, "z": 1.7, "s": 0.12}]}
+ "number": {"color": "#101114", "spots": [{"v": "side", "z": -0.95, "y": 0.63, "s": 0.13}, {"v": "top", "x": 0, "z": 1.7, "s": 0.12}]}
 }
