@@ -108,4 +108,11 @@
 - **TV-Kamera**: zeigt jetzt das modellierte Cockpit mit Lenkrad und Armen (gleiche Umschaltung wie Cockpitansicht).
 - **Cockpit F1**: Spiegelhalter werden nicht mehr mit ausgeschnitten. **F2**: Carbon über dem Kopf nur ausgeblendet, wenn es näher als 42 cm an der Kamera liegt.
 - **Tempo-Streifen** weiter außen und viel schwächer; Einblendung „Runde n: Zeit“/„Letzte Runde“ entfernt.
+- Nachtrag: Ausnahme für die F1-Spiegelhalter im Cockpit-Ausschnitt nach innen und unten erweitert (y > 0,625, |x| > 0,215) – der Halter reicht bis in die Karosserie. Versuch mit Handschuh-Modell aus einer Vorlage (um den Griff geformt) auf Wunsch verworfen; es bleiben die bisherigen Hände.
 
+## Version 1.28
+- **Studio-Boden**: reines Schwarz (`MeshBasicMaterial`, unabhängig von Licht und Teamfarbe); das Spiegelbild der LED-Wand im Boden auf 10 % abgedunkelt – vorher färbte die Wand den Boden je Team (z. B. rot bei Haas).
+- **Übergang aus dem Hauptmenü**: Wischer-Streifen entfernt; stattdessen kommt der Inhalt weich aus der Unschärfe nach vorn (`mzoom`), die obere Leiste gleitet ein (`mdrop`).
+- **F1-Spiegel im Cockpit**: Halterblatt und sein Fuß stammen wieder vollständig aus dem Originalmodell (Ausnahme im Ausschnitt: z 0,742–0,868, y 0,646–0,712, |x| > 0,20); ein selbst modellierter Sockel wurde verworfen.
+- **Cockpit-Kamera** 8 cm näher am Lenkrad (F1 z 0,30, F2 z 0,28).
+- 1.29: Blinken nach dem Übergang zur Klassenwahl behoben – die Klasse `fromtitle` wird nicht mehr per Zeitgeber entfernt (das startete die normale Einblend-Animation erneut), sondern erst beim nächsten Bildschirmwechsel.
