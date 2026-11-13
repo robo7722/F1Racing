@@ -170,3 +170,13 @@ Damit ist auch der gestreifte Fächer am Fuß des Spiegelträgers wieder da (Urs
 **Geprüft:** Racing Bulls in Monza, Cockpit-Kamera und Nahaufnahme des Spiegelfußes – Nase gerade, keine Streifen, kein Zickzack.
 
 **Merke:** Der Fehler lag im Fahrzeugmodell, nicht im Cockpit-Modell. Das Verkürzen des Cockpit-Modells in 1.37 war dafür unnötig.
+
+## Version 1.42 – Lücke am Fuß des Spiegelträgers geschlossen (F1-Cockpit)
+
+**Anlass:** Bildschirmfoto vom Gerät – zwischen dem Fuß der Spiegelstrebe und der Nase blieb links und rechts ein kleiner durchsichtiger Keil, durch den man den Reifen sah.
+
+**Ursache:** `cockCutGLSL` ließ vom Originalmodell im Abschnitt des Spiegelträgers (z 0,742–0,868, |x| > 0,13) nur stehen, was oberhalb der Deckfläche des Cockpit-Modells lag. Die Seitenwand des Fußes liegt tiefer und wurde weggeschnitten.
+
+**Änderung:** In diesem Abschnitt bleibt das Original ganz stehen (Bedingung „oberhalb der Deckfläche" entfällt). Cache-Schlüssel `cocknew15`. Eine engere Variante (nur |x| > 0,26) schloss die Lücke nur halb.
+
+**Geprüft:** Racing Bulls in Monza – Nahaufnahme aus Fahrersicht links und rechts, Cockpit-Kamera, Außenansicht der Stelle: Lücke zu, keine Streifen, Nase gerade.
