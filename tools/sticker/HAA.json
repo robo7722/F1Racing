@@ -1,0 +1,29 @@
+{
+ "kind": "f1",
+ "photo": "https://media.formula1.com/image/upload/v1740000001/common/f1/2026/haasf1team/2026haasf1teamcarright.png",
+ "rear": [568, 575],
+ "front": [3085, 575],
+ "glsl": ["vec3 W = #eceef1, Rd = #e5161a;", "vec3 col = W;", "if (c < 6.5) col = mix(col, Rd, aaS(p.y - 0.86) * band(p.z, -0.32, 0.03));", "return col;"],
+ "number": {"color": "#16181b", "spots": [{"v": "side", "z": -0.36, "y": 0.78, "s": 0.14}, {"v": "top", "x": 0, "z": 2.0, "s": 0.13}]},
+ "stickers": [
+  {"name": "rot_haube", "box": [835, 95, 1500, 340], "kind": "key", "key": "#e5161a"},
+  {"name": "rot_airbox", "box": [1500, 95, 1752, 215], "kind": "key", "key": "#e5161a"},
+  {"name": "schwarz_haube", "box": [800, 110, 1215, 300], "kind": "key", "key": "#0a0a0a", "color": "#16181b"},
+  {"name": "rot_seite", "box": [835, 335, 2010, 455], "kind": "key", "key": "#e5161a"},
+  {"name": "linie", "box": [1180, 338, 2000, 372], "kind": "key", "key": "#0a0a0a", "color": "#16181b"},
+  {"name": "rot_vorn", "box": [2350, 338, 2870, 402], "kind": "key", "key": "#e5161a"},
+  {"name": "haasR", "box": [1215, 395, 2005, 690], "kind": "key", "key": "#0a0a0a", "color": "#16181b", "side": "R", "mirror": false},
+  {"name": "haasL", "box": [1215, 395, 2005, 690], "kind": "key", "key": "#0a0a0a", "color": "#16181b", "side": "L", "dz": 0.18, "mirror": false},
+  {"box": [1360, 275, 1480, 325], "kind": "key", "key": "#dfdfdf", "tol": 90, "color": "#eceef1", "w": 0.135, "h": 0.041, "name": "weiss0R", "side": "R", "at": [0.008, 0.222], "mirror": false},
+  {"box": [1360, 275, 1480, 325], "kind": "key", "key": "#dfdfdf", "tol": 90, "color": "#eceef1", "w": 0.135, "h": 0.041, "name": "weiss0L", "side": "L", "at": [-0.343, 0.222], "dz": 0.18, "mirror": false},
+  {"box": [1360, 275, 1480, 325], "kind": "key", "key": "#dfdfdf", "tol": 90, "color": "#eceef1", "w": 0.189, "h": 0.063, "name": "weiss1R", "side": "R", "at": [0.103, 0.233], "mirror": false},
+  {"box": [1360, 275, 1480, 325], "kind": "key", "key": "#dfdfdf", "tol": 90, "color": "#eceef1", "w": 0.189, "h": 0.063, "name": "weiss1L", "side": "L", "at": [-0.438, 0.233], "dz": 0.18, "mirror": false},
+  {"box": [1360, 275, 1480, 325], "kind": "key", "key": "#dfdfdf", "tol": 90, "color": "#eceef1", "w": 0.135, "h": 0.1, "name": "weiss2R", "side": "R", "at": [0.238, 0.251], "mirror": false},
+  {"box": [1360, 275, 1480, 325], "kind": "key", "key": "#dfdfdf", "tol": 90, "color": "#eceef1", "w": 0.135, "h": 0.1, "name": "weiss2L", "side": "L", "at": [-0.573, 0.251], "dz": 0.18, "mirror": false},
+  {"box": [1360, 275, 1480, 325], "kind": "key", "key": "#dfdfdf", "tol": 90, "color": "#eceef1", "w": 0.084, "h": 0.127, "name": "weiss3R", "side": "R", "at": [0.327, 0.265], "mirror": false},
+  {"box": [1360, 275, 1480, 325], "kind": "key", "key": "#dfdfdf", "tol": 90, "color": "#eceef1", "w": 0.084, "h": 0.127, "name": "weiss3L", "side": "L", "at": [-0.662, 0.265], "dz": 0.18, "mirror": false},
+  {"name": "ruckus", "box": [1512, 108, 1740, 152], "kind": "w"},
+  {"name": "fix", "box": [2095, 365, 2200, 462], "kind": "d"},
+  {"name": "orion", "box": [2343, 395, 2568, 460], "kind": "c"}
+ ]
+}

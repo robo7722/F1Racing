@@ -1,0 +1,38 @@
+{
+ "kind": "f2",
+ "team": "F2_INV",
+ "driver": "CAM",
+ "drivers": ["CAM"],
+ "photo": "https://res.cloudinary.com/prod-f2f3/v1770000000/common/f2/2026/invictaracing/2026invictaracingcarleft.png",
+ "rear": [3080, 572],
+ "front": [860, 572],
+ "liv": {"body": "#f7de00", "acc": "#b4e61e", "tip": "#14161b", "metal": 0.15},
+ "glsl": [
+  "vec3 Y = #f7de00; vec3 K = #14161b; vec3 G = #b4e61e; vec3 col = Y;",
+  "if (p.z > 1.85 && abs(p.x) > 0.17) col = K;",
+  "float yb = p.z < 1.75 ? 0.534 - 0.167 * (p.z - 1.093) : 0.424 - 0.25 * (p.z - 1.75);",
+  "if (p.z > 1.08 && (p.z < 2.15 || abs(p.x) < 0.17)) col = mix(K, col, aaS(p.y - yb));",
+  "if (p.z < 0.1 && p.z > -0.8) col = mix(col, K, aaS(p.y - (p.z > -0.18 ? 0.85 : 0.85 + (-0.18 - p.z) * 0.30)));",
+  "if (p.y > 0.72 && p.z > 0.0 && p.z < 0.95) col = K;",
+  "if (p.z > -1.4 && p.z < 0.4 && abs(p.x) > 0.25) col = mix(col, G, (1.0 - aaS(p.y - 0.235)));",
+  "if (p.z > -1.4 && p.z < 0.4 && abs(p.x) > 0.25) col = mix(col, K, band(p.y, 0.235, 0.25));",
+  "if (p.y > 0.78 && p.z < -0.30 && p.z > -0.54 && abs(p.x) > 0.13 && abs(p.x) < 0.25) col = #e30613;",
+  "if (p.z < -1.93) col = (p.y > 0.45 && abs(p.x) > 0.5) ? G : K;",
+  "return col;"
+ ],
+ "stickers": [
+  {"name": "fl_chassis", "box": [1110, 400, 1455, 625], "kind": "key", "key": "#161616", "color": "#14161b", "tol": 110},
+  {"name": "pech_grund", "box": [1214, 456, 1396, 564], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#14161b"},
+  {"name": "schlitz_grund", "box": [1116, 458, 1197, 507], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#14161b"},
+  {"name": "pirelli", "box": [202, 664, 416, 732], "kind": "c", "at": [2.06, 0.225], "w": 0.26},
+  {"name": "invicta", "box": [2222, 215, 2680, 362], "kind": "d", "at": [-0.88, 0.84], "w": 0.5},
+  {"name": "inv_p0_L", "box": [2525, 213, 2582, 232], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#f7de00", "at": [-0.9919, 0.9121], "w": 0.0622, "h": 0.0207, "side": "L"},
+  {"name": "inv_p0_R", "box": [2525, 213, 2582, 232], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#f7de00", "at": [-0.7681, 0.9121], "w": 0.0622, "h": 0.0207, "side": "R"},
+  {"name": "inv_p1_L", "box": [2580, 213, 2632, 245], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#f7de00", "at": [-1.0492, 0.905], "w": 0.0568, "h": 0.0349, "side": "L"},
+  {"name": "inv_p1_R", "box": [2580, 213, 2632, 245], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#f7de00", "at": [-0.7108, 0.905], "w": 0.0568, "h": 0.0349, "side": "R"},
+  {"name": "inv_p2_L", "box": [2630, 213, 2682, 258], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#f7de00", "at": [-1.1038, 0.8979], "w": 0.0568, "h": 0.0491, "side": "L"},
+  {"name": "inv_p2_R", "box": [2630, 213, 2682, 258], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#f7de00", "at": [-0.6562, 0.8979], "w": 0.0568, "h": 0.0491, "side": "R"},
+  {"name": "eurol", "box": [2012, 128, 2105, 192], "kind": "c", "at": [-0.4, 0.93], "w": 0.13}
+ ],
+ "number": {"color": "#14161b", "spots": [{"v": "side", "z": -2.12, "y": 0.75, "s": 0.14}, {"v": "top", "x": 0, "z": 1.9, "s": 0.12}]}
+}

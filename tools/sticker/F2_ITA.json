@@ -1,0 +1,248 @@
+{
+ "kind": "f2",
+ "team": "F2_PRE",
+ "driver": "MON",
+ "drivers": [
+  "MON"
+ ],
+ "photo": "https://res.cloudinary.com/prod-f2f3/v1770000000/common/f2/2026/premaracing/2026premaracingcarleft.png",
+ "rear": [
+  3078,
+  568
+ ],
+ "front": [
+  892,
+  570
+ ],
+ "liv": {
+  "body": "#e01010",
+  "acc": "#e01010",
+  "tip": "#e01010",
+  "low": "#f2f2f2",
+  "split": 0.36,
+  "metal": 0.25
+ },
+ "glsl": [
+  "vec3 R = #e01010; vec3 W = #f2f2f2; vec3 G = #0a9a3c; vec3 col = R; float sd = aaS(abs(p.x) - 0.15);",
+  "float yu = 0.655 - 0.146 * clamp(-0.6 - p.z, 0.0, 1.0); float yl = max(0.385, 0.555 + 0.19 * p.z);",
+  "col = mix(col, W, sd * band(p.z, -1.45, 0.35) * band(p.y, yl, yu));",
+  "col = mix(col, G, sd * (1.0 - aaS(p.z + 0.78 + 0.42 * (0.41 - p.y))) * (1.0 - aaS(p.y - yl + 0.01)) * aaS(p.z + 1.5));",
+  "col = mix(col, G, band(p.z, -1.7, -0.47) * aaS(p.y - 0.71 + 0.08 * clamp((-0.45 - p.z) / 0.65, 0.0, 1.0)));",
+  "return col;"
+ ],
+ "stickers": [
+  {
+   "name": "weiss_band",
+   "box": [
+    1040,
+    330,
+    2860,
+    560
+   ],
+   "kind": "key",
+   "key": "#e0e0e0",
+   "tol": 95,
+   "color": "#f2f2f2"
+  },
+  {
+   "name": "weiss_heck",
+   "box": [
+    2300,
+    470,
+    2476,
+    684
+   ],
+   "kind": "key",
+   "key": "#e0e0e0",
+   "tol": 95,
+   "color": "#f2f2f2"
+  },
+  {
+   "name": "weiss_heck2",
+   "box": [
+    2438,
+    684,
+    2476,
+    745
+   ],
+   "kind": "key",
+   "key": "#e0e0e0",
+   "tol": 95,
+   "color": "#f2f2f2"
+  },
+  {
+   "name": "weiss_nase",
+   "box": [
+    540,
+    430,
+    660,
+    650
+   ],
+   "kind": "key",
+   "key": "#e0e0e0",
+   "tol": 95,
+   "color": "#f2f2f2"
+  },
+  {
+   "name": "gruen_finne",
+   "box": [
+    2150,
+    125,
+    2770,
+    335
+   ],
+   "kind": "key",
+   "key": "#0aa040",
+   "tol": 45,
+   "color": "#0a9a3c"
+  },
+  {
+   "name": "gruen_heck",
+   "box": [
+    2300,
+    470,
+    2850,
+    745
+   ],
+   "kind": "key",
+   "key": "#0aa040",
+   "tol": 45,
+   "color": "#0a9a3c"
+  },
+  {
+   "name": "gruen_nase",
+   "box": [
+    540,
+    430,
+    700,
+    650
+   ],
+   "kind": "key",
+   "key": "#0aa040",
+   "tol": 45,
+   "color": "#0a9a3c"
+  },
+  {
+   "name": "gruen_cockpit",
+   "box": [
+    1040,
+    368,
+    1360,
+    408
+   ],
+   "kind": "key",
+   "key": "#0aa040",
+   "tol": 45,
+   "color": "#0a9a3c"
+  },
+  {
+   "name": "quimicolor",
+   "box": [
+    1826,
+    318,
+    2068,
+    386
+   ],
+   "kind": "c",
+   "dy": -0.03,
+   "w": 0.3
+  },
+  {
+   "name": "claro",
+   "box": [
+    2568,
+    410,
+    2726,
+    476
+   ],
+   "kind": "c",
+   "dy": -0.055
+  },
+  {
+   "name": "pony",
+   "box": [
+    2478,
+    540,
+    2652,
+    670
+   ],
+   "kind": "c"
+  },
+  {
+   "name": "bonbon",
+   "box": [
+    2016,
+    146,
+    2122,
+    197
+   ],
+   "kind": "c"
+  },
+  {
+   "name": "stern",
+   "box": [
+    1268,
+    466,
+    1378,
+    553
+   ],
+   "kind": "c"
+  },
+  {
+   "name": "partner",
+   "box": [
+    1983,
+    686,
+    2440,
+    733
+   ],
+   "kind": "w",
+   "at": [
+    -0.25,
+    0.19
+   ]
+  },
+  {
+   "name": "crc",
+   "box": [
+    248,
+    652,
+    380,
+    702
+   ],
+   "kind": "w",
+   "at": [
+    2.1,
+    0.345
+   ],
+   "w": 0.16
+  },
+  {
+   "name": "pirelli",
+   "box": [
+    326,
+    567,
+    526,
+    637
+   ],
+   "kind": "c"
+  }
+ ],
+ "number": {
+  "color": "#d8d8dc",
+  "spots": [
+   {
+    "v": "side",
+    "z": -2.1,
+    "y": 0.62,
+    "s": 0.2
+   },
+   {
+    "v": "top",
+    "x": 0,
+    "z": 1.9,
+    "s": 0.13
+   }
+  ]
+ }
+}

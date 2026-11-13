@@ -34,7 +34,7 @@ self.addEventListener('fetch', e => {
       .catch(() => caches.match('./index.html')));
     return;
   }
-  if (/\/(logos|liveries)\/[^/]+\.png$/i.test(new URL(req.url).pathname)) {   // Logos (Ordner logos/): aus dem eigenen Dauer-Cache, ohne erneutes Laden. Je Sitzung fragt der Service Worker einmal im Hintergrund nach, ob sich die Datei geändert hat – neue, geänderte und gelöschte Dateien gelten ab dem nächsten Start
+  if (/\/(logos|liveries)\/[^/]+\.(png|json)$/i.test(new URL(req.url).pathname)) {   // Logos (Ordner logos/): aus dem eigenen Dauer-Cache, ohne erneutes Laden. Je Sitzung fragt der Service Worker einmal im Hintergrund nach, ob sich die Datei geändert hat – neue, geänderte und gelöschte Dateien gelten ab dem nächsten Start
     const key = req.url.split('?')[0];
     e.respondWith(caches.open('fr-logos').then(c => c.match(key).then(hit => {
       if (hit && LSEEN.has(key)) return hit;

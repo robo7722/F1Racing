@@ -1,0 +1,74 @@
+{
+ "kind": "f2",
+ "team": "F2_TRI",
+ "driver": "VAN",
+ "drivers": [
+  "VAN",
+  "BEN"
+ ],
+ "photo": "https://res.cloudinary.com/prod-f2f3/v1770000000/common/f2/2026/trident/2026tridentcarleft.png",
+ "rear": [
+  3048,
+  567
+ ],
+ "front": [
+  820,
+  567
+ ],
+ "liv": {
+  "body": "#ee1018",
+  "low": "#1512a8",
+  "split": 0.5,
+  "acc": "#1512a8",
+  "tip": "#eceef2",
+  "metal": 0.3
+ },
+ "glsl": [
+  "float yr = p.z > 1.2 ? mix(0.535, 0.30, clamp((p.z - 1.2) / 1.4, 0.0, 1.0)) : (p.z > -0.6 ? 0.535 : mix(0.535, 0.33, clamp((-0.6 - p.z) / 0.8, 0.0, 1.0)));",
+  "yr = mix(yr, 0.72, aaS(abs(p.x) - 0.36) * band(p.z, -1.35, 0.75));",
+  "vec3 col = mix(#1512a8, #ee1018, aaS(p.y - yr));",
+  "if (p.z > 0.5 && p.z < 2.6) col = mix(col, #eceef2, band(p.y - yr, -0.011, 0.011));",
+  "if (p.z < -0.2 && p.z > -1.4 && p.y > 0.67) col = #eceef2;",
+  "if (p.z > 2.15 && p.y < 0.36 && abs(p.x) > 0.14) col = #1512a8;",
+  "if (p.z < -1.9 && p.y > 0.6) col = (abs(p.x) > 0.52 && p.y < 0.85) ? #1512a8 : #15171a;",
+  "return col;"
+ ],
+ "number": {
+  "color": "#f2f3f5",
+  "spots": [
+   {
+    "v": "side",
+    "z": -2.08,
+    "y": 0.6,
+    "s": 0.16
+   },
+   {
+    "v": "top",
+    "x": 0,
+    "z": 2.0,
+    "s": 0.12
+   }
+  ]
+ },
+ "stickers": [
+  {"name": "chassis_rot", "box": [1060, 350, 1345, 600], "kind": "key", "key": "#ee1018", "tol": 12},
+  {"name": "chassis_blau", "box": [1060, 350, 1345, 600], "kind": "key", "key": "#1512a8", "tol": 20},
+  {"name": "chassis_weiss", "box": [1060, 385, 1345, 415], "kind": "key", "key": "#eceef2", "tol": 90},
+  {"name": "seite_rot", "box": [1535, 340, 2780, 745], "kind": "key", "key": "#ee1018", "tol": 12, "dy": 0.05},
+  {"name": "seite_blau", "box": [1535, 340, 2780, 745], "kind": "key", "key": "#1512a8", "tol": 20, "dy": 0.05},
+  {"name": "haube_rot", "box": [1975, 100, 2750, 305], "kind": "key", "key": "#ee1018", "tol": 12},
+  {"name": "haube_blau", "box": [1975, 100, 2750, 345], "kind": "key", "key": "#1512a8", "tol": 20},
+  {"name": "haube_weiss", "box": [1975, 100, 2745, 345], "kind": "key", "key": "#eceef2", "tol": 90},
+  {"name": "sts", "box": [333, 548, 444, 627], "kind": "c"},
+  {"name": "pirelli", "box": [317, 642, 448, 683], "kind": "w"},
+  {"name": "safin", "box": [1180, 445, 1396, 518], "kind": "w"},
+  {"name": "tognela", "box": [1281, 693, 1380, 752], "kind": "w"},
+  {"name": "rockinroma", "dy": 0.05, "box": [1788, 322, 2017, 380], "kind": "w"},
+  {"name": "waterford", "dy": 0.05, "box": [1805, 537, 2423, 638], "kind": "w"},
+  {"name": "zeus", "dy": 0.05, "box": [2230, 335, 2472, 402], "kind": "w"},
+  {"name": "ecomvest", "box": [2200, 187, 2465, 270], "kind": "d"},
+  {"name": "pakelo", "dy": 0.05, "box": [2498, 586, 2607, 630], "kind": "w"},
+  {"name": "sparco", "dy": 0.05, "box": [2118, 681, 2234, 717], "kind": "w"},
+  {"name": "em", "dy": 0.05, "box": [2266, 678, 2317, 714], "kind": "w"}
+ ]
+}

@@ -1,0 +1,35 @@
+{
+ "kind": "f2",
+ "team": "F2_DAM",
+ "driver": "BIL",
+ "drivers": ["BIL"],
+ "photo": "https://res.cloudinary.com/prod-f2f3/v1770000000/common/f2/2026/damslucasoil/2026damslucasoilcarleft.png",
+ "rear": [3070, 567],
+ "front": [847, 565],
+ "liv": {"body": "#45a8f0", "acc": "#0c1a52", "tip": "#0c1a52", "low": "#0c1a52", "split": 0.3, "metal": 0.3},
+ "glsl": [
+  "vec3 navy = #0c1a52; vec3 lb = #3a9cec; vec3 blk = #0b0d14;",
+  "bool fw = p.z > 2.15 && p.y < 0.36 && abs(p.x) > 0.14; bool rw = p.z < -1.9 && p.y > 0.6;",
+  "if (fw || rw) return blk;",
+  "vec3 col = navy;",
+  "float yt = 0.44 - max(p.z - 1.73, 0.0) * 0.33;",
+  "if (p.z > 0.95 && p.z < 2.72 && abs(p.x) < 0.05 + 0.10 * clamp((2.7 - p.z) / 1.7, 0.0, 1.0) && p.y > yt) col = lb;",
+  "if (p.z < -0.57 && p.z > -1.3 && p.y > 0.55) col = lb;",
+  "return col;"
+ ],
+ "stickers": [
+  {"name": "nase_hell", "box": [90, 430, 560, 692], "kind": "key", "key": "#4fb0ff", "color": "#45a8f0", "tol": 18},
+  {"name": "chassis_hell", "box": [1115, 365, 1260, 530], "kind": "key", "key": "#4fb0ff", "color": "#45a8f0", "tol": 18},
+  {"name": "haube_muster", "box": [2000, 110, 2760, 380], "kind": "key", "key": "#000a2e", "color": "#0c1a52", "tol": 40},
+  {"name": "haube_hell", "box": [2000, 110, 2760, 380], "kind": "key", "key": "#4fb0ff", "color": "#45a8f0", "tol": 18},
+  {"name": "kasten_hell", "box": [1850, 410, 2470, 700], "kind": "key", "key": "#4fb0ff", "color": "#45a8f0", "tol": 18},
+  {"name": "kasten_hell2", "box": [2470, 380, 2600, 500], "kind": "key", "key": "#4fb0ff", "color": "#45a8f0", "tol": 18},
+  {"name": "grund_haube", "box": [2000, 135, 2230, 300], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#0c1a52"},
+  {"name": "loch_erho", "box": [1864, 494, 2228, 670], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#45a8f0"},
+  {"name": "loch_volito", "box": [2245, 360, 2495, 432], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#45a8f0"},
+  {"name": "grund_reihe", "box": [1866, 692, 2486, 738], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#0c1a52", "at": [-0.45, 0.205], "w": 0.8},
+  {"name": "pirelli", "box": [308, 638, 477, 685], "kind": "w"},
+  {"name": "lucasoil_reihe", "box": [1866, 692, 2486, 738], "kind": "w", "at": [-0.45, 0.205], "w": 0.8}
+ ],
+ "number": {"color": "#ffffff", "spots": [{"v": "side", "z": -2.07, "y": 0.62, "s": 0.14}, {"v": "top", "x": 0, "z": 1.55, "s": 0.12}]}
+}
