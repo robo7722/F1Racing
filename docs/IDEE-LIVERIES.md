@@ -50,3 +50,7 @@ Technisch möglich – der Bogen kann auch deckende Farbflächen und Streifen en
 ## Roadster (RONE Racing) – echte Aufkleber, November 2026
 
 Der Roadster trägt jetzt die Aufkleber des echten Autos, aus den Fotos geschnitten. Technik anders als bei F1/F2: eigenes dünnes Netz über dem Lack statt Projektion im Shader (`liveries/MX5.png` + `liveries/MX5.json`). Einzelheiten, Positionen und offene Punkte: `tools/sticker/mx5/ANLEITUNG.md`.
+
+## Reifenflanken F1 und F2 – November 2026
+
+Die Reifen tragen die echte Beschriftung (PIRELLI, P ZERO, zwei Bögen mit Karomuster) in der Farbe der Mischung (rot, gelb, weiß). Vorlage: Produktbild eines Pirelli-Reifens von vorn; daraus `textures/reifen_flanke.png` (weiß, Deckkraft = Zeichnung). Im Spiel: `ringParts()` legt auf beide Flanken einen Kreisring mit dieser Textur, `WMAT` blendet per `alphaTest` aus, die Farbe kommt aus der Eckpunktfarbe. Kein zusätzlicher Zeichenaufruf. Der graue Felgenring und das FSC-Zeichen des echten Reifens fehlen. Nur im Showroom geprüft.
