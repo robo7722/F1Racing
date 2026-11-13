@@ -2732,7 +2732,8 @@ function paintGeo(g, fn) {
 // Beschriftung der Reifenflanke wie am echten Reifen (PIRELLI, P ZERO, zwei Bögen mit Karomuster) in der Farbe der Mischung:
 // Kreisring auf beiden Flanken, Textur textures/reifen_flanke.png (weiß, Deckkraft = Zeichnung; die Ecken sind deckend weiß – dorthin zeigen die UVs des übrigen Rads).
 // RT = Reifenradius; die Textur deckt den Radius 0 … 0,927·RT ab.
-const RF_R = [0.742, 0.782, 0.822, 0.862, 0.902];
+const RF_R = [0.742, 0.782, 0.822, 0.862, 0.902], RF_COVER = 0.70;   // RF_COVER: Radius der Radabdeckung (F1) als Anteil des Reifenradius
+const RF_IMG = await new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = './textures/reifen_flanke.png'; });
 function ringParts(hw, segs, RT) {
   const pos = [], nrm = [], uv = [], idx = [], n = Math.max(24, segs * 4), m = RF_R.length;
   for (const sd of [-1, 1]) { const base = pos.length / 3;
@@ -2742,7 +2743,7 @@ function ringParts(hw, segs, RT) {
   }
   return { pos, nrm, uv, idx };
 }
-function wheelGeoM(g, hw, comp, segs) {
+function wheelGeoM(g, hw, comp, segs, cover) {
   const cTy = new THREE.Color(0x141414), cRim = new THREE.Color(0x2b2e33), cc = new THREE.Color(COMPOUNDS_[comp]);
   const base = paintGeo(g, (k, x, y, z, o) => o.copy(k === 5 ? cTy : cRim)); let RT = 0; { const q = g.attributes.position.array; for (let i = 0; i < q.length; i += 3) RT = Math.max(RT, Math.hypot(q[i + 1], q[i + 2])); } const R = ringParts(hw, segs, RT);
   // Markierung auf die Reifenflanke legen: je Seite und Radius die tatsächliche Flankenposition aus dem Modell lesen (vorher fest bei ±hw – die Flanke wölbt sich nach innen, die Linie schwebte daneben)
@@ -2750,23 +2751,59 @@ function wheelGeoM(g, hw, comp, segs) {
     for (let i = 0; i < R.pos.length; i += 3) { const sd = Math.sign(R.pos[i]), r = Math.round(Math.hypot(R.pos[i + 1], R.pos[i + 2]) * 1000) / 1000, key = sd + ':' + r; if (!cache.has(key)) cache.set(key, side(sd, r)); }
     for (const sd of [-1, 1]) { const rs = RF_R.map(f => Math.round(f * RT * 1000) / 1000), xs = rs.map(r => cache.get(sd + ':' + r)), ok = xs.filter(x => x > 0), fb = ok.length ? Math.max(...ok) : hw; rs.forEach((r, j) => cache.set(sd + ':' + r, (xs[j] > 0 ? xs[j] : fb) + 0.002)); }   // fehlende Radien (grobe Fernmodelle) auffüllen
     for (let i = 0; i < R.pos.length; i += 3) { const sd = Math.sign(R.pos[i]), r = Math.round(Math.hypot(R.pos[i + 1], R.pos[i + 2]) * 1000) / 1000; R.pos[i] = sd * cache.get(sd + ':' + r); } }
+  const nRing = R.pos.length / 3;
+  if (cover) {   // Radabdeckung (F1): flache Scheibe auf der Außenseite, trägt das Teamdesign aus der Mitte der Flankentextur (siehe wheelMat)
+    const gp = g.attributes.position.array; let x = -1; for (let i = 0; i < gp.length; i += 3) { const rr = Math.hypot(gp[i + 1], gp[i + 2]); if (rr > 0.45 * RT && rr < 0.62 * RT && cover * gp[i] > x) x = cover * gp[i]; }
+    x = cover * ((x > 0 ? x : hw * 0.8) + 0.004); const b = R.pos.length / 3, n = Math.max(24, segs * 4), f = RF_COVER / 0.927 * 0.5;
+    R.pos.push(x, 0, 0); R.nrm.push(cover, 0, 0); R.uv.push(0.5, 0.5);
+    for (let k = 0; k <= n; k++) { const t = k / n * Math.PI * 2, c = Math.cos(t), sn = Math.sin(t); R.pos.push(x, RF_COVER * RT * c, RF_COVER * RT * sn); R.nrm.push(cover, 0, 0); R.uv.push(0.5 - cover * sn * f, 0.5 + c * f); }
+    for (let k = 0; k < n; k++) R.idx.push(b, b + 1 + k, b + 2 + k); }
   const n0 = base.attributes.position.count, n1 = R.pos.length / 3;
   const P = new Float32Array((n0 + n1) * 3), Nn = new Float32Array((n0 + n1) * 3), C = new Float32Array((n0 + n1) * 3), U = new Float32Array((n0 + n1) * 2);
   P.set(base.attributes.position.array); P.set(R.pos, n0 * 3); Nn.set(base.attributes.normal.array); Nn.set(R.nrm, n0 * 3); C.set(base.attributes.color.array);
-  for (let i = 0; i < n1; i++) C.set([cc.r, cc.g, cc.b], (n0 + i) * 3); U.set(R.uv, n0 * 2);
+  for (let i = 0; i < n1; i++) C.set(i < nRing ? [cc.r, cc.g, cc.b] : [1, 1, 1], (n0 + i) * 3); U.set(R.uv, n0 * 2);
   const I = Array.from(base.index.array); for (const i of R.idx) I.push(i + n0);
   const o = new THREE.BufferGeometry(); o.setAttribute('position', new THREE.BufferAttribute(P, 3)); o.setAttribute('normal', new THREE.BufferAttribute(Nn, 3)); o.setAttribute('color', new THREE.BufferAttribute(C, 3)); o.setAttribute('uv', new THREE.BufferAttribute(U, 2));
   o.setIndex(I); o.computeBoundingSphere(); return o;
 }
-const mkWheelM = C => C ? C.lods.map((L, l) => {
-  const sg = [24, 12, 6][l], v = (g, hw) => [0, 1, 2].map(ci => wheelGeoM(g, hw, ci, sg)), hf = C.hwf || 0.1695, hr = C.hwr || 0.2155;
-  return { L: v(L.wheelL, hf), R: v(L.wheelR, hf), RL: v(L.rwheelL, hr), RR: v(L.rwheelR, hr) };
+const mkWheelM = (C, cover) => C ? C.lods.map((L, l) => {
+  const sg = [24, 12, 6][l], v = (g, hw, sd) => [0, 1, 2].map(ci => wheelGeoM(g, hw, ci, sg, cover && RF_IMG ? sd : 0)), hf = C.hwf || 0.1695, hr = C.hwr || 0.2155;
+  return { L: v(L.wheelL, hf, -1), R: v(L.wheelR, hf, 1), RL: v(L.rwheelL, hr, -1), RR: v(L.rwheelR, hr, 1) };
 }) : null;
-const WHEELM = mkWheelM(CARM), WHEELM2 = mkWheelM(CARM2);
+const WHEELM = mkWheelM(CARM, true), WHEELM2 = mkWheelM(CARM2);
 const MODELS = { f1: CARM ? { C: CARM, W: WHEELM, helm: [0.79, 0.18], rl: [0.315, -2.335], swPos: [0, 0.60, 0.665], swS: 0.78, cam: [0, 0.765, 0.30, 3.0],   /* Lenkrad IN der Cockpitwanne (vorher z 0,98 = unter dem Vorderdeck, darüber gemalt), Augenpunkt etwas weiter hinten mit leichtem Blick nach unten wie in echten Onboards */ tv: [0, 1.04, 0.02, 2.4] } : null, f2: CARM2 ? { C: CARM2, W: WHEELM2, helm: [0.80, 0.21], rl: [0.40, -2.468], rlS: [0.085, 0.075, 0.02], swPos: [0, 0.61, 0.64], swS: 0.8, cam: [0, 0.795, 0.28, 3.5],   /* swS: Lenkrad im F2 kleiner – die Kamera sitzt dort viel näher dran */ tv: [0, 1.04, 0.02, 2.4] } : null };
 const COMPOUNDS = COMPOUNDS_;
 const WMAT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .88, metalness: .05, side: THREE.DoubleSide });
-{ const t = new THREE.TextureLoader().load('./textures/reifen_flanke.png', () => { WMAT.map = t; WMAT.alphaTest = 0.45; WMAT.needsUpdate = true; }); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; }   // Flankenbeschriftung; bis sie geladen ist, bleibt der Ring einfarbig
+if (RF_IMG) { const t = new THREE.Texture(RF_IMG); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.needsUpdate = true; WMAT.map = t; WMAT.alphaTest = 0.45; }   // Flankenbeschriftung
+// Radabdeckungen der F1-Teams (Saison 2026), nach Fotos gezeichnet: je Team eine Kopie der Flankentextur mit dem Abdeckungsdesign in der Mitte
+const WHEEL_COVER = {
+  MER: (c, K) => { K.disc(1, '#17191c'); for (const r of [0.93, 0.8, 0.67, 0.54]) K.ring(r, 0.035, '#8f969e'); K.disc(0.42, '#0c0d0f'); K.spokes(5, 0.4, 0.07, '#2a2d31'); K.hub('#d9e021'); },
+  FER: (c, K) => { K.disc(1, '#0b0b0c'); K.ring(0.96, 0.03, '#1d1e21'); K.ring(0.55, 0.015, '#1d1e21'); K.hub('#e8d21a'); },
+  MCL: (c, K) => { K.disc(1, '#101114'); for (let k = 0; k < 120; k++) K.arc(0.8, 0.26, k / 120, (k + 1.2) / 120, `hsl(${(k * 3 + 200) % 360} 95% 55%)`); K.disc(0.6, '#0e0f12'); K.spokes(5, 0.56, 0.09, '#24272b'); K.hub('#c8e01f'); },
+  RBR: (c, K) => { K.disc(1, '#0a0f24'); K.ring(0.93, 0.06, '#1f49d6'); K.ring(0.6, 0.02, '#16254f'); K.spokes(6, 0.5, 0.06, '#141b3a'); K.hub('#c8e01f'); },
+  WIL: (c, K) => { K.disc(1, '#0a1030'); for (let k = 0; k < 24; k++) K.arc(0.84, 0.16, (k + 0.08) / 24, (k + 0.92) / 24, k % 2 ? '#f2f2f6' : '#7a3fe0'); K.ring(0.62, 0.02, '#7a3fe0'); K.text('JACKPOT CITY', 0.44, 0.14, 0, '#f2f2f6'); K.text('JACKPOT CITY', 0.44, 0.14, Math.PI, '#f2f2f6'); K.hub('#17b890'); },
+  RB:  (c, K) => { K.disc(1, '#eef0f3'); for (const r of [0.94, 0.78, 0.62]) K.ring(r, 0.02, '#aab0b8'); K.spokes(12, 0.56, 0.035, '#cfd3d9'); K.disc(0.2, '#d9dce1'); K.hub('#e0202a'); },
+  AST: (c, K) => { K.disc(1, '#0b0c0d'); K.ring(0.96, 0.025, '#e8eaec'); K.text('CELSIUS', 0.68, 0.17, 0, '#f2f2f2'); K.text('CELSIUS', 0.68, 0.17, Math.PI, '#f2f2f2'); K.text('LIVE.FIT.GO.', 0.7, 0.105, Math.PI / 2, '#f2f2f2'); K.text('LIVE.FIT.GO.', 0.7, 0.105, -Math.PI / 2, '#f2f2f2'); K.hub('#00a86b'); },
+  ALP: (c, K) => { K.disc(1, '#0c0d0f'); K.ring(0.95, 0.03, '#1a1c20'); K.ring(0.5, 0.02, '#1a1c20'); for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; c.fillStyle = '#050506'; c.beginPath(); c.arc(Math.cos(a) * 0.3 * K.R, Math.sin(a) * 0.3 * K.R, 0.05 * K.R, 0, 7); c.fill(); } K.hub('#2b2e33'); },
+  HAA: (c, K) => { K.disc(1, '#0d0e10'); K.ring(0.95, 0.04, '#26282c'); K.spokes(14, 0.88, 0.03, '#3a3d42'); K.spokes(7, 0.6, 0.05, '#2c2f33'); K.disc(0.18, '#15161a'); K.hub('#d9e021'); },
+  AUD: (c, K) => { K.disc(1, '#0c0c0d'); K.ring(0.95, 0.03, '#202124'); K.spokes(5, 0.5, 0.08, '#1b1c1f'); K.ring(0.2, 0.04, '#e0202a'); K.hub('#e0202a'); },
+  CAD: (c, K) => { K.disc(1, '#f2f3f5'); K.ring(0.97, 0.03, '#c9ccd1'); K.disc(0.56, '#101114'); K.spokes(10, 0.52, 0.05, '#34373c'); K.disc(0.16, '#1a1b1e'); K.hub('#e0202a'); },
+};
+const WHEEL_MATS = {};
+function wheelMat(tk) {
+  if (!RF_IMG || !WHEEL_COVER[tk]) return WMAT; if (WHEEL_MATS[tk]) return WHEEL_MATS[tk];
+  const N = DECAL_SMALL ? 512 : 1024, cv = document.createElement('canvas'); cv.width = cv.height = N; const c = cv.getContext('2d'); c.drawImage(RF_IMG, 0, 0, N, N);
+  const R = RF_COVER / 0.927 * N / 2 * 1.01;
+  const K = { R, disc: (r, col) => { c.fillStyle = col; c.beginPath(); c.arc(0, 0, r * R, 0, 7); c.fill(); },
+    ring: (r, w, col) => { c.strokeStyle = col; c.lineWidth = w * R; c.beginPath(); c.arc(0, 0, r * R - w * R / 2, 0, 7); c.stroke(); },
+    arc: (r, w, a0, a1, col) => { c.strokeStyle = col; c.lineWidth = w * R; c.beginPath(); c.arc(0, 0, r * R, a0 * Math.PI * 2, a1 * Math.PI * 2); c.stroke(); },
+    spokes: (n, r, w, col) => { c.strokeStyle = col; c.lineWidth = w * R; c.lineCap = 'butt'; for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2; c.beginPath(); c.moveTo(0, 0); c.lineTo(Math.cos(a) * r * R, Math.sin(a) * r * R); c.stroke(); } },
+    hub: col => { K.disc(0.1, '#08080a'); K.disc(0.065, col); K.disc(0.03, '#08080a'); },
+    text: (t, r, h, a, col) => { c.fillStyle = col; c.font = `900 ${Math.round(h * R)}px Arial, system-ui, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; const ws = [...t].map(ch => c.measureText(ch).width + h * R * 0.08), tot = ws.reduce((x, y) => x + y, 0); let d = -tot / 2;
+      for (let i = 0; i < t.length; i++) { const an = a + (d + ws[i] / 2) / (r * R); c.save(); c.rotate(an); c.translate(0, -r * R); c.fillText(t[i], 0, 0); c.restore(); d += ws[i]; } } };
+  c.save(); c.translate(N / 2, N / 2); WHEEL_COVER[tk](c, K); c.restore();
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; const m = WMAT.clone(); m.map = t; m.roughness = 0.6; return (WHEEL_MATS[tk] = m);
+}
 const MIRMAT = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x86bfee, metalness: 0, roughness: 1, envMapIntensity: 0, side: THREE.DoubleSide });   /* Spiegelglas in der Himmelsfarbe der Strecke (nachts dunkel) – als Spiegel der Umgebung zeigte es Gras und Tribünen und wirkte grün */   // Spiegelglas: spiegelt die Umgebung (vorher eine einfarbig hellblaue, selbstleuchtende Fläche – im Cockpit ein weißer Klotz)
 const MATTE = new THREE.MeshStandardMaterial({ vertexColors: true, map: TEX.carbon, normalMap: TEX.carbonN, normalScale: new THREE.Vector2(.5, .5), roughness: .42, metalness: .35, side: THREE.DoubleSide });
 const col = h => new THREE.Color(h);
@@ -3816,10 +3853,10 @@ function makeCar0(d) {
     const hm = new THREE.Group(), hsh = new THREE.Mesh(helmGeoNew(), helmMat(d, hAcc)); hsh.position.set(0, MD.helm[0] + 0.005, MD.helm[1]); hsh.castShadow = true; hm.add(hsh); g.add(hm);   // Gruppe: wird als Ganzes ein-/ausgeblendet und (TV-Kamera) verschoben
     { const dv = new THREE.Mesh(mergeParts(hOff(driverParts(col(uiCol(T)), hAcc))), KDRV.suit); hm.add(dv); }   // Fahrer hängt am Helm: wird mit ihm ausgeblendet (Cockpitansicht, Fernmodell)
     const rl = new THREE.Mesh(new THREE.BoxGeometry(...(MD.rlS || [0.13, 0.045, 0.02])), RLMAT); rl.position.set(0, MD.rl[0], MD.rl[1]); g.add(rl);   /* F2: Regenlicht sitzt außen auf der Heck-Crashstruktur (vorher 6 cm im Karosserieteil versenkt) */ // Regenlicht unten am Heck (nicht am Auspuff)
-    const fl = new THREE.Group(); fl.position.set(fw[0], fw[1], fw[2]); const wfl = new THREE.Mesh(W.R[1], WMAT); wfl.castShadow = true; fl.add(wfl); g.add(fl);
-    const fr = new THREE.Group(); fr.position.set(-fw[0], fw[1], fw[2]); const wfr = new THREE.Mesh(W.L[1], WMAT); wfr.castShadow = true; fr.add(wfr); g.add(fr);
+    const fl = new THREE.Group(); fl.position.set(fw[0], fw[1], fw[2]); const wm = wheelMat(d.team), wfl = new THREE.Mesh(W.R[1], wm); wfl.castShadow = true; fl.add(wfl); g.add(fl);
+    const fr = new THREE.Group(); fr.position.set(-fw[0], fw[1], fw[2]); const wfr = new THREE.Mesh(W.L[1], wm); wfr.castShadow = true; fr.add(wfr); g.add(fr);
     const rw = MD.C.rw, rr = new THREE.Group(); rr.position.set(0, rw[1], rw[2]); g.add(rr);
-    const wrl = new THREE.Mesh(W.RL[1], WMAT), wrr = new THREE.Mesh(W.RR[1], WMAT); wrl.position.x = -rw[0]; wrr.position.x = rw[0]; wrl.castShadow = wrr.castShadow = true; rr.add(wrl, wrr);
+    const wrl = new THREE.Mesh(W.RL[1], wm), wrr = new THREE.Mesh(W.RR[1], wm); wrl.position.x = -rw[0]; wrr.position.x = rw[0]; wrl.castShadow = wrr.castShadow = true; rr.add(wrl, wrr);
     
     const label = carLabel(d, T); g.add(label); scene.add(g);
     // Fernmodell: ab 120 m ist das ganze Auto EIN Netz mit EINEM Zeichenaufruf (statt Karosserie, Carbon, Halo, Helm, Spiegel und vier Rädern einzeln)

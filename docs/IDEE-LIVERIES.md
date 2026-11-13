@@ -54,3 +54,7 @@ Der Roadster trägt jetzt die Aufkleber des echten Autos, aus den Fotos geschnit
 ## Reifenflanken F1 und F2 – November 2026
 
 Die Reifen tragen die echte Beschriftung (PIRELLI, P ZERO, zwei Bögen mit Karomuster) in der Farbe der Mischung (rot, gelb, weiß). Vorlage: Produktbild eines Pirelli-Reifens von vorn; daraus `textures/reifen_flanke.png` (weiß, Deckkraft = Zeichnung). Im Spiel: `ringParts()` legt auf beide Flanken einen Kreisring mit dieser Textur, `WMAT` blendet per `alphaTest` aus, die Farbe kommt aus der Eckpunktfarbe. Kein zusätzlicher Zeichenaufruf. Der graue Felgenring und das FSC-Zeichen des echten Reifens fehlen. Nur im Showroom geprüft.
+
+## Radabdeckungen F1 – November 2026
+
+Jedes F1-Team hat seine Radabdeckung der Saison 2026 (Vorlage: F1-Grafik „Wheel covers for 2026“). Technik: flache Scheibe auf der Radaußenseite in `wheelGeoM()`, Design je Team in `WHEEL_COVER` gezeichnet, `wheelMat(team)` legt es in die Mitte einer Kopie der Flankentextur. Kein zusätzlicher Zeichenaufruf; je Team eine Textur (1024², auf Touch-Geräten 512²). Die Designs sind nach der Grafik nachgezeichnet, nicht ausgeschnitten. F2 und Kart unverändert. Nur im Showroom geprüft.
