@@ -260,7 +260,7 @@ Gelände (nur bei Strecken mit `el`):
 12. **Randdetails**: Reifenstapel/Tecpro in großen Auslaufzonen, Zaunpfosten, Werbetafeln, Kameratürme, Büsche.
 13. **Start/Ziel**: Zielstrich, Startplätze, Ampel.
 14. **Boxengasse** auf der Innenseite (bzw. `pitOut`), nur wenn der Platz von `s = −300` bis `+160` frei ist (`trackFree`).
-15. **Tribünen** (Abschnitt 4.5), Brücken, Bremsschilder 150/100/50 (automatisch aus dem Tempoprofil), Streckenposten alle 270 m, Lichtmasten.
+15. **Tribünen** (Abschnitt 4.5), Brücken, Bremsschilder 150/100/50 (automatisch aus dem Tempoprofil; weiße Tafel mit schwarzen Ziffern: freistehender Keil im Gras/Auslauf, oder ohne Mast direkt am Fangzaun über der Mauer, Tafelmitte 3 m hoch (ohne Zaun flach an der Mauer selbst), wenn diese an einer Stelle der Bremszone näher als ~5 m am Asphalt steht – dann die ganze Reihe; Prüfhilfe `__brakeBoards`), Streckenposten alle 270 m, Lichtmasten.
 16. **Handgebaute Wahrzeichen** je Strecke, dann **OSM-Gebäude**, dann **Stadt**, **Berge/Hügel**, **Bäume**.
 17. **Licht & Himmel** aus dem Theme.
 18. **Nachbearbeitung**: `applyElevation` (hebt alles auf Geländehöhe), `tileGround`, `mergeGroups`, `chunkStrips`, `chunkInstances`, Sichtweite, `applySky`, `buildEnv`, `applyLook`, Minikarte, `bakeShadows`, `buildEvict`.
