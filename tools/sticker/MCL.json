@@ -664,16 +664,17 @@
   {"name": "grund_dp", "box": [2400, 408, 2680, 455], "kind": "key", "key": "#ffffff", "tol": 5000, "color": "#2b2aa8"},
   {"name": "dropbox", "box": [65, 188, 405, 264], "kind": "d"},
   {"name": "dell", "box": [764, 355, 916, 404], "kind": "d"},
-  {"name": "gemini_stern", "box": [952, 248, 1078, 358], "kind": "c"},
-  {"name": "gemini", "box": [1090, 232, 1452, 332], "kind": "w"},
+  {"name": "gemini_stern", "box": [952, 248, 1078, 358], "kind": "c", "side": "R"},
+  {"name": "gemini", "box": [1090, 232, 1452, 332], "kind": "w", "side": "R"},
+  {"name": "gemini_stern_l", "box": [952, 248, 1078, 358], "kind": "c", "side": "L", "at": [-0.35, 0.71]},
+  {"name": "gemini_l", "box": [1090, 232, 1452, 332], "kind": "w", "side": "L", "dz": -0.08},
   {"name": "allwyn", "box": [1432, 103, 1692, 172], "kind": "w"},
   {"name": "cisco", "box": [1742, 272, 1932, 372], "kind": "d"},
   {"name": "velo", "box": [1848, 410, 2100, 462], "kind": "d", "color": "#1a1f3a"},
   {"name": "okx", "box": [1455, 435, 1742, 558], "kind": "w"},
   {"name": "mastercard", "box": [1252, 496, 1398, 594], "kind": "c"},
   {"name": "richardmille", "box": [2398, 350, 2668, 396], "kind": "d"},
-  {"name": "dpworld", "box": [2362, 394, 2692, 464], "kind": "w"},
-  {"name": "workday", "box": [3398, 596, 3596, 690], "kind": "d"}
+  {"name": "dpworld", "box": [2362, 394, 2692, 464], "kind": "w"}
  ],
- "number": {"color": "#16181b", "spots": [{"v": "side", "z": -1.25, "y": 0.75, "s": 0.14}, {"v": "top", "x": 0, "z": 2.0, "s": 0.13}]}
+ "number": {"color": "#16181b", "spots": [{"v": "side", "z": 2.6, "y": 0.31, "s": 0.1}, {"v": "top", "x": 0, "z": 2.0, "s": 0.13}]}
 }

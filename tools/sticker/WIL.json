@@ -795,12 +795,13 @@
   {"name": "duracell", "box": [1450, 133, 1682, 172], "kind": "w"},
   {"name": "kraken", "box": [1556, 316, 1744, 358], "kind": "w"},
   {"name": "claude", "box": [1760, 306, 1964, 356], "kind": "c"},
-  {"name": "barclays", "box": [1606, 452, 2070, 532], "kind": "w"},
+  {"name": "barclays", "box": [1606, 452, 2070, 532], "kind": "w", "side": "R"},
+  {"name": "barclays_li", "box": [1606, 452, 2070, 532], "kind": "w", "side": "L", "dz": 0.07, "w": 0.46},
   {"name": "komatsu", "box": [1113, 520, 1524, 607], "kind": "d", "color": "#0c1e8c", "thr": [0.2, 0.45], "dz": -0.05, "w": 0.5},
   {"name": "brillio", "box": [2438, 338, 2580, 400], "kind": "w"},
   {"name": "stephens", "box": [2430, 416, 2656, 478], "kind": "w"},
-  {"name": "betway", "box": [3382, 612, 3570, 668], "kind": "w", "at": [2.55, 0.29], "w": 0.2},
-  {"name": "jackpot", "box": [3352, 672, 3620, 708], "kind": "w", "at": [2.55, 0.215], "w": 0.24}
+  {"name": "betway", "box": [3382, 612, 3570, 668], "kind": "w", "at": [2.55, 0.265], "w": 0.16},
+  {"name": "jackpot", "box": [3352, 672, 3620, 708], "kind": "w", "at": [2.55, 0.195], "w": 0.24}
  ],
  "zones": [[0.98, 1.36, 0, 0.4]],
  "logoFile": "WIL",

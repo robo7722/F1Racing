@@ -14,9 +14,14 @@
   "vec3 col = B;",
   "col = mix(col, K, (1.0 - aaS(p.y - 0.45 - 0.2 * clamp(-1.0 - p.z, 0.0, 1.0))) * (1.0 - aaS(p.z + 0.9)));",
   "col = mix(col, K, 1.0 - aaS(p.z + 1.22));",
+  "float bl = 0.482 + 0.10 * (p.z + 0.88);",
+  "col = mix(col, Pk, band(p.y + 0.62 * p.z, -0.064, 0.256) * (1.0 - aaS(p.y - 0.80 - 0.356 * (p.z + 0.88))) * aaS(p.y - bl));",
+  "col = mix(col, K, band(p.z, -0.92, -0.3) * aaS(p.y - 0.37 - 0.19 * (p.z + 0.92)) * (1.0 - aaS(p.y - bl)));",
   "float yl = 0.80 + 0.47 * clamp(p.z + 0.95, -0.25, 0.24) + 0.17 * clamp(p.z + 0.71, 0.0, 0.42);",
   "col = mix(col, K, aaS(p.y - yl) * (1.0 - aaS(p.z + 0.28)));",
   "col = mix(col, K, (1.0 - aaS(p.y - 0.25)) * (1.0 - aaS(p.z - 1.5)));",
+  "if (p.z < -1.9 && p.y > 0.61) col = Pk;",
+  "if (p.z > 2.42 && p.y < 0.36) col = Pk;",
   "if (c > 0.5 && c < 1.5) { col = K; if (p.z > 1.9) col = Pk; if (p.z < -1.9) col = Pk; }",
   "if (c > 1.5 && c < 2.5) col = Pk;",
   "if (c > 6.5) col = Pk;",
@@ -155,7 +160,7 @@
    ],
    "kind": "w",
    "at": [
-    -1.96,
+    -2.06,
     0.5
    ]
   }

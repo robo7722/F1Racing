@@ -22,6 +22,7 @@ process.on('exit', freeSlot); process.on('SIGTERM', () => process.exit(1)); proc
   await takeSlot();
   const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
   const p = await b.newPage({ viewport: { width: 1280, height: 640 } });
+  p.setDefaultTimeout(240000);   // Aufnahmen brauchen unter Last lange
   p.on('pageerror', e => console.log('SEITENFEHLER', String(e).slice(0, 500)));
   p.on('console', m => { const t = m.text(); if (/THREE\.WebGLProgram|shader error|ERROR:/i.test(t)) console.log('SHADER', t.slice(0, 1500)); });
   await p.route('http://f1.test/**', async r => {

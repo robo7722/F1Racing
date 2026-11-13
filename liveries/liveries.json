@@ -28,7 +28,7 @@
     }
    ]
   },
-  "glsl": "vec3 B = #2080d0, Pk = #f272b6, K = #101216;\nvec3 col = B;\ncol = mix(col, K, (1.0 - aaS(p.y - 0.45 - 0.2 * clamp(-1.0 - p.z, 0.0, 1.0))) * (1.0 - aaS(p.z + 0.9)));\ncol = mix(col, K, 1.0 - aaS(p.z + 1.22));\nfloat yl = 0.80 + 0.47 * clamp(p.z + 0.95, -0.25, 0.24) + 0.17 * clamp(p.z + 0.71, 0.0, 0.42);\ncol = mix(col, K, aaS(p.y - yl) * (1.0 - aaS(p.z + 0.28)));\ncol = mix(col, K, (1.0 - aaS(p.y - 0.25)) * (1.0 - aaS(p.z - 1.5)));\nif (c > 0.5 && c < 1.5) { col = K; if (p.z > 1.9) col = Pk; if (p.z < -1.9) col = Pk; }\nif (c > 1.5 && c < 2.5) col = Pk;\nif (c > 6.5) col = Pk;\nreturn col;"
+  "glsl": "vec3 B = #2080d0, Pk = #f272b6, K = #101216;\nvec3 col = B;\ncol = mix(col, K, (1.0 - aaS(p.y - 0.45 - 0.2 * clamp(-1.0 - p.z, 0.0, 1.0))) * (1.0 - aaS(p.z + 0.9)));\ncol = mix(col, K, 1.0 - aaS(p.z + 1.22));\nfloat bl = 0.482 + 0.10 * (p.z + 0.88);\ncol = mix(col, Pk, band(p.y + 0.62 * p.z, -0.064, 0.256) * (1.0 - aaS(p.y - 0.80 - 0.356 * (p.z + 0.88))) * aaS(p.y - bl));\ncol = mix(col, K, band(p.z, -0.92, -0.3) * aaS(p.y - 0.37 - 0.19 * (p.z + 0.92)) * (1.0 - aaS(p.y - bl)));\nfloat yl = 0.80 + 0.47 * clamp(p.z + 0.95, -0.25, 0.24) + 0.17 * clamp(p.z + 0.71, 0.0, 0.42);\ncol = mix(col, K, aaS(p.y - yl) * (1.0 - aaS(p.z + 0.28)));\ncol = mix(col, K, (1.0 - aaS(p.y - 0.25)) * (1.0 - aaS(p.z - 1.5)));\nif (p.z < -1.9 && p.y > 0.61) col = Pk;\nif (p.z > 2.42 && p.y < 0.36) col = Pk;\nif (c > 0.5 && c < 1.5) { col = K; if (p.z > 1.9) col = Pk; if (p.z < -1.9) col = Pk; }\nif (c > 1.5 && c < 2.5) col = Pk;\nif (c > 6.5) col = Pk;\nreturn col;"
  },
  "AST": {
   "kind": "f1",
@@ -67,7 +67,7 @@
     }
    ]
   },
-  "glsl": "vec3 G = #00594a, K = #0d1110;\nvec3 col = mix(K, G, aaS(p.y - 0.31));\ncol = mix(col, K, aaS(p.y - 0.9) * band(p.z, -0.42, 0.05));\nif (c > 0.5 && c < 1.5) col = mix(K, G, aaS(p.y - 0.5));\nreturn col;"
+  "glsl": "vec3 G = #00594a, K = #0d1110;\nfloat yb = mix(0.31, 0.43, band(p.z, -1.6, 0.75) * aaS(abs(p.x) - 0.2)); vec3 col = mix(K, G, aaS(p.y - yb));\ncol = mix(col, K, aaS(p.y - 0.9) * band(p.z, -0.42, 0.05));\nif (c > 0.5 && c < 1.5) col = mix(K, G, aaS(p.y - 0.5));\nreturn col;"
  },
  "AUD": {
   "kind": "f1",
@@ -765,8 +765,8 @@
     {
      "v": "side",
      "z": -1.16,
-     "y": 0.795,
-     "s": 0.15
+     "y": 0.72,
+     "s": 0.11
     },
     {
      "v": "top",
@@ -776,7 +776,7 @@
     }
    ]
   },
-  "glsl": "vec3 R = #cf1018, W = #f3f3f1, K = #141416;\nvec3 col = R;\ncol = mix(col, W, aaS(p.y - 0.72) * aaS(p.z + 0.45 + 1.2 * (p.y - 0.6)) * (1.0 - aaS(p.z - 0.30)));\ncol = mix(col, K, (1.0 - aaS(p.y - 0.545)) * band(p.z, 0.80, 1.75));\nif (c > 0.5 && c < 1.5) col = K;\nif (c > 1.5 && c < 2.5) col = K;\nif (c > 6.5) col = K;\nreturn col;"
+  "glsl": "vec3 R = #cf1018, W = #f3f3f1, K = #141416;\nvec3 col = R;\ncol = mix(col, W, aaS(p.y - 0.72) * aaS(p.z + 0.45 + 1.2 * (p.y - 0.6)) * (1.0 - aaS(p.z - 0.30)));\ncol = mix(col, K, (1.0 - aaS(p.y - 0.545)) * band(p.z, 0.80, 1.75));\ncol = mix(col, K, (1.0 - aaS(p.y - 0.43)) * band(p.z, 0.55, 0.81));\nif (p.z < -1.72 && p.y > 0.42) col = K;\nif (p.z > 2.1 && p.y < 0.30) col = K;\nif (c > 0.5 && c < 1.5) col = K;\nif (c > 1.5 && c < 2.5) col = K;\nif (c > 6.5) col = K;\nreturn col;"
  },
  "HAA": {
   "kind": "f1",
@@ -808,9 +808,9 @@
    "list": [
     {
      "v": "side",
-     "z": -1.25,
-     "y": 0.75,
-     "s": 0.14
+     "z": 2.6,
+     "y": 0.31,
+     "s": 0.1
     },
     {
      "v": "top",
@@ -848,8 +848,8 @@
     {
      "v": "side",
      "z": -1.14,
-     "y": 0.8,
-     "s": 0.12
+     "y": 0.76,
+     "s": 0.11
     },
     {
      "v": "top",
@@ -900,9 +900,9 @@
    "list": [
     {
      "v": "side",
-     "z": -1.13,
-     "y": 0.8,
-     "s": 0.11
+     "z": -1.12,
+     "y": 0.76,
+     "s": 0.1
     },
     {
      "v": "top",
@@ -912,7 +912,7 @@
     }
    ]
   },
-  "glsl": "vec3 N = #0b1236, B = #101f8c, K = #14151a;\nvec3 col = mix(N, B, max(smoothstep(0.40, 0.56, p.y), aaS(p.z - 1.2)));\nif (c > 0.5 && c < 1.5) col = p.z > 1.9 ? B : mix(K, B, aaS(p.y - 0.72));\nif (c > 1.5 && c < 2.5) col = B;\nif (c > 6.5) col = K;\nreturn col;"
+  "glsl": "vec3 N = #0b1236, B = #101f8c, K = #14151a;\nvec3 col = mix(N, B, max(smoothstep(0.40, 0.56, p.y), aaS(p.z - 1.2)));\ncol = mix(col, #ffc906, band(p.z, -0.28, 0.05) * aaS(p.y - 0.88) * (1.0 - aaS(abs(p.x) - 0.11)));\nif (p.z < -1.9) col = mix(K, B, aaS(p.y - 0.72));\nif (c > 0.5 && c < 1.5) col = p.z > 1.9 ? B : mix(K, B, aaS(p.y - 0.72));\nif (c > 1.5 && c < 2.5) col = B;\nif (c > 6.5) col = K;\nreturn col;"
  },
  "WIL": {
   "kind": "f1",

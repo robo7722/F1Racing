@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Startnummern im Design der Fahrer holen:  python3 tools/sticker/numbers.py
+"""Startnummern im Design der Fahrer holen:  python3 tools/sticker/nummern.py
 Lädt die offiziellen Nummern-Grafiken (weiß, ohne Rahmen) von formula1.com und fiaformula2.com und schreibt
 liveries/num/<f1|f2>_<Nummer>.png (256 x 128, weiß auf durchsichtig). Die Farbe kommt erst im Spiel dazu ("number.color").
 Fehlt eine Grafik, zeichnet das Spiel die Nummer selbst."""
