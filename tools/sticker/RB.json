@@ -86,7 +86,8 @@
    ],
    "kind": "key",
    "color": "#d8102c",
-   "key": "#cf2f35"
+   "key": "#cf2f35",
+   "mirror": false
   },
   {
    "name": "cashapp",
@@ -152,6 +153,76 @@
     0.24
    ],
    "w": 0.34
+  },
+  {
+   "name": "visa_weg1",
+   "box": [
+    1245,
+    478,
+    1440,
+    652
+   ],
+   "kind": "key",
+   "key": "#0638a0",
+   "color": "#f2f3f6",
+   "tol": 32,
+   "side": "L"
+  },
+  {
+   "name": "visa_weg2",
+   "box": [
+    1440,
+    452,
+    1790,
+    612
+   ],
+   "kind": "key",
+   "key": "#0638a0",
+   "color": "#f2f3f6",
+   "tol": 32,
+   "side": "L"
+  },
+  {
+   "name": "visa_l",
+   "box": [
+    1245,
+    470,
+    1790,
+    652
+   ],
+   "kind": "key",
+   "key": "#0638a0",
+   "color": "#1740b8",
+   "tol": 32,
+   "side": "L",
+   "mirror": false
+  },
+  {
+   "name": "rbtext_weg",
+   "box": [
+    1090,
+    278,
+    1435,
+    372
+   ],
+   "kind": "key",
+   "key": "#d8102c",
+   "color": "#f2f3f6",
+   "side": "L"
+  },
+  {
+   "name": "rbtext_l",
+   "box": [
+    1090,
+    278,
+    1435,
+    372
+   ],
+   "kind": "key",
+   "key": "#d8102c",
+   "color": "#d8102c",
+   "side": "L",
+   "mirror": false
   }
  ],
  "number": {

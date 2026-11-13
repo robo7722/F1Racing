@@ -63,7 +63,8 @@
    ],
    "kind": "key",
    "key": "#ed73b1",
-   "color": "#f272b6"
+   "color": "#f272b6",
+   "mirror": false
   },
   {
    "name": "eni",

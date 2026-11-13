@@ -2986,10 +2986,12 @@ for (const k in LIVMAN) { const m = LIVMAN[k]; if (!m || !SHEET_BOX[m.kind]) con
   if (m.liv && LIVS[k]) Object.assign(LIVS[k], m.liv); else if (m.liv && m.kind === 'f2') LIVS[k] = { kind: 'f2', metal: .25, ...m.liv };   // neue F2-Lackierung nur aus der Datei
   if (m.kind === 'f2') for (const c of m.drivers || []) { const d = F2_DRIVERS.find(x => x[0] === c); if (d && LIVS[k]) d[5] = k.slice(3); }   // drivers = Fahrer, die diese Lackierung fahren
   if (m.glsl) LIVERY[k] = m.glsl.replace(/#([0-9a-f]{6})/gi, (q, h) => lc(parseInt(h, 16))); }
-const DECAL_TEX = {};
+const DECAL_TEX = {}, DECAL_SMALL = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
 function decalUniforms(tk) { if (DECAL_TEX[tk]) return DECAL_TEX[tk];
   const U = DECAL_TEX[tk] = { uDecal: { value: null }, uDecalOn: { value: 0 }, uSheet: { value: null }, uSheetOn: { value: 0 }, uNum: { value: null }, uNumOn: { value: 0 }, uNumCol: { value: new THREE.Color(1, 1, 1) } };
-  const ld = (url, tx, on) => { tx.value = new THREE.TextureLoader().load(url, t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.needsUpdate = true; on.value = 1; }, undefined, () => {}); };
+  const ld = (url, tx, on) => { tx.value = new THREE.TextureLoader().load(url, t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+    if (DECAL_SMALL && t.image && t.image.width > 1024) { const c = document.createElement('canvas'); c.width = t.image.width >> 1; c.height = t.image.height >> 1; c.getContext('2d').drawImage(t.image, 0, 0, c.width, c.height); t.image = c; }   // Handy/Tablet: halbe Auflösung spart drei Viertel des Grafikspeichers (ein Feld hat bis zu 16 Bögen)
+    t.needsUpdate = true; on.value = 1; }, undefined, () => {}); };
   if (DECALS[tk]) ld('logos/' + DECALS[tk].file + '.png', U.uDecal, U.uDecalOn); if (SHEETS[tk]) ld('liveries/' + tk + '.png', U.uSheet, U.uSheetOn);
   return U; }
 const hasDecal = tk => !!(DECALS[tk] || SHEETS[tk] || NUMS[tk]);
