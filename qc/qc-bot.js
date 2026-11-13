@@ -83,7 +83,7 @@ function withVoidScene(fn) {
   hide.forEach(o => o.visible = false); A.scene.background = null; r.setClearColor(0xff00ff, 0);
   try { return fn(); } finally { hide.forEach((o, k) => o.visible = vis[k]); A.scene.background = bg; r.setClearColor(cc, ca); r.setRenderTarget(prev); }
 }
-function renderTo(rt, cam, buf) { const r = A.renderer, prev = r.getRenderTarget(); r.setRenderTarget(rt); r.clear(); r.render(A.scene, cam); r.readRenderTargetPixels(rt, 0, 0, TW, TH2, buf); r.setRenderTarget(prev); }
+function renderTo(rt, cam, buf) { const r = A.renderer, prev = r.getRenderTarget(); r.setRenderTarget(rt); r.clear(); if (A.renderCam) A.renderCam(cam); else r.render(A.scene, cam);   /* wie das Spiel zeichnen (Cockpit: erst die Welt, dann das eigene Auto) */ r.readRenderTargetPixels(rt, 0, 0, TW, TH2, buf); r.setRenderTarget(prev); }
 const isVoid = (b, i) => b[i + 3] === 0;   /* nichts gezeichnet: der Hintergrund bleibt durchsichtig (Alpha 0) – jede deckende oder halbdurchsichtige Fläche hinterlässt Alpha > 0 */
 
 // Prüfung einer Ansicht: (1) Blick nach unten ins Leere = Loch, (2) Z-Fighting: die Szene zweimal mit winzig verschobener Kamera zeichnen –

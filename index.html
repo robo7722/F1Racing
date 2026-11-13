@@ -1916,6 +1916,29 @@ class SunRaysPass extends Pass {
     fu.tSunVis.value = this.vis.texture; fu.tRays.value = this.rt.texture;
   }
 }
+// Cockpit/T-Cam: die Nahgrenze muss für das eigene Cockpit 7–8 cm klein sein, das macht den Tiefenpuffer in der Ferne aber grob
+// (Häuser, Tribünen, Skyline flimmerten). Darum zwei Durchgänge: erst die Welt mit Nahgrenze 0,8 m, dann – Tiefe gelöscht – nur das
+// eigene Auto (Ebene 6) mit kleiner Nahgrenze. Die Schattenkarte aus dem ersten Durchgang bleibt (sonst fehlte dem Boden der Autoschatten).
+const SPLIT_L = 6, WORLD_NEAR = 0.8;
+const splitOn = () => running && (S.cam === 2 || S.cam === 3) && !!(pl && pl.mesh && pl.mesh.g) && camera.near < 0.2;
+function drawOwnCar(cam = camera) {
+  const g = pl.mesh.g; g.traverse(o => o.layers.enable(SPLIT_L));
+  const bg = scene.background, sa = renderer.shadowMap.autoUpdate, ac = renderer.autoClear, mask = cam.layers.mask;
+  renderer.autoClear = false; renderer.shadowMap.autoUpdate = false; scene.background = null; cam.layers.set(SPLIT_L);
+  renderer.clearDepth(); renderer.render(scene, cam);
+  cam.layers.mask = mask; scene.background = bg; renderer.shadowMap.autoUpdate = sa; renderer.autoClear = ac;
+}
+function withWorldNear(fn, cam = camera) { const n = cam.near; cam.near = n * (WORLD_NEAR / 0.07);   /* verhältnisgleich (0,07 -> 0,8 m), damit Prüfungen mit veränderter Nahgrenze weiter greifen */ cam.updateProjectionMatrix(); try { fn(); } finally { cam.near = n; cam.updateProjectionMatrix(); } }
+// QC-Bot: eine beliebige Kamera so zeichnen wie das Spiel (Cockpit-Nahgrenze -> zwei Durchgänge) in das gerade gesetzte Ziel
+function renderLikeGame(cam) { if (!(cam.near < 0.2 && pl && pl.mesh && pl.mesh.g)) return renderer.render(scene, cam); withWorldNear(() => renderer.render(scene, cam), cam); drawOwnCar(cam); }
+class SplitRenderPass extends RenderPass {
+  render(r, wb, rb, dt, mask) {
+    if (!splitOn()) return super.render(r, wb, rb, dt, mask);
+    withWorldNear(() => super.render(r, wb, rb, dt, mask));
+    r.setRenderTarget(this.renderToScreen ? null : rb); drawOwnCar();
+  }
+}
+function renderPlain() { if (!splitOn()) return renderer.render(scene, camera); renderer.setRenderTarget(null); withWorldNear(() => renderer.render(scene, camera)); drawOwnCar(); }
 let composer = null, bloomPass = null, finishPass = null, raysPass = null;
 function buildComposer() {
   if (composer) { composer.renderTarget1.dispose(); composer.renderTarget2.dispose(); composer = null; }
@@ -1923,7 +1946,7 @@ function buildComposer() {
   const ultra = S.gfx === 'ultra';
   const rt = new THREE.WebGLRenderTarget(Math.max(1, innerWidth), Math.max(1, innerHeight), { type: THREE.HalfFloatType, samples: ultra || !isTouch ? 4 : 2 });
   composer = new EffectComposer(renderer, rt);
-  composer.addPass(new RenderPass(scene, camera));
+  composer.addPass(new SplitRenderPass(scene, camera));
   if (ultra) { // Umgebungsverdeckung in Echtzeit nur noch bei Ultra – sonst kommt sie gebacken aus der Schatten-Textur
     syncAoCam(); const ao = new GTAOPass(scene, aoCam, innerWidth, innerHeight), aoS = ultra ? 0.75 : 0.5, aoSet = ao.setSize.bind(ao); ao.setSize = (w, h) => aoSet(Math.max(1, Math.round(w * aoS)), Math.max(1, Math.round(h * aoS)));
     ao.updateGtaoMaterial({ radius: 1.6, distanceExponent: 1.6, thickness: 2.5, scale: 1.1, samples: ultra ? 16 : 8 }); ao.updatePdMaterial({ radius: ultra ? 6 : 5, rings: 2, samples: ultra ? 12 : 8 });
@@ -2592,7 +2615,11 @@ function adsTex(TH) {
   });
 }
 function beltTex(TH) { return canvasTex(128, 32, (g, w, h) => { for (let i = 0; i < 4; i++) { g.fillStyle = TH.belt[i % 2]; g.fillRect(i * 32, 0, 32, h); } g.fillStyle = 'rgba(0,0,0,.35)'; for (let y = 6; y < h; y += 9) g.fillRect(0, y, w, 1); }); }
-function boardTex(txt) { return canvasTex(64, 64, (g, w, h) => { g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); g.fillStyle = '#111'; g.font = '900 30px system-ui,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, w / 2, h / 2 + 2); g.strokeStyle = '#111'; g.lineWidth = 4; g.strokeRect(2, 2, w - 4, h - 4); }); }
+// Bremsschild wie an echten Strecken: weiße Tafel (≈ 3:2) ohne Rahmen, große schwarze Ziffern, unten leicht verschmutzt
+function boardTex(txt) { return canvasTex(256, 172, (g, w, h) => { g.fillStyle = '#f4f4f1'; g.fillRect(0, 0, w, h);
+  const gr = g.createLinearGradient(0, h * .7, 0, h); gr.addColorStop(0, 'rgba(90,80,60,0)'); gr.addColorStop(1, 'rgba(90,80,60,.22)'); g.fillStyle = gr; g.fillRect(0, h * .7, w, h * .3);
+  g.fillStyle = '#121212'; g.font = '900 ' + (txt.length > 2 ? 104 : 118) + 'px "Arial Black",Arial,system-ui,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, w / 2, h / 2 + 6, w * .9);
+  g.strokeStyle = 'rgba(0,0,0,.18)'; g.lineWidth = 3; g.strokeRect(1.5, 1.5, w - 3, h - 3); }); }
 
 /* ======================= Geometrie-Helfer ======================= */
 const _v1 = new THREE.Vector3(), _v2 = new THREE.Vector3(0, 1, 0), _q = new THREE.Quaternion();
@@ -4403,7 +4430,7 @@ function fillGroundHoles(dry = false) {
       const wx = x / Q, wz = z / Q, [d, j] = nearestDist(wx, wz), lat = (wx - PX[j]) * RX[j] + (wz - PZ[j]) * RZ[j]; if (Math.abs(lat) >= (lat < 0 ? WL[j] : WR[j]) - 0.6 || d > 200) continue;
       const sf = surface(j, lat); if (sf !== 'gravel' && sf !== 'runoff') continue;   /* nur wo die Fahrphysik Kies/Auslauf meint, aber nichts gezeichnet ist (Rasen zwischen den Spielberger Ausläufen meldet surface() als Gras) – typisch innen in Haarnadeln, wo foldLim die Streifen kürzt */
       let enc = 0; for (const [ux, uz] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) for (let r = 1; r <= 12 * Q; r++) if (C.has(key(x + ux * r, z + uz * r))) { enc++; break; }
-      if (enc < 7) continue;   /* nur eingeschlossene Lücken – nicht den Außenrand eines Kiesbetts zackig verbreitern */
+      if (enc < (Math.abs(lat) > (lat < 0 ? WL[j] : WR[j]) - 4 ? 5 : 7)) continue;   /* nur eingeschlossene Lücken – nicht den Außenrand eines Kiesbetts zackig verbreitern; direkt vor der Mauer fehlt zur Mauerseite naturgemäß der Nachbar (Spielberg 2965 m: Rasenstreifen am Auslaufende) */
       const mat = pick(x, z, sf); if (!mat) continue; (groups.get(mat) || groups.set(mat, []).get(mat)).push([x, z]);
       const sk = Math.round(j * DS / 20) * 20; XZ.set(sk, (XZ.get(sk) || 0) + 1); } }
   if (dry) return [...groups.values()].reduce((a, L2) => a + L2.length, 0);   /* Testlauf: nur zählen, was noch offen wäre */
@@ -5388,7 +5415,13 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   // Bremsschilder 150/100/50
   {
     const bTex = { 150: boardTex('150'), 100: boardTex('100'), 50: boardTex('50') }; Object.values(bTex).forEach(t => t.userData.own = true);
-    const postM = lam({ color: 0x333333 }), boardG = new THREE.PlaneGeometry(1.3, 1.3);
+    // Freistehend: niedriger Keil (A-Rahmen) im Gras, Vorderseite ~15° nach hinten geneigt. An der Mauer: Tafel direkt an Mauer/Leitplanke, schräg zum Verkehr gedreht.
+    const BW = 1.2, BH = 0.8, TILT = 0.26, sideM = lam({ color: 0xe6e6e2 }), backM = lam({ color: 0x5a5f66 });
+    const panelG = new THREE.BoxGeometry(BW, BH, 0.05).translate(0, BH / 2, 0.025), wedgeF = panelG.clone().rotateX(-TILT).translate(0, 0.06, 0);
+    const BH2 = BH * Math.cos(TILT) / Math.cos(0.42);   // Rückwand trifft die Oberkante der Vorderseite
+    const backG = new THREE.BoxGeometry(BW - 0.04, BH2, 0.03).translate(0, BH2 / 2, -0.015).rotateX(0.42).translate(0, 0.06, -BH * Math.sin(TILT) - BH2 * Math.sin(0.42) + 0.02);
+    const feetG = new THREE.BoxGeometry(BW + 0.06, 0.06, 0.62).translate(0, 0.03, -0.3);
+    const brdM = {}; for (const d of [150, 100, 50]) for (const lit of [0, 1]) brdM[d + '_' + lit] = [sideM, sideM, sideM, sideM, lam({ map: bTex[d], emissive: lit ? 0x333333 : 0x000000 }), backM];
     // Bremszonen: lokales Tempo-Minimum mit deutlichem Tempoabbau davor; Bezugspunkt ist der Kurveneingang (Einlenkpunkt)
     const zones = [], back = Math.round(320 / DS);
     for (let m = 0; m < N; m++) {
@@ -5399,13 +5432,25 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       if (zones.length && ((t - zones[zones.length - 1].t + N) % N) * DS < 260) continue;   // Schikanen: nur die erste Kurve
       zones.push({ t, m });
     }
+    window.__brakeBoards = [];   // Prüfhilfe: Lage aller Bremsschilder
     for (const { t, m } of zones) {
-      const side = KS[m] > 0 ? -1 : 1;
+      const side = KS[m] > 0 ? -1 : 1, nb = side < 0 ? 1 : 2, bIdx = d => (t - Math.round(d / DS) + N) % N;
+      // Mauer/Leitplanke so nah am Asphalt, dass kein Schild davor Platz hat -> die ganze Reihe an die Mauer (einheitlich je Bremszone); sonst freistehend im Gras bzw. am Rand des Auslaufs
+      const tight = [150, 100, 50].some(d => { const i = bIdx(d); return !(NOWALL[i] & nb) && wallAt(i, side) < HW[i] + 5.2; });
       for (const dist of [150, 100, 50]) {
-        const bi = (t - Math.round(dist / DS) + N) % N; if (Math.abs(KS[bi]) > 1 / 120) continue;   // Schild nicht mitten in eine vorige Kurve
-        const onWall = TH.wallKind === 'concrete' && TH.night, w = wallAt(bi, side), lat = onWall ? side * (w - 0.35) : side * Math.max(HW[bi] + 2.2, Math.min(HW[bi] + 4, w - 1)), p = trackAt(t * DS - dist, lat);
-        const b = new THREE.Mesh(boardG, lam({ map: bTex[dist], emissive: onWall ? 0x333333 : 0x000000 })); b.position.set(p.x, onWall ? TH.wallH + 1.1 : 1.6, p.z); b.rotation.y = p.h + Math.PI; trackGroup.add(b);
-        if (!onWall) { const pole = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.0, 0.12), postM); pole.position.set(p.x, 0.5, p.z); trackGroup.add(pole); }
+        const bi = bIdx(dist); if (Math.abs(KS[bi]) > 1 / 120) continue;   // Schild nicht mitten in eine vorige Kurve
+        const w = wallAt(bi, side), onWall = tight && !(NOWALL[bi] & nb) && w < HW[bi] + 9, s0 = t * DS - dist;
+        // an der Mauer: ohne Mast direkt am Fangzaun, Tafelmitte 3 m hoch (über Reifenstapeln/Tecpro); ohne Zaun flach an der Mauer selbst
+        const onFence = onWall && hi && fenceAt(bi, side);
+        const lat = onWall ? side * (w - (onFence ? 0.05 : w > HW[bi] + 6 ? 0.85 : TH.wallKind === 'armco' ? 0.22 : 0.06)) : side * Math.max(HW[bi] + 2.4, Math.min(HW[bi] + 4.5, w - 1.6));
+        const p = trackAt(s0, lat), pf = trackAt(s0 + 1, lat), po = trackAt(s0, lat + side);
+        const fx = pf.x - p.x, fz = pf.z - p.z, fl = Math.hypot(fx, fz) || 1, ox = po.x - p.x, oz = po.z - p.z, ol = Math.hypot(ox, oz) || 1;   // f: Fahrtrichtung, o: nach außen (zur Mauer)
+        const a = onWall ? 0 : 0.22,   /* an Zaun/Mauer: steht im rechten Winkel heraus, Schrift zum anrollenden Verkehr */ nx = -fx / fl * Math.cos(a) - ox / ol * Math.sin(a), nz = -fz / fl * Math.cos(a) - oz / ol * Math.sin(a);   // Blick zum anrollenden Verkehr, leicht zur Strecke gedreht
+        const tx = -ox / ol * Math.cos(a) + fx / fl * Math.sin(a), tz = -oz / ol * Math.cos(a) + fz / fl * Math.sin(a);   // in der Tafelebene von der Mauer weg
+        const lit = TH.night ? 1 : 0, g = new THREE.Group(); g.rotation.y = Math.atan2(nx, nz);
+        if (onWall) { g.position.set(p.x + tx * (BW / 2 + 0.02), onFence ? 3.0 - BH / 2 : Math.max(0.12, TH.wallH - BH - 0.08), p.z + tz * (BW / 2 + 0.02)); g.add(new THREE.Mesh(panelG, brdM[dist + '_' + lit])); }
+        else { g.position.set(p.x, 0, p.z); g.add(new THREE.Mesh(wedgeF, brdM[dist + '_' + lit]), new THREE.Mesh(backG, backM), new THREE.Mesh(feetG, backM)); }
+        g.traverse(o => { o.castShadow = true; }); trackGroup.add(g); window.__brakeBoards.push({ s: s0, lat, side, onWall, dist });
       }
     }
   }
@@ -5901,13 +5946,16 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     inMarina = pip;
     const sh = new THREE.Shape(P.map(([x, z]) => new THREE.Vector2(x, -z))), wg = new THREE.ShapeGeometry(sh, 1); wg.rotateX(-Math.PI / 2); wg.translate(0, 0.08, 0);
     const water = new THREE.Mesh(wg, new THREE.MeshStandardMaterial({ color: 0x0a1a2a, roughness: .22, metalness: .4, envMapIntensity: 1.0, ...po(-1) })); water.receiveShadow = true; trackGroup.add(water);
-    const qp = [], lampsP = []; let acc = 0;
+    const qp = [], kw = [], lampsP = []; let acc = 0;
     for (let i = 0; i < P.length; i++) { const [ax, az] = P[i], [bx, bz] = P[(i + 1) % P.length], dx = bx - ax, dz = bz - az, l = Math.hypot(dx, dz) || 1, nx = -dz / l, nz = dx / l, w = 1.2;
       qp.push(ax - nx * w, 0.6, az - nz * w, bx - nx * w, 0.6, bz - nz * w, ax + nx * w, 0.6, az + nz * w, ax + nx * w, 0.6, az + nz * w, bx - nx * w, 0.6, bz - nz * w, bx + nx * w, 0.6, bz + nz * w);
+      for (const s of [-1, 1]) { const x0 = ax + nx * w * s, z0 = az + nz * w * s, x1 = bx + nx * w * s, z1 = bz + nz * w * s; kw.push(x0, 0, z0, x1, 0, z1, x0, 0.6, z0, x0, 0.6, z0, x1, 0, z1, x1, 0.6, z1); }
       acc += l; if (acc > 24) { acc = 0; lampsP.push([ax, az]); } }
     const qg = new THREE.BufferGeometry(); qg.setAttribute('position', new THREE.Float32BufferAttribute(qp, 3)); qg.computeVertexNormals();
     trackGroup.add(new THREE.Mesh(qg, lam({ color: 0xb8b2a6, side: THREE.DoubleSide })));
-    const wall = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(P.map(([x, z]) => new THREE.Vector3(x, 0.3, z)), true), 520, 0.5, 4, true), lam({ color: 0x8a8478 })); trackGroup.add(wall);
+    // Kaimauer: senkrechte Kanten der Promenade bis zum Wasser (vorher ein Rohr, das die Promenade schräg durchstieß – flimmerte in der Ferne)
+    const kg = new THREE.BufferGeometry(); kg.setAttribute('position', new THREE.Float32BufferAttribute(kw, 3)); kg.computeVertexNormals();
+    trackGroup.add(new THREE.Mesh(kg, lam({ color: 0x8a8478, side: THREE.DoubleSide })));
     const lm = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.12, 0.16, 4.5, 6).translate(0, 2.85, 0), lam({ color: 0x2a2c30 }), lampsP.length), lh = new THREE.InstancedMesh(new THREE.SphereGeometry(0.42, 10, 8).translate(0, 5.2, 0), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 1.8, 1.2) }), lampsP.length);
     const m4 = new THREE.Matrix4(); lampsP.forEach(([x, z], k) => { m4.makeTranslation(x, 0, z); lm.setMatrixAt(k, m4); lh.setMatrixAt(k, m4); }); trackGroup.add(lm, lh);
     const sp = []; for (let k = 0; k < 900; k++) { let x, z, t = 0; do { x = Math.random() * 1400 - 700; z = Math.random() * 1200; t++; } while (!pip(x, z) && t < 40); if (t < 40) sp.push(x, 0.12, z); }   // Lichtreflexe auf dem Wasser
@@ -6143,8 +6191,8 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       const mbsM = facadeMat({ wall: '#9aa1aa', frame: '#b4bac2', glass: '#1c232c', glassTop: '#3e4b5a', litP: .22, emi: 0xffffff, emiI: 0.55, cornice: 'rgba(0,0,0,0)', roof: '#5a5e66', seed: 51, bays: 9, floors: 55, bayM: 4, floorM: H / 55, winW: .92, winH: .62 });   /* echte Fassade: waagerechte Glas-/Betonbänder, nachts nur vereinzelt erleuchtete Zimmer, keine Anstrahlung; Raster passt genau auf die Turmmaße */
       for (const t of [-104, 0, 104]) {
         const east = new THREE.Mesh(new THREE.BoxGeometry(20, H, 36).translate(13.5, H / 2, -2.5), mbsM); east.position.set(-0.5, 0, -t + 2.5); g.add(east);   // Kanten auf Fensterachsen (Fassaden-UV beginnt bei −0,5)
-        const wg = new THREE.BoxGeometry(20, H, 36, 1, 12, 1), P = wg.attributes.position;
-        for (let i = 0; i < P.count; i++) { const y = P.getY(i) + H / 2, f = 1 - y / H; P.setX(i, P.getX(i) - 10 - 26 * f * f); P.setY(i, y); }
+        const HB = H - 0.5, wg = new THREE.BoxGeometry(20, HB, 35.4, 1, 12, 1), P = wg.attributes.position;   /* geschwungene Scheibe 30 cm schmaler und 50 cm niedriger: oben überlappt sie die senkrechte – gleiche Vorder-/Rück-/Dachflächen flimmerten (Z-Fighting) */
+        for (let i = 0; i < P.count; i++) { const y = P.getY(i) + HB / 2, f = 1 - y / HB; P.setX(i, P.getX(i) - 10 - 26 * f * f); P.setY(i, y); }
         wg.translate(0, 0, -2.5); wg.computeVertexNormals(); const west = new THREE.Mesh(wg, mbsM); west.position.z = -t + 2.5; g.add(west);
         const gap = new THREE.Mesh(new THREE.BoxGeometry(2, H * 0.92, 30).translate(1.5, H * 0.46, 0), glow(0x8c86ff, 0.95)); gap.position.z = -t; g.add(gap);   // Lichtfuge zwischen den Scheiben
       }
@@ -6161,7 +6209,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         const bg2 = grp(cx, cz, rot, false); for (let k = 0; k < 5; k++) { const b = new THREE.Mesh(new THREE.CylinderGeometry(14, 0.8, 1400, 12, 1, true).translate(0, 700, 0), bm); const pv = new THREE.Group(); pv.position.set(-2, H + 12, -120 + k * 60); pv.add(b); bg2.add(pv); SGT.list.push([pv, k]); } }
       // Einkaufs- und Theater-Sockel am Wasser
       const podM = stone('#c9c2b4', 52);
-      for (const [z, w2] of [[-105, 70], [0, 80], [105, 70]]) { const p = new THREE.Mesh(new THREE.BoxGeometry(46, 24, w2).translate(-58, 12, z), podM); g.add(p); const r2 = new THREE.Mesh(new THREE.CylinderGeometry(w2 / 2, w2 / 2, 46, 24, 1, false, 0, Math.PI).rotateZ(Math.PI / 2).translate(-58, 24, z), lam({ color: 0x9aa4ae, roughness: .4, metalness: .5 })); r2.scale.y = 0.35; g.add(r2); }
+      for (const [z, w2] of [[-105, 70], [0, 80], [105, 70]]) { const p = new THREE.Mesh(new THREE.BoxGeometry(46, 24, w2).translate(-58, 12, z), podM); g.add(p); const r2 = new THREE.Mesh(new THREE.CylinderGeometry(w2 / 2 - 0.3, w2 / 2 - 0.3, 45.4, 24, 1, false, 0, Math.PI).rotateZ(Math.PI / 2).translate(-58, 24, z)   /* Tonnendach etwas kleiner als der Sockel: Stirnseiten lagen genau in dessen Seitenwänden (Flimmern) */, lam({ color: 0x9aa4ae, roughness: .4, metalness: .5 })); r2.scale.y = 0.35; g.add(r2); }
       excl.push([cx, cz, 200]);
       // ArtScience Museum: Lotusblüte aus zehn Blättern
       { const [lx0, lz0] = ll(103.8593, 1.2863), [lx, lz] = clearOf(lx0, lz0, 45), lg = grp(lx, lz, 0.4), pm = lam({ color: 0xb8c0ca, roughness: .35, metalness: .2, emissive: 0x08080a });
@@ -8207,7 +8255,7 @@ let camTY = 0, camH = 0, orbitT = 0, camK = 0, camAcc = 0, camLat = 0, camRoll =
 function toggleCam() { S.cam = (S.cam + 1) % (pl && pl.mesh && pl.mesh.tv ? 4 : 3); save(); }   // 0 Verfolger, 1 Hubschrauber, 2 Helm/Cockpit, 3 TV-Kamera über dem Halo (nur F1/F2)
 function updateCamera(dt) {
   let tx, tz;
-  { const wn = running && S.cam === 3 ? 0.08 : running && S.cam === 2 ? 0.07 : 0.8;   /* Cockpit: Nahgrenze 7 cm – bei 20 cm schnitt sie beim Umschauen und in Kurven die Cockpitflanken auf (Blick ins Innere) */ if (camera.near !== wn) { camera.near = wn; camera.updateProjectionMatrix(); } }   /* größere Nahgrenze = viel genauerer Tiefenpuffer in der Ferne (kein Flimmern, keine falsche Reihenfolge) */
+  { const wn = running && S.cam === 3 ? 0.07 : running && S.cam === 2 ? 0.07 : 0.8;   /* Cockpit: Nahgrenze 7 cm – bei 20 cm schnitt sie beim Umschauen und in Kurven die Cockpitflanken auf (Blick ins Innere) */ if (camera.near !== wn) { camera.near = wn; camera.updateProjectionMatrix(); } }   /* größere Nahgrenze = viel genauerer Tiefenpuffer in der Ferne (kein Flimmern, keine falsche Reihenfolge) */
   if (!running) {
     orbitT += dt; const s0 = modL(orbitT * 8 + 220), c = trackAt(s0, 0), ce = FLAT ? 0 : ELEV[c.i]; tx = c.x; tz = c.z; camTY = ce;
     const gd = Math.min(Math.abs(modL(s0 + 200) - 100), 400), lift = 3.2 * clamp(1 - (gd - 100) / 80, 0, 1);   // über der Startaufstellung etwas höher
@@ -9064,7 +9112,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.51'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.53'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -9147,7 +9195,7 @@ function tick(now, forced) {
   if (HORIZ) { HORIZ.position.x = camera.position.x; HORIZ.position.z = camera.position.z; }
   // Pause: das Bild steht still, also nur zwei Bilder zeichnen und dann die Grafikkarte schonen
   if (running && paused) { if (pauseDrawn >= 2) return; pauseDrawn++; } else pauseDrawn = 0;
-  if (!window.__norender && !(!running && settingsFrom === 'menu' && !$('#settings').classList.contains('hidden')) && !(!running && !SHOW.on && !$('#menu').classList.contains('hidden'))) {   /* Einstellungen aus dem Menü: nichts neu zeichnen – sonst lief dahinter die Strecke des letzten Rennens weiter */   /* Hauptmenü: fester Hintergrund statt Kamerafahrt – dort wird die Strecke nicht gerendert (spart Akku) */ if (SHOW.on && !running && !$('#menu').classList.contains('hidden')) { showroomFrame(dt); const bo = BAKE.u.bakeOn.value, et = ENVP.tex; BAKE.u.bakeOn.value = 0; if (SHOW.env) ENVP.tex = SHOW.env; renderer.render(SHOW.scene, SHOW.cam); ENVP.tex = et; BAKE.u.bakeOn.value = bo;   /* im Showroom spiegelt sich das Studio, nicht die Strecke */ } else if (composer) { syncAoCam(); composer.render(dt); } else renderer.render(scene, camera); }
+  if (!window.__norender && !(!running && settingsFrom === 'menu' && !$('#settings').classList.contains('hidden')) && !(!running && !SHOW.on && !$('#menu').classList.contains('hidden'))) {   /* Einstellungen aus dem Menü: nichts neu zeichnen – sonst lief dahinter die Strecke des letzten Rennens weiter */   /* Hauptmenü: fester Hintergrund statt Kamerafahrt – dort wird die Strecke nicht gerendert (spart Akku) */ if (SHOW.on && !running && !$('#menu').classList.contains('hidden')) { showroomFrame(dt); const bo = BAKE.u.bakeOn.value, et = ENVP.tex; BAKE.u.bakeOn.value = 0; if (SHOW.env) ENVP.tex = SHOW.env; renderer.render(SHOW.scene, SHOW.cam); ENVP.tex = et; BAKE.u.bakeOn.value = bo;   /* im Showroom spiegelt sich das Studio, nicht die Strecke */ } else if (composer) { syncAoCam(); composer.render(dt); } else renderPlain(); }
   if (window.__qcF) window.__qcF(now, forced);   /* QC-Bot: Bildzeiten messen und direkt nach dem Zeichnen Bilder auswerten */
 }
 applyGfx();
@@ -9263,7 +9311,7 @@ window.__S = () => S; window.__mesh = () => ({ ALL, pl, MODELS, camera });   /* 
 window.__laps = () => ais.map(a => a.code + ':' + (a.lapTimes || []).map(t => t.toFixed(1)).join('/'));
 window.__dbg = () => ({ L, N, raceState, running, paused, lightsT, raceTime, plD: pl.d, plV: pl.v, plLat: pl.lat, order: order.map(c => c.code), best: pl.best, fastest, resultsShown, aiBest: ais.slice(0, 5).map(a => a.code + ':' + (a.best || 0).toFixed(1)) });
 // QC-Bot (qc/qc-bot.js, Start mit ?qc): Zugriff auf den Spielzustand, ohne das Spiel selbst zu verändern
-window.__qcApi = { THREE, renderer, camera, scene, trackGroup, sky, skyBox, S, TRACKS, SERIES, GP, tick: (t, f) => tick(t, f), renderNow: () => composer ? composer.render(0) : renderer.render(scene, camera), surface: (i, l) => surface(i, l), nearestDist: (x, z) => nearestDist(x, z), wallAt: (j, sd) => wallAt(j, sd), groundY: (x, z) => groundY(x, z),
+window.__qcApi = { THREE, renderer, camera, scene, trackGroup, sky, skyBox, S, TRACKS, SERIES, GP, tick: (t, f) => tick(t, f), renderNow: () => composer ? composer.render(0) : renderPlain(), renderCam: cam => renderLikeGame(cam), surface: (i, l) => surface(i, l), nearestDist: (x, z) => nearestDist(x, z), wallAt: (j, sd) => wallAt(j, sd), groundY: (x, z) => groundY(x, z),
   get pl() { return pl; }, get ais() { return ais; }, get running() { return running; }, get paused() { return paused; }, get raceState() { return raceState; }, get raceTime() { return raceTime; }, get SER() { return SER; },
   get TRK() { return TRK; }, get TH() { return TH; }, get N() { return N; }, get L() { return L; }, get DS() { return DS; }, get PX() { return PX; }, get PZ() { return PZ; }, get RX() { return RX; }, get RZ() { return RZ; }, get TX() { return TX; }, get TZ() { return TZ; },
   get PAVEZ() { return PAVEZ; }, get POCK() { return POCK; }, get PVBL() { return PVBL; }, get PVBR() { return PVBR; }, get KERBL() { return KERBL; }, get KERBR() { return KERBR; }, get NOWALL() { return NOWALL; }, get GRL() { return GRL; }, get GRR() { return GRR; }, get MC_CHIC() { return MC_CHIC; },
