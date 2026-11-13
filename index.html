@@ -7381,24 +7381,21 @@ function carStep(c, thr, brk, dt, limit) {
   c.v = Math.max(0, c.v + a * dt);
   if (limit !== undefined && c.v > limit) c.v = Math.max(limit, v0 - BRAKE * dt);
   c.thr = thr; c.brk = Math.max(brk, c.v < v0 + a * dt - 0.05 ? 1 : 0);
-  let yawMax = Math.min(c.v / 6, GRIP * (c.gripMul || 1) / Math.max(c.v, 1)) * sf[3] * (1 - 0.55 * Math.min(1, (c.slideV || 0) / 9));   // rutscht das Auto quer, greift die Lenkung weniger
+  let yawMax = Math.min(c.v / 6, GRIP * (c.gripMul || 1) / Math.max(c.v, 1)) * sf[3];
   c.yawR = -c.steer * yawMax;   // tatsächliche Gierrate (für die Kamera)
   c.h -= c.steer * yawMax * dt;
-  // Drehung nach Kontakt: das Auto dreht sich, fliegt aber zunächst in der alten Richtung weiter (Schwung bleibt erhalten) – der Unterschied wird zum Querrutschen, das die Reifen erst abbauen müssen
-  if (c.yawKick) { const vx = Math.sin(c.h) * c.v + (c.sx || 0), vz = Math.cos(c.h) * c.v + (c.sz || 0); c.h += c.yawKick * dt; const fx = Math.sin(c.h), fz = Math.cos(c.h); c.v = Math.max(0, vx * fx + vz * fz); c.sx = vx - fx * c.v; c.sz = vz - fz * c.v;
-    c.yawKick *= Math.exp(-2.6 * dt); if (Math.abs(c.yawKick) < 0.004) c.yawKick = 0; }
+  if (c.yawKick) { c.h += c.yawKick * dt; c.yawKick *= Math.exp(-3.4 * dt); if (Math.abs(c.yawKick) < 0.004) c.yawKick = 0; }   // Drehimpuls nach Kontakt klingt ab
   // Rutschen nach Kontakt (Weltkoordinaten): der Anteil in Fahrtrichtung geht ins Tempo, den Queranteil bauen die Reifen ab –
   // Seitenkraft steigt mit der Rutschgeschwindigkeit und sättigt an der Haftgrenze (weniger Grip auf Gras/Kies = weiter rutschen)
   if (c.sx || c.sz) { const fx = Math.sin(c.h), fz = Math.cos(c.h); let la = c.sx * fz - c.sz * fx; c.v = Math.max(0, c.v + c.sx * fx + c.sz * fz);
-    const dec = tyreGrip(c, sf) * Math.tanh(Math.abs(la) / 2.5) * dt; la = Math.abs(la) <= dec || Math.abs(la) < 0.02 ? 0 : la - Math.sign(la) * dec; c.slideV = Math.abs(la);
-    c.sx = fz * la; c.sz = -fx * la; c.x += c.sx * dt; c.z += c.sz * dt; } else c.slideV = 0;
+    const dec = tyreGrip(c, sf) * Math.tanh(Math.abs(la) / 1.2) * dt; la = Math.abs(la) <= dec || Math.abs(la) < 0.02 ? 0 : la - Math.sign(la) * dec;
+    c.sx = fz * la; c.sz = -fx * la; c.x += c.sx * dt; c.z += c.sz * dt; }
   c.x += Math.sin(c.h) * c.v * dt; c.z += Math.cos(c.h) * c.v * dt;
   projectCar(c);
   wallCheck(c, dt);
 }
 // Quer-Haftgrenze der Reifen in m/s²: mechanischer Grip + Abtrieb (wächst mit dem Tempo), mal Fahrzeug- und Untergrundfaktor
-// Hier zählt die Gleitreibung eines quer rutschenden Reifens: deutlich weniger als die Haftung in der Kurve, und quer wirkt der Abtrieb nur zum Teil – das Auto rutscht nach einem Treffer sichtbar weg, statt wie verankert stehen zu bleiben
-function tyreGrip(c, sf) { return (c.gripMul || 1) * (sf || SURF[c.surf] || SURF.road)[3] * (8 + 10 * Math.min(1, c.v * c.v / 4900)); }
+function tyreGrip(c, sf) { return (c.gripMul || 1) * (sf || SURF[c.surf] || SURF.road)[3] * (13 + (GRIP - 13) * Math.min(1, c.v * c.v / 4900)); }
 function wallCheck(c, dt) {
   c.wallCd -= dt;
   // Hitbox gegen die Bande: gedrehtes Rechteck (schräg stehendes Auto braucht mehr Platz), Mittelpunkt der Box statt Fahrzeugursprung
@@ -7505,7 +7502,7 @@ function updateAI(c, dt, prof = profAI, top = diff.top) {
 // Tempo: es zählt die Aufprallgeschwindigkeit am Kontakt (Fahrt + Rutschen beider Autos). Leichte Berührungen federn etwas zurück, harte Einschläge sind fast
 // unelastisch (Karosserie verformt sich, Energie geht verloren) und drehen das Auto stärker.
 // Trifft der Stoß neben dem Schwerpunkt, dreht sich das Auto (Hebelarm / Trägheitsmoment), gedämpft durch die Reifen.
-const COLL = { e: 0.35, mu: 0.3, yaw: 0.22, yawHard: 0.45, yawMax: 1.8 };   // e: Rückfederung bei leichtem Kontakt · yaw: Drehanteil bei leichtem Kontakt · yawHard: zusätzlich bei hartem Einschlag (ab ca. 3 m/s Stoß)
+const COLL = { e: 0.25, mu: 0.3, yaw: 0.07, yawHard: 0.3, yawMax: 1.1 };   // yaw: Drehanteil bei leichtem Kontakt (Reifen halten das Auto gerade), yawHard: zusätzlich bei hartem Einschlag (ab ca. 3 m/s Stoß)
 function carBox(c) { const hb = c.hb, fx = Math.sin(c.h), fz = Math.cos(c.h), zc = (hb.zf + hb.zr) / 2; return { cx: c.x + fx * zc, cz: c.z + fz * zc, fx, fz, hl: (hb.zf - hb.zr) / 2, hw: hb.hw }; }
 function boxCorners(o) { const out = []; for (const [u, w] of [[1, 1], [1, -1], [-1, -1], [-1, 1]]) out.push([o.cx + o.fx * o.hl * u + o.fz * o.hw * w, o.cz + o.fz * o.hl * u - o.fx * o.hw * w]); return out; }
 function inBox(o, x, z, tol = 0.03) { const dx = x - o.cx, dz = z - o.cz; return Math.abs(dx * o.fx + dz * o.fz) <= o.hl + tol && Math.abs(dx * o.fz - dz * o.fx) <= o.hw + tol; }
