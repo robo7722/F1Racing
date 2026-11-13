@@ -1,6 +1,6 @@
 # Rennfahrer-Modell
 
-Stand: 13.11.2026 (v1.49) – Kart-Fahrer im Spiel eingebaut, stehende Figur als Vorschau.
+Stand: 13.11.2026 (v1.50) – Kart-Fahrer im Spiel eingebaut, stehende Figur als Vorschau.
 
 ## Dateien
 - `kartfahrer.bin` – sitzender Kart-Fahrer fürs Spiel: Körper + beide Handschuhe als EIN Netz (~14 200 Dreiecke).
