@@ -3305,6 +3305,7 @@ function roadMats(paint) {
     clearglass: P({ color: 0xdfe6ea, roughness: .05, metalness: .1, transparent: true, opacity: .35, depthWrite: false }),
     redglass: new THREE.MeshStandardMaterial({ color: 0x6e0808, emissive: 0xff1a10, emissiveIntensity: .15, roughness: .15, metalness: .1 }),
     orangeglass: new THREE.MeshStandardMaterial({ color: 0x9a4a06, roughness: .15, metalness: .1 }),
+    smoke: new THREE.MeshStandardMaterial({ color: 0x17130f, roughness: .12, metalness: .2 }),   // abgedunkelte Seitenblinker
     tire: new THREE.MeshStandardMaterial({ color: 0x18191b, roughness: .9 }),
     rim: new THREE.MeshStandardMaterial({ color: 0x101113, roughness: .3, metalness: .7 }),
     Material__1: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .5 }),
@@ -3404,17 +3405,26 @@ function roadStickers() {
   for (let i = 0; i < p.length; i++) p[i] = j.p[i] / j.q; for (let i = 0; i < uv.length; i++) uv[i] = j.uv[i] / 8192;
   g.setAttribute('position', new THREE.BufferAttribute(p, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(j.i); g.computeVertexNormals(); g.computeBoundingSphere();
   const t = new THREE.Texture(img); t.colorSpace = THREE.SRGBColorSpace; t.flipY = false; t.anisotropy = 8; t.needsUpdate = true;
-  return { g, m: new THREE.MeshStandardMaterial({ map: t, transparent: true, alphaTest: 0.03, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4, roughness: .5, metalness: 0 }) };
+  let sp = null; if (j.sp) { const q = new Float32Array(j.sp.length); for (let i = 0; i < q.length; i++) q[i] = j.sp[i] / j.q; sp = new THREE.BufferGeometry(); sp.setAttribute('position', new THREE.BufferAttribute(q, 3)); sp.computeVertexNormals(); sp.computeBoundingSphere(); }   // schwarze Abrisskante am Heck
+  return { sp, g, m: new THREE.MeshStandardMaterial({ map: t, transparent: true, alphaTest: 0.03, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4, roughness: .5, metalness: 0 }) };
 }
 let RDS = null;
+const ROAD_DROP = 0.032;   // Tieferlegung der Karosserie in Metern (Modellmaß)
 function makeRoadster(d, T) {
   if (!RDS) { RDS = loadRoadCar(ROADBIN); RDS.mats = roadMats(roadPaint()); RDS.plates = roadPlates(RDS);
     RDS.wheelG = RDS.parts.filter(p => p.w >= 0 && p.w < 4).map(p => { const c = RDS.wc[p.w], g2 = p.g.clone(); g2.translate(-c[0], -c[1], -c[2]); return { w: p.w, m: p.m, g: g2, c }; }); }
-  const D = RDS, M = D.mats, g = new THREE.Group(); g.rotation.order = 'YXZ';
+  if (!RDS.smoked) { RDS.smoked = true; const og = RDS.parts.find(p => p.m === 'orangeglass' && !(p.w >= 0));   // Seitenblinker in den Kotflügeln (z um 1,0) abdunkeln, übrige Blinker bleiben orange
+    if (og) { const ix = og.g.index.array, P = og.g.attributes.position, A = [], B = []; for (let i = 0; i < ix.length; i += 3) { const z = P.getZ(ix[i]); (z > 0.6 && z < 1.4 ? B : A).push(ix[i], ix[i + 1], ix[i + 2]); }
+      og.g.setIndex(A.concat(B)); og.g.clearGroups(); og.g.addGroup(0, A.length, 0); og.g.addGroup(A.length, B.length, 1); og.multi = [RDS.mats.orangeglass, RDS.mats.smoke]; } }
+  if (!RDS.stub) { RDS.stub = true;   // kurze Stummelantenne wie am echten Auto: den langen Stab des Modells auf ein Viertel stauchen
+    for (const p of RDS.parts) { if (p.m !== 'black' || p.w >= 0) continue; const P = p.g.attributes.position;
+      for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), z = P.getZ(i); if (x > -0.7 && x < -0.63 && y > 1.0 && z < -1.7) { P.setY(i, 1.0 + (y - 1.0) * 0.25); P.setZ(i, -1.74 + (z + 1.74) * 0.25); } }
+      P.needsUpdate = true; p.g.computeBoundingSphere(); } }
+  const D = RDS, M = D.mats, g = new THREE.Group(), body = new THREE.Group(); g.rotation.order = 'YXZ'; body.position.y = -ROAD_DROP; g.add(body);   // Karosserie tiefergelegt, Räder bleiben auf der Fahrbahn
   const brakeMat = M.redglass.clone();
-  for (const p of D.parts) { if (p.w >= 0) continue; const mat = p.m === 'redglass' ? brakeMat : M[p.m]; if (!mat) continue; const m = new THREE.Mesh(p.g, mat); m.castShadow = !mat.transparent; m.receiveShadow = true; g.add(m); }
-  for (const [pg, pm] of D.plates) g.add(new THREE.Mesh(pg, pm));
-  if (ROADSTK) { D.stk ||= roadStickers(); const m = new THREE.Mesh(D.stk.g, D.stk.m); m.renderOrder = 3; g.add(m); }
+  for (const p of D.parts) { if (p.w >= 0) continue; const mat = p.multi || (p.m === 'redglass' ? brakeMat : M[p.m]); if (!mat) continue; const m = new THREE.Mesh(p.g, mat); m.castShadow = !mat.transparent; m.receiveShadow = true; body.add(m); }
+  for (const [pg, pm] of D.plates) body.add(new THREE.Mesh(pg, pm));
+  if (ROADSTK) { D.stk ||= roadStickers(); const m = new THREE.Mesh(D.stk.g, D.stk.m); m.renderOrder = 3; body.add(m); if (D.stk.sp) { const q = new THREE.Mesh(D.stk.sp, M.carpaint_second); q.castShadow = true; body.add(q); } }
   const zr = D.wc.find(c => c[2] < 0)[2], fl = new THREE.Group(), fr = new THREE.Group(), rr = new THREE.Group(), wfl = new THREE.Group(), wfr = new THREE.Group();
   for (const wc of D.wc) if (wc[2] > 0) { if (wc[0] > 0) fl.position.set(wc[0], wc[1], wc[2]); else fr.position.set(wc[0], wc[1], wc[2]); }
   rr.position.set(0, D.wr, zr); fl.add(wfl); fr.add(wfr); g.add(fl, fr, rr);
@@ -3424,12 +3434,12 @@ function makeRoadster(d, T) {
   const swPart = D.parts.find(p => p.w === 10), swPivot = new THREE.Group(), swSpin = new THREE.Group();
   if (swPart && D.sw) { const c = D.sw.c, az = new THREE.Vector3(...D.sw.a).normalize(), axx = new THREE.Vector3(-1, 0, 0), ay = new THREE.Vector3().crossVectors(az, axx);
     const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(axx, ay, az));   // lokal: Lenkradebene x/y (y oben), z zum Fahrer
-    swPivot.position.set(...c); swPivot.quaternion.copy(q); swPivot.add(swSpin); g.add(swPivot);
+    swPivot.position.set(...c); swPivot.quaternion.copy(q); swPivot.add(swSpin); body.add(swPivot);
     swSpin.add((D.swNew ||= roadSteeringWheel()).clone()); }   // eigenes, detailliertes Lenkrad statt des groben aus dem Modell
-  g.add((D.cabin ||= roadCabin()).clone());
+  body.add((D.cabin ||= roadCabin()).clone());
   const helm = new THREE.Group(), rl = new THREE.Group(); g.add(helm, rl);
   const label = carLabel(d, T); g.add(label); scene.add(g);
-  return { g, fl, fr, wfl, wfr, rr, label, helm, rl, road: true, brakeMat, swSpin, cam: [0.423, 1.17, -0.52, 2.7] };
+  return { g, fl, fr, wfl, wfr, rr, label, helm, rl, road: true, brakeMat, swSpin, cam: [0.423, 1.17 - ROAD_DROP, -0.52, 2.7] };
 }
 /* ======================= GoKart: Modell, Material, Fahrer ======================= */
 const KARTBIN = await fetch('./kart.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null);
@@ -8892,7 +8902,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.43'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.44'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
