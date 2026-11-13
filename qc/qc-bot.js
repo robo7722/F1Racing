@@ -9,7 +9,10 @@ const CFG = {
   list: (P.get('qc') || 'all').toLowerCase(), mode: P.get('mode') === 'quick' ? 'quick' : 'full', laps: +P.get('laps') || 0, ser: P.get('ser') || '',
   gfx: P.get('gfx') || '', stat: P.get('static') !== '0', srv: P.get('srv') === '1', run: P.get('run') || new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-'), i: +P.get('i') || 0, selftest: P.get('selftest') === '1', reportOnly: P.get('report') === '1'
 };
-CFG.shot = +P.get('shot') || (CFG.mode === 'quick' ? 200 : 300);
+// at=2900-3100: nur diesen Abschnitt prüfen (Streckenmeter, darf über Start/Ziel laufen, z. B. 5600-200) – dort dicht, Befunde außerhalb fallen weg
+CFG.at = (m => m ? [+m[1], +m[2]] : null)(/^(\d+)-(\d+)$/.exec(P.get('at') || ''));
+CFG.shot = +P.get('shot') || (CFG.at ? 25 : CFG.mode === 'quick' ? 200 : 300);
+const inAt = (s, pad = 0) => { if (!CFG.at) return true; const L = A.L || 1e9, m = v => ((v % L) + L) % L, a = m(CFG.at[0] - pad), b = m(CFG.at[1] + pad), x = m(s); return a <= b ? x >= a && x <= b : x >= a || x <= b; };
 const CAMN = ['Verfolger', 'Hoch hinten', 'Cockpit', 'T-Cam'];
 const LOG = [];
 // Fenster verdeckt (Bildschirm gesperrt, minimiert): der Browser zeichnet dann nicht von selbst – der Bot treibt das Spiel mit 60 Bildern/s an
@@ -270,7 +273,8 @@ function drive(R) {
       const sf = A.pl.surf; offT = sf && sf !== 'road' && sf !== 'kerb' ? offT + dt / 1000 : 0; if (offT > 1.5) { R.events.push({ t: 'Bot neben der Strecke (' + sf + ')', s: Math.round(s), lap: lr }); offT = -10; }
       if (Math.abs(s - lastS) > A.L / 2) nextShot = CFG.shot * 0.5; lastS = s;
       // Ansicht prüfen
-      if (s >= nextShot && s < nextShot + 300) {
+      if (CFG.at && !inAt(s)) nextShot = s;   /* außerhalb des Abschnitts keine Ansichten – die erste Stelle im Abschnitt wird sofort geprüft */
+      else if (s >= nextShot && s < nextShot + 300) {
         nextShot = s + CFG.shot; skip = 2;
         const shot = screenJpeg(), st2 = screenStats(), smp = { s: Math.round(s), lap: lr, cam: CAMN[cm], view: 'Kamera', mean: st2.mean, std: st2.std };
         const pr = probe(A.camera); Object.assign(smp, { void: pr.void, zf: pr.zfBlocks, zfPx: pr.zf });
@@ -279,7 +283,7 @@ function drive(R) {
         samples.push(smp); imgLater(pr.marks.length ? (cx.drawImage(A.renderer.domElement, 0, 0, TW, TH2), drawMarks(pr.marks.map(m => [m[0], m[1], m[2], m[3]])), cv.toDataURL('image/jpeg', 0.72)) : shot, 'cam' + cm, p => smp.img = p);
         flagSample(R, smp, pr, cm);
         // Rundumblick (nur in der Verfolger-Runde, jede zweite Stelle): links, rechts, hinten, von oben
-        if (cm === 0 && samples.filter(x => x.cam === CAMN[0] && x.view === 'Kamera').length % 2 === 1) for (const [nm, yaw, up, dist] of [['links', Math.PI / 2, 2.6, 0], ['rechts', -Math.PI / 2, 2.6, 0], ['hinten', Math.PI, 2.6, 0], ['oben', 0, 26, 18]]) {
+        if (cm === 0 && (CFG.at || samples.filter(x => x.cam === CAMN[0] && x.view === 'Kamera').length % 2 === 1)) for (const [nm, yaw, up, dist] of [['links', Math.PI / 2, 2.6, 0], ['rechts', -Math.PI / 2, 2.6, 0], ['hinten', Math.PI, 2.6, 0], ['oben', 0, 26, 18]]) {
           const p = A.pl, h = p.h + yaw, c3 = new T.PerspectiveCamera(62, TW / TH2, 0.8, A.camera.far), ey = p.ey || 0;   /* Nah- und Fernebene wie die Kamera im Spiel (mit 4000 m wurden die Berge abgeschnitten und die Schnittkante als Flimmern gemeldet) */
           c3.position.set(p.x - Math.sin(h) * dist, ey + up, p.z - Math.cos(h) * dist);   /* seitlich/hinten: direkt über dem Auto (nie hinter Zäunen), oben: 18 m zurück */ c3.lookAt(p.x + Math.sin(h) * 30, ey + (up > 10 ? 0 : 0.8), p.z + Math.cos(h) * 30); c3.updateMatrixWorld();
           const q = probe(c3), sm2 = { s: Math.round(s), lap: lr, cam: CAMN[0], view: nm, void: q.void, zf: q.zfBlocks, zfPx: q.zf, mean: +q.mean.toFixed(1), std: +q.std.toFixed(1) };
@@ -386,6 +390,7 @@ async function finishTrack(R) {
   const ri = A.renderer.info; R.gpu = { geo: ri.memory.geometries, tex: ri.memory.textures, prog: ri.programs ? ri.programs.length : 0 };
   await Promise.all(pendingImgs); pendingImgs.length = 0;
   for (const it of R.issues) if (it.ref) { it.img = it.img || it.ref.img; delete it.ref; }
+  if (CFG.at) { R.at = CFG.at; R.issues = R.issues.filter(i => i.s == null ? i.cat !== 'Z-Fighting' : inAt(i.s, 30)); }   /* Abschnittsprüfung: nur Befunde im Abschnitt (±30 m); Streckenweites wie Ruckler-Statistik bleibt */
   // Z-Fighting im Bild: nur die 6 stärksten Stellen einzeln, der Rest als eine Zeile (alle Bilder bleiben unter „Ansichten“)
   { const vz = R.issues.filter(i => i.zb).sort((a, b) => b.zb - a.zb), rest = vz.slice(6);
     if (rest.length) { R.issues = R.issues.filter(i => !rest.includes(i)); issue(R, 'info', 'Z-Fighting', 'Weitere ' + rest.length + ' Ansichten mit leichtem Flimmern (je ' + Math.min(...rest.map(i => i.zb)) + '–' + Math.max(...rest.map(i => i.zb)) + ' Bereiche)', null, 'bei ' + [...new Set(rest.map(i => i.s))].sort((a, b) => a - b).map(at).join(', ')); } }
@@ -455,7 +460,7 @@ details{margin:8px 0}summary{cursor:pointer;font-weight:600}pre{white-space:pre-
 .chart svg{width:100%;height:170px;background:rgba(127,127,127,.06)}.gl{stroke:var(--ln)}.gt{fill:var(--mu);font-size:10px}.leg{font-size:12px;color:var(--mu)}.leg span{margin-left:10px}.leg i{display:inline-block;width:9px;height:9px;margin-right:4px}
 .dim td{color:var(--mu)}.wrap{overflow-x:auto}
 @media (max-width:700px){.iss{flex-direction:column}.iss img{width:100%}}
-</style></head><body><h1>Strecken-QC</h1><p class="meta">${esc(when)} · Modus ${esc(CFG.mode)} · ${esc(all[0] ? all[0].screen : '')} · ${esc(navigator.userAgent.replace(/.*(Edg\/[\d.]+|Chrome\/[\d.]+|Firefox\/[\d.]+|Safari\/[\d.]+).*/, '$1'))}</p>
+</style></head><body><h1>Strecken-QC</h1><p class="meta">${esc(when)} · Modus ${esc(CFG.mode)}${CFG.at ? ' · nur Abschnitt ' + CFG.at[0] + '–' + CFG.at[1] + ' m' : ''} · ${esc(all[0] ? all[0].screen : '')} · ${esc(navigator.userAgent.replace(/.*(Edg\/[\d.]+|Chrome\/[\d.]+|Firefox\/[\d.]+|Safari\/[\d.]+).*/, '$1'))}</p>
 <div class="wrap"><table><tr><th>Strecke</th><th>Urteil</th><th>fps</th><th>p99 ms</th><th>Ruckler/min</th><th>Ruckler</th><th>Löcher</th><th>Z-Fight</th><th>Rendering</th><th>Clipping</th><th>Fahrt</th></tr>${rows}</table></div>
 <p class="meta">Zahlen in den Spalten = Befunde der Stufe „mittel“ oder „hoch“. Ruckler = Bild über 50 ms. Magenta-Kästen = Blick ins Leere, gelbe Kästen = flimmernde Flächen (Z-Fighting).</p>${sect}</body></html>`;
 }

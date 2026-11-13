@@ -32,6 +32,10 @@ Am Ende öffnet sich der Bericht `qc-reports/<Datum_Uhrzeit>/report.html`.
 | `python qc/run.py --no-static` | ohne die Geometrie-Prüfungen (schneller) |
 | `python qc/run.py --report 2026-11-12_23-14-50` | nur den Bericht eines früheren Laufs neu bauen (nach Änderungen am Bot, ohne neu zu fahren) |
 | `python qc/run.py --list` | bekannte Strecken anzeigen |
+| `python qc/run.py --changed` | nur Strecken, die sich seit ihrer letzten Prüfung geändert haben (siehe unten) |
+| `python qc/run.py --changed --dry` | nur anzeigen, welche Strecken betroffen wären und warum |
+| `python qc/run.py mc --at 2900-3100` | nur diesen Abschnitt (Streckenmeter) prüfen – dort alle 25 m mit Rundumblick |
+| `python qc/run.py --accept` | aktuellen Stand als geprüft merken, ohne zu fahren (z. B. nach einer Prüfung von Hand) |
 
 Braucht nur Python und Edge (oder Chrome, `--browser <Pfad>`). Neue Strecken werden automatisch erkannt.
 Ein voller Lauf über alle Strecken dauert etwa 1,5–2 Stunden (eine Runde je Kamera, die Nordschleife allein rund 25 Minuten).
@@ -44,6 +48,28 @@ Abgebrochene Läufe hinterlassen keine Edge-Prozesse: `run.py` beendet beim Star
 
 Ohne `run.py` geht es auch direkt im Browser, z. B. am Handy: `index.html?qc=monza&mode=quick`.
 Der Bericht wird am Ende als HTML-Datei heruntergeladen.
+
+## Nach Änderungen gezielt prüfen
+
+**Welche Strecken (`--changed`):** Nach jedem vollen Lauf merkt sich `run.py` je Strecke, mit welchem Stand von `index.html`
+sie geprüft wurde (`qc-reports/baseline/`). `--changed` vergleicht den aktuellen Stand damit – auch nicht committete Änderungen – und
+prüft nur betroffene Strecken. Im Terminal steht je Strecke der Grund. Zugeordnet wird so (Logik in `qc/changed.py`):
+
+1. Änderung im Eintrag der Strecke in `TRACKS`, ihrem Thema in `THEMES` (auch geerbt, z. B. `...THEMES.sil` für die Kartbahnen) oder `TREE_STYLE` → diese Strecke.
+2. Merkmal der Strecke in der geänderten Zeile oder im umgebenden Block: `TRK.mc`, seltene Themen-Eigenschaften wie `TH.vegas`/`TH.night`,
+   Datenkennung (`'mc-1929'`), eigene Datenkonstanten (`MEL_REF`, `NS_DATA`) → diese Strecken.
+3. Sonst: allgemeiner Streckencode (z. B. in `buildTrack`, `hStrip`, `surface`) → **alle** Strecken; Auto, Menü, Musik, Versionsnummer → keine.
+
+Nur `index.html` zählt. Wer Texturen oder andere Dateien einer Strecke ändert, gibt die Strecke von Hand an.
+Abschnitts-, Selbsttest- und Berichtsläufe merken sich nichts; Strecken mit Abbruch („Seite hing“) auch nicht.
+
+**Welche Stelle (`--at VON-BIS`):** Gilt für genau eine Strecke. Der Bot fährt die ganze Runde, prüft aber nur im Abschnitt –
+dort alle 25 m (`--shot` ändert das) mit Rundumblick links/rechts/hinten/oben. Befunde außerhalb (±30 m) fallen weg, die
+Ruckler-Statistik bleibt für die ganze Runde. Der Abschnitt darf über Start/Ziel laufen (`--at 5600-200`).
+Die Streckenmeter stehen in jedem Befund des letzten Berichts.
+
+Typischer Ablauf: Strecke ändern → `python qc/run.py --changed --dry` (was ist betroffen?) → `python qc/run.py mc --at 2900-3100`
+für die geänderte Stelle → `python qc/run.py --changed` zum Abschluss (volle Runde, merkt sich den Stand).
 
 ## Was geprüft wird
 

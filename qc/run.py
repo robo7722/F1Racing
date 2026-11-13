@@ -5,6 +5,9 @@
     python qc/run.py --quick              eine Runde je Strecke, Kamera wechselt während der Runde
     python qc/run.py --laps 2 --gfx ultra
     python qc/run.py --list               bekannte Strecken anzeigen
+    python qc/run.py --changed            nur Strecken, die sich seit ihrer letzten Prüfung geändert haben (zeigt den Grund)
+    python qc/run.py --changed --dry      nur anzeigen, welche das wären
+    python qc/run.py mc --at 2900-3100    nur diesen Abschnitt (Streckenmeter) prüfen, dort alle 25 m mit Rundumblick
 
 Braucht nur Python und Edge (oder Chrome). Ergebnis: qc-reports/<Datum>/report.html
 Standard: Edge läuft unsichtbar im Hintergrund. Mit --show öffnet sich ein Fenster (echte Bildausgabe).
@@ -12,6 +15,9 @@ Standard: Edge läuft unsichtbar im Hintergrund. Mit --show öffnet sich ein Fen
 import argparse, json, os, re, shutil, subprocess, sys, tempfile, threading, time, webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import changed as CHG   # noqa: E402  (qc/changed.py: welche Strecken eine Änderung betrifft)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'qc-reports')
@@ -169,6 +175,10 @@ def main():
     ap.add_argument('--selftest', action='store_true', help='absichtlich ein Loch und eine Doppelfläche einbauen und prüfen, ob der Bot sie findet')
     ap.add_argument('--report', default='', metavar='LAUF', help='nur den Bericht eines früheren Laufs neu erstellen (Ordnername in qc-reports)')
     ap.add_argument('--list', action='store_true')
+    ap.add_argument('--changed', action='store_true', help='nur Strecken prüfen, die sich seit ihrer letzten Prüfung geändert haben')
+    ap.add_argument('--dry', action='store_true', help='mit --changed: nur anzeigen, nichts starten')
+    ap.add_argument('--accept', action='store_true', help='aktuellen Stand für diese Strecken als geprüft merken, ohne zu fahren (z. B. nach einem Lauf von Hand)')
+    ap.add_argument('--at', default='', metavar='VON-BIS', help='nur diesen Abschnitt prüfen (Streckenmeter, z. B. 2900-3100), dicht mit Rundumblick')
     a = ap.parse_args()
 
     known = track_keys()
@@ -176,10 +186,25 @@ def main():
         for k, n in known:
             print(f'{k:8} {n}')
         return
+    src = open(os.path.join(ROOT, 'index.html'), encoding='utf-8').read()   # dieser Stand wird geprüft (und danach je Strecke gemerkt)
     keys = [k.lower() for k in a.tracks] or [k for k, _ in known]
     bad = [k for k in keys if k not in dict(known)]
     if bad:
         sys.exit('Unbekannt: ' + ', '.join(bad) + ' – bekannt: ' + ', '.join(k for k, _ in known))
+    if a.accept:
+        CHG.remember(OUT, src, keys); print('Als geprüft gemerkt: ' + ', '.join(keys)); return
+    if a.changed:
+        ch = CHG.changed_tracks(OUT, src, keys, tempfile.gettempdir())
+        if not ch:
+            print('Keine Strecke betroffen – alle sind mit dem aktuellen Stand schon geprüft.'); return
+        print('Betroffene Strecken:')
+        for k, why in ch:
+            print(f'  {k:6} ' + why[0] + (f' (+{len(why) - 1} weitere Stellen)' if len(why) > 1 else ''))
+        if a.dry: return
+        keys = [k for k, _ in ch]
+    if a.at:
+        if not re.fullmatch(r'\d+-\d+', a.at): sys.exit('--at erwartet VON-BIS in Metern, z. B. 2900-3100')
+        if len(keys) != 1: sys.exit('--at gilt für genau eine Strecke, z. B.: python qc/run.py mc --at 2900-3100')
 
     run = a.report or time.strftime('%Y-%m-%d_%H-%M-%S')
     if a.report:   # Strecken des alten Laufs übernehmen
@@ -201,6 +226,7 @@ def main():
     if a.no_static: params['static'] = '0'
     if a.selftest: params['selftest'] = '1'
     if a.report: params['report'] = '1'
+    if a.at: params['at'] = a.at
 
     def url(i):
         return f'http://127.0.0.1:{a.port}/index.html?' + '&'.join(f'{k}={v}' for k, v in {**params, 'i': i}.items())
@@ -279,6 +305,16 @@ def main():
 
     rep = os.path.join(OUT, run, 'report.html')
     print(f'\nDauer {int(time.time() - t0) // 60} min')
+    # geprüften Stand je Strecke merken (für --changed) – nur volle Runden ohne Abbruch, nicht Selbsttest/Abschnitt/Bericht
+    if not (a.selftest or a.at or a.report):
+        ok = []
+        for k in keys:
+            try:
+                r = json.load(open(os.path.join(OUT, run, k + '.json'), encoding='utf-8'))
+                if not any(i.get('cat') == 'Ablauf' for i in r.get('issues', [])): ok.append(k)
+            except Exception:
+                pass
+        if ok: CHG.remember(OUT, src, ok)
     try:
         for r in json.load(open(os.path.join(OUT, run, 'summary.json'), encoding='utf-8')):
             n = {s: sum(1 for i in r['issues'] if i[0] == s) for s in ('hoch', 'mittel', 'info')}
