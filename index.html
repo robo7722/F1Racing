@@ -3471,9 +3471,11 @@ const KFAHRER = (() => {
     g.setAttribute('aReg', new THREE.BufferAttribute(Float32Array.from(new Uint8Array(KFBIN, b + h.reg, h.nv)), 1));
     g.setAttribute('aRy', new THREE.BufferAttribute(new Float32Array(KFBIN, b + h.ry, h.nv).slice(), 1));
     if (h.rest !== undefined) { g.setAttribute('aRest', new THREE.BufferAttribute(new Float32Array(KFBIN, b + h.rest, h.nv * 3).slice(), 3)); g.setAttribute('aRN', new THREE.BufferAttribute(new Int8Array(KFBIN, b + h.rn, h.nv * 3).slice(), 3, true)); }
+    const bi = h.bi !== undefined ? new Uint8Array(KFBIN, b + h.bi, h.nv * 4).slice() : new Uint8Array(h.nv * 4), bw = h.bw !== undefined ? new Uint8Array(KFBIN, b + h.bw, h.nv * 4).slice() : (() => { const a = new Uint8Array(h.nv * 4); for (let i = 0; i < h.nv; i++) a[i * 4] = 255; return a; })();
+    g.setAttribute('aBi', new THREE.BufferAttribute(Float32Array.from(bi), 4)); g.setAttribute('aBw', new THREE.BufferAttribute(bw, 4, true));
     g.setIndex(new THREE.BufferAttribute((h.i32 ? new Uint32Array(KFBIN, b + h.idx, h.ni) : new Uint16Array(KFBIN, b + h.idx, h.ni)).slice(), 1));
     g.computeBoundingSphere();
-    return { geo: g, helm: h.helm, tilt: h.helmTilt || 0 };
+    return { geo: g, helm: h.helm, tilt: h.helmTilt || 0, swExt: h.swExt || 0, swC: new THREE.Vector3(...(h.swC || [0, 0.5005, 0.1235])), swAx: new THREE.Vector3(...(h.swAx || [0, 0.6273, -0.7788])), arm: (h.arm || [[-0.2, 0.78, -0.57], [-0.29, 0.56, -0.36], [-0.24, 0.58, -0.08]]).map(a => new THREE.Vector3(...a)) };
   } catch (e) { console.warn('kartfahrer.bin', e); return null; }
 })();
 // KFMAT-START (fahrer/kart_vorschau.html liest diesen Abschnitt aus, um denselben Anzug zu zeigen)
@@ -3488,11 +3490,16 @@ function kartFahrerMat(tk, suit, acc) {
   if (!KFMAT.tex) { const ld = (u, srgb, rep) => { const t = new THREE.TextureLoader().load(u); t.anisotropy = 8; if (srgb) t.colorSpace = THREE.SRGBColorSpace; if (rep) t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; };
     KFMAT.tex = ld('textures/kart_fahrer.jpg', true); KFMAT.weave = ld('textures/kart_stoff.jpg', false, true); }
   const dark = suit.clone().multiplyScalar(0.28).lerp(col(0x101114), 0.5);
-  const U = { uSuit: { value: suit }, uAcc: { value: acc }, uDark: { value: dark }, uShoe: { value: col(0x141518) }, uPatch: { value: col(0xf2f2ee) }, uWeave: { value: KFMAT.weave } };
+  const U = { uSuit: { value: suit }, uAcc: { value: acc }, uDark: { value: dark }, uShoe: { value: col(0x141518) }, uPatch: { value: col(0xf2f2ee) }, uWeave: { value: KFMAT.weave },
+    uBone: { value: Array.from({ length: 7 }, () => new THREE.Matrix4()) } };   // Arm-Knochen: je Kart vor dem Zeichnen gesetzt (kartArmsIK in onBeforeRender)
   const m = new THREE.MeshPhysicalMaterial({ map: KFMAT.tex, roughness: .85, metalness: 0, sheen: 1, sheenRoughness: .45, sheenColor: 0xffffff, side: THREE.DoubleSide });
+  m.userData.U = U;
   m.onBeforeCompile = sh => { Object.assign(sh.uniforms, U);
-    sh.vertexShader = 'attribute float aReg; attribute float aRy; attribute vec3 aRest; attribute vec3 aRN; varying float vReg; varying float vRy; varying vec3 vRest; varying vec3 vRN;\n'
-      + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vReg = aReg; vRy = aRy; vRest = aRest; vRN = aRN;');
+    // Arme mit Skelett (Skinning): Knochen 0 Rumpf (fest), 1–3 Ober-/Unterarm/Hand rechts, 4–6 links. Die Matrizen rechnet kartArmsIK je Bild.
+    sh.vertexShader = `attribute float aReg; attribute float aRy; attribute vec3 aRest; attribute vec3 aRN; attribute vec4 aBi; attribute vec4 aBw; varying float vReg; varying float vRy; varying vec3 vRest; varying vec3 vRN;
+      uniform mat4 uBone[7];
+      ` + sh.vertexShader.replace('#include <beginnormal_vertex>', '#include <beginnormal_vertex>\n mat4 skM = uBone[int(aBi.x)] * aBw.x + uBone[int(aBi.y)] * aBw.y + uBone[int(aBi.z)] * aBw.z + uBone[int(aBi.w)] * aBw.w; objectNormal = normalize(mat3(skM) * objectNormal);')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\n transformed = (skM * vec4(transformed, 1.0)).xyz; vReg = aReg; vRy = aRy; vRest = aRest; vRN = aRN;');
     sh.fragmentShader = `uniform vec3 uSuit, uAcc, uDark, uShoe, uPatch; uniform sampler2D uWeave; varying float vReg; varying float vRy; varying vec3 vRest; varying vec3 vRN;
       float gH = 0.0, gRough = 0.85, gMetal = 0.0, gSheen = 1.0, gBump = 1.0;
       float bnd(float x, float a, float b, float w) { return smoothstep(a - w, a, x) * (1.0 - smoothstep(b, b + w, x)); }
@@ -3551,11 +3558,39 @@ function kartFahrerMat(tk, suit, acc) {
       .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\n metalnessFactor = gMetal;')
       .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\n normal = bumpN(-vViewPosition, normal, vec2(dFdx(gH), dFdy(gH)) * 0.0025 * gBump, faceDirection);')
       .replace('#include <lights_physical_fragment>', '#include <lights_physical_fragment>\n material.sheenColor = diffuseColor.rgb * 0.6 * gSheen + 0.05 * gSheen;'); };
-  m.customProgramCacheKey = () => 'kartFahrer2';
+  m.customProgramCacheKey = () => 'kartFahrer4';
   return (KFMAT[tk] = m);
 }
+// Arme folgen dem Lenkrad wie echte Arme: Die Hand bleibt am Kranz (dreht mit dem Lenkrad um dessen Achse), Schulter fest,
+// Ober- und Unterarm starr mit fester Länge – der Ellbogen ergibt sich aus der Zwei-Knochen-IK und bleibt in seiner Ebene (hebt/senkt sich natürlich).
+const _ik = { q: new THREE.Quaternion(), q2: new THREE.Quaternion(), r: new THREE.Quaternion(), v: new THREE.Vector3(), t: new THREE.Vector3(), e: new THREE.Vector3(), u: new THREE.Vector3(), p: new THREE.Vector3(), a: new THREE.Vector3(), b: new THREE.Vector3(), m: new THREE.Matrix4() };
+function kartArmsIK(out, spin) {   // out: 7 Matrix4 (Bindhaltung -> aktuell), spin: Lenkraddrehung (rad)
+  const K = KFAHRER, C = K.swC, X = _ik; out[0].identity();
+  X.r.setFromAxisAngle(K.swAx, spin);
+  for (let side = 0; side < 2; side++) {
+    const mir = side ? -1 : 1, sh = X.a.copy(K.arm[0]).setX(K.arm[0].x * mir), el = X.b.copy(K.arm[1]).setX(K.arm[1].x * mir), wr = X.p.copy(K.arm[2]).setX(K.arm[2].x * mir);
+    const L1 = sh.distanceTo(el), L2 = el.distanceTo(wr), o = side ? 4 : 1;
+    // Ziel: Handgelenk um die Lenkradachse gedreht
+    X.t.copy(wr).sub(C).applyQuaternion(X.r).add(C);
+    // Ellbogen-Ebene aus der Bindhaltung (Pol = Ellbogen relativ zur Linie Schulter–Hand)
+    X.u.copy(wr).sub(sh).normalize(); const pole = X.v.copy(el).sub(sh); pole.addScaledVector(X.u, -pole.dot(X.u));
+    const d0 = X.e.copy(X.t).sub(sh), d = Math.min(Math.max(d0.length(), Math.abs(L1 - L2) + 1e-3), (L1 + L2) * 0.999); X.u.copy(d0).normalize();
+    pole.addScaledVector(X.u, -pole.dot(X.u)).normalize();
+    const a1 = (L1 * L1 - L2 * L2 + d * d) / (2 * d), hh = Math.sqrt(Math.max(L1 * L1 - a1 * a1, 0));
+    const eN = X.e.copy(sh).addScaledVector(X.u, a1).addScaledVector(pole, hh);           // neuer Ellbogen
+    // Oberarm: Drehung, die (el - sh) auf (eN - sh) bringt
+    X.q.setFromUnitVectors(X.v.copy(el).sub(sh).normalize(), _ikV1.copy(eN).sub(sh).normalize());
+    out[o].makeRotationFromQuaternion(X.q); out[o].setPosition(_ikV2.copy(sh).sub(_ikV3.copy(sh).applyQuaternion(X.q)));
+    // Unterarm: erst wie der Oberarm, dann (gedrehte Bind-Richtung) auf (Ziel - eN)
+    _ikV1.copy(wr).sub(el).applyQuaternion(X.q).normalize(); X.q2.setFromUnitVectors(_ikV1, _ikV2.copy(X.t).sub(eN).normalize()).multiply(X.q);
+    out[o + 1].makeRotationFromQuaternion(X.q2); out[o + 1].setPosition(_ikV2.copy(eN).sub(_ikV3.copy(el).applyQuaternion(X.q2)));
+    // Hand: dreht mit dem Lenkrad um dessen Achse
+    out[o + 2].makeRotationFromQuaternion(X.r); out[o + 2].setPosition(_ikV2.copy(C).sub(_ikV3.copy(C).applyQuaternion(X.r)));
+  }
+}
+const _ikV1 = new THREE.Vector3(), _ikV2 = new THREE.Vector3(), _ikV3 = new THREE.Vector3();
 // KFMAT-END
-const KTEX = {};
+const KTEX = {}; let KTUBE = null;
 function kartTex() {
   if (KTEX.body) return KTEX;
   const ld = (u, srgb) => { const t = new THREE.TextureLoader().load(u); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; if (srgb) t.colorSpace = THREE.SRGBColorSpace; return t; };
@@ -3638,8 +3673,9 @@ function kartDriver(d, T) {
   if (KFAHRER) {   // Fahrer aus kartfahrer.bin (sitzend, Hände am Lenkradkranz); der Helm ist derselbe wie bei F1/F2, ohne das Anbauteil unter dem Visier
     const g = new THREE.Group(), base = T.body === 0xdfe3e8 || T.body === 0xf0f0f0 ? T.acc : T.body, trim = helmAcc(base, T.acc === T.body ? 0xf0f0f0 : T.acc);
     const body = new THREE.Mesh(KFAHRER.geo, kartFahrerMat(d.team, col(base), trim)); body.castShadow = true; g.add(body);
-    const helm = new THREE.Group(), shell = new THREE.Mesh(helmGeoNew(), helmMat(d, helmAcc(d.helmet, T.acc), true)); shell.scale.setScalar(1.1); shell.castShadow = true;
+    const helm = new THREE.Group(), shell = new THREE.Mesh(helmGeoKart(), helmMat(d, helmAcc(d.helmet, T.acc), true)); shell.scale.setScalar(1.1); shell.castShadow = true;
     helm.position.fromArray(KFAHRER.helm); helm.rotation.x = KFAHRER.tilt; helm.add(shell); g.add(helm);
+    g.userData = { body, helm };
     return g;
   }
   // (bisheriger, aus Grundformen gebauter Fahrer – nur noch Rückfall, falls kartfahrer.bin fehlt)
@@ -3720,9 +3756,17 @@ function makeKart(d, T) {
   fl.position.set(...W.fR); fr.position.set(...W.fL); rr.position.set(0, W.rR[1], W.rR[2]);
   const wfl = mm('wfR', wm), wfr = mm('wfL', wm), wrl = mm('wrL', wm), wrr = mm('wrR', wm);
   fl.add(wfl); fr.add(wfr); wrl.position.x = W.rL[0]; wrr.position.x = W.rR[0]; rr.add(wrl, wrr); g.add(fl, fr, rr);
-  const drv = kartDriver(d, T); g.add(drv);
+  const drv = kartDriver(d, T); g.add(drv);   // (Lenkrad-Versatz und Hand-Animation siehe unten)
   const swPivot = new THREE.Group(), swSpin = new THREE.Group(), az = new THREE.Vector3(0, 29, -36).normalize(), axx = new THREE.Vector3(-1, 0, 0), ay = new THREE.Vector3().crossVectors(az, axx);
   swPivot.position.set(0, 0.5005, 0.1235); swPivot.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(axx, ay, az)); swPivot.add(swSpin); swSpin.add(kartSteeringWheel(T)); g.add(swPivot);
+  const kf = KFAHRER && drv.userData.body;
+  if (kf) {   // neuer Fahrer: Lenkrad entlang der Lenksäule zu ihm gerückt (verstellbare Säule), Verlängerungsrohr bis zur Nabe; Hände folgen dem Einschlag
+    const ext = KFAHRER.swExt; swPivot.position.addScaledVector(az, ext);
+    if (ext > 0.005) { const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, ext + 0.02, 12).rotateX(Math.PI / 2), KTUBE ||= new THREE.MeshStandardMaterial({ color: 0x9aa1aa, metalness: .85, roughness: .35 }));
+      tube.position.set(0, 0, -(ext + 0.02) / 2); swPivot.add(tube); }
+    const bones = Array.from({ length: 7 }, () => new THREE.Matrix4()); let last = NaN;
+    kf.onBeforeRender = () => { const sp = swSpin.rotation.z; if (sp !== last) { kartArmsIK(bones, sp); last = sp; } const mt = kf.material; mt.userData.U.uBone.value = bones; mt.uniformsNeedUpdate = true; };
+  }
   // Anzeige (wie ein Rennkart-Display): Halterung am Lenkrohr hinter dem Lenkrad, Gehäuse über dem Kranz, Bildschirm zeigt Tempo und Drehzahl (nur der Spieler-Kart wird neu gezeichnet)
   const dcv = document.createElement('canvas'); dcv.width = 288; dcv.height = 144; const dtex = new THREE.CanvasTexture(dcv); dtex.colorSpace = THREE.SRGBColorSpace; dtex.anisotropy = 4; kartDispDraw(dcv, 0, 0, true); dtex.needsUpdate = true;
   // Sitzt wie beim echten Rennkart HINTER dem Lenkrad auf der Lenksäule (feststehend) und ist durch das obere Feld zwischen Nabe und Kranz zu lesen.
@@ -3731,7 +3775,9 @@ function makeKart(d, T) {
   const hous = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.078, 0.022), new THREE.MeshStandardMaterial({ color: 0x15171a, roughness: .5 })); hous.position.set(0, 0.124, -0.062);
   const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.138, 0.066), new THREE.MeshBasicMaterial({ map: dtex, toneMapped: false })); scr.position.set(0, 0, 0.0115); hous.add(scr); swPivot.add(stalk, hous);
   const rl = new THREE.Object3D(), label = carLabel(d, T); label.position.y = 1.35; g.add(label); scene.add(g);
-  return { g, fl, fr, wfl, wfr, rr, label, helm: drv, rl, kart: true, wr: 0.2, swSpin, sw: swPivot, dcv, dtex, dT: 0, cam: KFAHRER ? [0, KFAHRER.helm[1] + 0.03, KFAHRER.helm[2] + 0.06, 0.3] : [0, 0.74, -0.5, 0.3], camS: 0.72 };   /* Cockpit: Augen im Helm des Fahrers */
+  // helm: was in der Cockpitansicht ausgeblendet wird – beim neuen Fahrer nur der Helm (Körper, Arme und Hände bleiben sichtbar).
+  // Cockpit: Augen etwas tiefer und vor der Helmmitte, Blick ~24° nach unten – Lenkrad und Hände im Bild (cam[3] = Blicksenkung, siehe Helmkamera).
+  return { g, fl, fr, wfl, wfr, rr, label, helm: kf ? drv.userData.helm : drv, rl, kart: true, kartFahrer: !!kf, wr: 0.2, swSpin, sw: swPivot, dcv, dtex, dT: 0, cam: kf ? [0, KFAHRER.helm[1] - 0.09, KFAHRER.helm[2] + 0.12, 13] : [0, 0.74, -0.5, 0.3], camS: 0.72 };   /* Cockpit: Augen im Helm des Fahrers */
 }
 function envAll(o) { o.traverse(m => { if (m.material) (Array.isArray(m.material) ? m.material : [m.material]).forEach(x => { x.userData.env = true; }); }); return o; }   // Autos behalten volle Spiegelungen
 function makeCar(d) { const r = makeCar0(d); envAll(r.g || r); return r; }
@@ -3746,6 +3792,23 @@ function helmGeoNew() { if (HELM_G) return HELM_G; const dec = (b, T) => { const
   for (let i = 0; i < n * 3; i++) { P[i] = p16[i] / 32767 * 0.25; Nn[i] = n8[i] / 127; }
   for (let i = 0; i < n; i++) if (z8[i] === 1) { const x = P[i * 3], y = P[i * 3 + 1] * 0.5, z = P[i * 3 + 2] + 0.03, l = Math.hypot(x, y, z) || 1; Nn[i * 3] = x / l; Nn[i * 3 + 1] = y / l; Nn[i * 3 + 2] = z / l; }   // Visier: Normalen radial nach außen (die dünne Scheibe hat Vorder- und Rückseite – gemittelt ergab das Flecken)
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.BufferAttribute(Nn, 3)); g.setAttribute('aZone', new THREE.BufferAttribute(Float32Array.from(z8), 1)); g.setIndex(new THREE.BufferAttribute(ix, 1)); g.computeBoundingSphere(); return (HELM_G = g); }
+// Kart-Helm: wie helmGeoNew, aber das Anbauteil unter dem Visier (Kinnbelüftung) wird auf die Schalenform gelegt und gehört zur Schale:
+// es schließt die Öffnung glatt und bekommt die Helmlackierung (wegschneiden ließ ein Loch, einfärben eine klobige Klammer).
+let HELM_GK = null;
+function helmGeoKart() { if (HELM_GK) return HELM_GK; const g = helmGeoNew().clone(), P = g.attributes.position.array, N = g.attributes.normal.array, Z = g.attributes.aZone.array.slice(), n = Z.length;
+  const front = i => P[i * 3 + 2] / 0.15 > 0.3 && P[i * 3 + 1] / 0.15 > -0.8 && P[i * 3 + 1] / 0.15 < -0.12, cy = -0.01;
+  const shell = []; for (let i = 0; i < n; i++) if (Z[i] < 0.5) shell.push(i);
+  const P0 = P.slice(), N0 = N.slice();
+  for (let i = 0; i < n; i++) {
+    const z3 = Z[i] > 2.5, z0 = Z[i] < 0.5; if (!(z3 || z0) || !front(i)) continue;
+    const x = P0[i * 3], y = P0[i * 3 + 1] - cy, z = P0[i * 3 + 2], r = Math.hypot(x, y, z), dx = x / r, dy = y / r, dz = z / r; let ws = 0, rs = 0;
+    for (const k of shell) { const kx = P0[k * 3], ky = P0[k * 3 + 1] - cy, kz = P0[k * 3 + 2], kr = Math.hypot(kx, ky, kz), c = (kx * dx + ky * dy + kz * dz) / kr; if (c < 0.97) continue;
+      const w = Math.pow(c - 0.96, 2); ws += w; rs += w * kr; }
+    if (ws <= 0) { if (z3) Z[i] = 0; continue; } const rr = rs / ws;
+    if (z3) { P[i * 3] = dx * rr; P[i * 3 + 1] = dy * rr + cy; P[i * 3 + 2] = dz * rr; N[i * 3] = -dx; N[i * 3 + 1] = -dy; N[i * 3 + 2] = -dz; Z[i] = 0; }   // Kinnteil auf die Schale legen (Normalen wie die Schale: nach innen)
+    else { const sg = Math.sign(N0[i * 3] * dx + N0[i * 3 + 1] * dy + N0[i * 3 + 2] * dz) || -1; N[i * 3] = dx * sg; N[i * 3 + 1] = dy * sg; N[i * 3 + 2] = dz * sg; }   // Schlitze nicht verschieben, nur glatt schattieren
+  }
+  g.setAttribute('aZone', new THREE.BufferAttribute(Z, 1)); g.attributes.position.needsUpdate = true; g.computeBoundingSphere(); return (HELM_GK = g); }
 // Helmdesigns der F1-Fahrer als Farbschema: Grundfarbe, zwei Zusatzfarben, Muster, Visiertönung. Angelehnt an die bekannten Farben der Fahrer (ohne Sponsoren, Logos und Schriftzüge).
 // Muster: 0 Mittelstreifen · 1 untere Hälfte · 2 Heckkeil · 3 Kappe + Ring · 4 drei Längsbänder · 5 Flanken · 6 zwei Querringe
 const HELM_DESIGN = { RUS: [0x16307a, 0x00d2be, 0xf2f2f2, 2, 0x0a1a2a], ANT: [0x00a19c, 0xf2f2f2, 0xd81e2c, 4, 0x101820], LEC: [0xd4121e, 0xf2f2f2, 0x8fd0f0, 1, 0x1a1012], HAM: [0xf5c400, 0xd4121e, 0x111111, 5, 0x2a1a08],
@@ -3768,8 +3831,11 @@ function helmMat(d, hAcc, noChin = false) { /* noChin (Kart): Anbauteil unter de
         else if (uPat == 4) { c = p.x < -0.2 ? uA : p.x < 0.2 ? uB : uC; c = mix(uA, c, smoothstep(0.1, 0.1 + w, p.y + 0.2 * p.z)); }
         else if (uPat == 5) { float a = abs(p.x) - 0.25 * p.y; c = mix(c, uC, smoothstep(0.52, 0.52 + w, a)); c = mix(c, uB, smoothstep(0.6, 0.6 + w, a)); }
         else { float e = p.y - 0.12 * p.z; c = mix(c, uB, (1.0 - smoothstep(0.09, 0.09 + w, abs(e - 0.42)))); c = mix(c, uC, (1.0 - smoothstep(0.07, 0.07 + w, abs(e - 0.2)))); }
-        if (vHZ > 1.5 && vHZ < 2.5) discard; ${noChin ? 'if (vHZ > 2.5 && ((p.z > 0.6 && p.y > -0.76 && p.y < -0.2) || p.y < -0.8)) discard;' : ''} if (vHZ > 2.5) c = vec3(0.012); else if (vHZ > 0.5) c = uV;
-        diffuseColor.rgb = c; }`); };
+        if (vHZ > 1.5 && vHZ < 2.5) discard; if (vHZ > 0.5 && vHZ < 1.5 && !gl_FrontFacing) discard;   /* Visier nur von vorn: die Rückseite flimmerte als helle Linien durch */
+        ${noChin ? 'if (vHZ > 2.5 && p.y < -0.8) discard;' : ''}   /* Kart: Dichtring unten weg (sitzt auf dem Kragen); das Kinnteil ist dort Teil der Schale (helmGeoKart) */
+        if (vHZ > 2.5) c = vec3(0.012); else if (vHZ > 0.5) c = uV;
+        diffuseColor.rgb = c; }`);
+    if (noChin) sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n if (!gl_FrontFacing && vHZ < 0.5) totalEmissiveRadiance += diffuseColor.rgb * 0.6;'); };   /* Kart: Schale innen in Helmfarbe – feine Spalten am umgelegten Kinnteil fallen so nicht als dunkle Flecken auf */
   m.customProgramCacheKey = () => noChin ? 'helmLivK' : 'helmLiv'; return m; }
 // (älterer, aus Grundkörpern gebauter Helm – nicht mehr verwendet)
 // Helm (F1/F2), um den Ursprung, Blick nach +z: Schale, Kinnbügel, dunkles Visier mit Farbstreifen und Dichtung, Mittelstreifen über den Scheitel, Farbring unten,
@@ -7964,7 +8030,9 @@ const SW_ROT = 0.95;   // sichtbare Lenkraddrehung bei vollem Einschlag (~55°):
 const ARMS = { f1: null, road: null }, _gc = new THREE.Color(), _gw = new THREE.Color(0xffffff);
 function armsTick() {
   const cock = running && (S.cam === 2 || S.cam === 3) && !!(pl && pl.mesh), road = !!(pl && pl.mesh && (pl.mesh.road || pl.mesh.kart)), col = pl && TEAMS[pl.team] ? uiCol(TEAMS[pl.team]) : 0xffffff;
-  if (ARMS.f1) ARMS.f1.g.visible = cock && !road; if (ARMS.road) ARMS.road.g.visible = cock && road;
+  const own = !!(pl && pl.mesh && pl.mesh.kartFahrer);   // Kart mit neuem Fahrer: eigene Arme und Hände am Modell, keine eingeblendeten
+  if (ARMS.f1) ARMS.f1.g.visible = cock && !road; if (ARMS.road) ARMS.road.g.visible = cock && road && !own;
+  if (own) return;
   if (!cock) return;
   const steer = pl.steer || 0;
   if (!road) {   // F1: Lenkrad dreht max. ~70°, die Hände bleiben an den Griffen
