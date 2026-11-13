@@ -27,11 +27,16 @@ sw.position.set(0, 0.5005, 0.1235); sw.quaternion.setFromRotationMatrix(new THRE
 const fb = await fetch('../kartfahrer.bin').then(x => x.arrayBuffer()), fl = new DataView(fb).getUint32(0, true), fh = JSON.parse(new TextDecoder().decode(new Uint8Array(fb, 4, fl))), fbase = 4 + fl;
 const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(fb, fbase + fh.pos, fh.nv * 3), 3)); g.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(fb, fbase + fh.nrm, fh.nv * 3), 3)); g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(fb, fbase + fh.uv, fh.nv * 2), 2));
 g.setIndex(new THREE.BufferAttribute(fh.i32 ? new Uint32Array(fb, fbase + fh.idx, fh.ni) : new Uint16Array(fb, fbase + fh.idx, fh.ni), 1));
-const reg = new Uint8Array(fb, fbase + fh.reg, fh.nv), ry = new Float32Array(fb, fbase + fh.ry, fh.nv), cc = new Float32Array(fh.nv * 3), C = [0xc8101c, 0xf2c200, 0x1a1a1d].map(h => new THREE.Color(h));   // grob je Eckpunkt (im Spiel pixelgenau im Shader)
-for (let i = 0; i < fh.nv; i++) C[reg[i] > 1 ? 1 : ry[i] >= 0 && ry[i] < 0.072 ? 2 : ry[i] > 0.548 && ry[i] < 0.592 ? 1 : 0].toArray(cc, i * 3); g.setAttribute('color', new THREE.BufferAttribute(cc, 3));
-const map = tl.load('../textures/kart_fahrer.jpg'); map.colorSpace = THREE.SRGBColorSpace;
-if (q.has('debug')) { s.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .75, side: THREE.FrontSide }))); s.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.BackSide }))); }   // Prüfung: Rückseiten grün
-else s.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map, normalMap: tl.load('../textures/kart_fahrer_n.jpg'), vertexColors: true, roughness: .75, side: THREE.DoubleSide })));
+g.setAttribute('aReg', new THREE.BufferAttribute(Float32Array.from(new Uint8Array(fb, fbase + fh.reg, fh.nv)), 1));
+g.setAttribute('aRy', new THREE.BufferAttribute(new Float32Array(fb, fbase + fh.ry, fh.nv), 1));
+g.setAttribute('aRest', new THREE.BufferAttribute(new Float32Array(fb, fbase + fh.rest, fh.nv * 3), 3));
+g.setAttribute('aRN', new THREE.BufferAttribute(new Int8Array(fb, fbase + fh.rn, fh.nv * 3), 3, true));
+// Material aus dem Spiel (Abschnitt KFMAT-START … KFMAT-END in index.html), Texturpfade eine Ebene höher
+const src = await fetch('../index.html').then(x => x.text()), part = src.slice(src.indexOf('// KFMAT-START'), src.indexOf('// KFMAT-END')).replaceAll("'textures/", "'../textures/");
+const kartFahrerMat = new Function('THREE', 'col', part + '\nreturn kartFahrerMat;')(THREE, h => new THREE.Color(h));
+const team = { suit: q.get('suit') || 'c8101c', acc: q.get('acc') || 'f0f0f0' };
+if (q.has('debug')) { s.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0xcc3333, roughness: .75, side: THREE.FrontSide }))); s.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.BackSide }))); }   // Prüfung: Rückseiten grün
+else s.add(new THREE.Mesh(g, kartFahrerMat('T', new THREE.Color('#' + team.suit), new THREE.Color('#' + team.acc))));
 // Helm
 const dec = (b, Ty) => { const s2 = atob(b), u = new Uint8Array(s2.length); for (let i = 0; i < u.length; i++) u[i] = s2.charCodeAt(i); return new Ty(u.buffer); };
 const p16 = dec(HELM_BIN.p, Int16Array), n8 = dec(HELM_BIN.n, Int8Array), z8 = dec(HELM_BIN.z, Uint8Array), ix = dec(HELM_BIN.i, Uint16Array), n = z8.length, P = new Float32Array(n * 3), N = new Float32Array(n * 3);

@@ -7,7 +7,8 @@ Braucht: numpy, pillow, scipy, trimesh, pymeshlab, libigl, scikit-image (+ Syste
 Ergebnis:
   fahrer/fahrer.glb, fahrer/handschuh.glb   stehende Figur (Vorschau: fahrer/vorschau.html; Kart-Prüfansicht: fahrer/kart_vorschau.html)
   kartfahrer.bin                           sitzender Kart-Fahrer fürs Spiel (Körper + beide Handschuhe, ein Netz)
-  textures/kart_fahrer.jpg, _n.jpg         Atlas (links Anzug, rechts Handschuh) + Normalen
+  textures/kart_fahrer.jpg                 Atlas (links Anzug-Schattierung, rechts Handschuh)
+  textures/kart_stoff.jpg                  kachelbares Nomex-Gewebe (Höhenkarte) für das Anzugmaterial
 
 Ablauf:
   1. Körper aufräumen: Splitter, Kopf (Tripo-Helm) und Hände weg; Ärmel sauber quer zum Unterarm abschneiden.
@@ -495,6 +496,21 @@ def place_glove(gV0, gF, grip, Xg, Yg, Zg, S):
     return grip + p @ R.T, gF
 
 
+def weave_texture(n=256, threads=16):
+    """Kachelbare Höhenkarte für Nomex-Gewebe (Köper 2/2): Kett- und Schussfäden als gewölbte Bahnen, diagonaler Grat, leichtes Rauschen."""
+    y, x = np.mgrid[0:n, 0:n].astype(np.float32); t = n / threads
+    i, j = np.floor(x / t), np.floor(y / t); u, v = (x % t) / t, (y % t) / t
+    warp_up = ((i + j) % 4) < 2                                                         # Köper: Kettfaden liegt 2 oben, 2 unten, je Reihe versetzt
+    prof = lambda q: np.sin(np.pi * np.clip(q, 0, 1)) ** 0.7
+    hw = prof(u) * (0.75 + 0.25 * np.cos(np.pi * (v - 0.5)))                             # Kettfaden (senkrecht)
+    hf = prof(v) * (0.75 + 0.25 * np.cos(np.pi * (u - 0.5)))                             # Schussfaden (waagerecht)
+    h = np.where(warp_up, 0.55 + 0.45 * hw, 0.55 + 0.45 * hf) * np.where(warp_up, 1, 0.97)
+    rng = np.random.default_rng(3); nz = ndimage.gaussian_filter(rng.random((n, n)).astype(np.float32), 1.2, mode='wrap')
+    h = h + (nz - nz.mean()) * 0.6
+    h = (h - h.min()) / (h.max() - h.min())
+    return Image.fromarray((h * 255).astype(np.uint8)).convert('L')
+
+
 def smooth_normals(V, F):
     """Normalen über gleiche Positionen gemittelt (sonst harte Kanten an den UV-Nähten)."""
     mesh = trimesh.Trimesh(V, F, process=False); fn = mesh.face_normals * mesh.area_faces[:, None]
@@ -577,11 +593,17 @@ def main():
     print('Sitzpunkt', np.round(info['hip'], 3), 'Schulter', np.round(info['shoulder'], 3), 'Ellbogen', np.round(info['elbow'], 3), 'Arm-Eckpunkte', int(info['arms'][0].sum()), int(info['arms'][1].sum()))
     # Bereiche: 0 Körper, 3 Handschuh. Dazu je Eckpunkt die Höhe in Ruhehaltung (normiert): daraus zieht der Shader
     # Gürtel (0,548…0,592) und Schuhe (< 0,072) pixelgenau – Farbwechsel je Eckpunkt gäbe bei ~9000 Dreiecken Treppenkanten.
+    # Bereiche je Eckpunkt: 0 Rumpf, 1 Arm, 2 Bein, 3 Handschuh. aRy = Höhe in Ruhehaltung (Schuhe, Gürtel), aRest/aRN = Ruhe-Position
+    # und -Normale: daraus zeichnet der Shader das Anzug-Design (Streifen, Nähte, Reißverschluss) und legt das Stoffgewebe auf.
+    # (Vorher stand für Arme ry = 0,5 als „kein Gürtel“ – an der Grenze Arm/Rumpf lief der Wert über die Gürtelhöhe: gezackte Linie.)
     reg = np.zeros(len(kV), np.uint8); ry = kV[:, 1].astype(np.float32)
-    ry[info['arms'][0] | info['arms'][1] | ((np.abs(kV[:, 0]) > 0.104) & (kV[:, 1] > 0.3))] = 0.5   # Arme: kein Gürtelband auf den Unterarmen
+    reg[(kV[:, 1] < 0.535) & ~(info['arms'][0] | info['arms'][1])] = 2
+    reg[info['arms'][0] | info['arms'][1]] = 1
+    rest = kV.astype(np.float32); rn = smooth_normals(kV, kF).astype(np.float32)
     # Handschuhe (verkleinert) an beide Hände
     hV, hF, hUV = decimate(gV0, gF0, gUV0, 1600)
     parts_V, parts_F, parts_UV, parts_R, parts_Y = [Pk], [kF], [kUV * np.array([0.5, 1.0])], [reg], [ry]
+    parts_P, parts_N = [rest], [rn]
     off = len(Pk)
     armPts = Pk[info['arms'][0]]                                                       # Ärmel (für die Stulpe), nach dem Engziehen
     gvR, gfR = place_glove(hV, hF, *info['grip'], S)
@@ -596,14 +618,14 @@ def main():
     ang = np.degrees(np.arctan2(d @ az_, np.sum(d * u1, 1)))[near]; print(f'{np.ptp(ang):.0f}°')
     for s, sfx in ((-1, 'R'), (1, 'L')):
         pv, pf = (gvR, gfR) if s < 0 else (gvR * np.array([-1.0, 1, 1]), gfR[:, ::-1])   # linke Hand gespiegelt
-        parts_V.append(pv); parts_F.append(pf + off); parts_UV.append(hUV * np.array([0.5, 1.0]) + np.array([0.5, 0.0])); parts_R.append(np.full(len(pv), 3, np.uint8)); parts_Y.append(np.full(len(pv), -1, np.float32)); off += len(pv)
+        parts_V.append(pv); parts_F.append(pf + off); parts_UV.append(hUV * np.array([0.5, 1.0]) + np.array([0.5, 0.0])); parts_R.append(np.full(len(pv), 3, np.uint8)); parts_Y.append(np.full(len(pv), -1, np.float32)); parts_P.append(np.zeros((len(pv), 3), np.float32)); parts_N.append(np.tile([0, 1, 0], (len(pv), 1)).astype(np.float32)); off += len(pv)
         print(f'Handgelenk {sfx}: Arm endet bei {np.round(info["wrist"][sfx][0], 3)}, Handschuh bei {np.round(info["wrist"][sfx][1], 3)}')
     AV, AF, AUV, AR, AY = np.vstack(parts_V), np.vstack(parts_F), np.vstack(parts_UV), np.concatenate(parts_R), np.concatenate(parts_Y)
     N = smooth_normals(AV, AF)
-    # Atlas: links Anzug-Schattierung, rechts Handschuh; Normalen links Anzug, rechts flach
+    # Atlas: links Anzug-Schattierung, rechts Handschuh
     atl = Image.new('RGB', (1024, 512)); atl.paste(tex.resize((512, 512), Image.LANCZOS), (0, 0)); atl.paste(glove_texture(gtex).resize((512, 512), Image.LANCZOS), (512, 0))
-    atn = Image.new('RGB', (1024, 512), (128, 128, 255))                                 # flach: UV kommen vom Originalnetz, Normalen-Details würden an Nähten streifen
-    atl.save(os.path.join(ROOT, 'textures', 'kart_fahrer.jpg'), quality=86); atn.save(os.path.join(ROOT, 'textures', 'kart_fahrer_n.jpg'), quality=90)
+    atl.save(os.path.join(ROOT, 'textures', 'kart_fahrer.jpg'), quality=86)
+    weave_texture().save(os.path.join(ROOT, 'textures', 'kart_stoff.jpg'), quality=92)
     # Binärformat wie kart.bin: [u32 Länge][JSON-Kopf][Daten]
     # Helm lückenlos auf den Hals: Unterkante 4,5 cm unter dem oberen Ende des Halses (Kragen), mittig über dem Hals, leicht nach vorn
     nk = Pk[kV[:, 1] > 0.845]; HB_BOTTOM = 0.154 * 1.1                                 # Helm-Unterkante unter der Mitte (Spielhelm × 1,1)
@@ -613,6 +635,7 @@ def main():
     def put(name, arr):
         off = sum(len(b) for b in blobs); b = arr.tobytes(); b += b'\0' * (-len(b) % 4); blobs.append(b); hdr[name] = off
     put('pos', AV.astype(np.float32)); put('nrm', N.astype(np.float32)); put('uv', AUV.astype(np.float32)); put('reg', AR.astype(np.uint8)); put('ry', AY.astype(np.float32))
+    put('rest', np.vstack(parts_P).astype(np.float32)); put('rn', np.round(np.vstack(parts_N) * 127).astype(np.int8))
     put('idx', AF.astype(np.uint16 if len(AV) < 65536 else np.uint32).reshape(-1)); hdr['i32'] = len(AV) >= 65536
     hj = json.dumps(hdr).encode(); hj += b' ' * (-len(hj) % 4)
     with open(os.path.join(ROOT, 'kartfahrer.bin'), 'wb') as fo: fo.write(struct.pack('<I', len(hj)) + hj + b''.join(blobs))
