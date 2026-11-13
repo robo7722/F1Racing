@@ -24,7 +24,7 @@
   "vec3 O = #ff5a08; vec3 K = #141518; vec3 col = O;",
   "col = mix(col, K, aaS(p.z - 2.0)); col = mix(col, K, aaS(abs(p.x) - 0.86) * aaS(p.z - 1.6) * (1.0 - aaS(p.y - 0.55)));",
   "col = mix(col, K, band(p.z, -1.4, -0.42) * aaS(p.y - 0.925 - 0.25 * (p.z + 0.413)));",
-  "float rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.6);",
+  "float rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.45);",
   "col = mix(col, K, rw * (1.0 - aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.57))));",
   "return col;"
  ],
@@ -67,9 +67,9 @@
    "name": "panoro",
    "box": [
     1868,
-    322,
+    330,
     2210,
-    388
+    384
    ],
    "kind": "w",
    "dy": -0.08
@@ -78,9 +78,9 @@
    "name": "prop",
    "box": [
     2222,
-    368,
+    374,
     2622,
-    447
+    443
    ],
    "kind": "c",
    "dy": -0.09
@@ -105,8 +105,8 @@
    ],
    "kind": "c",
    "thr": [
-    0.12,
-    0.45
+    0.25,
+    0.6
    ]
   },
   {
@@ -117,7 +117,11 @@
     495,
     605
    ],
-   "kind": "w"
+   "kind": "w",
+   "at": [
+    1.99,
+    0.33
+   ]
   },
   {
    "name": "pirelli",
@@ -127,7 +131,11 @@
     438,
     685
    ],
-   "kind": "c"
+   "kind": "c",
+   "at": [
+    2.2,
+    0.24
+   ]
   }
  ],
  "logoFile": "F2_MPM",
