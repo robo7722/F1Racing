@@ -1,0 +1,227 @@
+{
+ "kind": "f2",
+ "team": "F2_CAM",
+ "driver": "LEO",
+ "drivers": [
+  "LEO"
+ ],
+ "photo": "https://res.cloudinary.com/prod-f2f3/v1770000000/common/f2/2026/camposracing/2026camposracingcarleft.png",
+ "rear": [
+  3065,
+  562
+ ],
+ "front": [
+  850,
+  565
+ ],
+ "liv": {
+  "body": "#f2f3f5",
+  "acc": "#0c0d10",
+  "tip": "#0c0d10",
+  "low": "#0c0d10",
+  "split": 0.25,
+  "metal": 0.25
+ },
+ "glsl": [
+  "vec3 wht = #f2f3f5; vec3 blk = #0c0d10; vec3 red = #e0121e;",
+  "bool fw = p.z > 2.15 && p.y < 0.36 && abs(p.x) > 0.2; bool rw = p.z < -1.9 && p.y > 0.6;",
+  "if (fw || rw) return blk;",
+  "vec3 col = wht;",
+  "float yl = 0.55 - clamp((p.z - 1.08) / 0.65, 0.0, 1.0) * 0.085 - max(p.z - 1.73, 0.0) * 0.35;",
+  "if (p.z > 0.5) { if (p.y < yl) col = blk; else if (p.y < yl + 0.022 && p.z > 1.2) col = red; }",
+  "if (p.z < -1.2 && p.y < 0.62) col = blk;",
+  "return col;"
+ ],
+ "stickers": [
+  {
+   "name": "seite_schwarz",
+   "box": [
+    1500,
+    120,
+    2770,
+    722
+   ],
+   "kind": "key",
+   "key": "#0c0e10",
+   "tol": 60,
+   "color": "#0c0d10"
+  },
+  {
+   "name": "seite_weiss",
+   "box": [
+    1500,
+    120,
+    2770,
+    722
+   ],
+   "kind": "key",
+   "key": "#d2dae6",
+   "tol": 75,
+   "color": "#f2f3f5"
+  },
+  {
+   "name": "streifen_rot",
+   "box": [
+    2112,
+    135,
+    2762,
+    306
+   ],
+   "kind": "key",
+   "key": "#f01428",
+   "color": "#e0121e"
+  },
+  {
+   "name": "streifen_gelb",
+   "box": [
+    2112,
+    135,
+    2420,
+    215
+   ],
+   "kind": "key",
+   "key": "#f5a800",
+   "tol": 22,
+   "color": "#f5b000"
+  },
+  {
+   "name": "streifen_gruen",
+   "box": [
+    2365,
+    192,
+    2565,
+    248
+   ],
+   "kind": "key",
+   "key": "#006f4b",
+   "color": "#0a7a48"
+  },
+  {
+   "name": "heck_rot",
+   "box": [
+    2452,
+    502,
+    2602,
+    718
+   ],
+   "kind": "key",
+   "key": "#ff0000",
+   "color": "#e0121e"
+  },
+  {
+   "name": "heck_gelb",
+   "box": [
+    2452,
+    502,
+    2602,
+    718
+   ],
+   "kind": "key",
+   "key": "#f8a700",
+   "tol": 22,
+   "color": "#f5b000"
+  },
+  {
+   "name": "aless_grau",
+   "box": [
+    1945,
+    470,
+    2240,
+    625
+   ],
+   "kind": "key",
+   "key": "#4c5b6c",
+   "tol": 45,
+   "color": "#56636f"
+  },
+  {
+   "name": "aless_rot",
+   "box": [
+    1920,
+    455,
+    2385,
+    708
+   ],
+   "kind": "key",
+   "key": "#db0000",
+   "color": "#dc1018"
+  },
+  {
+   "name": "heraldo",
+   "box": [
+    2180,
+    205,
+    2482,
+    296
+   ],
+   "kind": "d"
+  },
+  {
+   "name": "griffincore",
+   "box": [
+    1832,
+    328,
+    2155,
+    388
+   ],
+   "kind": "d"
+  },
+  {
+   "name": "fipresta",
+   "box": [
+    1210,
+    425,
+    1415,
+    492
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "telcel",
+   "box": [
+    1242,
+    494,
+    1378,
+    546
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "pirelli",
+   "box": [
+    297,
+    562,
+    501,
+    633
+   ],
+   "kind": "c"
+  },
+  {
+   "name": "heraldo_nase",
+   "box": [
+    235,
+    636,
+    492,
+    704
+   ],
+   "kind": "w"
+  }
+ ],
+ "number": {
+  "color": "#101114",
+  "spots": [
+   {
+    "v": "side",
+    "z": -0.82,
+    "y": 0.56,
+    "s": 0.15
+   },
+   {
+    "v": "top",
+    "x": 0,
+    "z": 1.7,
+    "s": 0.12
+   }
+  ]
+ }
+}

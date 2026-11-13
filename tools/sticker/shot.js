@@ -10,7 +10,16 @@ const V = { L: [[30, 0.9, 0.35], [0, 0.55, 0.35], 6], Lf: [[14, 1.0, 1.9], [0, 0
   top: [[0.01, 24, 0.3], [0, 0.5, 0.3], 8], f34: [[9, 3, 12], [0, 0.5, 0.5], 14], r34: [[9, 3, -12], [0, 0.5, -0.3], 14] };
 for (const k of ['L', 'Lf', 'Lm', 'Lr', 'f34', 'r34']) V[k.replace('L', 'R').replace(/^([fr])34$/, '$134R')] = [[-V[k][0][0], V[k][0][1], V[k][0][2]], V[k][1], V[k][2]];
 const MIME = { html: 'text/html', js: 'text/javascript', json: 'application/json', png: 'image/png', jpg: 'image/jpeg', bin: 'application/octet-stream', mp3: 'audio/mpeg', webmanifest: 'application/manifest+json', svg: 'image/svg+xml' };
+// Höchstens drei Aufnahmen gleichzeitig (jede braucht viel Rechenzeit): Platz in /tmp/f1shot-slots belegen, sonst warten
+const SLOTS = '/tmp/f1shot-slots'; let slot = null;
+async function takeSlot() { fs.mkdirSync(SLOTS, { recursive: true });
+  for (;;) { for (let i = 0; i < 3; i++) { const f = path.join(SLOTS, 's' + i);
+      try { fs.writeFileSync(f, String(process.pid), { flag: 'wx' }); slot = f; return; } catch (e) { try { process.kill(+fs.readFileSync(f, 'utf8'), 0); } catch (e2) { try { fs.unlinkSync(f); } catch (e3) {} } } }
+    await new Promise(r => setTimeout(r, 4000)); } }
+const freeSlot = () => { if (slot) { try { fs.unlinkSync(slot); } catch (e) {} slot = null; } };
+process.on('exit', freeSlot); process.on('SIGTERM', () => process.exit(1)); process.on('SIGINT', () => process.exit(1));
 (async () => {
+  await takeSlot();
   const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
   const p = await b.newPage({ viewport: { width: 1280, height: 640 } });
   p.on('pageerror', e => console.log('SEITENFEHLER', String(e).slice(0, 500)));

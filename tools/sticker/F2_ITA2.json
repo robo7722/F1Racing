@@ -1,0 +1,68 @@
+{
+ "kind": "f2",
+ "team": "F2_PRE",
+ "driver": "BOY",
+ "drivers": [
+  "BOY"
+ ],
+ "photo": "https://res.cloudinary.com/prod-f2f3/v1770000000/common/f2/2026/premaracing/2026premaracingcarleft.png",
+ "rear": [
+  3078,
+  568
+ ],
+ "front": [
+  892,
+  570
+ ],
+ "liv": {
+  "body": "#0b5a48",
+  "acc": "#0a1f1a",
+  "tip": "#0b5a48",
+  "metal": 0.4
+ },
+ "glsl": [
+  "vec3 G = #0b5a48; vec3 K = #0a1f1a; vec3 L = #cfe034; vec3 col = G;",
+  "float rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.6);",
+  "col = mix(col, K, rw * aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.40)));",
+  "return col;"
+ ],
+ "stickers": [
+  {
+   "name": "partner",
+   "box": [
+    1983,
+    686,
+    2440,
+    733
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "pirelli",
+   "box": [
+    326,
+    567,
+    526,
+    637
+   ],
+   "kind": "c"
+  }
+ ],
+ "number": {
+  "color": "#ffffff",
+  "spots": [
+   {
+    "v": "side",
+    "z": -2.1,
+    "y": 0.62,
+    "s": 0.2
+   },
+   {
+    "v": "top",
+    "x": 0,
+    "z": 1.9,
+    "s": 0.13
+   }
+  ]
+ }
+}

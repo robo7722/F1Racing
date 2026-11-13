@@ -1,0 +1,251 @@
+{
+ "kind": "f2",
+ "team": "F2_VAR",
+ "driver": "VAR",
+ "drivers": [
+  "VAR",
+  "VIL"
+ ],
+ "photo": "https://res.cloudinary.com/prod-f2f3/v1770000000/common/f2/2026/vanamersfoortracing/2026vanamersfoortracingcarleft.png",
+ "rear": [
+  3075,
+  570
+ ],
+ "front": [
+  848,
+  567
+ ],
+ "liv": {
+  "body": "#17181b",
+  "acc": "#ff5a00",
+  "tip": "#17181b",
+  "metal": 0.5
+ },
+ "glsl": [
+  "vec3 col = #17181b;",
+  "if (p.z > 0.6 && p.z < 2.45 && abs(p.x) < 0.09 && p.y > 0.25) col = #ff5a00;",
+  "if (p.z < -1.9 && p.y > 1.0 && abs(p.x) < 0.44) col = #ff5a00;",
+  "return col;"
+ ],
+ "stickers": [
+  {
+   "name": "nase",
+   "box": [
+    100,
+    430,
+    625,
+    625
+   ],
+   "kind": "key",
+   "key": "#ff5a00",
+   "tol": 14
+  },
+  {
+   "name": "cockpit",
+   "box": [
+    1020,
+    340,
+    1500,
+    430
+   ],
+   "kind": "key",
+   "key": "#ff5a00",
+   "tol": 14
+  },
+  {
+   "name": "schwungA",
+   "box": [
+    1640,
+    400,
+    2480,
+    560
+   ],
+   "kind": "key",
+   "key": "#ff5a00",
+   "tol": 14
+  },
+  {
+   "name": "schwungB",
+   "box": [
+    1742,
+    560,
+    1940,
+    700
+   ],
+   "kind": "key",
+   "key": "#ff5a00",
+   "tol": 14
+  },
+  {
+   "name": "schwungC",
+   "box": [
+    1790,
+    700,
+    1940,
+    745
+   ],
+   "kind": "key",
+   "key": "#ff5a00",
+   "tol": 14
+  },
+  {
+   "name": "linien",
+   "box": [
+    2380,
+    185,
+    2850,
+    455
+   ],
+   "kind": "key",
+   "key": "#ff5a00",
+   "tol": 14
+  },
+  {
+   "name": "pirelli",
+   "box": [
+    286,
+    632,
+    474,
+    685
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "var",
+   "box": [
+    1262,
+    398,
+    1348,
+    437
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "balius",
+   "box": [
+    1240,
+    446,
+    1378,
+    487
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "pap",
+   "box": [
+    1252,
+    493,
+    1358,
+    552
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "acc7",
+   "box": [
+    1830,
+    326,
+    2024,
+    364
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "hexacore",
+   "box": [
+    2178,
+    193,
+    2380,
+    242
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "gtoklein",
+   "box": [
+    2001,
+    128,
+    2152,
+    192
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "gtoicon",
+   "box": [
+    2122,
+    503,
+    2248,
+    642
+   ],
+   "kind": "c"
+  },
+  {
+   "name": "corporativogto",
+   "box": [
+    1937,
+    646,
+    2418,
+    714
+   ],
+   "kind": "c"
+  },
+  {
+   "name": "hrx",
+   "box": [
+    2555,
+    590,
+    2647,
+    624
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "pm",
+   "box": [
+    2653,
+    576,
+    2717,
+    632
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "milwaukee",
+   "box": [
+    2725,
+    573,
+    2802,
+    630
+   ],
+   "kind": "c"
+  },
+  {
+   "name": "claro",
+   "box": [
+    3258,
+    263,
+    3372,
+    307
+   ],
+   "kind": "w"
+  }
+ ],
+ "number": {
+  "color": "#aab0bd",
+  "spots": [
+   {
+    "v": "side",
+    "z": -2.07,
+    "y": 0.59,
+    "s": 0.155
+   },
+   {
+    "v": "top",
+    "x": 0,
+    "z": 2.0,
+    "s": 0.12
+   }
+  ]
+ }
+}

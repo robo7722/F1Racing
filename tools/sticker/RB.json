@@ -1,0 +1,172 @@
+{
+ "kind": "f1",
+ "photo": "https://media.formula1.com/image/upload/v1740000001/common/f1/2026/racingbulls/2026racingbullscarright.png",
+ "rear": [
+  523,
+  568
+ ],
+ "front": [
+  3110,
+  566
+ ],
+ "glsl": [
+  "vec3 W = #f2f3f6, Cb = #1b1c20, Y = #f4cf2e;",
+  "vec3 col = W;",
+  "float yl = 0.67 + 0.545 * clamp(p.z + 1.26, -0.3, 0.44) + 0.15 * clamp(p.z + 0.82, 0.0, 0.55);",
+  "col = mix(col, Cb, aaS(p.y - yl) * (1.0 - aaS(p.z + 0.28)));",
+  "col = mix(col, Y, aaS(p.y - 0.86) * band(p.z, -0.28, 0.15));",
+  "vec3 Bm = #1740b8;",
+  "col = mix(col, Bm, (1.0 - aaS(p.y - 0.26)) * band(p.z, -0.6, 0.7));",
+  "col = mix(col, Bm, (1.0 - aaS(p.y - 0.62)) * (1.0 - aaS(p.z + 1.15)));",
+  "col = mix(col, Cb, 1.0 - aaS(p.y - 0.15));",
+  "if (c > 0.5 && c < 1.5) col = mix(Cb, W, aaS(p.z - 1.9));",
+  "if (c > 1.5 && c < 2.5) col = W;",
+  "return col;"
+ ],
+ "stickers": [
+  {
+   "name": "blau",
+   "box": [
+    835,
+    300,
+    2385,
+    705
+   ],
+   "kind": "key",
+   "key": "#0638a0",
+   "color": "#1740b8",
+   "tol": 32
+  },
+  {
+   "name": "blaunase",
+   "box": [
+    2770,
+    358,
+    2895,
+    404
+   ],
+   "kind": "key",
+   "key": "#3768c2",
+   "color": "#1740b8",
+   "tol": 32
+  },
+  {
+   "name": "gelb",
+   "box": [
+    1290,
+    85,
+    1790,
+    292
+   ],
+   "kind": "key",
+   "key": "#ead24f",
+   "color": "#f4cf2e"
+  },
+  {
+   "name": "rot",
+   "box": [
+    985,
+    88,
+    1705,
+    372
+   ],
+   "kind": "key",
+   "key": "#d8102c",
+   "color": "#d8102c"
+  },
+  {
+   "name": "hugo",
+   "box": [
+    2505,
+    362,
+    2705,
+    420
+   ],
+   "kind": "key",
+   "color": "#d8102c",
+   "key": "#cf2f35"
+  },
+  {
+   "name": "cashapp",
+   "box": [
+    1678,
+    290,
+    1902,
+    350
+   ],
+   "kind": "c"
+  },
+  {
+   "name": "ford",
+   "box": [
+    788,
+    378,
+    926,
+    470
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "visarb",
+   "box": [
+    140,
+    135,
+    318,
+    310
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "cashappfl",
+   "box": [
+    178,
+    305,
+    308,
+    350
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "hugofl",
+   "box": [
+    178,
+    365,
+    318,
+    403
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "cashappfw",
+   "box": [
+    3460,
+    630,
+    3725,
+    692
+   ],
+   "kind": "d",
+   "at": [
+    2.38,
+    0.24
+   ],
+   "w": 0.28
+  }
+ ],
+ "number": {
+  "color": "#d8102c",
+  "spots": [
+   {
+    "v": "side",
+    "z": -1.17,
+    "y": 0.79,
+    "s": 0.15
+   },
+   {
+    "v": "top",
+    "x": 0,
+    "z": 2.0,
+    "s": 0.13
+   }
+  ]
+ }
+}

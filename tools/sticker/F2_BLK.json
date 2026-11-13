@@ -1,0 +1,200 @@
+{
+ "kind": "f2",
+ "team": "F2_ROD",
+ "driver": "STE",
+ "drivers": [
+  "STE"
+ ],
+ "photo": "https://res.cloudinary.com/prod-f2f3/c_lpad,w_8000,h_880,g_west,b_transparent/l_common:f2:2026:rodinmotorsport:2026rodinmotorsportcarleft/a_hflip/fl_layer_apply,g_west,x_3520/l_text:Arial_300_bold:BWT,co_rgb:1b3f9c/fl_layer_apply,g_east,x_40/v1770000000/common/f2/2026/rodinmotorsport/2026rodinmotorsportcarleft.png",
+ "rear": [
+  3075,
+  570
+ ],
+ "front": [
+  852,
+  572
+ ],
+ "liv": {
+  "body": "#0b0c0f",
+  "acc": "#0b0c0f",
+  "tip": "#0b0c0f",
+  "metal": 0.4
+ },
+ "glsl": [
+  "vec3 col = #0b0c0f;",
+  "if (p.z < -0.12 && p.z > -1.5 && p.y > 0.72 && abs(p.x) < 0.3) col = #e9edf1;",
+  "return col;"
+ ],
+ "stickers": [
+  {
+   "name": "haube_weiss",
+   "box": [
+    1990,
+    60,
+    2760,
+    352
+   ],
+   "kind": "key",
+   "key": "#e6eaee",
+   "tol": 120,
+   "color": "#e9edf1",
+   "at": [
+    -0.722,
+    0.813
+   ],
+   "w": 1.09,
+   "side": "L"
+  },
+  {
+   "name": "haube_weiss_R",
+   "box": [
+    4280,
+    60,
+    5050,
+    352
+   ],
+   "kind": "key",
+   "key": "#e6eaee",
+   "tol": 120,
+   "color": "#e9edf1",
+   "at": [
+    -0.722,
+    0.813
+   ],
+   "w": 1.09,
+   "side": "R"
+  },
+  {
+   "name": "nase_linie",
+   "box": [
+    130,
+    400,
+    640,
+    640
+   ],
+   "kind": "key",
+   "key": "#f0f0f0",
+   "tol": 60,
+   "color": "#e9edf1",
+   "at": [
+    2.094,
+    0.369
+   ],
+   "w": 0.722,
+   "side": "L"
+  },
+  {
+   "name": "nase_linie_R",
+   "box": [
+    6400,
+    400,
+    6910,
+    640
+   ],
+   "kind": "key",
+   "key": "#f0f0f0",
+   "tol": 60,
+   "color": "#e9edf1",
+   "at": [
+    2.094,
+    0.369
+   ],
+   "w": 0.722,
+   "side": "R"
+  },
+  {
+   "name": "cockpit_linie",
+   "box": [
+    1095,
+    340,
+    1800,
+    385
+   ],
+   "kind": "key",
+   "key": "#f0f0f0",
+   "tol": 60,
+   "color": "#e9edf1",
+   "at": [
+    0.591,
+    0.592
+   ],
+   "w": 0.998,
+   "side": "L"
+  },
+  {
+   "name": "cockpit_linie_R",
+   "box": [
+    5240,
+    340,
+    5945,
+    385
+   ],
+   "kind": "key",
+   "key": "#f0f0f0",
+   "tol": 60,
+   "color": "#e9edf1",
+   "at": [
+    0.591,
+    0.592
+   ],
+   "w": 0.998,
+   "side": "R"
+  },
+  {
+   "name": "pirelli",
+   "box": [
+    283,
+    584,
+    468,
+    642
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "allroad",
+   "box": [
+    1115,
+    403,
+    1378,
+    472
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "ptc",
+   "box": [
+    2008,
+    133,
+    2108,
+    182
+   ],
+   "kind": "d"
+  }
+ ],
+ "logoFile": "F2_ROD",
+ "logos": [
+  {
+   "v": "top",
+   "x": 0,
+   "z": 1.75,
+   "s": 0.16
+  }
+ ],
+ "number": {
+  "color": "#ffffff",
+  "spots": [
+   {
+    "v": "side",
+    "z": -1.13,
+    "y": 0.47,
+    "s": 0.2
+   },
+   {
+    "v": "top",
+    "x": 0,
+    "z": 2.15,
+    "s": 0.11
+   }
+  ]
+ }
+}

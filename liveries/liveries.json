@@ -1,4 +1,712 @@
 {
+ "ALP": {
+  "kind": "f1",
+  "sheet": true,
+  "logoFile": "ALP",
+  "logos": [
+   {
+    "v": "top",
+    "x": 0,
+    "z": 1.5,
+    "s": 0.2
+   }
+  ],
+  "num": {
+   "color": "#ffffff",
+   "list": [
+    {
+     "v": "side",
+     "z": -1.19,
+     "y": 0.79,
+     "s": 0.15
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 2.0,
+     "s": 0.13
+    }
+   ]
+  },
+  "glsl": "vec3 B = #2080d0, Pk = #f272b6, K = #101216;\nvec3 col = B;\ncol = mix(col, K, (1.0 - aaS(p.y - 0.45 - 0.2 * clamp(-1.0 - p.z, 0.0, 1.0))) * (1.0 - aaS(p.z + 0.9)));\ncol = mix(col, K, 1.0 - aaS(p.z + 1.22));\nfloat yl = 0.80 + 0.47 * clamp(p.z + 0.95, -0.25, 0.24) + 0.17 * clamp(p.z + 0.71, 0.0, 0.42);\ncol = mix(col, K, aaS(p.y - yl) * (1.0 - aaS(p.z + 0.28)));\ncol = mix(col, K, (1.0 - aaS(p.y - 0.25)) * (1.0 - aaS(p.z - 1.5)));\nif (c > 0.5 && c < 1.5) { col = K; if (p.z > 1.9) col = Pk; if (p.z < -1.9) col = mix(K, Pk, aaS(p.y - 0.71)); }\nif (c > 1.5 && c < 2.5) col = Pk;\nif (c > 6.5) col = Pk;\nreturn col;"
+ },
+ "AST": {
+  "kind": "f1",
+  "sheet": true,
+  "zones": [
+   [
+    0.98,
+    1.36,
+    0,
+    0.4
+   ]
+  ],
+  "logoFile": "AST",
+  "logos": [
+   {
+    "v": "top",
+    "x": 0,
+    "z": 1.5,
+    "s": 0.2
+   }
+  ],
+  "num": {
+   "color": "#cedc00",
+   "list": [
+    {
+     "v": "side",
+     "z": -1.55,
+     "y": 0.82,
+     "s": 0.2
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 2.0,
+     "s": 0.13
+    }
+   ]
+  },
+  "glsl": "vec3 G = #00594a, K = #0d1110;\nvec3 col = mix(K, G, aaS(p.y - 0.31));\ncol = mix(col, K, aaS(p.y - 0.9) * band(p.z, -0.42, 0.05));\nif (c > 0.5 && c < 1.5) col = mix(K, G, aaS(p.y - 0.5));\nreturn col;"
+ },
+ "AUD": {
+  "kind": "f1",
+  "sheet": true,
+  "num": {
+   "color": "#e32b1c",
+   "list": [
+    {
+     "v": "side",
+     "z": -0.78,
+     "y": 0.84,
+     "s": 0.14
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 2.0,
+     "s": 0.13
+    }
+   ]
+  },
+  "glsl": "vec3 Ti = #bfc2c6, K = #131417;\nvec3 col = mix(K, Ti, aaS(p.z + 0.19));\nif (c > 0.5 && c < 1.5) col = K;\nreturn col;"
+ },
+ "CAD": {
+  "kind": "f1",
+  "sheet": true,
+  "logoFile": "CAD",
+  "logos": [
+   {
+    "v": "top",
+    "x": 0,
+    "z": 1.5,
+    "s": 0.2
+   }
+  ],
+  "num": {
+   "color": "#ffffff",
+   "list": [
+    {
+     "v": "side",
+     "z": -1.16,
+     "y": 0.8,
+     "s": 0.14
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 2.0,
+     "s": 0.13
+    }
+   ]
+  },
+  "glsl": "vec3 K = #0d0e10, W = #e8e8e8, G = #b9bec4;\nvec3 col = K;\nif (c > 0.5 && c < 1.5) col = p.z < -1.85 ? mix(K, W, aaS(p.y - 0.73)) : (p.z > 2.0 ? G : K);\nif (c > 1.5 && c < 2.5) col = G;\nreturn col;"
+ },
+ "F2_AIX": {
+  "kind": "f2",
+  "sheet": true,
+  "num": {
+   "color": "#101214",
+   "list": [
+    {
+     "v": "side",
+     "z": -2.03,
+     "y": 0.55,
+     "s": 0.15
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 2.0,
+     "s": 0.12
+    }
+   ]
+  },
+  "drivers": [
+   "FIT",
+   "SHI"
+  ],
+  "liv": {
+   "body": 3457576,
+   "acc": 13952386,
+   "tip": 3457576,
+   "metal": 0.3
+  },
+  "glsl": "vec3 col = #34c228;\nif (p.z < -1.9 && p.y > 0.6 && abs(p.x) < 0.44) col = #15171a;\nreturn col;"
+ },
+ "F2_BLK": {
+  "kind": "f2",
+  "sheet": true,
+  "logoFile": "F2_ROD",
+  "logos": [
+   {
+    "v": "top",
+    "x": 0,
+    "z": 1.75,
+    "s": 0.16
+   }
+  ],
+  "num": {
+   "color": "#ffffff",
+   "list": [
+    {
+     "v": "side",
+     "z": -1.13,
+     "y": 0.47,
+     "s": 0.2
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 2.15,
+     "s": 0.11
+    }
+   ]
+  },
+  "drivers": [
+   "STE"
+  ],
+  "liv": {
+   "body": 723983,
+   "acc": 723983,
+   "tip": 723983,
+   "metal": 0.4
+  },
+  "glsl": "vec3 col = #0b0c0f;\nif (p.z < -0.12 && p.z > -1.5 && p.y > 0.72 && abs(p.x) < 0.3) col = #e9edf1;\nreturn col;"
+ },
+ "F2_CAMW": {
+  "kind": "f2",
+  "sheet": true,
+  "num": {
+   "color": "#101114",
+   "list": [
+    {
+     "v": "side",
+     "z": -0.82,
+     "y": 0.56,
+     "s": 0.15
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 1.7,
+     "s": 0.12
+    }
+   ]
+  },
+  "drivers": [
+   "LEO"
+  ],
+  "liv": {
+   "body": 15922165,
+   "acc": 789776,
+   "tip": 789776,
+   "low": 789776,
+   "split": 0.25,
+   "metal": 0.25
+  },
+  "glsl": "vec3 wht = #f2f3f5; vec3 blk = #0c0d10; vec3 red = #e0121e;\nbool fw = p.z > 2.15 && p.y < 0.36 && abs(p.x) > 0.2; bool rw = p.z < -1.9 && p.y > 0.6;\nif (fw || rw) return blk;\nvec3 col = wht;\nfloat yl = 0.55 - clamp((p.z - 1.08) / 0.65, 0.0, 1.0) * 0.085 - max(p.z - 1.73, 0.0) * 0.35;\nif (p.z > 0.5) { if (p.y < yl) col = blk; else if (p.y < yl + 0.022 && p.z > 1.2) col = red; }\nif (p.z < -1.2 && p.y < 0.62) col = blk;\nreturn col;"
+ },
+ "F2_DAM": {
+  "kind": "f2",
+  "sheet": true,
+  "logoFile": "F2_DAM",
+  "logos": [
+   {
+    "v": "top",
+    "x": 0,
+    "z": 2.2,
+    "s": 0.12
+   }
+  ],
+  "num": {
+   "color": "#ffffff",
+   "list": [
+    {
+     "v": "side",
+     "z": -2.07,
+     "y": 0.62,
+     "s": 0.14
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 1.55,
+     "s": 0.12
+    }
+   ]
+  },
+  "drivers": [
+   "BEG"
+  ],
+  "liv": {
+   "body": 4565232,
+   "acc": 793170,
+   "tip": 793170,
+   "low": 793170,
+   "split": 0.3,
+   "metal": 0.3
+  },
+  "glsl": "vec3 navy = #0c1a52; vec3 lb = #45a8f0; vec3 blk = #0b0d14;\nbool fw = p.z > 2.15 && p.y < 0.36 && abs(p.x) > 0.2; bool rw = p.z < -1.9 && p.y > 0.6;\nif (fw || rw) return blk;\nvec3 col = navy;\nfloat yt = 0.44 - max(p.z - 1.73, 0.0) * 0.33;\nif (p.z > 0.95 && p.z < 2.72 && abs(p.x) < 0.05 + 0.10 * clamp((2.7 - p.z) / 1.7, 0.0, 1.0) && p.y > yt) col = lb;\nif (p.z < -0.45 && p.z > -1.3 && p.y > 0.55) col = lb;\nreturn col;"
+ },
+ "F2_GREY": {
+  "kind": "f2",
+  "sheet": true,
+  "logoFile": "F2_ART",
+  "logos": [
+   {
+    "v": "top",
+    "x": 0,
+    "z": 1.75,
+    "s": 0.16
+   }
+  ],
+  "num": {
+   "color": "#d5d8dc",
+   "list": [
+    {
+     "v": "side",
+     "z": -2.02,
+     "y": 0.55,
+     "s": 0.17
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 2.15,
+     "s": 0.11
+    }
+   ]
+  },
+  "drivers": [
+   "INT"
+  ],
+  "liv": {
+   "body": 1513499,
+   "acc": 1513499,
+   "tip": 1513499,
+   "metal": 0.45
+  },
+  "glsl": "vec3 col = #17181b;\nreturn col;"
+ },
+ "F2_HIT": {
+  "kind": "f2",
+  "sheet": true,
+  "num": {
+   "color": "#e6e9f2",
+   "list": [
+    {
+     "v": "side",
+     "z": -2.04,
+     "y": 0.52,
+     "s": 0.2
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 1.9,
+     "s": 0.12
+    }
+   ]
+  },
+  "drivers": [
+   "MIY",
+   "HER"
+  ],
+  "liv": {
+   "body": 11778765,
+   "acc": 790037,
+   "tip": 790037,
+   "metal": 0.55
+  },
+  "glsl": "vec3 S = #b3bacd; vec3 K = #0c0e15; vec3 col = S;\nif (p.z > 2.15 && p.y < 0.36 && abs(p.x) > 0.17) col = K;\nif (p.z > 1.55 && p.z < 2.45 && abs(p.x) < 0.07) col = K;\nif (p.y > 0.86 && p.z > -0.62 && p.z < 0.1) col = K;\nif (p.z < -1.93) col = K;\nreturn col;"
+ },
+ "F2_INV": {
+  "kind": "f2",
+  "sheet": true,
+  "num": {
+   "color": "#b3a300",
+   "list": [
+    {
+     "v": "side",
+     "z": -2.04,
+     "y": 0.56,
+     "s": 0.2
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 1.9,
+     "s": 0.12
+    }
+   ]
+  },
+  "drivers": [
+   "DUR"
+  ],
+  "liv": {
+   "body": 16048896,
+   "acc": 1316379,
+   "tip": 1316379,
+   "metal": 0.25
+  },
+  "glsl": "vec3 Y = #f4e300; vec3 K = #14161b; vec3 col = Y;\nif (p.z > 2.15 && p.y < 0.36 && abs(p.x) > 0.17) col = K;\nif (p.z > 1.08 && p.z < 1.75 && p.y < 0.534 - 0.167 * (p.z - 1.093)) col = K;\nif (p.y > 0.86 && p.z > -0.62 && p.z < 0.1) col = K;\nif (p.z < -1.93) col = K;\nreturn col;"
+ },
+ "F2_ITA": {
+  "kind": "f2",
+  "sheet": true,
+  "num": {
+   "color": "#d8d8dc",
+   "list": [
+    {
+     "v": "side",
+     "z": -2.1,
+     "y": 0.62,
+     "s": 0.2
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 1.9,
+     "s": 0.13
+    }
+   ]
+  },
+  "drivers": [
+   "MON"
+  ],
+  "liv": {
+   "body": 14684176,
+   "acc": 14684176,
+   "tip": 14684176,
+   "low": 15921906,
+   "split": 0.36,
+   "metal": 0.25
+  },
+  "glsl": "vec3 R = #e01010; vec3 col = R;\nreturn col;"
+ },
+ "F2_ITA2": {
+  "kind": "f2",
+  "num": {
+   "color": "#ffffff",
+   "list": [
+    {
+     "v": "side",
+     "z": -2.1,
+     "y": 0.62,
+     "s": 0.2
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 1.9,
+     "s": 0.13
+    }
+   ]
+  },
+  "drivers": [
+   "BOY"
+  ],
+  "liv": {
+   "body": 744008,
+   "acc": 663322,
+   "tip": 744008,
+   "metal": 0.4
+  },
+  "glsl": "vec3 G = #0b5a48; vec3 K = #0a1f1a; vec3 L = #cfe034; vec3 col = G;\nfloat rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.6);\ncol = mix(col, K, rw * aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.40)));\nreturn col;"
+ },
+ "F2_ORA": {
+  "kind": "f2",
+  "sheet": true,
+  "logoFile": "F2_MPM",
+  "logos": [
+   {
+    "v": "top",
+    "x": 0,
+    "z": 2.45,
+    "s": 0.12
+   }
+  ],
+  "num": {
+   "color": "#d6d6d6",
+   "list": [
+    {
+     "v": "side",
+     "z": -2.1,
+     "y": 0.62,
+     "s": 0.2
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 2.15,
+     "s": 0.12
+    }
+   ]
+  },
+  "drivers": [
+   "GOE"
+  ],
+  "liv": {
+   "body": 16734728,
+   "acc": 1316120,
+   "tip": 1316120,
+   "metal": 0.25
+  },
+  "glsl": "vec3 O = #ff5a08; vec3 K = #141518; vec3 col = O;\ncol = mix(col, K, aaS(p.z - 2.0));\nfloat rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.6);\ncol = mix(col, K, rw * (1.0 - aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.40))));\nreturn col;"
+ },
+ "F2_PINK_ART": {
+  "kind": "f2",
+  "sheet": true,
+  "num": {
+   "color": "#15171a",
+   "list": [
+    {
+     "v": "side",
+     "z": -2.02,
+     "y": 0.55,
+     "s": 0.17
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 2.1,
+     "s": 0.12
+    }
+   ]
+  },
+  "drivers": [
+   "MAI"
+  ],
+  "liv": {
+   "body": 15768776,
+   "acc": 15768776,
+   "tip": 15768776,
+   "metal": 0.25
+  },
+  "glsl": "vec3 col = #f09cc8;\nreturn col;"
+ },
+ "F2_PINK_MPM": {
+  "kind": "f2",
+  "num": {
+   "color": "#151c36",
+   "list": [
+    {
+     "v": "side",
+     "z": -1.2,
+     "y": 0.8,
+     "s": 0.18
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 1.9,
+     "s": 0.13
+    }
+   ]
+  },
+  "drivers": [
+   "MIN"
+  ],
+  "liv": {
+   "body": 15899332,
+   "acc": 14164778,
+   "tip": 15899332,
+   "metal": 0.25
+  },
+  "glsl": "vec3 P = #f29ac4; vec3 N = #151c36; vec3 R = #d8232a; vec3 col = P;\nfloat rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.6);\ncol = mix(col, N, rw); col = mix(col, R, rw * aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.40)));\nreturn col;"
+ },
+ "F2_PINK_ROD": {
+  "kind": "f2",
+  "sheet": true,
+  "num": {
+   "color": "#15171a",
+   "list": [
+    {
+     "v": "side",
+     "z": -1.13,
+     "y": 0.47,
+     "s": 0.2
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 2.1,
+     "s": 0.12
+    }
+   ]
+  },
+  "drivers": [
+   "DUN"
+  ],
+  "liv": {
+   "body": 15768776,
+   "acc": 15768776,
+   "tip": 15768776,
+   "metal": 0.25
+  },
+  "glsl": "vec3 col = #f09cc8;\nreturn col;"
+ },
+ "F2_TRI": {
+  "kind": "f2",
+  "sheet": true,
+  "num": {
+   "color": "#f2f3f5",
+   "list": [
+    {
+     "v": "side",
+     "z": -2.08,
+     "y": 0.6,
+     "s": 0.16
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 2.0,
+     "s": 0.12
+    }
+   ]
+  },
+  "drivers": [
+   "VAN",
+   "BEN"
+  ],
+  "liv": {
+   "body": 15601688,
+   "low": 1381032,
+   "split": 0.5,
+   "acc": 1381032,
+   "tip": 15527666,
+   "metal": 0.3
+  },
+  "glsl": "float yr = p.z > 1.0 ? mix(0.53, 0.33, clamp((p.z - 1.0) / 1.3, 0.0, 1.0)) : (p.z > -0.6 ? 0.54 : mix(0.54, 0.33, clamp((-0.6 - p.z) / 0.8, 0.0, 1.0)));\nvec3 col = p.y > yr ? #ee1018 : #1512a8;\nif (p.z < -0.2 && p.z > -1.4 && p.y > 0.67) col = #eceef2;\nif (p.z > 2.15 && p.y < 0.36) col = #1512a8;\nif (p.z < -1.9 && p.y > 0.6) col = (abs(p.x) > 0.44 && p.y < 0.8) ? #1512a8 : #15171a;\nreturn col;"
+ },
+ "F2_VAR": {
+  "kind": "f2",
+  "sheet": true,
+  "num": {
+   "color": "#aab0bd",
+   "list": [
+    {
+     "v": "side",
+     "z": -2.07,
+     "y": 0.59,
+     "s": 0.155
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 2.0,
+     "s": 0.12
+    }
+   ]
+  },
+  "drivers": [
+   "VAR",
+   "VIL"
+  ],
+  "liv": {
+   "body": 1513499,
+   "acc": 16734720,
+   "tip": 1513499,
+   "metal": 0.5
+  },
+  "glsl": "vec3 col = #17181b;\nif (p.z > 0.6 && p.z < 2.45 && abs(p.x) < 0.09 && p.y > 0.25) col = #ff5a00;\nif (p.z < -1.9 && p.y > 1.0 && abs(p.x) < 0.44) col = #ff5a00;\nreturn col;"
+ },
+ "FER": {
+  "kind": "f1",
+  "sheet": true,
+  "zones": [
+   [
+    0.98,
+    1.36,
+    0,
+    0.4
+   ]
+  ],
+  "num": {
+   "color": "#ffffff",
+   "list": [
+    {
+     "v": "side",
+     "z": -1.16,
+     "y": 0.795,
+     "s": 0.15
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 2.0,
+     "s": 0.13
+    }
+   ]
+  },
+  "glsl": "vec3 R = #cf1018, K = #141416;\nvec3 col = R;\nif (c > 0.5 && c < 1.5) col = K;\nif (c > 1.5 && c < 2.5) col = K;\nreturn col;"
+ },
+ "HAA": {
+  "kind": "f1",
+  "sheet": true,
+  "num": {
+   "color": "#16181b",
+   "list": [
+    {
+     "v": "side",
+     "z": -0.36,
+     "y": 0.78,
+     "s": 0.14
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 2.0,
+     "s": 0.13
+    }
+   ]
+  },
+  "glsl": "vec3 W = #eceef1, K = #16181b;\nvec3 col = W;\nif (c > 0.5 && c < 1.5) col = p.z > 2.0 ? W : mix(K, W, aaS(p.y - 0.3));\nreturn col;"
+ },
+ "MCL": {
+  "kind": "f1",
+  "sheet": true,
+  "num": {
+   "color": "#16181b",
+   "list": [
+    {
+     "v": "side",
+     "z": -1.25,
+     "y": 0.75,
+     "s": 0.14
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 2.0,
+     "s": 0.13
+    }
+   ]
+  },
+  "glsl": "vec3 P = #ff7a00, A = #0e0f11, T = #0d5f85;\nvec3 col = A;\nfloat og = max(1.0 - aaS(p.z - (-1.30 + (0.86 - p.y))), aaS(p.z - 0.95));\nog = max(og, aaS(p.y - 0.58) * aaS(p.z - (-0.30 + (0.86 - p.y) * 0.87)));\ncol = mix(col, P, og);\ncol = mix(col, T, aaS(p.y - 0.84) * aaS(p.z - (-0.48 + 0.94 * (0.99 - p.y))) * (1.0 - aaS(p.z - 0.06)));\nif (c > 0.5 && c < 1.5) col = p.z > 1.9 ? P : mix(A, P, aaS(p.y - 0.72));\nif (c > 1.5 && c < 2.5) col = P;\nif (c > 6.5) col = A;\nreturn col;"
+ },
  "MER": {
   "kind": "f1",
   "sheet": true,
@@ -24,6 +732,98 @@
    "list": [
     {
      "v": "side",
+     "z": -1.14,
+     "y": 0.8,
+     "s": 0.12
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 2.0,
+     "s": 0.13
+    }
+   ]
+  },
+  "glsl": "vec3 K = #0d0f12, T = #00a19c;\nvec3 col = K;\nif (c > 0.5 && c < 1.5) col = mix(K, T, band(p.y, 0.98, 1.02));\nreturn col;"
+ },
+ "RB": {
+  "kind": "f1",
+  "sheet": true,
+  "num": {
+   "color": "#d8102c",
+   "list": [
+    {
+     "v": "side",
+     "z": -1.17,
+     "y": 0.79,
+     "s": 0.15
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 2.0,
+     "s": 0.13
+    }
+   ]
+  },
+  "glsl": "vec3 W = #f2f3f6, Cb = #1b1c20, Y = #f4cf2e;\nvec3 col = W;\nfloat yl = 0.67 + 0.545 * clamp(p.z + 1.26, -0.3, 0.44) + 0.15 * clamp(p.z + 0.82, 0.0, 0.55);\ncol = mix(col, Cb, aaS(p.y - yl) * (1.0 - aaS(p.z + 0.28)));\ncol = mix(col, Y, aaS(p.y - 0.86) * band(p.z, -0.28, 0.15));\nvec3 Bm = #1740b8;\ncol = mix(col, Bm, (1.0 - aaS(p.y - 0.26)) * band(p.z, -0.6, 0.7));\ncol = mix(col, Bm, (1.0 - aaS(p.y - 0.62)) * (1.0 - aaS(p.z + 1.15)));\ncol = mix(col, Cb, 1.0 - aaS(p.y - 0.15));\nif (c > 0.5 && c < 1.5) col = mix(Cb, W, aaS(p.z - 1.9));\nif (c > 1.5 && c < 2.5) col = W;\nreturn col;"
+ },
+ "RBR": {
+  "kind": "f1",
+  "sheet": true,
+  "logoFile": "RBR",
+  "logos": [
+   {
+    "v": "top",
+    "x": 0,
+    "z": 1.6,
+    "s": 0.2
+   }
+  ],
+  "num": {
+   "color": "#d8102c",
+   "list": [
+    {
+     "v": "side",
+     "z": -1.13,
+     "y": 0.8,
+     "s": 0.11
+    },
+    {
+     "v": "top",
+     "x": 0,
+     "z": 2.1,
+     "s": 0.13
+    }
+   ]
+  },
+  "glsl": "vec3 N = #0b1236, B = #101f8c, K = #14151a;\nvec3 col = mix(N, B, max(smoothstep(0.40, 0.56, p.y), aaS(p.z - 1.2)));\nif (c > 0.5 && c < 1.5) col = p.z > 1.9 ? B : mix(K, B, aaS(p.y - 0.72));\nif (c > 1.5 && c < 2.5) col = B;\nif (c > 6.5) col = K;\nreturn col;"
+ },
+ "WIL": {
+  "kind": "f1",
+  "sheet": true,
+  "zones": [
+   [
+    0.98,
+    1.36,
+    0,
+    0.4
+   ]
+  ],
+  "logoFile": "WIL",
+  "logos": [
+   {
+    "v": "top",
+    "x": 0,
+    "z": 1.5,
+    "s": 0.2
+   }
+  ],
+  "num": {
+   "color": "#ffffff",
+   "list": [
+    {
+     "v": "side",
      "z": -1.55,
      "y": 0.82,
      "s": 0.2
@@ -35,7 +835,8 @@
      "s": 0.13
     }
    ]
-  }
+  },
+  "glsl": "vec3 B = #1846d8, W = #f4f6fa, K = #14161c;\nvec3 col = B; float sd = aaS(abs(p.x) - 0.22);\ncol = mix(col, K, (1.0 - aaS(p.y - 0.28)) * sd);\ncol = mix(col, K, (1.0 - aaS(p.y - 0.5)) * band(p.z, 0.6, 1.7) * sd);\ncol = mix(col, K, aaS(p.y - 0.9) * band(p.z, -0.5, 0.0));\nif (c > 0.5 && c < 1.5) col = p.z > 1.0 ? K : mix(W, #0c1e9a, aaS(p.y - 0.8));\nif (c > 1.5 && c < 2.5) col = K;\nreturn col;"
  },
  "_num": [
   "f1_1",

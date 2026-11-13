@@ -1,0 +1,214 @@
+{
+ "kind": "f2",
+ "team": "F2_HIT",
+ "driver": "MIY",
+ "drivers": [
+  "MIY",
+  "HER"
+ ],
+ "photo": "https://res.cloudinary.com/prod-f2f3/v1770000000/common/f2/2026/hitech/2026hitechcarleft.png",
+ "rear": [
+  3083,
+  568
+ ],
+ "front": [
+  860,
+  568
+ ],
+ "liv": {
+  "body": "#b3bacd",
+  "acc": "#0c0e15",
+  "tip": "#0c0e15",
+  "metal": 0.55
+ },
+ "glsl": [
+  "vec3 S = #b3bacd; vec3 K = #0c0e15; vec3 col = S;",
+  "if (p.z > 2.15 && p.y < 0.36 && abs(p.x) > 0.17) col = K;",
+  "if (p.z > 1.55 && p.z < 2.45 && abs(p.x) < 0.07) col = K;",
+  "if (p.y > 0.86 && p.z > -0.62 && p.z < 0.1) col = K;",
+  "if (p.z < -1.93) col = K;",
+  "return col;"
+ ],
+ "stickers": [
+  {
+   "name": "fl_nase",
+   "box": [
+    60,
+    490,
+    612,
+    752
+   ],
+   "kind": "key",
+   "key": "#0c0e15",
+   "tol": 75
+  },
+  {
+   "name": "fl_finne",
+   "box": [
+    2190,
+    128,
+    2750,
+    335
+   ],
+   "kind": "key",
+   "key": "#101828",
+   "color": "#0c0e15",
+   "tol": 90
+  },
+  {
+   "name": "fl_finne_w",
+   "box": [
+    2255,
+    150,
+    2750,
+    300
+   ],
+   "kind": "key",
+   "key": "#ffffff",
+   "tol": 28
+  },
+  {
+   "name": "fl_heck",
+   "box": [
+    2490,
+    350,
+    2830,
+    640
+   ],
+   "kind": "key",
+   "key": "#0c0e15",
+   "tol": 75
+  },
+  {
+   "name": "fl_heck_w",
+   "box": [
+    2490,
+    372,
+    2830,
+    640
+   ],
+   "kind": "key",
+   "key": "#ffffff",
+   "tol": 28
+  },
+  {
+   "name": "striche",
+   "box": [
+    1050,
+    358,
+    1385,
+    378
+   ],
+   "kind": "key",
+   "key": "#0c0e15",
+   "tol": 75
+  },
+  {
+   "name": "pirelli",
+   "box": [
+    278,
+    622,
+    482,
+    690
+   ],
+   "kind": "c"
+  },
+  {
+   "name": "gainbridge",
+   "box": [
+    1090,
+    400,
+    1355,
+    445
+   ],
+   "kind": "d"
+  },
+  {
+   "name": "corescientific",
+   "box": [
+    1855,
+    333,
+    2030,
+    368
+   ],
+   "kind": "d"
+  },
+  {
+   "name": "twg_t",
+   "box": [
+    1748,
+    418,
+    1900,
+    592
+   ],
+   "kind": "d"
+  },
+  {
+   "name": "twg_w",
+   "box": [
+    1900,
+    418,
+    2060,
+    612
+   ],
+   "kind": "d"
+  },
+  {
+   "name": "twg_g",
+   "box": [
+    2060,
+    430,
+    2215,
+    645
+   ],
+   "kind": "d"
+  },
+  {
+   "name": "twg_ai",
+   "box": [
+    2215,
+    490,
+    2365,
+    665
+   ],
+   "kind": "d"
+  },
+  {
+   "name": "claro",
+   "box": [
+    2008,
+    150,
+    2160,
+    200
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "ifs",
+   "box": [
+    3250,
+    262,
+    3410,
+    325
+   ],
+   "kind": "w"
+  }
+ ],
+ "number": {
+  "color": "#e6e9f2",
+  "spots": [
+   {
+    "v": "side",
+    "z": -2.04,
+    "y": 0.52,
+    "s": 0.2
+   },
+   {
+    "v": "top",
+    "x": 0,
+    "z": 1.9,
+    "s": 0.12
+   }
+  ]
+ }
+}

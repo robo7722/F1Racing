@@ -1,0 +1,152 @@
+{
+ "kind": "f2",
+ "team": "F2_MPM",
+ "driver": "GOE",
+ "drivers": [
+  "GOE"
+ ],
+ "photo": "https://res.cloudinary.com/prod-f2f3/v1770000000/common/f2/2026/mpmotorsport/2026mpmotorsportcarleft.png",
+ "rear": [
+  3080,
+  572
+ ],
+ "front": [
+  852,
+  572
+ ],
+ "liv": {
+  "body": "#ff5a08",
+  "acc": "#141518",
+  "tip": "#141518",
+  "metal": 0.25
+ },
+ "glsl": [
+  "vec3 O = #ff5a08; vec3 K = #141518; vec3 col = O;",
+  "col = mix(col, K, aaS(p.z - 2.0));",
+  "float rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.6);",
+  "col = mix(col, K, rw * (1.0 - aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.40))));",
+  "return col;"
+ ],
+ "stickers": [
+  {
+   "name": "schwarz_seite",
+   "box": [
+    1640,
+    425,
+    2800,
+    745
+   ],
+   "kind": "key",
+   "key": "#101214",
+   "color": "#141518"
+  },
+  {
+   "name": "schwarz_vorn",
+   "box": [
+    1110,
+    370,
+    1335,
+    475
+   ],
+   "kind": "key",
+   "key": "#101214",
+   "color": "#141518"
+  },
+  {
+   "name": "rofgo",
+   "box": [
+    1765,
+    555,
+    2250,
+    635
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "panoro",
+   "box": [
+    1868,
+    322,
+    2210,
+    388
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "prop",
+   "box": [
+    2222,
+    368,
+    2622,
+    447
+   ],
+   "kind": "c"
+  },
+  {
+   "name": "adac",
+   "box": [
+    1200,
+    483,
+    1400,
+    560
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "kroon",
+   "box": [
+    2014,
+    140,
+    2106,
+    190
+   ],
+   "kind": "c"
+  },
+  {
+   "name": "itq",
+   "box": [
+    378,
+    530,
+    495,
+    605
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "pirelli",
+   "box": [
+    230,
+    606,
+    438,
+    685
+   ],
+   "kind": "c"
+  }
+ ],
+ "logoFile": "F2_MPM",
+ "logos": [
+  {
+   "v": "top",
+   "x": 0,
+   "z": 2.45,
+   "s": 0.12
+  }
+ ],
+ "number": {
+  "color": "#d6d6d6",
+  "spots": [
+   {
+    "v": "side",
+    "z": -2.1,
+    "y": 0.62,
+    "s": 0.2
+   },
+   {
+    "v": "top",
+    "x": 0,
+    "z": 2.15,
+    "s": 0.12
+   }
+  ]
+ }
+}

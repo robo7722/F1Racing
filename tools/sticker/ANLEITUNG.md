@@ -41,7 +41,7 @@ baut den Bogen (Vorschau: `.cache/<Kürzel>_bogen.png`) und schreibt `liveries/l
 ```bash
 node tools/sticker/shot.js <Kürzel> tools/sticker/.cache/<Kürzel> L,R,Lf,Lm,Lr,f34
 ```
-startet das Spiel im Testbrowser und nimmt das Auto im Showroom auf (`<Vorsilbe>_<Ansicht>.png`). Dauert 1–4 Minuten (Zeitlimit großzügig setzen, z. B. 10 Minuten), deshalb mehrere Ansichten in **einem** Aufruf holen und nie zwei Aufrufe gleichzeitig starten.
+startet das Spiel im Testbrowser und nimmt das Auto im Showroom auf (`<Vorsilbe>_<Ansicht>.png`). Dauert 1–4 Minuten, bei Andrang länger: es laufen höchstens drei Aufnahmen gleichzeitig, weitere warten automatisch (Zeitlimit großzügig setzen, z. B. 10 Minuten), deshalb mehrere Ansichten in **einem** Aufruf holen und nie zwei Aufrufe gleichzeitig starten.
 Ansichten: `L`/`R` ganze Seite, `Lf Lm Lr`/`Rf Rm Rr` vorderes/mittleres/hinteres Drittel vergrößert, `top` von oben, `f34`/`r34` schräg von vorn/hinten (links), `f34R`/`r34R` rechts.
 Zeilen mit `SHADER` oder `SEITENFEHLER` in der Ausgabe bedeuten einen Fehler im `glsl` – dann bleibt das Auto falsch gefärbt; beheben.
 

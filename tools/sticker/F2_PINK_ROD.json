@@ -1,0 +1,73 @@
+{
+ "kind": "f2",
+ "team": "F2_ROD",
+ "driver": "DUN",
+ "drivers": [
+  "DUN"
+ ],
+ "photo": "https://res.cloudinary.com/prod-f2f3/c_lpad,w_8000,h_880,g_west,b_transparent/l_common:f2:2026:rodinmotorsport:2026rodinmotorsportcarleft/a_hflip/fl_layer_apply,g_west,x_3520/l_text:Arial_300_bold:BWT,co_rgb:1b3f9c/fl_layer_apply,g_east,x_40/v1770000000/common/f2/2026/rodinmotorsport/2026rodinmotorsportcarleft.png",
+ "rear": [
+  3075,
+  570
+ ],
+ "front": [
+  852,
+  572
+ ],
+ "liv": {
+  "body": "#f09cc8",
+  "acc": "#f09cc8",
+  "tip": "#f09cc8",
+  "metal": 0.25
+ },
+ "glsl": [
+  "vec3 col = #f09cc8;",
+  "return col;"
+ ],
+ "stickers": [
+  {
+   "name": "bwt",
+   "box": [
+    7290,
+    320,
+    7975,
+    560
+   ],
+   "kind": "key",
+   "key": "#1b3f9c",
+   "at": [
+    -0.35,
+    0.42
+   ],
+   "w": 0.78
+  },
+  {
+   "name": "pirelli",
+   "box": [
+    283,
+    584,
+    468,
+    642
+   ],
+   "kind": "w",
+   "color": "#1b2a6b"
+  }
+ ],
+ "number": {
+  "color": "#15171a",
+  "spots": [
+   {
+    "v": "side",
+    "z": -1.13,
+    "y": 0.47,
+    "s": 0.2
+   },
+   {
+    "v": "top",
+    "x": 0,
+    "z": 2.1,
+    "s": 0.12
+   }
+  ]
+ }
+}
