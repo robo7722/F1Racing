@@ -1,6 +1,6 @@
 # Rennfahrer-Modell
 
-Stand: 13.11.2026 (v1.49) – Kart-Fahrer im Spiel eingebaut, stehende Figur als Vorschau.
+Stand: 13.11.2026 (v1.50) – Kart-Fahrer im Spiel eingebaut, stehende Figur als Vorschau.
 
 ## Dateien
 - `kartfahrer.bin` – sitzender Kart-Fahrer fürs Spiel: Körper + beide Handschuhe als EIN Netz (~14 200 Dreiecke).
@@ -46,6 +46,12 @@ Prüfansicht: `fahrer/kart_vorschau.html?debug` färbt Rückseiten grün – so 
 - **Cockpitansicht Kart**: Kamera tiefer (9 cm unter der Helmmitte) und Blick ~24° nach unten: Lenkrad, Display und beide Hände im Bild. Die alten eingeblendeten Arme sind beim neuen Fahrer aus; man sieht die echten Arme des Modells.
 - **Lenken**: Arme mit Skelett (7 Knochen, Gewichte im Bauskript, Skinning im Shader). `kartArmsIK` je Bild: Hand bleibt am Kranz und dreht mit dem Lenkrad, Schulter fest, Ober-/Unterarm starr – der Ellbogen ergibt sich aus der Zwei-Knochen-IK und bleibt in seiner Ebene.
 - **Helme (alle Karts)**: Das Anbauteil unter dem Visier wurde vorher weggeschnitten → Loch mit Blick ins Helminnere (dunkle, „komische“ Formen, am deutlichsten bei hellen/blauen Helmen). Jetzt `helmGeoKart`: Kinnteil auf die Schalenform gelegt und in Helmfarbe, eingelassene Lüftungsschlitze glatt schattiert, Visier nur von vorn. Rest: zwei winzige Lüftungspunkte, nur aus nächster Nähe sichtbar.
+
+## v1.50 – Korrektur nach Handy-Screenshot
+- Lenkrad drehte beim Kart mit vollem Einschlag um 92° (`steer × 1,6`) – die Hand landete über dem Lenkrad, der Arm lag quer vor dem Gesicht. Jetzt `KART_SW_ROT = 0,7` (~40°) für Karts mit neuem Fahrer.
+- Ellbogen-Pol nach unten-außen gezogen (Ellbogen bleibt beim Einlenken unten).
+- Gewebe-Relief und Strickrippen werden ausgeblendet, sobald sie feiner als ein Bildpunkt sind (Pixelmuster/Flimmern auf dem Handy).
+- Getestet mit vollem Einschlag in beide Richtungen (vorher nur halber Einschlag – deshalb übersehen).
 
 ## Offen / Ideen
 - Lenkrad dreht sich beim Lenken, die Hände nicht (war beim alten Fahrer genauso).

@@ -3598,9 +3598,11 @@ function kartFahrerMat(tk, suit, acc) {
             float cuff = 1.0 - smoothstep(0.112, 0.114, p.y); c = mix(c, uDark, cuff); knit += cuff;                            // Hosenbündchen am Stiefel
           }
           // Gewebe / Strick als Höhe, Nähte als Rillen, Nahtfaden etwas dunkler
-          float wv = weave(p, n, 115.0), rib = 0.5 + 0.5 * sin(p.x * 2600.0 + p.z * 900.0);
-          gH = mix(wv, rib, clamp(knit, 0.0, 1.0)) * 0.6 - clamp(seam, 0.0, 1.0) * 0.9;
-          c *= 1.0 - 0.28 * clamp(seam, 0.0, 1.0); c *= 0.9 + 0.2 * wv;
+          float fw = length(fwidth(p));                                          // Weltgröße eines Bildpunkts
+          float wvFade = 1.0 - smoothstep(0.0025, 0.006, fw * 1.0), ribFade = 1.0 - smoothstep(0.0008, 0.002, fw);
+          float wv = mix(0.5, weave(p, n, 115.0), wvFade), rib = mix(0.5, 0.5 + 0.5 * sin(p.x * 2600.0 + p.z * 900.0), ribFade);
+          gH = mix(wv, rib, clamp(knit, 0.0, 1.0)) * 0.6 * mix(0.15, 1.0, wvFade) - clamp(seam, 0.0, 1.0) * 0.9;
+          c *= 1.0 - 0.28 * clamp(seam, 0.0, 1.0); c *= 1.0 + 0.2 * (wv - 0.5);
           gRough = mix(0.86, 0.8, clamp(knit, 0.0, 1.0));
         }
         diffuseColor.rgb *= c; }`)
@@ -3625,6 +3627,7 @@ function kartArmsIK(out, spin) {   // out: 7 Matrix4 (Bindhaltung -> aktuell), s
     // Ellbogen-Ebene aus der Bindhaltung (Pol = Ellbogen relativ zur Linie Schulter–Hand)
     X.u.copy(wr).sub(sh).normalize(); const pole = X.v.copy(el).sub(sh); pole.addScaledVector(X.u, -pole.dot(X.u));
     const d0 = X.e.copy(X.t).sub(sh), d = Math.min(Math.max(d0.length(), Math.abs(L1 - L2) + 1e-3), (L1 + L2) * 0.999); X.u.copy(d0).normalize();
+    pole.normalize().multiplyScalar(0.4).add(_ikV3.set(0.45 * mir * -1, -1, -0.1).normalize());   // Ellbogen bleibt unten-außen (echte Fahrer heben ihn beim Einlenken kaum)
     pole.addScaledVector(X.u, -pole.dot(X.u)).normalize();
     const a1 = (L1 * L1 - L2 * L2 + d * d) / (2 * d), hh = Math.sqrt(Math.max(L1 * L1 - a1 * a1, 0));
     const eN = X.e.copy(sh).addScaledVector(X.u, a1).addScaledVector(pole, hh);           // neuer Ellbogen
@@ -3640,7 +3643,7 @@ function kartArmsIK(out, spin) {   // out: 7 Matrix4 (Bindhaltung -> aktuell), s
 }
 const _ikV1 = new THREE.Vector3(), _ikV2 = new THREE.Vector3(), _ikV3 = new THREE.Vector3();
 // KFMAT-END
-const KTEX = {}; let KTUBE = null;
+const KTEX = {}; let KTUBE = null; const KART_SW_ROT = 0.7;   // sichtbare Lenkraddrehung (rad) bei vollem Einschlag, Kart mit neuem Fahrer (~40°)
 function kartTex() {
   if (KTEX.body) return KTEX;
   const ld = (u, srgb) => { const t = new THREE.TextureLoader().load(u); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; if (srgb) t.colorSpace = THREE.SRGBColorSpace; return t; };
@@ -7940,7 +7943,7 @@ function updateMeshes(dt) {
     m.g.position.set(c.x, c.ey, c.z); m.g.rotation.set(FLAT ? 0 : -Math.atan(SLOPE[c.idx] * fw), c.h, roll);
     m.fl.rotation.y = m.fr.rotation.y = -c.steer * 0.35;
     c.spin = (c.spin + (c.v || 0) * dt / (m.wr || 0.36)) % (Math.PI * 2);   // echte Raddrehzahl, ohne Deckel
-    if ((m.road || m.kart) && m.swSpin) m.swSpin.rotation.z = -(c.steer || 0) * 1.6;
+    if ((m.road || m.kart) && m.swSpin) m.swSpin.rotation.z = -(c.steer || 0) * (m.kartFahrer ? KART_SW_ROT : 1.6);   /* Kart mit neuem Fahrer: weniger Drehung – die Hände bleiben am Kranz, bei 92° lag der Arm quer vor dem Gesicht */
     if (m.road) m.brakeMat.emissiveIntensity = running && c.brk > 0.1 ? 4 : 0.15;
     else m.rl.visible = running && c.v > 25 && ((c.thr || 0) < 0.6 || c.brk > 0.1) && ((performance.now() / 110) | 0) % 2 === 0;
     m.wfl.rotation.x = m.wfr.rotation.x = m.rr.rotation.x = c.spin;
@@ -9025,7 +9028,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.49'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.50'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
