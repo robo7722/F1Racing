@@ -1,6 +1,6 @@
 # Rennfahrer-Modell
 
-Stand: 13.11.2026 (v1.36) – Kart-Fahrer im Spiel eingebaut, stehende Figur als Vorschau.
+Stand: 13.11.2026 (v1.39) – Kart-Fahrer im Spiel eingebaut, stehende Figur als Vorschau.
 
 ## Dateien
 - `kartfahrer.bin` – sitzender Kart-Fahrer fürs Spiel: Körper + beide Handschuhe als EIN Netz (~12 200 Dreiecke, 435 KB).
@@ -21,7 +21,7 @@ Stand: 13.11.2026 (v1.36) – Kart-Fahrer im Spiel eingebaut, stehende Figur als
 - `kartFahrerMat()` färbt im Shader: Anzug = Teamfarbe, Gürtel und Handschuhe = Akzentfarbe, Schuhe dunkel. Gürtel/Schuhe aus der Höhe in Ruhehaltung je Eckpunkt (`aRy`) → gerade Kanten.
 - Helm: derselbe wie F1/F2 (`helmMat(…, true)`), beim Kart ohne das Anbauteil unter dem Visier. F1/F2 haben es noch.
 - Cockpitkamera der Karts sitzt jetzt auf Augenhöhe im Helm (`cam` aus `KFAHRER.helm`).
-- `sw.js`: neue Dateien im Offline-Cache, Cache `f1-rennen-1.36`.
+- `sw.js`: neue Dateien im Offline-Cache, Cache `f1-rennen-1.39`.
 
 ## Offen / Ideen
 - Lenkrad dreht sich beim Lenken, die Hände nicht (war beim alten Fahrer genauso).
