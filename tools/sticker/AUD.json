@@ -9,9 +9,9 @@
   {"name": "rot_block", "box": [985, 270, 1592, 665], "kind": "key", "key": "#f02a26", "color": "#e32b1c"},
   {"name": "ringe", "box": [1335, 160, 1540, 237], "kind": "key", "key": "#f02a26", "color": "#e32b1c", "mirror": false},
   {"name": "bp", "box": [786, 196, 940, 279], "kind": "c"},
-  {"name": "visitqatar", "box": [1635, 118, 1777, 190], "kind": "d"},
+  {"name": "visitqatar", "box": [1635, 118, 1777, 190], "kind": "d", "at": [-0.07, 0.93]},
   {"name": "castrol", "box": [1708, 288, 1916, 337], "kind": "d"},
-  {"name": "revolut", "box": [1640, 420, 2037, 517], "kind": "d", "at": [0.23, 0.52]},
+  {"name": "revolut", "box": [1640, 420, 2037, 517], "kind": "d", "at": [0.38, 0.55]},
   {"name": "nexo", "box": [2365, 388, 2640, 452], "kind": "d"}
  ]
 }

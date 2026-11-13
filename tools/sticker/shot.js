@@ -43,7 +43,9 @@ process.on('exit', freeSlot); process.on('SIGTERM', () => process.exit(1)); proc
   for (let i = 0; i < 90 && ok === null; i++) { await p.waitForTimeout(2000); ok = await p.evaluate(c => { try { return window.__stkEval ? String(window.__stkEval(c)) : null; } catch (e) { return null; } }, cmd); }
   console.log('Showroom:', ok);
   await p.addStyleTag({ content: '#menu{visibility:hidden!important}' });
-  await p.waitForTimeout(6000);
+  // warten, bis Aufkleberbogen und Logo geladen sind (unter Last dauert das) – sonst zeigt die erste Aufnahme das Auto ohne Aufkleber
+  for (let i = 0; i < 60; i++) { const rdy = await p.evaluate(k => { try { return window.__stkEval(`(() => { const u = DECAL_TEX[${JSON.stringify(k)}]; return !hasDecal(${JSON.stringify(k)}) || (!!u && (!SHEETS[${JSON.stringify(k)}] || u.uSheetOn.value > 0.5) && (!DECALS[${JSON.stringify(k)}] || u.uDecalOn.value > 0.5)); })()`); } catch (e) { return false; } }, key); if (rdy) break; await p.waitForTimeout(2000); }
+  await p.waitForTimeout(5000);
   for (const k of views.split(',')) { if (!V[k]) { console.log('unbekannte Ansicht', k); continue; }
     const [mp, mt, fov] = V[k];   // Modell (x quer, y hoch, z vorn) -> Bühne (-z, y, x)
     await p.evaluate(c => { window.__shotCam = c; }, { p: [-mp[2], mp[1], mp[0]], t: [-mt[2], mt[1], mt[0]], fov }); await p.waitForTimeout(1800);
