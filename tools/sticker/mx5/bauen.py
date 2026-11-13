@@ -25,10 +25,15 @@ A = [
   dict(bild='oni', sicht='T', a=0, b=1.53, w=0.435), dict(bild='insta', sicht='F', a=0, b=0.228, w=0.32),
   dict(bild='limitless', sicht='B', a=0.5, b=0.665, w=0.31), dict(bild='mazdaspeed', sicht='B', a=0.5, b=0.585, w=0.34), dict(bild='fisch', sicht='B', a=-0.5, b=0.63, w=0.27),
   dict(bild='banner', sicht='F', a=0, b=1.262, w=1.06, teil='glas'),
+  # Anime-Motiv in der Heckscheibe links, schwarze Streifen auf der Haube (breit an der Scheibe, spitz nach vorn, rechts gespiegelt)
+  dict(bild='anime', sicht='B', a=0.33, b=1.175, w=0.15, teil='glas'),
+  dict(bild='streifen', sicht='T', a=-0.56, b=1.03, w=0.15, rot=-7), dict(bild='streifen', sicht='T', a=0.56, b=1.03, w=0.15, rot=7, flip=True),
+  # BLACKLIST-Krone: hängt frei am Innenspiegel (frei = Mitte x, y, z; Vorderseite zeigt nach vorn, Rückseite seitenrichtig zum Fahrer)
+  dict(bild='krone', frei=(0.03, 1.18, -0.05), w=0.1, rot=-4),
 ]
-PAD, BW, ZELLE, HOCH = 8, 2048, 0.025, {'lack': 0.003, 'glas': 0.002}
+PAD, BW, ZELLE, HOCH = 8, 2048, 0.025, {'lack': 0.003, 'glas': 0.002, 'spoiler': 0.002}
 def bogen():
-    namen = sorted({s['bild'] for s in A}); ims = {n: Image.open(os.path.join(HIER, 'bilder', n + '.png')).convert('RGBA') for n in namen}; pos = {}; x = y = PAD; zh = 0
+    namen = sorted({s['bild'] for s in A} | {'blacklist'}); ims = {n: Image.open(os.path.join(HIER, 'bilder', n + '.png')).convert('RGBA') for n in namen}; pos = {}; x = y = PAD; zh = 0
     for n in sorted(namen, key=lambda n: -ims[n].height):
         im = ims[n]
         if x + im.width + PAD > BW: x = PAD; y += zh + PAD; zh = 0
@@ -58,9 +63,39 @@ def netz(s, im, T):
             if al[y0:y1, x0:x1].max() < 8: continue
             tri += [[q[0], q[3], q[1]], [q[1], q[3], q[2]]]
     return X, (1 - gu if s.get('flip') else gu), gv, np.array(tri, int).reshape(-1, 3), sg * us * vs
+def spoiler(T):
+    """Schwarze Abrisskante auf dem Kofferraumdeckel (das Modell hat keine): flach in der Mitte, an beiden Enden ein erhöhtes Feld für den BLACKLIST-Aufkleber.
+    Liefert die Dreiecke (n, 3, 3) und die Lage der Hinterkante z(x)."""
+    xs = np.linspace(-0.6, 0.6, 61); zs = np.arange(-1.9, -2.3, -0.004); ze = []
+    for x in xs:
+        X, n, hit = treffer(T, 'T', np.full(len(zs), x), -zs); k = 0
+        while k + 1 < len(zs) and hit[k + 1] and n[k + 1, 1] > 0.5 and X[k, 1] - X[k + 1, 1] < 0.012: k += 1
+        ze.append(zs[k])
+    kante = np.poly1d(np.polyfit(xs, ze, 6)); sm = lambda t: np.clip(t, 0, 1) ** 2 * (3 - 2 * np.clip(t, 0, 1)); Q = []
+    for x in xs:
+        f = sm((abs(x) - 0.37) / 0.05); d = 0.045 + 0.075 * f; h = 0.016 + 0.026 * f; z = kante(x) + 0.006
+        X, n, hit = treffer(T, 'T', np.array([x, x]), -np.array([z + d, z])); ya, ye = X[0, 1] - 0.002, X[1, 1]
+        Q.append([[x, ya, z + d], [x, ye + h, z - 0.018], [x, ye + h - 0.009, z - 0.02], [x, ye - 0.006, z - 0.002]])
+    Q = np.array(Q); tri = []
+    for k in range(len(xs) - 1):
+        for i, j, (ax, sg) in ((0, 1, (1, 1)), (1, 2, (2, -1)), (2, 3, (1, -1))):
+            for t in ([Q[k, i], Q[k + 1, i], Q[k + 1, j]], [Q[k, i], Q[k + 1, j], Q[k, j]]):
+                t = np.array(t); nn = np.cross(t[1] - t[0], t[2] - t[0]); tri.append(t if nn[ax] * sg > 0 else t[::-1])
+    for k, sg in ((0, -1), (len(xs) - 1, 1)):
+        for t in ([Q[k, 0], Q[k, 1], Q[k, 2]], [Q[k, 0], Q[k, 2], Q[k, 3]]):
+            t = np.array(t); nn = np.cross(t[1] - t[0], t[2] - t[0]); tri.append(t if nn[0] * sg > 0 else t[::-1])
+    return np.array(tri), kante
 def main():
     ims, pos, (W, H) = bogen(); teile = {'lack': laden(('carpaint',)), 'glas': laden(('windowglass',))}; P = []; UV = []; I = []; n0 = 0
+    SP, kante = spoiler(teile['lack']); teile['spoiler'] = SP
+    for sg in (1, -1):     # BLACKLIST auf den erhöhten Enden, an der Kante ausgerichtet (Schrift von vorn lesbar wie am echten Auto)
+        x = 0.505 * sg; A.append(dict(bild='blacklist', sicht='T', a=x, b=kante(x) + 0.052, w=0.165, rot=-np.degrees(np.arctan(kante.deriv()(x))), teil='spoiler'))
     for s in A:
+        if 'frei' in s:
+            im = ims[s['bild']]; x, y, w, h = pos[s['bild']]; bw = s['w'] / 2; bh = bw * im.height / im.width; r = np.radians(s.get('rot', 0)); c = np.array(s['frei'])
+            eck = [(1, 1), (-1, 1), (-1, -1), (1, -1)]; Q = np.array([c + [(ex * bw) * np.cos(r) - (ey * bh) * np.sin(r), (ex * bw) * np.sin(r) + (ey * bh) * np.cos(r), 0] for ex, ey in eck])
+            uv = np.array([[x, y], [x + w, y], [x + w, y + h], [x, y + h]]) / [W, H]; uvr = uv[[1, 0, 3, 2]]
+            P += [Q, Q - [0, 0, 0.001]]; UV += [uvr, uv]; I += [np.array([[0, 1, 3], [1, 2, 3]]) + n0, np.array([[0, 3, 1], [1, 3, 2]]) + n0 + 4]; n0 += 8; print(f"{s['bild']:11s} frei"); continue
         im = ims[s['bild']]; X, u, v, tri, hand = netz(s, im, teile[s.get('teil', 'lack')]); x, y, w, h = pos[s['bild']]
         if not len(tri): print('WARNUNG: trifft nichts', s); continue
         use = np.unique(tri); neu = np.full(len(X), -1); neu[use] = np.arange(len(use)) + n0; tri = neu[tri]
@@ -70,6 +105,6 @@ def main():
         P.append(X[use]); UV.append(np.stack([(x + u[use] * w) / W, (y + v[use] * h) / H], 1)); I.append(tri); n0 += len(use)
         print(f"{s['bild']:11s} {s['sicht']} {len(use):5d} Punkte {len(tri):5d} Dreiecke")
     P = np.concatenate(P); UV = np.concatenate(UV); I = np.concatenate(I)
-    out = {'q': 10000, 'p': np.round(P * 10000).astype(int).ravel().tolist(), 'uv': np.round(UV * 8192).astype(int).ravel().tolist(), 'i': I.ravel().tolist()}
+    out = {'q': 10000, 'p': np.round(P * 10000).astype(int).ravel().tolist(), 'uv': np.round(UV * 8192).astype(int).ravel().tolist(), 'i': I.ravel().tolist(), 'sp': np.round(SP * 10000).astype(int).ravel().tolist()}
     json.dump(out, open(os.path.join(ROOT, 'liveries', 'MX5.json'), 'w'), separators=(',', ':')); print(len(P), 'Punkte,', len(I), 'Dreiecke, Bogen', W, 'x', H)
 if __name__ == '__main__': main()
