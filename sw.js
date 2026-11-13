@@ -34,7 +34,12 @@ self.addEventListener('fetch', e => {
       .catch(() => caches.match('./index.html')));
     return;
   }
-  if (/\/(logos|liveries)\/[^/]+\.(png|json)$/i.test(new URL(req.url).pathname)) {   // Logos (Ordner logos/): aus dem eigenen Dauer-Cache, ohne erneutes Laden. Je Sitzung fragt der Service Worker einmal im Hintergrund nach, ob sich die Datei geändert hat – neue, geänderte und gelöschte Dateien gelten ab dem nächsten Start
+  if (/\/liveries\/(num\/)?[^/]+\.(png|json)$/i.test(new URL(req.url).pathname)) {   // Aufkleber (Ordner liveries/): immer zuerst am Server nachfragen – Bogen, Nummern und liveries.json gehören zusammen und müssen zum geladenen Spiel passen (ein alter Bogen zur neuen Grundfarbe zeigt ein Auto ohne Farbflächen); ohne Netz der letzte Stand
+    const key = req.url.split('?')[0];
+    e.respondWith(fetch(key, { cache: 'no-cache' }).then(r => { if (r.ok) { const cp = r.clone(); caches.open('fr-logos').then(c => c.put(key, cp)); } return r; }).catch(() => caches.open('fr-logos').then(c => c.match(key)).then(h => h || Response.error())));
+    return;
+  }
+  if (/\/logos\/[^/]+\.png$/i.test(new URL(req.url).pathname)) {   // Logos (Ordner logos/): aus dem eigenen Dauer-Cache, ohne erneutes Laden. Je Sitzung fragt der Service Worker einmal im Hintergrund nach, ob sich die Datei geändert hat – neue, geänderte und gelöschte Dateien gelten ab dem nächsten Start
     const key = req.url.split('?')[0];
     e.respondWith(caches.open('fr-logos').then(c => c.match(key).then(hit => {
       if (hit && LSEEN.has(key)) return hit;
