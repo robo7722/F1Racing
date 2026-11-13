@@ -2663,6 +2663,11 @@ function flatFins(M, x0, x1, z0, z1, yMax) {
     for (let i = 0; i < p.count; i++) { const ax = Math.abs(p.getX(i)), z = p.getZ(i); if (ax >= x0 && ax <= x1 && z >= z0 && z <= z1 && p.getY(i) > yMax) p.setY(i, yMax); } }
 }
 flatFins(CARM, 0.12, 0.30, 0.70, 0.92, 0.64);
+// F2-Modell: auf der Nase (Mitte, z ≈ 1,54–1,57) steckte eine 14 cm hohe, 3 mm dünne dunkle Nadel (Rest aus dem Quellmodell) – in der Cockpitsicht ein schwebender Strich vor dem Auto.
+// Spitze auf die Grundfläche zurückziehen: die Nadel fällt zu einer Fläche knapp unter dem Nasenlack zusammen und ist unsichtbar.
+if (CARM2) for (const Lv of CARM2.lods) { const g = Lv.matte; if (!g) continue; const p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) if (Math.abs(p.getX(i)) < 0.01 && p.getY(i) > 0.66 && p.getY(i) < 0.8 && p.getZ(i) > 1.52 && p.getZ(i) < 1.6) { p.setY(i, 0.647); p.setZ(i, 1.541); }
+  p.needsUpdate = true; g.computeBoundingSphere(); }
 // F2-Modell: der Ausschnitt für die Halo-Mittelstrebe hat einen ausgefransten Rand (in der TV-Kamera als Zacken sichtbar) -> glatte Platte in Wagenfarbe knapp darunter
 function addPlate(M, x0, x1, z0, z1, y, cls = 0) {
   if (!M) return; for (const Lv of M.lods) { const g = Lv.gloss; if (!g) continue; const n = g.attributes.position.count;
@@ -8907,7 +8912,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.44'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.45'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
