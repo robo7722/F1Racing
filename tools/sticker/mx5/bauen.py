@@ -74,9 +74,9 @@ def spoiler(T):
         ze.append(zs[k])
     kante = np.poly1d(np.polyfit(xs, ze, 6)); sm = lambda t: np.clip(t, 0, 1) ** 2 * (3 - 2 * np.clip(t, 0, 1)); Q = []
     for x in xs:
-        f = sm((abs(x) - 0.37) / 0.05); d = 0.045 + 0.075 * f; h = 0.016 + 0.026 * f; z = kante(x) + 0.006
+        f = sm((abs(x) - 0.355) / 0.03); e = sm((0.6 - abs(x)) / 0.045); d = (0.05 + 0.05 * f) * (0.35 + 0.65 * e); h = (0.009 + 0.013 * f) * (0.2 + 0.8 * e); z = kante(x) + 0.004   # flach; Enden leicht erhöht, laufen spitz aus
         X, n, hit = treffer(T, 'T', np.array([x, x]), -np.array([z + d, z])); ya, ye = X[0, 1] - 0.002, X[1, 1]
-        Q.append([[x, ya, z + d], [x, ye + h, z - 0.018], [x, ye + h - 0.009, z - 0.02], [x, ye - 0.006, z - 0.002]])
+        Q.append([[x, ya, z + d], [x, ye + h, z - 0.014], [x, ye + h - 0.006, z - 0.016], [x, ye - 0.006, z - 0.002]])
     Q = np.array(Q); tri = []
     for k in range(len(xs) - 1):
         for i, j, (ax, sg) in ((0, 1, (1, 1)), (1, 2, (2, -1)), (2, 3, (1, -1))):
@@ -90,7 +90,7 @@ def main():
     ims, pos, (W, H) = bogen(); teile = {'lack': laden(('carpaint',)), 'glas': laden(('windowglass',))}; P = []; UV = []; I = []; n0 = 0
     SP, kante = spoiler(teile['lack']); teile['spoiler'] = SP
     for sg in (1, -1):     # BLACKLIST auf den erhöhten Enden, an der Kante ausgerichtet (Schrift von vorn lesbar wie am echten Auto)
-        x = 0.505 * sg; A.append(dict(bild='blacklist', sicht='T', a=x, b=kante(x) + 0.052, w=0.165, rot=-np.degrees(np.arctan(kante.deriv()(x))), teil='spoiler'))
+        x = 0.47 * sg; A.append(dict(bild='blacklist', sicht='T', a=x, b=kante(x) + 0.047, w=0.15, rot=-np.degrees(np.arctan(kante.deriv()(x))), teil='spoiler'))
     for s in A:
         if 'frei' in s:
             im = ims[s['bild']]; x, y, w, h = pos[s['bild']]; bw = s['w'] / 2; bh = bw * im.height / im.width; r = np.radians(s.get('rot', 0)); c = np.array(s['frei'])
