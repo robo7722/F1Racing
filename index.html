@@ -1514,11 +1514,12 @@ const KART_DRIVERS = [
   ['ONY', 'Oskar Nyberg', 6, 'K_HZN', 0xe0007a], ['NBE', 'Nils Brenner', 77, 'K_HZN', 0xf0f0f0],
   ['KTA', 'Kai Tanaka', 10, 'K_ION', 0x1456b8], ['ACO', 'Ari Cohen', 31, 'K_ION', 0xdfe3e8],
 ];
+// mass: Fahrzeuggewicht mit Fahrer in kg (für Kollisionen); die Kollisionsmaße werden aus dem 3D-Modell gemessen (hitboxOf)
 // ph: Fahrzeugleistung gegenüber dem F1-Basismodell (Topspeed, Kurvengrip, Bremse, Beschleunigung); laps: Renndauer im Karrieremodus
 const SERIES = {
-  kart: { id: 'kart', name: 'GoKart', sub: 'Rennkart · Sprint-Rennen', teams: KART_TEAMS, drivers: KART_DRIVERS, ph: { top: 0.5, grip: 0.5, brk: 0.5, acc: 1.12 }, laps: 3, cal: ['genk', 'wack', 'sil'], noBoost: true, cl: 2.3, cw: 1.55, hw: 0.85 },
-  f2:   { id: 'f2',   name: 'Formula 2', sub: 'FIA Formula 2 · Saison 2026', teams: F2_TEAMS, drivers: F2_DRIVERS, ph: { top: 0.93, grip: 0.9, brk: 0.92, acc: 0.9 }, laps: 4, cal: ['mel', 'mtl', 'mc', 'rbr', 'sil', 'spa', 'monza', 'yas'], noBoost: true, cl: 4.9, cw: 1.78, hw: 0.98 },
-  f1:   { id: 'f1',   name: 'Formula 1', sub: 'FIA Formula 1 · Saison 2026', teams: F1_TEAMS, drivers: F1_DRIVERS, ph: { top: 1, grip: 1, brk: 1, acc: 1 }, laps: 3, cal: null, noBoost: false },
+  kart: { id: 'kart', name: 'GoKart', sub: 'Rennkart · Sprint-Rennen', teams: KART_TEAMS, drivers: KART_DRIVERS, ph: { top: 0.5, grip: 0.5, brk: 0.5, acc: 1.12 }, laps: 3, cal: ['genk', 'wack', 'sil'], noBoost: true, mass: 165 },
+  f2:   { id: 'f2',   name: 'Formula 2', sub: 'FIA Formula 2 · Saison 2026', teams: F2_TEAMS, drivers: F2_DRIVERS, ph: { top: 0.93, grip: 0.9, brk: 0.92, acc: 0.9 }, laps: 4, cal: ['mel', 'mtl', 'mc', 'rbr', 'sil', 'spa', 'monza', 'yas'], noBoost: true, mass: 795 },
+  f1:   { id: 'f1',   name: 'Formula 1', sub: 'FIA Formula 1 · Saison 2026', teams: F1_TEAMS, drivers: F1_DRIVERS, ph: { top: 1, grip: 1, brk: 1, acc: 1 }, laps: 3, cal: null, noBoost: false, mass: 800 },
 };
 const LIVS = {}; for (const k in LIV) LIVS['F2_' + k] = { kind: 'f2', ...LIV[k] };
 let SER = 'f1', TEAMS = F1_TEAMS, DRIVERS = F1_DRIVERS, SERPH = SERIES.f1.ph;
@@ -1639,7 +1640,7 @@ THEMES.wack.look = { sh: [0.92, 1.0, 1.08], hi: [1.03, 1.04, 0.97], sat: 1.12, c
 
 /* ======================= Konstanten ======================= */
 const VTOP = 95, BRAKE = 44, GRIP = 46, HALF = 7;
-let CL = 5.4, CW = 1.95, CARHW = 1.1;   // Kollisionsmaße (Länge/Breite) und halbe Breite für die Bande – je Klasse (Kart kleiner)
+let CL = 5.4, CW = 1.95, CARHW = 1.1;   // Maße des größten Fahrzeugs im Feld (Länge/Breite/halbe Breite) – aus den Modellen gemessen (fieldDims), nur noch für die KI-Abstände
 const DIFF = { easy: { aLat: 36, brake: 40, top: .99 }, mid: { aLat: 44, brake: 44, top: 1 }, hard: { aLat: 47.5, brake: 46, top: 1.015, grip: 1.07, brk: 1.05, acc: 1.04 },
   pro: { aLat: 58, brake: 56, top: 1.065, grip: 1.3, brk: 1.3, acc: 1.28 }, leg: { aLat: 65, brake: 62, top: 1.1, grip: 1.45, brk: 1.42, acc: 1.4 } };
 const accel = (v, vmax = VTOP) => Math.max(0, 11.5 * (1 - Math.pow(v / vmax, 2.2)));
@@ -3630,9 +3631,19 @@ function carLabel(d, T) {
 
 const buildAll = () => DRIVERS.map(d => {
   const c = { code: d[0], name: d[1], num: d[2], team: d[3], helmet: d[4], skill: skillOf(d), liv: d[5] ? 'F2_' + d[5] : undefined };
-  c.mesh = makeCar(c); return c;
+  c.mesh = makeCar(c); c.hb = hitboxOf(c.mesh); c.mass = TEAMS[c.team].road ? STREET.m : (SERIES[SER].mass || 800); return c;
 });
-let ALL = buildAll();
+// Hitbox aus dem 3D-Modell gemessen: halbe Breite (über die Reifen), Bug (zf) und Heck (zr) ab Fahrzeugursprung. Schilder (Sprites) und durchsichtige Hilfsflächen zählen nicht.
+function hitboxOf(m) {
+  const g = m.g, bb = new THREE.Box3(), b = new THREE.Box3(), inv = new THREE.Matrix4(), rel = new THREE.Matrix4(); g.updateMatrixWorld(true); inv.copy(g.matrixWorld).invert();
+  g.traverse(o => { if (!o.isMesh || !o.geometry || !o.geometry.attributes.position || o.userData.noHit) return; const mt = o.material; if (mt && mt.transparent && mt.depthWrite === false) return;
+    if (!o.geometry.boundingBox) o.geometry.computeBoundingBox(); b.copy(o.geometry.boundingBox).applyMatrix4(rel.multiplyMatrices(inv, o.matrixWorld)); bb.union(b); });
+  if (bb.isEmpty()) return { hw: 1, zf: 2.8, zr: -2.8 };
+  return { hw: Math.max(Math.abs(bb.min.x), Math.abs(bb.max.x)), zf: bb.max.z, zr: bb.min.z };
+}
+// Maße des Feldes für die KI (Abstand halten, Spurwahl): größtes Fahrzeug der Klasse
+function fieldDims() { CL = 0; CW = 0; for (const c of ALL) { if (TEAMS[c.team].road && ALL.length > 1) continue; CL = Math.max(CL, c.hb.zf - c.hb.zr); CW = Math.max(CW, c.hb.hw * 2); } CARHW = CW / 2; }
+let ALL = buildAll(); fieldDims();
 const byCode = k => ALL.find(c => c.code === k);
 // Serie wechseln (Kart / F2 / F1): Fahrerfeld, Teams, Fahrzeugmodelle und Leistungsfaktoren
 function setSeries(k, quiet) {
@@ -3641,9 +3652,9 @@ function setSeries(k, quiet) {
   SERIES._dirty = false;
   for (const c of ALL) { scene.remove(c.mesh.g); if (c.mesh.label && c.mesh.label.material.map) c.mesh.label.material.map.dispose(); }
   if (SER && SER !== k) { (S.drv ||= {})[SER] = S.driver; }
-  const prevSer = SER; SER = k; const SD = SERIES[k]; TEAMS = SD.teams; SERPH = SD.ph; CL = SD.cl || 5.4; CW = SD.cw || 1.95; CARHW = SD.hw || 1.1;
+  const prevSer = SER; SER = k; const SD = SERIES[k]; TEAMS = SD.teams; SERPH = SD.ph;
   DRIVERS = SD.drivers.map(x => x.slice()); if (typeof applyCareerSlot === 'function') applyCareerSlot(k, DRIVERS);
-  ALL = buildAll(); cars.length = 0; ais = [];
+  ALL = buildAll(); fieldDims(); cars.length = 0; ais = [];
   const want = k === prevSer ? S.driver : (S.drv || {})[k]; S.driver = ALL.find(c => c.code === want) ? want : ALL[0].code;
   pl = byCode(S.driver) || ALL[0]; S.grid = clamp(S.grid, 1, fieldSize()); MENU.team = pl.team;
   S.lastSer = k; if (!quiet) save();
@@ -7182,7 +7193,7 @@ function placeOnGrid() {
   const TT = (S.mode === 'tt' && !CHP) || QL;   // Zeitfahren: allein auf der Strecke, von der Pole
   (TT ? [DRIVERS.find(d => d[0] === pl.code)] : gridOrder()).forEach((d, j) => {
     const c = byCode(d[0]), s = QL ? -220 : slotS(j), p = trackAt(s, slotLat(j));
-    Object.assign(c, { isPlayer: c === pl, d: s, v: 0, startD: s, gridLat: slotLat(j), yawKick: 0, pushV: 0, lat: slotLat(j), latT: slotLat(j), latV: 0, home: (Math.random() - .5) * 3, laneT: 0,
+    Object.assign(c, { isPlayer: c === pl, d: s, v: 0, startD: s, gridLat: slotLat(j), yawKick: 0, sx: 0, sz: 0, lat: slotLat(j), latT: slotLat(j), latV: 0, home: (Math.random() - .5) * 3, laneT: 0,
       lapsDone: -1, lapStart: 0, last: 0, best: 0, lapTimes: [], finished: false, finishTime: 0, finishLaps: 0, grid: j + 1,
       react: 0.05 + Math.random() * 0.15, form: Math.random() * 0.006, phase: Math.random() * 6.28, thrS: 0, brkS: 0, slip: 0, slipS: 0, blkPrev: null, ovr: null, lineK: 0.85 + Math.random() * 0.15, idx: p.i, x: p.x, z: p.z, h: p.h, steer: 0, brk: 0, sPrev: modL(s), wallCd: 0, stuckT: 0, wrongT: 0, thr: 0, spin: 0 });
     const comp = c === pl ? 1 : Math.floor(Math.random() * 3);
@@ -7330,7 +7341,7 @@ function projectCar(c) {
 }
 function resetCar(c) {
   const p = trackAt(c.idx * DS + 5, 0);
-  c.x = p.x; c.z = p.z; c.h = p.h; c.v = 0; c.steer = 0; c.stuckT = 0; c.wrongT = 0;
+  c.x = p.x; c.z = p.z; c.h = p.h; c.v = 0; c.sx = c.sz = 0; c.yawKick = 0; c.steer = 0; c.stuckT = 0; c.wrongT = 0;
   if (c === pl) camH = p.h;
   projectCar(c);
 }
@@ -7374,17 +7385,26 @@ function carStep(c, thr, brk, dt, limit) {
   c.yawR = -c.steer * yawMax;   // tatsächliche Gierrate (für die Kamera)
   c.h -= c.steer * yawMax * dt;
   if (c.yawKick) { c.h += c.yawKick * dt; c.yawKick *= Math.exp(-3.4 * dt); if (Math.abs(c.yawKick) < 0.004) c.yawKick = 0; }   // Drehimpuls nach Kontakt klingt ab
-  if (c.pushV) { c.x += RX[c.idx] * c.pushV * dt; c.z += RZ[c.idx] * c.pushV * dt; c.pushV *= Math.exp(-4 * dt); if (Math.abs(c.pushV) < 0.02) c.pushV = 0; }
+  // Rutschen nach Kontakt (Weltkoordinaten): der Anteil in Fahrtrichtung geht ins Tempo, den Queranteil bauen die Reifen ab –
+  // Seitenkraft steigt mit der Rutschgeschwindigkeit und sättigt an der Haftgrenze (weniger Grip auf Gras/Kies = weiter rutschen)
+  if (c.sx || c.sz) { const fx = Math.sin(c.h), fz = Math.cos(c.h); let la = c.sx * fz - c.sz * fx; c.v = Math.max(0, c.v + c.sx * fx + c.sz * fz);
+    const dec = tyreGrip(c, sf) * Math.tanh(Math.abs(la) / 1.2) * dt; la = Math.abs(la) <= dec || Math.abs(la) < 0.02 ? 0 : la - Math.sign(la) * dec;
+    c.sx = fz * la; c.sz = -fx * la; c.x += c.sx * dt; c.z += c.sz * dt; }
   c.x += Math.sin(c.h) * c.v * dt; c.z += Math.cos(c.h) * c.v * dt;
   projectCar(c);
   wallCheck(c, dt);
 }
+// Quer-Haftgrenze der Reifen in m/s²: mechanischer Grip + Abtrieb (wächst mit dem Tempo), mal Fahrzeug- und Untergrundfaktor
+function tyreGrip(c, sf) { return (c.gripMul || 1) * (sf || SURF[c.surf] || SURF.road)[3] * (13 + (GRIP - 13) * Math.min(1, c.v * c.v / 4900)); }
 function wallCheck(c, dt) {
   c.wallCd -= dt;
-  const side = c.lat >= 0 ? 1 : -1, lim = wallAt(c.idx, side) - CARHW;
-  if (Math.abs(c.lat) > lim) {
-    const i = c.idx, push = Math.abs(c.lat) - lim;
+  // Hitbox gegen die Bande: gedrehtes Rechteck (schräg stehendes Auto braucht mehr Platz), Mittelpunkt der Box statt Fahrzeugursprung
+  const hb = c.hb, i0 = c.idx, fr = Math.sin(c.h) * RX[i0] + Math.cos(c.h) * RZ[i0], ft = Math.sin(c.h) * TX[i0] + Math.cos(c.h) * TZ[i0];
+  const latC = c.lat + fr * (hb.zf + hb.zr) / 2, side = latC >= 0 ? 1 : -1, lim = wallAt(c.idx, side) - (hb.hw * Math.abs(ft) + (hb.zf - hb.zr) / 2 * Math.abs(fr));
+  if (Math.abs(latC) > lim) {
+    const i = c.idx, push = Math.abs(latC) - lim;
     c.x -= RX[i] * side * push; c.z -= RZ[i] * side * push;
+    { const so = (c.sx * RX[i] + c.sz * RZ[i]) * side; if (so > 0) { c.sx -= RX[i] * side * so; c.sz -= RZ[i] * side * so; } }   // Rutschen endet an der Bande
     const th = Math.atan2(TX[i], TZ[i]), dh = wrapA(th - c.h);
     const impact = Math.abs(Math.sin(dh)) * c.v;
     if (Math.abs(dh) < Math.PI / 2) c.h += dh * (1 - Math.exp(-22 * dt));
@@ -7475,45 +7495,64 @@ function updateAI(c, dt, prof = profAI, top = diff.top) {
   stuckCheck(c, dt);
 }
 
-// Kollisionen: paarweise in Streckenkoordinaten, ohne Überschwingen (für alle Autos gleich)
-function shiftLat(c, dx) { c.x += RX[c.idx] * dx; c.z += RZ[c.idx] * dx; c.lat += dx; }
-function shiftD(c, dx) { c.x += TX[c.idx] * dx; c.z += TZ[c.idx] * dx; c.d += dx; c.sPrev = modL(c.sPrev + dx); }
-// Kollisionen: beide Autos gleich schwer (≈ 800 kg). Seitlich: Querimpuls (Auto rutscht weg) + Drehimpuls je nach Trefferpunkt;
-// Auffahren: weitgehend unelastisch, Energieverlust, bei versetztem Treffer dreht sich das getroffene Heck weg.
+// Kollisionen: jedes Auto ist ein gedrehtes Rechteck in den Maßen seines Modells (c.hb), geprüft in Weltkoordinaten (Trennachsen-Test).
+// Physik: Stoß mit Impulserhaltung – jedes Auto bekommt die Geschwindigkeitsänderung Impuls / eigene Masse (schwere Autos schieben leichte weg).
+// Der Anteil in Fahrtrichtung ändert das Tempo, der Queranteil lässt das Auto rutschen; die Reifen bauen das Rutschen je nach Grip ab (carStep).
+// Wer dauerhaft gegen ein anderes Auto lenkt, schiebt es: es gewinnt die Seite mit mehr Reifenkraft (Masse × Grip), auf Gras/Kies hält der Gegner weniger dagegen.
+// Tempo: es zählt die Aufprallgeschwindigkeit am Kontakt (Fahrt + Rutschen beider Autos). Leichte Berührungen federn etwas zurück, harte Einschläge sind fast
+// unelastisch (Karosserie verformt sich, Energie geht verloren) und drehen das Auto stärker.
+// Trifft der Stoß neben dem Schwerpunkt, dreht sich das Auto (Hebelarm / Trägheitsmoment), gedämpft durch die Reifen.
+const COLL = { e: 0.25, mu: 0.3, yaw: 0.07, yawHard: 0.3, yawMax: 1.1 };   // yaw: Drehanteil bei leichtem Kontakt (Reifen halten das Auto gerade), yawHard: zusätzlich bei hartem Einschlag (ab ca. 3 m/s Stoß)
+function carBox(c) { const hb = c.hb, fx = Math.sin(c.h), fz = Math.cos(c.h), zc = (hb.zf + hb.zr) / 2; return { cx: c.x + fx * zc, cz: c.z + fz * zc, fx, fz, hl: (hb.zf - hb.zr) / 2, hw: hb.hw }; }
+function boxCorners(o) { const out = []; for (const [u, w] of [[1, 1], [1, -1], [-1, -1], [-1, 1]]) out.push([o.cx + o.fx * o.hl * u + o.fz * o.hw * w, o.cz + o.fz * o.hl * u - o.fx * o.hw * w]); return out; }
+function inBox(o, x, z, tol = 0.03) { const dx = x - o.cx, dz = z - o.cz; return Math.abs(dx * o.fx + dz * o.fz) <= o.hl + tol && Math.abs(dx * o.fz - dz * o.fx) <= o.hw + tol; }
+// Überlappung zweier Boxen: null oder { nx, nz (von A nach B), ov (Eindringtiefe), px, pz (Kontaktpunkt) }
+function boxHit(A, B) {
+  const dx = B.cx - A.cx, dz = B.cz - A.cz; let ov = 1e9, nx = 0, nz = 0;
+  for (const [ax, az] of [[A.fx, A.fz], [A.fz, -A.fx], [B.fx, B.fz], [B.fz, -B.fx]]) {
+    const rA = A.hl * Math.abs(A.fx * ax + A.fz * az) + A.hw * Math.abs(A.fz * ax - A.fx * az), rB = B.hl * Math.abs(B.fx * ax + B.fz * az) + B.hw * Math.abs(B.fz * ax - B.fx * az);
+    const d = dx * ax + dz * az, o = rA + rB - Math.abs(d); if (o <= 0) return null;
+    if (o < ov) { ov = o; const s = d >= 0 ? 1 : -1; nx = ax * s; nz = az * s; }
+  }
+  let px = 0, pz = 0, n = 0; for (const [x, z] of boxCorners(A)) if (inBox(B, x, z)) { px += x; pz += z; n++; } for (const [x, z] of boxCorners(B)) if (inBox(A, x, z)) { px += x; pz += z; n++; }
+  if (n) { px /= n; pz /= n; } else { px = (A.cx + B.cx) / 2; pz = (A.cz + B.cz) / 2; }
+  return { nx, nz, ov, px, pz };
+}
+// Geschwindigkeitsänderung (Welt) auf ein Auto anwenden: längs -> Tempo, quer -> Rutschen; Angriffspunkt neben dem Schwerpunkt -> Drehung
+function kickCar(c, box, dvx, dvz, px, pz) {
+  const lon = dvx * box.fx + dvz * box.fz, la = dvx * box.fz - dvz * box.fx;
+  c.v = Math.max(0, c.v + lon); c.sx = (c.sx || 0) + box.fz * la; c.sz = (c.sz || 0) - box.fx * la;
+  const rx = px - box.cx, rz = pz - box.cz, I = (4 * box.hl * box.hl + 4 * box.hw * box.hw) / 12;   // Trägheitsmoment je kg (Rechteck)
+  const yk = COLL.yaw + COLL.yawHard * clamp((Math.hypot(dvx, dvz) - 3) / 10, 0, 1);
+  c.yawKick = clamp((c.yawKick || 0) - (rx * dvz - rz * dvx) / I * yk, -COLL.yawMax, COLL.yawMax);
+}
 function collisions() {
-  let hit = 0;
+  let hit = 0; const boxes = cars.map(carBox);
   for (let it = 0; it < 2; it++) for (let a = 0; a < cars.length; a++) for (let b = a + 1; b < cars.length; b++) {
-    const A = cars[a], B = cars[b];
-    const da = wrapL(B.d - A.d); if (Math.abs(da) >= CL) continue;
-    const dl = B.lat - A.lat; if (Math.abs(dl) >= CW) continue;
-    const pa = CL - Math.abs(da), pw = CW - Math.abs(dl), first = it === 0;
-    if (pw / CW < pa / CL) {   // seitlicher Kontakt
-      const s = dl >= 0 ? 1 : -1, corr = pw / 2;
-      shiftLat(A, -s * corr); shiftLat(B, s * corr);
-      if (first) {
-        const dvv = Math.abs(A.v - B.v), j = clamp(pw * 7 + dvv * 0.08, 0.6, 5);
-        A.pushV = (A.pushV || 0) - s * j * 0.12; B.pushV = (B.pushV || 0) + s * j * 0.12;   // v31: Mittelweg zwischen v29 und v30
-        const k = clamp(pw * 0.17 + dvv * 0.006, 0, 0.15) * (Math.abs(da) > 1.2 ? 1 : 0.35), sg = da >= 0 ? 1 : -1;
-        A.yawKick = (A.yawKick || 0) + s * sg * k; B.yawKick = (B.yawKick || 0) + s * sg * k;
-        const avg = (A.v + B.v) / 2, loss = 1 - clamp(pw * 0.015 + dvv * 0.0005, 0.001, 0.015); A.v += (avg - A.v) * 0.08; B.v += (avg - B.v) * 0.08; A.v *= loss; B.v *= loss;
-        if (A === pl || B === pl) hit = Math.max(hit, clamp(j / 4, 0.3, 1));
-      }
-    } else {   // Auffahren
-      const s = da >= 0 ? 1 : -1, corr = pa / 2;
-      shiftD(A, -s * corr); shiftD(B, s * corr);
-      const rear = s > 0 ? A : B, front = s > 0 ? B : A;
-      if (first && rear.v > front.v) {
-        const dv = rear.v - front.v, m = (rear.v + front.v) / 2, e = 0.18; rear.v = m - dv * e / 2; front.v = m + dv * e / 2;
-        const loss = 1 - Math.min(0.025, dv * 0.001); rear.v *= loss; front.v *= loss;
-        const off = clamp((front.lat - rear.lat) / CW, -1, 1), sp = clamp(dv * 0.01, 0, 0.28) * off;   // versetzter Treffer -> Dreher
-        front.yawKick = (front.yawKick || 0) - sp; rear.yawKick = (rear.yawKick || 0) + sp * 0.4;
-        front.pushV = (front.pushV || 0) + off * dv * 0.015; rear.pushV = (rear.pushV || 0) - off * dv * 0.008;
-        if (rear === pl || front === pl) hit = Math.max(hit, clamp(dv / 12, 0.3, 1));
-      }
+    const A = cars[a], B = cars[b], oa = boxes[a], ob = boxes[b];
+    { const dx = ob.cx - oa.cx, dz = ob.cz - oa.cz, r = oa.hl + oa.hw + ob.hl + ob.hw; if (dx * dx + dz * dz > r * r) continue; }
+    const h = boxHit(oa, ob); if (!h) continue;
+    const mA = A.mass || 800, mB = B.mass || 800, im = 1 / mA + 1 / mB, { nx, nz } = h;
+    // Relativgeschwindigkeit (Fahrt + Rutschen) am Kontakt
+    const rvx = (ob.fx * B.v + (B.sx || 0)) - (oa.fx * A.v + (A.sx || 0)), rvz = (ob.fz * B.v + (B.sz || 0)) - (oa.fz * A.v + (A.sz || 0)), vn = rvx * nx + rvz * nz;
+    if (vn < 0) {
+      const e = COLL.e * (1 - 0.7 * clamp((-vn - 2) / 13, 0, 1)), j = -(1 + e) * vn / im, tx = -nz, tz = nx, vt = rvx * tx + rvz * tz, jt = clamp(-vt / im, -COLL.mu * j, COLL.mu * j);   // Normalstoß + Reibung der Karosserien aneinander
+      const Jx = nx * j + tx * jt, Jz = nz * j + tz * jt;
+      kickCar(A, oa, -Jx / mA, -Jz / mA, h.px, h.pz); kickCar(B, ob, Jx / mB, Jz / mB, h.px, h.pz);
+      if (A === pl || B === pl) { const dv = Math.hypot(Jx, Jz) / (A === pl ? mA : mB); if (dv > 0.6) hit = Math.max(hit, clamp(dv / 7, 0.3, 1)); }
     }
+    // Überlappung auflösen: das leichtere Auto weicht weiter aus
+    const sA = h.ov * mB / (mA + mB), sB = h.ov * mA / (mA + mB);
+    A.x -= nx * sA; A.z -= nz * sA; B.x += nx * sB; B.z += nz * sB; projectCar(A); projectCar(B);
+    boxes[a] = carBox(A); boxes[b] = carBox(B);
   }
   if (hit && bumpCd <= 0) { bump(hit); bumpCd = 0.35; }
 }
+// Test: Hitboxen je Fahrzeug (Maße) und als Drahtrahmen am Modell ein-/ausblenden
+window.__hb = ser => { if (ser && !running) setSeries(ser, true); const m = new Map(); for (const c of ALL) { const k = 'hw ' + c.hb.hw.toFixed(2) + ' bug ' + c.hb.zf.toFixed(2) + ' heck ' + c.hb.zr.toFixed(2) + ' kg ' + c.mass; m.set(k, (m.get(k) || 0) + 1); } return { ser: SER, CL: +CL.toFixed(2), CW: +CW.toFixed(2), boxes: [...m] }; };
+window.__cars = () => cars;
+window.__hbShow = (on = true) => { for (const c of ALL) { const g = c.mesh.g; if (g.userData.hbLine) { g.remove(g.userData.hbLine); g.userData.hbLine = null; } if (!on) continue; const hb = c.hb, y = 0.5, p = [[hb.hw, hb.zf], [hb.hw, hb.zr], [-hb.hw, hb.zr], [-hb.hw, hb.zf]].flatMap(q => [q[0], y, q[1]]);
+    const ln = new THREE.LineLoop(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(p, 3)), new THREE.LineBasicMaterial({ color: 0x00ff66, depthTest: false })); ln.renderOrder = 999; ln.userData.noHit = true; g.add(ln); g.userData.hbLine = ln; } };
 
 function lapCheck(c) {
   const nl = Math.floor(c.d / L);
