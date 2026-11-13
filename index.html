@@ -2724,27 +2724,31 @@ function paintGeo(g, fn) {
   const o = new THREE.BufferGeometry(); for (const k of ['position', 'normal', 'uv']) o.setAttribute(k, g.attributes[k]);
   o.setIndex(g.index); o.setAttribute('color', new THREE.BufferAttribute(c, 3)); o.setAttribute('aCls', new THREE.BufferAttribute(Float32Array.from(cl), 1)); o.boundingSphere = g.boundingSphere; return o;
 }
-// glatter, unterbrochener Mischungs-Ring auf beiden Reifenflanken (unterbrochen -> man sieht das Rad drehen)
-function ringParts(hw, segs) {
-  const pos = [], nrm = [], idx = [];
-  for (const sd of [-1, 1]) for (let a = 0; a < 4; a++) {
-    const a0 = a * Math.PI / 2 + 0.17, a1 = a0 + Math.PI / 2 - 0.34, base = pos.length / 3;
-    for (let k = 0; k <= segs; k++) { const t = a0 + (a1 - a0) * k / segs, c = Math.cos(t), sn = Math.sin(t);
-      for (const r of [0.274, 0.296]) { pos.push(sd * hw, r * c, r * sn); nrm.push(sd, 0, 0); } }
-    for (let k = 0; k < segs; k++) { const q = base + k * 2; idx.push(q, q + 1, q + 2, q + 1, q + 3, q + 2); }
+// Beschriftung der Reifenflanke wie am echten Reifen (PIRELLI, P ZERO, zwei Bögen mit Karomuster) in der Farbe der Mischung:
+// Kreisring auf beiden Flanken, Textur textures/reifen_flanke.png (weiß, Deckkraft = Zeichnung; die Ecken sind deckend weiß – dorthin zeigen die UVs des übrigen Rads).
+// RT = Reifenradius; die Textur deckt den Radius 0 … 0,927·RT ab.
+const RF_R = [0.742, 0.782, 0.822, 0.862, 0.902];
+function ringParts(hw, segs, RT) {
+  const pos = [], nrm = [], uv = [], idx = [], n = Math.max(24, segs * 4), m = RF_R.length;
+  for (const sd of [-1, 1]) { const base = pos.length / 3;
+    for (let k = 0; k <= n; k++) { const t = k / n * Math.PI * 2, c = Math.cos(t), sn = Math.sin(t);
+      for (const f of RF_R) { const r = f * RT; pos.push(sd * hw, r * c, r * sn); nrm.push(sd, 0, 0); uv.push(0.5 - sd * sn * f / 0.927 * 0.5, 0.5 + c * f / 0.927 * 0.5); } }
+    for (let k = 0; k < n; k++) for (let j = 0; j < m - 1; j++) { const q = base + k * m + j; idx.push(q, q + 1, q + m, q + 1, q + m + 1, q + m); }
   }
-  return { pos, nrm, idx };
+  return { pos, nrm, uv, idx };
 }
 function wheelGeoM(g, hw, comp, segs) {
   const cTy = new THREE.Color(0x141414), cRim = new THREE.Color(0x2b2e33), cc = new THREE.Color(COMPOUNDS_[comp]);
-  const base = paintGeo(g, (k, x, y, z, o) => o.copy(k === 5 ? cTy : cRim)), R = ringParts(hw, segs);
+  const base = paintGeo(g, (k, x, y, z, o) => o.copy(k === 5 ? cTy : cRim)); let RT = 0; { const q = g.attributes.position.array; for (let i = 0; i < q.length; i += 3) RT = Math.max(RT, Math.hypot(q[i + 1], q[i + 2])); } const R = ringParts(hw, segs, RT);
   // Markierung auf die Reifenflanke legen: je Seite und Radius die tatsächliche Flankenposition aus dem Modell lesen (vorher fest bei ±hw – die Flanke wölbt sich nach innen, die Linie schwebte daneben)
   { const gp = g.attributes.position.array, side = (sd, r) => { let m = -1; for (let i = 0; i < gp.length; i += 3) { const rr = Math.hypot(gp[i + 1], gp[i + 2]); if (Math.abs(rr - r) < 0.008 && sd * gp[i] > m) m = sd * gp[i]; } return m; }, cache = new Map();
-    for (let i = 0; i < R.pos.length; i += 3) { const sd = Math.sign(R.pos[i]), r = Math.round(Math.hypot(R.pos[i + 1], R.pos[i + 2]) * 1000) / 1000, key = sd + ':' + r; if (!cache.has(key)) cache.set(key, side(sd, r)); const x = cache.get(key); if (x > 0) R.pos[i] = sd * (x + 0.0015); } }
+    for (let i = 0; i < R.pos.length; i += 3) { const sd = Math.sign(R.pos[i]), r = Math.round(Math.hypot(R.pos[i + 1], R.pos[i + 2]) * 1000) / 1000, key = sd + ':' + r; if (!cache.has(key)) cache.set(key, side(sd, r)); }
+    for (const sd of [-1, 1]) { const rs = RF_R.map(f => Math.round(f * RT * 1000) / 1000), xs = rs.map(r => cache.get(sd + ':' + r)), ok = xs.filter(x => x > 0), fb = ok.length ? Math.max(...ok) : hw; rs.forEach((r, j) => cache.set(sd + ':' + r, (xs[j] > 0 ? xs[j] : fb) + 0.002)); }   // fehlende Radien (grobe Fernmodelle) auffüllen
+    for (let i = 0; i < R.pos.length; i += 3) { const sd = Math.sign(R.pos[i]), r = Math.round(Math.hypot(R.pos[i + 1], R.pos[i + 2]) * 1000) / 1000; R.pos[i] = sd * cache.get(sd + ':' + r); } }
   const n0 = base.attributes.position.count, n1 = R.pos.length / 3;
   const P = new Float32Array((n0 + n1) * 3), Nn = new Float32Array((n0 + n1) * 3), C = new Float32Array((n0 + n1) * 3), U = new Float32Array((n0 + n1) * 2);
   P.set(base.attributes.position.array); P.set(R.pos, n0 * 3); Nn.set(base.attributes.normal.array); Nn.set(R.nrm, n0 * 3); C.set(base.attributes.color.array);
-  for (let i = 0; i < n1; i++) C.set([cc.r, cc.g, cc.b], (n0 + i) * 3);
+  for (let i = 0; i < n1; i++) C.set([cc.r, cc.g, cc.b], (n0 + i) * 3); U.set(R.uv, n0 * 2);
   const I = Array.from(base.index.array); for (const i of R.idx) I.push(i + n0);
   const o = new THREE.BufferGeometry(); o.setAttribute('position', new THREE.BufferAttribute(P, 3)); o.setAttribute('normal', new THREE.BufferAttribute(Nn, 3)); o.setAttribute('color', new THREE.BufferAttribute(C, 3)); o.setAttribute('uv', new THREE.BufferAttribute(U, 2));
   o.setIndex(I); o.computeBoundingSphere(); return o;
@@ -2757,6 +2761,7 @@ const WHEELM = mkWheelM(CARM), WHEELM2 = mkWheelM(CARM2);
 const MODELS = { f1: CARM ? { C: CARM, W: WHEELM, helm: [0.79, 0.18], rl: [0.315, -2.335], swPos: [0, 0.60, 0.665], swS: 0.78, cam: [0, 0.765, 0.30, 3.0],   /* Lenkrad IN der Cockpitwanne (vorher z 0,98 = unter dem Vorderdeck, darüber gemalt), Augenpunkt etwas weiter hinten mit leichtem Blick nach unten wie in echten Onboards */ tv: [0, 1.04, 0.02, 2.4] } : null, f2: CARM2 ? { C: CARM2, W: WHEELM2, helm: [0.80, 0.21], rl: [0.40, -2.468], rlS: [0.085, 0.075, 0.02], swPos: [0, 0.61, 0.64], swS: 0.8, cam: [0, 0.795, 0.28, 3.5],   /* swS: Lenkrad im F2 kleiner – die Kamera sitzt dort viel näher dran */ tv: [0, 1.04, 0.02, 2.4] } : null };
 const COMPOUNDS = COMPOUNDS_;
 const WMAT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .88, metalness: .05, side: THREE.DoubleSide });
+{ const t = new THREE.TextureLoader().load('./textures/reifen_flanke.png', () => { WMAT.map = t; WMAT.alphaTest = 0.45; WMAT.needsUpdate = true; }); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; }   // Flankenbeschriftung; bis sie geladen ist, bleibt der Ring einfarbig
 const MIRMAT = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x86bfee, metalness: 0, roughness: 1, envMapIntensity: 0, side: THREE.DoubleSide });   /* Spiegelglas in der Himmelsfarbe der Strecke (nachts dunkel) – als Spiegel der Umgebung zeigte es Gras und Tribünen und wirkte grün */   // Spiegelglas: spiegelt die Umgebung (vorher eine einfarbig hellblaue, selbstleuchtende Fläche – im Cockpit ein weißer Klotz)
 const MATTE = new THREE.MeshStandardMaterial({ vertexColors: true, map: TEX.carbon, normalMap: TEX.carbonN, normalScale: new THREE.Vector2(.5, .5), roughness: .42, metalness: .35, side: THREE.DoubleSide });
 const col = h => new THREE.Color(h);
