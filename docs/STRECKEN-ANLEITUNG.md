@@ -19,7 +19,7 @@ Stellen, an denen der Code nicht eindeutig ist, sind mit **(unklar)** markiert.
 7. **Erster Bau**: Spiel laden, in der Konsole `__build('schlüssel')`. Die Strecke bekommt Fahrbahn, Kerbs, Auslauf, Mauern, Zäune, Bäume, Boxengasse, Tribünen, Schatten und KI automatisch.
 8. **Streckenrand nachbessern**: Tribünenplan (`stands`), Auslaufart (`runoffKind`), Wandabstände (`wall`, `runoff`), ggf. Wahrzeichen (`osm`) und Stadt (`city`, `cityBelt`).
 9. **Look einstellen**: Himmel, Dunst, Sonne, `look`-Block (Abschnitt 3).
-10. **Testen**: Checkliste in Abschnitt 7 (`__clipAll`, `__onRoad`, `__bldOverlap`, `__bench`, `__pace`, `__sim`). Danach Versionsnummer und `CACHE`-Name in `sw.js` erhöhen.
+10. **Testen**: zuerst den QC-Bot laufen lassen (`python qc/run.py <schlüssel>`, siehe `qc/README.md`), dann die Checkliste in Abschnitt 7 (`__clipAll`, `__onRoad`, `__bldOverlap`, `__bench`, `__pace`, `__sim`). Danach Versionsnummer und `CACHE`-Name in `sw.js` erhöhen.
 
 ---
 
@@ -350,6 +350,11 @@ Ziel auf der Startaufstellung bei Qualität „Schön“ (`S.gfx === 'high'`): *
 ---
 
 ## 7. Test-Checkliste
+
+**Automatisch:** `python qc/run.py <schlüssel>` fährt die Strecke mit dem QC-Bot ab (eine Runde je Kamera, unsichtbar im Hintergrund)
+und prüft Ruckler, Löcher im Boden, Z-Fighting, Darstellungsfehler, Clipping und Fahrbarkeit. Er ruft dabei auch die Helfer unten auf.
+Ergebnis: `qc-reports/<Datum>/report.html` mit Bild und Streckenmeter je Befund. Während des Bauens reicht `--quick` (eine Runde).
+Details in `qc/README.md`. Die Befehle unten bleiben für gezieltes Nachsehen von Hand.
 
 Alle Befehle in der Browser-Konsole. Die Helfer stehen am Ende von `index.html` (~7232).
 

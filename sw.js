@@ -1,5 +1,5 @@
 // Service Worker: macht das Spiel offline-fähig und installierbar
-const CACHE = 'f1-rennen-1.46';
+const CACHE = 'f1-rennen-1.47';
 const APP = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './car.bin', './f2car.bin', './kart.bin', './textures/kart_body.jpg', './textures/kart_body_n.jpg', './textures/kart_wheel.jpg', './kartfahrer.bin', './textures/kart_fahrer.jpg', './textures/kart_stoff.jpg', './roadcar.bin', './menu.mp3',
   ...['asphalt_track', 'asphalt_pit_lane', 'sand_01', 'gravel_floor'].flatMap(t => ['diff', 'nor_gl'].map(m => './textures/' + t + '_' + m + '_1k.jpg')),
   ...['Grass004_Color', 'Grass004_NormalGL', 'LeafSet004_Color', 'LeafSet004_Opacity', 'LeafSet019_Color', 'LeafSet019_Opacity', 'Foliage001_Color', 'Foliage001_Opacity'].map(f => './textures/acg_' + f + '.jpg')];
@@ -28,6 +28,7 @@ const LSEEN = new Set();   // Logos, bei denen in dieser Sitzung schon nach eine
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
+  if (/\/(qc|qc-reports)\//.test(new URL(req.url).pathname)) return;   // QC-Bot und seine Berichte nie zwischenspeichern
   if (new URL(req.url).hostname === 'api.github.com') { e.respondWith(fetch(req).catch(() => caches.match(req))); return; }   // Liste des Musik-Ordners immer frisch
   if (req.mode === 'navigate') { // Seite: zuerst Netz (Updates), sonst Cache
     e.respondWith(fetch(req.url, { cache: 'no-cache' }).then(r => { if (r.ok) { const copy = r.clone(); caches.open(CACHE).then(c => c.put('./index.html', copy)); } return r; })   // am Server nachfragen statt 10 Minuten alte Kopie zu nehmen

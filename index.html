@@ -2011,7 +2011,7 @@ const SKYC = { rt: new THREE.WebGLCubeRenderTarget(SKYRES, cubeOpt(THREE.HalfFlo
 SKYC.cam = new THREE.CubeCamera(1, 6000, SKYC.rt); SKYC.clCam = new THREE.CubeCamera(1, 6000, SKYC.cl); skyScene.add(SKYC.cam, SKYC.clCam);
 const skyBox = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.ShaderMaterial({
   uniforms: { tSky: { value: SKYC.rt.texture }, tCl: { value: SKYC.cl.texture }, uRot: { value: 0 } },
-  vertexShader: 'varying vec3 vDir; void main(){ vDir = position; vec4 p = projectionMatrix * vec4(mat3(viewMatrix) * position, 1.0); gl_Position = vec4(p.xy, p.w * 0.99999, p.w); }',
+  vertexShader: 'varying vec3 vDir; void main(){ vDir = position; vec4 p = projectionMatrix * vec4(mat3(viewMatrix) * position, 1.0); gl_Position = vec4(p.xy, p.w, p.w); }',   /* genau auf der Fernebene: mit 0.99999 lag der Himmel bei kleiner Nahgrenze (Cockpit 7 cm) vor allem ab ~5 km und übermalte ferne Berge (wandernde Schnittkante) */
   fragmentShader: `uniform samplerCube tSky, tCl; uniform float uRot; varying vec3 vDir;
     void main(){ vec3 d = normalize(vDir); vec3 c = textureCube(tSky, d).rgb; float cr = cos(uRot), sr = sin(uRot);
       vec4 k = textureCube(tCl, vec3(cr * d.x - sr * d.z, d.y, sr * d.x + cr * d.z)); c = c * (1.0 - k.a) + k.rgb;
@@ -3954,7 +3954,7 @@ function bankBreaks(i) { const qe = HW[i] + BK_IN; return [0, KSD * qe, KSD * (q
 function bankAt(c) { if (!BANK) return 0; const f = modL(c.d) / DS, i0 = Math.floor(f) % N, i1 = (i0 + 1) % N, t = f - Math.floor(f); return bankY(i0, c.lat) * (1 - t) + bankY(i1, c.lat) * t; }
 const HOTEL_T = { value: 0 };
 let POCK = null, POCKETS = [];   // asphaltierte Notausgänge (Schikanen): Seiten-Bits je Streckenpunkt + Flächen zum Füllen
-let ROAD_WAIT = null, HOLES = 0, MC_CHIC = null, MC_DEM = null, MC_TERR = [], MC_PADS = null, BANDW = null, HORIZ = null, BANDS = [], MC_SEA = null, MC_ISL = null, MJ = null, SPI = null, PAVEZ = null, KERBL = null, KERBR = null, REFNW = null, WTL = null, WTR = null, GOL = null, GOR = null, HILLW = null, RISE = null, ELEV, SLOPE, FLAT = true, ELMEAN = 0, HG = null, HW, NOWALL, TRK, TH, N, L, DS, PX, PZ, TX, TZ, RX, RZ, KS, KP, KR, RL, profBot = null, WL, WR, GRL, GRR, KERB, profP, profAI, inSign = 1, poleSide = 1, hotelRoof = null;
+let ROAD_WAIT = null, HOLES = 0, MC_CHIC = null, MC_DEM = null, MC_TERR = [], MC_PADS = null, BANDW = null, HORIZ = null, BANDS = [], MC_SEA = null, MC_ISL = null, MJ = null, SPI = null, PAVEZ = null, KERBL = null, KERBR = null, REFNW = null, WTL = null, WTR = null, GOL = null, GOR = null, HILLW = null, RISE = null, ELEV, SLOPE, FLAT = true, ELMEAN = 0, HG = null, HW, NOWALL, TRK, TH, N, L, DS, PX, PZ, TX, TZ, RX, RZ, KS, KP, KR, RL, profBot = null, WL, WR, GRL, GRR, PVBL = null, PVBR = null, KERB, profP, profAI, inSign = 1, poleSide = 1, hotelRoof = null;
 const trackGroup = new THREE.Group(); scene.add(trackGroup);
 const wrapL = x => x - L * Math.round(x / L);
 const modL = x => ((x % L) + L) % L;
@@ -4290,11 +4290,13 @@ function fillGroundHoles(dry = false) {
     raster(o, (x, z, y) => { const k = key(x, z), q = C.get(k); if (!q || y < q.y) C.set(k, { y, m: o.material }); }); }   /* je Zelle den TIEFSTEN Belag merken: Kies/Auslauf liegt unter Kerbs und Linien */
   if (!C.size) return 0; const groups = new Map(), XZ = new Map(), done = new Set();
   // Material je Belagsart: Kies = Kiesstreifen, Auslauf = tiefster asphaltierter Nachbar (aus den gerasterten Flächen ermittelt)
-  const pick = (x, z, want) => { for (let r = 1; r <= 6 * Q; r++) for (let a = -r; a <= r; a++) for (let b = -r; b <= r; b++) { if (Math.max(Math.abs(a), Math.abs(b)) !== r) continue; const c = C.get(key(x + a, z + b)); if (c && (want === 'gravel') === (c.m.map && c.m.map.source === TEX.gravel.source)) return c.m; } return null; };
+  const isTex = (m, t) => !!(m.map && t && m.map.source === t.source);
+  const pick = (x, z, want) => { let any = null; for (let r = 1; r <= 6 * Q; r++) for (let a = -r; a <= r; a++) for (let b = -r; b <= r; b++) { if (Math.max(Math.abs(a), Math.abs(b)) !== r) continue; const c = C.get(key(x + a, z + b)); if (!c) continue;
+    if (want === 'gravel') { if (isTex(c.m, TEX.gravel)) return c.m; continue; } if (isTex(c.m, TEX.gravel)) continue; if (isTex(c.m, TEX.runoff)) return c.m; any = any || c.m; } return any; };   /* Auslauf: bevorzugt die Auslauf-Textur, sonst der nächste asphaltierte Belag */
   for (let i = 0; i < N; i++) for (const sg of [-1, 1]) { const W = sg < 0 ? WL[i] : WR[i];
     for (let o = HW[i] + 1.6; o < W - 0.6; o += 0.7 / Q) { const x = Math.round((PX[i] + RX[i] * o * sg) * Q), z = Math.round((PZ[i] + RZ[i] * o * sg) * Q), k = key(x, z); if (done.has(k)) continue; done.add(k); if (C.has(k) || F.has(k)) continue;
       const wx = x / Q, wz = z / Q, [d, j] = nearestDist(wx, wz), lat = (wx - PX[j]) * RX[j] + (wz - PZ[j]) * RZ[j]; if (Math.abs(lat) >= (lat < 0 ? WL[j] : WR[j]) - 0.6 || d > 200) continue;
-      const sf = surface(j, lat); if (sf !== 'gravel') continue;   /* nur wo die Fahrphysik Kies meint, aber nichts gezeichnet ist (Asphalt-Ausläufe haben absichtlich Sand-/Rasenflächen dazwischen) */
+      const sf = surface(j, lat); if (sf !== 'gravel' && sf !== 'runoff') continue;   /* nur wo die Fahrphysik Kies/Auslauf meint, aber nichts gezeichnet ist (Rasen zwischen den Spielberger Ausläufen meldet surface() als Gras) – typisch innen in Haarnadeln, wo foldLim die Streifen kürzt */
       let enc = 0; for (const [ux, uz] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) for (let r = 1; r <= 12 * Q; r++) if (C.has(key(x + ux * r, z + uz * r))) { enc++; break; }
       if (enc < 7) continue;   /* nur eingeschlossene Lücken – nicht den Außenrand eines Kiesbetts zackig verbreitern */
       const mat = pick(x, z, sf); if (!mat) continue; (groups.get(mat) || groups.set(mat, []).get(mat)).push([x, z]);
@@ -4603,7 +4605,7 @@ function buildTrack(key) { BID++;
   KS = filt(K, 4, 'avg'); { const ak = new Float32Array(N); for (let i = 0; i < N; i++) ak[i] = Math.abs(KS[i]); KP = filt(filt(ak, 3, 'max'), 2, 'avg'); }
   KERB = new Uint8Array(N); for (let i = 0; i < N; i++) for (let k = -3; k <= 3; k++) if (Math.abs(KS[(i + k + N) % N]) > 1 / 350) { KERB[i] = 1; break; }
   if (TRK.mc && TRK.mc.tun) for (let i = 0; i < N; i++) if (i * DS > TRK.mc.tun[0] * L - 15 && i * DS < TRK.mc.tun[1] * L + 15) KERB[i] = 0;   /* keine Randsteine im Tunnel */
-  KERBL = KERB; KERBR = KERB; REFNW = null; WTL = WTR = GOL = GOR = null;
+  KERBL = KERB; KERBR = KERB; REFNW = null; WTL = WTR = GOL = GOR = null; PVBL = PVBR = null;
   const PG = TRK.ref ? projGrid() : null;
   if (TRK.refFull) {
     KERBL = new Uint8Array(N); KERBR = new Uint8Array(N);
@@ -4817,10 +4819,11 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     // Boxenseite: die Boxengasse wird später ab Mauer +0,2 m bis +11 m gebaut – das Band darf erst dahinter beginnen (in Spa stieg es mit dem Hang an und lag als Gras-Zebramuster 3 cm ÜBER der Boxengasse)
     for (const [W0, sg] of [[WL, -1], [WR, 1]]) {
       const W = W0.map((w, i) => pitZone(i, sg) ? w + 10.8 : w);
-      const bw = new Float32Array(N);
-      for (let i = 0; i < N; i++) { let w = 0; for (let o = 4; o <= BAND; o += 4) { const oo = W[i] + o, x = PX[i] + RX[i] * oo * sg, z = PZ[i] + RZ[i] * oo * sg; const [dd, jj] = nearestDist(x, z); if (dd < oo - 2.5) break; if (TRK.mc) { let dj = Math.abs(jj - i); dj = Math.min(dj, N - dj); if (dj * DS > 30 && dd < Math.max(WL[jj], WR[jj]) + 6) break; }   /* Monaco: Band nie über den ummauerten Bereich eines anderen Asts (sonst fällt es als Hügel auf dessen Fahrbahn ab) */ w = o; } bw[i] = w ? Math.min(BAND, w + 4) : 0; }
+      const bw = new Float32Array(N), cap = new Float32Array(N);
+      for (let i = 0; i < N; i++) { let w = 0; for (let o = 4; o <= BAND; o += 4) { const oo = W[i] + o, x = PX[i] + RX[i] * oo * sg, z = PZ[i] + RZ[i] * oo * sg; const [dd, jj] = nearestDist(x, z); if (dd < oo - 2.5) { cap[i] = 1; break; } if (TRK.mc) { let dj = Math.abs(jj - i); dj = Math.min(dj, N - dj); if (dj * DS > 30 && dd < Math.max(WL[jj], WR[jj]) + 6) { cap[i] = 1; break; } }   /* Monaco: Band nie über den ummauerten Bereich eines anderen Asts (sonst fällt es als Hügel auf dessen Fahrbahn ab) */ w = o; } bw[i] = w ? Math.min(BAND, w + 4) : 0; }
+      const capS = filt(filt(cap, 4, 'max'), 4, 'avg');   /* Band stößt an einen Nachbarast: dort überlappen sich beide Bänder (+4 m gegen Lücken) und lägen exakt gleich hoch auf dem Gelände -> Z-Fighting */
       const bws = filt(filt(bw, 3, 'min'), 3, 'avg'), H = []; (BANDW || (BANDW = [null, null]))[sg < 0 ? 0 : 1] = filt(bws, 6, 'max');
-      for (let k = 0; k <= K; k++) { const a = new Float32Array(N); for (let i = 0; i < N; i++) { const o = Math.abs(foldLim(i, (W[i] + bws[i] * k / K) * sg)), x = PX[i] + RX[i] * o * sg, z = PZ[i] + RZ[i] * o * sg, dh = surfH(x, z) - ELEV[i], f = clamp((o - W[i]) / (TRK.mc && dh < 0 ? 1.5 : 12), 0, 1);   /* Höhe an der TATSÄCHLICHEN Position: hStrip schiebt Punkte im Kurveninneren auf die Faltgrenze zusammen (foldLim) – mit den Höhen der ursprünglichen Positionen lagen dort mehrere Punkte übereinander und bildeten senkrechte Wände (Red Bull Ring, Infield) */ a[i] = dh * f * f * (3 - 2 * f); }   /* Monaco: tiefer liegendes Gelände direkt hinter der Mauer (die Steinschürze deckt den Absatz) statt Böschung */ H.push(a); }
+      for (let k = 0; k <= K; k++) { const a = new Float32Array(N); for (let i = 0; i < N; i++) { const o = Math.abs(foldLim(i, (W[i] + bws[i] * k / K) * sg)), x = PX[i] + RX[i] * o * sg, z = PZ[i] + RZ[i] * o * sg, dh = surfH(x, z) - ELEV[i], f = clamp((o - W[i]) / (TRK.mc && dh < 0 ? 1.5 : 12), 0, 1);   /* Höhe an der TATSÄCHLICHEN Position: hStrip schiebt Punkte im Kurveninneren auf die Faltgrenze zusammen (foldLim) – mit den Höhen der ursprünglichen Positionen lagen dort mehrere Punkte übereinander und bildeten senkrechte Wände (Red Bull Ring, Infield) */ a[i] = dh * f * f * (3 - 2 * f) - 0.008 * capS[i] * k / K; }   /* an Nachbarästen zum Außenrand hin 8 mm absenken: im Überlapp gewinnt das Band des näheren Asts, die Naht liegt auf der Mittellinie */   /* Monaco: tiefer liegendes Gelände direkt hinter der Mauer (die Steinschürze deckt den Absatz) statt Böschung */ H.push(a); }
       for (let k = 0; k < K; k++) {
         const o0 = i => W[i] + bws[i] * k / K, o1 = i => W[i] + bws[i] * (k + 1) / K, msk = i => bws[i] > 0.5;
         BANDS.push(sg < 0 ? hStrip(i => -o1(i), i => -o0(i), 0.004, 0.004, shm, { uScale: 14, vScale: 14, yL: H[k + 1], yR: H[k], mask: msk }) : hStrip(o0, o1, 0.004, 0.004, shm, { uScale: 14, vScale: 14, yL: H[k], yR: H[k + 1], mask: msk }));
@@ -4859,6 +4862,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     // Spielberg: hellgraue Asphalt-Auslaufzonen in den Kurven, Grasstreifen auf den Geraden, bemalte Streifen in T1 und der letzten Kurve
     const rm = lam({ map: TEX.runoff, normalMap: TEX.runoffN, roughness: .8, color: 0xf0f0ee, ...po(-3) });   /* -3: deutlich vor dem Grasfüllstreifen (+1): sonst Z-Fighting ab ~300 m = "Loch" mit Gras in der Auslaufzone */
     const bigL = i => mL[i] > 5 && WL[i] > HW[i] + 6, bigR = i => mR[i] > 5 && WR[i] > HW[i] + 6;
+    PVBL = new Uint8Array(N); PVBR = new Uint8Array(N); for (let i = 0; i < N; i++) { PVBL[i] = bigL(i) ? 1 : 0; PVBR[i] = bigR(i) ? 1 : 0; }   /* surface(): außerhalb der Auslaufflächen liegt sichtbar Gras – dort fährt man auch auf Gras */
     hStrip(i => -(WL[i] - 0.2), i => -HW[i], .015, .015, rm, { mask: bigL, uScale: 12, vScale: 12, conform: true }); hStrip(i => HW[i], i => WR[i] - 0.2, .015, .015, rm, { mask: bigR, uScale: 12, vScale: 12, conform: true });
     hStrip(i => HW[i], i => HW[i] + 2.2, .016, .016, rm, { mask: i => !bigR(i), uScale: 12, vScale: 12 }); hStrip(i => -HW[i] - 2.2, i => -HW[i], .016, .016, rm, { mask: i => !bigL(i), uScale: 12, vScale: 12 });
     const stripeT = (a, b) => { const t = canvasTex(64, 64, (g, w, h) => { g.fillStyle = b; g.fillRect(0, 0, w, h); g.fillStyle = a; g.fillRect(0, 0, w, h / 2); g.globalAlpha = .12; for (let k = 0; k < 500; k++) { g.fillStyle = Math.random() < .5 ? '#000' : '#fff'; g.fillRect(Math.random() * w, Math.random() * h, 1, 1); } }); t.userData.own = true; return t; };
@@ -4954,7 +4958,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     vStrip(i => s * W[i], 0, wH, wallMat, { mask: i => !adMask[i] && !(NOWALL[i] & nb) && !(WT && WT[i] === 2), vScale: 4, cast: true });
     if (WT) vStrip(i => s * W[i], 0, 1.15, tricolM, { mask: i => !(NOWALL[i] & nb) && WT[i] === 2, vScale: 12, cast: true, flip: s > 0 });
     vStrip(i => s * W[i], 0, wH, adMat, { mask: i => adMask[i] && !(NOWALL[i] & nb) && !(WT && WT[i] === 2), vScale: 64, cast: true, flip: s > 0 });
-    vStrip(i => s * W[i], TH.bandStone ? -14 : -3.6, 0.02, skirtM, { mask: i => !(NOWALL[i] & nb), vScale: TH.bandStone ? 6 : undefined });
+    vStrip(i => s * W[i], TH.bandStone ? -14 : -3.6, 0, skirtM, { mask: i => !(NOWALL[i] & nb), vScale: TH.bandStone ? 6 : undefined });   /* endet genau an der Unterkante von Mauer/Bande: 2 cm Überlappung in derselben Ebene flimmerten (Z-Fighting) – die Fuge liegt unter den Bodenstreifen */
     if (hi) { const fm = i => !(NOWALL[i] & nb) && fenceAt(i, s);
       const mesh = vStrip(i => s * W[i], wH, wH + 3.2, lam({ map: TEX.fence, transparent: true, depthWrite: false, alphaTest: 0.02, side: THREE.DoubleSide, metalness: .5, roughness: .5, color: 0xd8dde2 }), { mask: fm, vScale: 1 }); if (mesh) { mesh.renderOrder = 1; mesh.receiveShadow = false; }   // Geflecht: weich überblendet (kein Flimmern in der Ferne)
       vStrip(i => s * W[i], wH, wH + 3.2, lam({ map: TEX.fencePost, alphaTest: 0.5, alphaToCoverage: true, side: THREE.DoubleSide, metalness: .6, roughness: .45 }), { mask: fm, vScale: 4 }); }   // Pfosten und Spannseile: deckend
@@ -7618,7 +7622,8 @@ function surface(i, lat) {
   if (PAINTZ && PAINTZ[i] && a <= h + 12.5) return 'runoff';
   if (POCK && POCK[i] & (lat < 0 ? 1 : 2)) return 'runoff';   // asphaltierter Notausgang einer Schikane
   if (PAVEZ && PAVEZ[i]) return a <= h + 15 ? 'runoff' : 'gravel';
-  if (lat < 0 ? GRL[i] : GRR[i]) { const go = lat < 0 ? GOL : GOR; return a > h + 1.5 && (!go || a <= go[i] + 1) ? 'gravel' : a <= h + 1.5 ? 'grass' : 'grass'; }
+  if (lat < 0 ? GRL[i] : GRR[i]) { const go = lat < 0 ? GOL : GOR; if (a > h + 1.5 && Math.abs(foldLim(i, lat)) < a - 0.5) return 'grass';   /* Kurveninneres: das Kiesbett endet bei foldLim (75 % des Radius), dahinter liegt sichtbar Rasen */ return a > h + 1.5 && (!go || a <= go[i] + 1) ? 'gravel' : a <= h + 1.5 ? 'grass' : 'grass'; }
+  if (TH.runoffKind === 'paved' && PVBL && !(lat < 0 ? PVBL : PVBR)[i]) return a < h + 2.2 ? 'runoff' : 'grass';   // Spielberg/Montréal: Asphalt nur in den Kurven, auf den Geraden Gras
   return TH.runoffKind === 'asphalt' || TH.runoffKind === 'paved' ? 'runoff' : (a < h + 2.2 ? 'runoff' : 'grass');
 }
 // [Gas-Faktor, Zusatzbremsung, ab Tempo, Grip-Faktor]
@@ -8952,7 +8957,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.46'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.47'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -9036,6 +9041,7 @@ function tick(now, forced) {
   // Pause: das Bild steht still, also nur zwei Bilder zeichnen und dann die Grafikkarte schonen
   if (running && paused) { if (pauseDrawn >= 2) return; pauseDrawn++; } else pauseDrawn = 0;
   if (!window.__norender && !(!running && settingsFrom === 'menu' && !$('#settings').classList.contains('hidden')) && !(!running && !SHOW.on && !$('#menu').classList.contains('hidden'))) {   /* Einstellungen aus dem Menü: nichts neu zeichnen – sonst lief dahinter die Strecke des letzten Rennens weiter */   /* Hauptmenü: fester Hintergrund statt Kamerafahrt – dort wird die Strecke nicht gerendert (spart Akku) */ if (SHOW.on && !running && !$('#menu').classList.contains('hidden')) { showroomFrame(dt); const bo = BAKE.u.bakeOn.value, et = ENVP.tex; BAKE.u.bakeOn.value = 0; if (SHOW.env) ENVP.tex = SHOW.env; renderer.render(SHOW.scene, SHOW.cam); ENVP.tex = et; BAKE.u.bakeOn.value = bo;   /* im Showroom spiegelt sich das Studio, nicht die Strecke */ } else if (composer) { syncAoCam(); composer.render(dt); } else renderer.render(scene, camera); }
+  if (window.__qcF) window.__qcF(now, forced);   /* QC-Bot: Bildzeiten messen und direkt nach dem Zeichnen Bilder auswerten */
 }
 applyGfx();
 buildTrack(TRACKS[S.track] && (!TRACKS[S.track].extra || S.nos) && !TRACKS[S.track].kartOnly ? S.track : (S.track = 'monza'));placeOnGrid(); buildMenu(); renderMenu();
@@ -9045,9 +9051,10 @@ window.__scene = () => scene; window.__cam = () => camera; window.__perf = (k = 
 window.vb = () => [...document.querySelectorAll('button,.btn,[role=button],.card,.trk,div[onclick]')].filter(b => b.offsetParent !== null); window.W8 = ms => new Promise(r => setTimeout(r, ms));
 window.__go = async (name, ser) => { if (running) { location.reload(); return; } const q = s2 => document.querySelector(s2);   // Schnelles Spiel -> Klasse -> Strecke (wartet, bis sie gebaut ist)
   for (let k = 0; k < 6 && !(q('#qPlay') && q('#qPlay').offsetParent); k++) { const b = vb().find(b => b.textContent.trim() === '‹'); if (b) b.click(); await W8(500); }
-  q('#qPlay').click(); await W8(600); const sc = ser && q('#serCards [data-ser="' + ser + '"]'); if (sc) { sc.click(); await W8(200); } q('#mNext').click(); await W8(600);
+  q('#qPlay').click(); await W8(600); const sc = ser && q('#serCards [data-ser="' + ser + '"]'); if (sc) { sc.click(); await W8(200); }
+  for (let k = 0; k < 6 && q('#menu').dataset.scr !== 'track'; k++) { q('#mNext').click(); await W8(600); }   // Klasse -> Team -> Fahrer -> Strecke
   const t = [...document.querySelectorAll('#tracks .tcard')].find(e => new RegExp(name, 'i').test(e.textContent)); if (t) { t.click(); await W8(200); } q('#mNext').click();
-  for (let k = 0; k < 180 && q('#menu').dataset.scr !== 'team'; k++) await W8(500); };
+  for (let k = 0; k < 180 && q('#menu').dataset.scr !== 'race'; k++) await W8(500); };   // wartet, bis die Strecke gebaut ist
 window.__race = async (name, ser) => { await window.__go(name, ser); for (let k = 0; k < 12 && !running; k++) { document.querySelector('#mNext').click(); await W8(700); } return running; };
 window.__build = k => { buildTrack(k); return TRK.name; };
 window.__pace = () => { const out = { trk: TRK.name, L: Math.round(L) }, sv = SERPH;   /* Test: geschätzte Rundenzeiten je Klasse – Spieler am Limit (ideal) und KI je Schwierigkeit */
@@ -9067,14 +9074,14 @@ window.__wAt = s2 => { const i = Math.floor(modL(s2) / DS) % N; return { hw: HW[
 // Flache Flächen (Fahrbahn, Auslauf, Wasser) und die Absperrung selbst zählen nicht. Ergebnis: Stellen (10-m-Raster) mit Anzahl und Objekthöhe.
 window.__clipAll = (margin = 0.8) => { const out = new Map(), v = new THREE.Vector3(), m = new THREE.Matrix4(), bb = new THREE.Box3();
   const cell = new Set(); for (let i = 0; i < N; i++) { const cx = Math.floor(PX[i] / 25), cz = Math.floor(PZ[i] / 25); for (let u = -2; u <= 2; u++) for (let w = -2; w <= 2; w++) cell.add((cx + u) * 100003 + cz + w); }   /* schnelle Vorauswahl: nur Punkte nahe der Strecke */
-  const test = (x, y, z, h, tag) => { if (!cell.has(Math.floor(x / 25) * 100003 + Math.floor(z / 25))) return; const [d, j] = nearestDist(x, z); if (d > 200) return; if (y - (FLAT ? 0 : ELEV[j]) > 2.5) return; const lat = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j], wl = wallAt(j, lat >= 0 ? 1 : -1), lim = margin === 'road' ? Math.min(HW[j] + 1.5, wl - 0.4) : wl - margin; if (Math.abs(lat) >= lim) return;
+  const test = (x, y, z, h, tag) => { if (!cell.has(Math.floor(x / 25) * 100003 + Math.floor(z / 25))) return; const [d, j] = nearestDist(x, z); if (d > 200) return; if (y - (FLAT ? 0 : ELEV[j]) > 2.5 || y - (FLAT ? 0 : ELEV[j]) < -1) return;   /* tiefer als 1 m unter der Fahrbahn: steckt unsichtbar im Boden (Monaco: Fuß des Felsens) */ if (MC_ISL && Math.hypot(x - MC_ISL.x, z - MC_ISL.z) < MC_ISL.R + 1) return;   /* Palmen auf der Fairmont-Insel stehen absichtlich dort */ const lat = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j], wl = wallAt(j, lat >= 0 ? 1 : -1), lim = margin === 'road' ? Math.min(HW[j] + 1.5, wl - 0.4) : wl - margin; if (Math.abs(lat) >= lim) return;
     const k = Math.round(x / 10) * 10 + ',' + Math.round(z / 10) * 10; const e = out.get(k) || { x: Math.round(x), z: Math.round(z), n: 0, h: 0, tag, s: Math.round(j * DS), lat: Math.round(lat * 10) / 10, lim: Math.round(lim * 10) / 10 }; e.n++; e.h = Math.max(e.h, h); out.set(k, e); };
   trackGroup.updateMatrixWorld(true);
   trackGroup.traverse(o => { if (!o.isMesh || !o.geometry || !o.geometry.attributes.position || !o.visible) return; const g = o.geometry; if (!g.boundingBox) g.computeBoundingBox(); const H = g.boundingBox.max.y - g.boundingBox.min.y, SP = Math.max(g.boundingBox.max.x - g.boundingBox.min.x, g.boundingBox.max.z - g.boundingBox.min.z); if (H < 1.2 || o.userData.strip || o.userData.tile || o.userData.flat || o.userData.ground || g.type === 'PlaneGeometry' || (o.material && o.material.transparent && o.material.polygonOffset)) return;   /* Aufkleber auf der Fahrbahn (Graffiti) sind kein Clipping */   // flache Flächen/Gelände ignorieren
     if (!o.isInstancedMesh && SP > 150 && H < 6) return;   // streckenlange Streifen (Leitplanke, Zaun, Banden) folgen der Absperrung selbst
     const P = g.attributes.position, st = Math.max(1, Math.floor(P.count / 600)), tag = (o.material && (o.material.customProgramCacheKey && o.material.customProgramCacheKey()) || o.material.type) + ':' + P.count;
     const gy = g.boundingBox.min.y + 2.5, lowI = []; for (let i = 0; i < P.count; i += st) if (P.getY(i) <= gy) lowI.push(i);   /* nur bodennahe Punkte prüfen */
-    if (o.isInstancedMesh) { for (let k = 0; k < o.count; k++) { o.getMatrixAt(k, m); m.premultiply(o.matrixWorld); for (const i of lowI) { v.fromBufferAttribute(P, i).applyMatrix4(m); test(v.x, v.y, v.z, H, tag); } } }
+    if (o.isInstancedMesh) { for (let k = 0; k < o.count; k++) { o.getMatrixAt(k, m); if (Math.abs(m.determinant()) < 1e-9) continue;   /* auf Null skaliert = absichtlich ausgeblendet (lag sonst als Punkt im Ursprung) */ m.premultiply(o.matrixWorld); for (const i of lowI) { v.fromBufferAttribute(P, i).applyMatrix4(m); test(v.x, v.y, v.z, H, tag); } } }
     else { const eM = FLAT ? 2.5 : Math.max(...ELEV) + 2.5; for (let i = 0; i < P.count; i += st) { v.fromBufferAttribute(P, i).applyMatrix4(o.matrixWorld); if (v.y <= eM) test(v.x, v.y, v.z, H, tag); } } });
   return [...out.values()].sort((a, b) => b.n - a.n); };
 function bldOverlap(near = 80, fix = false) { const R = [], m = new THREE.Matrix4(), v = new THREE.Vector3(), bb = new THREE.Box3();
@@ -9111,7 +9118,7 @@ window.__bldOverlap = bldOverlap;
 // Testhilfe: alles, was auf der Fahrbahnfläche liegt (auch flach), außer den Fahrbahn-Streifen selbst
 window.__onRoad = () => { const out = new Map(), v = new THREE.Vector3(), m = new THREE.Matrix4(); trackGroup.updateMatrixWorld(true); const cell = new Set(); for (let i = 0; i < N; i++) cell.add(Math.floor(PX[i] / 20) * 100003 + Math.floor(PZ[i] / 20));
   trackGroup.traverse(o => { if (!o.isMesh || !o.visible || o.userData.strip || o.userData.ground || o.userData.tile) return; const g = o.geometry, P = g.attributes.position; if (!P) return; const n = o.isInstancedMesh ? o.count : 1, st = Math.max(1, Math.floor(P.count / 400));
-    for (let k = 0; k < n; k++) { if (o.isInstancedMesh) { o.getMatrixAt(k, m); m.premultiply(o.matrixWorld); } else m.copy(o.matrixWorld);
+    for (let k = 0; k < n; k++) { if (o.isInstancedMesh) { o.getMatrixAt(k, m); if (Math.abs(m.determinant()) < 1e-9) continue; m.premultiply(o.matrixWorld); } else m.copy(o.matrixWorld);   /* auf Null skalierte Instanzen sind ausgeblendet */
       for (let i = 0; i < P.count; i += st) { v.fromBufferAttribute(P, i).applyMatrix4(m); if (!cell.has(Math.floor(v.x / 20) * 100003 + Math.floor(v.z / 20))) continue; const [d, j] = nearestDist(v.x, v.z); if (d > HW[j] - 0.3) continue; const dy = v.y - (FLAT ? 0 : ELEV[j]); if (dy < -0.3 || dy > 4) continue;
         const key = o.uuid + ':' + k; const e = out.get(key) || { s: Math.round(j * DS), x: Math.round(v.x), z: Math.round(v.z), dy: +dy.toFixed(2), col: o.material.color && o.material.color.getHexString(), type: o.material.type, geo: g.type, pc: P.count, ud: Object.keys(o.userData).join('/'), n: 0 }; e.n++; out.set(key, e); } } });
   return [...out.values()].sort((a, b) => b.n - a.n).slice(0, 25); };
@@ -9148,6 +9155,14 @@ window.__plRef = () => pl;
 window.__S = () => S; window.__mesh = () => ({ ALL, pl, MODELS, camera });   /* Test: Einstellungen und Fahrzeuge lesen/setzen */
 window.__laps = () => ais.map(a => a.code + ':' + (a.lapTimes || []).map(t => t.toFixed(1)).join('/'));
 window.__dbg = () => ({ L, N, raceState, running, paused, lightsT, raceTime, plD: pl.d, plV: pl.v, plLat: pl.lat, order: order.map(c => c.code), best: pl.best, fastest, resultsShown, aiBest: ais.slice(0, 5).map(a => a.code + ':' + (a.best || 0).toFixed(1)) });
+// QC-Bot (qc/qc-bot.js, Start mit ?qc): Zugriff auf den Spielzustand, ohne das Spiel selbst zu verändern
+window.__qcApi = { THREE, renderer, camera, scene, trackGroup, sky, skyBox, S, TRACKS, SERIES, GP, tick: (t, f) => tick(t, f), renderNow: () => composer ? composer.render(0) : renderer.render(scene, camera), surface: (i, l) => surface(i, l), nearestDist: (x, z) => nearestDist(x, z), wallAt: (j, sd) => wallAt(j, sd), groundY: (x, z) => groundY(x, z),
+  get pl() { return pl; }, get ais() { return ais; }, get running() { return running; }, get paused() { return paused; }, get raceState() { return raceState; }, get raceTime() { return raceTime; }, get SER() { return SER; },
+  get TRK() { return TRK; }, get TH() { return TH; }, get N() { return N; }, get L() { return L; }, get DS() { return DS; }, get PX() { return PX; }, get PZ() { return PZ; }, get RX() { return RX; }, get RZ() { return RZ; }, get TX() { return TX; }, get TZ() { return TZ; },
+  get PAVEZ() { return PAVEZ; }, get POCK() { return POCK; }, get PVBL() { return PVBL; }, get PVBR() { return PVBR; }, get KERBL() { return KERBL; }, get KERBR() { return KERBR; }, get NOWALL() { return NOWALL; }, get GRL() { return GRL; }, get GRR() { return GRR; }, get MC_CHIC() { return MC_CHIC; },
+  get HW() { return HW; }, get WL() { return WL; }, get WR() { return WR; }, get ELEV() { return ELEV; }, get FLAT() { return FLAT; }, get HORIZ() { return HORIZ; }, get composer() { return composer; },
+  botOn: () => { window.__plAI = true; profBot = buildProfile(45.5, VTOP, 44, KR); }, resume: () => { if (paused) { $('#pause').classList.add('hidden'); resume(); } }, pause: () => pause() };
+if (/[?&]qc=/.test(location.search)) { const sc = document.createElement('script'); sc.type = 'module'; sc.src = 'qc/qc-bot.js?v=' + Date.now(); document.body.appendChild(sc); }
 requestAnimationFrame(frame);
 </script>
 </body>
