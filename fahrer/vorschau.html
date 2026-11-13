@@ -38,7 +38,7 @@ hm.onBeforeCompile = sh2 => { Object.assign(sh2.uniforms, { uA: { value: new THR
   sh2.vertexShader = 'attribute float aZone; varying float vHZ; varying vec3 vHP;\n' + sh2.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vHP = position / 0.15; vHZ = aZone;');
   sh2.fragmentShader = 'uniform vec3 uA, uB, uC, uV; varying float vHZ; varying vec3 vHP;\n' + sh2.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
     { vec3 p = vHP, c = uA; float w = 0.012, a = abs(p.x); c = mix(uC, c, smoothstep(0.27, 0.27 + w, a)); c = mix(uB, c, smoothstep(0.17, 0.17 + w, a));
-      if (vHZ > 1.5 && vHZ < 2.5) discard; if (vHZ > 2.5) c = vec3(0.012); else if (vHZ > 0.5) c = uV; diffuseColor.rgb = c; }`); };
+      if (vHZ > 1.5 && vHZ < 2.5) discard; if (vHZ > 2.5 && p.z > 0.6 && p.y > -0.76 && p.y < -0.2) discard;   /* Anbauteil unter dem Visier (Kinn) weg */ if (vHZ > 2.5) c = vec3(0.012); else if (vHZ > 0.5) c = uV; diffuseColor.rgb = c; }`); };
 const helm = new THREE.Mesh(hg, hm), hb = hg.boundingBox, HS = 1.0;
 // Kopf des Tripo-Modells lag bei x ±0,07, y 0,825…1,0, z −0,075…0,092 (×1,78 m): Helm mittig darauf, Unterkante am Kragen
 helm.scale.setScalar(HS); helm.position.set(0, 1.47 - hb.min.y * HS, 0.015 - (hb.max.z + hb.min.z) / 2 * HS); helm.castShadow = true; s.add(helm);
