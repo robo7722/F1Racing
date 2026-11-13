@@ -158,3 +158,15 @@
 Die Änderungen aus 1.37 und 1.38 sind zurückgenommen: `car.bin` ist wieder die Datei aus 1.36 (bytegleich), das F1-Cockpit-Modell reicht wieder bis 1,82 m, `cockCutGLSL` hat wieder die Sonderregel für den Spiegelhalter. Die Aufkleber- und Startnummern-Änderungen der anderen Sitzung bleiben erhalten.
 
 Damit ist auch der gestreifte Fächer am Fuß des Spiegelträgers wieder da (Ursache siehe Abschnitt 1.37). Die Konvertierung mit den Korrekturen liegt nur im Arbeitsordner der Sitzung, nicht im Repo; die beiden Stände stehen in der Git-Historie (`0594740` = 1.37, `5b60a48` = 1.38).
+
+## Version 1.39 – gerade Nase wie 1.36, Spiegelträger sauber wie 1.38
+
+**Rückmeldung zu 1.37/1.38:** Der Knick nach unten zwischen Cockpit und Nase störte – die Nase war nicht mehr gerade. Er entstand dort, wo das verkürzte Cockpit-Modell unter die Originalnase abtauchte.
+
+**Lösung:** Beides getrennt.
+- Cockpit-Modell und `cockCutGLSL` bleiben auf dem Stand von 1.36 (Deck bis 1,82 m, gerade Linie).
+- `car.bin` ist die Datei aus 1.38: Spiegelträger aus dem Originalnetz, behutsam auf 4 000 Dreiecke vereinfacht, ohne den gestreiften Fächer an der Vorderkante.
+
+**Geprüft:** Racing Bulls in Monza, Cockpit-Kamera und Nahaufnahme des Spiegelfußes – Nase gerade, keine Streifen, kein Zickzack.
+
+**Merke:** Der Fehler lag im Fahrzeugmodell, nicht im Cockpit-Modell. Das Verkürzen des Cockpit-Modells in 1.37 war dafür unnötig.
