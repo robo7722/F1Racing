@@ -46,3 +46,7 @@ Technisch möglich – der Bogen kann auch deckende Farbflächen und Streifen en
 ## Stand 13.11.2026 (2): Racing Bulls und Karts
 - Racing Bulls: die blaue Fläche kommt jetzt als glatte Kurven aus der Grundfarbe (`glsl` in `tools/sticker/RB.json`) statt als Ausschnitt aus dem Foto; VISA und „Red Bull“ sind eigene, nicht gespiegelte Schriftzüge. `build.py` kennt dafür `mask` (Teilkästen für schräge Schrift).
 - Karts: erfundener Aufklebersatz je Team, im Spiel gezeichnet (`kartStickerDraw` in `index.html`, keine Bilddateien): Zierform in fünf Arten, Team-Schriftzug auf Seitenkästen, Frontschürze und Nummerntafel, erfundene Ausrüster (`KART_SPONSORS`), gelbe Nummernfelder mit der Startnummer des Fahrers. Die Lage der Flächen in der Textur steht in `KART_UV` und `KART_PLATES` (am Modell ausgemessen).
+
+## Roadster (RONE Racing) – echte Aufkleber, November 2026
+
+Der Roadster trägt jetzt die Aufkleber des echten Autos, aus den Fotos geschnitten. Technik anders als bei F1/F2: eigenes dünnes Netz über dem Lack statt Projektion im Shader (`liveries/MX5.png` + `liveries/MX5.json`). Einzelheiten, Positionen und offene Punkte: `tools/sticker/mx5/ANLEITUNG.md`.
