@@ -62,6 +62,13 @@ Geprüft rechnerisch (Punkte aus dem laufenden Spiel ausgelesen, Windungszahl ge
 - Ergebnis: 0 Punkte Hand↔Bein, 0 Anzug↔Kart, Arm↔Rumpf nur 1 Punkt 1,4 mm am Schultergelenk (fließender Übergang derselben Fläche).
 - Beabsichtigte Überlappungen bleiben: Handschuh-Stulpe über dem Bündchen, Faust um den Lenkradkranz.
 
+## v1.52 – Griff, Handgelenke, Kamera
+- **Griff** (`bend_hand`, `FIST` im Bauskript): Hand-Mittellinie bis zum Handballen gerade, Handfläche leicht gewölbt (R 3,6), Finger um den Kranz (R 3,5). Der Kranz liegt am Daumenballen in der Handfläche (Abstand 2,3 bei Rohrradius 2,07 Vorlagen-Einheiten), die Finger umschließen ihn ohne einzudringen.
+- **Handgelenke** (`kartArmsIK`): Die Hand rollt um das Kranzrohr, bis sie in Linie mit dem Unterarm steht; der Ellbogen wird auf seinem IK-Kreis so gewählt, dass der Unterarm zur Hand zeigt (nicht über Schulter −10 cm, nicht in Hüfte/Rumpf, nicht nach hinten); der Unterarm übernimmt die Verdrehung (Elle/Speiche); die Hände folgen dem Kranz zu 80 % (er gleitet etwas durch die Faust).
+  - Gemessener Knick Hand↔Unterarm: geradeaus 1° (vorher 16°), halber Einschlag ≤ 13° (vorher 40°), voller Einschlag ≤ 39° (vorher 62°).
+  - Durchdringung bei −1…+1: 0 Hand↔Bein, 0 Arm↔Rumpf, 0 Anzug↔Kart.
+- **Cockpitkamera Kart**: wieder höher (3 cm unter Helmmitte), Blick ~15° nach unten – Lenkrad und Hände im Bild.
+
 ## Offen / Ideen
 - Lenkrad dreht sich beim Lenken, die Hände nicht (war beim alten Fahrer genauso).
 - Leichte Knautschfalten an der Hüfte durch das Biegen (im Sitz kaum sichtbar).
