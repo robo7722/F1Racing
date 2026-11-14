@@ -282,7 +282,7 @@ function drive(R) {
         nextShot = s + CFG.shot; skip = 2;
         const shot = screenJpeg(), st2 = screenStats(), smp = { s: Math.round(s), lap: lr, cam: CAMN[cm], view: 'Kamera', mean: st2.mean, std: st2.std };
         const pr = probe(A.camera); Object.assign(smp, { void: pr.void, zf: pr.zfBlocks, zfPx: pr.zf });
-        smp.calls = A.renderer.info.render.calls; smp.tris = A.renderer.info.render.triangles;
+        { const ci = A.renderer.info; ci.autoReset = false; ci.reset(); A.renderNow(); smp.calls = ci.render.calls; smp.tris = ci.render.triangles; ci.autoReset = true; }   /* ganzes Bild zählen (Schatten, Welt, eigenes Auto, Nachbearbeitung) – der Zähler stellt sich sonst je Durchgang zurück */
         const gl = A.renderer.getContext(), ge = gl.getError(); if (ge) smp.glErr = ge;
         samples.push(smp); imgLater(pr.marks.length ? (cx.drawImage(A.renderer.domElement, 0, 0, TW, TH2), drawMarks(pr.marks.map(m => [m[0], m[1], m[2], m[3]])), cv.toDataURL('image/jpeg', 0.72)) : shot, 'cam' + cm, p => smp.img = p);
         flagSample(R, smp, pr, cm);
@@ -382,6 +382,8 @@ async function runTrack(key) {
   for (const e of R.events) if (/Bot steht/.test(e.t)) issue(R, 'mittel', 'Fahrbarkeit', 'Bot-Auto bleibt stehen (Runde ' + (e.lap + 1) + ')', e.s, 'mögliche Kante, Mauer oder Fehler in der Ideallinie');
   { const off = R.events.filter(e => /neben/.test(e.t)); if (off.length >= 2) issue(R, 'info', 'Fahrbarkeit', 'Bot-Auto kommt ' + off.length + '× von der Strecke ab', off[0].s, off.map(e => at(e.s)).slice(0, 8).join(', ')); }
   if (R.drive.why !== 'fertig') issue(R, 'hoch', 'Ablauf', R.drive.why, null, '');
+  { const hot = (R.samples || []).filter(x => x.view === 'Kamera' && x.calls > 450).sort((a, b) => b.calls - a.calls);   // Lastspitzen: ab etwa 500 Zeichenaufrufen pro Bild ruckelt ein Handy (gemessen: Adreno 840, Abu Dhabi 1.300 m)
+    if (hot.length) issue(R, 'mittel', 'Last', 'Viele Zeichenaufrufe: bis zu ' + hot[0].calls + ' pro Bild (' + hot.length + ' Stellen über 450)', hot[0].s, 'Stellen: ' + hot.slice(0, 10).map(x => at(x.s) + ' = ' + x.calls + ' (' + x.cam + ')').join(', ') + ' – meist viele Einzelteile mit je eigenem Material oder zu kleine Instanz-Kacheln'); }
   if (R.load) { const P = R.load.progs;   // neue Shader mitten im Rennen: jede Stelle einzeln (höchstens 12), Texturen/Geometrien nur als Summe
     for (const e of P.slice(0, 12)) issue(R, 'mittel', 'Nachladen', (e.n > 1 ? e.n + ' neue Shader' : 'Neuer Shader') + ' mitten im Rennen (Runde ' + (e.lap + 1) + ', Kamera ' + CAMN[e.cam] + ')', e.s, 'wird beim Rennstart nicht vorgewärmt (precompile/warmCams in index.html) – Hänger beim ersten Auftreten');
     if (P.length > 12) issue(R, 'mittel', 'Nachladen', 'Weitere ' + (P.length - 12) + ' Stellen mit neuen Shadern', null, P.slice(12, 40).map(e => at(e.s)).join(', '));

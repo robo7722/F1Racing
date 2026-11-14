@@ -227,6 +227,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 #msg{position:absolute;left:50%;top:26%;transform:translateX(-50%);font-size:30px;font-weight:900;font-style:italic;text-align:center;white-space:nowrap;text-shadow:0 3px 12px rgba(0,0,0,.8);opacity:0;transition:opacity .2s}
 #msg.show{opacity:1}
 #perf{position:absolute;top:max(4px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:6;padding:3px 8px 4px;background:rgba(8,8,12,.72);border-top:2px solid var(--f1r,#e10600);text-align:center;pointer-events:auto}
+body.ptNoHud #hud,body.ptNoHud #controls{display:none!important}
 #ptRes{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;background:rgba(8,8,12,.94);color:#fff;padding:10px 14px;font:700 12px/1.55 system-ui,sans-serif;border-top:2px solid #e10600;max-width:96vw;max-height:94vh;overflow:auto;white-space:nowrap;font-size:11px;line-height:1.45}#ptRes td.l{text-align:left;white-space:normal;max-width:46vw}#ptRes button{font:700 12px system-ui,sans-serif;color:#fff;background:#e10600;border:0;padding:6px 12px;margin:6px 6px 0 0}#ptRes textarea{display:block;width:80vw;height:30vh;margin:6px 0;font:11px monospace}#ptRes table{border-collapse:collapse;margin:4px 0}#ptRes td,#ptRes th{padding:0 9px;text-align:right;font-variant-numeric:tabular-nums}#ptRes td:first-child,#ptRes th:first-child{text-align:left;padding-left:0}#ptRes th{color:rgba(255,255,255,.6);font-weight:700}#ptRes small{color:rgba(255,255,255,.6);font-weight:600}
 #perfTxt{font-size:11px;font-weight:700;line-height:14px;white-space:nowrap;font-variant-numeric:tabular-nums;color:#fff}#perfTxt b{font-weight:900}#perfTxt i{color:rgba(255,255,255,.55)}
 #perfG{display:block;width:120px;height:22px;margin:2px auto 0}
@@ -1929,7 +1930,7 @@ class SunRaysPass extends Pass {
 // (Häuser, Tribünen, Skyline flimmerten). Darum zwei Durchgänge: erst die Welt mit Nahgrenze 0,8 m, dann – Tiefe gelöscht – nur das
 // eigene Auto (Ebene 6) mit kleiner Nahgrenze. Die Schattenkarte aus dem ersten Durchgang bleibt (sonst fehlte dem Boden der Autoschatten).
 const SPLIT_L = 6, WORLD_NEAR = 0.8;
-const splitOn = () => running && (S.cam === 2 || S.cam === 3) && !!(pl && pl.mesh && pl.mesh.g) && camera.near < 0.2;
+const splitOn = () => running && (S.cam === 2 || S.cam === 3) && !!(pl && pl.mesh && pl.mesh.g) && camera.near < 0.2 && !window.__noSplit;
 function drawOwnCar(cam = camera) {
   const g = pl.mesh.g; g.traverse(o => o.layers.enable(SPLIT_L));
   const bg = scene.background, sa = renderer.shadowMap.autoUpdate, ac = renderer.autoClear, mask = cam.layers.mask;
@@ -2159,11 +2160,10 @@ function updateStreaks(dt) {
   streaks.visible = f > 0.01; if (!streaks.visible) return;
   stMat.opacity = Math.min(0.16, f * 0.08 + (pl.boostFx || 0) * 0.04 + (pl.slipS || 0) * 0.06);   /* nur noch ein Hauch */
   const len = 1 + f * 5 + (pl.boostFx || 0) * 2, sp = pl.v * 1.4;
-  stData.forEach((d, i) => {
+  for (let i = 0; i < stData.length; i++) { const d = stData[i];   /* ohne Wegwerf-Felder: vorher entstanden hier 80 kleine Arrays pro Bild (der größte Einzelposten für die Speicherbereinigung) */
     d.z += sp * dt; if (d.z > -5) respawnStreak(d);
-    const x = Math.cos(d.a) * d.r * 1.5, y = Math.sin(d.a) * d.r * 0.75 - 0.3;
-    stPos.set([x, y, d.z, x, y, d.z - len], i * 6);
-  });
+    const x = Math.cos(d.a) * d.r * 1.5, y = Math.sin(d.a) * d.r * 0.75 - 0.3, k = i * 6;
+    stPos[k] = x; stPos[k + 1] = y; stPos[k + 2] = d.z; stPos[k + 3] = x; stPos[k + 4] = y; stPos[k + 5] = d.z - len; }
   stGeo.attributes.position.needsUpdate = true;
 }
 // Partikel (Funken, Staub, Rauch)
@@ -2179,7 +2179,7 @@ class Particles {
   }
   emit(x, y, z, vx, vy, vz, life, s0, s1, r, g, b, a, grav) {
     const i = this.i; this.i = (i + 1) % this.n; y += PFLOOR; this.fl[i] = PFLOOR; this.live = true;
-    this.p.set([x, y, z], i * 3); this.v.set([vx, vy, vz], i * 3); this.life[i] = life; this.max[i] = life; this.s.set([s0, s1], i * 2); this.c.set([r, g, b, a], i * 4); this.g[i] = grav;
+    const k3 = i * 3, k4 = i * 4; this.p[k3] = x; this.p[k3 + 1] = y; this.p[k3 + 2] = z; this.v[k3] = vx; this.v[k3 + 1] = vy; this.v[k3 + 2] = vz; this.life[i] = life; this.max[i] = life; this.s[i * 2] = s0; this.s[i * 2 + 1] = s1; this.c[k4] = r; this.c[k4 + 1] = g; this.c[k4 + 2] = b; this.c[k4 + 3] = a; this.g[i] = grav;
   }
   update(dt) {
     // Ruht das System (kein Partikel lebt), wird nichts gerechnet, nichts hochgeladen und nichts gezeichnet. Vorher gingen in JEDEM Bild alle drei Felder
@@ -4636,14 +4636,37 @@ function chunkStrips(root, segLen = 900) {
 // einzelnes, unbewegtes Netz für mergeGroups vormerken: Hülle steht an seiner Stelle (richtige Kachel, gleiche Höhenanpassung wie das Netz allein)
 function asMerge(m) { const g = new THREE.Group(); g.position.set(m.position.x, 0, m.position.z); m.position.x = m.position.z = 0; g.add(m); g.userData.merge = true; g.userData.span = true; return g; }
 // statische Gruppen (Tribünen, Gebäude, Brücken, Tafeln) je Material und 350-m-Kachel zu einem Mesh verschmelzen -> viel weniger Zeichenaufrufe
+// Kennung eines Materials aus seinen Eigenschaften: zwei Materialien mit gleicher Kennung sehen gleich aus und dürfen zu einem Netz zusammengefasst werden.
+// Viele Bauteile legen je Stück ein eigenes, aber identisches Material an (lam({ color })) – nach der Objekt-ID blieb dann jedes Stück ein eigener Zeichenaufruf
+// (Abu Dhabi: 196 Pfosten, Las Vegas: 28 Lampen × 3 Teile, Singapur: 39 + 22 Teile). Materialien mit eigenen Daten (Objekte in userData, eigene Uniforms) behalten ihre ID.
+function matSig(m) {
+  if (window.__noDedupe || m.isShaderMaterial || m.uniforms) return m.uuid;
+  for (const k in m.userData) { const v = m.userData[k]; if (v !== null && typeof v === 'object') return m.uuid; }
+  const c = v => v && v.isColor ? v.getHexString() : '', t = v => v ? v.uuid : '';
+  return [m.type, c(m.color), c(m.emissive), m.emissiveIntensity, t(m.map), t(m.normalMap), t(m.emissiveMap), t(m.alphaMap), t(m.roughnessMap), t(m.metalnessMap), t(m.aoMap), t(m._envMap), m.roughness, m.metalness, m.envMapIntensity,
+    m.opacity, m.transparent, m.side, m.alphaTest, m.alphaToCoverage, m.vertexColors, m.depthWrite, m.depthTest, m.polygonOffset, m.polygonOffsetFactor, m.polygonOffsetUnits, m.fog, m.flatShading, m.blending, m.toneMapped, m.wireframe,
+    m.normalScale ? m.normalScale.x + ',' + m.normalScale.y : '', m.clearcoat, m.clearcoatRoughness, m.sheen, m.customProgramCacheKey ? m.customProgramCacheKey() : '', m.onBeforeCompile ? m.onBeforeCompile.toString().length : 0, JSON.stringify(m.userData)].join('|');
+}
+// Teile EINER bewegten Gruppe (Riesenrad: Speichen, Gondeln) je Material zu einem Netz verschmelzen – im Koordinatensystem der Gruppe, sie dreht sich weiter als Ganzes.
+function mergeLocal(g) {
+  if (window.__noMerge) return; const B = new Map();
+  for (const o of [...g.children]) { if (!o.isMesh || o.isInstancedMesh || o.children.length || Array.isArray(o.material)) continue;
+    const k = matSig(o.material) + '|' + (o.castShadow ? 1 : 0) + (o.receiveShadow ? 1 : 0) + '|' + o.renderOrder; let b = B.get(k); if (!b) B.set(k, b = { mat: o.material, list: [], objs: [], o0: o });
+    o.updateMatrix(); const geo = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone(); geo.applyMatrix4(o.matrix); b.list.push(geo); b.objs.push(o); }
+  for (const b of B.values()) { if (b.list.length < 2) { b.list.forEach(x => x.dispose()); continue; }
+    const names = Object.keys(b.list[0].attributes).filter(k => b.list.every(q => q.attributes[k] && q.attributes[k].itemSize === b.list[0].attributes[k].itemSize)), tot = b.list.reduce((a, q) => a + q.attributes.position.count, 0), out = new THREE.BufferGeometry();
+    for (const k of names) { const sz = b.list[0].attributes[k].itemSize, arr = new Float32Array(tot * sz); let off = 0; for (const q of b.list) { arr.set(q.attributes[k].array, off); off += q.attributes[k].array.length; } out.setAttribute(k, new THREE.BufferAttribute(arr, sz)); }
+    b.list.forEach(x => x.dispose()); out.computeBoundingSphere();
+    const m = new THREE.Mesh(out, b.mat); m.castShadow = b.o0.castShadow; m.receiveShadow = b.o0.receiveShadow; m.renderOrder = b.o0.renderOrder; for (const o of b.objs) { g.remove(o); o.geometry.dispose(); } g.add(m); }
+}
 function mergeGroups(root, cell = 350) {
   if (window.__noMerge) return;   /* Testmodus: Gruppen einzeln lassen, damit der Überschneidungs-Test jeden Bau sieht */
-  const buckets = new Map(), v = new THREE.Vector3(), nm = new THREE.Matrix3();
+  const buckets = new Map(), v = new THREE.Vector3(), nm = new THREE.Matrix3(), sigs = new Map(), sigOf = m => { let q = sigs.get(m); if (q === undefined) sigs.set(m, q = matSig(m)); return q; };
   for (const g of [...root.children]) {
     if (!g.userData.merge) continue; g.updateMatrixWorld(true);
     const cx = Math.floor(g.position.x / cell), cz = Math.floor(g.position.z / cell);
     g.traverse(o => { if (!o.isMesh || o.isInstancedMesh || Array.isArray(o.material)) return;
-      const key = o.material.uuid + '|' + cx + ',' + cz; let b = buckets.get(key); if (!b) buckets.set(key, b = { mat: o.material, list: [], cast: false, recv: false, skip: true }); b.skip &&= !!o.userData.clipSkip;
+      const sg = sigOf(o.material), key = sg + '|' + cx + ',' + cz; let b = buckets.get(key); if (!b) buckets.set(key, b = { mat: o.material, sig: sg, list: [], cast: false, recv: false, skip: true }); b.skip &&= !!o.userData.clipSkip;
       let geo = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
       if (o.material.userData.bay && !geo.attributes.facUV) { const P = geo.attributes.position, Nn = geo.attributes.normal, n = P.count, fu = new Float32Array(n * 3), sc = o.scale;   /* Fassaden-UV vor dem Zusammenfügen aus den lokalen Koordinaten festhalten (sonst verschiebt die Drehung das Fensterraster) */
         for (let k = 0; k < n; k++) { const x = P.getX(k), y = P.getY(k), z = P.getZ(k); fu[k * 3] = Math.abs(Nn.getX(k)) > 0.5 ? (z + 0.5) * sc.z : (x + 0.5) * sc.x; fu[k * 3 + 1] = y * sc.y + o.position.y; fu[k * 3 + 2] = 7; }
@@ -4654,7 +4677,7 @@ function mergeGroups(root, cell = 350) {
   // Kleinteile (Schilder, Pfosten, Tafeln …): je Material über die GANZE Strecke ein Netz statt eines je 350-m-Kachel – zusammen höchstens 40.000 Eckpunkte,
   // das Aussortieren je Kachel sparte also nichts, kostete aber viele Zeichenaufrufe. Große Bauten (Tribünen, Gebäude) bleiben je Kachel getrennt.
   if (!TRK.nos && !window.__chunkAll) { const big = new Map();
-    for (const [key, b] of buckets) { if (b.mat.transparent) continue; const k2 = b.mat.uuid + '|' + (b.cast ? 1 : 0) + (b.recv ? 1 : 0) + (b.skip ? 1 : 0); let e = big.get(k2); if (!e) big.set(k2, e = { keys: [], n: 0 }); e.keys.push(key); for (const g of b.list) e.n += g.attributes.position.count; }
+    for (const [key, b] of buckets) { if (b.mat.transparent) continue; const k2 = b.sig + '|' + (b.cast ? 1 : 0) + (b.recv ? 1 : 0) + (b.skip ? 1 : 0); let e = big.get(k2); if (!e) big.set(k2, e = { keys: [], n: 0 }); e.keys.push(key); for (const g of b.list) e.n += g.attributes.position.count; }
     for (const e of big.values()) { if (e.keys.length < 2 || e.n > 40000) continue; const b0 = buckets.get(e.keys[0]); for (const k of e.keys.slice(1)) { for (const g of buckets.get(k).list) b0.list.push(g); buckets.delete(k); } } }
   for (const b of buckets.values()) {
     const names = Object.keys(b.list[0].attributes).filter(k => b.list.every(g => g.attributes[k] && g.attributes[k].itemSize === b.list[0].attributes[k].itemSize));
@@ -4910,6 +4933,8 @@ function vStrip(off, y0, y1, mat, opt = {}) {
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.computeVertexNormals();
   const m = new THREE.Mesh(g, mat); m.receiveShadow = true; m.castShadow = !!opt.cast; m.userData.strip = true; trackGroup.add(m); return m;
 }
+/* (Getestet und verworfen: matte Flächen mit dem einfachen Lambert-Lichtmodell statt PBR – 805 Materialien umgestellt, Zeichenzeit auf Adreno X1 unverändert
+   innerhalb der Messschwankung: Monza 4,6/4,9 ms, Spa 5,3/5,5 ms. Der Aufwand liegt nicht im Lichtmodell der matten Flächen.) */
 const lam = (o) => { const m = new THREE.MeshStandardMaterial({ roughness: .9, metalness: 0, envMapIntensity: .9, ...o }); return o && o.map && o.map.userData.fol ? foliageMat(m) : o && o.map && o.map.userData.gv ? groundVar(m, o.map.userData.gv) : o && o.map === TEX.runoff ? sheenMat(m, TH && TH.night ? 0.1 : 0.28) : m; };
 // Bodenschichten (Fahrbahn, Linien, Curbs, Auslauf) nach vorn ziehen: neigungsabhängiger Anteil (factor) nur noch ein Viertel – er wächst bei flachem Blick
 // enorm (Helmkamera 0,9 m hoch: voller Wert = bei 50 m rund 8 m Versatz) und malte Asphalt und Linien über den Unterboden der Autos davor. Ganz ohne ihn
@@ -6381,13 +6406,15 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       for (let k = 0; k < 28; k++) { const a = k / 28 * Math.PI * 2, sp = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, R, 4).translate(0, R / 2, 0), steel); sp.rotation.z = a; wh.add(sp);
         const cab = new THREE.Mesh(new THREE.SphereGeometry(4.2, 12, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xbfe6ff).multiplyScalar(1.3) })); cab.position.set(Math.cos(a) * (R + 4), Math.sin(a) * (R + 4), 0); wh.add(cab); }
       for (const sz of [-1, 1]) { const leg = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 2.2, R + 12, 8).translate(0, -(R + 12) / 2, 0), steel); leg.position.set(0, 0, sz * 6); leg.rotation.x = sz * 0.12; wh.add(leg); }
-      WHEEL_ROT.obj = wh; WHEEL_ROT.rim = rim; excl.push([x, z, 50]); }
+      mergeLocal(wh); WHEEL_ROT.obj = wh; WHEEL_ROT.rim = rim; excl.push([x, z, 50]); }
     // See mit Fontänen vor dem Y-Hochhaus
     { const LK = [[-833.5,376.6],[-830.4,379.7],[-829.9,383.9],[-829.0,387.4],[-827.7,390.7],[-829.3,395.4],[-831.5,397.6],[-831.5,409.6],[-831.5,416.0],[-812.7,416.1],[-811.0,420.0],[-810.5,425.1],[-811.5,429.3],[-810.1,434.5],[-811.6,439.6],[-816.4,441.2],[-829.6,440.9],[-829.7,446.4],[-821.4,447.1],[-818.2,449.6],[-819.5,455.2],[-811.5,458.2],[-804.0,465.0],[-800.3,470.5],[-794.7,489.3],[-789.9,502.1],[-783.5,514.0],[-775.8,525.7],[-766.7,537.3],[-754.0,549.3],[-744.5,557.1],[-735.8,562.6],[-727.4,566.2],[-721.0,567.3],[-714.2,567.6],[-692.5,567.7],[-690.9,564.4],[-687.2,561.3],[-682.5,560.1],[-681.6,536.9],[-684.8,535.1],[-685.5,531.8],[-683.1,528.8],[-681.0,515.0],[-684.2,513.2],[-684.9,509.9],[-682.5,507.0],[-680.2,493.6],[-683.4,491.8],[-684.1,488.5],[-681.7,485.5],[-679.3,472.0],[-683.0,470.1],[-683.7,466.8],[-681.3,463.8],[-678.4,450.7],[-681.5,448.9],[-682.3,445.5],[-679.9,442.6],[-678.0,428.8],[-681.2,427.0],[-681.9,423.7],[-679.5,420.7],[-677.6,406.6],[-680.7,406.3],[-683.0,403.0],[-682.4,393.0],[-679.2,390.1],[-676.1,376.5],[-679.2,374.7],[-680.0,371.4],[-677.6,368.4],[-675.2,354.5],[-678.4,352.7],[-679.1,349.4],[-676.7,346.4],[-674.6,333.3],[-677.8,331.5],[-678.5,328.2],[-676.1,325.2],[-673.5,312.0],[-676.7,310.2],[-677.5,306.9],[-675.1,304.0],[-672.6,290.5],[-675.7,288.7],[-676.5,285.4],[-674.1,282.5],[-672.6,257.4],[-675.9,257.3],[-678.3,254.5],[-687.7,257.4],[-697.7,261.4],[-700.6,263.0],[-703.9,264.1],[-707.0,264.4],[-709.7,265.9],[-712.8,266.3],[-716.2,269.5],[-714.3,273.4],[-714.3,276.7],[-718.4,278.6],[-719.1,282.3],[-721.3,292.2],[-724.3,292.1],[-728.2,292.8],[-734.0,293.2],[-736.1,288.3],[-740.0,289.0],[-739.7,295.7],[-744.2,297.3],[-746.4,295.1],[-749.1,298.1],[-754.2,298.0],[-758.0,300.8],[-761.5,301.9],[-764.9,302.3],[-767.8,301.2],[-771.5,304.1],[-775.5,308.0],[-779.1,308.8],[-783.7,310.0],[-786.7,307.9],[-789.9,310.8],[-792.9,310.2],[-794.9,317.2],[-800.2,317.7],[-802.7,320.7],[-808.8,320.6],[-810.7,323.2],[-814.4,327.9],[-817.6,333.1],[-822.4,336.0],[-825.1,345.4],[-822.0,345.9],[-820.5,348.7],[-822.9,350.6],[-823.0,358.0],[-820.7,360.2],[-817.5,361.1],[-817.0,364.1],[-817.5,367.1],[-820.5,369.3],[-823.1,371.9],[-829.5,370.8],[-833.5,376.6]], x = LK.reduce((a, p) => a + p[0], 0) / LK.length, z = LK.reduce((a, p) => a + p[1], 0) / LK.length;   // Bellagio-See: Umriss aus OSM (Fountains of Bellagio)
       const lake = new THREE.Mesh(new THREE.ShapeGeometry(new THREE.Shape(LK.map(([a, b]) => new THREE.Vector2(a, -b)))).rotateX(-Math.PI / 2).translate(0, 0.15, 0), new THREE.MeshStandardMaterial({ color: 0x0a2a3a, roughness: .18, metalness: .4, envMapIntensity: 1.4 })); trackGroup.add(lake);
-      const fm = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.6, 1.7, 1.9), transparent: true, opacity: .55, depthWrite: false }), jets = [];
-      for (let k = 0; k < 36; k++) { const j = new THREE.Mesh(new THREE.ConeGeometry(1.4, 1, 8, 1, true).translate(0, -0.5, 0).rotateX(Math.PI), fm); { const q = LK[Math.floor(k / 36 * LK.length)]; j.position.set(x + (q[0] - x) * 0.7, 0.2, z + (q[1] - z) * 0.7); } j.scale.set(1, 0.01, 1); trackGroup.add(j); jets.push(j); }
-      FOUNT.jets = jets; excl.push([x, z, Math.max(...LK.map(p => Math.hypot(p[0] - x, p[1] - z)))]); }
+      const fm = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.6, 1.7, 1.9), transparent: true, opacity: .55, depthWrite: false });
+      /* 36 Fontänen als EINE Instanz-Gruppe (vorher 36 Netze = 36 Zeichenaufrufe); vegasTick setzt die Höhe je Fontäne über die Instanz-Matrix */
+      const jets = new THREE.InstancedMesh(new THREE.ConeGeometry(1.4, 1, 8, 1, true).translate(0, -0.5, 0).rotateX(Math.PI), fm, 36), jm = new THREE.Matrix4(); jets.userData.noChunk = true; jets.frustumCulled = false;
+      for (let k = 0; k < 36; k++) { const q = LK[Math.floor(k / 36 * LK.length)]; jm.makeScale(1, 0.01, 1).setPosition(x + (q[0] - x) * 0.7, 0.2, z + (q[1] - z) * 0.7); jets.setMatrixAt(k, jm); } trackGroup.add(jets);
+      FOUNT.jets = jets; FOUNT.base = null; excl.push([x, z, Math.max(...LK.map(p => Math.hypot(p[0] - x, p[1] - z)))]); }
     // flache Casino-Sockelbauten direkt am Strip (warm angestrahlt), dahinter die Türme
     { const podM = [warm('#8a6a44', '#ffd89a', .35, 11), warm('#7a6a58', '#ffe2b0', .3, 12), warm('#5a4a3a', '#ffcf80', .4, 13), warm('#8a7a68', '#fff0c8', .3, 14)];
       for (let k = 0, n = 0; k < N; k += Math.round(58 / DS)) for (const sd of [-1, 1]) {
@@ -6495,7 +6522,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       for (let k = 0; k < 28; k++) { const a = k / 28 * Math.PI * 2, sp = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, R - 5, 4).translate(0, (R - 5) / 2, 0), steel); sp.rotation.z = a; wh.add(sp);
         const cab = new THREE.Mesh(new THREE.CapsuleGeometry(2.4, 6, 4, 10).rotateZ(Math.PI / 2), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xdff2ff).multiplyScalar(1.25) })); cab.position.set(Math.cos(a) * (R + 3.5), Math.sin(a) * (R + 3.5), 0); wh.add(cab); }
       const hub = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, 12, 16).rotateX(Math.PI / 2), steel); wh.add(hub);
-      FLYER.obj = wh;
+      mergeLocal(wh); FLYER.obj = wh;
       const base = grp(x, z, TRK.flyerRot); for (const s of [-1, 1]) { const leg = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 2.6, R + 18, 8).translate(0, (R + 18) / 2, 0), steel); leg.position.set(s * 24, 0, 0); leg.rotation.z = s * 0.3; base.add(leg); }
       const term = new THREE.Mesh(new THREE.BoxGeometry(120, 14, 34).translate(0, 7, 0), stone('#d6d8dc', 53)); base.add(term);
       const roof = new THREE.Mesh(new THREE.BoxGeometry(124, 1.2, 38).translate(0, 14.6, 0), lam({ color: 0x3a4048 })); base.add(roof);
@@ -7170,7 +7197,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   buildEvict(trackGroup); for (const e of EVICT) e.m.userData.evRef = e;
   // feste Objekte (Bäume, Felsen, Absperrungen, Gebäude …): Positionen nur einmal beim Laden berechnen, nicht mehr in jedem Bild
   trackGroup.updateMatrixWorld(true); trackGroup.traverse(o => { o.matrixAutoUpdate = false; o.matrixWorldAutoUpdate = true; });
-  for (const o of [FLYER.obj, WHEEL_ROT.obj, ...(SGT.list || []).map(x => x[0]), ...(FOUNT.jets || [])]) if (o && o.parent) o.matrixAutoUpdate = true;   // bewegte Teile (Riesenrad, Lichtkegel, Fontänen)
+  for (const o of [FLYER.obj, WHEEL_ROT.obj, ...(SGT.list || []).map(x => x[0])]) if (o && o.parent) o.matrixAutoUpdate = true;   // bewegte Teile (Riesenrad, Lichtkegel, Fontänen)
 }
 /* ======================= Gebackene Schatten + Umgebungsverdeckung =======================
    Beim Laden der Strecke einmal berechnet: die Sonne (bzw. das Flutlicht) wirft von allen statischen Objekten Schatten auf Strecke und Gelände,
@@ -7919,12 +7946,8 @@ function warmUpTrack() {
 function precompile() { const hid = [];
   const wk = WAKE.m, wkP = wk.parent, wkV = wk.visible; if (!wkP) scene.add(wk); wk.visible = true;   /* Windschatten-Kegel: hing bisher an keinem Auto und war unsichtbar -> seine Shader, Textur und Geometrie entstanden erst beim ersten Windschatten (Ruckler kurz nach dem Start) */ for (const c of cars) { const m = c.mesh; if (!m || !m.g) continue; m.g.traverse(o => { if ((o.isMesh || o.isGroup) && !o.visible && !o.isSprite) { o.visible = true; hid.push(o); } }); }   /* ALLE Teile jedes Autos (Fernmodell, Überblend-Geister, Nahteile wie Helm und Räder ferner Autos) sind teils unsichtbar: Shader trotzdem jetzt übersetzen und – im winzigen Vorwärm-Bild unten – ihre Texturen hochladen. Sonst kamen sie erst, wenn ein Gegner zum ersten Mal ganz nah war (erste Kurve) */
   try { const prev = renderer.getRenderTarget(); if (composer) renderer.setRenderTarget(composer.renderTarget1); renderer.compile(scene, camera); renderer.setRenderTarget(prev); } catch (e) { console.warn('precompile', e); } finally { for (const o of hid) o.visible = false; }
-  // Materialien, die erst beim Kamerawechsel auftauchen (Cockpit: aufgeschnittene Karosserie + Wanne, TV-Kamera: einfarbiges Halo), jetzt mit übersetzen – sonst Hänger beim ersten Umschalten
-  try { const m = pl && pl.mesh; if (m) { const tp = m.tp || {}, k = tp.M === MODELS.f2 ? 'f2' : 'f1'; if (m.tp) { cockBuild(m); }
-      const sc = new THREE.Scene(), add = (g, mt) => { const o = new THREE.Mesh(g, mt); o.frustumCulled = false; sc.add(o); }; if (m.tp) { add(m.body.geometry, tp.cutGloss); add(m.matte.geometry, tp.cutMatte); if (tp.haloFlat) add(tp.haloFlat, tp.haloMat); m.tub.traverse(o => { if (o.isMesh) add(o.geometry, o.material); }); }
-      ARMS.f1 ||= makeArms(true, 0.033); ARMS.road ||= makeArms(false, 0.023, true); cockLast(SW.g, true); cockLast(ARMS.f1.g, true); if (m.tp && tp.halo) { tp.haloGhost ||= haloGhostMat(tp.haloMat); add(tp.halo, tp.haloGhost); add(tp.halo, HALO_PRE); }
-      for (const G of [SW.g, ARMS.f1.g, ARMS.road.g]) G.traverse(o => { if (o.isMesh) add(o.geometry, o.material); }); sc.add(...scene.children.filter(o => o.isLight).map(l => l.clone())); sc.fog = scene.fog; sc.environment = scene.environment;
-      if (!WARM.rt2) WARM.rt2 = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType }); const prev = renderer.getRenderTarget(); renderer.setRenderTarget(WARM.rt2); renderer.compile(sc, camera); renderer.render(sc, camera); renderer.setRenderTarget(prev); } } catch (e) { console.warn('precompile2', e); }
+  // (Der frühere Zusatzschritt, der Cockpit- und TV-Kamera-Materialien in einer eigenen Hilfsszene übersetzte, ist entfallen: seine 9 Shader wurden im Rennen nie
+  //  benutzt – gemessen. Die echten Varianten erzeugt warmCams(), das jede Kamera auf dem Weg des Rennens einmal zeichnet.)
   // Alles einmal winzig (4×4 Pixel) zeichnen – ohne Sichtfeld-Prüfung und mit jeder Detailstufe: lädt jede Geometrie, Instanzliste und Textur JETZT auf die Grafikkarte,
   // statt beim ersten Auftauchen mitten im Rennen (das waren die kurzen Lade-Ruckler kurz nach dem Start, v. a. in den großen Stadtkursen Vegas und Singapur)
   try { if (!WARM.rt) WARM.rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType });
@@ -8345,7 +8368,7 @@ function updateMeshes(dt) {
     if (m.sw) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z; m.sw.visible = c === pl || dx * dx + dz * dz < 625; }   /* Kart: Lenkrad (viele kleine Teile) nur aus der Nähe zeichnen */
     if (m.tp) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z, d2 = dx * dx + dz * dz; const LD = window.__carLod || CAR_LOD, cur = m.lf ? m.lf.to : m.lod, b0 = LD[0] + (cur >= 1 ? -LOD_HYS : LOD_HYS), b1 = LD[1] + (cur >= 2 ? -LOD_HYS : LOD_HYS);
       if (c === pl) { const w = window.__plLod ?? (!running || S.cam === 2 || S.cam === 3 ? 0 : 1);   /* eigenes Auto: volle Stufe (~112.000 Dreiecke) nur im Cockpit/TV-Kamera und im Stand; in den Verfolgerkameras die mittlere (~37.000) – im Bild nicht zu unterscheiden */
-        if (m.lod !== w || m.lf) setLod(m, w, true); if (!m.g.visible) m.g.visible = true; }
+        if (m.lod !== w || m.lf) setLod(m, w, true); if (m.g.visible === !!window.__hideOwn) m.g.visible = !window.__hideOwn; }
       else { const hd = window.__carHide || CAR_HIDE, vis = d2 < (m.g.visible ? hd + 25 : hd) ** 2; if (m.g.visible !== vis) { m.g.visible = vis; EVT.car++; }
         if (vis) { lodStep(m, d2 < b0 * b0 ? 0 : d2 < b1 * b1 ? 1 : 2, dt);
           if (m.far && m.tp.far3) { const f3 = window.__noFar3 ? m.tp.far : d2 > (m.far.geometry === m.tp.far3 ? CAR_FAR3 - 5 : CAR_FAR3 + 5) ** 2 ? m.tp.far3 : m.tp.far; if (m.far.geometry !== f3) { m.far.geometry = f3; EVT.car++; } } } }  /* volle Modellstufe (50.000 Dreiecke) nur für den Spieler und Autos unter 13 m */   /* Detailstufen früher: weniger Dreiecke bei vollem Starterfeld */ }
@@ -9449,7 +9472,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.85'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.86'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -9473,11 +9496,13 @@ let last = performance.now();
 const _sv = new THREE.Vector3(), _cd = new THREE.Vector3(), _v2b = new THREE.Vector2();
 const DYN = { acc: 0, n: 0, scale: 1, calm: 0, bad: 0, tChg: 0 };
 // (Dynamische Auflösung entfernt – Wunsch: jedes Umschalten legte alle Render-Ziele neu an und ruckelte spürbar. Die Auflösung bleibt jetzt während des Rennens fest.)
-const SPHERE = { cv: null, tex: null, t: 0, acc: 0 }, WHEEL_ROT = { obj: null, rim: null }, FOUNT = { jets: null, t: 0 }, FLYER = { obj: null }, SGT = { list: [] };
+const SPHERE = { cv: null, tex: null, t: 0, acc: 0 }, WHEEL_ROT = { obj: null, rim: null }, FOUNT = { jets: null, t: 0, base: null, rest: false }, _fm = new THREE.Matrix4(), FLYER = { obj: null }, SGT = { list: [] };
 function vegasTick(dt) {
   if (FLYER.obj && FLYER.obj.parent && TRK.sgp) { FLYER.obj.rotation.z += dt * 0.012; const t = performance.now() / 1000; for (const [pv, k] of SGT.list) pv.rotation.set(Math.sin(t * 0.21 + k * 1.3) * 0.45, 0, Math.cos(t * 0.17 + k * 2.1) * 0.55); }   // Riesenrad dreht sich langsam, Lichtstrahlen schwenken
   if (WHEEL_ROT.obj && WHEEL_ROT.obj.parent) { WHEEL_ROT.obj.rotation.z += dt * 0.02; WHEEL_ROT.rim.color.setHSL((performance.now() / 9000) % 1, .85, .62).multiplyScalar(2.2); }
-  if (FOUNT.jets && FOUNT.jets[0].parent) { FOUNT.t += dt; const t = FOUNT.t % 24, on = t < 12; FOUNT.jets.forEach((j, k) => { const h = on ? Math.max(0.01, (Math.sin(t * 2.2 + k * 0.45) * 0.5 + 0.5) * 34 * Math.min(1, t / 1.5, (12 - t) / 1.5)) : 0.01; j.scale.y = h; }); }
+  if (FOUNT.jets && FOUNT.jets.parent) { const J = FOUNT.jets; FOUNT.t += dt; const t = FOUNT.t % 24, on = t < 12;
+    if (!FOUNT.base) { FOUNT.base = []; for (let k = 0; k < J.count; k++) { J.getMatrixAt(k, _fm); FOUNT.base.push([_fm.elements[12], _fm.elements[13], _fm.elements[14]]); } FOUNT.rest = false; }   /* Lage je Fontäne einmal merken (nach der Höhenanpassung der Strecke) */
+    if (on || !FOUNT.rest) { for (let k = 0; k < J.count; k++) { const h = on ? Math.max(0.01, (Math.sin(t * 2.2 + k * 0.45) * 0.5 + 0.5) * 34 * Math.min(1, t / 1.5, (12 - t) / 1.5)) : 0.01, b = FOUNT.base[k]; _fm.makeScale(1, h, 1).setPosition(b[0], b[1], b[2]); J.setMatrixAt(k, _fm); } J.instanceMatrix.needsUpdate = true; FOUNT.rest = !on; J.visible = on; } }   /* in den 12 s Pause: nichts hochladen, nichts zeichnen */
 }
 // Sphere-Emoji: Gefühlslagen nach Fotos/Videos – [Braue L hoch, Neigung L, Braue R hoch, Neigung R, Pupille x, Pupille y, Lid L, Lid R, Mund: 0 Lächeln/1 "o", Lächelbreite, Versatz]
 const EMO = [
@@ -9505,7 +9530,7 @@ const PERF = { on: null, prev: 0, buf: new Float32Array(120), i: 0, n: 0, tUpd: 
 function perfTick(now) {
   if (PERF.on !== !!S.perfHud) { PERF.on = !!S.perfHud; PERF.el = PERF.el || $('#perf'); PERF.el.classList.toggle('hidden', !PERF.on); PERF.prev = 0; PERF.n = 0; }
   if (!PERF.on) return;
-  if (RLOG.on) return;   // Ruckler-Protokoll läuft: Anzeige ruht (sie soll das Ergebnis nicht verfälschen)
+  if (RLOG.on || LTEST.on) return;   // Messung läuft: Anzeige ruht (sie soll das Ergebnis nicht verfälschen)
   if (!PERF.prev || now - PERF.prev > 1000) { PERF.prev = now; PERF.tUpd = now; return; }   // nach Pausen/Tabwechsel neu anfangen
   const d = now - PERF.prev; PERF.prev = now; PERF.drew = true;
   PERF.buf[PERF.i] = d; PERF.i = (PERF.i + 1) % PERF.buf.length; PERF.n = Math.min(PERF.n + 1, PERF.buf.length);
@@ -9521,7 +9546,7 @@ function perfTick(now) {
   for (let k = 1; k <= cnt; k++) { const e = PERF.buf[(PERF.i - k + L) % L] - avg; vr += e * e; }
   const fps = Math.round(1000 / avg), sd = Math.sqrt(vr / cnt);
   const lo = Array.from(PERF.buf.subarray(0, PERF.n)).sort((x, y) => x - y)[Math.floor(PERF.n * 0.1)], hz = Math.round(1000 / lo / 10) * 10;   // Display-Takt ≈ kürzeste Bildabstände
-  PERF.txt.innerHTML = `<b style="color:${fps >= 55 ? '#22c55e' : fps >= 30 ? '#eab308' : '#ef4444'}">${fps}</b> FPS <i>·</i> ~${hz} Hz <i>·</i> ${avg.toFixed(1)} ms <i>·</i> ±${sd.toFixed(1)} <i>·</i> max ${mx.toFixed(1)}<br>CPU Ø ${(PERF.cS / Math.max(1, PERF.cN)).toFixed(1)} <i>/</i> max ${PERF.cM.toFixed(1)} ms <i>·</i> Zeichnen ${(PERF.rS / Math.max(1, PERF.cN)).toFixed(1)}<br><i>antippen = Ruckler-Protokoll (1 Runde)</i>`; PERF.cS = PERF.cM = PERF.cN = PERF.rS = 0;   /* CPU = Rechenzeit des Spiels pro Bild (ohne die Grafikkarte) */
+  PERF.txt.innerHTML = `<b style="color:${fps >= 55 ? '#22c55e' : fps >= 30 ? '#eab308' : '#ef4444'}">${fps}</b> FPS <i>·</i> ~${hz} Hz <i>·</i> ${avg.toFixed(1)} ms <i>·</i> ±${sd.toFixed(1)} <i>·</i> max ${mx.toFixed(1)}<br>CPU Ø ${(PERF.cS / Math.max(1, PERF.cN)).toFixed(1)} <i>/</i> max ${PERF.cM.toFixed(1)} ms <i>·</i> Zeichnen ${(PERF.rS / Math.max(1, PERF.cN)).toFixed(1)}<br><i>antippen = Messung starten</i>`; PERF.cS = PERF.cM = PERF.cN = PERF.rS = 0;   /* CPU = Rechenzeit des Spiels pro Bild (ohne die Grafikkarte) */
 }
 /* Ruckler-Protokoll (Leistungsanzeige im Rennen antippen): das Auto fährt eine ganze Runde selbst, das Spiel läuft dabei wie immer (gleicher Bildtakt).
    Jedes Bild, das deutlich länger steht als der Takt, wird mit Streckenposition festgehalten – dazu, was in den zwei Bildern davor passiert ist
@@ -9572,7 +9597,63 @@ function rlogEnd() {
     try { navigator.clipboard.writeText(R.txt).then(() => { b.textContent = 'Kopiert ✓'; }, fail); } catch (e) { fail(); } });
 }
 window.__rlog = () => RLOG;
-{ const el = document.getElementById('perf'); if (el) el.addEventListener('click', rlogStart); }
+/* Lasttest (Leistungsanzeige antippen → „Lasttest“): das Auto fährt ~30 s selbst, nacheinander ist je ein Teil des Bildes abgeschaltet. Gemessen wird die
+   Rechenzeit pro Bild (CPU) und ihr Anteil „Zeichnen“ – die Bildrate selbst sagt bei aktivem Bildtakt nichts (sie bleibt bei 60). Die Zeile, in der „Zeichnen“
+   deutlich fällt, zeigt, wo der Aufwand auf DIESEM Gerät steckt. Ergebnis als Tabelle und als Text zum Kopieren. */
+const LTEST = { on: false, i: -1, t0: 0, t1: 0, n: 0, cpu: 0, rnd: 0, res: [], bot: null, txt: '' };
+const LT_STEPS = [
+  ['Normal', () => {}, () => {}],
+  ['ohne eigenes Auto', () => { window.__hideOwn = true; }, () => { window.__hideOwn = false; }],
+  ['ohne Gegner', () => { window.__carHide = 0.01; }, () => { window.__carHide = 0; }],
+  ['ohne Strecke', () => { trackGroup.visible = false; }, () => { trackGroup.visible = true; }],
+  ['ohne Himmel', () => { skyBox.visible = false; }, () => { skyBox.visible = true; }],
+  ['ohne Schatten', () => { LTEST.sa = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false; }, () => { renderer.shadowMap.autoUpdate = LTEST.sa; }],
+  ['ohne zweiten Durchgang (eigenes Auto)', () => { window.__noSplit = true; }, () => { window.__noSplit = false; }],
+  ['ohne Nachbearbeitung', () => { window.__ptPlain = true; }, () => { window.__ptPlain = false; }],
+  ['leere Szene', () => { scene.visible = false; }, () => { scene.visible = true; }],
+  ['ohne Anzeigen und Tasten', () => document.body.classList.add('ptNoHud'), () => document.body.classList.remove('ptNoHud')],
+  ['ohne 3D-Bild', () => { window.__norender = true; }, () => { window.__norender = false; }],
+];
+function ltStart() { if (LTEST.on || RLOG.on || !running || paused || raceState !== 'race') return; LTEST.on = true; LTEST.i = -1; LTEST.res = []; LTEST.bot = [window.__plAI, profBot]; window.__plAI = true; profBot = buildProfile(45.5, VTOP, 44, KR); ltNext(performance.now()); }
+function ltNext(now, abort) {
+  if (LTEST.i >= 0) { const s = LT_STEPS[LTEST.i], n = Math.max(1, LTEST.n); if (!abort && LTEST.t1) LTEST.res.push([s[0], LTEST.cpu / n, LTEST.rnd / n, LTEST.n * 1000 / Math.max(1, now - LTEST.t1)]); try { s[2](); } catch (e) {} }
+  LTEST.i++;
+  if (abort || LTEST.i >= LT_STEPS.length) { LTEST.on = false; window.__plAI = LTEST.bot[0]; profBot = LTEST.bot[1]; ltShow(); return; }
+  try { LT_STEPS[LTEST.i][1](); } catch (e) {} LTEST.t0 = now; LTEST.t1 = 0; LTEST.n = 0; LTEST.cpu = LTEST.rnd = 0;
+  if (PERF.txt) PERF.txt.innerHTML = 'Lasttest ' + (LTEST.i + 1) + '/' + LT_STEPS.length + ' <i>·</i> ' + LT_STEPS[LTEST.i][0] + '<br><i>das Auto fährt selbst · antippen = abbrechen</i>';
+}
+function ltFrame(now, c) {
+  if (!running || paused) { ltNext(now, true); return; }
+  const el = now - LTEST.t0; if (el < 700) return;   // Einschwingen
+  if (!LTEST.t1) { LTEST.t1 = now; return; }
+  LTEST.n++; LTEST.cpu += c; LTEST.rnd += PERF.rT;
+  if (el >= 2700) ltNext(now);
+}
+function ltShow() {
+  if (!LTEST.res.length) return; let gpu = ''; try { const gl = renderer.getContext(), e = gl.getExtension('WEBGL_debug_renderer_info'); gpu = e ? String(gl.getParameter(e.UNMASKED_RENDERER_WEBGL)).slice(0, 60) : ''; } catch (e) {}
+  const head = 'Lasttest · v' + VERSION + ' · ' + TRK.name + ' · Grafik ' + S.gfx + ' · Kamera ' + S.cam + ' · ' + canvas.width + '×' + canvas.height;
+  LTEST.txt = [head, gpu, '', 'Messung | CPU ms | Zeichnen ms | FPS', ...LTEST.res.map(r => r[0] + ' | ' + r[1].toFixed(1) + ' | ' + r[2].toFixed(1) + ' | ' + r[3].toFixed(0))].join('\n');
+  ptBox('<b>' + head + '</b><br><small>' + gpu + '</small><table><tr><th>Messung</th><th>CPU ms</th><th>Zeichnen ms</th><th>FPS</th></tr>' +
+    LTEST.res.map(r => '<tr><td>' + r[0] + '</td><td>' + r[1].toFixed(1) + '</td><td>' + r[2].toFixed(1) + '</td><td>' + r[3].toFixed(0) + '</td></tr>').join('') + '</table>', () => LTEST.txt);
+}
+// Ergebnis-/Auswahlkasten: Inhalt + „Alles kopieren“ (wenn es Text gibt) + „Schließen“
+function ptBox(html, textFn) {
+  const old = $('#ptRes'); if (old) old.remove(); const d = document.createElement('div'); d.id = 'ptRes';
+  d.innerHTML = html + (textFn ? '<button id="ptCopy">Alles kopieren</button> ' : '') + '<button id="ptClose">Schließen</button>'; document.body.appendChild(d);
+  d.querySelector('#ptClose').addEventListener('click', () => d.remove());
+  if (textFn) d.querySelector('#ptCopy').addEventListener('click', ev => { const b = ev.currentTarget, txt = textFn(), fail = () => { const ta = document.createElement('textarea'); ta.value = txt; ta.readOnly = true; d.insertBefore(ta, b); ta.focus(); ta.select(); try { document.execCommand('copy'); b.textContent = 'Kopiert'; } catch (e) { b.textContent = 'Text markieren und kopieren'; } };
+    try { navigator.clipboard.writeText(txt).then(() => { b.textContent = 'Kopiert ✓'; }, fail); } catch (e) { fail(); } });
+  return d;
+}
+// Antippen der Leistungsanzeige: läuft eine Messung, wird sie beendet – sonst Auswahl zwischen Ruckler-Protokoll und Lasttest
+function perfMenu() {
+  if (RLOG.on) { rlogEnd(); return; } if (LTEST.on) { ltNext(performance.now(), true); return; }
+  if (!running || paused || raceState !== 'race') return;
+  const d = ptBox('<b>Messung starten</b><br><small>Das Auto fährt solange selbst.</small><br><button id="ptRl">Ruckler-Protokoll (1 Runde)</button> <button id="ptLt">Lasttest (30 s)</button><br>');
+  d.querySelector('#ptRl').addEventListener('click', () => { d.remove(); rlogStart(); }); d.querySelector('#ptLt').addEventListener('click', () => { d.remove(); ltStart(); });
+}
+window.__ltest = () => LTEST;
+{ const el = document.getElementById('perf'); if (el) el.addEventListener('click', perfMenu); }
 /* Gleichmäßiger Bildtakt: requestAnimationFrame kommt im Takt des Displays. Schafft das Handy dessen volle Rate nicht (gemessen: ~67 FPS auf 120 Hz,
    d. h. Bilder stehen abwechselnd 8,3 und 16,7 ms = sichtbares Ruckeln), wird nur gezeichnet, wenn seit dem letzten gezeichneten Bild mindestens
    ~1/60 s vergangen ist. Bewusst OHNE Messung der Display-Rate (die frühere Begrenzung v1.66–1.72 erkannte sie falsch): 120 Hz → jedes 2. Bild (60 FPS),
@@ -9584,7 +9665,7 @@ function frame(now) { requestAnimationFrame(frame);
   if (lg) { const inf = renderer.info; i0 = [inf.programs.length, inf.memory.geometries, inf.memory.textures]; }
   for (const k in EVT) EVT[k] = 0;
   tick(now); const c = performance.now() - t0; if (PERF.drew) { PERF.cS += c; PERF.rS += PERF.rT; PERF.cN++; if (c > PERF.cM) PERF.cM = c; }
-  if (lg) rlogFrame(now, t0 - now, c, i0); }
+  if (lg) rlogFrame(now, t0 - now, c, i0); if (LTEST.on) ltFrame(now, c); }
 let REBUILD = false;
 function tick(now, forced) {
   if (REBUILD) { last = now; return; }   /* Grafik wird gerade umgestellt */   // forced: Testhilfen zeichnen direkt, ohne eine zweite Bildschleife zu starten
@@ -9620,7 +9701,7 @@ function tick(now, forced) {
   // Pause: das Bild steht still, also nur zwei Bilder zeichnen und dann die Grafikkarte schonen
   if (running && paused) { if (pauseDrawn >= 2) return; pauseDrawn++; } else pauseDrawn = 0;
   const tR0 = performance.now(); PERF.rT = 0;
-  if (!window.__norender && !(!running && settingsFrom === 'menu' && !$('#settings').classList.contains('hidden')) && !(!running && !SHOW.on && !$('#menu').classList.contains('hidden'))) {   /* Einstellungen aus dem Menü: nichts neu zeichnen – sonst lief dahinter die Strecke des letzten Rennens weiter */   /* Hauptmenü: fester Hintergrund statt Kamerafahrt – dort wird die Strecke nicht gerendert (spart Akku) */ if (SHOW.on && !running && !$('#menu').classList.contains('hidden')) { showroomFrame(dt); const bo = BAKE.u.bakeOn.value, et = ENVP.tex; BAKE.u.bakeOn.value = 0; if (SHOW.env) ENVP.tex = SHOW.env; renderer.render(SHOW.scene, SHOW.cam); ENVP.tex = et; BAKE.u.bakeOn.value = bo;   /* im Showroom spiegelt sich das Studio, nicht die Strecke */ } else if (composer) { syncAoCam(); composer.render(dt); } else renderPlain(); }
+  if (!window.__norender && !(!running && settingsFrom === 'menu' && !$('#settings').classList.contains('hidden')) && !(!running && !SHOW.on && !$('#menu').classList.contains('hidden'))) {   /* Einstellungen aus dem Menü: nichts neu zeichnen – sonst lief dahinter die Strecke des letzten Rennens weiter */   /* Hauptmenü: fester Hintergrund statt Kamerafahrt – dort wird die Strecke nicht gerendert (spart Akku) */ if (SHOW.on && !running && !$('#menu').classList.contains('hidden')) { showroomFrame(dt); const bo = BAKE.u.bakeOn.value, et = ENVP.tex; BAKE.u.bakeOn.value = 0; if (SHOW.env) ENVP.tex = SHOW.env; renderer.render(SHOW.scene, SHOW.cam); ENVP.tex = et; BAKE.u.bakeOn.value = bo;   /* im Showroom spiegelt sich das Studio, nicht die Strecke */ } else if (composer && !window.__ptPlain) { syncAoCam(); composer.render(dt); } else renderPlain(); }
   PERF.rT = performance.now() - tR0;   /* Anteil „Zeichnen“ an der Rechenzeit: Befehle an die Grafikkarte abschicken (inkl. Warten, falls sie nicht nachkommt) */
   if (window.__qcF) window.__qcF(now, forced);   /* QC-Bot: Bildzeiten messen und direkt nach dem Zeichnen Bilder auswerten */
 }
