@@ -35,7 +35,7 @@ g.setAttribute('aBi', new THREE.BufferAttribute(Float32Array.from(new Uint8Array
 sw.position.addScaledVector(az, fh.swExt || 0); const spin = -(+q.get('steer') || 0) * 1.6; sw.children[0].rotation.z = spin;   // Lenkrad wie im Spiel versetzt; ?steer=-1…1
 // Material aus dem Spiel (Abschnitt KFMAT-START … KFMAT-END in index.html), Texturpfade eine Ebene höher
 const src = await fetch('../index.html').then(x => x.text()), part = src.slice(src.indexOf('// KFMAT-START'), src.indexOf('// KFMAT-END')).replaceAll("'textures/", "'../textures/");
-const KFAHRER = { swC: new THREE.Vector3(...fh.swC), swAx: new THREE.Vector3(...fh.swAx), arm: fh.arm.map(a => new THREE.Vector3(...a)) };
+const KFAHRER = { swC: new THREE.Vector3(...fh.swC), swAx: new THREE.Vector3(...fh.swAx), arm: fh.arm.map(a => new THREE.Vector3(...a)), rimR: fh.rimR || 0.188 };
 const { kartFahrerMat, kartArmsIK } = new Function('THREE', 'col', 'KFAHRER', part + '\nreturn { kartFahrerMat, kartArmsIK };')(THREE, h => new THREE.Color(h), KFAHRER);
 const team = { suit: q.get('suit') || 'c8101c', acc: q.get('acc') || 'f0f0f0' };
 if (q.has('debug')) { s.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0xcc3333, roughness: .75, side: THREE.FrontSide }))); s.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.BackSide }))); }   // Prüfung: Rückseiten grün
