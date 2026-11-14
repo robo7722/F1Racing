@@ -112,8 +112,37 @@ Rückmeldung (Aston Martin, Helmkamera, voller Einschlag): „sieht immer noch f
 Prüfung v1.94: **kein Clipping**. Handschuh ≥ 1,8 mm. Arm F1-TV +32,5, F2 +36,7, F2-TV +15,9 mm (schlankerer Ärmel, vorher +25,1 / +29,4 / +7,0). Unterarme/Hände in der Wanne frei.
 (Anzugstoff aus der Nähe: Melierung und feiner Köpergrat)
 
+## v1.96 – Lappen oben an der Faust, schärfere Ärmel
+Rückmeldung (Ferrari, Spa, Helmkamera, Einschlag rechts): oben an der rechten Faust neben dem Griff „eine kleine Stelle, Überbleibsel?“ – und die Arme sollen schärfer sein.
+
+1. **Lappen oben an der Faust**: Das war die **Spitze des alten Daumens** der Vorlage (zeigte gestreckt am Griff nach oben, bis 9,9 cm über der Faustmitte).
+   `f1_hand_nachbearbeitung.py` zieht den alten Daumen als Stummel in die Faust ein und setzt den neuen Daumen davor. Der Winkelfilter (`sel`), der die Fingerknöchel vorn schützen soll,
+   ließ aber genau die Spitze weg: Sie liegt außen-**vorn** (Winkel −115…−155° um die Griffachse, `sin < −0,35`). 24 Punkte je Hand blieben stehen,
+   mit langen Dreiecken zum eingezogenen Stummel verbunden → ein dünner, ~1,5 cm hoher Lappen mit dunkler Unterseite. `TIP_K` (v1.94) hatte ihn nur flacher gedrückt.
+   - Neu: oberhalb `TH_TOP` = 0,065 (entlang der Griffachse, lokal) gehört alles im Daumen-Abstand zum alten Daumen und wird mit eingezogen – dort gibt es keine Knöchel.
+   - `f1fahrer.bin` neu aus der Vorlage v1.65 (`git show 03c9550:f1fahrer.bin`): `f1_hand_nachbearbeitung.py`, danach `f1_handgelenk.py`. Gegenüber v1.95 haben sich nur 48 Punkte (24 je Hand) bewegt, sonst alles gleich (Punkte, Flächen, Gewichte).
+   - Höchster Handschuhpunkt außen-vorn über der Faustmitte jetzt 0,072 (lokal; vorher 0,084 = Lappen).
+
+![[bilder/faust_v196.png]]
+(links v1.95 mit Lappen, rechts v1.96; rechte Hand, Helmkamera gezoomt)
+
+2. **Ärmel unscharf**: Die Ärmel bekommen im Atlas `kart_fahrer.jpg` (Anzug 512²) nur **4,8 Bildpunkte je cm** (≈ 2 mm je Bildpunkt; Handschuhe 34 je cm). Die Foto-Schattierung der Vorlage
+   wurde zusätzlich ×2,2 verstärkt – aus 25–50 cm in der Helmkamera nur noch weiche Flecken. Die Vorlage (`base.jpg`) ist nicht im Repo, schärfer neu backen ging also nicht.
+   - Neu: eigene Stofftextur **nur für die F1/F2-Ärmel** `textures/f1_arm_stoff.jpg` (1024², eine Kachel = 4 cm → 256 Bildpunkte je cm), erzeugt mit `tools/fahrer/arm_stoff.py`:
+     R Köpergewebe 2/2 (64 Fäden je Kachel, Faserstreifen), G Melierung (Flecken 1–4 mm), B Flusen. Ohne Farb-Unterabtastung gespeichert (die Kanäle sind getrennte Daten), 673 KB.
+   - Shader (`armStoff`, `hiA` in `kartFahrerMat`): dreiseitig auf die Ruhe-Position projiziert (wandert mit dem Stoff), Köper als Relief, Melierung/Flusen als Farbe.
+     Die Mipmaps blenden das Gewebe mit der Entfernung von selbst aus – kein Flimmern. Atlas-Schattierung an den Ärmeln nur noch ×1,3. Rumpf, Beine, Kart unverändert.
+   - Im Service Worker vorgeladen, Cache `f1-rennen-1.96`.
+
+![[bilder/arm_stoff_v196.png]]
+(links v1.95, rechts v1.96; Unterarm in der Helmkamera gezoomt)
+
+Nicht neu geprüft: Clipping (`export.cjs` + `check_lenkrad.py`) – der Stummel wird nur in die Faust eingezogen, nichts wandert nach außen.
+
 ## Offen / Ideen
-- An der Faust bleibt oben ein kleiner Grat (Rest der Zeigefingerkuppe), nur in Nahansicht von außen sichtbar.
+- ~~An der Faust bleibt oben ein kleiner Grat~~ – erledigt in v1.96 (war die Spitze des alten Daumens).
+- Die Spitze des neuen Daumens (`thumb_mesh`) läuft in eine kleine Spitze aus, nur stark gezoomt sichtbar.
+- Ärmel-Schattierung: schärfer ginge nur mit der Vorlage (`base.jpg`) – dann die Ärmel-UV-Inseln im Atlas größer backen.
 - Handschuh-Nachbearbeitung (`f1_hand_nachbearbeitung.py`, danach `f1_handgelenk.py`) muss nach jedem Neubau von f1fahrer.bin (build_fahrer.py) erneut laufen.
 - Bei vollem Einschlag knickt die obere Hand weiter ~54° ab (jetzt weich gebogen). Weniger ginge mit mehr Handrolle (`F1_ROLL`) oder höherem Ellbogen, beides braucht neue Clipping-Prüfung.
 - Ellbogen/Oberarme hinter z 0,40 liegen wie bisher gewollt unter dem Rand im Monocoque (nicht geprüft).

@@ -24,6 +24,7 @@ GRIP_R = 0.0265
 # Daumen: Länge ab Spitze (über die Oberfläche, m), die gebogen wird; Übergang zum Ballen
 TH_LEN, TH_BLEND = 0.056, 0.012
 TH_CLEAR = 0.0045                     # Luft Daumen-Innenseite ↔ Griff (lokal)
+TH_TOP = 0.065                        # oberhalb (entlang der Griffachse, lokal) gehört alles im Daumen-Abstand zum alten Daumen (v1.96)
 TH_EXTRA = 35.0                       # Daumen zusätzlich als Ganzes um die Griffachse zur Fahrerseite gedreht (Grad)
 
 
@@ -84,7 +85,9 @@ def process_hand(P, F, gmask):
     outer = np.cos(ang) < -0.8                                                                # Außenseite des Griffs (±180° ± 37°)
     tip = idx[outer][np.argmax(t[outer])]                                                     # Daumenspitze: höchster Punkt außen
     gd = geodesic(P, F, tip, gmask)[idx]
-    sel = (gd < TH_LEN + TH_BLEND) & (np.cos(ang - np.pi) > 0.55) & (np.sin(ang) > -0.35)   # nur Daumen (außen / außen-Fahrerseite), nicht die Fingerknöchel vorn
+    sel = (gd < TH_LEN + TH_BLEND) & (((np.cos(ang - np.pi) > 0.55) & (np.sin(ang) > -0.35)) | (t > TH_TOP))   # nur Daumen (außen / außen-Fahrerseite), nicht die Fingerknöchel vorn
+    # v1.96: die Spitze des alten Daumens (oberhalb TH_TOP) liegt außen-VORN (Winkel −115…−155°) und fiel durch den Winkelfilter – 24 Punkte blieben
+    # stehen und ragten als dünner Lappen oben aus der Faust (in der Helmkamera bei Einschlag deutlich sichtbar). Oberhalb TH_TOP gibt es keine Knöchel.
     w = np.clip((TH_LEN + TH_BLEND - gd) / TH_BLEND, 0, 1); w = w * w * (3 - 2 * w) * sel
     core = sel & (gd < TH_LEN); base = sel & (np.abs(gd - TH_LEN) < 0.006)
     tB = t[base].mean(); aB = np.arctan2(np.sin(ang[base]).mean(), np.cos(ang[base]).mean()); rc = r[core].mean()

@@ -7,6 +7,7 @@ Stand: 14.11.2026 (v1.71) – derselbe Fahrer in Kart, F1 und F2; stehende Figur
 - `f1fahrer.bin` – derselbe Fahrer halb liegend für F1/F2 (gleiches Format, Hände an den Griffen des F1-Lenkrads).
 - `textures/kart_fahrer.jpg` – Atlas 1024×512: links Anzug (helle Stoff-Schattierung), rechts Handschuh.
 - `textures/kart_stoff.jpg` – kachelbares Nomex-Köpergewebe (Höhenkarte 256², vom Bauskript erzeugt).
+- `textures/f1_arm_stoff.jpg` – Stofftextur nur für die F1/F2-Ärmel (1024² je 4 cm, `tools/fahrer/arm_stoff.py`, v1.96).
 - `fahrer/fahrer.glb`, `fahrer/handschuh.glb` – stehende Figur (24 000 Dreiecke), `fahrer/vorschau.html` zeigt sie mit unserem Helm.
 - `fahrer/kart_vorschau.html` – Prüfansicht: Kart + Kart-Fahrer + Lenkradkranz (gleiche Lade-Logik wie im Spiel).
 - `tools/fahrer/build_fahrer.py <quellordner> [kart|f1]` – baut alles neu (oder nur einen der beiden Sitzfahrer, je ~3 min). Quellordner: `model.obj`, `base.jpg`, `normal.jpg` (Tripo), `glove.kmz`. Vorlagen nicht im Repo (OBJ 25 MB). Braucht numpy, pillow, scipy, trimesh, pymeshlab, libigl, scikit-image (+ Systempaket libopengl0).
@@ -138,6 +139,10 @@ Details: [[LENKRAD-F1F2]]. Stulpe (Handschuh) hing starr an der Hand, Ärmel sta
 `tools/fahrer/f1_handgelenk.py` (nach `f1_hand_nachbearbeitung.py`) setzt für Arm/Handschuh von −1 bis +8 cm hinter dem Handgelenk weiche Gewichte Hand ↔ Unterarm. Wiederholbar, ändert nur `bi`/`bw`.
 v1.94: Ärmel läuft zum Handgelenk schlank in die Stulpe, die Stulpe ist zum Ende hin weiter (Form einmalig, `"gelenk": "v1.94"`).
 Daumen: Die Wurzel läuft als Ballen in die Hand (`TH_ROOT` in `f1_hand_nachbearbeitung.py`), vorher stand er als eigener Schlauch ab.
+
+## v1.96 – Daumenrest oben an der Faust, Ärmel-Stofftextur
+Details: [[LENKRAD-F1F2]]. Die Spitze des alten Daumens blieb als Lappen oben an der Faust stehen (Winkelfilter in `f1_hand_nachbearbeitung.py`, jetzt `TH_TOP`).
+F1/F2-Ärmel: eigene Stofftextur `textures/f1_arm_stoff.jpg` (256 Bildpunkte je cm statt 4,8 im Atlas, `tools/fahrer/arm_stoff.py`).
 
 ## Offen / Ideen
 - Leichte Knautschfalten an der Hüfte durch das Biegen (im Sitz kaum sichtbar).

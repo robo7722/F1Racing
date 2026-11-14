@@ -3701,8 +3701,9 @@ function kartFahrerMat(tk, suit, acc, des = null) {   // des (F1/F2-Anzüge): { 
   if (KFMAT[tk]) return KFMAT[tk];
   if (!KFMAT.tex) { const ld = (u, srgb, rep) => { const t = new THREE.TextureLoader().load(u); t.anisotropy = 8; if (srgb) t.colorSpace = THREE.SRGBColorSpace; if (rep) t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; };
     KFMAT.tex = ld('textures/kart_fahrer.jpg', true); KFMAT.weave = ld('textures/kart_stoff.jpg', false, true); }
+  if (des && !KFMAT.arm) { KFMAT.arm = new THREE.TextureLoader().load('textures/f1_arm_stoff.jpg'); KFMAT.arm.anisotropy = 8; KFMAT.arm.wrapS = KFMAT.arm.wrapT = THREE.RepeatWrapping; }   // F1/F2: eigene hochauflösende Stofftextur nur für die Ärmel (tools/fahrer/arm_stoff.py)
   const dark = suit.clone().multiplyScalar(0.28).lerp(col(0x101114), 0.5);
-  const U = { uSuit: { value: suit }, uAcc: { value: acc }, uDark: { value: dark }, uSec: { value: des ? des.sec : suit.clone() }, uGlove: { value: des && des.glove ? des.glove : acc }, uStyle: { value: des ? des.style : 0 }, uCut: { value: 0 }, uShoe: { value: col(0x141518) }, uPatch: { value: col(0xf2f2ee) }, uWeave: { value: KFMAT.weave },
+  const U = { uSuit: { value: suit }, uAcc: { value: acc }, uDark: { value: dark }, uSec: { value: des ? des.sec : suit.clone() }, uGlove: { value: des && des.glove ? des.glove : acc }, uStyle: { value: des ? des.style : 0 }, uCut: { value: 0 }, uShoe: { value: col(0x141518) }, uPatch: { value: col(0xf2f2ee) }, uWeave: { value: KFMAT.weave }, uArmT: { value: des ? KFMAT.arm : KFMAT.weave },
     uBone: { value: Array.from({ length: 7 }, () => new THREE.Matrix4()) } };   // Arm-Knochen: je Kart vor dem Zeichnen gesetzt (kartArmsIK in onBeforeRender)
   const m = new THREE.MeshPhysicalMaterial({ map: KFMAT.tex, roughness: .85, metalness: 0, sheen: 1, sheenRoughness: .45, sheenColor: 0xffffff, side: THREE.DoubleSide });
   m.userData.U = U;
@@ -3712,7 +3713,7 @@ function kartFahrerMat(tk, suit, acc, des = null) {   // des (F1/F2-Anzüge): { 
       uniform mat4 uBone[7];
       ` + sh.vertexShader.replace('#include <beginnormal_vertex>', '#include <beginnormal_vertex>\n mat4 skM = uBone[int(aBi.x)] * aBw.x + uBone[int(aBi.y)] * aBw.y + uBone[int(aBi.z)] * aBw.z + uBone[int(aBi.w)] * aBw.w; objectNormal = normalize(mat3(skM) * objectNormal);')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\n transformed = (skM * vec4(transformed, 1.0)).xyz; vReg = aReg; vRy = aRy; vRest = aRest; vRN = aRN;');
-    sh.fragmentShader = `uniform vec3 uSuit, uAcc, uDark, uShoe, uPatch, uSec, uGlove; uniform float uStyle, uCut; uniform sampler2D uWeave; varying float vReg; varying float vRy; varying vec3 vRest; varying vec3 vRN;
+    sh.fragmentShader = `uniform vec3 uSuit, uAcc, uDark, uShoe, uPatch, uSec, uGlove; uniform float uStyle, uCut; uniform sampler2D uWeave, uArmT; varying float vReg; varying float vRy; varying vec3 vRest; varying vec3 vRN;
       float gH = 0.0, gRough = 0.85, gMetal = 0.0, gSheen = 1.0, gBump = 1.0; vec3 gEm = vec3(0.0);
       float bnd(float x, float a, float b, float w) { return smoothstep(a - w, a, x) * (1.0 - smoothstep(b, b + w, x)); }
       float ln(float x, float a, float w) { return 1.0 - smoothstep(0.0, w, abs(x - a)); }
@@ -3729,6 +3730,9 @@ function kartFahrerMat(tk, suit, acc, des = null) {   // des (F1/F2-Anzüge): { 
                    mix(mix(h3(i + vec3(0, 0, 1)), h3(i + vec3(1, 0, 1)), f.x), mix(h3(i + vec3(0, 1, 1)), h3(i + vec3(1, 1, 1)), f.x), f.y), f.z); }
       float weave(vec3 p, vec3 n, float sc) { vec3 b = pow(abs(n), vec3(4.0)); b /= max(b.x + b.y + b.z, 1e-4);
         return texture2D(uWeave, p.yz * sc).r * b.x + texture2D(uWeave, p.xz * sc).r * b.y + texture2D(uWeave, p.xy * sc).r * b.z; }
+      // F1/F2-Ärmel: Stofftextur 1024² je 4 cm (256 Bildpunkte je cm statt 4,8 im Atlas), dreiseitig auf die Ruhe-Position; R Köper, G Melierung, B Flusen
+      vec3 armStoff(vec3 p, vec3 n) { vec3 b = pow(abs(n), vec3(4.0)); b /= max(b.x + b.y + b.z, 1e-4); p *= 25.0;
+        return texture2D(uArmT, p.yz).rgb * b.x + texture2D(uArmT, p.xz + 0.37).rgb * b.y + texture2D(uArmT, p.xy + 0.71).rgb * b.z; }
       vec3 bumpN(vec3 pos, vec3 n, vec2 d, float fd) { vec3 sx = dFdx(pos), sy = dFdy(pos), r1 = cross(sy, n), r2 = cross(n, sx); float det = dot(sx, r1) * fd;
         return normalize(abs(det) * n - sign(det) * (d.x * r1 + d.y * r2)); }
       ` + sh.fragmentShader
@@ -3804,12 +3808,16 @@ function kartFahrerMat(tk, suit, acc, des = null) {   // des (F1/F2-Anzüge): { 
           float wv = mix(0.5, weave(p, n, wsc), wvFade), rib = mix(0.5, 0.5 + 0.5 * sin(p.x * 2600.0 + p.z * 900.0), ribFade);
           // F1/F2: statt des groben Korbgeflechts (Kachel 3 cm, Fäden 3,6 mm – wirkte wie Carbon) leicht melierter Stoff: unregelmäßiges Rauschen in zwei feinen Stufen
           //   + Köpergrat: feine schräge Rippen (Abstand 1,4 mm), nur aus der Nähe; aus der Entfernung bleibt die Melierung
-          float mo = 0.5, tw = 0.5; if (uStyle > 0.5) { float f1 = 1.0 - smoothstep(0.006, 0.016, fw), f2 = 1.0 - smoothstep(0.0015, 0.005, fw), f3 = 1.0 - smoothstep(0.00035, 0.0009, fw);
+          bool hiA = uStyle > 0.5 && arm;   // F1/F2-Ärmel: eigene Stofftextur statt Rauschen (v1.96)
+          float mo = 0.5, tw = 0.5; if (uStyle > 0.5 && !hiA) { float f1 = 1.0 - smoothstep(0.006, 0.016, fw), f2 = 1.0 - smoothstep(0.0015, 0.005, fw), f3 = 1.0 - smoothstep(0.00035, 0.0009, fw);
             mo = 0.5 + (vn(p * 110.0) - 0.5) * f1 * 0.55 + (vn(p * vec3(420.0, 160.0, 420.0) + 7.3) - 0.5) * f2 * 0.45;
             tw = 0.5 + 0.5 * sin((p.x + p.y * 0.7 + p.z) * 4500.0 + vn(p * 300.0) * 3.0) * f3; }
-          gH = mix(wv, rib, clamp(knit, 0.0, 1.0)) * (uStyle > 0.5 ? 0.35 : 0.6) * mix(0.15, 1.0, wvFade) - clamp(seam, 0.0, 1.0) * 0.9;
-          c *= 1.0 - (uStyle > 0.5 ? 0.45 : 0.28) * clamp(seam, 0.0, 1.0); c *= 1.0 + (uStyle > 0.5 ? 0.08 : 0.2) * (wv - 0.5) + 0.32 * (mo - 0.5) + 0.12 * (tw - 0.5); gH += (mo - 0.5) * 0.5 + (tw - 0.5) * 0.45;
-          if (uStyle > 0.5) diffuseColor.rgb = clamp(1.0 - (1.0 - diffuseColor.rgb) * 2.2, 0.0, 1.0);   // Falten/Schattierung der Vorlage kräftiger
+          if (hiA) { vec3 at = armStoff(p, n) - 0.5;   // Köpergrat als Relief, Melierung und Flusen als Farbe – Mipmaps blenden das Gewebe mit der Entfernung sauber aus
+            gH = at.r * 1.4 + at.g * 0.35 + at.b * 0.3 - clamp(seam, 0.0, 1.0) * 0.9;
+            c *= 1.0 - 0.45 * clamp(seam, 0.0, 1.0); c *= 1.0 + 0.5 * at.g + 0.22 * at.r + 0.3 * at.b; }
+          else { gH = mix(wv, rib, clamp(knit, 0.0, 1.0)) * (uStyle > 0.5 ? 0.35 : 0.6) * mix(0.15, 1.0, wvFade) - clamp(seam, 0.0, 1.0) * 0.9;
+          c *= 1.0 - (uStyle > 0.5 ? 0.45 : 0.28) * clamp(seam, 0.0, 1.0); c *= 1.0 + (uStyle > 0.5 ? 0.08 : 0.2) * (wv - 0.5) + 0.32 * (mo - 0.5) + 0.12 * (tw - 0.5); gH += (mo - 0.5) * 0.5 + (tw - 0.5) * 0.45; }
+          if (uStyle > 0.5) diffuseColor.rgb = clamp(1.0 - (1.0 - diffuseColor.rgb) * (hiA ? 1.3 : 2.2), 0.0, 1.0);   // Falten/Schattierung der Vorlage kräftiger; Ärmel nur leicht: dort sind es bei 2 mm je Bildpunkt nur weiche Flecken (wirkten unscharf)
           gRough = mix(0.86, 0.8, clamp(knit, 0.0, 1.0));
         }
         diffuseColor.rgb *= c; if (uStyle > 0.5) gEm = diffuseColor.rgb * (glove ? 0.32 : vReg > 0.5 && vReg < 1.5 ? 0.4 : 0.05); }`)   /* F1/F2: Aufhellung im Schatten (Streulicht im Cockpit) – im Gegenlicht sah man sonst nur schwarze Handrücken; Hände und Arme liegen in der Wanne im Schatten der Cockpitwand (wirkten in der Helmkamera schwarz) → Handschuhe 32 %, Arme 40 % */
@@ -3818,7 +3826,7 @@ function kartFahrerMat(tk, suit, acc, des = null) {   // des (F1/F2-Anzüge): { 
       .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\n metalnessFactor = gMetal;')
       .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\n normal = bumpN(-vViewPosition, normal, vec2(dFdx(gH), dFdy(gH)) * 0.0025 * gBump, faceDirection);')
       .replace('#include <lights_physical_fragment>', '#include <lights_physical_fragment>\n material.sheenColor = diffuseColor.rgb * 0.6 * gSheen + 0.05 * gSheen;'); };
-  m.customProgramCacheKey = () => 'kartFahrer10';
+  m.customProgramCacheKey = () => 'kartFahrer11';
   return (KFMAT[tk] = m);
 }
 // Arme folgen dem Lenkrad wie echte Arme: Die Hand bleibt am Kranz (dreht mit dem Lenkrad um dessen Achse), Schulter fest,
@@ -9635,7 +9643,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.95'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.96'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
