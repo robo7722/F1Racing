@@ -55,6 +55,14 @@ Handrolle höchstens 20°. Vorher (altes Lenkrad): Zeigefinger durch die Griffsc
 ![[bilder/hand_v174_daumen.png]]
 ![[bilder/hand_v174_seite.png]]
 
+## v1.87 – Zusammenführung mit main (v1.86), F2-Modell
+- Du spieltest `main` (v1.86), der Lenkrad-Branch zweigte bei v1.72 ab → „alte Hände“. `main` in den Branch geholt, nur die Versionsnummer kollidierte → v1.87.
+- `main` zeigt das eigene Auto in den Verfolgerkameras mit mittlerer Detailstufe. Deren F2-Netz hat 80 große Fächer-Dreiecke vom Cockpitboden (Mitte, y 0,29) zum Rand – quer durch Fahrer, Hände und Lenkrad. In den groben Stufen entfernt (Cockpitansicht verwirft den Bereich ohnehin).
+- **„Löcher“ auf der F2-Nase**: keine Löcher in der Lackhaut, sondern 20 winzige dunkle Einzelteile der Vorlage (paarweise, 0,3–4 cm, Schrauben/Öffnungen) auf Nase und Deck. Beim Laden entfernt (zusammenhängende Teile < 6 cm oben auf Nase/Deck, alle Detailstufen).
+- Prüfung danach: kein Clipping. Bekannt aus `main` (nicht von diesem Umbau): Seitenfehler „reading 'NaN'“ in `trackAt` beim Start eines F2-Rennens in Monza.
+
+![[bilder/f2_nase_v187.png]]
+
 ## Offen / Ideen
 - An der Faust bleibt oben ein kleiner Grat (Rest der Zeigefingerkuppe), nur in Nahansicht von außen sichtbar.
 - Handschuh-Nachbearbeitung muss nach jedem Neubau von f1fahrer.bin (build_fahrer.py) erneut laufen.

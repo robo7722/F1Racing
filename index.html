@@ -2733,6 +2733,16 @@ function widenRim(M, X, y0, y1, zA, zB) { if (!M) return; const S = t => { t = c
       p.setX(i, Math.sign(x) * (ax + (X - ax) * w)); ch = true; }
     if (ch) { p.needsUpdate = true; g.computeBoundingSphere(); } } }
 widenRim(CARM, 0.24, 0.56, 0.64, 0.48, 0.71); widenRim(CARM2, 0.24, 0.56, 0.70, 0.46, 0.70);
+// F2-Modell: winzige dunkle Einzelteile auf Nase und Deck (20 Stück, 0,3–4 cm, paarweise – Schrauben/Öffnungen der Vorlage) wirkten im Spiel wie Löcher
+// in der Nase; die Lackhaut darunter ist geschlossen. Zusammenhängende Teile (Punkte verschweißt) unter 6 cm oben auf Nase/Deck werden entfernt.
+if (CARM2) for (const Lv of CARM2.lods) { const g = Lv.matte; if (!g || !g.index) continue; const p = g.attributes.position, I = g.index.array, n = p.count, id = new Int32Array(n), key = new Map();
+  for (let i = 0; i < n; i++) { const k = Math.round(p.getX(i) / 2e-4) + ',' + Math.round(p.getY(i) / 2e-4) + ',' + Math.round(p.getZ(i) / 2e-4); let j = key.get(k); if (j === undefined) { j = i; key.set(k, i); } id[i] = j; }
+  const par = Int32Array.from({ length: n }, (_, i) => i), find = a => { while (par[a] !== a) { par[a] = par[par[a]]; a = par[a]; } return a; };
+  for (let t = 0; t < I.length; t += 3) { const a = find(id[I[t]]); par[find(id[I[t + 1]])] = a; par[find(id[I[t + 2]])] = a; }
+  const box = new Map(); for (let t = 0; t < I.length; t++) { const r = find(id[I[t]]), v = I[t]; let b = box.get(r); if (!b) box.set(r, b = [9, 9, 9, -9, -9, -9]); for (let c = 0; c < 3; c++) { const x = p.getComponent(v, c); b[c] = Math.min(b[c], x); b[c + 3] = Math.max(b[c + 3], x); } }
+  const small = r => { const b = box.get(r), cy = (b[1] + b[4]) / 2, cz = (b[2] + b[5]) / 2, cx = (b[0] + b[3]) / 2; return Math.max(b[3] - b[0], b[4] - b[1], b[5] - b[2]) < 0.06 && cy > 0.55 && cz > 0.7 && cz < 1.8 && Math.abs(cx) < 0.4; };
+  const keep = []; for (let t = 0; t < I.length; t += 3) if (!small(find(id[I[t]]))) keep.push(I[t], I[t + 1], I[t + 2]);
+  if (keep.length < I.length) g.setIndex(new THREE.BufferAttribute(new I.constructor(keep), 1)); }
 // F2-Modell, grobe Detailstufen (eigenes Auto in den Verfolgerkameras): große Fächer-Dreiecke vom Cockpitboden (Mitte, y 0,29) zum Rand liefen quer durch Fahrer,
 // Hände und Lenkrad – weg damit (Detailstufe 0 hat dort eigene Innenflächen, die Cockpitansicht verwirft den Bereich ohnehin)
 if (CARM2) CARM2.lods.forEach((Lv, li) => { if (li === 0) return; for (const k of ['gloss', 'matte']) { const g = Lv[k]; if (!g || !g.index) continue; const p = g.attributes.position, I = g.index.array, keep = [];
