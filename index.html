@@ -3679,11 +3679,19 @@ function kartFahrerMat(tk, suit, acc, des = null) {   // des (F1/F2-Anzüge): { 
                  : p.y < 0.635 ? 0.089 : p.y < 0.66 ? mix(0.089, 0.1, (p.y - 0.635) / 0.025) : 0.1 + max(0.0, p.y - 0.74) * 0.5;
         bool glove = vReg > 2.5, shoe = !glove && vRy < 0.072, arm = !glove && p.y > 0.4 && p.y < 0.82 && ax > ta, leg = !glove && !arm && p.y < 0.535;
         if (glove) { c = uGlove;
-          if (uStyle > 0.5) {   // F1/F2: zweifarbig nach Team – helle Flächen der Vorlage in Handschuhfarbe, Polster/Griffflächen in Anzugfarbe; Relief aus der Vorlage + Ledernarbung
-            float gl = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114)), gr = texture2D(uWeave, vMapUv * 70.0).r;
+          if (uStyle > 0.5) {   // F1/F2: schlichtes Design aus der Geometrie (aRest der Handschuhe, tools/fahrer/f1_hand_nachbearbeitung.py) statt der fleckigen Foto-Textur:
+            // x = Griffseite (Fläche zeigt zur Griffachse), y = Abstand hinter dem Handgelenk (Stulpe), z = 1 wenn Daten vorhanden
             vec3 gd = dot(uSuit, vec3(0.299, 0.587, 0.114)) > 0.5 ? uSec : uSuit; if (dot(abs(gd - uGlove), vec3(1.0)) < 0.25) gd = uGlove * 0.35;
-            c = mix(gd * 0.9, uGlove, smoothstep(0.07, 0.2, gl));   /* nur die schwarzen Griffflächen in der zweiten Farbe, Handrücken in Handschuhfarbe */ diffuseColor.rgb = vec3(0.78 + 0.3 * gl) * (0.94 + 0.12 * gr);
-            gH = gl * 0.9 + gr * 0.12; } gRough = 0.62; gSheen = 0.35; gBump = uStyle > 0.5 ? 0.8 : 0.0; }
+            float has = step(0.5, vRest.z), gx = vRest.x, cw = vRest.y, fwg = fwidth(gx) + 1e-4, fwc = fwidth(cw) + 1e-4;
+            float pad = has * smoothstep(0.38 - fwg, 0.38 + fwg, gx);                      // Griffflächen: Handfläche, Fingerinnenseiten, Daumenballen
+            float strap = has * smoothstep(0.02 - fwc, 0.02 + fwc, cw) * (1.0 - smoothstep(0.046 - fwc, 0.046 + fwc, cw));   // Klettband an der Stulpe
+            float sm = has * (1.0 - smoothstep(0.0, 1.5 * fwg + 0.02, abs(gx - 0.38)));    // Naht an der Grenze Rücken/Grifffläche
+            float sc = has * ((1.0 - smoothstep(0.0, 1.5 * fwc + 0.0012, abs(cw - 0.02))) + (1.0 - smoothstep(0.0, 1.5 * fwc + 0.0012, abs(cw - 0.046))));   // Kanten des Bands
+            float gr = mix(0.5, texture2D(uWeave, vMapUv * 70.0).r, 1.0 - smoothstep(0.004, 0.012, fwidth(vMapUv.x * 70.0)));   // Ledernarbung, blendet aus bevor sie flimmert
+            c = mix(uGlove, mix(vec3(0.075), uGlove * 0.25, 0.35), pad);                    // Rücken in Handschuhfarbe, Griffflächen dunkles Wildleder
+            c = mix(c, gd * 0.9, strap); c *= 1.0 - 0.35 * clamp(sm + sc, 0.0, 1.0);
+            diffuseColor.rgb = vec3(0.97 + 0.08 * (gr - 0.5));                              // Foto-Textur der Vorlage nicht mehr verwenden
+            gH = (gr - 0.5) * 0.12 - clamp(sm + sc, 0.0, 1.0) * 0.5 + strap * 0.25; } gRough = 0.62; gSheen = 0.35; gBump = uStyle > 0.5 ? 0.8 : 0.0; }
         else if (shoe) { c = uShoe; gRough = 0.38; gSheen = 0.0; gBump = 0.15;
           c = mix(c, uAcc, bnd(p.y, 0.052, 0.062, 0.001)); if (p.y < 0.006) { c = vec3(0.07); gRough = 0.8; } }
         else {
@@ -3735,13 +3743,13 @@ function kartFahrerMat(tk, suit, acc, des = null) {   // des (F1/F2-Anzüge): { 
           if (uStyle > 0.5) diffuseColor.rgb = clamp(1.0 - (1.0 - diffuseColor.rgb) * 2.2, 0.0, 1.0);   // Falten/Schattierung der Vorlage kräftiger
           gRough = mix(0.86, 0.8, clamp(knit, 0.0, 1.0));
         }
-        diffuseColor.rgb *= c; if (uStyle > 0.5) gEm = diffuseColor.rgb * (glove ? 0.16 : 0.05); }`)   /* F1/F2: Aufhellung im Schatten (Streulicht im Cockpit) – im Gegenlicht sah man sonst nur schwarze Handrücken */
+        diffuseColor.rgb *= c; if (uStyle > 0.5) gEm = diffuseColor.rgb * (glove ? 0.32 : vReg > 0.5 && vReg < 1.5 ? 0.4 : 0.05); }`)   /* F1/F2: Aufhellung im Schatten (Streulicht im Cockpit) – im Gegenlicht sah man sonst nur schwarze Handrücken; Hände und Arme liegen in der Wanne im Schatten der Cockpitwand (wirkten in der Helmkamera schwarz) → Handschuhe 32 %, Arme 40 % */
       .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n roughnessFactor = gRough;')
       .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance += gEm;')
       .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\n metalnessFactor = gMetal;')
       .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\n normal = bumpN(-vViewPosition, normal, vec2(dFdx(gH), dFdy(gH)) * 0.0025 * gBump, faceDirection);')
       .replace('#include <lights_physical_fragment>', '#include <lights_physical_fragment>\n material.sheenColor = diffuseColor.rgb * 0.6 * gSheen + 0.05 * gSheen;'); };
-  m.customProgramCacheKey = () => 'kartFahrer5';
+  m.customProgramCacheKey = () => 'kartFahrer6';
   return (KFMAT[tk] = m);
 }
 // Arme folgen dem Lenkrad wie echte Arme: Die Hand bleibt am Kranz (dreht mit dem Lenkrad um dessen Achse), Schulter fest,
@@ -3772,7 +3780,7 @@ function kartArmsIK(out, spin, K = KFAHRER, C = K.swC, AX = K.swAx, RIM = K.rimR
     const hand0 = _ikH0.copy(wr).sub(el).normalize();                                      // Unterarm-/Handrichtung in Bindhaltung
     let phi = out.prevPhi ? out.prevPhi[side] : 0, phU = 0, lastA = 0;   // vom letzten Bild weiter (stetig); phU: weich begrenzte Rolle (harte Grenze ließ die Hand im engen Cockpit springen)
     for (let it = 0; it < 10; it++) {
-      phU = FX ? F1_ROLL * Math.tanh(phi / F1_ROLL) : 1.3 * Math.tanh(phi / 1.3);   // F1/F2: Rolle klein halten – die Fingerspitzen liegen im Schlitz neben dem Mittelteil
+      phU = FX ? F1_ROLL * Math.tanh(-spin / (SW_ROT * 0.35)) : 1.3 * Math.tanh(phi / 1.3);   // F1/F2: Rolle fest und weich aus dem Lenkwinkel (vorher nachgeregelt: sprang bei kleinen Lenkkorrekturen um die Mitte bis 2,3° je 0,01 Einschlag → Hand zitterte), höchstens ±F1_ROLL
       X.q2.setFromAxisAngle(tng, phU).multiply(X.r); if (FX) X.q2.multiply(FX.qc[side]);  // Handdrehung: (F1/F2: Korrektur auf die Griffachse,) Lenkrad, dann um das Rohr
       X.t.copy(wr).sub(G0).applyQuaternion(X.q2).add(G);                                   // Handgelenk-Ziel
       // IK: Ellbogen auf dem möglichen Kreis so wählen, dass der Unterarm in Linie mit der Hand steht (kein seitliches Abknicken),
@@ -3794,7 +3802,7 @@ function kartArmsIK(out, spin, K = KFAHRER, C = K.swC, AX = K.swAx, RIM = K.rimR
       if (pA == null) for (let k = 0; k < 48; k++) evalE(k / 48 * Math.PI * 2); else for (let k = -6; k <= 6; k++) evalE(pA + k * 0.06);
       // fein nachsuchen (Stufen von 7,5° ließen den Ellbogen beim Einlenken springen)
       for (let st = Math.PI / 48; st > 0.002; st *= 0.5) { const a0 = bestA; evalE(a0 - st); evalE(a0 + st); }
-      lastA = bestA;
+      lastA = bestA; if (FX) break;   // F1/F2: Rolle steht fest, ein Durchgang reicht
       // Fehlwinkel zwischen Hand (gedreht) und tatsächlichem Unterarm, gemessen um die Rohrachse -> phi nachführen
       const hNow = _ikV1.copy(hand0).applyQuaternion(X.q2), fa = _ikV2.copy(X.t).sub(_ikEN).normalize();
       hNow.addScaledVector(tng, -hNow.dot(tng)); fa.addScaledVector(tng, -fa.dot(tng));
@@ -8562,7 +8570,7 @@ function drawWheel(dt) {
     g.font = `800 30px ${F}`; g.fillStyle = '#fff'; g.textAlign = 'right'; g.fillText(cur ? fmt(cur) : '0:00.000', 222, 202); g.font = `700 15px ${F}`; g.fillStyle = !best ? '#6f8396' : d <= 0 ? '#22e06a' : '#ff4b3a'; g.fillText(best ? (d > 0 ? '+' : '−') + Math.abs(d).toFixed(2) : '', 222, 162); }
   // rechts: ERS, Batterie, Modus
   box(404, 62, 210, 70); lab('ERS', 414, 80); g.font = `800 40px ${F}`; g.fillStyle = '#ffd400'; g.textAlign = 'right'; g.fillText(Math.round((pl.bat || 0) * 100) + '%', 600, 122);
-  box(404, 142, 210, 70); lab('MODE', 414, 160); g.font = `700 26px ${F}`; g.fillStyle = pl.boosting ? '#ffd400' : '#19c8ff'; g.fillText(pl.boosting ? 'ERS AKTIV' : 'BALANCED', 600, 198);
+  box(404, 142, 210, 70); lab('MODE', 414, 160); g.font = `700 26px ${F}`; g.fillStyle = pl.boosting ? '#ffd400' : '#19c8ff'; g.textAlign = 'right'; g.fillText(pl.boosting ? 'ERS AKTIV' : 'BALANCED', 600, 198, 186);   /* rechtsbündig im Feld (lab() stellte auf links – der Text lief rechts aus dem Display), höchstens Feldbreite */
   // unten: Reifen (4 Felder), Bremsbalance, Batteriebalken, Runde
   const tt = 88 + Math.min(14, (pl.v || 0) / 7);
   [[26, 226], [86, 226], [26, 262], [86, 262]].forEach(([x, y], k) => { g.fillStyle = tt + k > 96 ? '#ff9f1a' : '#22c06a'; g.fillRect(x, y, 54, 30); g.fillStyle = '#04120a'; g.font = `700 16px ${F}`; g.textAlign = 'center'; g.fillText(Math.round(tt + k * 1.5), x + 27, y + 21); });
