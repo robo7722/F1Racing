@@ -2175,16 +2175,20 @@ class Particles {
     this.s = new Float32Array(n * 2); this.c = new Float32Array(n * 4); this.g = new Float32Array(n); this.fl = new Float32Array(n); this.size = new Float32Array(n); this.col = new Float32Array(n * 4);
     const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(this.p, 3)); geo.setAttribute('aSize', new THREE.BufferAttribute(this.size, 1)); geo.setAttribute('aCol', new THREE.BufferAttribute(this.col, 4));
     this.mat = new THREE.ShaderMaterial({ uniforms: { uScale: { value: 500 }, uSoft: { value: soft ? 1 : 0 } }, vertexShader: PT_V, fragmentShader: PT_F, transparent: true, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending });
-    this.pts = new THREE.Points(geo, this.mat); this.pts.frustumCulled = false; scene.add(this.pts);
+    this.pts = new THREE.Points(geo, this.mat); this.pts.frustumCulled = false; this.pts.visible = false; this.live = false; scene.add(this.pts);
   }
   emit(x, y, z, vx, vy, vz, life, s0, s1, r, g, b, a, grav) {
-    const i = this.i; this.i = (i + 1) % this.n; y += PFLOOR; this.fl[i] = PFLOOR;
+    const i = this.i; this.i = (i + 1) % this.n; y += PFLOOR; this.fl[i] = PFLOOR; this.live = true;
     this.p.set([x, y, z], i * 3); this.v.set([vx, vy, vz], i * 3); this.life[i] = life; this.max[i] = life; this.s.set([s0, s1], i * 2); this.c.set([r, g, b, a], i * 4); this.g[i] = grav;
   }
   update(dt) {
+    // Ruht das System (kein Partikel lebt), wird nichts gerechnet, nichts hochgeladen und nichts gezeichnet. Vorher gingen in JEDEM Bild alle drei Felder
+    // aller Systeme (17.860 Partikel ≈ 570 KB) an die Grafikkarte – auch wenn gar nichts zu sehen war (das Feuerwerk mit 14.000 läuft nur am Rennende).
+    if (!this.live) { if (this.pts.visible) this.pts.visible = false; return; }
+    let alive = 0;
     for (let i = 0; i < this.n; i++) {
       if (this.life[i] <= 0) { this.size[i] = 0; this.col[i * 4 + 3] = 0; continue; }
-      this.life[i] -= dt; const t = 1 - Math.max(this.life[i], 0) / this.max[i];
+      alive++; this.life[i] -= dt; const t = 1 - Math.max(this.life[i], 0) / this.max[i];
       const k = i * 3; this.v[k + 1] += this.g[i] * dt;
       this.p[k] += this.v[k] * dt; this.p[k + 1] += this.v[k + 1] * dt; this.p[k + 2] += this.v[k + 2] * dt;
       if (this.p[k + 1] < this.fl[i] + 0.03) { this.p[k + 1] = this.fl[i] + 0.03; this.v[k + 1] *= -0.35; this.v[k] *= 0.7; this.v[k + 2] *= 0.7; }
@@ -2193,6 +2197,7 @@ class Particles {
       this.col[i * 4] = this.c[i * 4]; this.col[i * 4 + 1] = this.c[i * 4 + 1]; this.col[i * 4 + 2] = this.c[i * 4 + 2]; this.col[i * 4 + 3] = this.c[i * 4 + 3] * (1 - t) * Math.min(1, t * 8 + 0.3);
     }
     const a = this.pts.geometry.attributes; a.position.needsUpdate = a.aSize.needsUpdate = a.aCol.needsUpdate = true;
+    this.pts.visible = true; if (!alive) this.live = false;   /* dieses Bild lädt noch die geleerten Felder hoch, ab dem nächsten ruht das System */
   }
 }
 const fwP = new Particles(14000, true, true), FW = { t: 0 };
@@ -9399,7 +9404,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.78'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.79'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
