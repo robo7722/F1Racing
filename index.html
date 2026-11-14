@@ -3596,7 +3596,7 @@ function loadFahrer(KFBIN) {
     g.setAttribute('aBi', new THREE.BufferAttribute(Float32Array.from(bi), 4)); g.setAttribute('aBw', new THREE.BufferAttribute(bw, 4, true));
     g.setIndex(new THREE.BufferAttribute((h.i32 ? new Uint32Array(KFBIN, b + h.idx, h.ni) : new Uint16Array(KFBIN, b + h.idx, h.ni)).slice(), 1));
     g.computeBoundingSphere();
-    return { geo: g, helm: h.helm, tilt: h.helmTilt || 0, swExt: h.swExt || 0, swC: new THREE.Vector3(...(h.swC || [0, 0.5005, 0.1235])), swAx: new THREE.Vector3(...(h.swAx || [0, 0.6273, -0.7788])), rimR: h.rimR || 0.188, arm: (h.arm || [[-0.2, 0.78, -0.57], [-0.29, 0.56, -0.36], [-0.24, 0.58, -0.08]]).map(a => new THREE.Vector3(...a)) };
+    return { geo: g, helm: h.helm, tilt: h.helmTilt || 0, swExt: h.swExt || 0, swC: new THREE.Vector3(...(h.swC || [0, 0.5005, 0.1235])), swAx: new THREE.Vector3(...(h.swAx || [0, 0.6273, -0.7788])), rimR: h.rimR || 0.188, grip: h.grip ? new THREE.Vector3(...h.grip) : null, arm: (h.arm || [[-0.2, 0.78, -0.57], [-0.29, 0.56, -0.36], [-0.24, 0.58, -0.08]]).map(a => new THREE.Vector3(...a)) };
   } catch (e) { console.warn('fahrer.bin', e); return null; }
 }
 const KFAHRER = loadFahrer(KFBIN), F1FAHRER = loadFahrer(F1FBIN);
@@ -3708,13 +3708,17 @@ function kartArmsIK(out, spin, K = KFAHRER, C = K.swC, AX = K.swAx, RIM = K.rimR
     const sh = _ikA.copy(K.arm[0]).setX(K.arm[0].x * mir), el = _ikB.copy(K.arm[1]).setX(K.arm[1].x * mir), wr = _ikW.copy(K.arm[2]).setX(K.arm[2].x * mir);
     const L1 = sh.distanceTo(el), L2 = el.distanceTo(wr);
     // Griffpunkt in Bindhaltung (nächster Kranzpunkt zum Handgelenk) und dessen Lage nach der Lenkraddrehung
-    const rel = _ikG.copy(wr).sub(C); rel.addScaledVector(AX, -rel.dot(AX)).setLength(RIM);
-    const G0 = _ikG0.copy(C).add(rel), G = _ikGr.copy(G0).sub(C).applyQuaternion(X.r).add(C);
+    // Griffmitte aus dem Bauskript (Faust liegt um diesen Punkt) in den Lenkrad-Rahmen dieses Autos übertragen: Lage relativ zur Bau-Lenkradmitte;
+    // ohne Angabe: nächster Kranzpunkt zum Handgelenk (beim F1 lag die Hand damit neben der Griffschlaufe)
+    const rel = _ikG.copy(K.grip || wr); if (K.grip) rel.x *= mir; rel.sub(K.grip ? K.swC : C); const rax = rel.dot(AX); rel.addScaledVector(AX, -rax); if (!K.grip) rel.setLength(RIM); else rel.multiplyScalar(RIM / K.rimR).addScaledVector(AX, rax);   /* Griff: radial auf diesen Kranz, Abstand entlang der Achse bleibt (sonst rutschte die Faust beim Rollen um das Rohr vom Griff) */
+    // G0: Griff in Bindhaltung (Fahrer-Rahmen, fest), G: derselbe Griff am Lenkrad dieses Autos nach dem Einlenken (TV-Kamera/F2: Lenkrad liegt im Fahrer-Rahmen woanders)
+    const G0 = K.grip ? _ikG0.copy(K.grip).setX(K.grip.x * mir) : _ikG0.copy(C).add(rel), G = _ikGr.copy(rel).applyQuaternion(X.r).add(C);
     const tng = _ikT.crossVectors(AX, _ikV1.copy(G).sub(C)).normalize();              // Kranz-Tangente am Griff (Rohrachse)
     const hand0 = _ikH0.copy(wr).sub(el).normalize();                                      // Unterarm-/Handrichtung in Bindhaltung
-    let phi = 0;
-    for (let it = 0; it < 6; it++) {
-      X.q2.setFromAxisAngle(tng, phi).multiply(X.r);                                       // Handdrehung: Lenkrad, dann um das Rohr
+    let phi = out.prevPhi ? out.prevPhi[side] : 0, phU = 0, lastA = 0;   // vom letzten Bild weiter (stetig); phU: weich begrenzte Rolle (harte Grenze ließ die Hand im engen Cockpit springen)
+    for (let it = 0; it < 10; it++) {
+      phU = 1.3 * Math.tanh(phi / 1.3);
+      X.q2.setFromAxisAngle(tng, phU).multiply(X.r);                                       // Handdrehung: Lenkrad, dann um das Rohr
       X.t.copy(wr).sub(G0).applyQuaternion(X.q2).add(G);                                   // Handgelenk-Ziel
       // IK: Ellbogen auf dem möglichen Kreis so wählen, dass der Unterarm in Linie mit der Hand steht (kein seitliches Abknicken),
       // dabei nahe an der Ruhehaltung, nicht über Schulterhöhe-10 cm und nicht nach innen in den Rumpf
@@ -3722,23 +3726,31 @@ function kartArmsIK(out, spin, K = KFAHRER, C = K.swC, AX = K.swAx, RIM = K.rimR
       const a1 = (L1 * L1 - L2 * L2 + d * d) / (2 * d), hh = Math.sqrt(Math.max(L1 * L1 - a1 * a1, 0));
       const e1 = _ikE1.set(0, 1, 0).cross(X.u).normalize(), e2 = _ikE2.crossVectors(X.u, e1);
       const hDir = _ikHD.copy(hand0).applyQuaternion(X.q2);
-      let best = 1e9;
-      for (let k = 0; k < 48; k++) { const an = k / 48 * Math.PI * 2, ca = Math.cos(an), sa = Math.sin(an);
+      let best = 1e9, bestA = 0;
+      const evalE = an => { const ca = Math.cos(an), sa = Math.sin(an);
         const E = _ikV1.copy(sh).addScaledVector(X.u, a1).addScaledVector(e1, ca * hh).addScaledVector(e2, sa * hh);
         const fa = _ikV2.copy(X.t).sub(E).normalize(), swing = Math.acos(Math.min(1, Math.max(-1, fa.dot(hDir))));
-        const dev = E.distanceTo(el) / L1, up = Math.max(0, E.y - (sh.y - 0.10)), inn = Math.max(0, mir * (E.x - (sh.x - mir * 0.02)));
-        const low = K.f1 ? Math.max(0, Math.abs(E.x) - 0.235) * 3 : Math.max(0, 0.53 - E.y) * Math.max(0, 0.27 - Math.abs(E.x)) * 400,   /* F1: Ellbogen innerhalb der Cockpitbreite */ back = Math.max(0, (sh.z + 0.17) - E.z);   // nicht in die Hüfte, nicht nach hinten
-        const sc = swing * 1.0 + dev * 0.8 + up * 20 + inn * 20 + low * 20 + back * 20;
-        if (sc < best) { best = sc; _ikEN.copy(E); } }
+        const dev = E.distanceTo(el) / L1, up = Math.max(0, E.y - (sh.y - 0.10)), inn = Math.max(0, mir * (E.x - (sh.x - mir * (K.f1 ? -0.03 : 0.02))));   /* F1: enges Cockpit – Ellbogen darf bis 3 cm innerhalb der Schulter */
+        const low = K.f1 ? Math.max(0, Math.abs(E.x) - 0.215) * 4 : Math.max(0, 0.53 - E.y) * Math.max(0, 0.27 - Math.abs(E.x)) * 400,   /* F1: Ellbogen innerhalb der Cockpitbreite */ back = Math.max(0, (sh.z + 0.17) - E.z);   // nicht in die Hüfte, nicht nach hinten
+        const pv = out.prevE && out.prevE[side] ? E.distanceTo(out.prevE[side]) / L1 : 0;   // Stetigkeit: nahe an der Lösung des letzten Bildes (sonst sprang der Ellbogen zwischen zwei fast gleich guten Lagen)
+        const sc = swing * 1.0 + dev * 0.8 + up * 20 + inn * 20 + low * 20 + back * 20 + pv * 3;
+        if (sc < best) { best = sc; bestA = an; _ikEN.copy(E); } return sc; };
+      const pA = out.prevA && out.prevA[side];   // ab dem zweiten Bild nur nahe der letzten Lage suchen (stetig, keine Sprünge zwischen zwei Lösungen)
+      if (pA == null) for (let k = 0; k < 48; k++) evalE(k / 48 * Math.PI * 2); else for (let k = -6; k <= 6; k++) evalE(pA + k * 0.06);
+      // fein nachsuchen (Stufen von 7,5° ließen den Ellbogen beim Einlenken springen)
+      for (let st = Math.PI / 48; st > 0.002; st *= 0.5) { const a0 = bestA; evalE(a0 - st); evalE(a0 + st); }
+      lastA = bestA;
       // Fehlwinkel zwischen Hand (gedreht) und tatsächlichem Unterarm, gemessen um die Rohrachse -> phi nachführen
       const hNow = _ikV1.copy(hand0).applyQuaternion(X.q2), fa = _ikV2.copy(X.t).sub(_ikEN).normalize();
       hNow.addScaledVector(tng, -hNow.dot(tng)); fa.addScaledVector(tng, -fa.dot(tng));
       if (hNow.lengthSq() < 1e-8 || fa.lengthSq() < 1e-8) break;
       hNow.normalize(); fa.normalize(); const err = Math.atan2(_ikV3.crossVectors(hNow, fa).dot(tng), hNow.dot(fa));
-      phi += err; phi = Math.max(-1.2, Math.min(1.2, phi));
+      phi += err * 0.5; phi = Math.max(-1.8, Math.min(1.8, phi)); if (out.prevPhi) phi = Math.max(out.prevPhi[side] - 0.04, Math.min(out.prevPhi[side] + 0.04, phi));   // höchstens 0,04 rad je Bild: an der Grenze (enges Cockpit) zitterte die Rolle sonst   // gedämpft: im engen Cockpit schwang die Rolle sonst zwischen zwei Werten
       if (Math.abs(err) < 1e-3) break;
     }
-    const eN = _ikEN;
+    const eN = _ikEN; (out.prevE ||= [new THREE.Vector3(), new THREE.Vector3()])[side].copy(eN);
+    (out.prevPhi ||= [0, 0])[side] = phi;
+    (out.prevA ||= [null, null])[side] = lastA;
     X.q.setFromUnitVectors(X.v.copy(el).sub(sh).normalize(), _ikV1.copy(eN).sub(sh).normalize());
     out[o].makeRotationFromQuaternion(X.q); out[o].setPosition(_ikV2.copy(sh).sub(_ikV3.copy(sh).applyQuaternion(X.q)));
     // Unterarm: Richtung (Ellbogen -> Handgelenk) und Verdrehung um die eigene Achse wie die Hand (Unterarm-Rotation, verhindert Knick am Bündchen)
@@ -3752,9 +3764,9 @@ function kartArmsIK(out, spin, K = KFAHRER, C = K.swC, AX = K.swAx, RIM = K.rimR
     X.q2.setFromAxisAngle(X.e, tw).multiply(q1);                                           // Unterarm-Drehung (Elle/Speiche) übernimmt die Verdrehung ganz
     out[o + 1].makeRotationFromQuaternion(X.q2); out[o + 1].setPosition(_ikV2.copy(eN).sub(_ikV3.copy(el).applyQuaternion(X.q2)));
     // Hand
-    X.q2.setFromAxisAngle(tng, phi).multiply(X.r);
+    X.q2.setFromAxisAngle(tng, phU).multiply(X.r);
     out[o + 2].makeRotationFromQuaternion(X.q2); out[o + 2].setPosition(_ikV2.copy(G).sub(_ikV3.copy(G0).applyQuaternion(X.q2)));
-    out.wristBend = out.wristBend || []; out.wristBend[side] = phi;
+    out.wristBend = out.wristBend || []; out.wristBend[side] = phU;
   }
 }
 const _ikE1 = new THREE.Vector3(), _ikE2 = new THREE.Vector3(), _ikHD = new THREE.Vector3(), _ikA = new THREE.Vector3(), _ikB = new THREE.Vector3(), _ikW = new THREE.Vector3(), _ikG = new THREE.Vector3(), _ikG0 = new THREE.Vector3(), _ikGr = new THREE.Vector3(),
@@ -4058,7 +4070,7 @@ function f1Driver(d, T, MD, g) {
   const mesh = new THREE.Mesh(K.geo, kartFahrerMat(key, col(D.base), col(D.acc), { sec: col(D.sec), style: D.style, glove: col(D.glove) })); mesh.castShadow = true;
   const off = new THREE.Vector3(0, MD.helm[0] + 0.005, MD.helm[1]).sub(new THREE.Vector3(...K.helm));   // F2: Helm sitzt etwas anders als im F1, an dem das Modell gebaut ist
   mesh.position.copy(off); g.add(mesh);
-  const U = mesh.material.userData.U, W = f1Wheel(MD), bones = Array.from({ length: 7 }, () => new THREE.Matrix4()), Cl = new THREE.Vector3(), st = { mesh, off, spin: 0, cut: false };
+  const U = mesh.material.userData.U, W = f1Wheel(MD), bones = Array.from({ length: 7 }, () => new THREE.Matrix4()), Cl = new THREE.Vector3(), st = { mesh, off, spin: 0, cut: false, bones };
   let last = NaN, lx = NaN;
   mesh.onBeforeRender = () => { const sp = st.spin, px = mesh.position.y * 7 + mesh.position.z;
     if (sp !== last || px !== lx) { Cl.copy(W.C).sub(mesh.position); kartArmsIK(bones, sp, K, Cl, W.AX, W.R); last = sp; lx = px; }   // Lenkrad im Fahrer-Rahmen (TV-Kamera verschiebt den Fahrer mit dem Helm)
@@ -9304,7 +9316,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.59'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.60'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -9495,7 +9507,7 @@ window.__elev = (a = 0, n = 40) => { const o = []; for (let i = a; i < a + n; i+
 window.__holes = () => HOLES; window.__holesLeft = () => fillGroundHoles(true);
 window.__scr = k => { showScreen(k); return MENU.scr; };   /* Test: Menübildschirm direkt öffnen */
 window.__season = tier => { if (!CAREER) { CAREER = carDef(); CAREER.name = 'Robert Nemec'; } if (tier !== 'kart' && !CAREER.slot[tier]) CAREER.slot[tier] = mkSlot(tier, SERIES[tier].drivers[4][3], null); (CAREER.intro ||= {})[tier] = 1; startSeason(tier); return MENU.scr; };   /* Test: Saison-Bildschirm öffnen */
-window.__arms = () => ARMS; window.__sw = () => SW;
+window.__arms = () => ARMS; window.__sw = () => SW; window.__f1f = () => F1FAHRER;
 window.__layout = () => { effCtrl = S.ctrl; layoutControls(); return effCtrl; };   /* Test: Touch-Tasten zeigen */
 window.__ks = s2 => KS[Math.floor(modL(s2) / DS) % N]; window.__head = () => HEAD; window.__tp = s2 => { const q = trackAt(s2, 0); pl.x = q.x; pl.z = q.z; pl.h = q.h; camH = q.h; projectCar(pl); pl.sPrev = modL(s2); return pl.idx; };
 window.__plRef = () => pl;
