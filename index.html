@@ -226,7 +226,9 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 #unit b{font-size:15px;color:var(--acc)}
 #msg{position:absolute;left:50%;top:26%;transform:translateX(-50%);font-size:30px;font-weight:900;font-style:italic;text-align:center;white-space:nowrap;text-shadow:0 3px 12px rgba(0,0,0,.8);opacity:0;transition:opacity .2s}
 #msg.show{opacity:1}
-#perf{position:absolute;top:max(4px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:6;padding:3px 8px 4px;background:rgba(8,8,12,.72);border-top:2px solid var(--f1r,#e10600);text-align:center;pointer-events:none}
+#perf{position:absolute;top:max(4px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:6;padding:3px 8px 4px;background:rgba(8,8,12,.72);border-top:2px solid var(--f1r,#e10600);text-align:center;pointer-events:auto}
+body.ptNoHud #hud,body.ptNoHud #controls{display:none!important}
+#ptRes{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;background:rgba(8,8,12,.94);color:#fff;padding:10px 14px;font:700 12px/1.55 system-ui,sans-serif;border-top:2px solid #e10600;max-width:96vw;max-height:94vh;overflow:auto;white-space:nowrap;font-size:11px;line-height:1.45}#ptRes td.l{text-align:left;white-space:normal;max-width:46vw}#ptRes button{font:700 12px system-ui,sans-serif;color:#fff;background:#e10600;border:0;padding:6px 12px;margin:6px 6px 0 0}#ptRes textarea{display:block;width:80vw;height:30vh;margin:6px 0;font:11px monospace}#ptRes table{border-collapse:collapse;margin:4px 0}#ptRes td,#ptRes th{padding:0 9px;text-align:right;font-variant-numeric:tabular-nums}#ptRes td:first-child,#ptRes th:first-child{text-align:left;padding-left:0}#ptRes th{color:rgba(255,255,255,.6);font-weight:700}#ptRes small{color:rgba(255,255,255,.6);font-weight:600}
 #perfTxt{font-size:11px;font-weight:700;line-height:14px;white-space:nowrap;font-variant-numeric:tabular-nums;color:#fff}#perfTxt b{font-weight:900}#perfTxt i{color:rgba(255,255,255,.55)}
 #perfG{display:block;width:120px;height:22px;margin:2px auto 0}
 #lights{position:absolute;left:50%;top:14%;transform:translateX(-50%);display:flex;gap:10px;padding:10px 14px;border-radius:12px;background:rgba(10,10,10,.75)}
@@ -1333,8 +1335,6 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
   <div class="ppane" id="sGfx"><section class="panel" id="setGfx">
     <div class="seg gfx" data-key="gfx"><button data-v="low">Schnell</button><button data-v="high">Schön</button><button data-v="ultra">Ultra</button></div>
     <p class="hint left" id="gfxInfo"></p>
-    <div class="field"><label>Bildrate</label><div class="seg" data-key="fpsCap"><button data-v="30">30</button><button data-v="40">40</button><button data-v="60">60</button><button data-v="max">Max</button></div></div>
-    <p class="hint left">Das Spiel zeichnet im Takt des Displays (V-Sync) und lässt gleichmäßig Bilder aus, damit jedes Bild gleich lang steht. 40 FPS geht gleichmäßig nur auf 120-Hz-Displays – auf 60 Hz wird daraus 30. Max: so viele Bilder, wie das Display schafft. Niedrigere Bildraten sparen Akku und halten das Handy kühler.</p>
   </section></div>
   <div class="ppane" id="sCtl"><section class="panel" id="setCtl">
     <div class="field"><label>Steuerung</label><div class="seg" data-key="ctrl"><button data-v="tilt">Neigen</button><button data-v="touch">Touch</button></div></div>
@@ -1347,8 +1347,10 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
   <div class="ppane" id="sExtra"><section class="panel" id="setExtra">
     <div class="tog"><span>Team RONE Racing freischalten</span><button class="sw" data-tog="rone" aria-label="Team RONE Racing freischalten"></button></div>
     <p class="hint left">Schaltet das Team RONE Racing mit Robert Nemec in der Teamauswahl frei. Es fährt nur, wenn du es selbst wählst.</p>
+    <div class="tog"><span>Gleichmäßiger Bildtakt (60 FPS)</span><button class="sw" data-tog="evenPace" aria-label="Gleichmäßiger Bildtakt"></button></div>
+    <p class="hint left">An: Auf schnellen Displays (120 Hz) wird genau jedes zweite Display-Bild gezeichnet – jedes Bild steht gleich lang (16,7 ms), statt zwischen 8 und 17 ms zu wechseln. Aus: so viele Bilder wie möglich, dafür ungleichmäßig, wenn das Handy die volle Bildrate nicht hält.</p>
     <div class="tog"><span>FPS- und Frame-Pacing-Anzeige</span><button class="sw" data-tog="perfHud" aria-label="FPS- und Frame-Pacing-Anzeige"></button></div>
-    <p class="hint left">Zeigt im Rennen oben in der Mitte die Bildrate, die mittlere Bildzeit, die Schwankung (±) und das langsamste Bild der letzten Sekunde, darunter wie viele Bilder zu spät kamen und wie lange das Spiel pro Bild rechnet (CPU, ohne Grafikkarte). Der Graph darunter zeigt jede Bildzeit: grün = im Takt der gewählten Bildrate, gelb = ein Bild zu spät, rot = Ruckler. Die Linie markiert die Ziel-Bildzeit (z. B. 16,7 ms bei 60 FPS).</p>
+    <p class="hint left">Zeigt im Rennen oben in der Mitte die Bildrate, die mittlere Bildzeit, die Schwankung (±) und das langsamste Bild der letzten Sekunde, darunter wie lange das Spiel pro Bild rechnet (CPU, ohne Grafikkarte). Der Graph darunter zeigt jede Bildzeit: grün = flüssig, gelb = ein Bild verpasst, rot = Ruckler. Die Linie markiert 60 FPS.</p>
     <div class="tog"><span>Nordschleife freischalten</span><button class="sw" data-tog="nos" aria-label="Nordschleife freischalten"></button></div>
     <p class="hint left">Die komplette Nürburgring-Nordschleife (20,8 km) als Zusatzstrecke im schnellen Spiel und Zeitrennen. In der Karriere fährt sie nicht mit.</p>
     <button class="big alt danger" id="careerReset" style="margin-top:10px">Karriere zurücksetzen</button>
@@ -1408,14 +1410,14 @@ import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const lerp = (a, b, t) => a + (b - a) * t;
+const EVT = { lod: 0, vis: 0, car: 0, hud: 0, map: 0, gauge: 0, sw: 0, halo: 0, fx: 0, tick: 0 };   /* Ereigniszähler je Bild für das Ruckler-Protokoll (siehe rlogFrame) */
 const isTouch = matchMedia('(pointer:coarse)').matches || navigator.maxTouchPoints > 0;
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const standalone = matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 
 /* ======================= Einstellungen ======================= */
-const S = { fpsFree: true, fpsCap: null, rmode: 'f1', level: true, songHist: [], rone: false, nos: false, perfHud: false, mode: 'race', ttBest: {}, song: 0, track: 'monza', driver: 'RUS', laps: 5, grid: 10, ctrl: 'touch', diff: 'mid', autogas: false, assist: false, sound: true, music: true, invert: false, cam: 0, gfx: 'high', line: 'off', champLaps: 3, volMusic: 0.7, volCar: 0.85 };
+const S = { evenPace: true, rmode: 'f1', level: true, songHist: [], rone: false, nos: false, perfHud: false, mode: 'race', ttBest: {}, song: 0, track: 'monza', driver: 'RUS', laps: 5, grid: 10, ctrl: 'touch', diff: 'mid', autogas: false, assist: false, sound: true, music: true, invert: false, cam: 0, gfx: 'high', line: 'off', champLaps: 3, volMusic: 0.7, volCar: 0.85 };
 try { Object.assign(S, JSON.parse(localStorage.getItem('f1rennen') || '{}')); } catch (e) {}
-if (!['30', '40', '60', 'max'].includes(S.fpsCap)) S.fpsCap = S.fpsFree ? 'max' : '60';   // alte Einstellung „Unbegrenzte FPS“ übernehmen
 if (!S.v40) { S.rmode = 'f1'; S.v40 = true; }   // Roadster: Standard ist die F1-Variante
 if (!S.v17) { S.ctrl = 'touch'; S.autogas = false; S.assist = false; S.v17 = true; try { localStorage.setItem('f1rennen', JSON.stringify(S)); } catch (e) {} }
 const save = () => { try { localStorage.setItem('f1rennen', JSON.stringify(S)); } catch (e) {} };
@@ -1928,7 +1930,7 @@ class SunRaysPass extends Pass {
 // (Häuser, Tribünen, Skyline flimmerten). Darum zwei Durchgänge: erst die Welt mit Nahgrenze 0,8 m, dann – Tiefe gelöscht – nur das
 // eigene Auto (Ebene 6) mit kleiner Nahgrenze. Die Schattenkarte aus dem ersten Durchgang bleibt (sonst fehlte dem Boden der Autoschatten).
 const SPLIT_L = 6, WORLD_NEAR = 0.8;
-const splitOn = () => running && (S.cam === 2 || S.cam === 3) && !!(pl && pl.mesh && pl.mesh.g) && camera.near < 0.2;
+const splitOn = () => running && (S.cam === 2 || S.cam === 3) && !!(pl && pl.mesh && pl.mesh.g) && camera.near < 0.2 && !window.__noSplit;
 function drawOwnCar(cam = camera) {
   const g = pl.mesh.g; g.traverse(o => o.layers.enable(SPLIT_L));
   const bg = scene.background, sa = renderer.shadowMap.autoUpdate, ac = renderer.autoClear, mask = cam.layers.mask;
@@ -1979,7 +1981,7 @@ function applyLook() {
 }
 function basePR() { const dpr = devicePixelRatio || 1; if (S.gfx === 'low') return Math.min(dpr, 1); if (S.gfx === 'ultra') return Math.min(dpr, isTouch ? 2.25 : 2.5);
   // Hoch: nach Pixelbudget statt fester Stufe – Handy ~0,9 MP (z. B. S26 Ultra ≈ 1,55×), großes Laptop-/Monitorbild ~2,4 MP; jeder Vollbild-Durchgang kostet je Pixel
-  const budget = isTouch ? 0.75e6 : 2.4e6;   /* Handy 0,75 MP (vorher 0,9): 17 % weniger Pixel, Nachschärfen gleicht aus */ return Math.min(dpr, 1.75, Math.max(1, Math.sqrt(budget / Math.max(1, innerWidth * innerHeight)))); }   /* Hoch: auf hochauflösenden Displays mit geringerer Renderauflösung + Nachschärfen (jeder Vollbild-Durchgang kostet auf Handy-/Laptop-GPUs viel) – Ultra rendert in voller Auflösung */
+  const budget = isTouch ? 1.1e6 : 2.4e6;   /* Handy 1,1 MP (vorher 0,75): der Selbsttest auf dem Adreno 840 zeigte kaum Unterschied zwischen halber und voller Auflösung – also schärfer */   /* Handy 0,75 MP (vorher 0,9): 17 % weniger Pixel, Nachschärfen gleicht aus */ return Math.min(dpr, 1.75, Math.max(1, Math.sqrt(budget / Math.max(1, innerWidth * innerHeight)))); }   /* Hoch: auf hochauflösenden Displays mit geringerer Renderauflösung + Nachschärfen (jeder Vollbild-Durchgang kostet auf Handy-/Laptop-GPUs viel) – Ultra rendert in voller Auflösung */
 function applyGfx() {
   const hi = S.gfx !== 'low', ultra = S.gfx === 'ultra';
   renderer.setPixelRatio(basePR() * (typeof DYN !== 'undefined' ? DYN.scale : 1));
@@ -2158,11 +2160,10 @@ function updateStreaks(dt) {
   streaks.visible = f > 0.01; if (!streaks.visible) return;
   stMat.opacity = Math.min(0.16, f * 0.08 + (pl.boostFx || 0) * 0.04 + (pl.slipS || 0) * 0.06);   /* nur noch ein Hauch */
   const len = 1 + f * 5 + (pl.boostFx || 0) * 2, sp = pl.v * 1.4;
-  stData.forEach((d, i) => {
+  for (let i = 0; i < stData.length; i++) { const d = stData[i];   /* ohne Wegwerf-Felder: vorher entstanden hier 80 kleine Arrays pro Bild (der größte Einzelposten für die Speicherbereinigung) */
     d.z += sp * dt; if (d.z > -5) respawnStreak(d);
-    const x = Math.cos(d.a) * d.r * 1.5, y = Math.sin(d.a) * d.r * 0.75 - 0.3;
-    stPos.set([x, y, d.z, x, y, d.z - len], i * 6);
-  });
+    const x = Math.cos(d.a) * d.r * 1.5, y = Math.sin(d.a) * d.r * 0.75 - 0.3, k = i * 6;
+    stPos[k] = x; stPos[k + 1] = y; stPos[k + 2] = d.z; stPos[k + 3] = x; stPos[k + 4] = y; stPos[k + 5] = d.z - len; }
   stGeo.attributes.position.needsUpdate = true;
 }
 // Partikel (Funken, Staub, Rauch)
@@ -2174,16 +2175,20 @@ class Particles {
     this.s = new Float32Array(n * 2); this.c = new Float32Array(n * 4); this.g = new Float32Array(n); this.fl = new Float32Array(n); this.size = new Float32Array(n); this.col = new Float32Array(n * 4);
     const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(this.p, 3)); geo.setAttribute('aSize', new THREE.BufferAttribute(this.size, 1)); geo.setAttribute('aCol', new THREE.BufferAttribute(this.col, 4));
     this.mat = new THREE.ShaderMaterial({ uniforms: { uScale: { value: 500 }, uSoft: { value: soft ? 1 : 0 } }, vertexShader: PT_V, fragmentShader: PT_F, transparent: true, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending });
-    this.pts = new THREE.Points(geo, this.mat); this.pts.frustumCulled = false; scene.add(this.pts);
+    this.pts = new THREE.Points(geo, this.mat); this.pts.frustumCulled = false; this.pts.visible = false; this.live = false; scene.add(this.pts);
   }
   emit(x, y, z, vx, vy, vz, life, s0, s1, r, g, b, a, grav) {
-    const i = this.i; this.i = (i + 1) % this.n; y += PFLOOR; this.fl[i] = PFLOOR;
-    this.p.set([x, y, z], i * 3); this.v.set([vx, vy, vz], i * 3); this.life[i] = life; this.max[i] = life; this.s.set([s0, s1], i * 2); this.c.set([r, g, b, a], i * 4); this.g[i] = grav;
+    const i = this.i; this.i = (i + 1) % this.n; y += PFLOOR; this.fl[i] = PFLOOR; this.live = true;
+    const k3 = i * 3, k4 = i * 4; this.p[k3] = x; this.p[k3 + 1] = y; this.p[k3 + 2] = z; this.v[k3] = vx; this.v[k3 + 1] = vy; this.v[k3 + 2] = vz; this.life[i] = life; this.max[i] = life; this.s[i * 2] = s0; this.s[i * 2 + 1] = s1; this.c[k4] = r; this.c[k4 + 1] = g; this.c[k4 + 2] = b; this.c[k4 + 3] = a; this.g[i] = grav;
   }
   update(dt) {
+    // Ruht das System (kein Partikel lebt), wird nichts gerechnet, nichts hochgeladen und nichts gezeichnet. Vorher gingen in JEDEM Bild alle drei Felder
+    // aller Systeme (17.860 Partikel ≈ 570 KB) an die Grafikkarte – auch wenn gar nichts zu sehen war (das Feuerwerk mit 14.000 läuft nur am Rennende).
+    if (!this.live) { if (this.pts.visible) this.pts.visible = false; return; }
+    let alive = 0;
     for (let i = 0; i < this.n; i++) {
       if (this.life[i] <= 0) { this.size[i] = 0; this.col[i * 4 + 3] = 0; continue; }
-      this.life[i] -= dt; const t = 1 - Math.max(this.life[i], 0) / this.max[i];
+      alive++; this.life[i] -= dt; const t = 1 - Math.max(this.life[i], 0) / this.max[i];
       const k = i * 3; this.v[k + 1] += this.g[i] * dt;
       this.p[k] += this.v[k] * dt; this.p[k + 1] += this.v[k + 1] * dt; this.p[k + 2] += this.v[k + 2] * dt;
       if (this.p[k + 1] < this.fl[i] + 0.03) { this.p[k + 1] = this.fl[i] + 0.03; this.v[k + 1] *= -0.35; this.v[k] *= 0.7; this.v[k + 2] *= 0.7; }
@@ -2192,6 +2197,7 @@ class Particles {
       this.col[i * 4] = this.c[i * 4]; this.col[i * 4 + 1] = this.c[i * 4 + 1]; this.col[i * 4 + 2] = this.c[i * 4 + 2]; this.col[i * 4 + 3] = this.c[i * 4 + 3] * (1 - t) * Math.min(1, t * 8 + 0.3);
     }
     const a = this.pts.geometry.attributes; a.position.needsUpdate = a.aSize.needsUpdate = a.aCol.needsUpdate = true;
+    this.pts.visible = true; EVT.fx++; if (!alive) this.live = false;   /* dieses Bild lädt noch die geleerten Felder hoch, ab dem nächsten ruht das System */
   }
 }
 const fwP = new Particles(14000, true, true), FW = { t: 0 };
@@ -2727,6 +2733,12 @@ function widenRim(M, X, y0, y1, zA, zB) { if (!M) return; const S = t => { t = c
       p.setX(i, Math.sign(x) * (ax + (X - ax) * w)); ch = true; }
     if (ch) { p.needsUpdate = true; g.computeBoundingSphere(); } } }
 widenRim(CARM, 0.24, 0.56, 0.64, 0.48, 0.71); widenRim(CARM2, 0.24, 0.56, 0.70, 0.46, 0.70);
+// F2-Modell, grobe Detailstufen (eigenes Auto in den Verfolgerkameras): große Fächer-Dreiecke vom Cockpitboden (Mitte, y 0,29) zum Rand liefen quer durch Fahrer,
+// Hände und Lenkrad – weg damit (Detailstufe 0 hat dort eigene Innenflächen, die Cockpitansicht verwirft den Bereich ohnehin)
+if (CARM2) CARM2.lods.forEach((Lv, li) => { if (li === 0) return; for (const k of ['gloss', 'matte']) { const g = Lv[k]; if (!g || !g.index) continue; const p = g.attributes.position, I = g.index.array, keep = [];
+  for (let t = 0; t < I.length; t += 3) { let x0 = 9, y0 = 9, y1 = -9, zOk = true; for (let j = 0; j < 3; j++) { const v = I[t + j], y = p.getY(v), z = p.getZ(v); x0 = Math.min(x0, Math.abs(p.getX(v))); y0 = Math.min(y0, y); y1 = Math.max(y1, y); if (z < 0.3 || z > 0.8) zOk = false; }
+    if (!(zOk && y1 - y0 > 0.2 && x0 < 0.05 && y0 < 0.4)) keep.push(I[t], I[t + 1], I[t + 2]); }
+  if (keep.length < I.length) g.setIndex(new THREE.BufferAttribute(new I.constructor(keep), 1)); } });
 // F2-Modell: Lenksäule (dünner Kegel, Spitze bei z 0,573) stach durch die Lenkradmitte und ragte vor dem Display heraus – Spitze hinter die Nabe legen
 if (CARM2) for (const Lv of CARM2.lods) { const g = Lv.matte; if (!g) continue; const p = g.attributes.position; let ch = false;
   for (let i = 0; i < p.count; i++) if (Math.abs(p.getX(i)) < 0.004 && Math.abs(p.getY(i) - 0.594) < 0.006 && p.getZ(i) > 0.55 && p.getZ(i) < 0.6) { p.setZ(i, 0.69); ch = true; }
@@ -3296,6 +3308,7 @@ function numberTex(num, bg) {
     g.font = 'italic 900 62px system-ui,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(String(num), w / 2, h / 2 + 3);
   });
 }
+const CAR_FAR3 = 80, CAR_HIDE = 600;   /* ab 80 m das stark vereinfachte Fernmodell (clusterGeo); ab 600 m (Auto < 5 Pixel) wird ein Gegner gar nicht mehr gezeichnet */
 const CAR_LOD = [10, 35], LOD_HYS = 1.5, LOD_FADE = 0.35;   // Abstand (m) zur Kamera: darunter volle Stufe / mittlere Stufe, darüber Fernmodell (± Schaltlücke gegen Hin- und Herspringen)
 // Weiche Überblendung zwischen den Stufen statt Aufploppen: alte und neue Stufe ~0,35 s gleichzeitig, per Punktraster (wie beim Rasen) einander
 // ergänzend – jeder Pixel zeigt genau eine der beiden. Dafür hat jedes Netz eines Autos eine eigene Materialkopie (gleicher Shader, nichts wird neu übersetzt).
@@ -3326,7 +3339,7 @@ function lodStep(m, want, dt) {
 }
 function setLod(m, l, force) {
   if (force) lodFadeEnd(m);
-  if (!m.tp || (!force && m.lod === l)) return; m.lod = l; const L = m.tp.lods[l], W = m.tp.M.W[l];
+  if (!m.tp || (!force && m.lod === l)) return; if (m.lod !== l) EVT.car++; m.lod = l; const L = m.tp.lods[l], W = m.tp.M.W[l];
   m.body.geometry = L.gloss; m.matte.geometry = L.matte; m.wfl.geometry = W.R[m.comp]; m.wfr.geometry = W.L[m.comp]; m.wrl.geometry = W.RL[m.comp]; m.wrr.geometry = W.RR[m.comp];
   if (m.far) { const f = l === 2 && !window.__noFar; m.far.visible = f; for (const o of m.detail) o.visible = !f; }
 }
@@ -3341,6 +3354,30 @@ function farCarGeo(tp, T) {
   const hg = new THREE.SphereGeometry(0.15, 10, 7).scale(1, 0.97, 1.1).translate(0, MD.helm[0], MD.helm[1]); add(hg, 0, 0, 0, 4, 1, col(T.acc)); hg.dispose();
   const o = new THREE.BufferGeometry(); o.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); o.setAttribute('normal', new THREE.Float32BufferAttribute(Nn, 3)); o.setAttribute('color', new THREE.Float32BufferAttribute(C, 3)); o.setAttribute('aCls', new THREE.Float32BufferAttribute(K, 1));
   o.setIndex(I); o.computeBoundingSphere(); return o;
+}
+// Fernmodell für große Abstände (ab CAR_FAR3): das Fernmodell wird beim Laden auf höchstens ~3.000 Dreiecke vereinfacht. Eckpunkte, die in dieselbe
+// Rasterzelle fallen (gleiche Lackklasse, gleiche Hauptrichtung der Normale), werden zu einem Punkt gemittelt; zusammengefallene Dreiecke entfallen.
+// Ab 80 m ist ein Auto höchstens ~35 Pixel lang – die Zellen (wenige cm) liegen weit unter einem Pixel.
+function clusterGeo(g, maxTris = 3000) {
+  const P = g.attributes.position, Nn = g.attributes.normal, C = g.attributes.color, K = g.attributes.aCls, I = g.index.array, n = P.count;
+  for (let cell = 0.04; ; cell *= 1.25) {
+    const map = new Map(), rm = new Int32Array(n), acc = [];   // acc: je neuem Punkt 10 Summen (Ort, Normale, Farbe, Anzahl) + Klasse
+    for (let i = 0; i < n; i++) { const nx = Nn.getX(i), ny = Nn.getY(i), nz = Nn.getZ(i), ax = Math.abs(nx), ay = Math.abs(ny), az = Math.abs(nz);
+      const nd = ax >= ay && ax >= az ? (nx < 0 ? 0 : 1) : ay >= az ? (ny < 0 ? 2 : 3) : (nz < 0 ? 4 : 5), cls = Math.round(K.getX(i));
+      const key = (((Math.floor(P.getX(i) / cell) + 512) * 1024 + Math.floor(P.getY(i) / cell) + 512) * 1024 + Math.floor(P.getZ(i) / cell) + 512) * 64 + cls * 8 + nd;
+      let j = map.get(key); if (j === undefined) { j = acc.length / 11; map.set(key, j); acc.push(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, cls); }
+      const b = j * 11; acc[b] += P.getX(i); acc[b + 1] += P.getY(i); acc[b + 2] += P.getZ(i); acc[b + 3] += nx; acc[b + 4] += ny; acc[b + 5] += nz; acc[b + 6] += C.getX(i); acc[b + 7] += C.getY(i); acc[b + 8] += C.getZ(i); acc[b + 9]++; rm[i] = j; }
+    const idx = [], seen = new Set(), m = acc.length / 11;
+    for (let t = 0; t < I.length; t += 3) { const a = rm[I[t]], b = rm[I[t + 1]], c = rm[I[t + 2]]; if (a === b || b === c || a === c) continue;
+      const lo = Math.min(a, b, c), k = lo === a ? (a * m + b) * m + c : lo === b ? (b * m + c) * m + a : (c * m + a) * m + b; if (seen.has(k)) continue; seen.add(k); idx.push(a, b, c); }
+    if (idx.length / 3 > maxTris && cell < 0.3) continue;
+    const p = new Float32Array(m * 3), nn = new Float32Array(m * 3), cc = new Float32Array(m * 3), kk = new Float32Array(m);
+    for (let j = 0; j < m; j++) { const b = j * 11, w = 1 / acc[b + 9], l = Math.hypot(acc[b + 3], acc[b + 4], acc[b + 5]) || 1;
+      p[j * 3] = acc[b] * w; p[j * 3 + 1] = acc[b + 1] * w; p[j * 3 + 2] = acc[b + 2] * w; nn[j * 3] = acc[b + 3] / l; nn[j * 3 + 1] = acc[b + 4] / l; nn[j * 3 + 2] = acc[b + 5] / l;
+      cc[j * 3] = acc[b + 6] * w; cc[j * 3 + 1] = acc[b + 7] * w; cc[j * 3 + 2] = acc[b + 8] * w; kk[j] = acc[b + 10]; }
+    const o = new THREE.BufferGeometry(); o.setAttribute('position', new THREE.BufferAttribute(p, 3)); o.setAttribute('normal', new THREE.BufferAttribute(nn, 3)); o.setAttribute('color', new THREE.BufferAttribute(cc, 3)); o.setAttribute('aCls', new THREE.BufferAttribute(kk, 1));
+    o.setIndex(idx); o.boundingSphere = g.boundingSphere.clone(); return o;
+  }
 }
 let ROAD_DASH = null;
 // RONE Racing: Roadster aus dem hochgeladenen 3D-Modell (vereinfacht auf ~87k Dreiecke), mit eigener Lackierung nach den Fotos.
@@ -4175,6 +4212,7 @@ function makeCar0(d) {
     const label = carLabel(d, T); g.add(label); scene.add(g);
     // Fernmodell: ab 120 m ist das ganze Auto EIN Netz mit EINEM Zeichenaufruf (statt Karosserie, Carbon, Halo, Helm, Spiegel und vier Rädern einzeln)
     const far = new THREE.Mesh(tp.far || (tp.far = farCarGeo(tp, T)), tp.glossMat); far.visible = false; g.add(far);
+    if (!tp.far3) { try { tp.far3 = clusterGeo(tp.far); } catch (e) { console.warn('far3', e); tp.far3 = tp.far; } }   // ab CAR_FAR3: ~3.000 statt ~13.600 Dreiecke
     const r = { g, fl, fr, wfl, wfr, rr, wrl, wrr, label, helm: hm, rl, body, matte, halo, tp, lod: 0, comp: 1, cam: MD.cam, tv: MD.tv, far, detail: [body, matte, halo, hm, fl, fr, rr].concat(mir ? [mir] : []), oldDrv, mkF1: F1F ? () => f1Driver(d, T, MD, g) : null };
     lodFadePrep(r); return r;
   }
@@ -4625,8 +4663,13 @@ function fillGroundHoles(dry = false) {
   window.__holeList = [...XZ].sort((p, q) => q[1] - p[1]).slice(0, 30); return cells; }
 function chunkStrips(root, segLen = 900) {
   const per = Math.max(60, Math.round(segLen / DS)) * 6, v = new THREE.Vector3();
+  // Normale Strecken (bis 8 km): Streifen NICHT in 900-m-Stücke teilen. Gemessen (Monza): von 106 Stücken waren rund um die Runde 30–96 gleichzeitig im Bild –
+  // das Aussortieren sparte kaum Dreiecke (alle Streifen zusammen ~84.000), kostete aber je Stück einen Zeichenaufruf. Durchsichtige Streifen bleiben geteilt
+  // (ihre Zeichenreihenfolge hängt am Abstand der Stücke). Die Nordschleife bleibt geteilt: dort werden ferne Stücke ausgeblendet und aus dem Speicher geworfen.
+  const whole = !TRK.nos && L <= 8000 && !window.__chunkAll;
   for (const ch of [...root.children]) {
     if (!ch.userData.strip || ch.geometry.index) continue;
+    if (whole && !Array.isArray(ch.material) && !ch.material.transparent) continue;
     const g = ch.geometry, n = g.attributes.position.count; if (n <= per * 1.5) continue;
     for (let a = 0; a < n; a += per) {
       const cnt = Math.min(per, n - a), sg = new THREE.BufferGeometry(); for (const k in g.attributes) { const A = g.attributes[k]; sg.setAttribute(k, new THREE.BufferAttribute(A.array.slice(a * A.itemSize, (a + cnt) * A.itemSize), A.itemSize, A.normalized)); }
@@ -4640,14 +4683,37 @@ function chunkStrips(root, segLen = 900) {
 // einzelnes, unbewegtes Netz für mergeGroups vormerken: Hülle steht an seiner Stelle (richtige Kachel, gleiche Höhenanpassung wie das Netz allein)
 function asMerge(m) { const g = new THREE.Group(); g.position.set(m.position.x, 0, m.position.z); m.position.x = m.position.z = 0; g.add(m); g.userData.merge = true; g.userData.span = true; return g; }
 // statische Gruppen (Tribünen, Gebäude, Brücken, Tafeln) je Material und 350-m-Kachel zu einem Mesh verschmelzen -> viel weniger Zeichenaufrufe
+// Kennung eines Materials aus seinen Eigenschaften: zwei Materialien mit gleicher Kennung sehen gleich aus und dürfen zu einem Netz zusammengefasst werden.
+// Viele Bauteile legen je Stück ein eigenes, aber identisches Material an (lam({ color })) – nach der Objekt-ID blieb dann jedes Stück ein eigener Zeichenaufruf
+// (Abu Dhabi: 196 Pfosten, Las Vegas: 28 Lampen × 3 Teile, Singapur: 39 + 22 Teile). Materialien mit eigenen Daten (Objekte in userData, eigene Uniforms) behalten ihre ID.
+function matSig(m) {
+  if (window.__noDedupe || m.isShaderMaterial || m.uniforms) return m.uuid;
+  for (const k in m.userData) { const v = m.userData[k]; if (v !== null && typeof v === 'object') return m.uuid; }
+  const c = v => v && v.isColor ? v.getHexString() : '', t = v => v ? v.uuid : '';
+  return [m.type, c(m.color), c(m.emissive), m.emissiveIntensity, t(m.map), t(m.normalMap), t(m.emissiveMap), t(m.alphaMap), t(m.roughnessMap), t(m.metalnessMap), t(m.aoMap), t(m._envMap), m.roughness, m.metalness, m.envMapIntensity,
+    m.opacity, m.transparent, m.side, m.alphaTest, m.alphaToCoverage, m.vertexColors, m.depthWrite, m.depthTest, m.polygonOffset, m.polygonOffsetFactor, m.polygonOffsetUnits, m.fog, m.flatShading, m.blending, m.toneMapped, m.wireframe,
+    m.normalScale ? m.normalScale.x + ',' + m.normalScale.y : '', m.clearcoat, m.clearcoatRoughness, m.sheen, m.customProgramCacheKey ? m.customProgramCacheKey() : '', m.onBeforeCompile ? m.onBeforeCompile.toString().length : 0, JSON.stringify(m.userData)].join('|');
+}
+// Teile EINER bewegten Gruppe (Riesenrad: Speichen, Gondeln) je Material zu einem Netz verschmelzen – im Koordinatensystem der Gruppe, sie dreht sich weiter als Ganzes.
+function mergeLocal(g) {
+  if (window.__noMerge) return; const B = new Map();
+  for (const o of [...g.children]) { if (!o.isMesh || o.isInstancedMesh || o.children.length || Array.isArray(o.material)) continue;
+    const k = matSig(o.material) + '|' + (o.castShadow ? 1 : 0) + (o.receiveShadow ? 1 : 0) + '|' + o.renderOrder; let b = B.get(k); if (!b) B.set(k, b = { mat: o.material, list: [], objs: [], o0: o });
+    o.updateMatrix(); const geo = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone(); geo.applyMatrix4(o.matrix); b.list.push(geo); b.objs.push(o); }
+  for (const b of B.values()) { if (b.list.length < 2) { b.list.forEach(x => x.dispose()); continue; }
+    const names = Object.keys(b.list[0].attributes).filter(k => b.list.every(q => q.attributes[k] && q.attributes[k].itemSize === b.list[0].attributes[k].itemSize)), tot = b.list.reduce((a, q) => a + q.attributes.position.count, 0), out = new THREE.BufferGeometry();
+    for (const k of names) { const sz = b.list[0].attributes[k].itemSize, arr = new Float32Array(tot * sz); let off = 0; for (const q of b.list) { arr.set(q.attributes[k].array, off); off += q.attributes[k].array.length; } out.setAttribute(k, new THREE.BufferAttribute(arr, sz)); }
+    b.list.forEach(x => x.dispose()); out.computeBoundingSphere();
+    const m = new THREE.Mesh(out, b.mat); m.castShadow = b.o0.castShadow; m.receiveShadow = b.o0.receiveShadow; m.renderOrder = b.o0.renderOrder; for (const o of b.objs) { g.remove(o); o.geometry.dispose(); } g.add(m); }
+}
 function mergeGroups(root, cell = 350) {
   if (window.__noMerge) return;   /* Testmodus: Gruppen einzeln lassen, damit der Überschneidungs-Test jeden Bau sieht */
-  const buckets = new Map(), v = new THREE.Vector3(), nm = new THREE.Matrix3();
+  const buckets = new Map(), v = new THREE.Vector3(), nm = new THREE.Matrix3(), sigs = new Map(), sigOf = m => { let q = sigs.get(m); if (q === undefined) sigs.set(m, q = matSig(m)); return q; };
   for (const g of [...root.children]) {
     if (!g.userData.merge) continue; g.updateMatrixWorld(true);
     const cx = Math.floor(g.position.x / cell), cz = Math.floor(g.position.z / cell);
     g.traverse(o => { if (!o.isMesh || o.isInstancedMesh || Array.isArray(o.material)) return;
-      const key = o.material.uuid + '|' + cx + ',' + cz; let b = buckets.get(key); if (!b) buckets.set(key, b = { mat: o.material, list: [], cast: false, recv: false, skip: true }); b.skip &&= !!o.userData.clipSkip;
+      const sg = sigOf(o.material), key = sg + '|' + cx + ',' + cz; let b = buckets.get(key); if (!b) buckets.set(key, b = { mat: o.material, sig: sg, list: [], cast: false, recv: false, skip: true }); b.skip &&= !!o.userData.clipSkip;
       let geo = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
       if (o.material.userData.bay && !geo.attributes.facUV) { const P = geo.attributes.position, Nn = geo.attributes.normal, n = P.count, fu = new Float32Array(n * 3), sc = o.scale;   /* Fassaden-UV vor dem Zusammenfügen aus den lokalen Koordinaten festhalten (sonst verschiebt die Drehung das Fensterraster) */
         for (let k = 0; k < n; k++) { const x = P.getX(k), y = P.getY(k), z = P.getZ(k); fu[k * 3] = Math.abs(Nn.getX(k)) > 0.5 ? (z + 0.5) * sc.z : (x + 0.5) * sc.x; fu[k * 3 + 1] = y * sc.y + o.position.y; fu[k * 3 + 2] = 7; }
@@ -4655,6 +4721,11 @@ function mergeGroups(root, cell = 350) {
       geo.applyMatrix4(o.matrixWorld); b.list.push(geo); b.cast ||= o.castShadow; b.recv ||= o.receiveShadow; });
     root.remove(g);
   }
+  // Kleinteile (Schilder, Pfosten, Tafeln …): je Material über die GANZE Strecke ein Netz statt eines je 350-m-Kachel – zusammen höchstens 40.000 Eckpunkte,
+  // das Aussortieren je Kachel sparte also nichts, kostete aber viele Zeichenaufrufe. Große Bauten (Tribünen, Gebäude) bleiben je Kachel getrennt.
+  if (!TRK.nos && !window.__chunkAll) { const big = new Map();
+    for (const [key, b] of buckets) { if (b.mat.transparent) continue; const k2 = b.sig + '|' + (b.cast ? 1 : 0) + (b.recv ? 1 : 0) + (b.skip ? 1 : 0); let e = big.get(k2); if (!e) big.set(k2, e = { keys: [], n: 0 }); e.keys.push(key); for (const g of b.list) e.n += g.attributes.position.count; }
+    for (const e of big.values()) { if (e.keys.length < 2 || e.n > 40000) continue; const b0 = buckets.get(e.keys[0]); for (const k of e.keys.slice(1)) { for (const g of buckets.get(k).list) b0.list.push(g); buckets.delete(k); } } }
   for (const b of buckets.values()) {
     const names = Object.keys(b.list[0].attributes).filter(k => b.list.every(g => g.attributes[k] && g.attributes[k].itemSize === b.list[0].attributes[k].itemSize));
     const tot = b.list.reduce((a, g) => a + g.attributes.position.count, 0), out = new THREE.BufferGeometry();
@@ -4678,13 +4749,13 @@ function buildEvict(root) {
 }
 function evictTick() {
   for (const e of EVICT) { const d = camera.position.distanceTo(e.c) - e.r;
-    if (!e.ev && d > e.D) { if (TRK.nos) e.m.geometry.dispose(); e.m.visible = false; e.ev = true; }   /* Speicher nur auf der 20-km-Nordschleife freigeben – neu Hochladen beim Wiederkommen ruckelte */
-    else if (e.ev && d < e.D - 150) { e.ev = false; e.m.visible = true; } }
+    if (!e.ev && d > e.D) { if (TRK.nos) e.m.geometry.dispose(); e.m.visible = false; e.ev = true; EVT.vis++; }   /* Speicher nur auf der 20-km-Nordschleife freigeben – neu Hochladen beim Wiederkommen ruckelte */
+    else if (e.ev && d < e.D - 150) { e.ev = false; e.m.visible = true; EVT.vis++; } }
 }
 function lodTick(dt) {
-  lodT -= dt; if (lodT > 0) return; lodT = 0.2; evictTick(); if (!LODS.length) return;
+  lodT -= dt; if (lodT > 0) return; lodT = 0.2; EVT.tick++; evictTick(); if (!LODS.length) return;
   for (const m of LODS) { const bs = m.boundingSphere; if (!bs) continue; const d = camera.position.distanceTo(bs.center) - bs.radius; let g = m.userData.lodHi;
-    for (const [lo, D] of m.userData.lodSteps) if (d > D) g = lo; if (g === null) { m.visible = false; continue; } if (m.userData.evRef && m.userData.evRef.ev) continue; m.visible = true; if (m.geometry !== g) m.geometry = g; }
+    for (const [lo, D] of m.userData.lodSteps) if (d > D) g = lo; if (g === null) { if (m.visible) EVT.vis++; m.visible = false; continue; } if (m.userData.evRef && m.userData.evRef.ev) continue; if (!m.visible) EVT.vis++; m.visible = true; if (m.geometry !== g) { m.geometry = g; EVT.lod++; } }
 }
 // Distanz-Überblendung: Fragmente lösen sich zwischen d0 und d1 Metern Entfernung punktweise auf (Dither) – Objekte blenden weich ein/aus statt zu "poppen".
 // Kostet nichts extra (ein Vergleich im Fragment-Shader) und braucht keine Sortierung oder Transparenz.
@@ -4698,8 +4769,8 @@ function distFade(m, d0, d1) {
   return m;
 }
 // Ferne Bäume als Bildtafeln: beim Laden wird jedes Baummodell (nah mit Laubflächen / fern einfach, je Laub- und Nadelbaum) aus 8 Richtungen gerendert –
-// mit dem Licht der Strecke. Ab 200 m zeigt jeder Baum die Ansicht seines eigenen Modells, die zu seiner Drehung passt, auf einer Tafel, die sich zur Kamera
-// dreht (4 Zeichenaufrufe für den ganzen Hintergrundwald). Zwischen 200 und 260 m teilen sich 3D-Baum und Tafel die Pixel per Punktraster.
+// mit dem Licht der Strecke. Ab 120 m zeigt jeder Baum die Ansicht seines eigenen Modells, die zu seiner Drehung passt, auf einer Tafel, die sich zur Kamera
+// dreht (4 Zeichenaufrufe für den ganzen Hintergrundwald). Zwischen 120 und 170 m teilen sich 3D-Baum und Tafel die Pixel per Punktraster.
 let TREESPR = null; const TREESPR_RT = [], TREE_VIEWS = 8;
 // Bild eines Baums aus 8 Richtungen (je 45°) nebeneinander: die Tafel zeigt später die Ansicht, die zur Drehung des Baums passt – so deckt sie sich
 // beim Überblenden mit dem 3D-Baum. Licht immer von der Seite (wie beim 3D-Baum aus der Ferne), dafür dreht sich der Baum statt der Kamera.
@@ -4794,7 +4865,7 @@ function chunkInstances(root, cell = 260, minCount = 120) {
   for (const ch of [...root.children]) {
     if (!ch.isInstancedMesh || ch.count < minCount || ch.userData.noChunk) continue;
     const cells = new Map();
-    const gt = ch.geometry, ntri = (gt.index ? gt.index.count : gt.attributes.position.count) / 3, cl = gt.userData.tree ? clamp(L / 19, 150, 300) : ntri < 40 ? cell * 2 : gt.userData.lod ? (ntri > 150 ? cell * 0.6 : cell * 1.4) : cell;   /* Bäume immer in kleinen Kacheln: sonst liegt auf kleinen Strecken alles in einer Kachel und die Fernstufen greifen nie */   // detailreiche Modelle mit LOD (Jachten, Palmen, Laubbäume): kleinere Kacheln, damit die Fernstufe auch greift   // kleine Objekte: größere Kacheln -> weniger Zeichenaufrufe
+    const gt = ch.geometry, ntri = (gt.index ? gt.index.count : gt.attributes.position.count) / 3, cl = gt.userData.tree ? clamp(L / 19, 150, 300) : ntri < 40 ? cell * 2 : gt.userData.lod ? (ntri > 400 || (gt.userData.lod[0] && gt.userData.lod[0][1] <= 80) ? cell * 0.6 : ntri > 150 ? cell : cell * 1.4) : cell;   /* Modelle, die schon ab ≤ 80 m vereinfacht werden (Reifenstapel): kleine Kacheln – die Stufe gilt je Kachel, in einer 500-m-Kachel blieben sonst alle Stapel voll detailliert (Abu Dhabi: 260.000 Dreiecke) */   /* mittelgroße Modelle (Füll-Häuser, 168 Dreiecke): normale Kachel statt 0,6-facher – in Abu Dhabi waren 111 Häuser-Kacheln gleichzeitig im Bild */   /* Bäume immer in kleinen Kacheln: sonst liegt auf kleinen Strecken alles in einer Kachel und die Fernstufen greifen nie */   // detailreiche Modelle mit LOD (Jachten, Palmen, Laubbäume): kleinere Kacheln, damit die Fernstufe auch greift   // kleine Objekte: größere Kacheln -> weniger Zeichenaufrufe
     if (!gt.boundingSphere) gt.computeBoundingSphere();
     for (let k = 0; k < ch.count; k++) { ch.getMatrixAt(k, m4); const key = Math.floor(m4.elements[12] / cl) + ',' + Math.floor(m4.elements[14] / cl); (cells.get(key) || cells.set(key, []).get(key)).push(k); }
     if (cells.size < 2) continue;
@@ -4909,6 +4980,8 @@ function vStrip(off, y0, y1, mat, opt = {}) {
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.computeVertexNormals();
   const m = new THREE.Mesh(g, mat); m.receiveShadow = true; m.castShadow = !!opt.cast; m.userData.strip = true; trackGroup.add(m); return m;
 }
+/* (Getestet und verworfen: matte Flächen mit dem einfachen Lambert-Lichtmodell statt PBR – 805 Materialien umgestellt, Zeichenzeit auf Adreno X1 unverändert
+   innerhalb der Messschwankung: Monza 4,6/4,9 ms, Spa 5,3/5,5 ms. Der Aufwand liegt nicht im Lichtmodell der matten Flächen.) */
 const lam = (o) => { const m = new THREE.MeshStandardMaterial({ roughness: .9, metalness: 0, envMapIntensity: .9, ...o }); return o && o.map && o.map.userData.fol ? foliageMat(m) : o && o.map && o.map.userData.gv ? groundVar(m, o.map.userData.gv) : o && o.map === TEX.runoff ? sheenMat(m, TH && TH.night ? 0.1 : 0.28) : m; };
 // Bodenschichten (Fahrbahn, Linien, Curbs, Auslauf) nach vorn ziehen: neigungsabhängiger Anteil (factor) nur noch ein Viertel – er wächst bei flachem Blick
 // enorm (Helmkamera 0,9 m hoch: voller Wert = bei 50 m rund 8 m Versatz) und malte Asphalt und Linien über den Unterboden der Autos davor. Ganz ohne ihn
@@ -5350,7 +5423,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     if (spots.length) {
       const tyres = TH.wallKind === 'armco';
       const geo = tyres ? mergeParts([0.13, 0.39, 0.65].map(y => [new THREE.CylinderGeometry(0.33, 0.33, 0.25, 10).translate(0, y, 0), col(0x141414)])) : mergeParts([[new THREE.CylinderGeometry(0.34, 0.34, 0.95, 16).translate(0, 0.475, 0), col(0xffffff)], [new THREE.CylinderGeometry(0.345, 0.345, 0.12, 16).translate(0, 0.85, 0), col(0x222222)]]);
-      geo.userData.lod = [[tyres ? mergeParts([[new THREE.CylinderGeometry(0.33, 0.33, 0.78, 6).translate(0, 0.39, 0), col(0x141414)]]) : mergeParts([[new THREE.CylinderGeometry(0.34, 0.34, 0.95, 6).translate(0, 0.475, 0), col(0xffffff)]]), 130]];
+      geo.userData.lod = [[tyres ? mergeParts([[new THREE.CylinderGeometry(0.33, 0.33, 0.78, 6).translate(0, 0.39, 0), col(0x141414)]]) : mergeParts([[new THREE.CylinderGeometry(0.34, 0.34, 0.95, 6).translate(0, 0.475, 0), col(0xffffff)]]), 70]];   /* Reifenstapel/Poller: einfache Stufe schon ab 70 m (dort ~6 Pixel hoch) statt 130 m */
       const belt = tyres ? new THREE.PlaneGeometry(0.66, 0.78).translate(0, 0.39, 0.34) : null;
       const im = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true }), spots.length);
       const ib = belt ? new THREE.InstancedMesh(belt, new THREE.MeshLambertMaterial({ side: THREE.DoubleSide }), spots.length) : null;
@@ -5484,12 +5557,16 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     const cg = new THREE.BufferGeometry(); cg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); cg.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); cg.computeVertexNormals();
     grp.add(new THREE.Mesh(cg, crowdM2));
     if (hgt > 8 && TH.tents) {   // weiße Membran-Zeltdächer mit Spitzen (Beduinenzelt-Stil), Reihe über die ganze Länge
-      const top = rh * rows, y0 = Math.max(top + 4, hgt), n = Math.max(1, Math.round(len / 12)), pz = [], tm = new THREE.MeshStandardMaterial({ color: 0xf6f7f8, roughness: .55, metalness: 0, side: THREE.DoubleSide, emissive: new THREE.Color(TH.night ? 0.25 : 0.06, TH.night ? 0.25 : 0.06, TH.night ? 0.28 : 0.07) });
+      const top = rh * rows, y0 = Math.max(top + 4, hgt), n = Math.max(1, Math.round(len / 12)), pz = [];
+      /* EIN Zeltdach- und EIN Pfosten-Material je Streckenbau (vorher je Tribüne bzw. je Pfosten ein eigenes): nur Netze mit demselben Material werden zusammengefasst –
+         in Abu Dhabi waren das 196 einzelne Pfosten = 196 Zeichenaufrufe für 4.700 Dreiecke (gemessene Ruckler bei 1.300–1.380 m) */
+      if (TENT_M.bid !== BID) { TENT_M.bid = BID; TENT_M.tm = new THREE.MeshStandardMaterial({ color: 0xf6f7f8, roughness: .55, metalness: 0, side: THREE.DoubleSide, emissive: new THREE.Color(TH.night ? 0.25 : 0.06, TH.night ? 0.25 : 0.06, TH.night ? 0.28 : 0.07) }); TENT_M.post = lam({ color: 0xe8eaec }); }
+      const tm = TENT_M.tm;
       for (let k = 0; k < n; k++) { const z = -len / 2 + (k + 0.5) * len / n, g = new THREE.ConeGeometry(1, 1, 4, 3, true).rotateY(Math.PI / 4), P = g.attributes.position;
         for (let v = 0; v < P.count; v++) { const y = P.getY(v) + 0.5, f = Math.pow(1 - y, 1.8); P.setX(v, P.getX(v) * (0.2 + 0.8 * f) / Math.SQRT1_2); P.setZ(v, P.getZ(v) * (0.2 + 0.8 * f) / Math.SQRT1_2); }
         g.scale((dep + 3) / 2, 7, len / n / 2 + 0.3).translate(dep / 2 - 0.4, y0 + 3.5, z); g.computeVertexNormals(); pz.push([g, null]); }
       const tg = new THREE.Mesh(mergeParts(pz), tm); tg.castShadow = true; grp.add(tg);
-      for (let k = 0; k <= n; k++) { const z = -len / 2 + k * len / n; for (const x of [-0.6, dep + 0.4]) { const pst = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, y0, 6), lam({ color: 0xe8eaec })); pst.position.set(x, y0 / 2, z); grp.add(pst); } } }
+      for (let k = 0; k <= n; k++) { const z = -len / 2 + k * len / n; for (const x of [-0.6, dep + 0.4]) { const pst = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, y0, 6), TENT_M.post); pst.position.set(x, y0 / 2, z); grp.add(pst); } } }
     else if (hgt > 8) { const top = rh * rows, rf = new THREE.Mesh(new THREE.BoxGeometry(dep + 2, 0.35, len + 1), roofM); rf.position.set(dep / 2 - 0.4, Math.max(top + 4, hgt), 0); rf.rotation.z = -0.06; rf.castShadow = true; grp.add(rf);
       for (const z of [-len / 2 + 1, -len / 6, len / 6, len / 2 - 1]) { const pst = new THREE.Mesh(new THREE.BoxGeometry(0.35, Math.max(top + 4, hgt), 0.35), concM); pst.position.set(x0 + rd * rows + 0.3, Math.max(top + 4, hgt) / 2, z); grp.add(pst); } }
   };
@@ -5596,7 +5673,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     const truckT = (base, stripe) => { const t = canvasTex(256, 64, (g, w, h) => { g.fillStyle = base; g.fillRect(0, 0, w, h); g.fillStyle = stripe; g.fillRect(0, h * .62, w, h * .14); g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(0, h - 5, w, 5);
         for (let k = 1; k < 8; k++) { g.fillStyle = 'rgba(0,0,0,.08)'; g.fillRect(k * w / 8, 0, 1, h * .6); } g.fillStyle = stripe; g.font = '900 italic 20px system-ui'; g.fillText('RACE LOGISTICS', 14, h * .5); }); t.userData.own = true; return lam({ map: t }); };
     const truckM = [truckT('#f2f4f6', '#e10600'), truckT('#1d232b', '#00a19c'), truckT('#c9ced4', '#1f3a8a')];
-    TRK.ref.vehicles.forEach((v2, k) => { if (v2.h < 1.5 || v2.l < 6) return; { const [vd, vj] = nearestDist(v2.c[0], v2.c[1]); if (vd < Math.max(WL[vj], WR[vj]) + Math.max(v2.l, v2.w) / 2 + 2) return; } const m = new THREE.Mesh(new THREE.BoxGeometry(v2.l, Math.min(4.2, v2.h), Math.max(2.4, Math.min(v2.w, 3))), truckM[k % 3]); m.position.set(v2.c[0], Math.min(4.2, v2.h) / 2, v2.c[1]); m.rotation.y = -v2.a; m.castShadow = true; trackGroup.add(m); excl.push([v2.c[0], v2.c[1], v2.l / 2 + 2]); });
+    TRK.ref.vehicles.forEach((v2, k) => { if (v2.h < 1.5 || v2.l < 6) return; { const [vd, vj] = nearestDist(v2.c[0], v2.c[1]); if (vd < Math.max(WL[vj], WR[vj]) + Math.max(v2.l, v2.w) / 2 + 2) return; } const m = new THREE.Mesh(new THREE.BoxGeometry(v2.l, Math.min(4.2, v2.h), Math.max(2.4, Math.min(v2.w, 3))), truckM[k % 3]); m.position.set(v2.c[0], Math.min(4.2, v2.h) / 2, v2.c[1]); m.rotation.y = -v2.a; m.castShadow = true; trackGroup.add(asMerge(m));   /* Lastwagen im Fahrerlager: je Farbe zu einem Netz zusammenfassen (vorher ein Zeichenaufruf je Wagen) */ excl.push([v2.c[0], v2.c[1], v2.l / 2 + 2]); });
   } else if (TRK.stands) {   // Tribünen exakt nach dem offiziellen Tribünenplan
     const loop = []; for (let i = 0; i < N; i += 4) loop.push([PX[i], PZ[i]]);
     const pipL = (x, z) => { let c = false; for (let i = 0, j = loop.length - 1; i < loop.length; j = i++) { const [xi, zi] = loop[i], [xj, zj] = loop[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };
@@ -6376,13 +6453,15 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       for (let k = 0; k < 28; k++) { const a = k / 28 * Math.PI * 2, sp = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, R, 4).translate(0, R / 2, 0), steel); sp.rotation.z = a; wh.add(sp);
         const cab = new THREE.Mesh(new THREE.SphereGeometry(4.2, 12, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xbfe6ff).multiplyScalar(1.3) })); cab.position.set(Math.cos(a) * (R + 4), Math.sin(a) * (R + 4), 0); wh.add(cab); }
       for (const sz of [-1, 1]) { const leg = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 2.2, R + 12, 8).translate(0, -(R + 12) / 2, 0), steel); leg.position.set(0, 0, sz * 6); leg.rotation.x = sz * 0.12; wh.add(leg); }
-      WHEEL_ROT.obj = wh; WHEEL_ROT.rim = rim; excl.push([x, z, 50]); }
+      mergeLocal(wh); WHEEL_ROT.obj = wh; WHEEL_ROT.rim = rim; excl.push([x, z, 50]); }
     // See mit Fontänen vor dem Y-Hochhaus
     { const LK = [[-833.5,376.6],[-830.4,379.7],[-829.9,383.9],[-829.0,387.4],[-827.7,390.7],[-829.3,395.4],[-831.5,397.6],[-831.5,409.6],[-831.5,416.0],[-812.7,416.1],[-811.0,420.0],[-810.5,425.1],[-811.5,429.3],[-810.1,434.5],[-811.6,439.6],[-816.4,441.2],[-829.6,440.9],[-829.7,446.4],[-821.4,447.1],[-818.2,449.6],[-819.5,455.2],[-811.5,458.2],[-804.0,465.0],[-800.3,470.5],[-794.7,489.3],[-789.9,502.1],[-783.5,514.0],[-775.8,525.7],[-766.7,537.3],[-754.0,549.3],[-744.5,557.1],[-735.8,562.6],[-727.4,566.2],[-721.0,567.3],[-714.2,567.6],[-692.5,567.7],[-690.9,564.4],[-687.2,561.3],[-682.5,560.1],[-681.6,536.9],[-684.8,535.1],[-685.5,531.8],[-683.1,528.8],[-681.0,515.0],[-684.2,513.2],[-684.9,509.9],[-682.5,507.0],[-680.2,493.6],[-683.4,491.8],[-684.1,488.5],[-681.7,485.5],[-679.3,472.0],[-683.0,470.1],[-683.7,466.8],[-681.3,463.8],[-678.4,450.7],[-681.5,448.9],[-682.3,445.5],[-679.9,442.6],[-678.0,428.8],[-681.2,427.0],[-681.9,423.7],[-679.5,420.7],[-677.6,406.6],[-680.7,406.3],[-683.0,403.0],[-682.4,393.0],[-679.2,390.1],[-676.1,376.5],[-679.2,374.7],[-680.0,371.4],[-677.6,368.4],[-675.2,354.5],[-678.4,352.7],[-679.1,349.4],[-676.7,346.4],[-674.6,333.3],[-677.8,331.5],[-678.5,328.2],[-676.1,325.2],[-673.5,312.0],[-676.7,310.2],[-677.5,306.9],[-675.1,304.0],[-672.6,290.5],[-675.7,288.7],[-676.5,285.4],[-674.1,282.5],[-672.6,257.4],[-675.9,257.3],[-678.3,254.5],[-687.7,257.4],[-697.7,261.4],[-700.6,263.0],[-703.9,264.1],[-707.0,264.4],[-709.7,265.9],[-712.8,266.3],[-716.2,269.5],[-714.3,273.4],[-714.3,276.7],[-718.4,278.6],[-719.1,282.3],[-721.3,292.2],[-724.3,292.1],[-728.2,292.8],[-734.0,293.2],[-736.1,288.3],[-740.0,289.0],[-739.7,295.7],[-744.2,297.3],[-746.4,295.1],[-749.1,298.1],[-754.2,298.0],[-758.0,300.8],[-761.5,301.9],[-764.9,302.3],[-767.8,301.2],[-771.5,304.1],[-775.5,308.0],[-779.1,308.8],[-783.7,310.0],[-786.7,307.9],[-789.9,310.8],[-792.9,310.2],[-794.9,317.2],[-800.2,317.7],[-802.7,320.7],[-808.8,320.6],[-810.7,323.2],[-814.4,327.9],[-817.6,333.1],[-822.4,336.0],[-825.1,345.4],[-822.0,345.9],[-820.5,348.7],[-822.9,350.6],[-823.0,358.0],[-820.7,360.2],[-817.5,361.1],[-817.0,364.1],[-817.5,367.1],[-820.5,369.3],[-823.1,371.9],[-829.5,370.8],[-833.5,376.6]], x = LK.reduce((a, p) => a + p[0], 0) / LK.length, z = LK.reduce((a, p) => a + p[1], 0) / LK.length;   // Bellagio-See: Umriss aus OSM (Fountains of Bellagio)
       const lake = new THREE.Mesh(new THREE.ShapeGeometry(new THREE.Shape(LK.map(([a, b]) => new THREE.Vector2(a, -b)))).rotateX(-Math.PI / 2).translate(0, 0.15, 0), new THREE.MeshStandardMaterial({ color: 0x0a2a3a, roughness: .18, metalness: .4, envMapIntensity: 1.4 })); trackGroup.add(lake);
-      const fm = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.6, 1.7, 1.9), transparent: true, opacity: .55, depthWrite: false }), jets = [];
-      for (let k = 0; k < 36; k++) { const j = new THREE.Mesh(new THREE.ConeGeometry(1.4, 1, 8, 1, true).translate(0, -0.5, 0).rotateX(Math.PI), fm); { const q = LK[Math.floor(k / 36 * LK.length)]; j.position.set(x + (q[0] - x) * 0.7, 0.2, z + (q[1] - z) * 0.7); } j.scale.set(1, 0.01, 1); trackGroup.add(j); jets.push(j); }
-      FOUNT.jets = jets; excl.push([x, z, Math.max(...LK.map(p => Math.hypot(p[0] - x, p[1] - z)))]); }
+      const fm = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.6, 1.7, 1.9), transparent: true, opacity: .55, depthWrite: false });
+      /* 36 Fontänen als EINE Instanz-Gruppe (vorher 36 Netze = 36 Zeichenaufrufe); vegasTick setzt die Höhe je Fontäne über die Instanz-Matrix */
+      const jets = new THREE.InstancedMesh(new THREE.ConeGeometry(1.4, 1, 8, 1, true).translate(0, -0.5, 0).rotateX(Math.PI), fm, 36), jm = new THREE.Matrix4(); jets.userData.noChunk = true; jets.frustumCulled = false;
+      for (let k = 0; k < 36; k++) { const q = LK[Math.floor(k / 36 * LK.length)]; jm.makeScale(1, 0.01, 1).setPosition(x + (q[0] - x) * 0.7, 0.2, z + (q[1] - z) * 0.7); jets.setMatrixAt(k, jm); } trackGroup.add(jets);
+      FOUNT.jets = jets; FOUNT.base = null; excl.push([x, z, Math.max(...LK.map(p => Math.hypot(p[0] - x, p[1] - z)))]); }
     // flache Casino-Sockelbauten direkt am Strip (warm angestrahlt), dahinter die Türme
     { const podM = [warm('#8a6a44', '#ffd89a', .35, 11), warm('#7a6a58', '#ffe2b0', .3, 12), warm('#5a4a3a', '#ffcf80', .4, 13), warm('#8a7a68', '#fff0c8', .3, 14)];
       for (let k = 0, n = 0; k < N; k += Math.round(58 / DS)) for (const sd of [-1, 1]) {
@@ -6490,7 +6569,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       for (let k = 0; k < 28; k++) { const a = k / 28 * Math.PI * 2, sp = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, R - 5, 4).translate(0, (R - 5) / 2, 0), steel); sp.rotation.z = a; wh.add(sp);
         const cab = new THREE.Mesh(new THREE.CapsuleGeometry(2.4, 6, 4, 10).rotateZ(Math.PI / 2), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xdff2ff).multiplyScalar(1.25) })); cab.position.set(Math.cos(a) * (R + 3.5), Math.sin(a) * (R + 3.5), 0); wh.add(cab); }
       const hub = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, 12, 16).rotateX(Math.PI / 2), steel); wh.add(hub);
-      FLYER.obj = wh;
+      mergeLocal(wh); FLYER.obj = wh;
       const base = grp(x, z, TRK.flyerRot); for (const s of [-1, 1]) { const leg = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 2.6, R + 18, 8).translate(0, (R + 18) / 2, 0), steel); leg.position.set(s * 24, 0, 0); leg.rotation.z = s * 0.3; base.add(leg); }
       const term = new THREE.Mesh(new THREE.BoxGeometry(120, 14, 34).translate(0, 7, 0), stone('#d6d8dc', 53)); base.add(term);
       const roof = new THREE.Mesh(new THREE.BoxGeometry(124, 1.2, 38).translate(0, 14.6, 0), lam({ color: 0x3a4048 })); base.add(roof);
@@ -7089,14 +7168,14 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       for (const g of [cardB, cardC]) if (g) g.userData.lod = [[null, 130]];   /* Flächen verschwinden genau dann, wenn der Kern auf die einfache Stufe wechselt */
       ball.userData.lod = [[ballLo, 130], [ballFar, 300]]; cone.userData.lod = [[coneLo, 130], [coneFar, 260]]; ballLo.userData.lod = [[ballFar, 300]]; coneLo.userData.lod = [[coneFar, 130]]; trunk.userData.lod = [[trunkFar, 90], [null, 450]];   /* Stufen wechseln früher: ab 130 m ist der Unterschied nicht mehr zu sehen */
       if (TRK.nos) { for (const g of [ball, cone]) g.userData.lod.push([null, 1000]); for (const g of [ballLo, coneLo]) g.userData.lod.push([null, 1000]); trunk.userData.lod = [[trunkFar, 120], [null, 450]]; }   // Nordschleife: Waldkante übernimmt die Ferne
-      const SD0 = 200, SD1 = 260;   // ab hier Bildtafeln statt 3D-Bäumen (Überblendung SD0..SD1 per Punktraster, siehe treeSprites)
+      const SD0 = window.__treeD ? window.__treeD[0] : 120, SD1 = window.__treeD ? window.__treeD[1] : 170;   /* vorher 200/260 m: ab 120 m ist ein Baum nur noch ~50 Pixel hoch, die Tafel (288 Pixel breit, 8 Ansichten) ist dort nicht vom 3D-Baum zu unterscheiden – spart rund die Hälfte der Baum-Dreiecke */   // ab hier Bildtafeln statt 3D-Bäumen (Überblendung SD0..SD1 per Punktraster, siehe treeSprites)
       const SPR = !window.__noTreeSpr;   // Testschalter: alte Darstellung (3D bis zum Horizont)
       // Mit Bildtafeln: jeder Baum behält seine Form (nahe mit Laubflächen, ferne als einfache Krone) bis zur Tafel – nur EIN Übergang, kein Zwischenschritt
       // (vorher: Laubflächen lösten sich bei 92–128 m auf – Himmel schien als helle Punkte durch – und danach wechselte die Krone zweimal die Form)
-      if (SPR) { for (const g of [cardB, cardC, ball, cone, ballLo, coneLo]) if (g) g.userData.lod = [[null, SD1]]; trunk.userData.lod = [[trunkFar, 150], [null, SD1]]; }
+      if (SPR) { for (const g of [cardB, cardC, ball, cone, ballLo, coneLo]) if (g) g.userData.lod = [[null, SD1]]; trunk.userData.lod = [[trunkFar, 90], [null, SD1]]; }
       const ic = new THREE.InstancedMesh(cone, needleMat, place.length), ib = new THREE.InstancedMesh(ball, leafMat, place.length), it = new THREE.InstancedMesh(trunk, lam({ map: TEX.bark, normalMap: TEX.barkN, normalScale: new THREE.Vector2(1.3, 1.3), color: 0xffffff, roughness: .95 }), place.length);
       const icL = new THREE.InstancedMesh(coneLo, needleMat, place.length), ibL = new THREE.InstancedMesh(ballLo, leafMat, place.length);
-      if (SPR) for (const mt of new Set([needleMat, leafMat, it.material])) distFade(mt, SD0, SD1);   /* 3D-Bäume lösen sich zwischen 200 und 260 m auf, die Bildtafeln füllen genau diese Punkte */
+      if (SPR) for (const mt of new Set([needleMat, leafMat, it.material])) distFade(mt, SD0, SD1);   /* 3D-Bäume lösen sich zwischen SD0 und SD1 auf, die Bildtafeln füllen genau diese Punkte */
       const cardM = (t) => distFade(lam({ map: t, alphaTest: 0.42, alphaToCoverage: true, side: THREE.DoubleSide, roughness: .85, color: 0xffffff }), SPR ? SD0 : 92, SPR ? SD1 : 128);   /* Kantenglättung der Laubränder (wie beim Rasen): kein Himmel-Glitzern in einzelnen Pixeln */   /* Laubflächen: mit Tafeln erst beim Übergang zur Tafel */
       const icS = cardC ? new THREE.InstancedMesh(cardC, cardM(FOL.cardC), place.length) : null, ibS = cardB ? new THREE.InstancedMesh(cardB, cardM(FOL.card), place.length) : null;
       const SPL = { nc: [], nl: [], fc: [], fl: [] }, bark = it.material;   // Tafeln je Modell: nah (mit Laubflächen) / fern (einfache Krone), je Nadel-/Laubbaum
@@ -7165,7 +7244,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   buildEvict(trackGroup); for (const e of EVICT) e.m.userData.evRef = e;
   // feste Objekte (Bäume, Felsen, Absperrungen, Gebäude …): Positionen nur einmal beim Laden berechnen, nicht mehr in jedem Bild
   trackGroup.updateMatrixWorld(true); trackGroup.traverse(o => { o.matrixAutoUpdate = false; o.matrixWorldAutoUpdate = true; });
-  for (const o of [FLYER.obj, WHEEL_ROT.obj, ...(SGT.list || []).map(x => x[0]), ...(FOUNT.jets || [])]) if (o && o.parent) o.matrixAutoUpdate = true;   // bewegte Teile (Riesenrad, Lichtkegel, Fontänen)
+  for (const o of [FLYER.obj, WHEEL_ROT.obj, ...(SGT.list || []).map(x => x[0])]) if (o && o.parent) o.matrixAutoUpdate = true;   // bewegte Teile (Riesenrad, Lichtkegel, Fontänen)
 }
 /* ======================= Gebackene Schatten + Umgebungsverdeckung =======================
    Beim Laden der Strecke einmal berechnet: die Sonne (bzw. das Flutlicht) wirft von allen statischen Objekten Schatten auf Strecke und Gelände,
@@ -7419,7 +7498,7 @@ function visorDirtTick(dt) {
 const HH = { t: 0, on: null, obst: [], ot: 0, key: '', e: null, cam: null }, TVFOV = 78;
 function drawHaloHud() {
   const on = !!(running && S.cam === 3 && pl && pl.mesh && pl.mesh.tp); if (on !== HH.on) { HH.on = on; document.body.classList.toggle('tvcam', on); HH.t = 0; } if (!on) return;
-  { const tn = performance.now(); if (tn - HH.t < 30) return; HH.t = tn;   /* höchstens ~30× pro Sekunde: die Grafik ist bildschirmgroß, jedes Neuzeichnen lädt sie neu auf die Grafikkarte */
+  { const tn = performance.now(); if (tn - HH.t < 30) return; HH.t = tn; EVT.halo++;   /* höchstens ~30× pro Sekunde: die Grafik ist bildschirmgroß, jedes Neuzeichnen lädt sie neu auf die Grafikkarte */
     if (tn - HH.ot > 1000) { HH.ot = tn; HH.obst = [...document.querySelectorAll('#controls .pad, #controls .boostBtn, #tr .hb, #map')].map(e => e.getBoundingClientRect()).filter(r => r.width > 0); } }
   const dpr = Math.min(1.5, devicePixelRatio || 1), W = innerWidth, H = innerHeight; if (HHC.width !== Math.round(W * dpr) || HHC.height !== Math.round(H * dpr)) { HHC.width = Math.round(W * dpr); HHC.height = Math.round(H * dpr); }
   // Lage der Grafik: EINMAL je Bildgröße und Modell aus einer festen Hilfskamera berechnet (Sitz der TV-Kamera im Auto, festes Sichtfeld) – nicht mehr in jedem Bild aus der bewegten Spielkamera.
@@ -7897,7 +7976,7 @@ function placeOnGrid() {
 const WARM = { rt: null };
 // Vorwärmen: Geometrie-Puffer und Texturen ALLER Objekte (auch der Detailstufen) werden einmal pro Streckenbau auf die Grafikkarte geladen – in einem winzigen Bild (8×8).
 // Sonst lädt der Treiber jedes Teil erst, wenn es zum ersten Mal in Sicht kommt: auf langen Strecken (Spa) ruckelt es dann während der Fahrt.
-let BID = 0, WARM_ID = -1;
+let BID = 0, WARM_ID = -1; const TENT_M = { bid: -1, tm: null, post: null };
 function warmUpTrack() {
   if (WARM_ID === BID || window.__noWarm) return; WARM_ID = BID; const t0 = performance.now();
   try { const rt = new THREE.WebGLRenderTarget(8, 8), prev = renderer.getRenderTarget(), objs = []; scene.traverse(o => { if (o.isMesh || o.isPoints || o.isLine) objs.push([o, o.visible, o.frustumCulled, o.geometry]); });
@@ -7911,23 +7990,29 @@ function warmUpTrack() {
   } catch (e) { console.warn('warmUp', e); }
   window.__warmMs = Math.round(performance.now() - t0);
 }
-function precompile() { const hid = []; for (const c of cars) { const m = c.mesh; if (!m) continue; for (const o of [m.far, ...(m.gh ? Object.values(m.gh) : [])]) if (o && !o.visible) { o.visible = true; hid.push(o); } }   /* Fernmodell und Überblend-Geister sind anfangs unsichtbar: Shader trotzdem jetzt übersetzen */
+function precompile() { const hid = [];
+  const wk = WAKE.m, wkP = wk.parent, wkV = wk.visible; if (!wkP) scene.add(wk); wk.visible = true;   /* Windschatten-Kegel: hing bisher an keinem Auto und war unsichtbar -> seine Shader, Textur und Geometrie entstanden erst beim ersten Windschatten (Ruckler kurz nach dem Start) */ for (const c of cars) { const m = c.mesh; if (!m || !m.g) continue; m.g.traverse(o => { if ((o.isMesh || o.isGroup) && !o.visible && !o.isSprite) { o.visible = true; hid.push(o); } }); }   /* ALLE Teile jedes Autos (Fernmodell, Überblend-Geister, Nahteile wie Helm und Räder ferner Autos) sind teils unsichtbar: Shader trotzdem jetzt übersetzen und – im winzigen Vorwärm-Bild unten – ihre Texturen hochladen. Sonst kamen sie erst, wenn ein Gegner zum ersten Mal ganz nah war (erste Kurve) */
   try { const prev = renderer.getRenderTarget(); if (composer) renderer.setRenderTarget(composer.renderTarget1); renderer.compile(scene, camera); renderer.setRenderTarget(prev); } catch (e) { console.warn('precompile', e); } finally { for (const o of hid) o.visible = false; }
-  // Materialien, die erst beim Kamerawechsel auftauchen (Cockpit: aufgeschnittene Karosserie + Wanne, TV-Kamera: einfarbiges Halo), jetzt mit übersetzen – sonst Hänger beim ersten Umschalten
-  try { const m = pl && pl.mesh; if (m) { const tp = m.tp || {}, k = tp.M === MODELS.f2 ? 'f2' : 'f1'; if (m.tp) { cockBuild(m); }
-      const sc = new THREE.Scene(), add = (g, mt) => { const o = new THREE.Mesh(g, mt); o.frustumCulled = false; sc.add(o); }; if (m.tp) { add(m.body.geometry, tp.cutGloss); add(m.matte.geometry, tp.cutMatte); if (tp.haloFlat) add(tp.haloFlat, tp.haloMat); m.tub.traverse(o => { if (o.isMesh) add(o.geometry, o.material); }); }
-      ARMS.f1 ||= makeArms(true, 0.033); ARMS.road ||= makeArms(false, 0.023, true); cockLast(SW.g, true); cockLast(ARMS.f1.g, true); if (m.tp && tp.halo) { tp.haloGhost ||= haloGhostMat(tp.haloMat); add(tp.halo, tp.haloGhost); add(tp.halo, HALO_PRE); }
-      for (const G of [SW.g, ARMS.f1.g, ARMS.road.g]) G.traverse(o => { if (o.isMesh) add(o.geometry, o.material); }); sc.add(...scene.children.filter(o => o.isLight).map(l => l.clone())); sc.fog = scene.fog; sc.environment = scene.environment;
-      if (!WARM.rt2) WARM.rt2 = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType }); const prev = renderer.getRenderTarget(); renderer.setRenderTarget(WARM.rt2); renderer.compile(sc, camera); renderer.render(sc, camera); renderer.setRenderTarget(prev); } } catch (e) { console.warn('precompile2', e); }
+  // (Der frühere Zusatzschritt, der Cockpit- und TV-Kamera-Materialien in einer eigenen Hilfsszene übersetzte, ist entfallen: seine 9 Shader wurden im Rennen nie
+  //  benutzt – gemessen. Die echten Varianten erzeugt warmCams(), das jede Kamera auf dem Weg des Rennens einmal zeichnet.)
   // Alles einmal winzig (4×4 Pixel) zeichnen – ohne Sichtfeld-Prüfung und mit jeder Detailstufe: lädt jede Geometrie, Instanzliste und Textur JETZT auf die Grafikkarte,
   // statt beim ersten Auftauchen mitten im Rennen (das waren die kurzen Lade-Ruckler kurz nach dem Start, v. a. in den großen Stadtkursen Vegas und Singapur)
   try { if (!WARM.rt) WARM.rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType });
     const prev = renderer.getRenderTarget(), fc = [], vis = [], geo = LODS.map(m => m.geometry); scene.traverse(o => { if (o.frustumCulled) { fc.push(o); o.frustumCulled = false; } });
     for (const m of LODS) if (!m.visible && !(m.userData.evRef && m.userData.evRef.ev)) { vis.push(m); m.visible = true; }
-    renderer.setRenderTarget(WARM.rt); renderer.render(scene, camera);
+    const hid2 = []; for (const c of cars) if (c.mesh && c.mesh.g) c.mesh.g.traverse(o => { if ((o.isMesh || o.isGroup) && !o.visible) { o.visible = true; hid2.push(o); } });   /* unsichtbare Autoteile (Nahteile ferner Autos, Fernmodelle naher): Texturen jetzt hochladen */
+    renderer.setRenderTarget(WARM.rt); renderer.render(scene, camera); for (const o of hid2) o.visible = false;
     const steps = Math.max(0, ...LODS.map(m => m.userData.lodSteps.length));
     for (let k = 0; k < steps; k++) { let any = false; for (const m of LODS) { const st = m.userData.lodSteps[k]; if (st && st[0] && m.geometry !== st[0]) { m.geometry = st[0]; any = true; } } if (any) renderer.render(scene, camera); }
-    LODS.forEach((m, i) => m.geometry = geo[i]); vis.forEach(m => m.visible = false); fc.forEach(o => o.frustumCulled = true); renderer.setRenderTarget(prev); } catch (e) { console.warn('warm', e); } }
+    LODS.forEach((m, i) => m.geometry = geo[i]); vis.forEach(m => m.visible = false); fc.forEach(o => o.frustumCulled = true); renderer.setRenderTarget(prev); } catch (e) { console.warn('warm', e); }
+  wk.visible = wkV; if (!wkP) scene.remove(wk);
+  // Lichtstrahlen und Sonnen-Sichtbarkeit: die beiden Shader liefen erst, wenn die Sonne zum ersten Mal ins Bild kam (Spa: bei ~1.080 m, gemessen 67 ms Hänger).
+  // Jetzt einmal in ihre eigenen Ziele zeichnen (übersetzt die Shader, legt die Texturen an), danach die Ziele leeren.
+  try { if (composer && raysPass) { const u = raysPass.mat.uniforms, v = raysPass.vmat.uniforms, prev = renderer.getRenderTarget(), ac = renderer.autoClear, cc0 = renderer.getClearColor(new THREE.Color()), ca0 = renderer.getClearAlpha();
+      u.tDiffuse.value = v.tDiffuse.value = composer.readBuffer.texture; renderer.autoClear = false; renderer.setClearColor(0x000000, 0);
+      renderer.setRenderTarget(raysPass.vis); raysPass.vq.render(renderer); renderer.clear(); renderer.setRenderTarget(raysPass.rt); raysPass.q.render(renderer); renderer.clear();
+      if (finishPass) { finishPass.uniforms.tSunVis.value = raysPass.vis.texture; finishPass.uniforms.tRays.value = raysPass.rt.texture; }
+      renderer.setClearColor(cc0, ca0); renderer.autoClear = ac; renderer.setRenderTarget(prev); } } catch (e) { console.warn('warmRays', e); } }
 const PM = { top: 1, grip: 1, brk: 1, acc: 1 };   // Fahrzeug-Upgrades des Spielers (Karriere)
 function seriesProfiles() {
   const dd = DIFF[S.diff] || DIFF.mid, df = typeof diff !== 'undefined' && diff ? diff : dd;
@@ -7954,7 +8039,7 @@ function startRace() {
   document.body.classList.toggle('noBoost', !!SERIES[SER].noBoost);
   diff = DIFF[S.diff] || DIFF.mid;
   seriesProfiles();
-  placeOnGrid(); precompile(); warmUpTrack(); visorNew(); document.body.classList.add('warmhelm'); setTimeout(() => document.body.classList.remove('warmhelm'), 1800);   /* Helmrand einmal unsichtbar zeichnen lassen */
+  placeOnGrid(); warmRace(); visorNew(); document.body.classList.add('warmhelm'); setTimeout(() => document.body.classList.remove('warmhelm'), 1800);   /* Helmrand einmal unsichtbar zeichnen lassen */
   DYN.acc = DYN.n = DYN.bad = DYN.calm = 0; DYN.tChg = performance.now() + 5000;   /* Auflösung in den ersten 15 s nicht umschalten: jede Umschaltung legt alle Render-Ziele neu an (Hänger genau am Start) */
   raceSongPick(false);
   $('#hud').style.visibility = ''; running = true; hadRace = true; paused = false; resultsShown = false; raceState = 'lights'; lightsT = 0; lightsOut = 5 + Math.random() * 1.4;
@@ -7968,6 +8053,35 @@ function startRace() {
   document.body.classList.add('racing'); applyLine();
   layoutControls();
 }
+// Alle Kameras einmal vorwärmen. Jede Kamera schaltet eigene Teile und Materialien ein (Verfolger: Halo in Lackfarbe und mittlere Detailstufe des eigenen
+// Autos; Helmkamera: aufgeschnittenes Cockpit, Geister-Halo, Lenkrad, Arme; TV-Kamera: einfarbiges Halo). Vorgewärmt war bisher nur die Kamera, mit der das
+// Rennen startet – beim ersten Umschalten mitten im Rennen übersetzte der Browser dann 4–5 Shader (Hänger). Jetzt stellt das Spiel beim Rennstart jede Kamera
+// kurz ein und zeichnet sie einmal auf genau dem Weg, den auch das Rennen nimmt (dabei sind alle Autoteile sichtbar, damit auch die Varianten ferner Autos
+// dabei sind). Zu sehen ist davon nichts: alles läuft in einem Zug, angezeigt wird erst das letzte, normale Bild.
+// Vorwärmen für das Rennen (Shader übersetzen, Geometrien/Texturen hochladen, alle Kameras einmal zeichnen) – dauert auf dem Handy einige Sekunden.
+// Läuft deshalb schon im Ladebildschirm der Strecke (nach buildTrack + placeOnGrid), nicht mehr erst beim Druck auf „Rennen starten“ (dort stand das Bild).
+// Der Schlüssel merkt sich, wofür vorgewärmt wurde (Strecke, Grafik, Klasse, eigenes Auto, Starterfeld); passt er beim Rennstart noch, entfällt die Arbeit.
+let WARM_KEY = '';
+const warmKey = () => BID + '|' + S.gfx + '|' + SER + '|' + (pl ? pl.code : '') + '|' + cars.map(c => c.code).sort().join(',');
+function warmRace() {
+  const key = warmKey(); if (key === WARM_KEY || window.__noWarm || !TRK || !cars.length) return false;
+  precompile(); warmUpTrack();
+  const r0 = running, p0 = paused, h0 = camH; running = true; paused = false; camH = pl.h;   /* die Kamera-Funktionen schalten ihre Teile nur im Rennen um */
+  try { warmCams(); } finally { running = r0; paused = p0; camH = h0; }
+  WARM_KEY = key; return true;
+}
+function warmCams() {
+  if (window.__noWarm || !pl || !pl.mesh || !TRK) return; const c0 = S.cam, t0 = performance.now(); const log = window.__warmLog = [[-1, renderer.info.programs.length, 0]];
+  const set = c => { S.cam = c; updateMeshes(0); updateCamera(0); drawWheel(0); }, draw = () => { if (composer) { syncAoCam(); composer.render(0); } else renderPlain(); };
+  /* zwei Durchläufe: nach einem Besuch in Helm-/TV-Kamera haben die Teile der Verfolgerkamera andere Materialzustände als beim ersten Mal (gemessen: 12 weitere Shader); ein dritter Durchlauf fand nichts Neues mehr */
+  try { const order = [0, 1, 2].concat(pl.mesh.tv ? [3] : []).filter(c => c !== c0).concat([c0]); for (const c of order.concat(order)) { set(c);
+      const hid = [], fc = []; for (const k of cars) if (k.mesh && k.mesh.g) k.mesh.g.traverse(o => { if ((o.isMesh || o.isGroup) && !o.visible) { o.visible = true; hid.push(o); } if (o.isMesh && o.frustumCulled) { o.frustumCulled = false; fc.push(o); } });   /* auch Autos hinter der Kamera mitzeichnen: jedes Team hat eigene Lack-Shader */
+      try { draw(); log.push([c, renderer.info.programs.length, hid.length]); } finally { for (const o of hid) o.visible = false; for (const o of fc) o.frustumCulled = true; } } }
+  catch (e) { console.warn('warmCams', e); }
+  finally { try { set(c0); draw(); } catch (e) { S.cam = c0; } }
+  window.__warmCamMs = Math.round(performance.now() - t0);
+}
+window.__warmCams = () => warmCams();
 const PADS = ['bL', 'bR', 'bBrakeL', 'bBrake', 'bGas', 'bBoost'];
 function applyLayout() {
   const L = S.layout || {};
@@ -8300,7 +8414,11 @@ function updateMeshes(dt) {
     m.wfl.rotation.x = m.wfr.rotation.x = m.rr.rotation.x = c.spin;
     if (m.sw) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z; m.sw.visible = c === pl || dx * dx + dz * dz < 625; }   /* Kart: Lenkrad (viele kleine Teile) nur aus der Nähe zeichnen */
     if (m.tp) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z, d2 = dx * dx + dz * dz; const LD = window.__carLod || CAR_LOD, cur = m.lf ? m.lf.to : m.lod, b0 = LD[0] + (cur >= 1 ? -LOD_HYS : LOD_HYS), b1 = LD[1] + (cur >= 2 ? -LOD_HYS : LOD_HYS);
-      if (c === pl) { if (m.lod !== 0 || m.lf) setLod(m, 0, true); } else lodStep(m, d2 < b0 * b0 ? 0 : d2 < b1 * b1 ? 1 : 2, dt);   /* volle Modellstufe (50.000 Dreiecke) nur für den Spieler und Autos unter 13 m */   /* Detailstufen früher: weniger Dreiecke bei vollem Starterfeld */ }
+      if (c === pl) { const w = window.__plLod ?? (!running || S.cam === 2 || S.cam === 3 ? 0 : 1);   /* eigenes Auto: volle Stufe (~112.000 Dreiecke) nur im Cockpit/TV-Kamera und im Stand; in den Verfolgerkameras die mittlere (~37.000) – im Bild nicht zu unterscheiden */
+        if (m.lod !== w || m.lf) setLod(m, w, true); if (m.g.visible === !!window.__hideOwn) m.g.visible = !window.__hideOwn; }
+      else { const hd = window.__carHide || CAR_HIDE, vis = d2 < (m.g.visible ? hd + 25 : hd) ** 2; if (m.g.visible !== vis) { m.g.visible = vis; EVT.car++; }
+        if (vis) { lodStep(m, d2 < b0 * b0 ? 0 : d2 < b1 * b1 ? 1 : 2, dt);
+          if (m.far && m.tp.far3) { const f3 = window.__noFar3 ? m.tp.far : d2 > (m.far.geometry === m.tp.far3 ? CAR_FAR3 - 5 : CAR_FAR3 + 5) ** 2 ? m.tp.far3 : m.tp.far; if (m.far.geometry !== f3) { m.far.geometry = f3; EVT.car++; } } } }  /* volle Modellstufe (50.000 Dreiecke) nur für den Spieler und Autos unter 13 m */   /* Detailstufen früher: weniger Dreiecke bei vollem Starterfeld */ }
   }
 }
 
@@ -8578,7 +8696,7 @@ function drawWheel(dt) {
   box(256, 226, 128, 66); lab('LAP', 264, 244); g.font = `700 26px ${F}`; g.fillStyle = '#fff'; g.textAlign = 'right'; g.fillText(clamp((pl.lapsDone ?? 0) + 1, 1, S.laps) + '/' + S.laps, 376, 282);
   box(396, 226, 218, 66); lab('BATTERY', 404, 244); g.fillStyle = '#1a2028'; g.fillRect(404, 256, 202, 26); g.fillStyle = pl.boosting ? '#ffd400' : '#19c8ff'; g.fillRect(404, 256, 202 * (pl.bat || 0), 26);
   for (let k = 1; k < 10; k++) { g.fillStyle = '#07090d'; g.fillRect(404 + k * 20.2, 256, 2, 26); }
-  SW.tex.needsUpdate = true;
+  SW.tex.needsUpdate = true; EVT.sw++;
 }
 
 /* ======================= Kamera ======================= */
@@ -8673,12 +8791,12 @@ function updateHUD(dt) {
     HUDD.h = pl.h; HUDD.v = pl.v; }
   if (msgT > 0) { msgT -= dt; if (msgT <= 0) $('#msg').classList.remove('show'); }
   if (!running) return;
-  gaugeT -= dt; if (gaugeT <= 0) { gaugeT = 1 / 30; drawGauge(); }
-  { const bp = Math.round((pl.bat || 0) * 100), bo = !!pl.boosting; if (bp !== hudBat || bo !== hudBoost) { hudBat = bp; hudBoost = bo; $('#batFill').style.height = bp + '%'; $('#batTxt').textContent = bp + '%'; HUDMARK = 1; $('#bat').classList.toggle('on', bo); $('#bBoost').classList.toggle('on', bo); } }
+  gaugeT -= dt; if (gaugeT <= 0) { gaugeT = 1 / 30; drawGauge(); EVT.gauge++; }
+  { const bp = Math.round((pl.bat || 0) * 100), bo = !!pl.boosting; if (bp !== hudBat || bo !== hudBoost) { hudBat = bp; hudBoost = bo; $('#batFill').style.height = bp + '%'; $('#batTxt').textContent = bp + '%'; $('#bat').classList.toggle('on', bo); $('#bBoost').classList.toggle('on', bo); } }
   if (pl.wrongT > 1 && msgT <= 0) showMsg('FALSCHE RICHTUNG', 0.5);
   hudT -= dt; if (hudT > 0) return; hudT = 0.12;
   const pos = order.indexOf(pl) + 1;
-  const setH = (id, v) => { if (HUDC[id] !== v) { HUDC[id] = v; $(id).innerHTML = v; HUDMARK = 1; } }, setT = (id, v) => { if (HUDC[id] !== v) { HUDC[id] = v; $(id).textContent = v; HUDMARK = 1; } };   // nur ändern, was sich ändert (spart Layout-Arbeit)
+  const setH = (id, v) => { if (HUDC[id] !== v) { HUDC[id] = v; $(id).innerHTML = v; EVT.hud++; } }, setT = (id, v) => { if (HUDC[id] !== v) { HUDC[id] = v; $(id).textContent = v; EVT.hud++; } };   // nur ändern, was sich ändert (spart Layout-Arbeit)
   setH('#pos', 'P' + pos + '<span>/' + cars.length + '</span>');
   setT('#lap', 'Runde ' + clamp(pl.lapsDone + 1, 1, S.laps) + '/' + S.laps);
   const cur = raceState === 'race' && pl.lapsDone >= 0 && !pl.finished ? raceTime - pl.lapStart : 0;
@@ -8696,7 +8814,7 @@ function updateHUD(dt) {
         else if (raceState === 'race') { const dd = kd(a) - kd(c); gp = dd >= L ? '+' + Math.floor(dd / L) + ' RD' : '+' + (Math.max(0, dd) / Math.max(c.v || 0, 25)).toFixed(1); }
         return '<div class="tw' + (c === pl ? ' me' : '') + (n > 0 && i - show[n - 1] > 1 ? ' cut' : '') + '"><span class="p">' + (i + 1) + '</span><i style="background:' + hex(uiCol(TEAMS[c.team])) + '"></i><span>' + c.code + '</span><span class="g">' + gp + '</span></div>'; }).join(''); }
     setH('#tower', th); }
-  drawMap(); HUDMARK = 1;
+  drawMap(); EVT.map++;
 }
 function showResults() {
   if (QL) { qualiResults(); return; }
@@ -8892,7 +9010,7 @@ function setupCareerRace(laps) {
   S.grid = QL ? 1 : (CHP.qpos || fieldSize()); applyPM();
   ['#results', '#pause'].forEach(x => $(x).classList.add('hidden'));
   const go = () => { placeOnGrid(); $('#go').click(); };
-  if (TRK !== TRACKS[S.track]) { loading(true); setTimeout(() => { buildTrack(S.track); loading(false); go(); }, 30); } else go();
+  if (TRK !== TRACKS[S.track]) { loading(true); setTimeout(() => { try { buildTrack(S.track); placeOnGrid(); warmRace(); } finally { loading(false); } go(); }, 30); } else go();
 }
 function careerStartQuali() { if (!CHP || CHP.round >= CAL.length) return; QL = true; CHP.phase = 'quali'; setupCareerRace(1); }
 const LEN_LAPS = { s: 3, m: 5, l: 8 }, LEN_NAME = { s: 'Kurz', m: 'Mittel', l: 'Lang' };   // Rennlänge in der Karriere: wählbar auf dem Saison-Bildschirm
@@ -9063,7 +9181,7 @@ function menuNext() {
   if (k === 'series') { setSeries(SER, true); MENU.team = (byCode(S.driver) || ALL[0]).team; return showScreen('team'); }
   if (k === 'track') {
     const go = () => showScreen('race');
-    if (TRK !== TRACKS[S.track]) { loading(true); setTimeout(() => { buildTrack(S.track); placeOnGrid(); loading(false); go(); }, 30); } else go();
+    if (TRK !== TRACKS[S.track]) { loading(true); setTimeout(() => { try { buildTrack(S.track); placeOnGrid(); warmRace(); } finally { loading(false); } go(); }, 30); } else go();   /* Strecke bauen UND fürs Rennen vorwärmen in einer Ladezeit */
     return;
   }
   if (k === 'team') { if (!teamOpen(MENU.team)) return; const d = byCode(S.driver); if (!d || d.team !== MENU.team) { S.driver = ALL.find(c => c.team === MENU.team).code; save(); placeOnGrid(); } return showScreen('driver'); }
@@ -9422,7 +9540,7 @@ $$('[data-step]').forEach(b => b.addEventListener('click', () => {
 }));
 $$('.seg button').forEach(b => b.addEventListener('click', () => { const k = b.parentElement.dataset.key; S[k] = b.dataset.v; save();
   if (k === 'line') applyLine();
-  if (k === 'ctrl' && running) { effCtrl = isTouch ? S.ctrl : 'touch'; if (effCtrl === 'tilt') { enableMotion(); tiltZero = tiltAngle; } layoutControls(); } if (k === 'gfx') { const was = running; REBUILD = true; loading(true); setTimeout(() => { try { applyGfx(); buildTrack(S.track); if (!was) placeOnGrid(); } finally { loading(false); REBUILD = false; last = performance.now(); pauseDrawn = 0; } }, 30); } renderMenu(); }));   /* im Rennen: Strecke neu aufbauen, Autos und Rennstand bleiben (nur die Bildschleife steht kurz) */
+  if (k === 'ctrl' && running) { effCtrl = isTouch ? S.ctrl : 'touch'; if (effCtrl === 'tilt') { enableMotion(); tiltZero = tiltAngle; } layoutControls(); } if (k === 'gfx') { const was = running; REBUILD = true; loading(true); setTimeout(() => { try { applyGfx(); if (TRK) { buildTrack(S.track); if (!was) placeOnGrid(); } } finally { loading(false); REBUILD = false; last = performance.now(); pauseDrawn = 0; } }, 30); } renderMenu(); }));   /* im Rennen: Strecke neu aufbauen, Autos und Rennstand bleiben (nur die Bildschleife steht kurz) */
 $$('.sw').forEach(b => b.addEventListener('click', () => { S[b.dataset.tog] = !S[b.dataset.tog]; save(); if (b.dataset.tog === 'nos') renderTracks(); renderMenu(); }));
 // Vollbild + Querformat schon beim ersten Antippen im Menü – nicht erst beim Rennstart (die Größenänderung legte alle Render-Ziele neu an: Hänger beim Start)
 addEventListener('pointerup', function fsOnce() { if (!isTouch || standalone || document.fullscreenElement) { removeEventListener('pointerup', fsOnce, true); return; } try { const el = document.documentElement; if (el.requestFullscreen) el.requestFullscreen({ navigationUI: 'hide' }).then(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {}); } catch (e) {} removeEventListener('pointerup', fsOnce, true); }, true);
@@ -9433,7 +9551,9 @@ $('#go').addEventListener('click', () => {
     if (S.ctrl === 'tilt') enableMotion();
   }
   initAudio();
-  if (ROAD_WAIT) { const w = ROAD_WAIT; ROAD_WAIT = null; Promise.race([w, new Promise(r => setTimeout(r, 2000))]).then(() => startRace()); } else startRace();   /* Asphalt-Foto erst fertig laden: sonst wird das Fahrbahn-Material mitten im Start neu übersetzt */
+  /* Ist noch nicht (oder für ein anderes Starterfeld/Auto) vorgewärmt, läuft das Vorwärmen jetzt – dann aber hinter dem Ladebildschirm statt mit stehendem Bild */
+  const launch = () => { placeOnGrid(); if (warmKey() !== WARM_KEY && !window.__noWarm) { loading(true); setTimeout(() => { try { startRace(); } finally { loading(false); } }, 40); } else startRace(); };
+  if (ROAD_WAIT) { const w = ROAD_WAIT; ROAD_WAIT = null; Promise.race([w, new Promise(r => setTimeout(r, 2000))]).then(launch); } else launch();   /* Asphalt-Foto erst fertig laden: sonst wird das Fahrbahn-Material mitten im Start neu übersetzt */
 });
 function loading(on) { if (on) { const t = typeof TRACKS !== 'undefined' && TRACKS[S.track]; $('#ldTrk').textContent = t ? t.name + (t.land ? ' · ' + t.land : '') : ''; } $('#loading').classList.toggle('hidden', !on); }
 
@@ -9445,7 +9565,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.74'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.87'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -9469,11 +9589,13 @@ let last = performance.now();
 const _sv = new THREE.Vector3(), _cd = new THREE.Vector3(), _v2b = new THREE.Vector2();
 const DYN = { acc: 0, n: 0, scale: 1, calm: 0, bad: 0, tChg: 0 };
 // (Dynamische Auflösung entfernt – Wunsch: jedes Umschalten legte alle Render-Ziele neu an und ruckelte spürbar. Die Auflösung bleibt jetzt während des Rennens fest.)
-const SPHERE = { cv: null, tex: null, t: 0, acc: 0 }, WHEEL_ROT = { obj: null, rim: null }, FOUNT = { jets: null, t: 0 }, FLYER = { obj: null }, SGT = { list: [] };
+const SPHERE = { cv: null, tex: null, t: 0, acc: 0 }, WHEEL_ROT = { obj: null, rim: null }, FOUNT = { jets: null, t: 0, base: null, rest: false }, _fm = new THREE.Matrix4(), FLYER = { obj: null }, SGT = { list: [] };
 function vegasTick(dt) {
   if (FLYER.obj && FLYER.obj.parent && TRK.sgp) { FLYER.obj.rotation.z += dt * 0.012; const t = performance.now() / 1000; for (const [pv, k] of SGT.list) pv.rotation.set(Math.sin(t * 0.21 + k * 1.3) * 0.45, 0, Math.cos(t * 0.17 + k * 2.1) * 0.55); }   // Riesenrad dreht sich langsam, Lichtstrahlen schwenken
   if (WHEEL_ROT.obj && WHEEL_ROT.obj.parent) { WHEEL_ROT.obj.rotation.z += dt * 0.02; WHEEL_ROT.rim.color.setHSL((performance.now() / 9000) % 1, .85, .62).multiplyScalar(2.2); }
-  if (FOUNT.jets && FOUNT.jets[0].parent) { FOUNT.t += dt; const t = FOUNT.t % 24, on = t < 12; FOUNT.jets.forEach((j, k) => { const h = on ? Math.max(0.01, (Math.sin(t * 2.2 + k * 0.45) * 0.5 + 0.5) * 34 * Math.min(1, t / 1.5, (12 - t) / 1.5)) : 0.01; j.scale.y = h; }); }
+  if (FOUNT.jets && FOUNT.jets.parent) { const J = FOUNT.jets; FOUNT.t += dt; const t = FOUNT.t % 24, on = t < 12;
+    if (!FOUNT.base) { FOUNT.base = []; for (let k = 0; k < J.count; k++) { J.getMatrixAt(k, _fm); FOUNT.base.push([_fm.elements[12], _fm.elements[13], _fm.elements[14]]); } FOUNT.rest = false; }   /* Lage je Fontäne einmal merken (nach der Höhenanpassung der Strecke) */
+    if (on || !FOUNT.rest) { for (let k = 0; k < J.count; k++) { const h = on ? Math.max(0.01, (Math.sin(t * 2.2 + k * 0.45) * 0.5 + 0.5) * 34 * Math.min(1, t / 1.5, (12 - t) / 1.5)) : 0.01, b = FOUNT.base[k]; _fm.makeScale(1, h, 1).setPosition(b[0], b[1], b[2]); J.setMatrixAt(k, _fm); } J.instanceMatrix.needsUpdate = true; FOUNT.rest = !on; J.visible = on; } }   /* in den 12 s Pause: nichts hochladen, nichts zeichnen */
 }
 // Sphere-Emoji: Gefühlslagen nach Fotos/Videos – [Braue L hoch, Neigung L, Braue R hoch, Neigung R, Pupille x, Pupille y, Lid L, Lid R, Mund: 0 Lächeln/1 "o", Lächelbreite, Versatz]
 const EMO = [
@@ -9496,67 +9618,156 @@ function sphereTick(dt) { // Bildschirm der LED-Kugel: meist das Emoji mit wechs
   const e = EMS.cur; U.uE.value.set(e[0], e[1], e[2], e[3]); U.uP.value.set(e[4], e[5], Math.max(e[6], bl), Math.max(e[7], bl)); U.uM.value.set(e[8], e[9], e[10], 0.5 + e[9] * 0.5);
 }
 
-/* Bildraten-Begrenzer im V-Sync-Takt: requestAnimationFrame kommt immer synchron zum Display. Statt nach Zeit zu
-   zählen (ergab bei 60 FPS auf 90/120/144 Hz ein Wechselspiel aus 1 und 2 Display-Bildern), wird die Bildwiederhol-
-   rate gemessen und genau jedes n-te Display-Bild gezeichnet. So steht jedes Bild gleich lang. */
-const VS = { prev: 0, all: new Float32Array(120), ai: 0, an: 0, d: new Float32Array(48), i: 0, n: 0, P: 1000 / 60, hz: 0, step: 1, lastDraw: 0, skip: false, cal: 24, k: 0, cand: 0, cc: 0 };
-const HZ_STD = [30, 48, 50, 60, 72, 75, 90, 100, 120, 144, 165, 240];
-/* Display-Takt messen. requestAnimationFrame kommt nie schneller als das Display – aber langsamer, wenn das Zeichnen
-   länger dauert oder das Handy das Display gerade herunterschaltet (viele 120-Hz-Handys laufen im ruhigen Menü mit 60 Hz).
-   Deshalb zählen die KÜRZESTEN Abstände (10-%-Wert), nie der Durchschnitt:
-   - Kalibrierung beim Start/nach Rückkehr: kurz jedes zweite Bild auslassen, Abstände danach sind der reine Takt.
-   - hochschalten (z. B. 60 → 120 Hz, sobald das Rennen läuft): wenn genug Abstände kurz sind – zweimal hintereinander.
-   - herunterschalten: nur, wenn auch nach ausgelassenen Bildern fast nie ein kurzer Abstand kommt – sechsmal hintereinander.
-   v1.66–1.68 nahmen den Median: ein 120-Hz-Handy galt dann als 60 Hz (60er-Modus lief mit ~80, 30er ruckelte zwischen 25/33/42 ms). */
-function vsLow(buf, n) { const a = Array.from(buf.subarray(0, n)).sort((x, y) => x - y), hz = Math.min(240, 1000 / a[Math.floor(n * 0.1)]); return HZ_STD.find(h => Math.abs(h - hz) / h < 0.05) || Math.round(hz); }
-function vsyncGate(now) {
-  const d = now - VS.prev, ok = VS.prev && d > 2 && d < 60, pure = ok && VS.skip; VS.prev = now;
-  if (ok) { VS.all[VS.ai] = d; VS.ai = (VS.ai + 1) % VS.all.length; VS.an = Math.min(VS.an + 1, VS.all.length); }
-  if (pure) { VS.d[VS.i] = d; VS.i = (VS.i + 1) % VS.d.length; VS.n = Math.min(VS.n + 1, VS.d.length); }
-  if (VS.cal > 0) {   // Kalibrierung
-    if (pure && --VS.cal === 0) { VS.hz = vsLow(VS.d, VS.n); VS.cc = 0; VS.k = 0; }
-    else { VS.skip = !VS.skip; if (VS.skip) return false; VS.lastDraw = now; return true; }
-  } else if (++VS.k >= 20 && VS.an >= 40) {   // Nachführen
-    VS.k = 0; const up = vsLow(VS.all, VS.an), dn = VS.n >= 24 ? vsLow(VS.d, VS.n) : VS.hz;
-    const hz = up > VS.hz ? up : dn < VS.hz ? dn : VS.hz;
-    if (hz !== VS.hz) { if (hz === VS.cand) VS.cc++; else { VS.cand = hz; VS.cc = 1; } if (VS.cc >= (hz > VS.hz ? 2 : 6)) { VS.hz = hz; VS.cc = 0; } } else VS.cc = 0;
-  }
-  VS.P = 1000 / VS.hz;
-  const cap = S.fpsCap === 'max' ? 0 : +S.fpsCap || 60;
-  VS.step = cap ? Math.max(1, Math.ceil(VS.hz / cap - 0.05)) : 1;   // nie über der Grenze: 60 Hz/40 → 2 (30 FPS), 120/40 → 3 (40), 120/60 → 2 (60), 90/60 → 2 (45), 144/60 → 3 (48)
-  if (VS.step > 1 && VS.lastDraw && now - VS.lastDraw < (VS.step - 0.5) * VS.P) return (VS.skip = true, false);
-  VS.skip = false; VS.lastDraw = now; return true;
-}
-document.addEventListener('visibilitychange', () => { if (!document.hidden) { VS.cal = 16; VS.prev = 0; VS.n = VS.i = VS.an = VS.ai = 0; } });   // nach Rückkehr neu messen
 /* FPS- und Frame-Pacing-Anzeige (Extras): Abstand zwischen tatsächlich gezeichneten Bildern */
-let HUDMARK = 0;   // Diagnose: wurde in diesem Bild etwas an der Seite (HUD-Text, Minikarte) geändert?
-const PERF = { on: null, prev: 0, buf: new Float32Array(120), mk: new Uint8Array(120), i: 0, n: 0, tUpd: 0, el: null, txt: null, g: null, cx: null, drew: false, cS: 0, cM: 0, cN: 0 };
+const PERF = { on: null, prev: 0, buf: new Float32Array(120), i: 0, n: 0, tUpd: 0, el: null, txt: null, g: null, cx: null, drew: false, cS: 0, cM: 0, cN: 0, rS: 0, rT: 0 };
 function perfTick(now) {
   if (PERF.on !== !!S.perfHud) { PERF.on = !!S.perfHud; PERF.el = PERF.el || $('#perf'); PERF.el.classList.toggle('hidden', !PERF.on); PERF.prev = 0; PERF.n = 0; }
   if (!PERF.on) return;
+  if (RLOG.on || LTEST.on) return;   // Messung läuft: Anzeige ruht (sie soll das Ergebnis nicht verfälschen)
   if (!PERF.prev || now - PERF.prev > 1000) { PERF.prev = now; PERF.tUpd = now; return; }   // nach Pausen/Tabwechsel neu anfangen
   const d = now - PERF.prev; PERF.prev = now; PERF.drew = true;
-  PERF.mk[PERF.i] = HUDMARK; HUDMARK = 0;   // Abstand d endet mit diesem Bild – gehört zu den Änderungen des vorigen Bildes
   PERF.buf[PERF.i] = d; PERF.i = (PERF.i + 1) % PERF.buf.length; PERF.n = Math.min(PERF.n + 1, PERF.buf.length);
   if (!PERF.g) { PERF.txt = $('#perfTxt'); PERF.g = $('#perfG'); PERF.cx = PERF.g.getContext('2d'); }
-  const T = 1000 * VS.step / (VS.hz || 60), L = PERF.buf.length, c = PERF.cx, W = PERF.g.width, H = PERF.g.height, sc = H / Math.max(50, T * 1.6), bw = W / L;   // Graph: 0–50 ms (bei 30 FPS mehr)
+  const L = PERF.buf.length, c = PERF.cx, W = PERF.g.width, H = PERF.g.height, sc = H / 50, bw = W / L;   // Graph: 0–50 ms
   c.clearRect(0, 0, W, H);
-  for (let k = 0; k < PERF.n; k++) { const v = PERF.buf[(PERF.i - PERF.n + k + L) % L]; c.fillStyle = v <= T * 1.15 + 1 ? '#22c55e' : v <= T * 2 + 1 ? '#eab308' : '#ef4444';   /* grün = im Takt des Ziels, gelb = ein Bild zu spät, rot = Ruckler */ const h = Math.max(1, Math.min(H, v * sc)); c.fillRect((L - PERF.n + k) * bw, H - h, Math.max(1, bw - 0.5), h); }
-  c.fillStyle = 'rgba(255,255,255,.55)'; c.fillRect(0, Math.round(H - T * sc), W, 1);   // Linie = Ziel-Bildzeit
+  for (let k = 0; k < PERF.n; k++) { const v = PERF.buf[(PERF.i - PERF.n + k + L) % L]; c.fillStyle = v <= 20 ? '#22c55e' : v <= 36 ? '#eab308' : '#ef4444'; const h = Math.max(1, Math.min(H, v * sc)); c.fillRect((L - PERF.n + k) * bw, H - h, Math.max(1, bw - 0.5), h); }
+  c.fillStyle = 'rgba(255,255,255,.55)'; c.fillRect(0, Math.round(H - 16.67 * sc), W, 1);   // Linie = 60 FPS
   if (now - PERF.tUpd < 250) return; PERF.tUpd = now;   // Text 4× pro Sekunde
-  let sum = 0, mx = 0, cnt = 0, late = 0, lateH = 0, hudN = 0;   // Werte der letzten Sekunde
-  for (let k = 1; k <= PERF.n && sum < 1000; k++) { const v = PERF.buf[(PERF.i - k + L) % L]; sum += v; if (v > mx) mx = v; const m = PERF.mk[(PERF.i - k + L) % L]; if (m) hudN++; if (v > T * 1.15 + 1) { late++; if (m) lateH++; } cnt++; }
+  let sum = 0, mx = 0, cnt = 0;   // Werte der letzten Sekunde
+  for (let k = 1; k <= PERF.n && sum < 1000; k++) { const v = PERF.buf[(PERF.i - k + L) % L]; sum += v; if (v > mx) mx = v; cnt++; }
   const avg = sum / cnt; let vr = 0;
   for (let k = 1; k <= cnt; k++) { const e = PERF.buf[(PERF.i - k + L) % L] - avg; vr += e * e; }
   const fps = Math.round(1000 / avg), sd = Math.sqrt(vr / cnt);
-  const tgt = Math.round((VS.hz || 60) / VS.step); PERF.txt.innerHTML = `<b style="color:${fps >= tgt - 2 ? '#22c55e' : fps >= tgt * 0.75 ? '#eab308' : '#ef4444'}">${fps}</b>/${tgt} FPS <i>·</i> ${VS.hz || '?'} Hz <i>·</i> ${avg.toFixed(1)} ms <i>·</i> ±${sd.toFixed(1)} <i>·</i> max ${mx.toFixed(1)}<br><span style="color:${late ? '#eab308' : '#22c55e'}">${late} zu spät</span>${late ? ` (${lateH} nach HUD)` : ''} <i>·</i> HUD in ${Math.round(hudN / cnt * 100)} % <i>·</i> CPU Ø ${(PERF.cS / Math.max(1, PERF.cN)).toFixed(1)} <i>/</i> max ${PERF.cM.toFixed(1)} ms`; PERF.cS = PERF.cM = PERF.cN = 0; HUDMARK = 1;   /* CPU = Rechenzeit des Spiels pro gezeichnetem Bild (ohne die Grafikkarte) */
+  const lo = Array.from(PERF.buf.subarray(0, PERF.n)).sort((x, y) => x - y)[Math.floor(PERF.n * 0.1)], hz = Math.round(1000 / lo / 10) * 10;   // Display-Takt ≈ kürzeste Bildabstände
+  PERF.txt.innerHTML = `<b style="color:${fps >= 55 ? '#22c55e' : fps >= 30 ? '#eab308' : '#ef4444'}">${fps}</b> FPS <i>·</i> ~${hz} Hz <i>·</i> ${avg.toFixed(1)} ms <i>·</i> ±${sd.toFixed(1)} <i>·</i> max ${mx.toFixed(1)}<br>CPU Ø ${(PERF.cS / Math.max(1, PERF.cN)).toFixed(1)} <i>/</i> max ${PERF.cM.toFixed(1)} ms <i>·</i> Zeichnen ${(PERF.rS / Math.max(1, PERF.cN)).toFixed(1)}<br><i>antippen = Messung starten</i>`; PERF.cS = PERF.cM = PERF.cN = PERF.rS = 0;   /* CPU = Rechenzeit des Spiels pro Bild (ohne die Grafikkarte) */
 }
-function frame(now) { requestAnimationFrame(frame); const t0 = performance.now(); PERF.drew = false; tick(now); if (PERF.drew) { const c = performance.now() - t0; PERF.cS += c; PERF.cN++; if (c > PERF.cM) PERF.cM = c; } }
+/* Ruckler-Protokoll (Leistungsanzeige im Rennen antippen): das Auto fährt eine ganze Runde selbst, das Spiel läuft dabei wie immer (gleicher Bildtakt).
+   Jedes Bild, das deutlich länger steht als der Takt, wird mit Streckenposition festgehalten – dazu, was in den zwei Bildern davor passiert ist
+   (neue Shader/Geometrien/Texturen auf der Grafikkarte, Detailstufenwechsel, HUD-Aktualisierungen, lange Rechenzeit, Wartezeit vor dem Bild).
+   Die Auswertung vergleicht, wie oft jedes Ereignis vor ALLEN Bildern vorkommt und wie oft vor einem Ruckler: was vor Rucklern klar häufiger ist, ist die Ursache.
+   EVT wird an den verdächtigen Stellen hochgezählt und in jedem Bild zurückgesetzt. */
+const RL_KEYS = [['pr', 'neuer Shader'], ['ge', 'neue Geometrie'], ['tx', 'neue Textur'], ['lod', 'Detailstufe Strecke/Bäume'], ['vis', 'Ein-/Ausblenden Strecke'], ['car', 'Detailstufe Autos'], ['tick', 'Detailstufen-Prüfung (5×/s)'], ['hud', 'HUD-Text'], ['map', 'Streckenkarte'], ['gauge', 'Tacho'], ['sw', 'Lenkrad-Anzeige'], ['halo', 'Halo-Grafik'], ['fx', 'Partikel'], ['slow', 'Skript > 12 ms'], ['wait', 'Wartezeit vor dem Bild > 5 ms']];
+const RLOG = { on: false, n: 0, base: 0, prev: null, prev2: null, prevNow: 0, late: [], all: {}, lat: {}, d0: 0, t0: 0, tTxt: 0, mx: 0, bot: null, txt: '' };
+function rlogStart() {
+  if (RLOG.on) { rlogEnd(); return; } if (!running || paused || raceState !== 'race') return;
+  Object.assign(RLOG, { on: true, n: 0, base: 0, prev: null, prev2: null, prevNow: 0, late: [], all: {}, lat: {}, d0: pl.d, t0: performance.now(), tTxt: 0, mx: 0, bot: [window.__plAI, profBot] });
+  window.__plAI = true; profBot = buildProfile(45.5, VTOP, 44, KR); const r = $('#ptRes'); if (r) r.remove();
+}
+const rlFlags = (a, b, wait) => { const f = {}; for (const [k] of RL_KEYS) { if (k === 'slow') f[k] = a.c > 12 ? 1 : 0; else if (k === 'wait') f[k] = wait > 5 ? 1 : 0; else f[k] = (a[k] || 0) + (b ? b[k] || 0 : 0); } return f; };
+function rlogFrame(now, wait, c, i0) {
+  const R = RLOG; if (!running || paused) { rlogEnd(); return; }
+  const inf = renderer.info, cur = { c, r: PERF.rT, w: wait, pr: inf.programs.length - i0[0], ge: inf.memory.geometries - i0[1], tx: inf.memory.textures - i0[2], ...EVT };
+  if (R.prev) { const d = now - R.prevNow; R.n++;
+    if (!R.base) R.base = d;
+    if (R.n > 40 && R.prev2) { const f = rlFlags(R.prev, R.prev2, wait), isLate = d > R.base * 1.45;
+      for (const [k] of RL_KEYS) if (f[k]) { R.all[k] = (R.all[k] || 0) + 1; if (isLate) R.lat[k] = (R.lat[k] || 0) + 1; }
+      if (isLate) { if (d > R.mx) R.mx = d; if (R.late.length < 2000) R.late.push({ d, s: modL(pl.d), lap: (pl.lapsDone || 0) + 1, v: pl.v * 3.6, c: R.prev.c, r: R.prev.r, w: wait, f }); } }
+    if (d < R.base * 1.3) R.base += (d - R.base) * (R.n <= 40 ? 0.2 : 0.03); else if (R.n <= 40) R.base += (d - R.base) * 0.2; }
+  R.prev2 = R.prev; R.prev = cur; R.prevNow = now;
+  if (pl.d - R.d0 >= L) { rlogEnd(); return; }
+  if (now - R.tTxt > 1000 && PERF.txt) { R.tTxt = now; PERF.txt.innerHTML = 'Ruckler-Protokoll <i>·</i> ' + Math.round(pl.d - R.d0) + ' / ' + Math.round(L) + ' m <i>·</i> ' + R.late.length + ' Ruckler<br><i>das Auto fährt selbst · antippen = beenden</i>'; }
+}
+function rlogEnd() {
+  const R = RLOG; if (!R.on) return; R.on = false; window.__plAI = R.bot[0]; profBot = R.bot[1]; if (R.n < 60) return;
+  let gpu = ''; try { const gl = renderer.getContext(), e = gl.getExtension('WEBGL_debug_renderer_info'); gpu = e ? String(gl.getParameter(e.UNMASKED_RENDERER_WEBGL)).slice(0, 60) : ''; } catch (e) {}
+  const tot = Math.max(1, R.n - 40), nl = R.late.length, pc = (a, b) => (100 * a / Math.max(1, b)).toFixed(0) + ' %';
+  const tags = f => RL_KEYS.filter(([k]) => f[k] && k !== 'tick' && k !== 'gauge').map(([k, t]) => t + (f[k] > 1 ? ' ×' + f[k] : '')).join(', ') || '–';
+  const head = 'Ruckler-Protokoll · v' + VERSION + ' · ' + TRK.name + ' · Grafik ' + S.gfx + ' · Kamera ' + S.cam + ' · ' + canvas.width + '×' + canvas.height + (S.evenPace !== false ? ' · Bildtakt an' : ' · Bildtakt aus');
+  const sum = tot + ' Bilder · Takt ' + R.base.toFixed(1) + ' ms · ' + nl + ' Ruckler (' + (100 * nl / tot).toFixed(1) + ' %) · längstes ' + R.mx.toFixed(0) + ' ms · ' + Math.round(pl.d - R.d0) + ' m gefahren';
+  const rows = RL_KEYS.map(([k, t]) => [t, R.all[k] || 0, R.lat[k] || 0]).filter(r => (r[1] || r[2]) && r[1] < tot * 0.95);   /* was ohnehin vor fast jedem Bild passiert (Tacho), sagt nichts aus */
+  const worst = R.late.slice().sort((a, b) => b.d - a.d).slice(0, 8).sort((a, b) => a.s - b.s);
+  const line = e => 'Runde ' + e.lap + ' · ' + Math.round(e.s) + ' m · ' + Math.round(e.v) + ' km/h · Bild ' + e.d.toFixed(1) + ' ms · Skript davor ' + e.c.toFixed(1) + ' (Zeichnen ' + e.r.toFixed(1) + ') · Wartezeit ' + e.w.toFixed(1) + ' · ' + tags(e.f);
+  R.txt = [head, gpu, sum, '', 'Ereignis | vor allen Bildern | vor Rucklern', ...rows.map(r => r[0] + ' | ' + pc(r[1], tot) + ' | ' + pc(r[2], nl)), '', 'Alle Ruckler:', ...R.late.map(line)].join('\n');
+  const d = document.createElement('div'); d.id = 'ptRes';
+  d.innerHTML = '<b>' + head + '</b><br><small>' + gpu + '</small><br>' + sum +
+    '<table><tr><th>Ereignis (in den 2 Bildern davor)</th><th>alle Bilder</th><th>Ruckler</th></tr>' + rows.map(r => '<tr><td>' + r[0] + '</td><td>' + pc(r[1], tot) + '</td><td>' + pc(r[2], nl) + '</td></tr>').join('') + '</table>' +
+    (nl ? '<table><tr><th>Die längsten Bilder</th><th>ms</th><th>Skript</th><th>Warten</th><th>davor</th></tr>' + worst.map(e => '<tr><td>' + Math.round(e.s) + ' m</td><td>' + e.d.toFixed(0) + '</td><td>' + e.c.toFixed(1) + '</td><td>' + e.w.toFixed(1) + '</td><td class="l">' + tags(e.f) + '</td></tr>').join('') + '</table>' +
+      '<small>Stellen (m): ' + R.late.slice(0, 60).map(e => Math.round(e.s)).join(', ') + (nl > 60 ? ' …' : '') + '</small><br>' : '<small>Kein einziges Bild stand länger als das 1,45-Fache des Takts.</small><br>') +
+    '<button id="ptCopy">Alles kopieren</button> <button id="ptClose">Schließen</button>';
+  document.body.appendChild(d);
+  d.querySelector('#ptClose').addEventListener('click', () => d.remove());
+  d.querySelector('#ptCopy').addEventListener('click', ev => { const b = ev.currentTarget, fail = () => { const ta = document.createElement('textarea'); ta.value = R.txt; ta.readOnly = true; d.insertBefore(ta, b); ta.focus(); ta.select(); try { document.execCommand('copy'); b.textContent = 'Kopiert'; } catch (e) { b.textContent = 'Text markieren und kopieren'; } };
+    try { navigator.clipboard.writeText(R.txt).then(() => { b.textContent = 'Kopiert ✓'; }, fail); } catch (e) { fail(); } });
+}
+window.__rlog = () => RLOG;
+/* Lasttest (Leistungsanzeige antippen → „Lasttest“): das Auto fährt ~30 s selbst, nacheinander ist je ein Teil des Bildes abgeschaltet. Gemessen wird die
+   Rechenzeit pro Bild (CPU) und ihr Anteil „Zeichnen“ – die Bildrate selbst sagt bei aktivem Bildtakt nichts (sie bleibt bei 60). Die Zeile, in der „Zeichnen“
+   deutlich fällt, zeigt, wo der Aufwand auf DIESEM Gerät steckt. Ergebnis als Tabelle und als Text zum Kopieren. */
+const LTEST = { on: false, i: -1, t0: 0, t1: 0, n: 0, cpu: 0, rnd: 0, res: [], bot: null, txt: '' };
+const LT_STEPS = [
+  ['Normal', () => {}, () => {}],
+  ['ohne eigenes Auto', () => { window.__hideOwn = true; }, () => { window.__hideOwn = false; }],
+  ['ohne Gegner', () => { window.__carHide = 0.01; }, () => { window.__carHide = 0; }],
+  ['ohne Strecke', () => { trackGroup.visible = false; }, () => { trackGroup.visible = true; }],
+  ['ohne Himmel', () => { skyBox.visible = false; }, () => { skyBox.visible = true; }],
+  ['ohne Schatten', () => { LTEST.sa = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false; }, () => { renderer.shadowMap.autoUpdate = LTEST.sa; }],
+  ['ohne zweiten Durchgang (eigenes Auto)', () => { window.__noSplit = true; }, () => { window.__noSplit = false; }],
+  ['ohne Nachbearbeitung', () => { window.__ptPlain = true; }, () => { window.__ptPlain = false; }],
+  ['leere Szene', () => { scene.visible = false; }, () => { scene.visible = true; }],
+  ['ohne Anzeigen und Tasten', () => document.body.classList.add('ptNoHud'), () => document.body.classList.remove('ptNoHud')],
+  ['ohne 3D-Bild', () => { window.__norender = true; }, () => { window.__norender = false; }],
+];
+function ltStart() { if (LTEST.on || RLOG.on || !running || paused || raceState !== 'race') return; LTEST.on = true; LTEST.i = -1; LTEST.res = []; LTEST.bot = [window.__plAI, profBot]; window.__plAI = true; profBot = buildProfile(45.5, VTOP, 44, KR); ltNext(performance.now()); }
+function ltNext(now, abort) {
+  if (LTEST.i >= 0) { const s = LT_STEPS[LTEST.i], n = Math.max(1, LTEST.n); if (!abort && LTEST.t1) LTEST.res.push([s[0], LTEST.cpu / n, LTEST.rnd / n, LTEST.n * 1000 / Math.max(1, now - LTEST.t1)]); try { s[2](); } catch (e) {} }
+  LTEST.i++;
+  if (abort || LTEST.i >= LT_STEPS.length) { LTEST.on = false; window.__plAI = LTEST.bot[0]; profBot = LTEST.bot[1]; ltShow(); return; }
+  try { LT_STEPS[LTEST.i][1](); } catch (e) {} LTEST.t0 = now; LTEST.t1 = 0; LTEST.n = 0; LTEST.cpu = LTEST.rnd = 0;
+  if (PERF.txt) PERF.txt.innerHTML = 'Lasttest ' + (LTEST.i + 1) + '/' + LT_STEPS.length + ' <i>·</i> ' + LT_STEPS[LTEST.i][0] + '<br><i>das Auto fährt selbst · antippen = abbrechen</i>';
+}
+function ltFrame(now, c) {
+  if (!running || paused) { ltNext(now, true); return; }
+  const el = now - LTEST.t0; if (el < 700) return;   // Einschwingen
+  if (!LTEST.t1) { LTEST.t1 = now; return; }
+  LTEST.n++; LTEST.cpu += c; LTEST.rnd += PERF.rT;
+  if (el >= 2700) ltNext(now);
+}
+function ltShow() {
+  if (!LTEST.res.length) return; let gpu = ''; try { const gl = renderer.getContext(), e = gl.getExtension('WEBGL_debug_renderer_info'); gpu = e ? String(gl.getParameter(e.UNMASKED_RENDERER_WEBGL)).slice(0, 60) : ''; } catch (e) {}
+  const head = 'Lasttest · v' + VERSION + ' · ' + TRK.name + ' · Grafik ' + S.gfx + ' · Kamera ' + S.cam + ' · ' + canvas.width + '×' + canvas.height;
+  LTEST.txt = [head, gpu, '', 'Messung | CPU ms | Zeichnen ms | FPS', ...LTEST.res.map(r => r[0] + ' | ' + r[1].toFixed(1) + ' | ' + r[2].toFixed(1) + ' | ' + r[3].toFixed(0))].join('\n');
+  ptBox('<b>' + head + '</b><br><small>' + gpu + '</small><table><tr><th>Messung</th><th>CPU ms</th><th>Zeichnen ms</th><th>FPS</th></tr>' +
+    LTEST.res.map(r => '<tr><td>' + r[0] + '</td><td>' + r[1].toFixed(1) + '</td><td>' + r[2].toFixed(1) + '</td><td>' + r[3].toFixed(0) + '</td></tr>').join('') + '</table>', () => LTEST.txt);
+}
+// Ergebnis-/Auswahlkasten: Inhalt + „Alles kopieren“ (wenn es Text gibt) + „Schließen“
+function ptBox(html, textFn) {
+  const old = $('#ptRes'); if (old) old.remove(); const d = document.createElement('div'); d.id = 'ptRes';
+  d.innerHTML = html + (textFn ? '<button id="ptCopy">Alles kopieren</button> ' : '') + '<button id="ptClose">Schließen</button>'; document.body.appendChild(d);
+  d.querySelector('#ptClose').addEventListener('click', () => d.remove());
+  if (textFn) d.querySelector('#ptCopy').addEventListener('click', ev => { const b = ev.currentTarget, txt = textFn(), fail = () => { const ta = document.createElement('textarea'); ta.value = txt; ta.readOnly = true; d.insertBefore(ta, b); ta.focus(); ta.select(); try { document.execCommand('copy'); b.textContent = 'Kopiert'; } catch (e) { b.textContent = 'Text markieren und kopieren'; } };
+    try { navigator.clipboard.writeText(txt).then(() => { b.textContent = 'Kopiert ✓'; }, fail); } catch (e) { fail(); } });
+  return d;
+}
+// Antippen der Leistungsanzeige: läuft eine Messung, wird sie beendet – sonst Auswahl zwischen Ruckler-Protokoll und Lasttest
+function perfMenu() {
+  if (RLOG.on) { rlogEnd(); return; } if (LTEST.on) { ltNext(performance.now(), true); return; }
+  if (!running || paused || raceState !== 'race') return;
+  const d = ptBox('<b>Messung starten</b><br><small>Das Auto fährt solange selbst.</small><br><button id="ptRl">Ruckler-Protokoll (1 Runde)</button> <button id="ptLt">Lasttest (30 s)</button><br>');
+  d.querySelector('#ptRl').addEventListener('click', () => { d.remove(); rlogStart(); }); d.querySelector('#ptLt').addEventListener('click', () => { d.remove(); ltStart(); });
+}
+window.__ltest = () => LTEST;
+{ const el = document.getElementById('perf'); if (el) el.addEventListener('click', perfMenu); }
+/* Gleichmäßiger Bildtakt: requestAnimationFrame kommt im Takt des Displays. Schafft das Handy dessen volle Rate nicht (gemessen: ~67 FPS auf 120 Hz,
+   d. h. Bilder stehen abwechselnd 8,3 und 16,7 ms = sichtbares Ruckeln), wird nur gezeichnet, wenn seit dem letzten gezeichneten Bild mindestens
+   ~1/60 s vergangen ist. Bewusst OHNE Messung der Display-Rate (die frühere Begrenzung v1.66–1.72 erkannte sie falsch): 120 Hz → jedes 2. Bild (60 FPS),
+   60 Hz → jedes Bild, 144 Hz → jedes 2. (72), 90 Hz → jedes 2. (45). */
+const FPACE = { last: 0 };
+function frame(now) { requestAnimationFrame(frame);
+  if (S.evenPace !== false && running && !paused) { const d = now - FPACE.last; if (d > 0 && d < 13.5) return; } FPACE.last = now;
+  const t0 = performance.now(), lg = RLOG.on; let i0 = null; PERF.drew = false;
+  if (lg) { const inf = renderer.info; i0 = [inf.programs.length, inf.memory.geometries, inf.memory.textures]; }
+  for (const k in EVT) EVT[k] = 0;
+  tick(now); const c = performance.now() - t0; if (PERF.drew) { PERF.cS += c; PERF.rS += PERF.rT; PERF.cN++; if (c > PERF.cM) PERF.cM = c; }
+  if (lg) rlogFrame(now, t0 - now, c, i0); if (LTEST.on) ltFrame(now, c); }
 let REBUILD = false;
 function tick(now, forced) {
   if (REBUILD) { last = now; return; }   /* Grafik wird gerade umgestellt */   // forced: Testhilfen zeichnen direkt, ohne eine zweite Bildschleife zu starten
-  if (!forced) { if (!vsyncGate(now)) return; perfTick(now); }   // Bildrate begrenzen: nur jedes n-te Display-Bild zeichnen (gleichmäßiges Frame-Pacing)
+  if (!forced) perfTick(now);   // keine Bildratenbegrenzung: gezeichnet wird jedes Bild, das der Browser anfordert
   const dt = clamp((now - last) / 1000, 0, 0.05); last = now;
+  if (!TRK) {   // Spielstart: es ist noch keine Strecke gebaut (sie entsteht erst nach der Streckenwahl) – nur Menü und Showroom
+    pollPad(dt); musicTick();
+    if (SHOW.on && !window.__norender && !$('#menu').classList.contains('hidden') && !(settingsFrom === 'menu' && !$('#settings').classList.contains('hidden'))) { showroomFrame(dt); const on = ENVP.on, et = ENVP.tex; ENVP.on = true; if (SHOW.env) ENVP.tex = SHOW.env; renderer.render(SHOW.scene, SHOW.cam); ENVP.tex = et; ENVP.on = on; }
+    return; }
   if (running && !paused) { const n = dt > 0.025 ? 2 : 1; for (let k = 0; k < n; k++) step(dt / n); }
   if (!running || !paused) updateMeshes(running && !paused ? dt : 0);
   pollPad(dt); updateCamera(dt); kartDispTick(dt);
@@ -9582,11 +9793,16 @@ function tick(now, forced) {
   if (HORIZ) { HORIZ.position.x = camera.position.x; HORIZ.position.z = camera.position.z; }
   // Pause: das Bild steht still, also nur zwei Bilder zeichnen und dann die Grafikkarte schonen
   if (running && paused) { if (pauseDrawn >= 2) return; pauseDrawn++; } else pauseDrawn = 0;
-  if (!window.__norender && !(!running && settingsFrom === 'menu' && !$('#settings').classList.contains('hidden')) && !(!running && !SHOW.on && !$('#menu').classList.contains('hidden'))) {   /* Einstellungen aus dem Menü: nichts neu zeichnen – sonst lief dahinter die Strecke des letzten Rennens weiter */   /* Hauptmenü: fester Hintergrund statt Kamerafahrt – dort wird die Strecke nicht gerendert (spart Akku) */ if (SHOW.on && !running && !$('#menu').classList.contains('hidden')) { showroomFrame(dt); const bo = BAKE.u.bakeOn.value, et = ENVP.tex; BAKE.u.bakeOn.value = 0; if (SHOW.env) ENVP.tex = SHOW.env; renderer.render(SHOW.scene, SHOW.cam); ENVP.tex = et; BAKE.u.bakeOn.value = bo;   /* im Showroom spiegelt sich das Studio, nicht die Strecke */ } else if (composer) { syncAoCam(); composer.render(dt); } else renderPlain(); }
+  const tR0 = performance.now(); PERF.rT = 0;
+  if (!window.__norender && !(!running && settingsFrom === 'menu' && !$('#settings').classList.contains('hidden')) && !(!running && !SHOW.on && !$('#menu').classList.contains('hidden'))) {   /* Einstellungen aus dem Menü: nichts neu zeichnen – sonst lief dahinter die Strecke des letzten Rennens weiter */   /* Hauptmenü: fester Hintergrund statt Kamerafahrt – dort wird die Strecke nicht gerendert (spart Akku) */ if (SHOW.on && !running && !$('#menu').classList.contains('hidden')) { showroomFrame(dt); const bo = BAKE.u.bakeOn.value, et = ENVP.tex; BAKE.u.bakeOn.value = 0; if (SHOW.env) ENVP.tex = SHOW.env; renderer.render(SHOW.scene, SHOW.cam); ENVP.tex = et; BAKE.u.bakeOn.value = bo;   /* im Showroom spiegelt sich das Studio, nicht die Strecke */ } else if (composer && !window.__ptPlain) { syncAoCam(); composer.render(dt); } else renderPlain(); }
+  PERF.rT = performance.now() - tR0;   /* Anteil „Zeichnen“ an der Rechenzeit: Befehle an die Grafikkarte abschicken (inkl. Warten, falls sie nicht nachkommt) */
   if (window.__qcF) window.__qcF(now, forced);   /* QC-Bot: Bildzeiten messen und direkt nach dem Zeichnen Bilder auswerten */
 }
 applyGfx();
-buildTrack(TRACKS[S.track] && (!TRACKS[S.track].extra || S.nos) && !TRACKS[S.track].kartOnly ? S.track : (S.track = 'monza'));placeOnGrid(); buildMenu(); renderMenu();
+if (!(TRACKS[S.track] && (!TRACKS[S.track].extra || S.nos) && !TRACKS[S.track].kartOnly)) S.track = 'monza';
+/* Die zuletzt gefahrene Strecke wird NICHT mehr beim Spielstart gebaut (das war der größte Teil der ersten Ladezeit). Sie entsteht erst, wenn nach der
+   Streckenwahl ein Rennen beginnt (TRK !== TRACKS[S.track] -> buildTrack). Bis dahin ist TRK leer; tick() zeichnet dann nur Menü und Showroom. */
+buildMenu(); renderMenu();
 loading(false); $('#menu').classList.remove('hidden'); showScreen('title');
 window.__scene = () => scene; window.__cam = () => camera; window.__perf = (k = 20) => { const was = paused; paused = false; renderer.info.autoReset = false; renderer.info.reset(); let t = performance.now(); const t0 = t; for (let i = 0; i < k; i++) tick(t += 40, true); last = performance.now(); const gl = renderer.getContext(); gl.finish(); const ms = (performance.now() - t0) / k, r = renderer.info.render; const o = { calls: Math.round(r.calls / k), tris: Math.round(r.triangles / k), ms: +ms.toFixed(2), pr: renderer.getPixelRatio() }; renderer.info.autoReset = true; paused = was; return o; };   /* Test: Zeichenaufrufe/Bild und Zeit pro Bild (CPU+GPU, mit gl.finish) */
 // Testhilfen: Menü per Code bedienen (Strecke bauen, Rennen starten, feste Kamera)

@@ -49,6 +49,17 @@ Abgebrochene Läufe hinterlassen keine Edge-Prozesse: `run.py` beendet beim Star
 Ohne `run.py` geht es auch direkt im Browser, z. B. am Handy: `index.html?qc=monza&mode=quick`.
 Der Bericht wird am Ende als HTML-Datei heruntergeladen.
 
+
+Nachladen im Rennen: Der Bot zählt nach jedem Bild des Spiels die Shader, Texturen und Geometrien auf der Grafikkarte. Entsteht mitten im Rennen
+ein neuer Shader, steht die Stelle (Streckenmeter, Runde, Kamera) als Befund **mittel** in der Kategorie „Nachladen“ im Bericht – das ist ein Hänger beim
+ersten Auftreten und heißt, dass das Vorwärmen beim Rennstart (`precompile`/`warmCams` in `index.html`) dieses Teil nicht erfasst. Da der Bot je Runde die Kamera
+wechselt, fallen auch Kamerawechsel darunter. Erst im Rennen hochgeladene Texturen und Geometrien stehen als Summe mit Stufe **info** dabei.
+
+
+Lastspitzen: An jeder geprüften Stelle zählt der Bot die Zeichenaufrufe des ganzen Bildes. Über 450 steht die Strecke mit dem Höchstwert und den Stellen als Befund
+**mittel** in der Kategorie „Last“ im Bericht – ab etwa 500 Aufrufen pro Bild ruckelt ein aktuelles Handy. Übliche Ursachen: viele Einzelteile mit je eigenem
+Material (werden dann nicht zusammengefasst) oder zu kleine Instanz-Kacheln.
+
 ## Nach Änderungen gezielt prüfen
 
 **Welche Strecken (`--changed`):** Nach jedem vollen Lauf merkt sich `run.py` je Strecke, mit welchem Stand von `index.html`

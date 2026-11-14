@@ -333,17 +333,33 @@ Die Art gilt für die ganze Strecke. Eine Einstellung „je Kurve“ gibt es im 
 
 ## 6. Performance-Regeln
 
-Ziel auf der Startaufstellung bei Qualität „Schön“ (`S.gfx === 'high'`): **unter ca. 600 Zeichenaufrufe und ca. 1,5 Mio. Dreiecke**.
+Ziel bei Qualität „Schön“ (`S.gfx === 'high'`) **an jeder Stelle der Runde: unter 450 Zeichenaufrufe pro Bild** (mit vollem Starterfeld) und unter ca. 1,2 Mio. Dreiecke.
+Der Wert ist auf einem Handy gemessen (Adreno 840, Version 1.83/1.84): ab etwa 500 Aufrufen pro Bild reichte die Rechenzeit nicht mehr für gleichmäßige 60 Bilder,
+bei rund 470 lief es noch sauber. Entscheidend ist die **schwerste Stelle**, nicht der Durchschnitt und nicht die Startaufstellung – der QC-Bot meldet sie (Abschnitt 7).
 
-- **Viele gleiche Objekte immer als `THREE.InstancedMesh`** in `trackGroup`. `chunkInstances` teilt Instanzen mit mindestens 120 Stück räumlich in Kacheln (360 m, Nordschleife 480 m), damit nur Sichtbares gezeichnet wird. `userData.noChunk` schaltet das ab.
+**Die drei Fehler, die im November 2026 die Ruckler verursacht haben – bei jeder neuen Strecke zuerst darauf achten:**
+
+1. **Ein eigenes Material je Bauteil.** `lam({ color: … })` oder `new THREE.Mesh…Material(…)` *in* einer Schleife erzeugt je Stück ein eigenes Material. Abu Dhabi hatte so
+   196 Zeltdach-Pfosten = 196 Zeichenaufrufe für 4.700 Dreiecke. Materialien **vor** der Schleife anlegen. `mergeGroups` fasst inzwischen auch Materialien mit identischen
+   Eigenschaften zusammen (`matSig`), aber nur in Gruppen mit `userData.merge` – auf das Teilen verlassen, nicht auf diese Rettung.
+2. **Teile, die erst im Rennen zum ersten Mal gezeichnet werden.** Alles, was beim Rennstart unsichtbar ist oder an keinem Objekt hängt (ein Effekt, der erst bei Tempo 200
+   erscheint; ein Durchgang, der nur läuft, wenn die Sonne im Bild ist), wird vom Vorwärmen nicht erfasst – sein Shader wird dann mitten im Rennen übersetzt (gemessen: 42 und
+   67 ms Hänger). Neue Effekte so bauen, dass `precompile()`/`warmCams()` sie zeichnen können: in der Szene hängen lassen und dort kurz sichtbar schalten (Vorbild: `WAKE.m`
+   und die Lichtstrahlen-Shader in `precompile`). Der QC-Bot meldet jeden neuen Shader im Rennen.
+3. **Zu kleine Kacheln für Instanzen.** Jede Kachel ist ein Zeichenaufruf. Abu Dhabi hatte 111 Häuser-Kacheln gleichzeitig im Bild. Kachelgröße siehe `chunkInstances`.
+
+
+- **Viele gleiche Objekte immer als `THREE.InstancedMesh`** in `trackGroup`. `chunkInstances` teilt Instanzen mit mindestens 120 Stück räumlich in Kacheln (Grundmaß 360 m, Nordschleife 480 m), damit nur Sichtbares gezeichnet wird. Das Maß richtet sich nach dem Modell: sehr kleine Teile (unter 40 Dreiecke) doppelt so groß; Modelle mit Detailstufen 1,4-fach, ab 150 Dreiecken das Grundmaß, ab 400 Dreiecken oder wenn die einfache Stufe schon ab ≤ 80 m greift das 0,6-Fache (die Stufe gilt je Kachel – in einer großen Kachel bliebe sonst alles voll detailliert); Bäume `L/19` (150–300 m). `userData.noChunk` schaltet das Teilen ab.
 - **Detailstufen** über `geometry.userData.lod = [[einfachereGeometrie, abDistanz], [null, abDistanz]]`. `null` = nicht mehr zeichnen. Beispiel Bäume: nah → 170 m → 340 m; Stämme verschwinden ab 600 m. Kleine Instanzen (Radius < 2,5 m) bekommen automatisch eine Ausblendgrenze.
-- **Ferne Bäume sind Bildtafeln** (nur Waldstrecken, `TH.trees === 'forest'`): `treeSprites` rendert beim Laden jedes Baummodell (nah mit Laubflächen / fern einfach, je Laub- und Nadelbaum) aus 8 Richtungen, mit dem Licht der Strecke. Ab 200 m zeigt jeder Baum auf einer zur Kamera gedrehten Tafel die Ansicht seines eigenen Modells, die zu seiner Drehung passt (4 Zeichenaufrufe für den ganzen Hintergrundwald). Bis dahin behält jeder Baum seine Form ohne Zwischenstufen (früher lösten sich die Laubflächen bei 92–128 m auf – der Himmel schien als helle Punkte durch). Zwischen 200 und 260 m teilen sich 3D-Baum (`distFade`) und Tafel die Pixel per Punktraster; Baumkacheln jenseits 260 m werden nicht gezeichnet. Nordschleife: Tafeln bis 1 km, dahinter die Waldkante. Testschalter `window.__noTreeSpr = true` vor dem Bauen = alte Darstellung.
-- **Autos**: volle Stufe bis 10 m, mittlere bis 35 m, dahinter das Fernmodell (`CAR_LOD`, 1,5 m Schaltlücke). Der Wechsel wird 0,35 s überblendet: die neue Stufe steht sofort voll da, die alte löst sich per Punktraster auf (`lodStep`, so entstehen keine Löcher im Auto; jedes Auto hat dafür eigene Materialkopien und „Geister“-Netze für die alte Stufe). `window.__noLodFade = true` schaltet sofort um.
+- **Ferne Bäume sind Bildtafeln** (nur Waldstrecken, `TH.trees === 'forest'`): `treeSprites` rendert beim Laden jedes Baummodell (nah mit Laubflächen / fern einfach, je Laub- und Nadelbaum) aus 8 Richtungen, mit dem Licht der Strecke. Ab 120 m zeigt jeder Baum auf einer zur Kamera gedrehten Tafel die Ansicht seines eigenen Modells, die zu seiner Drehung passt (4 Zeichenaufrufe für den ganzen Hintergrundwald). Bis dahin behält jeder Baum seine Form ohne Zwischenstufen (früher lösten sich die Laubflächen bei 92–128 m auf – der Himmel schien als helle Punkte durch). Zwischen 120 und 170 m (`SD0`/`SD1`, bis Version 1.75: 200/260 m) teilen sich 3D-Baum (`distFade`) und Tafel die Pixel per Punktraster; Baumkacheln jenseits 170 m werden nicht gezeichnet. Nordschleife: Tafeln bis 1 km, dahinter die Waldkante. Testschalter `window.__noTreeSpr = true` vor dem Bauen = alte Darstellung.
+- **Autos**: volle Stufe bis 10 m, mittlere bis 35 m, dahinter das Fernmodell (`CAR_LOD`, 1,5 m Schaltlücke); ab 80 m ein stark vereinfachtes Fernmodell (`CAR_FAR3`, ~2.500 Dreiecke, `clusterGeo`), ab 600 m wird ein Gegner nicht mehr gezeichnet (`CAR_HIDE`). Das eigene Auto nutzt in den Verfolgerkameras die mittlere Stufe, die volle nur in Helm- und TV-Kamera. Der Wechsel wird 0,35 s überblendet: die neue Stufe steht sofort voll da, die alte löst sich per Punktraster auf (`lodStep`, so entstehen keine Löcher im Auto; jedes Auto hat dafür eigene Materialkopien und „Geister“-Netze für die alte Stufe). `window.__noLodFade = true` schaltet sofort um.
 - **Nahe Bäume sind begrenzt**: Nur 1800 Bäume (Ultra 3200, Schnell 800) im 95-m-Streifen bekommen das detaillierte Modell mit Laubkarten (`FOL.card`/`FOL.cardC`, bis 150 m sichtbar); alle anderen das einfache.
-- **Einzelbauten zusammenfassen**: `userData.merge = true` an einer Gruppe lässt `mergeGroups` sie mit Nachbarn (350-m-Raster) zu einem Netz verschmelzen. Ein einzelnes unbewegtes Netz meldet man mit `trackGroup.add(asMerge(mesh))` an. Netze mit mehreren Materialien (`material` als Liste, z. B. `BoxGeometry` mit Textur nur auf einer Seite) werden **nicht** verschmolzen und kosten einen Aufruf je Seite: in Teile mit je einem Material zerlegen (so bei den Bremsschildern). Für Texturausschnitte die UVs verschieben statt die Textur je Objekt zu klonen (Garagenfronten). Streifen werden von `chunkStrips` in 900-m-Stücke geteilt.
+- **Einzelbauten zusammenfassen**: `userData.merge = true` an einer Gruppe lässt `mergeGroups` sie mit Nachbarn (350-m-Raster) zu einem Netz verschmelzen. Ein einzelnes unbewegtes Netz meldet man mit `trackGroup.add(asMerge(mesh))` an. Netze mit mehreren Materialien (`material` als Liste, z. B. `BoxGeometry` mit Textur nur auf einer Seite) werden **nicht** verschmolzen und kosten einen Aufruf je Seite: in Teile mit je einem Material zerlegen (so bei den Bremsschildern). Für Texturausschnitte die UVs verschieben statt die Textur je Objekt zu klonen (Garagenfronten). Streifen bleiben auf Strecken bis 8 km **ungeteilt** (gemessen: das Aussortieren von 900-m-Stücken sparte kaum Dreiecke, kostete aber je Stück einen Aufruf); nur durchsichtige Streifen und die Nordschleife werden von `chunkStrips` in 900-m-Stücke geteilt. Kleinteile bis zusammen 40.000 Eckpunkte je Material fasst `mergeGroups` über die ganze Strecke zu einem Netz zusammen.
+- **Bewegte Gruppen** (Riesenrad, Drehteile): die Gruppe dreht sich als Ganzes weiter, ihre Teile vorher mit `mergeLocal(gruppe)` je Material zu einem Netz verschmelzen (sonst kostet jede Speiche und jede Gondel einen Aufruf). **Viele einzeln bewegte gleiche Teile** (Fontänen) als `InstancedMesh` mit `userData.noChunk` bauen und die Instanz-Matrizen setzen – und in Ruhephasen weder hochladen noch zeichnen (Vorbild: `FOUNT` in `vegasTick`).
+- **Partikel und Effekte**: ein System, in dem nichts lebt, darf nichts rechnen, hochladen oder zeichnen (`Particles.live`).
 - **Boden zuletzt**: Bodenkacheln haben `renderOrder = 0.5` und eine Polygonverschiebung; sie kommen nach allen normalen Flächen dran, damit verdeckte Bodenpixel gar nicht erst berechnet werden. Objekte, die den Boden darunter brauchen (ohne Tiefenschreiben, nicht transparent), müssen `renderOrder ≥ 1` bekommen.
 - **Texturfilter**: anisotrop höchstens 8-fach (`maxAniso`), Reliefkarten der Strecke 4-fach – 16-fach kostete ~5 % Grafikzeit ohne sichtbaren Unterschied.
-- **Materialien teilen**: ein `lam()` je Aussehen, nicht je Objekt. Eigene Canvas-Texturen mit `userData.own = true` markieren, damit sie beim Streckenwechsel freigegeben werden.
+- **Materialien teilen**: ein `lam()` je Aussehen, nicht je Objekt (siehe Fehler 1 oben) – das Material **vor** der Schleife anlegen. Eigene Canvas-Texturen mit `userData.own = true` markieren, damit sie beim Streckenwechsel freigegeben werden.
 - **Transparenz vermeiden**: `alphaTest` (und `alphaToCoverage` wie beim Zaun) statt `transparent: true`. Transparente und `MeshBasicMaterial`-Objekte werfen und empfangen keine gebackenen Schatten.
 - **Sichtweite**: Hinter `fogFar × 1,08 + 250` wird nichts gezeichnet. Kleinere `fogFar` sparen spürbar (Monza 2600, Nacht ca. 3000). Horizontobjekte ohne Nebel brauchen `userData.fixed` und `material.fog = false`; die Sichtweite wird dann bis höchstens 14 km erweitert.
 - **Gebackene Schatten** (`bakeShadows`/`bakeMat`): einmal beim Laden, Kacheln 192 m mit 1024² Texeln (ca. 19 cm), höchstens 250 Kacheln im 100-m-Streifen um die Strecke. Bei sehr langen Strecken `bakeRes`/`bakeCell` senken. Echtzeitschatten werfen nur die Autos.
@@ -357,6 +373,8 @@ Ziel auf der Startaufstellung bei Qualität „Schön“ (`S.gfx === 'high'`): *
 
 **Automatisch:** `python qc/run.py <schlüssel>` fährt die Strecke mit dem QC-Bot ab (eine Runde je Kamera, unsichtbar im Hintergrund)
 und prüft Ruckler, Löcher im Boden, Z-Fighting, Darstellungsfehler, Clipping und Fahrbarkeit. Er ruft dabei auch die Helfer unten auf.
+Seit Version 1.83/1.86 prüft er außerdem die Leistung: Kategorie **„Last“** = Stellen mit mehr als 450 Zeichenaufrufen pro Bild (mit Streckenmeter und Kamera),
+Kategorie **„Nachladen“** = jeder Shader, der erst mitten im Rennen übersetzt wird (auch bei den Kamerawechseln des Bots). Eine neue Strecke ist erst fertig, wenn beide Kategorien leer sind.
 Ergebnis: `qc-reports/<Datum>/report.html` mit Bild und Streckenmeter je Befund. Während des Bauens reicht `--quick` (eine Runde).
 Details in `qc/README.md`. Die Befehle unten bleiben für gezieltes Nachsehen von Hand.
 
@@ -394,11 +412,21 @@ Für einen vollständigen Überschneidungstest vor dem Bau `window.__noMerge = t
 
 ### 7.3 Leistung prüfen
 
+**Zuerst der QC-Bot** (`python qc/run.py <schlüssel> --quick --no-static` reicht dafür, ~2 Minuten): keine Befunde „Last“ und „Nachladen“. Die Zahlen von Hand:
+
 1. Qualität „Schön“ einstellen, `await __race('Name', 'f1')`, Kamera auf der Startaufstellung lassen.
-2. `__bench()` → `{ ms, calls, tris }` (bester von 4 Durchläufen mit GPU-Abgleich). Ziel: `calls < 600`, `tris < 1 500 000`.
+2. `__bench()` → `{ ms, calls, tris }` (bester von 4 Durchläufen mit GPU-Abgleich). Ziel: `calls < 450`, `tris < 1 200 000`.
 3. `__perf()` → Mittel über 20 volle Spielbilder (`calls`, `tris`, `ms`, Pixelverhältnis). `__ri()` zeigt zusätzlich Geometrie-, Textur- und Shaderzahl; `__cpu()` die reine Skriptzeit.
 4. An zwei bis drei weiteren Stellen wiederholen (`__view` auf die dichteste Stelle: Stadt, Tribünen, Wald), denn die Startaufstellung ist nicht immer der schlimmste Punkt.
 5. `__btms` ansehen: Bau- und Backzeit sollten im Rahmen der vorhandenen Strecken bleiben.
+6. **Auf dem Handy** (das Vorschaufenster am Rechner taugt nicht für Bildzeiten): in den Einstellungen die „FPS- und Frame-Pacing-Anzeige“ einschalten, im Rennen antippen.
+   - **Ruckler-Protokoll (1 Runde)**: das Auto fährt selbst; jedes zu lange Bild wird mit Streckenmeter und dem festgehalten, was in den zwei Bildern davor passiert ist (neuer Shader,
+     neue Textur/Geometrie, Detailstufenwechsel, HUD, lange Rechenzeit). „Alles kopieren“ liefert den Text. Häufen sich Einträge an einer Stelle bei erhöhter Zeichenzeit, liegt dort
+     zu viel im Bild; stehen „neuer Shader“ davor, fehlt etwas im Vorwärmen. Zwei Runden hintereinander vergleichen: was nur in der ersten auftritt, ist Nachladen.
+   - **Lasttest (30 s)**: schaltet nacheinander Strecke, Gegner, eigenes Auto, Himmel, Schatten, Nachbearbeitung usw. ab und zeigt je Schritt die Rechenzeit – zeigt, welcher Teil kostet
+     (Auflösung etwa ±1 ms, weil jeder Schritt an einer anderen Stelle misst).
+   - Vergleichsstrecken: Monza ist die leichteste, Abu Dhabi und Las Vegas die schwersten normalen, die Nordschleife der härteste Fall (Stand 1.86: 452 Aufrufe in der Spitze).
+
 
 ### 7.4 Tempo und KI prüfen
 
@@ -439,7 +467,8 @@ Die KI braucht keine Abstimmung je Strecke: `trackPace()` berechnet aus dem Temp
 | Heller Rand am Horizont, Asphalt schimmert farbig | `fog` passt nicht zu `sky[2]` | Dunstfarbe an die Horizontfarbe angleichen |
 | Laub wirkt schwarz und flach | eigenes Material statt `lam({ map: TEX.leaf … })` | Laub-Texturen mit `lam()` verwenden |
 | Kein eigener Asphalt sichtbar | `asph`/`ROADTEX` fehlt, Datei falsch benannt (`<id>_diff_1k.jpg`, `<id>_nor_gl_1k.jpg`) oder offline | Namen prüfen; Ladefehler werden still übergangen und beim nächsten Bau erneut versucht |
-| Zu viele Zeichenaufrufe | Einzel-Meshes statt Instanzen, viele Materialien | `InstancedMesh`, `userData.merge`, Materialien teilen |
+| Zu viele Zeichenaufrufe | Einzel-Meshes statt Instanzen, ein eigenes Material je Bauteil, zu kleine Instanz-Kacheln | `InstancedMesh`, `userData.merge`, Material vor der Schleife anlegen; QC-Befund „Last“ nennt die Stelle |
+| Kurzer Hänger an immer derselben Stelle, nur in der ersten Runde | ein Teil wird dort zum ersten Mal gezeichnet, sein Shader erst dann übersetzt | Teil ins Vorwärmen aufnehmen (`precompile`/`warmCams`); QC-Befund „Nachladen“ nennt die Stelle |
 | Zu viele Dreiecke | fehlende Detailstufen, `treeMul`/`cityMul` zu hoch | `userData.lod` setzen, Faktoren senken |
 | Speicher wächst beim Streckenwechsel | eigene Texturen ohne `userData.own` | markieren |
 | Strecke erscheint nicht im Menü | `kartOnly`/`extra` gesetzt oder nicht im Kalender | Felder und `SERIES.cal`/`CAL_F1` prüfen |
