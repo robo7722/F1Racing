@@ -2724,7 +2724,7 @@ function widenRim(M, X, y0, y1, zA, zB) { if (!M) return; const S = t => { t = c
       const w = S((z - (zA - 0.06)) / 0.06) * S(((zB + 0.03) - z) / 0.03) * S((y - (y0 - 0.03)) / 0.03) * S(((y1 + 0.03) - y) / 0.03); if (w <= 0) continue;
       p.setX(i, Math.sign(x) * (ax + (X - ax) * w)); ch = true; }
     if (ch) { p.needsUpdate = true; g.computeBoundingSphere(); } } }
-widenRim(CARM, 0.24, 0.56, 0.64, 0.48, 0.71); widenRim(CARM2, 0.24, 0.56, 0.70, 0.46, 0.67);
+widenRim(CARM, 0.24, 0.56, 0.64, 0.48, 0.71); widenRim(CARM2, 0.24, 0.56, 0.70, 0.46, 0.70);
 // F2-Modell: auf der Nase (Mitte) steckten zwei dünne dunkle Stäbe aus dem Quellmodell – in Cockpit- und TV-Sicht ein schwebender Strich mit Punkt vor dem Auto:
 //  a) Antenne über der Vorderachse (z ≈ 1,40, y 0,669–0,903, 3–4 mm dick, mit Kappe oben)   b) Nadel weiter vorn (z ≈ 1,54–1,57, y 0,647–0,788)
 // Alles oberhalb des Fußes auf den Fuß zurückziehen: die Stäbe fallen zu Flächen knapp unter dem Nasenlack zusammen und sind unsichtbar.

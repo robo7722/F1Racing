@@ -80,26 +80,30 @@ def wheel_sdf(Q, spec, parts=False):
     return (D.min(1), D.argmin(1)) if parts else D.min(1)
 
 
-def tub_inside(Q, T, cell=0.01):
-    """Punkte im Material der Cockpitwanne (geschlossenes Netz): Strahl von der Mitte weg nach außen (±x), ungerade Zahl Treffer = innen."""
-    yz = T[:, :, 1:]; lo = yz.min(1); hi = yz.max(1); grid = {}
+def ray_odd(Q, T, ax, cell=0.01):
+    """Strahl von jedem Punkt in Richtung +Achse ax (bei ax = 0: von der Mitte weg nach außen, ±x); True = ungerade Zahl Treffer."""
+    o = [k for k in range(3) if k != ax]; yz = T[:, :, o]; lo = yz.min(1); hi = yz.max(1); grid = {}
     for k in range(len(T)):
         for gy in range(int(np.floor(lo[k, 0] / cell)), int(np.floor(hi[k, 0] / cell)) + 1):
             for gz in range(int(np.floor(lo[k, 1] / cell)), int(np.floor(hi[k, 1] / cell)) + 1): grid.setdefault((gy, gz), []).append(k)
-    cnt = np.zeros(len(Q), int); keys = np.floor(Q[:, 1:] / cell).astype(int)
+    cnt = np.zeros(len(Q), int); keys = np.floor(Q[:, o] / cell).astype(int)
     for key in set(map(tuple, keys)):
         tk = grid.get(key)
         if not tk: continue
-        m = (keys[:, 0] == key[0]) & (keys[:, 1] == key[1]); q = Q[m]; t = T[tk]
-        a, b, c = t[:, 0], t[:, 1], t[:, 2]
-        # Schnitt der Geraden (y, z fest) mit der Dreiecksebene über baryzentrische Koordinaten in der y-z-Ebene
-        v0 = (b - a)[:, 1:]; v1 = (c - a)[:, 1:]; den = v0[:, 0] * v1[:, 1] - v1[:, 0] * v0[:, 1]; ok = np.abs(den) > 1e-12
-        w = q[:, None, 1:] - a[None, :, 1:]
+        m = (keys[:, 0] == key[0]) & (keys[:, 1] == key[1]); q = Q[m]; t = T[tk]; a, b, c = t[:, 0], t[:, 1], t[:, 2]
+        v0 = (b - a)[:, o]; v1 = (c - a)[:, o]; den = v0[:, 0] * v1[:, 1] - v1[:, 0] * v0[:, 1]; ok = np.abs(den) > 1e-12
+        w = q[:, None, o] - a[None, :, o]
         u = (w[..., 0] * v1[:, 1] - v1[:, 0] * w[..., 1]) / np.where(ok, den, 1); v = (v0[:, 0] * w[..., 1] - w[..., 0] * v0[:, 1]) / np.where(ok, den, 1)
-        hit = ok & (u >= 0) & (v >= 0) & (u + v <= 1); xh = a[:, 0] + (b - a)[:, 0] * u + (c - a)[:, 0] * v
-        sg = np.sign(q[:, 0:1]); sg[sg == 0] = 1; out = hit & (xh * sg > q[:, 0:1] * sg)
-        cnt[m] = out.sum(1)
+        hit = ok & (u >= 0) & (v >= 0) & (u + v <= 1); xh = a[:, ax] + (b - a)[:, ax] * u + (c - a)[:, ax] * v
+        sg = np.sign(q[:, ax:ax + 1]) if ax == 0 else np.ones((len(q), 1)); sg[sg == 0] = 1
+        cnt[m] = (hit & (xh * sg > q[:, ax:ax + 1] * sg)).sum(1)
     return cnt % 2 == 1
+
+
+def tub_inside(Q, T):
+    """Punkte im Material der Cockpitwanne (geschlossenes Netz): zwei Strahlen (nach außen ±x und nach oben +y) müssen beide „innen“ ergeben –
+    ein einzelner Strahl kann an fast waagerechten Flächen (Schulter) streifen und falsch zählen."""
+    return ray_odd(Q, T, 0) & ray_odd(Q, T, 1)
 
 
 def rx(a): c, s = np.cos(a), np.sin(a); return np.array([[1, 0, 0], [0, c, -s], [0, s, c]])
