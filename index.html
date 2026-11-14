@@ -8308,8 +8308,8 @@ const SW = (() => {
   // die Fingerspitzen liegen im Schlitz. spec: Prüfmodell (Abstandsfunktion je Teil) für tools/lenkrad/check_lenkrad.py.
   const spec = [], V = THREE.Vector3;
   const HP = [[0, 0.1], [0.085, 0.1]], qb = (a, c, b, n = 8) => { for (let k = 1; k <= n; k++) { const t = k / n, u = 1 - t; HP.push([u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], u * u * a[1] + 2 * u * t * c[1] + t * t * b[1]]); } };
-  qb([0.085, 0.1], [0.11, 0.1], [0.13, 0.096]); HP.push([0.168, 0.103]); qb([0.168, 0.103], [0.206, 0.112], [0.208, 0.094]); qb([0.208, 0.094], [0.21, 0.078], [0.19, 0.078]);   // Ohr über dem Griff
-  HP.push([0.15, 0.076]); qb([0.15, 0.076], [0.123, 0.076], [0.122, 0.055]); HP.push([0.118, -0.04]); qb([0.118, -0.04], [0.116, -0.085], [0.085, -0.1]); HP.push([0.04, -0.108], [0, -0.108]);   // Schlitzkante, Kinn
+  HP.push([0.15, 0.1]); qb([0.15, 0.1], [0.172, 0.1], [0.172, 0.086]); qb([0.172, 0.086], [0.172, 0.076], [0.16, 0.076]);   // obere Ecke über dem Schlitz (das Ohr bildet der Griffbogen)
+  qb([0.16, 0.076], [0.123, 0.076], [0.122, 0.055]); HP.push([0.118, -0.04]); qb([0.118, -0.04], [0.116, -0.085], [0.085, -0.1]); HP.push([0.04, -0.108], [0, -0.108]);   // Schlitzkante, Kinn
   const OUT = HP.concat(HP.slice(1, -1).reverse().map(([x, y]) => [-x, y]));   // Umriss ohne Fase (Fase 6 mm kommt außen dazu)
   const sh = new THREE.Shape(OUT.map(([x, y]) => new THREE.Vector2(x, y)));
   const body = new THREE.ExtrudeGeometry(sh, { depth: 0.026, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.006, bevelSegments: 3, curveSegments: 10 });
@@ -8330,10 +8330,10 @@ const SW = (() => {
       for (let i = 0; i < n; i++) for (let j = 0; j < k; j++) { const q = i * (k + 1) + j; idx.push(q, q + k + 1, q + 1, q + 1, q + k + 1, q + k + 2); }
       const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return { g, pts, rs }; };
     for (const s2 of [-1, 1]) {   // Griff (Vorbild Ferrari 2026): gerades Stück auf der Griffachse (Hand t −0,10…+0,09, r 2,65 cm), unten frei, rund und etwas kräftiger, oben im Bogen dick ins Ohr
-      const m = v => new V(v.x * s2, v.y, v.z), at = t => m(FC.clone().addScaledVector(FD, t)), E0 = at(-0.12).add(new V(-s2 * 0.016, 0, -0.024)), A0 = at(-0.10), A1 = at(0.09), T1 = new V(s2 * 0.184, 0.094, 0.016);   // Ende leicht nach innen-vorn, weg vom Handgelenk
-      const path = new THREE.CurvePath(); path.add(new THREE.QuadraticBezierCurve3(E0, at(-0.112), A0)); path.add(new THREE.LineCurve3(A0, A1)); path.add(new THREE.QuadraticBezierCurve3(A1, at(0.125), T1));
+      const m = v => new V(v.x * s2, v.y, v.z), at = t => m(FC.clone().addScaledVector(FD, t)), E0 = at(-0.12).add(new V(-s2 * 0.016, 0, -0.024)), A0 = at(-0.10), A1 = at(0.09), T1 = new V(s2 * 0.135, 0.097, 0.016);   // Ende leicht nach innen-vorn, weg vom Handgelenk
+      const path = new THREE.CurvePath(); path.add(new THREE.QuadraticBezierCurve3(E0, at(-0.112), A0)); path.add(new THREE.LineCurve3(A0, A1)); path.add(new THREE.CubicBezierCurve3(A1, at(0.135), new V(s2 * 0.172, 0.124, 0.03), T1));   // Ohr: Griff biegt oben nach innen und läuft in die Oberkante
       const L0 = path.curves[0].getLength(), L1 = A0.distanceTo(A1), Lt = path.getLength(), S = t => { t = Math.min(1, Math.max(0, t)); return t * t * (3 - 2 * t); };
-      const rG = u => { const l = u * Lt; return l < L0 ? RG - 0.003 * S((L0 - l) / L0 * 1.6) : l < L0 + L1 ? RG : RG + 0.0015 * S((l - L0 - L1) / (Lt - L0 - L1) * 2); };
+      const rG = u => { const l = u * Lt; return l < L0 ? RG - 0.003 * S((L0 - l) / L0 * 1.6) : l < L0 + L1 ? RG : RG - 0.0075 * S(((l - L0 - L1) / (Lt - L0 - L1) - 0.45) / 0.55); };
       const G = loft(path, rG); P.push([G.g, rub], [new THREE.SphereGeometry(rG(0), 18, 12).translate(E0.x, E0.y, E0.z), rub], [new THREE.SphereGeometry(rG(1), 18, 12).translate(T1.x, T1.y, T1.z), rub]);
       spec.push({ t: 'tube', pts: G.pts, rs: G.rs, r: RG });
       box(0.052, 0.068, 0.004, s2 * 0.099, 0.03, -0.017, cfk, s2 * 0.06);   // Schaltwippe hinter dem Mittelteil (endet vor den Fingerspitzen)
@@ -8341,7 +8341,6 @@ const SW = (() => {
       box(0.012, 0.03, 0.012, s2 * 0.072, 0.03, -0.011, blk); box(0.012, 0.022, 0.012, s2 * 0.07, -0.045, -0.011, blk);   // Lager der Wippen
       drum(s2 * 0.112, 0.012, [0xe8eaee, 0xe8eaee, 0xffffff, 0xe8eaee], false);   // BMIG / BBAL
       drum(s2 * 0.112, -0.046, [0xf2c418, 0xe8eaee, 0xf2c418], false);   // gelbe Walzen unten
-      drum(s2 * 0.163, 0.09, s2 < 0 ? [0xe8862a, 0xe8eaee, 0xe8eaee] : [0xe8eaee, 0xe8eaee, 0xe8862a], true);   // ENTRY / K0 auf dem Ohr
     }
     cyl(0.026, 0.04, 0, -0.008, -0.026, blk, 24); cyl(0.03, 0.006, 0, -0.008, -0.009, aluL, 24);   // Nabe mit Schnellverschluss
     box(0.164, 0.087, 0.006, 0, 0.0335, 0.0345, blk);   // Display-Rahmen
@@ -8350,7 +8349,7 @@ const SW = (() => {
     const btn = (x, y, c, r = 0.0075) => { cyl(r + 0.0026, 0.006, x, y, 0.0345, alu, 16); cyl(r, 0.01, x, y, 0.039, col(c), 16, r * 0.9); };
     btn(-0.104, 0.046, 0x3fb44a, 0.0095); btn(0.104, 0.046, 0xd6263a, 0.0095);   // N (grün), P (rot)
     btn(-0.097, 0.07, 0x2f5fd0); btn(0.097, 0.07, 0x2f5fd0);   // blaue Tasten (10/−1, 1/+)
-    btn(-0.118, 0.088, 0xd6263a, 0.0062); btn(0.175, 0.1, 0xf2c418, 0.0055); cyl(0.0042, 0.006, 0.197, 0.103, 0.037, wht, 12);   // rote Taste oben links, K1 und weißer Punkt auf dem rechten Ohr
+    btn(-0.088, 0.091, 0xd6263a, 0.006); btn(0.088, 0.091, 0xf2c418, 0.006);   // rote Taste oben links, K1 (gelb) oben rechts
     btn(-0.094, -0.016, 0x2f6fd0, 0.0068); btn(0.094, -0.016, 0xe8862a, 0.0055);   // OK (blau), kleine orange Taste
     box(0.018, 0.005, 0.002, -0.08, -0.027, 0.0335, wht); box(0.018, 0.005, 0.002, 0.08, -0.027, 0.0335, wht);   // Beschriftungsfelder (MID / EB)
     // drei große Drehschalter in einer Reihe: farbige Rastfelder, links/rechts schwarzer Zeigerknebel, Mitte gelbe Scheibe
