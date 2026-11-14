@@ -43,11 +43,13 @@ def comb(d2, dz):
     return np.sqrt(np.maximum(d2, 0) ** 2 + np.maximum(dz, 0) ** 2) + np.minimum(np.maximum(d2, dz), 0)
 
 
-def seg_dist(Q, pts):
+def seg_dist(Q, pts, rs=None):
+    """Abstand zur Kette aus Kegelstümpfen (Radius rs je Punkt, linear dazwischen; ohne rs: Radius 0)."""
     A = np.asarray(pts)[:-1]; Bv = np.asarray(pts)[1:]; best = np.full(len(Q), np.inf)
+    R = np.zeros(len(pts)) if rs is None else np.asarray(rs); RA, RB = R[:-1], R[1:]
     for k in range(0, len(Q), 4000):
         q = Q[k:k + 4000, None, :]; e = (Bv - A)[None]; t = np.clip(((q - A[None]) * e).sum(-1) / (e * e).sum(-1), 0, 1)
-        best[k:k + 4000] = np.linalg.norm(q - (A[None] + e * t[..., None]), axis=-1).min(1)
+        best[k:k + 4000] = (np.linalg.norm(q - (A[None] + e * t[..., None]), axis=-1) - (RA[None] + (RB - RA)[None] * t)).min(1)
     return best
 
 
@@ -68,7 +70,7 @@ def wheel_sdf(Q, spec, parts=False):
             pre = (np.abs(x) < 0.25) & (np.abs(y) < 0.2) & (z > -0.1) & (z < 0.15); d = np.full(len(Q), 1.0)
             d[pre] = comb(poly_sdf(x[pre], y[pre], s['pts']), np.maximum(s['z0'] - z[pre], z[pre] - s['z1'])) - s['r']
         elif s['t'] == 'tube':
-            pre = np.linalg.norm(Q - np.mean(s['pts'], 0), axis=1) < 0.4; d = np.full(len(Q), 1.0); d[pre] = seg_dist(Q[pre], s['pts']) - s['r']
+            pre = np.linalg.norm(Q - np.mean(s['pts'], 0), axis=1) < 0.4; d = np.full(len(Q), 1.0); d[pre] = seg_dist(Q[pre], s['pts'], s['rs']) if s.get('rs') else seg_dist(Q[pre], s['pts']) - s['r']
         elif s['t'] == 'cyl':
             d = comb(np.hypot(x - s['x'], y - s['y']) - s['r'], np.maximum(s['z0'] - z, z - s['z1']))
         elif s['t'] == 'box':
