@@ -354,7 +354,7 @@ def wheel_frame(mode):
 SC = 1.0
 F1_SHEAR = 0.07                                                                        # F1: Kopf/Hals 7 cm vor den Schultern (wie mit HANS) – Schultern weiter vom nahen Lenkrad weg, Arme weniger gebeugt
 F1_NECK = 0.08                                                                         # F1: Helm reicht so weit über den Hals (Kart 4,5 cm) – Schultern sitzen höher im Cockpit, der Anzug ist von außen zu sehen
-F1_CUT = -1.0                                                                          # F1: Körper unter dieser Ruhe-Höhe weg (-1: nichts – seit das F1-Cockpit von außen offen ist, sieht man Hüfte und Beine)
+F1_CUT = 0.30                                                                          # F1: Körper unter dieser Ruhe-Höhe weg – Unterschenkel und Füße liegen unsichtbar unter der Nase (Knie 0,28)
 F1_LEAN = 18
 F1_HELM = np.array([0.0, 0.795, 0.18])                                                 # Helmmitte im F1 (MODELS.f1.helm + 5 mm wie im Spiel)
 
