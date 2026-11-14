@@ -1137,7 +1137,7 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="loading"><div class="ldBox"><div class="ldLogo"><small>FORMULA</small>RACING</div><div class="ldTrk" id="ldTrk"></div><div class="ldBar"><i></i></div><div class="ldTxt">Strecke wird geladen</div></div></div>
+<div id="loading"><div class="ldBox"><div class="ldLogo"><small>FORMULA</small>RACING</div><div class="ldTrk" id="ldTrk"></div><div class="ldBar"><i></i></div><div class="ldTxt" id="ldTxt">Wird geladen</div></div></div>
 <script>
 /* Eigenes Titel-Logo: liegt logos/LOGO.png im Projekt, ersetzt es den Schriftzug „FORMULA RACING“ – sofort beim Start auf dem Ladebildschirm, im Hauptmenü und klein oben in allen Untermenüs. Fehlt die Datei, bleibt der Schriftzug. */
 (function () { var im = new Image(); im.onload = function () {
@@ -9580,7 +9580,7 @@ $('#go').addEventListener('click', () => {
   const launch = () => { placeOnGrid(); if (warmKey() !== WARM_KEY && !window.__noWarm) { loading(true); setTimeout(() => { try { startRace(); } finally { loading(false); } }, 40); } else startRace(); };
   if (ROAD_WAIT) { const w = ROAD_WAIT; ROAD_WAIT = null; Promise.race([w, new Promise(r => setTimeout(r, 2000))]).then(launch); } else launch();   /* Asphalt-Foto erst fertig laden: sonst wird das Fahrbahn-Material mitten im Start neu übersetzt */
 });
-function loading(on) { if (on) { const t = typeof TRACKS !== 'undefined' && TRACKS[S.track]; $('#ldTrk').textContent = t ? t.name + (t.land ? ' · ' + t.land : '') : ''; } $('#loading').classList.toggle('hidden', !on); }
+function loading(on) { if (on) { const t = typeof TRACKS !== 'undefined' && TRACKS[S.track]; $('#ldTrk').textContent = t ? t.name + (t.land ? ' · ' + t.land : '') : ''; $('#ldTxt').textContent = 'Strecke wird geladen'; }   /* beim Spielstart steht „Wird geladen“ (aus dem HTML), danach beim Streckenbau „Strecke wird geladen“ */ $('#loading').classList.toggle('hidden', !on); }
 
 /* ======================= Web-App ======================= */
 let installEvt = null;
