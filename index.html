@@ -2990,7 +2990,7 @@ function haloGhostMat(src) { const m = src.clone(); m.transparent = true; m.dept
 let haloFlatOn = false;   // TV-Kamera aktiv: Halos aller Autos einfarbig (siehe Kamera-Update)
 // Cockpit-Innenraum (Wunsch: einheitliche Farbe IM Cockpit): alles unterhalb des Cockpitrands innerhalb der Öffnung wird einfarbig dunkles Carbon –
 // vorher malte der Lackierungs-Shader Streifen, Keile und Akzentfarben auf die Innenwände. Maße aus dem Höhenraster der Modelle vermessen (Rand F1 0,62 m, F2 0,67 m).
-const COCK = { f1: { x: 0.165, z0: 0.10, z1: 0.71, y: 0.615, fl: 0.30, wd: 0.07, wn: 0.04, zn0: 0.38, zn1: 0.52, yn: 0.625, yc: 0.645, hood: [0.655, 0.666, 0.925] },   /* wn: Öffnung auf Höhe von Lenkrad und Händen breiter (zn0..zn1 weicher Übergang) – das Lenkrad war breiter als die Öffnung und stach beim Lenken durch den Rand; hood: Abdeckung vor dem Lenkrad (Höhe hinten, vorn, Ende) */ f2: { x: 0.19, z0: 0.0, z1: 0.67, y: 0.655, fl: 0.14, wd: 0.05 } }   /* z1 = knapp vor dem Lenkrad: davor bleibt die echte Karosserie (vorher bis 0,84 aufgeschnitten = dunkles Loch vor dem Lenkrad) */, COCK_COL = new THREE.Color(0x1d2026);
+const COCK = { f1: { x: 0.205, z0: 0.10, z1: 0.71, y: 0.615, b2: { x: 0.25, z0: -0.25, z1: 0.38, y: 0.76 },   /* b2 (v1.59, Cockpit von außen offen wie beim F2): Sitzlehne, Kopfstütze, Innenwände neben den Schultern und Rand dunkel statt Wagenfarbe */ fl: 0.30, wd: 0.07, wn: 0.04, zn0: 0.38, zn1: 0.52, yn: 0.625, yc: 0.645, hood: [0.655, 0.666, 0.925] },   /* wn: Öffnung auf Höhe von Lenkrad und Händen breiter (zn0..zn1 weicher Übergang) – das Lenkrad war breiter als die Öffnung und stach beim Lenken durch den Rand; hood: Abdeckung vor dem Lenkrad (Höhe hinten, vorn, Ende) */ f2: { x: 0.19, z0: 0.0, z1: 0.67, y: 0.655, fl: 0.14, wd: 0.05 } }   /* z1 = knapp vor dem Lenkrad: davor bleibt die echte Karosserie (vorher bis 0,84 aufgeschnitten = dunkles Loch vor dem Lenkrad) */, COCK_COL = new THREE.Color(0x1d2026);
 // Cockpitansicht (nur Spielerauto): Karosserieflächen INNERHALB der Öffnung (unter dem Rand) werden verworfen – das Modell hat dort beim F1 eine flache Abdeckung 4 cm unter dem Rand,
 // in der Lenkrad und Hände steckten (deshalb wurden sie früher als Overlay über das Auto gemalt und schwebten über der Nase). Statt dessen: eigene Cockpitwanne (cockTub) aus Carbon.
 const cockWn = (c, z) => { if (!c.wn) return 0; const t = clamp((z - c.zn0) / (c.zn1 - c.zn0), 0, 1); return c.wn * t * t * (3 - 2 * t); };
@@ -3056,8 +3056,8 @@ function cockNew(tp, k, bodyCol) {
       const dm = new THREE.Mesh(dg, new THREE.MeshStandardMaterial({ map: tex, transparent: true, depthWrite: false, roughness: .5, metalness: 0, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); dm.renderOrder = 998; grp.add(dm); }); }
   grp.traverse(x => { if (x.isMesh) { x.frustumCulled = false; x.castShadow = false; } }); return grp; }
 
-const inCock = (k, x, y, z) => { const c = COCK[k]; return Math.abs(x) < c.x && z > c.z0 && z < c.z1 && y < c.y; };
-const cockGLSL = k => { const c = COCK[k]; return '\n if (abs(vLP.x) < ' + c.x.toFixed(3) + ' && vLP.z > ' + c.z0.toFixed(3) + ' && vLP.z < ' + c.z1.toFixed(3) + ' && vLP.y < ' + c.y.toFixed(3) + ') diffuseColor.rgb = vec3(' + [COCK_COL.r, COCK_COL.g, COCK_COL.b].map(v => v.toFixed(4)).join(',') + ');'; };
+const inCkBox = (c, x, y, z) => Math.abs(x) < c.x && z > c.z0 && z < c.z1 && y < c.y, inCock = (k, x, y, z) => inCkBox(COCK[k], x, y, z) || (!!COCK[k].b2 && inCkBox(COCK[k].b2, x, y, z));
+const cockGLSL = k => { const c = COCK[k], bx = b => 'abs(vLP.x) < ' + b.x.toFixed(3) + ' && vLP.z > ' + b.z0.toFixed(3) + ' && vLP.z < ' + b.z1.toFixed(3) + ' && vLP.y < ' + b.y.toFixed(3); return '\n if ((' + bx(c) + ')' + (c.b2 ? ' || (' + bx(c.b2) + ')' : '') + ') diffuseColor.rgb = vec3(' + [COCK_COL.r, COCK_COL.g, COCK_COL.b].map(v => v.toFixed(4)).join(',') + ');'; };
 // Aufkleber: Bilder auf dem berechneten Lack. Alle Angaben je Auto stehen in liveries/liveries.json (erzeugt von tools/sticker/build.py aus tools/sticker/<Kürzel>.json):
 //   sheet  = es gibt einen Aufkleberbogen liveries/<Kürzel>.png mit den Sponsoren, von der Seite aufgetragen. Der Bogen zeigt das Auto im Bereich SHEET_BOX (z = Länge, y = Höhe):
 //            obere Bildhälfte = linke Fahrzeugseite (+x, Nase links), untere Hälfte = rechte Seite (Nase rechts)
@@ -8204,7 +8204,7 @@ function updateMeshes(dt) {
     m.g.position.set(c.x, c.ey, c.z); m.g.rotation.set(FLAT ? 0 : -Math.atan(SLOPE[c.idx] * fw), c.h, roll);
     m.fl.rotation.y = m.fr.rotation.y = -c.steer * 0.35;
     c.spin = (c.spin + (c.v || 0) * dt / (m.wr || 0.36)) % (Math.PI * 2);   // echte Raddrehzahl, ohne Deckel
-    if (m.f1Fahrer) m.f1Fahrer.spin = -(c.steer || 0) * SW_ROT;   // F1/F2: Hände am Lenkrad (dreht wie SW in der Cockpitansicht)
+    if (m.f1Fahrer) { const F = m.f1Fahrer; F.spin = -(c.steer || 0) * SW_ROT; if (!F.sw) f1CarWheel(m); F.sw.rotation.z = F.spin; }   // F1/F2: Hände und Lenkrad (dreht wie SW in der Cockpitansicht)
     if ((m.road || m.kart) && m.swSpin) m.swSpin.rotation.z = -(c.steer || 0) * (m.kartFahrer ? KART_SW_ROT : 1.6);   /* Kart mit neuem Fahrer: weniger Drehung – die Hände bleiben am Kranz, bei 92° lag der Arm quer vor dem Gesicht */
     if (m.road) m.brakeMat.emissiveIntensity = running && c.brk > 0.1 ? 4 : 0.15;
     else m.rl.visible = running && c.v > 25 && ((c.thr || 0) < 0.6 || c.brk > 0.1) && ((performance.now() / 110) | 0) % 2 === 0;
@@ -8346,6 +8346,17 @@ function poseArm(a, gx, gy, gz, rz, ex, ey, ez) {
   _ad.set(ex - _aw.x, ey - _aw.y, ez - _aw.z); const L = _ad.length(); _ad.normalize();
   for (const o of [a.fore, a.cuff, a.strap]) { o.position.copy(_aw); o.quaternion.setFromUnitVectors(_ay, _ad); }
   a.fore.scale.set(1, Math.max(0.01, L), 1);
+}
+// Lenkrad im Auto für die Außenansicht (F1/F2, alle Autos): Kopie des Cockpit-Lenkrads (Carbon-Körper + Griffe/Tasten, ohne Display), normal gezeichnet.
+// In Helm- und TV-Kamera des Spielers übernimmt das Cockpit-Lenkrad SW.
+const SWX = { mats: null };
+function f1CarWheel(m) {
+  const F = m.f1Fahrer, MD = m.tp.M, w = new THREE.Group(); w.rotation.order = 'XYZ';
+  SWX.mats ||= new Map();
+  SW.g.children.slice(0, 2).forEach(o => { let mt = SWX.mats.get(o.material); if (!mt) { mt = o.material.clone(); mt.transparent = false; mt.depthWrite = true; SWX.mats.set(o.material, mt); }
+    const c = new THREE.Mesh(o.geometry, mt); c.castShadow = true; w.add(c); });
+  w.position.set(...(MD.swPos || [0, 0.605, 0.98])); w.scale.setScalar(MD.swS || 1); w.rotation.set(0.45, Math.PI, 0);
+  m.g.add(w); m.detail.push(w); w.visible = !m.far || !m.far.visible; F.sw = w; return w;
 }
 const SW_ROT = 0.95;   // sichtbare Lenkraddrehung bei vollem Einschlag (~55°): mehr hob die Hände so hoch, dass die Unterarme quer über die Karosserie liefen
 const ARMS = { f1: null, road: null }, _gc = new THREE.Color(), _gw = new THREE.Color(0xffffff);
@@ -8495,7 +8506,7 @@ function updateCamera(dt) {
         else { m.halo.geometry = haloFlatOn ? tp.haloFlat : tp.halo; m.halo.material = haloFlatOn ? tp.haloMat : tp.glossMat; m.halo.renderOrder = 0; m.halo.castShadow = true; }
         if (m.haloPre) m.haloPre.visible = gh; } }
     if (pl.mesh.tp) pl.mesh.helm.position.set(0, S.cam === 3 ? -0.03 : 0, S.cam === 3 ? 0.06 : 0);   // TV-Kamera: Helm leicht nach vorn/unten versetzt – bleibt sichtbar, ohne an der Kamera anzuschneiden
-    if (pl.mesh.f1Fahrer) { const F = pl.mesh.f1Fahrer; F.mesh.position.copy(F.off).add(pl.mesh.helm.position); F.cut = S.cam === 2; F.mesh.updateMatrixWorld(); }   // Fahrer bewegt sich mit dem Helm (TV-Kamera); Helmkamera: nur Unterarme und Hände
+    if (pl.mesh.f1Fahrer) { const F = pl.mesh.f1Fahrer; F.mesh.position.copy(F.off).add(pl.mesh.helm.position); F.cut = S.cam === 2; F.mesh.updateMatrixWorld(); if (F.sw) F.sw.visible = S.cam < 2 && !(pl.mesh.far && pl.mesh.far.visible); }   // Helm-/TV-Kamera: Cockpit-Lenkrad SW statt der Außen-Kopie   // Fahrer bewegt sich mit dem Helm (TV-Kamera); Helmkamera: nur Unterarme und Hände
     pl.mesh.label.visible = false;
   }
 
@@ -9293,7 +9304,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.58'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.59'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
