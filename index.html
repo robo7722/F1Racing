@@ -3286,7 +3286,7 @@ function numberTex(num, bg) {
   });
 }
 const CAR_FAR3 = 80, CAR_HIDE = 600;   /* ab 80 m das stark vereinfachte Fernmodell (clusterGeo); ab 600 m (Auto < 5 Pixel) wird ein Gegner gar nicht mehr gezeichnet */
-const CAR_LOD = [10, 35], LOD_HYS = 1.5, LOD_FADE = 0.35;   // Abstand (m) zur Kamera: darunter volle Stufe / mittlere Stufe, darüber Fernmodell (± Schaltlücke gegen Hin- und Herspringen)
+const CAR_LOD = [6, 35], LOD_HYS = 1.5, LOD_FADE = 0.35;   /* volle Stufe erst unter 6 m (bis 1.86: 10 m): im Pulk waren sonst mehrere Autos mit je über 100.000 Dreiecken gleichzeitig voll detailliert; die mittlere Stufe ist ab ~4 m nicht zu unterscheiden */   // Abstand (m) zur Kamera: darunter volle Stufe / mittlere Stufe, darüber Fernmodell (± Schaltlücke gegen Hin- und Herspringen)
 // Weiche Überblendung zwischen den Stufen statt Aufploppen: alte und neue Stufe ~0,35 s gleichzeitig, per Punktraster (wie beim Rasen) einander
 // ergänzend – jeder Pixel zeigt genau eine der beiden. Dafür hat jedes Netz eines Autos eine eigene Materialkopie (gleicher Shader, nichts wird neu übersetzt).
 function lodFadeMat(mt) { if (!mt || mt.userData.lodF) return mt; mt.userData.lodF = { value: new THREE.Vector2(0, 0) }; const prev = mt.onBeforeCompile, pk = mt.customProgramCacheKey; mt.__lfBase = [prev, mt.hasOwnProperty('customProgramCacheKey') ? pk : null];   /* für weitere Kopien: Haken ohne Überblendung (sonst stünde uLodF doppelt im Shader) */
@@ -3314,10 +3314,13 @@ function lodStep(m, want, dt) {
   else { setLod(m, 1, true); m.far.visible = true; for (const o of m.detail) o.visible = true; }   // beide sichtbar; m.lod bleibt 1 bis zum Ende (Schatten nutzt die mittlere Stufe)
   m.lf = { from, to: want, x, t: 0 }; lodFadeApply(m);
 }
+// Carbon-Teile (Unterboden, Aufhängung, Flügel-Innenseiten): beim eigenen Auto in Helm- und TV-Kamera reicht die mittlere Stufe (16.400 statt 47.000 Dreiecke) –
+// aus dem Cockpit sieht man davon nur einen Bruchteil. m.matteLo setzt updateMeshes; Testschalter window.__noMatteLo.
+const matteGeo = (m, l) => m.tp.lods[l === 0 && m.matteLo && !window.__noMatteLo ? 1 : l].matte;
 function setLod(m, l, force) {
   if (force) lodFadeEnd(m);
   if (!m.tp || (!force && m.lod === l)) return; if (m.lod !== l) EVT.car++; m.lod = l; const L = m.tp.lods[l], W = m.tp.M.W[l];
-  m.body.geometry = L.gloss; m.matte.geometry = L.matte; m.wfl.geometry = W.R[m.comp]; m.wfr.geometry = W.L[m.comp]; m.wrl.geometry = W.RL[m.comp]; m.wrr.geometry = W.RR[m.comp];
+  m.body.geometry = L.gloss; m.matte.geometry = matteGeo(m, l); m.wfl.geometry = W.R[m.comp]; m.wfr.geometry = W.L[m.comp]; m.wrl.geometry = W.RL[m.comp]; m.wrr.geometry = W.RR[m.comp];
   if (m.far) { const f = l === 2 && !window.__noFar; m.far.visible = f; for (const o of m.detail) o.visible = !f; }
 }
 // Fernmodell eines Teams: einfachste Karosserie + Carbon + Räder + Helm in einem Netz; Klasse 4 = feste Farbe (keine Lackierung)
@@ -4240,7 +4243,7 @@ let shSwap = false;
 function shadowSwap(on) {
   if (on === shSwap || (on && window.__noShLod)) return; shSwap = on;
   for (const c of cars) { const m = c.mesh; if (!m.tp || m.lod > 1) continue; const k = on ? m.lod + 1 : m.lod, L = m.tp.lods[k], W = m.tp.M.W[k];   /* Autos ab 13 m werfen den Schatten mit der einfachsten Stufe (Schattenpunkt ≈ 6 cm – kein Unterschied) */
-    m.body.geometry = L.gloss; m.matte.geometry = L.matte; m.wfl.geometry = W.R[m.comp]; m.wfr.geometry = W.L[m.comp]; m.wrl.geometry = W.RL[m.comp]; m.wrr.geometry = W.RR[m.comp]; }
+    m.body.geometry = L.gloss; m.matte.geometry = matteGeo(m, k); m.wfl.geometry = W.R[m.comp]; m.wfr.geometry = W.L[m.comp]; m.wrl.geometry = W.RL[m.comp]; m.wrr.geometry = W.RR[m.comp]; }
 }
 for (const l of [sun, flood]) { const um = l.shadow.updateMatrices; l.shadow.updateMatrices = function (light) { shadowSwap(true); if (OWNH) OWNH.visible = true; um.call(this, light); }; }
 scene.onAfterRender = () => shadowSwap(false);
@@ -8368,6 +8371,7 @@ function updateMeshes(dt) {
     if (m.sw) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z; m.sw.visible = c === pl || dx * dx + dz * dz < 625; }   /* Kart: Lenkrad (viele kleine Teile) nur aus der Nähe zeichnen */
     if (m.tp) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z, d2 = dx * dx + dz * dz; const LD = window.__carLod || CAR_LOD, cur = m.lf ? m.lf.to : m.lod, b0 = LD[0] + (cur >= 1 ? -LOD_HYS : LOD_HYS), b1 = LD[1] + (cur >= 2 ? -LOD_HYS : LOD_HYS);
       if (c === pl) { const w = window.__plLod ?? (!running || S.cam === 2 || S.cam === 3 ? 0 : 1);   /* eigenes Auto: volle Stufe (~112.000 Dreiecke) nur im Cockpit/TV-Kamera und im Stand; in den Verfolgerkameras die mittlere (~37.000) – im Bild nicht zu unterscheiden */
+        const ml = running && (S.cam === 2 || S.cam === 3); if (m.matteLo !== ml) { m.matteLo = ml; setLod(m, w, true); }
         if (m.lod !== w || m.lf) setLod(m, w, true); if (m.g.visible === !!window.__hideOwn) m.g.visible = !window.__hideOwn; }
       else { const hd = window.__carHide || CAR_HIDE, vis = d2 < (m.g.visible ? hd + 25 : hd) ** 2; if (m.g.visible !== vis) { m.g.visible = vis; EVT.car++; }
         if (vis) { lodStep(m, d2 < b0 * b0 ? 0 : d2 < b1 * b1 ? 1 : 2, dt);
@@ -9472,7 +9476,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.86'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.87'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
