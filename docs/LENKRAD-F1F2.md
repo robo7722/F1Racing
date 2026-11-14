@@ -146,7 +146,7 @@ Nicht neu geprüft: Clipping (`export.cjs` + `check_lenkrad.py`) – der Stummel
 - Handschuh-Nachbearbeitung (`f1_hand_nachbearbeitung.py`, danach `f1_handgelenk.py`) muss nach jedem Neubau von f1fahrer.bin (build_fahrer.py) erneut laufen.
 - Bei vollem Einschlag knickt die obere Hand weiter ~54° ab (jetzt weich gebogen). Weniger ginge mit mehr Handrolle (`F1_ROLL`) oder höherem Ellbogen, beides braucht neue Clipping-Prüfung.
 - Ellbogen/Oberarme hinter z 0,40 liegen wie bisher gewollt unter dem Rand im Monocoque (nicht geprüft).
-- Außen-Lenkrad (`f1CarWheel`) ohne Display (wie bisher, Leistung).
+- Außen-Lenkrad (`f1CarWheel`) seit v1.97 entfernt: in der Außenansicht hat das eigene Auto das einfache Fahrermodell ([[FAHRER-MODELL]] v1.97).
 
 ## Bilder
 ![[bilder/lenkrad_v173_vorn.png]]

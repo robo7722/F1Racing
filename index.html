@@ -8483,8 +8483,8 @@ function updateMeshes(dt) {
     m.g.position.set(c.x, c.ey, c.z); m.g.rotation.set(FLAT ? 0 : -Math.atan(SLOPE[c.idx] * fw), c.h, roll);
     m.fl.rotation.y = m.fr.rotation.y = -c.steer * 0.35;
     c.spin = (c.spin + (c.v || 0) * dt / (m.wr || 0.36)) % (Math.PI * 2);   // echte Raddrehzahl, ohne Deckel
-    if (m.mkF1) f1Own(m, c === pl);
-    if (m.f1Fahrer) { const F = m.f1Fahrer; F.spin = -(c.steer || 0) * SW_ROT; if (!F.sw) f1CarWheel(m); F.sw.rotation.z = F.spin; }   // F1/F2: Hände und Lenkrad (dreht wie SW in der Cockpitansicht)
+    if (m.mkF1) f1Own(m, c === pl && running && (S.cam === 2 || S.cam === 3));   /* v1.97: detaillierter Fahrer (Skinning, Arm-IK, Ärmel-Stofftextur) nur in Helm- und TV-Kamera; Außenansicht: einfaches Modell wie bei den Gegnern (Leistung) */
+    if (m.f1Fahrer) m.f1Fahrer.spin = -(c.steer || 0) * SW_ROT;   // F1/F2: Hände drehen wie das Cockpit-Lenkrad SW
     if ((m.road || m.kart) && m.swSpin) m.swSpin.rotation.z = -(c.steer || 0) * (m.kartFahrer ? KART_SW_ROT : 1.6);   /* Kart mit neuem Fahrer: weniger Drehung – die Hände bleiben am Kranz, bei 92° lag der Arm quer vor dem Gesicht */
     if (m.road) m.brakeMat.emissiveIntensity = running && c.brk > 0.1 ? 4 : 0.15;
     else m.rl.visible = running && c.v > 25 && ((c.thr || 0) < 0.6 || c.brk > 0.1) && ((performance.now() / 110) | 0) % 2 === 0;
@@ -8684,16 +8684,7 @@ function poseArm(a, gx, gy, gz, rz, ex, ey, ez) {
 function f1Own(m, on) {
   if (!m.mkF1 || on === !!m.f1Fahrer) return;
   if (on) { const st = m.mkF1(); st.m = m; m.f1Fahrer = st; m.detail.push(st.mesh); st.mesh.visible = m.body.visible; m.oldDrv.visible = false; }
-  else { const st = m.f1Fahrer; m.g.remove(st.mesh); if (st.sw) m.g.remove(st.sw); m.detail = m.detail.filter(o => o !== st.mesh && o !== st.sw); m.f1Fahrer = null; m.oldDrv.visible = true; }
-}
-const SWX = { mats: null };
-function f1CarWheel(m) {
-  const F = m.f1Fahrer, MD = m.tp.M, w = new THREE.Group(); w.rotation.order = 'XYZ';
-  SWX.mats ||= new Map();
-  SW.g.children.slice(0, 2).forEach(o => { let mt = SWX.mats.get(o.material); if (!mt) { mt = o.material.clone(); mt.transparent = false; mt.depthWrite = true; SWX.mats.set(o.material, mt); }
-    const c = new THREE.Mesh(o.geometry, mt); c.castShadow = true; w.add(c); });
-  w.position.set(...(MD.swPos || [0, 0.605, 0.98])); w.scale.setScalar(MD.swS || 1); w.rotation.set(0.45, Math.PI, 0);
-  m.g.add(w); m.detail.push(w); w.visible = !m.far || !m.far.visible; F.sw = w; return w;
+  else { const st = m.f1Fahrer; m.g.remove(st.mesh); m.detail = m.detail.filter(o => o !== st.mesh); m.f1Fahrer = null; m.oldDrv.visible = true; }
 }
 const SW_ROT = 0.95;   // sichtbare Lenkraddrehung bei vollem Einschlag (~55°): mehr hob die Hände so hoch, dass die Unterarme quer über die Karosserie liefen
 const ARMS = { f1: null, road: null }, _gc = new THREE.Color(), _gw = new THREE.Color(0xffffff);
@@ -8843,7 +8834,7 @@ function updateCamera(dt) {
         else { m.halo.geometry = haloFlatOn ? tp.haloFlat : tp.halo; m.halo.material = haloFlatOn ? tp.haloMat : tp.glossMat; m.halo.renderOrder = 0; m.halo.castShadow = true; }
         if (m.haloPre) m.haloPre.visible = gh; } }
     if (pl.mesh.tp) pl.mesh.helm.position.set(0, S.cam === 3 ? -0.03 : 0, S.cam === 3 ? 0.06 : 0);   // TV-Kamera: Helm leicht nach vorn/unten versetzt – bleibt sichtbar, ohne an der Kamera anzuschneiden
-    if (pl.mesh.f1Fahrer) { const F = pl.mesh.f1Fahrer; F.mesh.position.copy(F.off).add(pl.mesh.helm.position); F.cut = S.cam === 2; F.mesh.updateMatrixWorld(); if (F.sw) F.sw.visible = S.cam < 2 && !(pl.mesh.far && pl.mesh.far.visible); }   // Helm-/TV-Kamera: Cockpit-Lenkrad SW statt der Außen-Kopie   // Fahrer bewegt sich mit dem Helm (TV-Kamera); Helmkamera: nur Unterarme und Hände
+    if (pl.mesh.f1Fahrer) { const F = pl.mesh.f1Fahrer; F.mesh.position.copy(F.off).add(pl.mesh.helm.position); F.cut = S.cam === 2; F.mesh.updateMatrixWorld(); }   // Lenkrad: in Helm- und TV-Kamera das Cockpit-Lenkrad SW (die Außen-Kopie f1CarWheel entfiel in v1.97 mit dem Fahrer in der Außenansicht)   // Fahrer bewegt sich mit dem Helm (TV-Kamera); Helmkamera: nur Unterarme und Hände
     pl.mesh.label.visible = false;
   }
 
@@ -9643,7 +9634,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.96'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.97'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

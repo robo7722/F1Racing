@@ -94,7 +94,7 @@ Geprüft rechnerisch (Punkte aus dem laufenden Spiel ausgelesen, Windungszahl ge
 ## v1.59 – F1-Cockpit von außen wie beim F2
 - Wunsch: auch beim F1 von außen ins modellierte Cockpit sehen und den Anzug erkennen.
 - **Innenraum dunkel**: Sitzlehne, Kopfstütze, Innenwände neben den Schultern und der Cockpitrand werden in Cockpitfarbe gezeichnet statt in Wagenfarbe (zweiter Bereich `COCK.f1.b2`: |x| < 0,25, z −0,25…0,38, y < 0,76; wirkt in `inCock` und `cockGLSL`). Vorher saß der Fahrer zwischen orangen bzw. teamfarbenen Wänden.
-- **Lenkrad im Auto** (F1 und F2, alle Autos): `f1CarWheel` – Kopie des Cockpit-Lenkrads (Carbon-Körper, Griffe, Tasten; ohne Display) an `swPos`, dreht mit dem Einschlag; die Hände greifen es jetzt sichtbar (vorher griffen sie ins Leere). In Helm- und TV-Kamera des Spielers bleibt das Cockpit-Lenkrad SW zuständig, die Kopie ist dann aus. Gehört zu den Detailteilen (Fernmodell blendet es aus).
+- **Lenkrad im Auto** (F1 und F2, alle Autos; seit v1.97 entfernt, s. u.): `f1CarWheel` – Kopie des Cockpit-Lenkrads (Carbon-Körper, Griffe, Tasten; ohne Display) an `swPos`, dreht mit dem Einschlag; die Hände greifen es jetzt sichtbar (vorher griffen sie ins Leere). In Helm- und TV-Kamera des Spielers bleibt das Cockpit-Lenkrad SW zuständig, die Kopie ist dann aus. Gehört zu den Detailteilen (Fernmodell blendet es aus).
 
 ## v1.63 – F1/F2: Griff, springende Hände, Clipping in der TV-Ansicht
 Gemessen mit einem Durchlauf des Lenkeinschlags −1…+1 in Schritten von 0,01 (Bones aus dem laufenden Spiel; Skript im Arbeitsordner `sweep.cjs`).
@@ -143,6 +143,13 @@ Daumen: Die Wurzel läuft als Ballen in die Hand (`TH_ROOT` in `f1_hand_nachbear
 ## v1.96 – Daumenrest oben an der Faust, Ärmel-Stofftextur
 Details: [[LENKRAD-F1F2]]. Die Spitze des alten Daumens blieb als Lappen oben an der Faust stehen (Winkelfilter in `f1_hand_nachbearbeitung.py`, jetzt `TH_TOP`).
 F1/F2-Ärmel: eigene Stofftextur `textures/f1_arm_stoff.jpg` (256 Bildpunkte je cm statt 4,8 im Atlas, `tools/fahrer/arm_stoff.py`).
+
+## v1.97 – detaillierter F1/F2-Fahrer nur in Helm- und TV-Kamera
+Wunsch: Arme und Hände in dieser Stufe (Skinning, Arm-IK, Ärmel-Stofftextur) nur dort, wo man sie aus der Nähe sieht; in der Außenansicht sparen.
+- `f1Own(m, c === pl && running && (S.cam === 2 || S.cam === 3))`: Der neue Fahrer (`f1Driver`, 11 500 Dreiecke, 7 Knochen, IK je Bild) wird nur in Helm- und TV-Kamera erzeugt.
+  In den Verfolgerkameras (0, 1) und im Stand hat auch das eigene Auto das einfache Fahrermodell (`driverParts`, `oldDrv`) wie die Gegner – ohne Ärmeltextur und Skinning.
+- Die Lenkrad-Kopie fürs Auto (`f1CarWheel`, nur in der Außenansicht sichtbar) ist damit überflüssig und entfernt. In Helm-/TV-Kamera zeigt weiter das Cockpit-Lenkrad `SW` die Hände am Griff.
+- Kein Nachladen beim Kamerawechsel: Material ist je Team gemerkt, `warmCams` zeichnet Helm- und TV-Kamera vorab (gemessen: Shader-Zahl bleibt beim Umschalten 0→2→3→1→2→0 gleich).
 
 ## Offen / Ideen
 - Leichte Knautschfalten an der Hüfte durch das Biegen (im Sitz kaum sichtbar).
