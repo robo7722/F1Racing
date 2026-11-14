@@ -7668,6 +7668,37 @@ function applyVolumes() {
   if (!ac) return;
   if (SFX) SFX.gain.setTargetAtTime(S.sound ? S.volCar * 1.2 : 0, ac.currentTime, 0.05);
 }
+// ===== Aufgenommene Sounds (ElevenLabs Sound Effects, Ordner sounds/, siehe docs/SOUNDS.md) =====
+// Motor je Klasse: zwei nahtlose Loops (mittlere / hohe Drehzahl) mit gemessenem Grundton (Hz, Zündfrequenz der Aufnahme). Im Spiel wird jede Aufnahme
+// auf die aktuelle Zündfrequenz umgestimmt (playbackRate) und zwischen beiden gleich laut überblendet (Kosinus/Sinus über die Frequenz, logarithmisch).
+// Fehlt eine Datei oder lädt sie nicht, bleibt der synthetische Motor (Oszillatoren) – das Spiel klingt nie stumm.
+const SND_ENG = {
+  f1: { cyl: 3, vol: 0.2, lo: ['sounds/f1_mittel.mp3', 230], hi: ['sounds/f1_hoch.mp3', 0] },
+  f2: { cyl: 3, vol: 0.2, lo: ['sounds/f2_mittel.mp3', 248], hi: ['sounds/f2_hoch.mp3', 0] },
+  kart: { cyl: 1, vol: 0.2, lo: ['sounds/kart_mittel.mp3', 0], hi: ['sounds/kart_hoch.mp3', 0] } };   // Grundton 0 = noch nicht gemessen → Aufnahme nicht verwenden
+const SND_CRASH = { auto: 'sounds/crash_auto.mp3', wand: 'sounds/crash_wand.mp3', schwer: 'sounds/crash_schwer.mp3', kart: 'sounds/crash_kart.mp3' };
+const SNDB = {};   // url -> AudioBuffer | 'laedt' | null (fehlt)
+function sndLoad(url) { if (!ac || SNDB[url] !== undefined) return; SNDB[url] = 'laedt';
+  fetch(url).then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status)).then(b => new Promise((res, rej) => ac.decodeAudioData(b, res, rej))).then(buf => { SNDB[url] = buf; }).catch(() => { SNDB[url] = null; }); }
+const sndBuf = url => (SNDB[url] && typeof SNDB[url] === 'object' ? SNDB[url] : null);
+function sndPreload() { for (const k in SND_ENG) for (const s of ['lo', 'hi']) if (SND_ENG[k][s][1] > 0) sndLoad(SND_ENG[k][s][0]); for (const k in SND_CRASH) sndLoad(SND_CRASH[k]); }
+// Motor-Aufnahmen abspielen: gibt true zurück, wenn die Aufnahme läuft (dann schweigt der synthetische Motor)
+function sndEngine(E, cls, on, load, t) {
+  const M = E.smp; if (!M) return false;
+  const D = cls && SND_ENG[cls], bLo = D && D.lo[1] > 0 ? sndBuf(D.lo[0]) : null, bHi = D && D.hi[1] > 0 ? sndBuf(D.hi[0]) : null;
+  if (!bLo && !bHi) { if (M.cls) { for (const v of M.v) { try { v.src.stop(); } catch (e) {} } M.v = []; M.cls = null; M.out.gain.setTargetAtTime(0, t, 0.05); } return false; }
+  const key = cls + (bLo ? 'L' : '') + (bHi ? 'H' : '');
+  if (M.cls !== key) { for (const v of M.v) { try { v.src.stop(t + 0.05); } catch (e) {} } M.v = []; M.cls = key;
+    for (const [b, base] of [[bLo, D.lo[1]], [bHi, D.hi[1]]]) { if (!b) { M.v.push(null); continue; } const src = ac.createBufferSource(), g = ac.createGain(); src.buffer = b; src.loop = true; g.gain.value = 0; src.connect(g); g.connect(M.lp); src.start(t, Math.random() * b.duration); M.v.push({ src, g, base }); } }
+  const fq = E.rpm / 60 * D.cyl, [L, H] = M.v;
+  let x = 0; if (L && H) x = clamp(Math.log(fq / L.base) / Math.log(H.base / L.base), 0, 1); else if (H) x = 1;
+  if (L) { L.src.playbackRate.setTargetAtTime(clamp(fq / L.base, 0.45, 2.6), t, 0.015); L.g.gain.setTargetAtTime(Math.cos(x * Math.PI / 2), t, 0.03); }
+  if (H) { H.src.playbackRate.setTargetAtTime(clamp(fq / H.base, 0.45, 2.6), t, 0.015); H.g.gain.setTargetAtTime(Math.sin(x * Math.PI / 2), t, 0.03); }
+  M.lp.frequency.setTargetAtTime(1500 + load * 10500, t, 0.05);   // Gas weg: dumpfer (Schub), Vollgas: offen
+  M.out.gain.setTargetAtTime(on ? D.vol * (E.cut > 0 ? 0.35 : 0.55 + 0.45 * load) : 0, t, E.cut > 0 ? 0.01 : 0.04);
+  return true;
+}
+window.__snd = (init) => { if (init) initAudio(); return { ac: !!ac, dateien: Object.fromEntries(Object.entries(SNDB).map(([k, v]) => [k, v && typeof v === 'object' ? +v.duration.toFixed(2) + ' s' : v])), aktiv: ENG && ENG.smp ? ENG.smp.cls : null }; };   // Test/Diagnose
 function initAudio() {
   if (ac) { ac.resume && ac.resume(); return; }
   try {
@@ -7699,6 +7730,8 @@ function initAudio() {
       others.push({ fo, fo2, fl, fg, pan });
     }
     ENG = { out, lp, o1, o2, o3, o4, nbp, ng, turbo, tg, ers, ers2, ers3, ebp, eg, others, rpm: 4000, gear: 1, cut: 0, popT: 0, nb, wasBoost: false };
+    { const so = ac.createGain(), sl = ac.createBiquadFilter(); so.gain.value = 0; sl.type = 'lowpass'; sl.frequency.value = 8000; sl.Q.value = 0.7; sl.connect(so); so.connect(sfxBus()); ENG.smp = { out: so, lp: sl, cls: null, v: [] }; }
+    sndPreload();
   } catch (e) { try { ac && ac.close(); } catch (_) {} ac = null; ENG = null; SFX = null; }
 }
 // Getriebe: 8 Gänge, Drehzahl 4.000–12.000 U/min
@@ -7725,7 +7758,8 @@ function updateAudio(thr) {
   else { E.o1.frequency.setTargetAtTime(f * jit, t, 0.012); E.o2.frequency.setTargetAtTime(f * 2.005, t, 0.012); E.o3.frequency.setTargetAtTime(f * 0.5, t, 0.012); E.o4.frequency.setTargetAtTime(f * 1.5, t, 0.012); }
   E.nbp.frequency.setTargetAtTime(f * (kart ? 4 : 2.5), t, 0.02); E.ng.gain.setTargetAtTime(kart ? 0.1 + load * 0.2 : f2 ? 0.16 + load * 0.26 : 0.12 + load * 0.22, t, 0.05);
   E.lp.frequency.setTargetAtTime(kart ? Math.min(5200, 1300 + load * 2700 + (E.rpm / 14000) * 1500) : f2 ? Math.min(3300, 450 + load * 2000 + (E.rpm / 10500) * 1000) : road ? Math.min(1900, 260 + load * 900 + (E.rpm / 7300) * 700) : Math.min(4200, 500 + load * 2600 + (E.rpm / 12000) * 1300), t, 0.03);
-  const vol = on ? (E.cut > 0 ? 0.03 : (kart ? 0.055 + load * 0.065 : f2 ? 0.075 + load * 0.085 : road ? 0.09 + load * 0.09 : 0.07 + load * 0.08)) : 0;
+  const rec = sndEngine(E, road ? null : kart ? 'kart' : f2 ? 'f2' : 'f1', on, load, t);   // Aufnahme läuft → synthetischer Motor still (Turbo-Pfeifen, ERS und Fehlzündungen bleiben)
+  const vol = on && !rec ? (E.cut > 0 ? 0.03 : (kart ? 0.055 + load * 0.065 : f2 ? 0.075 + load * 0.085 : road ? 0.09 + load * 0.09 : 0.07 + load * 0.08)) : 0;
   E.out.gain.setTargetAtTime(vol, t, E.cut > 0 ? 0.01 : 0.04);
   E.turbo.frequency.setTargetAtTime(2600 + (E.rpm / 12000) * 2600, t, 0.05); E.tg.gain.setTargetAtTime(on && !road && !kart ? load * (f2 ? 0.006 : 0.012) : 0, t, 0.1);
   const ef = 380 + pl.v * 22; E.ers.frequency.setTargetAtTime(ef, t, 0.04); E.ers2.frequency.setTargetAtTime(ef * 2, t, 0.04); E.ers3.frequency.setTargetAtTime(ef * 3.01, t, 0.04); E.ebp.frequency.setTargetAtTime(ef * 2.2, t, 0.05);
@@ -7773,6 +7807,8 @@ let BUMP_NB = null;
 function bump(strength = 1, kind = 'car') {
   if (!ac || !S.sound) return;
   try { const t = ac.currentTime, st = clamp(strength, 0.2, 1), out = ac.createGain(), lim = ac.createDynamicsCompressor(); lim.threshold.value = -10; lim.ratio.value = 8; lim.attack.value = 0.002; lim.release.value = 0.08; out.gain.value = 0.85 * st; out.connect(lim); lim.connect(sfxBus());   /* Begrenzer: nie Übersteuern, auch bei Treffern in Serie */
+    { const kt = !!(pl && pl.mesh && pl.mesh.kart), b = sndBuf(SND_CRASH[kt ? 'kart' : kind === 'wall' ? (st > 0.85 ? 'schwer' : 'wand') : st > 0.9 ? 'schwer' : 'auto']);   // Aufnahme (ElevenLabs): Kart-Rempler, Leitplanke, Auto-Auto, sehr harte Treffer schwer
+      if (b) { const n = ac.createBufferSource(), g = ac.createGain(); n.buffer = b; n.playbackRate.value = 0.92 + Math.random() * 0.16; g.gain.value = 0.35 + 0.65 * st; n.connect(g); g.connect(out); n.start(t); return; } }
     if (!BUMP_NB) { BUMP_NB = ac.createBuffer(1, ac.sampleRate, ac.sampleRate); const d = BUMP_NB.getChannelData(0); for (let k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1; }
     const nz = (f, q, v, dur, off = 0) => { const n = ac.createBufferSource(), bp = ac.createBiquadFilter(), g = ac.createGain(); n.buffer = BUMP_NB; bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = q; g.gain.setValueAtTime(v, t + off); g.gain.exponentialRampToValueAtTime(0.001, t + off + dur); n.connect(bp); bp.connect(g); g.connect(out); n.start(t + off, Math.random() * 0.5); n.stop(t + off + dur + 0.02); };
     { const o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(95, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.16); g.gain.setValueAtTime(0.42, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.16 + 0.1 * st); o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.4); }   // Schlag (leiser als vorher: lag zu 98 % unter 150 Hz und war auf Handylautsprechern kaum zu hören)
