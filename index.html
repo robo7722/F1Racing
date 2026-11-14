@@ -4612,7 +4612,7 @@ function distFade(m, d0, d1) {
   m.onBeforeCompile = function (sh, r) { if (prev) prev.call(this, sh, r);
     sh.fragmentShader = sh.fragmentShader.replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
       { float fdv = 1.0 - smoothstep( ${d0.toFixed(1)}, ${d1.toFixed(1)}, length( vViewPosition ) ); float fdn = fract( 52.9829189 * fract( dot( gl_FragCoord.xy, vec2( 0.06711056, 0.00583715 ) ) ) );
-        if ( fdv < fdn + 0.001 ) discard; }`); };
+        if ( fdv <= fdn ) discard; }`); };   /* fdn liegt in [0,1): voll sichtbar (1) verwirft nie etwas – vorher (fdv < fdn + 0.001) fehlte jedes ~1000. Pixel fest am Bildschirm: weiße Punkte in den Bäumen */
   m.customProgramCacheKey = function () { return (pk ? pk.call(this) : '') + '|fade' + d0 + '_' + d1; };
   return m;
 }
@@ -4662,7 +4662,7 @@ function treeSprites() {
       sh.fragmentShader = 'varying float vTD; varying float vTK;\n' + sh.fragmentShader.replace('#include <map_fragment>', `
         vec4 sampledDiffuseColor = texture2D( map, vec2( ( floor( vTK + 0.5 ) + clamp( vMapUv.x, 0.004, 0.996 ) ) / ${n.toFixed(1)}, vMapUv.y ) ); diffuseColor *= sampledDiffuseColor;`)
         .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
-        { float tsn = fract( 52.9829189 * fract( dot( gl_FragCoord.xy, vec2( 0.06711056, 0.00583715 ) ) ) ); if ( tsn <= 1.0 - smoothstep( ${T.D0.toFixed(1)}, ${T.D1.toFixed(1)}, vTD ) + 0.001 ) discard; }`);   // genau die Punkte, die der 3D-Baum dort verwirft
+        { float tsn = fract( 52.9829189 * fract( dot( gl_FragCoord.xy, vec2( 0.06711056, 0.00583715 ) ) ) ); if ( tsn < 1.0 - smoothstep( ${T.D0.toFixed(1)}, ${T.D1.toFixed(1)}, vTD ) ) discard; }`);   // genau die Punkte, die der 3D-Baum dort verwirft
     };
     mat.customProgramCacheKey = () => 'treeSpr' + n + '_' + T.D0 + '_' + T.D1 + (TRK.nos ? 'n' : '');
     const im = new THREE.InstancedMesh(new THREE.PlaneGeometry(W, H).translate(0, H / 2, 0), mat, list.length);
@@ -9309,7 +9309,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.60'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.61'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
