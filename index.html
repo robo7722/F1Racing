@@ -3019,10 +3019,12 @@ const COCK_PAD = new THREE.MeshStandardMaterial({ color: 0x24252b, roughness: .9
 // Es misst nichts am Fahrzeugmodell und schließt nirgends daran an: das Fahrzeugmodell wird in diesem Bereich (Kasten um das neue Modell) in der Cockpitansicht nicht gezeichnet.
 // Erst kurz vor der Vorderachse taucht das neue Modell 1,5 cm kleiner in die echte Nase ein. Maße: hw = halbe Breite, hC = Deckhöhe in der Mitte (je Längsposition z).
 const CK = {
-  f1: { zB: -0.35, z1: 0.74, rc: 0.09, wo: 0.2, yR: 0.615, fl: 0.30, zCut: 1.82, zF: 2.0, yLo: 0.31,
+  f1: { zB: -0.35, z1: 0.74, rc: 0.09, wo: 0.2, wh: 0.035, wz: [0.12, 0.34], yR: 0.615, fl: 0.30, zCut: 1.82, zF: 2.0, yLo: 0.31,
     hw: [[-0.35, 0.37], [0.45, 0.37], [0.74, 0.31], [1.0, 0.285], [1.4, 0.23], [1.6, 0.19], [2.0, 0.14]], hC: [[0.74, 0.665], [1.6, 0.655], [1.8, 0.635], [2.0, 0.605]] },
-  f2: { zB: -0.35, z1: 0.70, rc: 0.09, wo: 0.21, yR: 0.655, fl: 0.14, zCut: 1.72, zF: 1.9, yLo: 0.30,
+  f2: { zB: -0.35, z1: 0.70, rc: 0.09, wo: 0.21, wh: 0.035, wz: [0.12, 0.34], yR: 0.655, fl: 0.14, zCut: 1.72, zF: 1.9, yLo: 0.30,
     hw: [[-0.35, 0.37], [0.45, 0.37], [0.70, 0.30], [0.8, 0.25], [1.0, 0.24], [1.2, 0.22], [1.4, 0.20], [1.6, 0.18], [1.9, 0.165]], hC: [[0.70, 0.705], [0.8, 0.705], [1.0, 0.695], [1.4, 0.685], [1.6, 0.655], [1.8, 0.615], [1.9, 0.59]] } };
+// Innenwand der Wanne: ab Ellbogenhöhe (wz) um wh weiter außen – Unterarme und Hände am Lenkrad lagen sonst bis 2 cm in der Wand (x 0,20)
+const ckWo = (G, z) => { const t = clamp((z - G.wz[0]) / (G.wz[1] - G.wz[0]), 0, 1); return G.wo + G.wh * t * t * (3 - 2 * t); };
 const ckTab = (T, z) => { if (z <= T[0][0]) return T[0][1]; for (let i = 1; i < T.length; i++) if (z <= T[i][0]) return lerp(T[i - 1][1], T[i][1], (z - T[i - 1][0]) / (T[i][0] - T[i - 1][0])); return T[T.length - 1][1]; };
 const ckGLSL = (T, v) => { let e = T[T.length - 1][1].toFixed(4); for (let i = T.length - 1; i >= 1; i--) e = '(' + v + ' < ' + T[i][0].toFixed(3) + ' ? mix(' + T[i - 1][1].toFixed(4) + ', ' + T[i][1].toFixed(4) + ', clamp((' + v + ' - ' + T[i - 1][0].toFixed(3) + ') / ' + (T[i][0] - T[i - 1][0]).toFixed(3) + ', 0.0, 1.0)) : ' + e + ')'; return e; };
 function cockNew(tp, k, bodyCol) {
@@ -3032,7 +3034,7 @@ function cockNew(tp, k, bodyCol) {
   const SD = [0, 0.045, 0.09, 0.125, 0.14, 0.2, 0.35, 0.55, 0.72, 0.79, 0.81, 0.87, 0.94, 1], NA = 3, NBw = 4, NC = 2, ND = SD.length - 1,   /* SD: Punktreihen dicht an den beiden Kanten der Schulter */ NE = 3, NF = 2, cols = NA + NBw + NC + ND + NE + NF + 1, P = [], UV = [], I = [], ICb = [];
   for (const sd of [-1, 1]) { const base = P.length / 3;
     zs.forEach((z, r) => { const tub = r < nTub, u = z > G.z1 - G.rc ? clamp((z - (G.z1 - G.rc)) / G.rc, 0, 1) : 0, shr = 0.015 * S((z - G.zCut) / (G.zF - G.zCut - 0.04)), hw = ckTab(G.hw, z) + 0.006 - shr, hC = ckTab(G.hC, Math.max(z, G.z1)) - shr;
-      const wo = tub ? Math.max(0.04, G.wo * Math.pow(Math.max(0, 1 - u * u * u), 1 / 3)) : 0,   /* vorn rund mit kurzem geradem Stück (keine Spitze/Kerbe in der Mitte) */ yRim = G.yR + (hC1 - G.yR) * S(u), rise = lerp(0.065, hC1 - G.yR, S((z - 0.25) / (G.z1 - 0.25))) * (1 - S(u)), yB = tub ? yBk : lerp(yBk, G.yLo, S((z - G.z1) / 0.25));
+      const wo = tub ? Math.max(0.04, ckWo(G, z) * Math.pow(Math.max(0, 1 - u * u * u), 1 / 3)) : 0,   /* vorn rund mit kurzem geradem Stück (keine Spitze/Kerbe in der Mitte) */ yRim = G.yR + (hC1 - G.yR) * S(u), rise = lerp(0.065, hC1 - G.yR, S((z - 0.25) / (G.z1 - 0.25))) * (1 - S(u)), yB = tub ? yBk : lerp(yBk, G.yLo, S((z - G.z1) / 0.25));
       const top = x => { const s2 = clamp((x - (wo + 0.022)) / Math.max(0.02, hw - (wo + 0.022)), 0, 1), c2 = clamp((s2 - 0.8) / 0.2, 0, 1); return tub ? yRim + 0.004 + rise * clamp(s2 / 0.13, 0, 1) - 0.012 * clamp((s2 - 0.13) / 0.67, 0, 1) - 0.05 * c2 :   /* kantig: steile Innenflanke, fast ebene Oberseite mit leichtem Gefälle nach außen, Fase zur Flanke */ hC - 0.02 * (x / hw) * (x / hw) - 0.045 * (1 - Math.cos(clamp((x / hw - 0.8) / 0.2, 0, 1) * Math.PI / 2)); };
       const push = (x, y, wall) => { P.push(sd * x, y, z); if (wall) UV.push((x + z) * 30, y * 30); else UV.push(x * 30, z * 30); };   /* Carbon: Wände über Umfang × Höhe, liegende Flächen über x × z */
       if (tub) { for (let j = 0; j < NA; j++) push((wo + 0.03) * j / NA, G.fl);                                        // Wannenboden
@@ -3060,9 +3062,9 @@ function cockNew(tp, k, bodyCol) {
     const ix = [0, 1, n + 1]; for (let i = 1; i <= n; i++) ix.push(0, i + 1, i); const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute(Q, 3)); wg.setIndex(ix); wg.computeVertexNormals();
     const wm = COCK_PAD.clone(); wm.side = THREE.DoubleSide; grp.add(new THREE.Mesh(wg, wm)); }
   // Schriftzüge auf den Schultern (eigene Schrift, keine Markenlogos): links der Teamname, rechts Startnummer und Fahrerkürzel – von außen lesbar, wie bei echten Autos
-  { const T = TEAMS[pl.team] || {}, txts = [String(T.name || '').toUpperCase(), (pl.num != null ? pl.num + ' ' : '') + (pl.code || '')], zA = 0.30, zE = G.z1 - G.rc - 0.03, hwA = z => ckTab(G.hw, z), yAt = (x, z) => { const s2 = (x - (G.wo + 0.022)) / (hwA(z) - G.wo - 0.022), rise = lerp(0.065, hC1 - G.yR, S((z - 0.25) / (G.z1 - 0.25))); return G.yR + 0.004 + rise * clamp(s2 / 0.13, 0, 1) - 0.012 * clamp((s2 - 0.13) / 0.67, 0, 1) + 0.0025; };
+  { const T = TEAMS[pl.team] || {}, txts = [String(T.name || '').toUpperCase(), (pl.num != null ? pl.num + ' ' : '') + (pl.code || '')], zA = 0.30, zE = G.z1 - G.rc - 0.03, hwA = z => ckTab(G.hw, z), yAt = (x, z) => { const s2 = (x - (ckWo(G, z) + 0.022)) / (hwA(z) - ckWo(G, z) - 0.022), rise = lerp(0.065, hC1 - G.yR, S((z - 0.25) / (G.z1 - 0.25))); return G.yR + 0.004 + rise * clamp(s2 / 0.13, 0, 1) - 0.012 * clamp((s2 - 0.13) / 0.67, 0, 1) + 0.0025; };
     [1, -1].forEach((sd, q) => { if (!txts[q].trim()) return; const tex = canvasTex(512, 128, (c, w, h) => { c.clearRect(0, 0, w, h); let fs = 86; c.font = '900 ' + fs + 'px "Titillium Web",system-ui,sans-serif'; const mw = c.measureText(txts[q]).width; if (mw > w - 20) { fs *= (w - 20) / mw; c.font = '900 ' + fs + 'px "Titillium Web",system-ui,sans-serif'; } c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round'; const bc2 = new THREE.Color(bodyCol), dark = 0.2126 * bc2.r + 0.7152 * bc2.g + 0.0722 * bc2.b > 0.35; c.lineWidth = 7; c.strokeStyle = dark ? 'rgba(255,255,255,.5)' : 'rgba(10,12,16,.55)'; c.strokeText(txts[q], w / 2, h / 2 + 4); c.fillStyle = dark ? '#14161b' : '#ffffff'; c.fillText(txts[q], w / 2, h / 2 + 4); });   /* helle Autos: dunkle Schrift, dunkle Autos: weiße */
-      const NZ = 8, Pp = [], Uu = [], Ii = []; for (let i = 0; i <= NZ; i++) for (let j = 0; j <= 1; j++) { const z = lerp(zA, zE, i / NZ), xs = G.wo + 0.022 + (hwA(z) - G.wo - 0.022) * (j ? 0.74 : 0.24); Pp.push(sd * xs, yAt(xs, z), z); Uu.push(sd === 1 ? 1 - i / NZ : i / NZ, j ? 0 : 1); }
+      const NZ = 8, Pp = [], Uu = [], Ii = []; for (let i = 0; i <= NZ; i++) for (let j = 0; j <= 1; j++) { const z = lerp(zA, zE, i / NZ), xs = ckWo(G, z) + 0.022 + (hwA(z) - ckWo(G, z) - 0.022) * (j ? 0.74 : 0.24); Pp.push(sd * xs, yAt(xs, z), z); Uu.push(sd === 1 ? 1 - i / NZ : i / NZ, j ? 0 : 1); }
       for (let i = 0; i < NZ; i++) { const a = i * 2, b2 = a + 1, d = a + 2, e = a + 3; if (sd === 1) Ii.push(a, d, b2, b2, d, e); else Ii.push(a, b2, d, b2, e, d); }
       const dg = new THREE.BufferGeometry(); dg.setAttribute('position', new THREE.Float32BufferAttribute(Pp, 3)); dg.setAttribute('uv', new THREE.Float32BufferAttribute(Uu, 2)); dg.setIndex(Ii); dg.computeVertexNormals();
       const dm = new THREE.Mesh(dg, new THREE.MeshStandardMaterial({ map: tex, transparent: true, depthWrite: false, roughness: .5, metalness: 0, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); dm.renderOrder = 998; grp.add(dm); }); }
@@ -3734,7 +3736,8 @@ function kartArmsIK(out, spin, K = KFAHRER, C = K.swC, AX = K.swAx, RIM = K.rimR
   // Hand: dreht mit dem Lenkrad UND zusätzlich um das Kranzrohr (wie eine echte Hand, die am Griff „rollt“), so dass sie in Linie mit dem
   // Unterarm bleibt – kein Abknicken im Handgelenk, keine Stulpe im Bündchen. Arm: Zwei-Knochen-IK auf das so gefundene Handgelenk.
   const X = _ik; out[0].identity();
-  X.r.setFromAxisAngle(AX, spin * 0.8);   // Hände folgen dem Kranz zu 80 % – der Kranz gleitet etwas durch die Faust (wie beim echten Fahren bei viel Einschlag)
+  const FX = K.fist;   // F1/F2: Faustachse der Hand (der Griff liegt genau darauf) – Hand sitzt fest am Griff und rollt nur um diese Achse
+  X.r.setFromAxisAngle(AX, spin * (FX ? 1 : 0.8));   // Kart: Hände folgen dem Kranz zu 80 % – der Kranz gleitet etwas durch die Faust; F1/F2: 100 % (bei 80 % rutschte die Faust bis 3 cm neben den Griff)
   for (let side = 0; side < 2; side++) {
     const mir = side ? -1 : 1, o = side ? 4 : 1;
     const sh = _ikA.copy(K.arm[0]).setX(K.arm[0].x * mir), el = _ikB.copy(K.arm[1]).setX(K.arm[1].x * mir), wr = _ikW.copy(K.arm[2]).setX(K.arm[2].x * mir);
@@ -3744,12 +3747,17 @@ function kartArmsIK(out, spin, K = KFAHRER, C = K.swC, AX = K.swAx, RIM = K.rimR
     // ohne Angabe: nächster Kranzpunkt zum Handgelenk (beim F1 lag die Hand damit neben der Griffschlaufe)
     const rel = _ikG.copy(K.grip || wr); if (K.grip) rel.x *= mir; rel.sub(K.grip ? K.swC : C); const rax = rel.dot(AX); rel.addScaledVector(AX, -rax); if (!K.grip) rel.setLength(RIM); else rel.multiplyScalar(RIM / K.rimR).addScaledVector(AX, rax);   /* Griff: radial auf diesen Kranz, Abstand entlang der Achse bleibt (sonst rutschte die Faust beim Rollen um das Rohr vom Griff) */
     // G0: Griff in Bindhaltung (Fahrer-Rahmen, fest), G: derselbe Griff am Lenkrad dieses Autos nach dem Einlenken (TV-Kamera/F2: Lenkrad liegt im Fahrer-Rahmen woanders)
-    const G0 = K.grip ? _ikG0.copy(K.grip).setX(K.grip.x * mir) : _ikG0.copy(C).add(rel), G = _ikGr.copy(rel).applyQuaternion(X.r).add(C);
-    const tng = _ikT.crossVectors(AX, _ikV1.copy(G).sub(C)).normalize();              // Kranz-Tangente am Griff (Rohrachse)
+    let G0 = K.grip ? _ikG0.copy(K.grip).setX(K.grip.x * mir) : _ikG0.copy(C).add(rel), G = _ikGr.copy(rel).applyQuaternion(X.r).add(C);
+    let tng = _ikT.crossVectors(AX, _ikV1.copy(G).sub(C)).normalize();              // Kranz-Tangente am Griff (Rohrachse)
+    if (FX) {   // F1/F2: Faustmitte und -achse; im Lenkrad dieses Autos maßstäblich (F2-Lenkrad ist größer), Rolle um die Faustachse – die Finger bleiben am Griff
+      // Drehpunkt = Ursprung der Lenkrad-Gruppe (C liegt 1 cm darunter: Drehung um C ließ die Hand beim Einlenken bis 6 mm vom Griff wandern)
+      const ov = _ikOV.set(0, -0.01, 0.02).multiplyScalar(RIM / 0.2).applyQuaternion(_swQ);
+      G0 = _ikG0.copy(FX.c).setX(FX.c.x * mir); rel.copy(G0).sub(K.swC).multiplyScalar(RIM / K.rimR).add(ov); G = _ikGr.copy(rel).applyQuaternion(X.r).add(C).sub(ov);
+      tng = _ikT.copy(FX.d).setX(FX.d.x * mir).applyQuaternion(X.r); }
     const hand0 = _ikH0.copy(wr).sub(el).normalize();                                      // Unterarm-/Handrichtung in Bindhaltung
     let phi = out.prevPhi ? out.prevPhi[side] : 0, phU = 0, lastA = 0;   // vom letzten Bild weiter (stetig); phU: weich begrenzte Rolle (harte Grenze ließ die Hand im engen Cockpit springen)
     for (let it = 0; it < 10; it++) {
-      phU = 1.3 * Math.tanh(phi / 1.3);
+      phU = FX ? F1_ROLL * Math.tanh(phi / F1_ROLL) : 1.3 * Math.tanh(phi / 1.3);   // F1/F2: Rolle klein halten – die Fingerspitzen liegen im Schlitz neben dem Mittelteil
       X.q2.setFromAxisAngle(tng, phU).multiply(X.r);                                       // Handdrehung: Lenkrad, dann um das Rohr
       X.t.copy(wr).sub(G0).applyQuaternion(X.q2).add(G);                                   // Handgelenk-Ziel
       // IK: Ellbogen auf dem möglichen Kreis so wählen, dass der Unterarm in Linie mit der Hand steht (kein seitliches Abknicken),
@@ -3781,7 +3789,7 @@ function kartArmsIK(out, spin, K = KFAHRER, C = K.swC, AX = K.swAx, RIM = K.rimR
       if (Math.abs(err) < 1e-3) break;
     }
     const eN = _ikEN; (out.prevE ||= [new THREE.Vector3(), new THREE.Vector3()])[side].copy(eN);
-    (out.prevPhi ||= [0, 0])[side] = phi;
+    (out.prevPhi ||= [0, 0])[side] = phi; (out.roll ||= [0, 0])[side] = phU;
     (out.prevA ||= [null, null])[side] = lastA;
     X.q.setFromUnitVectors(X.v.copy(el).sub(sh).normalize(), _ikV1.copy(eN).sub(sh).normalize());
     out[o].makeRotationFromQuaternion(X.q); out[o].setPosition(_ikV2.copy(sh).sub(_ikV3.copy(sh).applyQuaternion(X.q)));
@@ -3801,7 +3809,7 @@ function kartArmsIK(out, spin, K = KFAHRER, C = K.swC, AX = K.swAx, RIM = K.rimR
     out.wristBend = out.wristBend || []; out.wristBend[side] = phU;
   }
 }
-const _ikE1 = new THREE.Vector3(), _ikE2 = new THREE.Vector3(), _ikHD = new THREE.Vector3(), _ikA = new THREE.Vector3(), _ikB = new THREE.Vector3(), _ikW = new THREE.Vector3(), _ikG = new THREE.Vector3(), _ikG0 = new THREE.Vector3(), _ikGr = new THREE.Vector3(),
+const _ikOV = new THREE.Vector3(), _ikE1 = new THREE.Vector3(), _ikE2 = new THREE.Vector3(), _ikHD = new THREE.Vector3(), _ikA = new THREE.Vector3(), _ikB = new THREE.Vector3(), _ikW = new THREE.Vector3(), _ikG = new THREE.Vector3(), _ikG0 = new THREE.Vector3(), _ikGr = new THREE.Vector3(),
   _ikT = new THREE.Vector3(), _ikH0 = new THREE.Vector3(), _ikEN = new THREE.Vector3(), _ikQ1 = new THREE.Quaternion();
 const _ikV1 = new THREE.Vector3(), _ikV2 = new THREE.Vector3(), _ikV3 = new THREE.Vector3();
 // KFMAT-END
@@ -4098,9 +4106,15 @@ function suitDesign(d, T) {   // F2: aus der Lackierung (Hauptfarbe, Unterteil b
 }
 // Wagen-Lenkrad (SW-Gruppe, siehe drawWheel): Mitte, Drehachse und Griffradius im Fahrzeug-Rahmen
 const _swQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.45, Math.PI, 0));
+// Faustachse der rechten Hand im Lenkrad-Rahmen (lokal, vor swS): aus f1fahrer.bin vermessen (größter freier Zylinder in der Faust, r 3,1 cm lokal über ±7 cm).
+// Der Griff des Lenkrads liegt genau darauf (F1_GRIP_R: 4 mm Luft zu den Fingern); die Hand rollt beim Lenken nur um diese Achse, höchstens ±F1_ROLL.
+const F1_FIST = { c: [0.1939, -0.0161, 0.0380], d: [0.1375, 0.9331, 0.3324] }, F1_GRIP_R = 0.0265, F1_ROLL = 0.35;
+function f1Fist(K) {   // Faustachse im Fahrer-Rahmen (Bindhaltung: Lenkrad wie beim Bau von f1fahrer.bin, wheel_frame('f1') = MODELS.f1)
+  return { c: new THREE.Vector3(...F1_FIST.c).multiplyScalar(0.78).applyQuaternion(_swQ).add(new THREE.Vector3(0, 0.60, 0.665)), d: new THREE.Vector3(...F1_FIST.d).normalize().applyQuaternion(_swQ) }; }
 function f1Wheel(MD) { const s = MD.swS || 1; return { C: new THREE.Vector3(...(MD.swPos || [0, 0.605, 0.98])).add(new THREE.Vector3(0, -0.01, 0.02).multiplyScalar(s).applyQuaternion(_swQ)), AX: new THREE.Vector3(0, 0, 1).applyQuaternion(_swQ), R: 0.2 * s }; }
 function f1Driver(d, T, MD, g) {
   const K = F1FAHRER, D = suitDesign(d, T), key = 'F1S_' + (d.liv || d.team);
+  K.fist ||= f1Fist(K);
   const mesh = new THREE.Mesh(K.geo, kartFahrerMat(key, col(D.base), col(D.acc), { sec: col(D.sec), style: D.style, glove: col(D.glove) })); mesh.castShadow = true;
   const off = new THREE.Vector3(0, MD.helm[0] + 0.005, MD.helm[1]).sub(new THREE.Vector3(...K.helm));   // F2: Helm sitzt etwas anders als im F1, an dem das Modell gebaut ist
   mesh.position.copy(off); g.add(mesh);
@@ -8268,31 +8282,53 @@ const SW = (() => {
   const g = new THREE.Group(); g.position.set(0, 0.56, 1.0); g.visible = false;
   // Lenkrad und Hände: nach der Szene, mit eigenem Tiefenpuffer (Tiefe wird vor dem ersten Teil geleert) – so liegen sie über dem Auto, verdecken sich aber untereinander richtig
   const mk = (geo, mat, ro) => { mat.transparent = true; mat.depthWrite = true; const m = new THREE.Mesh(geo, mat); m.renderOrder = 2e6 - 100 + ro; m.frustumCulled = false; g.add(m); return m; };   /* „transparent“ (bei voller Deckkraft): kommt erst NACH allen transparenten Effekten dran – das Leeren der Tiefe trifft dann nur noch Lenkrad und Hände */
-  // Lenkrad nach echtem Formelwagen-Vorbild: Carbon-Mittelteil mit abgeschrägten Ecken, zwei offene Griffschlaufen (Lücke zwischen Griff und Mittelteil), Display mit Rahmen,
-  // Drucktasten in dunklen Fassungen, drei Drehschalter unten mit Zeigerstrich, zwei Daumenräder, Schaltwippen dahinter, Mittenmarkierung oben
-  const sh = new THREE.Shape(); sh.moveTo(-0.118, 0.088); sh.lineTo(0.118, 0.088); sh.quadraticCurveTo(0.142, 0.086, 0.146, 0.062); sh.lineTo(0.15, -0.03); sh.quadraticCurveTo(0.148, -0.062, 0.118, -0.078); sh.lineTo(0.07, -0.092); sh.lineTo(-0.07, -0.092); sh.lineTo(-0.118, -0.078); sh.quadraticCurveTo(-0.148, -0.062, -0.15, -0.03); sh.lineTo(-0.146, 0.062); sh.quadraticCurveTo(-0.142, 0.086, -0.118, 0.088);
-  const body = new THREE.ExtrudeGeometry(sh, { depth: 0.026, bevelEnabled: true, bevelThickness: 0.007, bevelSize: 0.007, bevelSegments: 3, curveSegments: 10 });
+  // Lenkrad nach Vorbild aktueller F1-Lenkräder (2024/25): breites Carbon-Mittelteil mit großem Display (Schaltlichter oben im Display), Tasten in zwei Spalten,
+  // bunte Drehschalter mit farbigen Rastfeldern unten, dicke gummierte Griffe außen mit Fingerschlitz zum Mittelteil, Schaltwippen und Nabe hinten.
+  // Griffe liegen genau auf der Faustachse der Fahrerhände (F1_FIST, aus f1fahrer.bin vermessen): die Finger umschließen den Griff, ohne einzudringen,
+  // die Fingerspitzen liegen im Schlitz. spec: Prüfmodell (Abstandsfunktion je Teil) für tools/lenkrad/check_lenkrad.py.
+  const spec = [], V = THREE.Vector3;
+  const HP = [[0, 0.094], [0.098, 0.094]], qb = (a, c, b, n = 8) => { for (let k = 1; k <= n; k++) { const t = k / n, u = 1 - t; HP.push([u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], u * u * a[1] + 2 * u * t * c[1] + t * t * b[1]]); } };
+  qb([0.098, 0.094], [0.121, 0.094], [0.121, 0.072]); HP.push([0.117, -0.05]); qb([0.117, -0.05], [0.115, -0.088], [0.085, -0.1]); HP.push([0.04, -0.108], [0, -0.108]);
+  const OUT = HP.concat(HP.slice(1, -1).reverse().map(([x, y]) => [-x, y]));   // Umriss ohne Fase (Fase 6 mm kommt außen dazu)
+  const sh = new THREE.Shape(OUT.map(([x, y]) => new THREE.Vector2(x, y)));
+  const body = new THREE.ExtrudeGeometry(sh, { depth: 0.026, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.006, bevelSegments: 3, curveSegments: 10 });
+  spec.push({ t: 'ext', pts: OUT, z0: 0, z1: 0.026, r: 0.006 });
   const cTex = TEX.carbon.clone(); cTex.repeat.set(44, 44); cTex.needsUpdate = true; const cNrm = TEX.carbonN.clone(); cNrm.repeat.set(44, 44); cNrm.needsUpdate = true;
-  mk(body, new THREE.MeshStandardMaterial({ map: cTex, normalMap: cNrm, normalScale: new THREE.Vector2(.2, .2), color: 0x2c2f35, roughness: .42, metalness: .35 }), 60);   /* KEIN Leeren der Tiefe mehr: Lenkrad sitzt jetzt wirklich in der Cockpitwanne und wird normal verdeckt */   /* Maske an, sonst leert gl.clear die Tiefe nicht (der Himmel davor schreibt keine Tiefe) */
-  { const P = [], V = THREE.Vector3, rub = col(0x16171a), alu = col(0x3b3f46), aluL = col(0x9aa1ab), blk = col(0x0c0d0f), wht = col(0xe8eaee);
-    const cyl = (r, h, x, y, z, c, seg = 20, r2 = r) => P.push([new THREE.CylinderGeometry(r2, r, h, seg).rotateX(Math.PI / 2).translate(x, y, z), c]);
-    const box = (w, h, d, x, y, z, c, rz = 0) => { const g = new THREE.BoxGeometry(w, h, d); if (rz) g.rotateZ(rz); g.translate(x, y, z); P.push([g, c]); };
-    for (const s2 of [-1, 1]) {   // Griffschlaufe: vom oberen Rand des Mittelteils nach außen, senkrecht durch die Hand, unten zurück
-      const cv = new THREE.CatmullRomCurve3([new V(s2 * 0.118, 0.07, 0.012), new V(s2 * 0.172, 0.074, 0.016), new V(s2 * 0.2, 0.045, 0.02), new V(s2 * 0.203, -0.01, 0.02), new V(s2 * 0.197, -0.06, 0.02), new V(s2 * 0.165, -0.088, 0.016), new V(s2 * 0.112, -0.074, 0.012)], false, 'centripetal');
-      const tg = new THREE.TubeGeometry(cv, 40, 0.0235, 12, false); tg.scale(1, 1, 1.12); P.push([tg, rub]);
-      box(0.05, 0.062, 0.006, s2 * 0.176, 0.012, -0.022, blk, s2 * -0.12);   // Schaltwippe hinter dem Griff
-      cyl(0.012, 0.016, s2 * 0.128, -0.028, 0.036, alu, 14); cyl(0.0125, 0.004, s2 * 0.128, -0.028, 0.046, aluL, 14);   // Daumenrad
+  mk(body, new THREE.MeshStandardMaterial({ map: cTex, normalMap: cNrm, normalScale: new THREE.Vector2(.2, .2), color: 0x2c2f35, roughness: .42, metalness: .35 }), 60);
+  { const P = [], rub = col(0x17181b), alu = col(0x3b3f46), aluL = col(0x9aa1ab), blk = col(0x0c0d0f), wht = col(0xe8eaee), cfk = col(0x1d2025);
+    const cyl = (r, h, x, y, z, c, seg = 20, r2 = r) => { P.push([new THREE.CylinderGeometry(r2, r, h, seg).rotateX(Math.PI / 2).translate(x, y, z), c]); spec.push({ t: 'cyl', x, y, z0: z - h / 2, z1: z + h / 2, r: Math.max(r, r2) }); };
+    const box = (w, h, d, x, y, z, c, rz = 0) => { const g = new THREE.BoxGeometry(w, h, d); if (rz) g.rotateZ(rz); g.translate(x, y, z); P.push([g, c]); spec.push({ t: 'box', c: [x, y, z], h: [w / 2, h / 2, d / 2], rz }); };
+    const FC = new V(...F1_FIST.c), FD = new V(...F1_FIST.d).normalize(), RG = F1_GRIP_R;
+    for (const s2 of [-1, 1]) {   // Griff: gerades Stück auf der Faustachse (t −0,09 … +0,085), unten und oben weich ins Mittelteil (Fingerschlitz dazwischen)
+      const m = v => new V(v.x * s2, v.y, v.z), A0 = m(FC.clone().addScaledVector(FD, -0.09)), A1 = m(FC.clone().addScaledVector(FD, 0.085));
+      const path = new THREE.CurvePath();
+      path.add(new THREE.QuadraticBezierCurve3(new V(s2 * 0.1, -0.094, 0.012), m(FC.clone().addScaledVector(FD, -0.135)), A0));
+      path.add(new THREE.LineCurve3(A0, A1));
+      path.add(new THREE.QuadraticBezierCurve3(A1, m(FC.clone().addScaledVector(FD, 0.125)), new V(s2 * 0.108, 0.09, 0.016)));
+      const tg = new THREE.TubeGeometry(path, 72, RG, 16, false); P.push([tg, rub]);
+      spec.push({ t: 'tube', pts: path.getSpacedPoints(160).map(p => [p.x, p.y, p.z]), r: RG });
+      box(0.052, 0.068, 0.004, s2 * 0.099, 0.03, -0.017, cfk, s2 * 0.06);   // Schaltwippe hinter dem Mittelteil (endet vor den Fingerspitzen)
+      box(0.046, 0.032, 0.004, s2 * 0.092, -0.045, -0.017, cfk, s2 * -0.05);   // Kupplungswippe
+      box(0.012, 0.03, 0.012, s2 * 0.072, 0.03, -0.011, blk); box(0.012, 0.022, 0.012, s2 * 0.07, -0.045, -0.011, blk);   // Lager der Wippen
     }
-    box(0.172, 0.092, 0.007, 0, 0.026, 0.034, blk);   // Display-Rahmen
-    box(0.012, 0.007, 0.003, 0, 0.0905, 0.034, col(0xffd400));   // Mittenmarkierung (12 Uhr)
-    const bc = [0xc8263a, 0xd9b21c, 0x2aa85a, 0x2f6fd0, 0xd9731a, 0xd8dbe0, 0x7a3fc0, 0x1f9bb0];
-    [[-0.118, 0.066], [0.118, 0.066], [-0.124, 0.03], [0.124, 0.03], [-0.122, -0.004], [0.122, -0.004], [-0.098, -0.06], [0.098, -0.06]].forEach(([x, y], k) => { cyl(0.0125, 0.007, x, y, 0.0365, alu, 16); cyl(0.0088, 0.012, x, y, 0.042, col(bc[k]), 16, 0.0078); });
-    [[-0.052, 0xc8263a], [0, 0x2f6fd0], [0.052, 0xd9b21c]].forEach(([x, rc]) => { const y = -0.058; cyl(0.019, 0.005, x, y, 0.0355, col(rc), 24); cyl(0.0165, 0.008, x, y, 0.039, blk, 24); cyl(0.0125, 0.017, x, y, 0.049, alu, 12, 0.0115); box(0.0028, 0.011, 0.002, x, y + 0.0065, 0.0582, wht); });
+    cyl(0.026, 0.04, 0, -0.008, -0.026, blk, 24); cyl(0.03, 0.006, 0, -0.008, -0.009, aluL, 24);   // Nabe mit Schnellverschluss
+    box(0.166, 0.088, 0.006, 0, 0.035, 0.0345, blk);   // Display-Rahmen
+    box(0.012, 0.006, 0.003, 0, 0.0985, 0.033, col(0xffd400));   // Mittenmarkierung (12 Uhr)
+    const btn = (x, y, c, r = 0.0085) => { cyl(r + 0.003, 0.006, x, y, 0.0345, alu, 16); cyl(r, 0.01, x, y, 0.039, col(c), 16, r * 0.9); };
+    [[0xc8263a, 0xd9b21c], [0x2aa85a, 0x2f6fd0], [0xd9731a, 0x5fc8e8], [0xd8dbe0, 0xd8dbe0]].forEach(([cl, cr], k) => { const y = 0.066 - k * 0.028; btn(-0.101, y, cl); btn(0.101, y, cr); });
+    btn(-0.103, -0.052, 0x7a3fc0); btn(0.103, -0.052, 0x2aa85a); btn(-0.03, -0.088, 0x1f9bb0, 0.0072); btn(0.03, -0.088, 0xc8263a, 0.0072); btn(-0.04, -0.022, 0x3a3f48, 0.0068); btn(0.04, -0.022, 0x3a3f48, 0.0068);
+    // Drehschalter: farbige Rastfelder (wie die bunten Schalter der Vorbilder), Knopf mit weißem Zeigerstrich
+    const rot = (x, y, R, cols, kr) => { cyl(R + 0.002, 0.005, x, y, 0.0345, blk, 28); const n = cols.length;
+      cols.forEach((c, k) => P.push([new THREE.CircleGeometry(R, 3, Math.PI / 2 + (k + 0.06) / n * Math.PI * 2, 0.88 / n * Math.PI * 2).translate(x, y, 0.0372), col(c)]));
+      cyl(kr, 0.016, x, y, 0.045, alu, 14, kr * 0.92); cyl(kr * 0.95, 0.003, x, y, 0.0535, aluL, 14); box(0.0026, kr * 0.9, 0.002, x, y + kr * 0.45, 0.0555, wht); };
+    rot(-0.068, -0.062, 0.02, [0xe8eaee, 0xffd400, 0xff8a1a, 0xe23a3a, 0xc23ab8, 0x5b5bf0, 0x2fb4e8, 0x2fd07a], 0.011);
+    rot(0.068, -0.062, 0.02, [0x2fd07a, 0x2fb4e8, 0x5b5bf0, 0xc23ab8, 0xe23a3a, 0xff8a1a, 0xffd400, 0xe8eaee], 0.011);
+    rot(0, -0.056, 0.016, [0xe23a3a, 0xffd400, 0x2fd07a, 0x2fb4e8, 0xe8eaee, 0xff8a1a], 0.0085);
     mk(mergeParts(P), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .55, metalness: .25 }), 61);
   }
   const sc = document.createElement('canvas'); sc.width = 640; sc.height = 320; const tex = new THREE.CanvasTexture(sc); tex.colorSpace = THREE.SRGBColorSpace; tex.generateMipmaps = false; tex.minFilter = THREE.LinearFilter;   /* keine Mipmaps: sie wurden bei jeder Aktualisierung des Displays neu berechnet */
-  mk(new THREE.PlaneGeometry(0.16, 0.08).translate(0, 0.026, 0.0378), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }), 63);
-  return { g, sc, tex, t: 0 };
+  mk(new THREE.PlaneGeometry(0.154, 0.077).translate(0, 0.035, 0.0378), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }), 63);
+  return { g, sc, tex, t: 0, spec };
 })();
 // Roadster-Cockpit: funktionierende Instrumente und Navi mit mitdrehender 3D-Karte (nur in der Cockpit-Ansicht, ca. 15x pro Sekunde)
 function roadDashTick(dt) {
@@ -9603,6 +9639,7 @@ window.__elev = (a = 0, n = 40) => { const o = []; for (let i = a; i < a + n; i+
 window.__holes = () => HOLES; window.__holesLeft = () => fillGroundHoles(true);
 window.__scr = k => { showScreen(k); return MENU.scr; };   /* Test: Menübildschirm direkt öffnen */
 window.__season = tier => { if (!CAREER) { CAREER = carDef(); CAREER.name = 'Robert Nemec'; } if (tier !== 'kart' && !CAREER.slot[tier]) CAREER.slot[tier] = mkSlot(tier, SERIES[tier].drivers[4][3], null); (CAREER.intro ||= {})[tier] = 1; startSeason(tier); return MENU.scr; };   /* Test: Saison-Bildschirm öffnen */
+window.__f1dbg = () => ({ K: F1FAHRER, MODELS, f1Wheel, f1Fist, kartArmsIK, SW, SW_ROT });   // Prüfskript tools/lenkrad (Durchdringung Hand/Lenkrad/Fahrer)
 window.__arms = () => ARMS; window.__sw = () => SW; window.__f1f = () => F1FAHRER;
 window.__layout = () => { effCtrl = S.ctrl; layoutControls(); return effCtrl; };   /* Test: Touch-Tasten zeigen */
 window.__ks = s2 => KS[Math.floor(modL(s2) / DS) % N]; window.__head = () => HEAD; window.__tp = s2 => { const q = trackAt(s2, 0); pl.x = q.x; pl.z = q.z; pl.h = q.h; camH = q.h; projectCar(pl); pl.sPrev = modL(s2); return pl.idx; };
