@@ -1,6 +1,6 @@
 # Rennfahrer-Modell
 
-Stand: 14.11.2026 (v1.59) – derselbe Fahrer in Kart, F1 und F2; stehende Figur als Vorschau.
+Stand: 14.11.2026 (v1.64) – derselbe Fahrer in Kart, F1 und F2; stehende Figur als Vorschau.
 
 ## Dateien
 - `kartfahrer.bin` – sitzender Kart-Fahrer fürs Spiel: Körper + beide Handschuhe als EIN Netz (~14 200 Dreiecke).
@@ -94,6 +94,20 @@ Geprüft rechnerisch (Punkte aus dem laufenden Spiel ausgelesen, Windungszahl ge
 - Wunsch: auch beim F1 von außen ins modellierte Cockpit sehen und den Anzug erkennen.
 - **Innenraum dunkel**: Sitzlehne, Kopfstütze, Innenwände neben den Schultern und der Cockpitrand werden in Cockpitfarbe gezeichnet statt in Wagenfarbe (zweiter Bereich `COCK.f1.b2`: |x| < 0,25, z −0,25…0,38, y < 0,76; wirkt in `inCock` und `cockGLSL`). Vorher saß der Fahrer zwischen orangen bzw. teamfarbenen Wänden.
 - **Lenkrad im Auto** (F1 und F2, alle Autos): `f1CarWheel` – Kopie des Cockpit-Lenkrads (Carbon-Körper, Griffe, Tasten; ohne Display) an `swPos`, dreht mit dem Einschlag; die Hände greifen es jetzt sichtbar (vorher griffen sie ins Leere). In Helm- und TV-Kamera des Spielers bleibt das Cockpit-Lenkrad SW zuständig, die Kopie ist dann aus. Gehört zu den Detailteilen (Fernmodell blendet es aus).
+
+## v1.63 – F1/F2: Griff, springende Hände, Clipping in der TV-Ansicht
+Gemessen mit einem Durchlauf des Lenkeinschlags −1…+1 in Schritten von 0,01 (Bones aus dem laufenden Spiel; Skript im Arbeitsordner `sweep.cjs`).
+- **Griff saß neben der Schlaufe**: Die IK nahm als Griffpunkt den Lenkradpunkt, der dem Handgelenk am nächsten liegt (beim runden Kartkranz in Ordnung, beim F1 lag die Hand hinter/neben der Griffschlaufe, die Finger vor der Lenkradfront). Jetzt steht die echte Griffmitte im Kopf von `f1fahrer.bin` (`grip`); die Faust liegt um diesen Punkt.
+- **Hände in TV-Ansicht und F2 neben dem Lenkrad (5–12 cm)**: Die IK verwechselte den Griff in Bindhaltung mit dem Griff am verschobenen Lenkrad (TV-Kamera: Fahrer rückt mit dem Helm 6 cm vor; F2: anderes Lenkrad). Jetzt G0 = Bindgriff, G = Griff am Lenkrad dieses Autos. Fehler jetzt 0,1 mm in allen vier Fällen (F1, F1-TV, F2, F2-TV).
+- **Arme stark gebeugt, Ellbogen außerhalb des Cockpits** (|x| 0,29): Kopf/Hals 7 cm vor die Schultern geschoben (`F1_SHEAR`, wie mit HANS-System), die Schultern sitzen damit weiter vom nahen Lenkrad weg (Arm zu 79 % gestreckt statt 73 %), Ellbogen unter dem Arm innerhalb der Cockpitbreite (|x| ≤ 0,215), Handgelenk bis 28° geknickt.
+- **Springen**: Ellbogen wurde in 7,5°-Stufen gesucht und wechselte zwischen zwei fast gleich guten Lagen; die Hand-Rolle (`phi`) schwang im engen F2-TV-Fall zwischen zwei Werten. Jetzt: Feinsuche, ab dem zweiten Bild nur nahe der letzten Lage, Rolle weich begrenzt (tanh, ±1,3 rad), gedämpft nachgeführt und höchstens 0,04 rad je Bild. Größter Sprung je 0,01 Einschlag: vorher bis 140 mm, jetzt ≤ 4 mm.
+- Das Kart nutzt dieselbe IK (ohne `grip` im Kopf wie bisher: nächster Kranzpunkt), Bilder geprüft.
+
+## v1.64 – neuer F1/F2-Fahrer nur im eigenen Auto (Leistung)
+- Wunsch: F1/F2 den Anzug nur im eigenen Auto rendern, andere Autos mit dem alten Modell; Karts: alle mit Anzug (unverändert).
+- `makeCar0` baut für jedes F1/F2-Auto wieder das einfache Fahrermodell aus Grundformen (`driverParts`, hängt am Helm) und merkt sich `mkF1`.
+- `f1Own(m, c === pl)` im Fahrzeug-Update: Gehört das Auto dem Spieler, wird der neue Fahrer (`f1Driver`, Lenkrad-Kopie `f1CarWheel`) erzeugt und das einfache Modell ausgeblendet; wechselt der Spieler das Auto, wird er wieder entfernt. Andere Autos sparen damit Netz (14 200 Dreiecke), Skinning und die Arm-IK je Bild.
+- Helm (mit Korrekturen) und offenes F1-Cockpit gelten weiter für alle Autos.
 
 ## Offen / Ideen
 - Lenkrad dreht sich beim Lenken, die Hände nicht (war beim alten Fahrer genauso).
