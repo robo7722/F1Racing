@@ -748,7 +748,7 @@ th{background:#0c0c12!important;letter-spacing:.16em;font-size:10px!important;co
   .mnext{height:44px!important}
 }
 @media (max-height:380px){
-  .logo2{display:none!important}.tag{margin-top:0!important}
+  .logo2:not(.img){display:none!important}.logo2.img .glogo{height:clamp(22px,11vh,40px)!important}#scrTitle .logo2.img{margin-top:0!important}.tag{margin-top:0!important}
   .hero .hs,.hbtn small{display:none!important}
   .hero,.hbtn{min-height:clamp(100px,46vh,170px)!important}
   .tcard .tf{display:none}
@@ -1138,7 +1138,7 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
 <script>
 /* Eigenes Titel-Logo: liegt logos/LOGO.png im Projekt, ersetzt es den Schriftzug „FORMULA RACING“ – sofort beim Start auf dem Ladebildschirm, im Hauptmenü und klein oben in allen Untermenüs. Fehlt die Datei, bleibt der Schriftzug. */
 (function () { var im = new Image(); im.onload = function () {
-  var put = function (sel, cls) { var el = document.querySelector(sel); if (!el) return; var g = new Image(); g.src = im.src; g.className = cls; g.alt = 'Logo'; el.innerHTML = ''; el.appendChild(g); };
+  var put = function (sel, cls) { var el = document.querySelector(sel); if (!el) return; var g = new Image(); g.src = im.src; g.className = cls; g.alt = 'Logo'; el.innerHTML = ''; el.appendChild(g); el.classList.add('img'); };
   var go = function () { put('.ldLogo', 'glogo ld'); put('.logo2', 'glogo'); var m = document.getElementById('mLogo'); if (m) { m.src = im.src; m.hidden = false; } };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); };
   im.src = 'logos/LOGO.png'; })();
@@ -9477,7 +9477,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.88'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.89'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
