@@ -1,6 +1,6 @@
 # Rennfahrer-Modell
 
-Stand: 14.11.2026 (v1.64) – derselbe Fahrer in Kart, F1 und F2; stehende Figur als Vorschau.
+Stand: 14.11.2026 (v1.67) – derselbe Fahrer in Kart, F1 und F2; stehende Figur als Vorschau.
 
 ## Dateien
 - `kartfahrer.bin` – sitzender Kart-Fahrer fürs Spiel: Körper + beide Handschuhe als EIN Netz (~14 200 Dreiecke).
@@ -108,6 +108,13 @@ Gemessen mit einem Durchlauf des Lenkeinschlags −1…+1 in Schritten von 0,01 
 - `makeCar0` baut für jedes F1/F2-Auto wieder das einfache Fahrermodell aus Grundformen (`driverParts`, hängt am Helm) und merkt sich `mkF1`.
 - `f1Own(m, c === pl)` im Fahrzeug-Update: Gehört das Auto dem Spieler, wird der neue Fahrer (`f1Driver`, Lenkrad-Kopie `f1CarWheel`) erzeugt und das einfache Modell ausgeblendet; wechselt der Spieler das Auto, wird er wieder entfernt. Andere Autos sparen damit Netz (14 200 Dreiecke), Skinning und die Arm-IK je Bild.
 - Helm (mit Korrekturen) und offenes F1-Cockpit gelten weiter für alle Autos.
+
+## v1.67 – Handschuhe und Anzüge in Teamfarben, unsichtbare Teile weg
+- **Schwarze Handschuhe**: Viele Teams hatten dunkle Handschuhfarben (Mercedes, Haas, Audi, Cadillac schwarz; Red Bull, Williams dunkelblau), dazu die schwarzen Griffflächen der Handschuh-Vorlage. Jetzt helle Teamfarbe je Team (`SUIT_F1.glove`: Mercedes Silber, Red Bull Rot, Aston Lime, Williams Hellblau, Alpine Pink, Racing Bulls Blau, Haas/Audi/Cadillac Weiß …); F2: hellste Farbe der Lackierung. Griffflächen der Vorlage im Shader aufgehellt (F1/F2).
+- Sehr dunkle Anzüge (Mercedes, Cadillac) etwas angehoben, damit Nähte und Schnitt sichtbar bleiben.
+- **Im Gegenlicht schwarz**: Aus der Helmkamera sieht man die Handrücken – bei Sonne von vorn liegen sie im Schatten. Leichte Aufhellung (Streulicht im Cockpit) für F1/F2: Handschuhe 16 %, Anzug 5 % der eigenen Farbe. Karts unverändert.
+- **Einfaches Fahrermodell (andere Autos)**: Anzug und Handschuhe in denselben Teamfarben (`suitDesign`) statt Menüfarbe bzw. Helm-Akzent (der war oft dunkel → „alle Handschuhe schwarz“).
+- **Unsichtbare Teile**: Unterschenkel und Füße liegen unter der Nase → im Bauskript weggeschnitten (`F1_CUT = 0,30`, Knie 0,28): 11 500 statt 14 200 Dreiecke.
 
 ## Offen / Ideen
 - Lenkrad dreht sich beim Lenken, die Hände nicht (war beim alten Fahrer genauso).
