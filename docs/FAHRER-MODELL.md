@@ -1,6 +1,6 @@
 # Rennfahrer-Modell
 
-Stand: 14.11.2026 (v1.67) – derselbe Fahrer in Kart, F1 und F2; stehende Figur als Vorschau.
+Stand: 14.11.2026 (v1.71) – derselbe Fahrer in Kart, F1 und F2; stehende Figur als Vorschau.
 
 ## Dateien
 - `kartfahrer.bin` – sitzender Kart-Fahrer fürs Spiel: Körper + beide Handschuhe als EIN Netz (~14 200 Dreiecke).
@@ -115,6 +115,12 @@ Gemessen mit einem Durchlauf des Lenkeinschlags −1…+1 in Schritten von 0,01 
 - **Im Gegenlicht schwarz**: Aus der Helmkamera sieht man die Handrücken – bei Sonne von vorn liegen sie im Schatten. Leichte Aufhellung (Streulicht im Cockpit) für F1/F2: Handschuhe 16 %, Anzug 5 % der eigenen Farbe. Karts unverändert.
 - **Einfaches Fahrermodell (andere Autos)**: Anzug und Handschuhe in denselben Teamfarben (`suitDesign`) statt Menüfarbe bzw. Helm-Akzent (der war oft dunkel → „alle Handschuhe schwarz“).
 - **Unsichtbare Teile**: Unterschenkel und Füße liegen unter der Nase → im Bauskript weggeschnitten (`F1_CUT = 0,30`, Knie 0,28): 11 500 statt 14 200 Dreiecke.
+
+## v1.71 – texturierter Anzug und Handschuhe (F1/F2)
+Wunsch: Anzug und Handschuhe wirkten einfarbig, sie sollen texturiert sein, und die Texturen dürfen nicht abgeschnitten sein oder flimmern. Alles im Shader `kartFahrerMat`, nur für F1/F2 (`uStyle > 0`), Karts unverändert.
+- **Stoff**: Falten und Schattierung der Vorlage kräftiger (Kontrast × 2,2). Zusätzlich eine gröbere Köper-Struktur (Kachel ~3 cm), die auch auf Entfernung sichtbar bleibt (feines Gewebe verschwand ab ~0,5 m). Nähte deutlich dunkler.
+- **Aufnäher mit Aufdruck**: Brust (zwei je Seite), Gürtel, Oberarm vorn. Der Aufdruck besteht aus Blockbuchstaben aus Zufall (`prt`), keine echten Marken. Er wird weich ausgeblendet, sobald er kleiner als ein Bildpunkt würde (kein Flimmern). Der Oberarm-Aufnäher liegt vorn neben dem Ärmelstreifen statt darüber (vorher war der Streifen dort abgeschnitten).
+- **Handschuhe zweifarbig**: Helle Flächen der Vorlage in Handschuhfarbe, nur die schwarzen Griffflächen in Anzugfarbe (bei hellem Anzug: zweite Teamfarbe) – der Handrücken bleibt in Handschuhfarbe, sonst wirkte er in der Helmkamera wieder dunkel. Relief aus der Vorlage (Nähte, Polster) plus Ledernarbung.
 
 ## Offen / Ideen
 - Lenkrad dreht sich beim Lenken, die Hände nicht (war beim alten Fahrer genauso).
