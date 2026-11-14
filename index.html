@@ -1348,7 +1348,7 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
     <div class="tog"><span>Team RONE Racing freischalten</span><button class="sw" data-tog="rone" aria-label="Team RONE Racing freischalten"></button></div>
     <p class="hint left">Schaltet das Team RONE Racing mit Robert Nemec in der Teamauswahl frei. Es fährt nur, wenn du es selbst wählst.</p>
     <div class="tog"><span>FPS- und Frame-Pacing-Anzeige</span><button class="sw" data-tog="perfHud" aria-label="FPS- und Frame-Pacing-Anzeige"></button></div>
-    <p class="hint left">Zeigt im Rennen oben in der Mitte die Bildrate, die mittlere Bildzeit, die Schwankung (±) und das langsamste Bild der letzten Sekunde. Der Graph darunter zeigt jede Bildzeit: grün = im Takt der gewählten Bildrate, gelb = ein Bild zu spät, rot = Ruckler. Die Linie markiert die Ziel-Bildzeit (z. B. 16,7 ms bei 60 FPS).</p>
+    <p class="hint left">Zeigt im Rennen oben in der Mitte die Bildrate, die mittlere Bildzeit, die Schwankung (±) und das langsamste Bild der letzten Sekunde, darunter wie viele Bilder zu spät kamen und wie lange das Spiel pro Bild rechnet (CPU, ohne Grafikkarte). Der Graph darunter zeigt jede Bildzeit: grün = im Takt der gewählten Bildrate, gelb = ein Bild zu spät, rot = Ruckler. Die Linie markiert die Ziel-Bildzeit (z. B. 16,7 ms bei 60 FPS).</p>
     <div class="tog"><span>Nordschleife freischalten</span><button class="sw" data-tog="nos" aria-label="Nordschleife freischalten"></button></div>
     <p class="hint left">Die komplette Nürburgring-Nordschleife (20,8 km) als Zusatzstrecke im schnellen Spiel und Zeitrennen. In der Karriere fährt sie nicht mit.</p>
     <button class="big alt danger" id="careerReset" style="margin-top:10px">Karriere zurücksetzen</button>
@@ -9442,12 +9442,12 @@ function vsyncGate(now) {
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { VS.cal = 16; VS.prev = 0; VS.n = VS.i = VS.an = VS.ai = 0; } });   // nach Rückkehr neu messen
 /* FPS- und Frame-Pacing-Anzeige (Extras): Abstand zwischen tatsächlich gezeichneten Bildern */
-const PERF = { on: null, prev: 0, buf: new Float32Array(120), i: 0, n: 0, tUpd: 0, el: null, txt: null, g: null, cx: null };
+const PERF = { on: null, prev: 0, buf: new Float32Array(120), i: 0, n: 0, tUpd: 0, el: null, txt: null, g: null, cx: null, drew: false, cS: 0, cM: 0, cN: 0 };
 function perfTick(now) {
   if (PERF.on !== !!S.perfHud) { PERF.on = !!S.perfHud; PERF.el = PERF.el || $('#perf'); PERF.el.classList.toggle('hidden', !PERF.on); PERF.prev = 0; PERF.n = 0; }
   if (!PERF.on) return;
   if (!PERF.prev || now - PERF.prev > 1000) { PERF.prev = now; PERF.tUpd = now; return; }   // nach Pausen/Tabwechsel neu anfangen
-  const d = now - PERF.prev; PERF.prev = now;
+  const d = now - PERF.prev; PERF.prev = now; PERF.drew = true;
   PERF.buf[PERF.i] = d; PERF.i = (PERF.i + 1) % PERF.buf.length; PERF.n = Math.min(PERF.n + 1, PERF.buf.length);
   if (!PERF.g) { PERF.txt = $('#perfTxt'); PERF.g = $('#perfG'); PERF.cx = PERF.g.getContext('2d'); }
   const T = 1000 * VS.step / (VS.hz || 60), L = PERF.buf.length, c = PERF.cx, W = PERF.g.width, H = PERF.g.height, sc = H / Math.max(50, T * 1.6), bw = W / L;   // Graph: 0–50 ms (bei 30 FPS mehr)
@@ -9455,14 +9455,14 @@ function perfTick(now) {
   for (let k = 0; k < PERF.n; k++) { const v = PERF.buf[(PERF.i - PERF.n + k + L) % L]; c.fillStyle = v <= T * 1.15 + 1 ? '#22c55e' : v <= T * 2 + 1 ? '#eab308' : '#ef4444';   /* grün = im Takt des Ziels, gelb = ein Bild zu spät, rot = Ruckler */ const h = Math.max(1, Math.min(H, v * sc)); c.fillRect((L - PERF.n + k) * bw, H - h, Math.max(1, bw - 0.5), h); }
   c.fillStyle = 'rgba(255,255,255,.55)'; c.fillRect(0, Math.round(H - T * sc), W, 1);   // Linie = Ziel-Bildzeit
   if (now - PERF.tUpd < 250) return; PERF.tUpd = now;   // Text 4× pro Sekunde
-  let sum = 0, mx = 0, cnt = 0;   // Werte der letzten Sekunde
-  for (let k = 1; k <= PERF.n && sum < 1000; k++) { const v = PERF.buf[(PERF.i - k + L) % L]; sum += v; if (v > mx) mx = v; cnt++; }
+  let sum = 0, mx = 0, cnt = 0, late = 0;   // Werte der letzten Sekunde
+  for (let k = 1; k <= PERF.n && sum < 1000; k++) { const v = PERF.buf[(PERF.i - k + L) % L]; sum += v; if (v > mx) mx = v; if (v > T * 1.15 + 1) late++; cnt++; }
   const avg = sum / cnt; let vr = 0;
   for (let k = 1; k <= cnt; k++) { const e = PERF.buf[(PERF.i - k + L) % L] - avg; vr += e * e; }
   const fps = Math.round(1000 / avg), sd = Math.sqrt(vr / cnt);
-  const tgt = Math.round((VS.hz || 60) / VS.step); PERF.txt.innerHTML = `<b style="color:${fps >= tgt - 2 ? '#22c55e' : fps >= tgt * 0.75 ? '#eab308' : '#ef4444'}">${fps}</b>/${tgt} FPS <i>·</i> ${VS.hz || '?'} Hz <i>·</i> ${avg.toFixed(1)} ms <i>·</i> ±${sd.toFixed(1)} <i>·</i> max ${mx.toFixed(1)}`;
+  const tgt = Math.round((VS.hz || 60) / VS.step); PERF.txt.innerHTML = `<b style="color:${fps >= tgt - 2 ? '#22c55e' : fps >= tgt * 0.75 ? '#eab308' : '#ef4444'}">${fps}</b>/${tgt} FPS <i>·</i> ${VS.hz || '?'} Hz <i>·</i> ${avg.toFixed(1)} ms <i>·</i> ±${sd.toFixed(1)} <i>·</i> max ${mx.toFixed(1)}<br><span style="color:${late ? '#eab308' : '#22c55e'}">${late} zu spät</span> <i>·</i> CPU Ø ${(PERF.cS / Math.max(1, PERF.cN)).toFixed(1)} <i>/</i> max ${PERF.cM.toFixed(1)} ms`; PERF.cS = PERF.cM = PERF.cN = 0;   /* CPU = Rechenzeit des Spiels pro gezeichnetem Bild (ohne die Grafikkarte) */
 }
-function frame(now) { requestAnimationFrame(frame); tick(now); }
+function frame(now) { requestAnimationFrame(frame); const t0 = performance.now(); PERF.drew = false; tick(now); if (PERF.drew) { const c = performance.now() - t0; PERF.cS += c; PERF.cN++; if (c > PERF.cM) PERF.cM = c; } }
 let REBUILD = false;
 function tick(now, forced) {
   if (REBUILD) { last = now; return; }   /* Grafik wird gerade umgestellt */   // forced: Testhilfen zeichnen direkt, ohne eine zweite Bildschleife zu starten
