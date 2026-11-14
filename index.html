@@ -7912,7 +7912,8 @@ function warmUpTrack() {
   } catch (e) { console.warn('warmUp', e); }
   window.__warmMs = Math.round(performance.now() - t0);
 }
-function precompile() { const hid = []; for (const c of cars) { const m = c.mesh; if (!m) continue; for (const o of [m.far, ...(m.gh ? Object.values(m.gh) : [])]) if (o && !o.visible) { o.visible = true; hid.push(o); } }   /* Fernmodell und Überblend-Geister sind anfangs unsichtbar: Shader trotzdem jetzt übersetzen */
+function precompile() { const hid = [];
+  const wk = WAKE.m, wkP = wk.parent, wkV = wk.visible; if (!wkP) scene.add(wk); wk.visible = true;   /* Windschatten-Kegel: hing bisher an keinem Auto und war unsichtbar -> seine Shader, Textur und Geometrie entstanden erst beim ersten Windschatten (Ruckler kurz nach dem Start) */ for (const c of cars) { const m = c.mesh; if (!m || !m.g) continue; m.g.traverse(o => { if ((o.isMesh || o.isGroup) && !o.visible && !o.isSprite) { o.visible = true; hid.push(o); } }); }   /* ALLE Teile jedes Autos (Fernmodell, Überblend-Geister, Nahteile wie Helm und Räder ferner Autos) sind teils unsichtbar: Shader trotzdem jetzt übersetzen und – im winzigen Vorwärm-Bild unten – ihre Texturen hochladen. Sonst kamen sie erst, wenn ein Gegner zum ersten Mal ganz nah war (erste Kurve) */
   try { const prev = renderer.getRenderTarget(); if (composer) renderer.setRenderTarget(composer.renderTarget1); renderer.compile(scene, camera); renderer.setRenderTarget(prev); } catch (e) { console.warn('precompile', e); } finally { for (const o of hid) o.visible = false; }
   // Materialien, die erst beim Kamerawechsel auftauchen (Cockpit: aufgeschnittene Karosserie + Wanne, TV-Kamera: einfarbiges Halo), jetzt mit übersetzen – sonst Hänger beim ersten Umschalten
   try { const m = pl && pl.mesh; if (m) { const tp = m.tp || {}, k = tp.M === MODELS.f2 ? 'f2' : 'f1'; if (m.tp) { cockBuild(m); }
@@ -7925,10 +7926,19 @@ function precompile() { const hid = []; for (const c of cars) { const m = c.mesh
   try { if (!WARM.rt) WARM.rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType });
     const prev = renderer.getRenderTarget(), fc = [], vis = [], geo = LODS.map(m => m.geometry); scene.traverse(o => { if (o.frustumCulled) { fc.push(o); o.frustumCulled = false; } });
     for (const m of LODS) if (!m.visible && !(m.userData.evRef && m.userData.evRef.ev)) { vis.push(m); m.visible = true; }
-    renderer.setRenderTarget(WARM.rt); renderer.render(scene, camera);
+    const hid2 = []; for (const c of cars) if (c.mesh && c.mesh.g) c.mesh.g.traverse(o => { if ((o.isMesh || o.isGroup) && !o.visible) { o.visible = true; hid2.push(o); } });   /* unsichtbare Autoteile (Nahteile ferner Autos, Fernmodelle naher): Texturen jetzt hochladen */
+    renderer.setRenderTarget(WARM.rt); renderer.render(scene, camera); for (const o of hid2) o.visible = false;
     const steps = Math.max(0, ...LODS.map(m => m.userData.lodSteps.length));
     for (let k = 0; k < steps; k++) { let any = false; for (const m of LODS) { const st = m.userData.lodSteps[k]; if (st && st[0] && m.geometry !== st[0]) { m.geometry = st[0]; any = true; } } if (any) renderer.render(scene, camera); }
-    LODS.forEach((m, i) => m.geometry = geo[i]); vis.forEach(m => m.visible = false); fc.forEach(o => o.frustumCulled = true); renderer.setRenderTarget(prev); } catch (e) { console.warn('warm', e); } }
+    LODS.forEach((m, i) => m.geometry = geo[i]); vis.forEach(m => m.visible = false); fc.forEach(o => o.frustumCulled = true); renderer.setRenderTarget(prev); } catch (e) { console.warn('warm', e); }
+  wk.visible = wkV; if (!wkP) scene.remove(wk);
+  // Lichtstrahlen und Sonnen-Sichtbarkeit: die beiden Shader liefen erst, wenn die Sonne zum ersten Mal ins Bild kam (Spa: bei ~1.080 m, gemessen 67 ms Hänger).
+  // Jetzt einmal in ihre eigenen Ziele zeichnen (übersetzt die Shader, legt die Texturen an), danach die Ziele leeren.
+  try { if (composer && raysPass) { const u = raysPass.mat.uniforms, v = raysPass.vmat.uniforms, prev = renderer.getRenderTarget(), ac = renderer.autoClear, cc0 = renderer.getClearColor(new THREE.Color()), ca0 = renderer.getClearAlpha();
+      u.tDiffuse.value = v.tDiffuse.value = composer.readBuffer.texture; renderer.autoClear = false; renderer.setClearColor(0x000000, 0);
+      renderer.setRenderTarget(raysPass.vis); raysPass.vq.render(renderer); renderer.clear(); renderer.setRenderTarget(raysPass.rt); raysPass.q.render(renderer); renderer.clear();
+      if (finishPass) { finishPass.uniforms.tSunVis.value = raysPass.vis.texture; finishPass.uniforms.tRays.value = raysPass.rt.texture; }
+      renderer.setClearColor(cc0, ca0); renderer.autoClear = ac; renderer.setRenderTarget(prev); } } catch (e) { console.warn('warmRays', e); } }
 const PM = { top: 1, grip: 1, brk: 1, acc: 1 };   // Fahrzeug-Upgrades des Spielers (Karriere)
 function seriesProfiles() {
   const dd = DIFF[S.diff] || DIFF.mid, df = typeof diff !== 'undefined' && diff ? diff : dd;
@@ -9381,7 +9391,7 @@ $$('[data-step]').forEach(b => b.addEventListener('click', () => {
 }));
 $$('.seg button').forEach(b => b.addEventListener('click', () => { const k = b.parentElement.dataset.key; S[k] = b.dataset.v; save();
   if (k === 'line') applyLine();
-  if (k === 'ctrl' && running) { effCtrl = isTouch ? S.ctrl : 'touch'; if (effCtrl === 'tilt') { enableMotion(); tiltZero = tiltAngle; } layoutControls(); } if (k === 'gfx') { const was = running; REBUILD = true; loading(true); setTimeout(() => { try { applyGfx(); buildTrack(S.track); if (!was) placeOnGrid(); } finally { loading(false); REBUILD = false; last = performance.now(); pauseDrawn = 0; } }, 30); } renderMenu(); }));   /* im Rennen: Strecke neu aufbauen, Autos und Rennstand bleiben (nur die Bildschleife steht kurz) */
+  if (k === 'ctrl' && running) { effCtrl = isTouch ? S.ctrl : 'touch'; if (effCtrl === 'tilt') { enableMotion(); tiltZero = tiltAngle; } layoutControls(); } if (k === 'gfx') { const was = running; REBUILD = true; loading(true); setTimeout(() => { try { applyGfx(); if (TRK) { buildTrack(S.track); if (!was) placeOnGrid(); } } finally { loading(false); REBUILD = false; last = performance.now(); pauseDrawn = 0; } }, 30); } renderMenu(); }));   /* im Rennen: Strecke neu aufbauen, Autos und Rennstand bleiben (nur die Bildschleife steht kurz) */
 $$('.sw').forEach(b => b.addEventListener('click', () => { S[b.dataset.tog] = !S[b.dataset.tog]; save(); if (b.dataset.tog === 'nos') renderTracks(); renderMenu(); }));
 // Vollbild + Querformat schon beim ersten Antippen im Menü – nicht erst beim Rennstart (die Größenänderung legte alle Render-Ziele neu an: Hänger beim Start)
 addEventListener('pointerup', function fsOnce() { if (!isTouch || standalone || document.fullscreenElement) { removeEventListener('pointerup', fsOnce, true); return; } try { const el = document.documentElement; if (el.requestFullscreen) el.requestFullscreen({ navigationUI: 'hide' }).then(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {}); } catch (e) {} removeEventListener('pointerup', fsOnce, true); }, true);
@@ -9404,7 +9414,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.80'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.82'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -9545,6 +9555,10 @@ function tick(now, forced) {
   if (REBUILD) { last = now; return; }   /* Grafik wird gerade umgestellt */   // forced: Testhilfen zeichnen direkt, ohne eine zweite Bildschleife zu starten
   if (!forced) perfTick(now);   // keine Bildratenbegrenzung: gezeichnet wird jedes Bild, das der Browser anfordert
   const dt = clamp((now - last) / 1000, 0, 0.05); last = now;
+  if (!TRK) {   // Spielstart: es ist noch keine Strecke gebaut (sie entsteht erst nach der Streckenwahl) – nur Menü und Showroom
+    pollPad(dt); musicTick();
+    if (SHOW.on && !window.__norender && !$('#menu').classList.contains('hidden') && !(settingsFrom === 'menu' && !$('#settings').classList.contains('hidden'))) { showroomFrame(dt); const on = ENVP.on, et = ENVP.tex; ENVP.on = true; if (SHOW.env) ENVP.tex = SHOW.env; renderer.render(SHOW.scene, SHOW.cam); ENVP.tex = et; ENVP.on = on; }
+    return; }
   if (running && !paused) { const n = dt > 0.025 ? 2 : 1; for (let k = 0; k < n; k++) step(dt / n); }
   if (!running || !paused) updateMeshes(running && !paused ? dt : 0);
   pollPad(dt); updateCamera(dt); kartDispTick(dt);
@@ -9576,7 +9590,10 @@ function tick(now, forced) {
   if (window.__qcF) window.__qcF(now, forced);   /* QC-Bot: Bildzeiten messen und direkt nach dem Zeichnen Bilder auswerten */
 }
 applyGfx();
-buildTrack(TRACKS[S.track] && (!TRACKS[S.track].extra || S.nos) && !TRACKS[S.track].kartOnly ? S.track : (S.track = 'monza'));placeOnGrid(); buildMenu(); renderMenu();
+if (!(TRACKS[S.track] && (!TRACKS[S.track].extra || S.nos) && !TRACKS[S.track].kartOnly)) S.track = 'monza';
+/* Die zuletzt gefahrene Strecke wird NICHT mehr beim Spielstart gebaut (das war der größte Teil der ersten Ladezeit). Sie entsteht erst, wenn nach der
+   Streckenwahl ein Rennen beginnt (TRK !== TRACKS[S.track] -> buildTrack). Bis dahin ist TRK leer; tick() zeichnet dann nur Menü und Showroom. */
+buildMenu(); renderMenu();
 loading(false); $('#menu').classList.remove('hidden'); showScreen('title');
 window.__scene = () => scene; window.__cam = () => camera; window.__perf = (k = 20) => { const was = paused; paused = false; renderer.info.autoReset = false; renderer.info.reset(); let t = performance.now(); const t0 = t; for (let i = 0; i < k; i++) tick(t += 40, true); last = performance.now(); const gl = renderer.getContext(); gl.finish(); const ms = (performance.now() - t0) / k, r = renderer.info.render; const o = { calls: Math.round(r.calls / k), tris: Math.round(r.triangles / k), ms: +ms.toFixed(2), pr: renderer.getPixelRatio() }; renderer.info.autoReset = true; paused = was; return o; };   /* Test: Zeichenaufrufe/Bild und Zeit pro Bild (CPU+GPU, mit gl.finish) */
 // Testhilfen: Menü per Code bedienen (Strecke bauen, Rennen starten, feste Kamera)
