@@ -2716,6 +2716,15 @@ function dropFaces(M, test) {
     if (keep.length < I.length) { g.setIndex(new THREE.BufferAttribute(new I.constructor(keep), 1)); } }
 }
 dropFaces(CARM, (x, y, z) => Math.abs(y - 0.576) < 0.012 && Math.abs(x) < 0.2 && z > 0.1 && z < 0.8);
+// Cockpitöffnung der Fahrzeugmodelle (Außenansicht) an Lenkrad und Händen weiter: Der Rand samt nach unten gezogener Lippe lag bei x ±0,16 (F1) bzw. ±0,18 (F2)
+// genau in Griffhöhe – Lenkradgriffe und Fäuste steckten bis 2 cm darin. Randpunkte im Band um die Hände werden nach außen auf x = X geschoben (weich in z und y).
+function widenRim(M, X, y0, y1, zA, zB) { if (!M) return; const S = t => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
+  for (const Lv of M.lods) for (const k of ['gloss', 'matte']) { const g = Lv[k]; if (!g) continue; const p = g.attributes.position; let ch = false;
+    for (let i = 0; i < p.count; i++) { const x = p.getX(i), ax = Math.abs(x), y = p.getY(i), z = p.getZ(i); if (ax < 0.12 || ax >= X || y < y0 - 0.03 || y > y1 + 0.03 || z < zA - 0.06 || z > zB + 0.03) continue;
+      const w = S((z - (zA - 0.06)) / 0.06) * S(((zB + 0.03) - z) / 0.03) * S((y - (y0 - 0.03)) / 0.03) * S(((y1 + 0.03) - y) / 0.03); if (w <= 0) continue;
+      p.setX(i, Math.sign(x) * (ax + (X - ax) * w)); ch = true; }
+    if (ch) { p.needsUpdate = true; g.computeBoundingSphere(); } } }
+widenRim(CARM, 0.24, 0.56, 0.64, 0.48, 0.71); widenRim(CARM2, 0.24, 0.56, 0.70, 0.46, 0.67);
 // F2-Modell: auf der Nase (Mitte) steckten zwei dünne dunkle Stäbe aus dem Quellmodell – in Cockpit- und TV-Sicht ein schwebender Strich mit Punkt vor dem Auto:
 //  a) Antenne über der Vorderachse (z ≈ 1,40, y 0,669–0,903, 3–4 mm dick, mit Kappe oben)   b) Nadel weiter vorn (z ≈ 1,54–1,57, y 0,647–0,788)
 // Alles oberhalb des Fußes auf den Fuß zurückziehen: die Stäbe fallen zu Flächen knapp unter dem Nasenlack zusammen und sind unsichtbar.
@@ -3019,12 +3028,12 @@ const COCK_PAD = new THREE.MeshStandardMaterial({ color: 0x24252b, roughness: .9
 // Es misst nichts am Fahrzeugmodell und schließt nirgends daran an: das Fahrzeugmodell wird in diesem Bereich (Kasten um das neue Modell) in der Cockpitansicht nicht gezeichnet.
 // Erst kurz vor der Vorderachse taucht das neue Modell 1,5 cm kleiner in die echte Nase ein. Maße: hw = halbe Breite, hC = Deckhöhe in der Mitte (je Längsposition z).
 const CK = {
-  f1: { zB: -0.35, z1: 0.74, rc: 0.09, wo: 0.2, wh: 0.035, wz: [0.12, 0.34], yR: 0.615, fl: 0.30, zCut: 1.82, zF: 2.0, yLo: 0.31,
+  f1: { zB: -0.35, z1: 0.74, rc: 0.09, wo: 0.2, wx: [[0.12, 0], [0.30, 0.03], [0.36, 0.05], [0.48, 0.066]], yR: 0.615, fl: 0.30, zCut: 1.82, zF: 2.0, yLo: 0.31,
     hw: [[-0.35, 0.37], [0.45, 0.37], [0.74, 0.31], [1.0, 0.285], [1.4, 0.23], [1.6, 0.19], [2.0, 0.14]], hC: [[0.74, 0.665], [1.6, 0.655], [1.8, 0.635], [2.0, 0.605]] },
-  f2: { zB: -0.35, z1: 0.70, rc: 0.09, wo: 0.21, wh: 0.035, wz: [0.12, 0.34], yR: 0.655, fl: 0.14, zCut: 1.72, zF: 1.9, yLo: 0.30,
+  f2: { zB: -0.35, z1: 0.70, rc: 0.09, wo: 0.21, wx: [[0.12, 0], [0.30, 0.03], [0.36, 0.05], [0.48, 0.066]], yR: 0.655, fl: 0.14, zCut: 1.72, zF: 1.9, yLo: 0.30,
     hw: [[-0.35, 0.37], [0.45, 0.37], [0.70, 0.30], [0.8, 0.25], [1.0, 0.24], [1.2, 0.22], [1.4, 0.20], [1.6, 0.18], [1.9, 0.165]], hC: [[0.70, 0.705], [0.8, 0.705], [1.0, 0.695], [1.4, 0.685], [1.6, 0.655], [1.8, 0.615], [1.9, 0.59]] } };
-// Innenwand der Wanne: ab Ellbogenhöhe (wz) um wh weiter außen – Unterarme und Hände am Lenkrad lagen sonst bis 2 cm in der Wand (x 0,20)
-const ckWo = (G, z) => { const t = clamp((z - G.wz[0]) / (G.wz[1] - G.wz[0]), 0, 1); return G.wo + G.wh * t * t * (3 - 2 * t); };
+// Innenwand der Wanne: neben Ellbogen, Unterarmen und Händen weiter außen (wx: Zuschlag je Längsposition z, weich) – Unterarme und Hände am Lenkrad lagen sonst bis 2 cm in der Wand (x 0,20)
+const ckWo = (G, z) => { const T = G.wx; if (z <= T[0][0]) return G.wo; for (let i = 1; i < T.length; i++) if (z <= T[i][0]) { const t = (z - T[i - 1][0]) / (T[i][0] - T[i - 1][0]); return G.wo + lerp(T[i - 1][1], T[i][1], t * t * (3 - 2 * t)); } return G.wo + T[T.length - 1][1]; };
 const ckTab = (T, z) => { if (z <= T[0][0]) return T[0][1]; for (let i = 1; i < T.length; i++) if (z <= T[i][0]) return lerp(T[i - 1][1], T[i][1], (z - T[i - 1][0]) / (T[i][0] - T[i - 1][0])); return T[T.length - 1][1]; };
 const ckGLSL = (T, v) => { let e = T[T.length - 1][1].toFixed(4); for (let i = T.length - 1; i >= 1; i--) e = '(' + v + ' < ' + T[i][0].toFixed(3) + ' ? mix(' + T[i - 1][1].toFixed(4) + ', ' + T[i][1].toFixed(4) + ', clamp((' + v + ' - ' + T[i - 1][0].toFixed(3) + ') / ' + (T[i][0] - T[i - 1][0]).toFixed(3) + ', 0.0, 1.0)) : ' + e + ')'; return e; };
 function cockNew(tp, k, bodyCol) {
@@ -9394,7 +9403,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.72'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.73'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

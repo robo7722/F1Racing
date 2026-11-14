@@ -141,13 +141,13 @@ def main():
                 if m.any() and d[m].min() < res[k][0]: res[k] = (d[m].min(), smp['st'])
             if smp.get('roll'): rolls.append(smp['roll'])
             if TT is not None:   # Arme/Hände gegen die Cockpitwanne (Cockpit- und TV-Ansicht zeigen dort nur die Wanne)
-                am = np.isin(RG, (1, 3)) & (np.abs(Q[:, 0]) > 0.12); ins = tub_inside(Q[am], TT)
+                am = np.isin(RG, (1, 3)) & (np.abs(Q[:, 0]) > 0.12) & (Q[:, 2] > 0.40); ins = tub_inside(Q[am], TT)   # sichtbarer Teil: Unterarme und Hände (Ellbogen/Oberarme liegen gewollt im Monocoque unter dem Rand)
                 if ins.any(): tubHit[smp['st']] = (int(ins.sum()), Q[am][ins][np.abs(Q[am][ins][:, 0]).argmax()].round(3).tolist())
         rr = np.degrees(np.abs(np.array(rolls))).max() if rolls else float('nan')
         print(f"{case:6s} " + '  '.join(f"{names[k]} {res[k][0] * 1000:+6.1f} mm (Einschlag {res[k][1]:+.2f})" for k in names) + f"   Handrolle max {rr:.0f}°")
         worst_all = min(worst_all, min(v[0] for v in res.values()))
         if TT is not None:
-            print(f"       Arme/Hände in der Cockpitwanne: " + ('frei' if not tubHit else f"{len(tubHit)} Lenkwinkel betroffen, z. B. " + '; '.join(f"Einschlag {k:+.2f}: {v[0]} Punkte, außen {v[1]}" for k, v in list(tubHit.items())[:4])))
+            print(f"       Unterarme/Hände in der Cockpitwanne: " + ('frei' if not tubHit else f"{len(tubHit)} Lenkwinkel betroffen, z. B. " + '; '.join(f"Einschlag {k:+.2f}: {v[0]} Punkte, außen {v[1]}" for k, v in list(tubHit.items())[:4])))
             if tubHit: worst_all = min(worst_all, -0.001)
     # Karosserie/Wanne gegen das Lenkrad (Lenkrad dreht, Auto steht)
     for ser, T in ex['car'].items():
