@@ -3765,7 +3765,7 @@ function kartArmsIK(out, spin, K = KFAHRER, C = K.swC, AX = K.swAx, RIM = K.rimR
     if (FX) {   // F1/F2: Faustmitte und -achse; im Lenkrad dieses Autos maßstäblich (F2-Lenkrad ist größer), Rolle um die Faustachse – die Finger bleiben am Griff
       // Drehpunkt = Ursprung der Lenkrad-Gruppe (C liegt 1 cm darunter: Drehung um C ließ die Hand beim Einlenken bis 6 mm vom Griff wandern)
       const ov = _ikOV.set(0, -0.01, 0.02).multiplyScalar(RIM / 0.2).applyQuaternion(_swQ);
-      G0 = _ikG0.copy(FX.c).setX(FX.c.x * mir); rel.copy(G0).sub(K.swC).multiplyScalar(RIM / K.rimR).add(ov); G = _ikGr.copy(rel).applyQuaternion(X.r).add(C).sub(ov);
+      G0 = _ikG0.copy(FX.c).setX(FX.c.x * mir); rel.copy(G0).sub(K.swC).add(_ikV3.copy(FX.o).setX(FX.o.x * mir)).multiplyScalar(RIM / K.rimR).add(ov); G = _ikGr.copy(rel).applyQuaternion(X.r).add(C).sub(ov);
       tng = _ikT.copy(FX.d).setX(FX.d.x * mir).applyQuaternion(X.r); }
     const hand0 = _ikH0.copy(wr).sub(el).normalize();                                      // Unterarm-/Handrichtung in Bindhaltung
     let phi = out.prevPhi ? out.prevPhi[side] : 0, phU = 0, lastA = 0;   // vom letzten Bild weiter (stetig); phU: weich begrenzte Rolle (harte Grenze ließ die Hand im engen Cockpit springen)
@@ -4121,12 +4121,13 @@ function suitDesign(d, T) {   // F2: aus der Lackierung (Hauptfarbe, Unterteil b
 const _swQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.45, Math.PI, 0));
 // Faustachse der rechten Hand im Lenkrad-Rahmen (lokal, vor swS): aus f1fahrer.bin vermessen (größter freier Zylinder in der Faust, r 3,1 cm lokal über ±7 cm).
 // Der Griff des Lenkrads liegt genau darauf (F1_GRIP_R: 4 mm Luft zu den Fingern); die Hand rollt beim Lenken nur um diese Achse, höchstens ±F1_ROLL.
-const F1_FIST = { c: [0.1939, -0.0161, 0.0380], d: [0.1375, 0.9331, 0.3324], d2: [-0.08, 1, 0.12] }, F1_GRIP_R = 0.0265, F1_ROLL = 0.35;
+const F1_FIST = { c: [0.1939, -0.0161, 0.0380], d: [0.1375, 0.9331, 0.3324], d2: [-0.08, 1, 0.12], o: [0, -0.022, 0] }, F1_GRIP_R = 0.0265, F1_ROLL = 0.35;
 // d2: Griffachse des Lenkrads wie beim Vorbild (fast senkrecht, oben leicht nach innen, kaum zum Fahrer gekippt). Die Hand wird dafür fest um die Faustmitte
 // von d auf d2 gedreht (~18°, Korrektur qc in der Arm-IK) – sonst stünden die Griffe oben 8° nach außen und 20° zum Fahrer gekippt.
+// o: Griff samt Hand gegenüber der Bauhaltung tiefer (der Zeigefinger stieß sonst oben an die Ohren); die Arm-IK greift entsprechend tiefer.
 function f1Fist(K) {   // Faustachse im Fahrer-Rahmen (Bindhaltung: Lenkrad wie beim Bau von f1fahrer.bin, wheel_frame('f1') = MODELS.f1)
   const d = new THREE.Vector3(...F1_FIST.d).normalize().applyQuaternion(_swQ), d2 = new THREE.Vector3(...F1_FIST.d2).normalize().applyQuaternion(_swQ), qc = new THREE.Quaternion().setFromUnitVectors(d, d2);
-  return { c: new THREE.Vector3(...F1_FIST.c).multiplyScalar(0.78).applyQuaternion(_swQ).add(new THREE.Vector3(0, 0.60, 0.665)), d: d2, qc: [qc, new THREE.Quaternion(qc.x, -qc.y, -qc.z, qc.w)] }; }   // qc[1]: gespiegelt für die linke Hand
+  return { c: new THREE.Vector3(...F1_FIST.c).multiplyScalar(0.78).applyQuaternion(_swQ).add(new THREE.Vector3(0, 0.60, 0.665)), d: d2, qc: [qc, new THREE.Quaternion(qc.x, -qc.y, -qc.z, qc.w)], o: new THREE.Vector3(...F1_FIST.o).multiplyScalar(0.78).applyQuaternion(_swQ) }; }   // qc[1]: gespiegelt für die linke Hand
 function f1Wheel(MD) { const s = MD.swS || 1; return { C: new THREE.Vector3(...(MD.swPos || [0, 0.605, 0.98])).add(new THREE.Vector3(0, -0.01, 0.02).multiplyScalar(s).applyQuaternion(_swQ)), AX: new THREE.Vector3(0, 0, 1).applyQuaternion(_swQ), R: 0.2 * s }; }
 function f1Driver(d, T, MD, g) {
   const K = F1FAHRER, D = suitDesign(d, T), key = 'F1S_' + (d.liv || d.team);
@@ -8319,7 +8320,7 @@ const SW = (() => {
     // Walzenschalter: schwarzes Gehäuse mit Ziffernfeldern (cs: Farben der Felder), quer (h) oder hochkant
     const drum = (x, y, cs, h) => { const n = cs.length, L = n * 0.0075 + 0.004; box(h ? L : 0.012, h ? 0.012 : L, 0.007, x, y, 0.0355, blk);
       cs.forEach((c, k) => { const o = (k - (n - 1) / 2) * 0.0075; box(h ? 0.0058 : 0.008, h ? 0.008 : 0.0058, 0.002, x + (h ? o : 0), y + (h ? 0 : -o), 0.0395, col(c)); }); };
-    const FC = new V(...F1_FIST.c), FD = new V(...F1_FIST.d2).normalize(), RG = F1_GRIP_R;
+    const FC = new V(...F1_FIST.c).add(new V(...F1_FIST.o)), FD = new V(...F1_FIST.d2).normalize(), RG = F1_GRIP_R;
     // Griff mit veränderlicher Dicke: Querschnitte entlang des Pfads (Frenet-Rahmen), rG(u) = Radius; Enden mit Kugelkappen
     const loft = (path, rG, n = 80, k = 18) => { const fr = path.computeFrenetFrames(n, false), pos = [], idx = [], pts = [], rs = [];
       for (let i = 0; i <= n; i++) { const u = i / n, c = path.getPointAt(u), r = rG(u); pts.push([c.x, c.y, c.z]); rs.push(r);
@@ -8327,10 +8328,10 @@ const SW = (() => {
       for (let i = 0; i < n; i++) for (let j = 0; j < k; j++) { const q = i * (k + 1) + j; idx.push(q, q + k + 1, q + 1, q + 1, q + k + 1, q + k + 2); }
       const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return { g, pts, rs }; };
     for (const s2 of [-1, 1]) {   // Griff (Vorbild Ferrari 2026): gerades Stück auf der Griffachse (Hand t −0,10…+0,09, r 2,65 cm), unten frei, rund und etwas kräftiger, oben im Bogen dick ins Ohr
-      const m = v => new V(v.x * s2, v.y, v.z), at = t => m(FC.clone().addScaledVector(FD, t)), E0 = at(-0.145), A0 = at(-0.10), A1 = at(0.09), T1 = new V(s2 * 0.188, 0.104, 0.016);
-      const path = new THREE.CurvePath(); path.add(new THREE.LineCurve3(E0, A0)); path.add(new THREE.LineCurve3(A0, A1)); path.add(new THREE.QuadraticBezierCurve3(A1, at(0.125), T1));
-      const L0 = E0.distanceTo(A0), L1 = A0.distanceTo(A1), Lt = path.getLength(), S = t => { t = Math.min(1, Math.max(0, t)); return t * t * (3 - 2 * t); };
-      const rG = u => { const l = u * Lt; return l < L0 ? RG + 0.0035 * S((L0 - l) / L0 * 1.6) : l < L0 + L1 ? RG : RG + 0.003 * S((l - L0 - L1) / (Lt - L0 - L1) * 2); };
+      const m = v => new V(v.x * s2, v.y, v.z), at = t => m(FC.clone().addScaledVector(FD, t)), E0 = at(-0.13).add(new V(-s2 * 0.007, 0, -0.014)), A0 = at(-0.10), A1 = at(0.09), T1 = new V(s2 * 0.188, 0.104, 0.016);   // Ende leicht nach innen-vorn, weg vom Handgelenk
+      const path = new THREE.CurvePath(); path.add(new THREE.QuadraticBezierCurve3(E0, at(-0.118), A0)); path.add(new THREE.LineCurve3(A0, A1)); path.add(new THREE.QuadraticBezierCurve3(A1, at(0.125), T1));
+      const L0 = path.curves[0].getLength(), L1 = A0.distanceTo(A1), Lt = path.getLength(), S = t => { t = Math.min(1, Math.max(0, t)); return t * t * (3 - 2 * t); };
+      const rG = u => { const l = u * Lt; return l < L0 ? RG + 0.0025 * S((L0 - l) / L0 * 1.6) : l < L0 + L1 ? RG : RG + 0.003 * S((l - L0 - L1) / (Lt - L0 - L1) * 2); };
       const G = loft(path, rG); P.push([G.g, rub], [new THREE.SphereGeometry(rG(0), 18, 12).translate(E0.x, E0.y, E0.z), rub], [new THREE.SphereGeometry(rG(1), 18, 12).translate(T1.x, T1.y, T1.z), rub]);
       spec.push({ t: 'tube', pts: G.pts, rs: G.rs, r: RG });
       box(0.052, 0.068, 0.004, s2 * 0.099, 0.03, -0.017, cfk, s2 * 0.06);   // Schaltwippe hinter dem Mittelteil (endet vor den Fingerspitzen)
