@@ -1,6 +1,6 @@
 # Rennfahrer-Modell
 
-Stand: 14.11.2026 (v1.67) – derselbe Fahrer in Kart, F1 und F2; stehende Figur als Vorschau.
+Stand: 14.11.2026 (v1.70) – derselbe Fahrer in Kart, F1 und F2; stehende Figur als Vorschau.
 
 ## Dateien
 - `kartfahrer.bin` – sitzender Kart-Fahrer fürs Spiel: Körper + beide Handschuhe als EIN Netz (~14 200 Dreiecke).
