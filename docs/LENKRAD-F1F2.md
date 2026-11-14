@@ -85,6 +85,33 @@ Rückmeldung mit drei Bildern (Spa, McLaren F1 und F2).
 Prüfung danach (`export.cjs` + `check_lenkrad.py`, STEP=2): **kein Clipping**. Handschuh ≥ 1,8 mm. Arm F1-TV +25,1, F2 +29,4, F2-TV +7,0 mm (vorher +22,1 / +26,2 / +3,1). Unterarme/Hände in der Wanne frei. Karosserie F1 +10,2 / F2 +4,1 mm.
 Hinweis: `f1_handgelenk.py` muss nach jedem Neubau von f1fahrer.bin laufen, nach `f1_hand_nachbearbeitung.py`.
 
+## v1.94 – Handgelenk-Form, Klettband, feinerer Stoff, Ärmel bis zum Handschuh
+Rückmeldung (Aston Martin, Helmkamera, voller Einschlag): „sieht immer noch falsch aus“. Am Handgelenk saß ein schmaler dunkler Klotz, dahinter sprang der Unterarm breit heraus.
+- Gemessen: Die Stulpe ist ein Zylinder mit r 3,1 cm, der Ärmel direkt dahinter ist aber schon 4–5,5 cm dick (elliptisch, Unterarmmuskel). Er stand ab 1 cm **vor** dem Stulpen-Ende außen über, die Stulpe verschwand also im Ärmel statt über ihm zu liegen.
+- `f1_handgelenk.py` (Form, einmalig, Kopf-Eintrag `"gelenk": "v1.94"`): Der Ärmel läuft zum Handgelenk schlank zu (bis 3,5 cm, ab 13 cm hinter dem Handgelenk unverändert) und liegt ganz in der Stulpe. Die Stulpe weitet sich zum Ende auf 3,7 cm und liegt damit über dem Ärmel. Normalen dort sind neu berechnet.
+- Shader: Das Klettband ist schmaler (1,2 statt 2,6 cm) und halb in Handschuhfarbe statt in dunkler Anzugfarbe.
+- `f1fahrer.bin` neu aus der Vorlage (v1.65): `f1_hand_nachbearbeitung.py`, danach `f1_handgelenk.py`.
+
+- **Stoff feiner, nach Textil** (Wunsch): Auf Anzug und Ärmeln lag zusätzlich ein grobes Korbgeflecht (`kart_stoff.jpg`, Maßstab 34: Kachel ~3 cm, Fäden ~3,6 mm). Das wirkte wie Carbon, besonders auf dem Unterarm nah vor der Kamera. Die Lederkörnung der Handschuhe benutzte dieselbe Geflecht-Textur.
+  - Anzug F1/F2: Das grobe Geflecht ist entfernt. Das Köpergewebe ist feiner (Maßstab 240, Fäden ~0,5 mm, nur ganz nah sichtbar) und schwächer. Dazu kommt eine leicht melierte, unregelmäßige Stoffstruktur aus Wertrauschen (`vn`, zwei feine Stufen, blendet mit der Entfernung aus).
+  - Dazu ein feiner schräger Köpergrat (Rippen im Abstand 1,4 mm), nur aus der Nähe sichtbar.
+  - Handschuhe: Feine unregelmäßige Wildleder-Narbung aus Rauschen statt Geflecht, kräftiger als vorher (±8 %).
+- **Schwarzes Stück am Unterarm** (Wunsch: Anzugstoff bis zum Handschuh): Das war das Strickbündchen am Ärmelende (Ruhehöhe y < 0,507). Es ist in dunkler Farbe gemalt und lag bis 7 cm hinter dem Handgelenk frei. F1/F2 haben jetzt kein Bündchen mehr, der Anzugstoff läuft bis in die Stulpe. Beim Kart bleibt es.
+- **Dunkle Dreiecke/Keile auf der Hand** (beim Prüfen gefunden), drei Ursachen:
+  1. Verkehrt herum stehende Handschuhflächen (5 schon in der Vorlage, weitere nach dem Einziehen des Stummels). `f1_hand_nachbearbeitung.py` dreht sie um (26 an beiden Händen).
+  2. Punkte mit Normale gegen die Nachbarn (am eingezogenen Stummel), dadurch lag ein Dreieck im Dunkeln. Sie werden auf den Mittelwert der Nachbarn gesetzt.
+  3. Die dunkle Griffseite (Wildleder) als einzelne Fläche mitten im Handrücken bzw. als Spitze vom Handballen auf die Stulpe. Die Griffseite wird über die Nachbarn geglättet, einzelne Flächen entfallen, und im Shader endet sie 1,2 cm vor dem Handgelenk.
+  - Zusätzlich wird die Zeigefinger-Kuppe nur noch zu 60 % statt 92 % an die Faust gedrückt (`TIP_K`), mit weicher Maske statt harter Grenze. Vorher entstand dort eine gequetschte Doppelfläche. Der Abstand zum Lenkrad bleibt 2,4 mm (lokal).
+  - `f1_handgelenk.py` führt Normalen nur noch innerhalb von Arm bzw. Handschuh zusammen. Die 12 verkehrten Ärmelflächen der Vorlage liegen im Ärmelende innerhalb der Stulpe und sind nicht sichtbar.
+
+![[bilder/handgelenk_v194.png]]
+(links v1.93, rechts v1.94)
+
+![[bilder/stoff_v194.png]]
+
+Prüfung v1.94: **kein Clipping**. Handschuh ≥ 1,8 mm. Arm F1-TV +32,5, F2 +36,7, F2-TV +15,9 mm (schlankerer Ärmel, vorher +25,1 / +29,4 / +7,0). Unterarme/Hände in der Wanne frei.
+(Anzugstoff aus der Nähe: Melierung und feiner Köpergrat)
+
 ## Offen / Ideen
 - An der Faust bleibt oben ein kleiner Grat (Rest der Zeigefingerkuppe), nur in Nahansicht von außen sichtbar.
 - Handschuh-Nachbearbeitung (`f1_hand_nachbearbeitung.py`, danach `f1_handgelenk.py`) muss nach jedem Neubau von f1fahrer.bin (build_fahrer.py) erneut laufen.

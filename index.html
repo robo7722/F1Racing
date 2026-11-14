@@ -3723,6 +3723,10 @@ function kartFahrerMat(tk, suit, acc, des = null) {   // des (F1/F2-Anzüge): { 
         if (r > 0.55) m *= 1.0 - step(0.2, fx) * step(fx, 0.58) * step(0.38, fy) * step(fy, 0.62);   // Querlücke (wie E, B, H)
         if (r > 0.3 && r < 0.55) m *= 1.0 - step(0.22, fx) * step(fx, 0.56) * step(0.2, fy);         // offen nach oben (wie U)
         return m; }
+      float h3(vec3 q) { q = fract(q * 0.3183099 + 0.1); q *= 17.0; return fract(q.x * q.y * q.z * (q.x + q.y + q.z)); }
+      float vn(vec3 x) { vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);   // Wertrauschen: unregelmäßige Stoff-/Lederstruktur statt Korbgeflecht
+        return mix(mix(mix(h3(i), h3(i + vec3(1, 0, 0)), f.x), mix(h3(i + vec3(0, 1, 0)), h3(i + vec3(1, 1, 0)), f.x), f.y),
+                   mix(mix(h3(i + vec3(0, 0, 1)), h3(i + vec3(1, 0, 1)), f.x), mix(h3(i + vec3(0, 1, 1)), h3(i + vec3(1, 1, 1)), f.x), f.y), f.z); }
       float weave(vec3 p, vec3 n, float sc) { vec3 b = pow(abs(n), vec3(4.0)); b /= max(b.x + b.y + b.z, 1e-4);
         return texture2D(uWeave, p.yz * sc).r * b.x + texture2D(uWeave, p.xz * sc).r * b.y + texture2D(uWeave, p.xy * sc).r * b.z; }
       vec3 bumpN(vec3 pos, vec3 n, vec2 d, float fd) { vec3 sx = dFdx(pos), sy = dFdy(pos), r1 = cross(sy, n), r2 = cross(n, sx); float det = dot(sx, r1) * fd;
@@ -3743,15 +3747,15 @@ function kartFahrerMat(tk, suit, acc, des = null) {   // des (F1/F2-Anzüge): { 
             // x = Griffseite (Fläche zeigt zur Griffachse), y = Abstand hinter dem Handgelenk (Stulpe), z = 1 wenn Daten vorhanden
             vec3 gd = dot(uSuit, vec3(0.299, 0.587, 0.114)) > 0.5 ? uSec : uSuit; if (dot(abs(gd - uGlove), vec3(1.0)) < 0.25) gd = uGlove * 0.35;
             float has = step(0.5, vRest.z), gx = vRest.x, cw = vRest.y, fwg = fwidth(gx) + 1e-4, fwc = fwidth(cw) + 1e-4;
-            float pad = has * smoothstep(0.38 - fwg, 0.38 + fwg, gx) * (1.0 - smoothstep(0.004, 0.018, cw));                      // Griffflächen: Handfläche, Fingerinnenseiten, Daumenballen – nicht auf der Stulpe (dort lag die Unterseite als großer schwarzer Fleck im Bild, wenn die Hand oben am Lenkrad war)
-            float strap = has * smoothstep(0.02 - fwc, 0.02 + fwc, cw) * (1.0 - smoothstep(0.046 - fwc, 0.046 + fwc, cw));   // Klettband an der Stulpe
+            float pad = has * smoothstep(0.38 - fwg, 0.38 + fwg, gx) * (1.0 - smoothstep(-0.012, 0.002, cw));                      // Griffflächen: Handfläche, Fingerinnenseiten, Daumenballen – nicht auf der Stulpe (dort lag die Unterseite als großer schwarzer Fleck im Bild, wenn die Hand oben am Lenkrad war)
+            float strap = has * smoothstep(0.024 - fwc, 0.024 + fwc, cw) * (1.0 - smoothstep(0.036 - fwc, 0.036 + fwc, cw));   // Klettband an der Stulpe
             float sm = has * (1.0 - smoothstep(0.0, 1.5 * fwg + 0.02, abs(gx - 0.38)));    // Naht an der Grenze Rücken/Grifffläche
-            float sc = has * ((1.0 - smoothstep(0.0, 1.5 * fwc + 0.0012, abs(cw - 0.02))) + (1.0 - smoothstep(0.0, 1.5 * fwc + 0.0012, abs(cw - 0.046))));   // Kanten des Bands
-            float gr = mix(0.5, texture2D(uWeave, vMapUv * 70.0).r, 1.0 - smoothstep(0.004, 0.012, fwidth(vMapUv.x * 70.0)));   // Ledernarbung, blendet aus bevor sie flimmert
+            float sc = has * ((1.0 - smoothstep(0.0, 1.5 * fwc + 0.0012, abs(cw - 0.024))) + (1.0 - smoothstep(0.0, 1.5 * fwc + 0.0012, abs(cw - 0.036))));   // Kanten des Bands
+            float gr = mix(0.5, vn(vec3(vMapUv * 260.0, 0.5)) * 0.65 + vn(vec3(vMapUv * 700.0, 3.1)) * 0.35, 1.0 - smoothstep(0.25, 0.7, fwidth(vMapUv.x * 260.0)));   // feine Wildleder-/Textilnarbung (unregelmäßig, vorher Korbgeflecht), blendet aus bevor sie flimmert
             c = mix(uGlove, mix(vec3(0.075), uGlove * 0.25, 0.35), pad);                    // Rücken in Handschuhfarbe, Griffflächen dunkles Wildleder
-            c = mix(c, gd * 0.9, strap); c *= 1.0 - 0.35 * clamp(sm + sc, 0.0, 1.0);
-            diffuseColor.rgb = vec3(0.97 + 0.08 * (gr - 0.5));                              // Foto-Textur der Vorlage nicht mehr verwenden
-            gH = (gr - 0.5) * 0.12 - clamp(sm + sc, 0.0, 1.0) * 0.5 + strap * 0.25; } gRough = 0.62; gSheen = 0.35; gBump = uStyle > 0.5 ? 0.8 : 0.0; }
+            c = mix(c, mix(uGlove, gd, 0.55) * 0.85, strap);   /* Klettband schmal (1,2 cm) und halb in Handschuhfarbe – vorher 2,6 cm in dunkler Anzugfarbe: wirkte am Handgelenk wie ein schwarzer Klotz */ c *= 1.0 - 0.35 * clamp(sm + sc, 0.0, 1.0);
+            diffuseColor.rgb = vec3(0.96 + 0.16 * (gr - 0.5));                              // Foto-Textur der Vorlage nicht mehr verwenden
+            gH = (gr - 0.5) * 0.3 - clamp(sm + sc, 0.0, 1.0) * 0.5 + strap * 0.25; } gRough = 0.62; gSheen = 0.35; gBump = uStyle > 0.5 ? 0.8 : 0.0; }
         else if (shoe) { c = uShoe; gRough = 0.38; gSheen = 0.0; gBump = 0.15;
           c = mix(c, uAcc, bnd(p.y, 0.052, 0.062, 0.001)); if (p.y < 0.006) { c = vec3(0.07); gRough = 0.8; } }
         else {
@@ -3782,7 +3786,7 @@ function kartFahrerMat(tk, suit, acc, des = null) {   // des (F1/F2-Anzüge): { 
             seam += (ln(p.z - zc, -0.011, 0.0014) + ln(p.z - zc, 0.011, 0.0014)) * step(xo, ax);
             float inw = -sign(p.x) * n.x;                                                                                      // Innenseite (zum Rumpf)
             float pit = smoothstep(0.35, 0.45, inw) * bnd(p.y, 0.64, 0.775, w); c = mix(c, uDark, pit); knit += pit;          // Achsel-Stretch innen
-            float cuff = 1.0 - smoothstep(0.506, 0.508, p.y); c = mix(c, uDark, cuff); knit += cuff; seam += ln(p.y, 0.507, 0.0015);   // Strickbündchen
+            float cuff = uStyle > 0.5 ? 0.0 : 1.0 - smoothstep(0.506, 0.508, p.y); c = mix(c, uDark, cuff); knit += cuff; seam += ln(p.y, 0.507, 0.0015) * (1.0 - step(0.5, uStyle));   // Strickbündchen (Kart); F1/F2: Anzugstoff bis in die Stulpe – das dunkle Bündchen lag bis 7 cm hinter dem Handgelenk frei und wirkte als schwarzes Stück am Unterarm
             if (uStyle > 0.5) { float sp = bnd(p.y, 0.682, 0.716, w) * smoothstep(0.45, 0.6, n.z) * (1.0 - st);   // Aufnäher vorn am Oberarm – neben dem Ärmelstreifen, nicht darüber
               float ang = atan(p.x - sign(p.x) * 0.125, p.z + 0.04); c = mix(c, uPatch, sp);
               c = mix(c, uSuit * 0.55, sp * pa * prt(vec2(clamp(0.5 + sign(p.x) * ang * 0.9, 0.0, 1.0), (p.y - 0.682) / 0.034), 7.0 + sign(p.x), 5.0)); seam += ln(p.y, 0.682, 0.0015) * sp + ln(p.y, 0.716, 0.0015) * sp; }
@@ -3795,11 +3799,16 @@ function kartFahrerMat(tk, suit, acc, des = null) {   // des (F1/F2-Anzüge): { 
           }
           // Gewebe / Strick als Höhe, Nähte als Rillen, Nahtfaden etwas dunkler
           float fw = length(fwidth(p));                                          // Weltgröße eines Bildpunkts
-          float wvFade = 1.0 - smoothstep(0.0025, 0.006, fw * 1.0), ribFade = 1.0 - smoothstep(0.0008, 0.002, fw);
-          float wv = mix(0.5, weave(p, n, 115.0), wvFade), rib = mix(0.5, 0.5 + 0.5 * sin(p.x * 2600.0 + p.z * 900.0), ribFade);
-          float wv2 = uStyle > 0.5 ? mix(0.5, weave(p, n, 34.0), 1.0 - smoothstep(0.008, 0.02, fw)) : 0.5;   // F1/F2: gröbere Stoffstruktur, auch auf Entfernung sichtbar
-          gH = mix(wv, rib, clamp(knit, 0.0, 1.0)) * 0.6 * mix(0.15, 1.0, wvFade) - clamp(seam, 0.0, 1.0) * 0.9;
-          c *= 1.0 - (uStyle > 0.5 ? 0.45 : 0.28) * clamp(seam, 0.0, 1.0); c *= 1.0 + 0.2 * (wv - 0.5) + 0.16 * (wv2 - 0.5); gH += (wv2 - 0.5) * 0.35;
+          float wsc = uStyle > 0.5 ? 240.0 : 115.0, wf = 115.0 / wsc;                // F1/F2: feines Köpergewebe (Fäden ~0,5 mm), nur ganz nah sichtbar
+          float wvFade = 1.0 - smoothstep(0.0025 * wf, 0.006 * wf, fw), ribFade = 1.0 - smoothstep(0.0008, 0.002, fw);
+          float wv = mix(0.5, weave(p, n, wsc), wvFade), rib = mix(0.5, 0.5 + 0.5 * sin(p.x * 2600.0 + p.z * 900.0), ribFade);
+          // F1/F2: statt des groben Korbgeflechts (Kachel 3 cm, Fäden 3,6 mm – wirkte wie Carbon) leicht melierter Stoff: unregelmäßiges Rauschen in zwei feinen Stufen
+          //   + Köpergrat: feine schräge Rippen (Abstand 1,4 mm), nur aus der Nähe; aus der Entfernung bleibt die Melierung
+          float mo = 0.5, tw = 0.5; if (uStyle > 0.5) { float f1 = 1.0 - smoothstep(0.006, 0.016, fw), f2 = 1.0 - smoothstep(0.0015, 0.005, fw), f3 = 1.0 - smoothstep(0.00035, 0.0009, fw);
+            mo = 0.5 + (vn(p * 110.0) - 0.5) * f1 * 0.55 + (vn(p * vec3(420.0, 160.0, 420.0) + 7.3) - 0.5) * f2 * 0.45;
+            tw = 0.5 + 0.5 * sin((p.x + p.y * 0.7 + p.z) * 4500.0 + vn(p * 300.0) * 3.0) * f3; }
+          gH = mix(wv, rib, clamp(knit, 0.0, 1.0)) * (uStyle > 0.5 ? 0.35 : 0.6) * mix(0.15, 1.0, wvFade) - clamp(seam, 0.0, 1.0) * 0.9;
+          c *= 1.0 - (uStyle > 0.5 ? 0.45 : 0.28) * clamp(seam, 0.0, 1.0); c *= 1.0 + (uStyle > 0.5 ? 0.08 : 0.2) * (wv - 0.5) + 0.32 * (mo - 0.5) + 0.12 * (tw - 0.5); gH += (mo - 0.5) * 0.5 + (tw - 0.5) * 0.45;
           if (uStyle > 0.5) diffuseColor.rgb = clamp(1.0 - (1.0 - diffuseColor.rgb) * 2.2, 0.0, 1.0);   // Falten/Schattierung der Vorlage kräftiger
           gRough = mix(0.86, 0.8, clamp(knit, 0.0, 1.0));
         }
@@ -3809,7 +3818,7 @@ function kartFahrerMat(tk, suit, acc, des = null) {   // des (F1/F2-Anzüge): { 
       .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\n metalnessFactor = gMetal;')
       .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\n normal = bumpN(-vViewPosition, normal, vec2(dFdx(gH), dFdy(gH)) * 0.0025 * gBump, faceDirection);')
       .replace('#include <lights_physical_fragment>', '#include <lights_physical_fragment>\n material.sheenColor = diffuseColor.rgb * 0.6 * gSheen + 0.05 * gSheen;'); };
-  m.customProgramCacheKey = () => 'kartFahrer7';
+  m.customProgramCacheKey = () => 'kartFahrer10';
   return (KFMAT[tk] = m);
 }
 // Arme folgen dem Lenkrad wie echte Arme: Die Hand bleibt am Kranz (dreht mit dem Lenkrad um dessen Achse), Schulter fest,
@@ -9590,7 +9599,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.93'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.94'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

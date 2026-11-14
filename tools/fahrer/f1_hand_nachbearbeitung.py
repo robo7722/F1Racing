@@ -92,8 +92,9 @@ def process_hand(P, F, gmask):
     Bp = L[base].mean(0)
     Ln = L + (Bp - L) * w[:, None]
     # Zeigefinger-Kuppe ragte spitz über die Faust (vorn-außen, oberhalb t 0,08): flacher an die Faust drücken
-    T0 = 0.074; fm = (t > T0) & (np.cos(ang + np.radians(135)) > 0.45) & (w < 0.01)
-    Ln[fm] -= np.outer((t[fm] - T0) * 0.92, D2)
+    # v1.94: weich begrenzt (vorher harte Maske: an ihrem Rand rissen Falten auf – dunkler Spalt oben auf der Hand)
+    T0 = 0.074; wa = np.clip((np.cos(ang + np.radians(135)) - 0.2) / 0.4, 0, 1); wa = wa * wa * (3 - 2 * wa) * (1 - np.clip(w * 100, 0, 1)); fm = (t > T0) & (wa > 0)
+    Ln[fm] -= np.outer((t[fm] - T0) * TIP_K * wa[fm], D2)
     Pn = P.copy(); Pn[idx] = from_game(Ln)
     # Abstand des Daumens zur übrigen Hand (grobe Kollisionsprüfung)
     info = dict(tip=int(tip), tB=round(float(tB), 3), ang_base=round(float(np.degrees(aB)), 1), rB=round(float(np.linalg.norm((Bp - CC) - ((Bp - CC) @ D2) * D2)), 4), n_stummel=int((w > 0.5).sum()))
@@ -102,6 +103,7 @@ def process_hand(P, F, gmask):
 
 TH_SWEEP, TH_RISE = 105.0, 0.010      # neuer Daumen: Bogen um den Griff (Grad) und Anstieg entlang der Achse (lokal)
 TH_RAD = (0.0135, 0.0118, 0.0108)     # Daumenradius Grund / Mitte / Spitze (lokal)
+TIP_K = 0.6                           # Zeigefinger-Kuppe: Anteil, um den sie oberhalb T0 an die Faust gedrückt wird (v1.94: 0,92 quetschte sie zu einer Doppelfläche = dunkler Spalt oben auf der Hand)
 TH_ROOT = (-0.3, 28.0, 0.012, 0.050, 0.0185)   # Daumenwurzel (v1.93): Länge in u, Bogen weiter nach außen (Grad), Versatz Richtung Handgelenk, Abstand zur Griffachse, Dicke
 
 
@@ -181,7 +183,26 @@ def main():
         bi = np.vstack([bi, np.tile(np.array([bone, 0, 0, 0], np.uint8), (len(tpw), 1))]); bw = np.vstack([bw, np.tile(np.array([255, 0, 0, 0], np.uint8), (len(tpw), 1))])
         nv2 += len(tpw)
     out = np.vstack(P2); F = np.vstack(F2); glove = reg == 3; Nn = np.vstack([Nn, np.zeros((nv2 - nv, 3), np.float32)])
+    # v1.94: einzelne Handschuh-Flächen standen verkehrt herum (Vorlage 5, nach Stummel/Kuppe 9) – von außen unsichtbar (Rückseite), als dunkles Dreieck
+    # auf dem Handrücken sichtbar. Flächen, deren Normale gegen die gemittelte Punktnormale zeigt, umdrehen; danach Normalen neu.
+    for _ in range(2):
+        N = vertex_normals(out, F, glove); fg = glove[F].all(1); Fg = F[fg]
+        fn = np.cross(out[Fg[:, 1]] - out[Fg[:, 0]], out[Fg[:, 2]] - out[Fg[:, 0]]); fn /= np.linalg.norm(fn, axis=1, keepdims=True) + 1e-15
+        inv = (fn * N[Fg].mean(1)).sum(1) < -0.2; ii = np.where(fg)[0][inv]
+        if not len(ii): break
+        F[ii] = F[ii][:, ::-1]; print('Handschuh: Flächen umgedreht', len(ii))
     N = vertex_normals(out, F, glove); Nn[glove] = N[glove]
+    # Ausreißer: Punktnormale gegen die Nachbarn (eingezogener Stummel) -> Mittel der Nachbarn (sonst dunkles Dreieck auf dem Handrücken)
+    fgl = F[glove[F].all(1)]; nbn = {}
+    for f in fgl:
+        for a_ in f: nbn.setdefault(int(a_), set()).update(int(x) for x in f)
+    for _ in range(3):
+        fix = 0
+        for v, sn in nbn.items():
+            sn = list(sn - {v}); m_ = Nn[sn].mean(0); lm = np.linalg.norm(m_)
+            if lm > 1e-6 and Nn[v] @ m_ / lm < 0.2: Nn[v] = m_ / lm; fix += 1
+        if not fix: break
+        print('Handschuh: Normalen-Ausreißer geglättet', fix)
     # Griffseite: Normale zeigt zur Griffachse (im Spielrahmen); Abstand hinter dem Handgelenk Richtung Ellbogen
     sh, el, wr = [np.array(a_) for a_ in h['arm']]
     for sx in (1, -1):
@@ -191,6 +212,23 @@ def main():
         pad = np.clip(-(Nl * rd).sum(1), 0, 1) * (np.linalg.norm(pr, axis=1) < 0.075)
         fa = nrm(el - wr); cw = (Pm[idx] - wr) @ fa
         rest[idx, 0] = pad; rest[idx, 1] = cw; rest[idx, 2] = 1.0
+    # v1.94: Griffseite über die Nachbarn glätten – einzelne Flächen mit schiefen Normalen (am eingezogenen Daumenstummel) wurden sonst als
+    # scharf begrenztes dunkles Dreieck auf dem Handrücken gemalt
+    gf = F[glove[F].all(1)]; nbr = [[] for _ in range(len(out))]
+    for f in gf:
+        for a_ in f: nbr[a_].extend(f)
+    gi = np.where(glove)[0]
+    pv = rest[:, 0].copy()
+    for v in gi:
+        if nbr[v]: rest[v, 0] = 0.5 * pv[v] + 0.5 * pv[nbr[v]].mean()
+    for _ in range(1):   # einzelne Griffseiten-Flächen inmitten von Handrücken: Punkte unter die Schwelle (0,38) setzen
+        pd = rest[:, 0] > 0.38; n_ = 0
+        for f in gf:
+            if pd[f].all():
+                ring = set(sum((nbr[a_] for a_ in f), [])) - set(f.tolist())
+                if ring and np.mean(pd[list(ring)]) < 0.45: rest[f, 0] = np.minimum(rest[f, 0], 0.3); n_ += 1
+        if not n_: break
+        print('Handschuh: einzelne Griffseiten-Flächen entfernt', n_)
     for i, inf in enumerate(infos): print(('rechte' if i == 0 else 'linke') + ' Hand:', inf)
     if '--spec' in opt and opt['--spec']:
         sys.path.insert(0, os.path.join(ROOT, 'tools', 'lenkrad')); from check_lenkrad import wheel_sdf
