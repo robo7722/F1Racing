@@ -18,7 +18,7 @@ Zugehörig: [[FAHRER-MODELL]] (Fahrer, Hände, Arm-IK).
 - Innenwand der Cockpitwanne (x ±0,20) lag bis ~2 cm in Unterarmen/Handgelenken; obere Hand stieß bei starkem Einschlag vorn an die Wannenrundung; Ellbogen (TV) am Wannenboden.
 
 ## Umbau (index.html)
-- **Lenkrad `SW`** (Cockpit) und Kopie `f1CarWheel` (Außenansicht): Umriss `OUT` (Fase 6 mm), Griffe als Querschnitt-Schlauch (`loft`, veränderliche Dicke) mit Kugelkappen. `SW.spec` = Prüfmodell aller Teile.
+- **Lenkrad `SW`** (Cockpit) und Kopie `f1CarWheel` (Außenansicht): Umriss `OUT` (Fase 6 mm), Griffe als Querschnitt-Schlauch (`loft`, veränderliche Dicke) mit Kugelkappen. Mittelteil und Griffe sind **ein Netz mit demselben Carbon-Material**; der Griffbogen (Ohr) läuft verjüngt seitlich ins Mittelteil, sein Ende liegt ganz in der Plattendicke (vorher stand die Plattenecke hinter dem Bogen heraus). `SW.spec` = Prüfmodell aller Teile.
 - **Griffachse** `F1_FIST.d2` = (−0,08 / 1 / 0,12) statt der gekippten Faustachse; die Hand wird dafür in der Arm-IK fest um die Faustmitte gedreht (`qc`, ~18°). Griff samt Hand 2,2 cm tiefer (`F1_FIST.o`), sonst stieß der Zeigefinger oben an den Bogen. Griffradius `F1_GRIP_R` 2,65 cm lokal (≈ 3–4 mm Luft zu den Fingern).
 - **Arm-IK** (`kartArmsIK`, nur mit `K.fist` = F1/F2): Hände folgen zu 100 %, Drehpunkt = Ursprung der Lenkrad-Gruppe, Rolle nur um die Griffachse, weich begrenzt ±20° (`F1_ROLL`). Kart unverändert.
 - **Cockpitwanne** (`CK.*.wx`, `ckWo`): Innenwand ab Ellbogenhöhe weiter außen (+3 cm bei z 0,30, +5 cm bei 0,36, +6,6 cm ab 0,48); vordere Rundung enger (`rc` 0,025) und Wanne vorn länger (F1 `z1` 0,765, F2 0,735); F1-Boden 0,265.
@@ -32,10 +32,24 @@ Zugehörig: [[FAHRER-MODELL]] (Fahrer, Hände, Arm-IK).
    - Karosserie/Wanne gegen das drehende Lenkrad.
 
 ### Ergebnis v1.73
-ERGEBNIS_PLATZHALTER
+Einschlag −1…+1 in 0,02-Schritten, kleinster Abstand (mm, Welt; negativ wäre Durchdringung):
+
+| Fall | Handschuh ↔ Lenkrad | Arm ↔ Lenkrad | Rumpf/Bein ↔ Lenkrad | Unterarme/Hände ↔ Wanne |
+|---|---|---|---|---|
+| F1 | +2,4 | +39 | +39 | frei |
+| F1-TV | +2,4 | +20,5 | +39 | frei |
+| F2 | +1,8 | +27,2 | +40 | frei |
+| F2-TV | +1,8 | +0,9 | +40 | frei |
+
+Karosserie/Wanne ↔ drehendes Lenkrad: F1 +29,8 mm, F2 +0,2 mm. **Ergebnis: kein Clipping.**
+Handrolle höchstens 20°. Vorher (altes Lenkrad): Zeigefinger durch die Griffschlaufe, Fingerspitzen im Mittelteil, Griffe/Fäuste bis 2 cm im Cockpitrand, Unterarme bis 2 cm in der Wannenwand.
 
 ## Offen / Ideen
 - Daumen liegen entlang des Griffs nach oben (Faust aus der Vorlage); beim Vorbild liegen sie vorn auf dem Lenkrad. Dafür müsste der Handschuh im Bauskript neu gebogen werden (Vorlage `glove.kmz` nicht im Repo).
 - Handrolle steht beim Lenken meist an der Grenze ±20° – mehr Rolle ließe die Fingerspitzen an den Schlitz kommen.
 - Ellbogen/Oberarme hinter z 0,40 liegen wie bisher gewollt unter dem Rand im Monocoque (nicht geprüft).
 - Außen-Lenkrad (`f1CarWheel`) ohne Display (wie bisher, Leistung).
+
+## Bilder
+![[bilder/lenkrad_v173_vorn.png]]
+![[bilder/lenkrad_v173_seite.png]]

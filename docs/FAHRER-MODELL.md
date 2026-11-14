@@ -122,6 +122,13 @@ Wunsch: Anzug und Handschuhe wirkten einfarbig, sie sollen texturiert sein, und 
 - **Aufnäher mit Aufdruck**: Brust (zwei je Seite), Gürtel, Oberarm vorn. Der Aufdruck besteht aus Blockbuchstaben aus Zufall (`prt`), keine echten Marken. Er wird weich ausgeblendet, sobald er kleiner als ein Bildpunkt würde (kein Flimmern). Der Oberarm-Aufnäher liegt vorn neben dem Ärmelstreifen statt darüber (vorher war der Streifen dort abgeschnitten).
 - **Handschuhe zweifarbig**: Helle Flächen der Vorlage in Handschuhfarbe, nur die schwarzen Griffflächen in Anzugfarbe (bei hellem Anzug: zweite Teamfarbe) – der Handrücken bleibt in Handschuhfarbe, sonst wirkte er in der Helmkamera wieder dunkel. Relief aus der Vorlage (Nähte, Polster) plus Ledernarbung.
 
+## v1.73 – neues F1/F2-Lenkrad, Griff und Hand-IK
+Details: [[LENKRAD-F1F2]]. Lenkrad nach Ferrari-Prototyp 2026 (lange, fast senkrechte Griffe, unten frei, oben als Ohren ins Mittelteil), Griffe und Mittelteil ein Carbon-Netz.
+- Faust in `f1fahrer.bin` vermessen (freie Röhre 20° gekippt); Griff liegt auf der Griffachse, die Hand wird in der IK fest darauf gedreht (`F1_FIST`, `qc`), Griff samt Hand 2,2 cm tiefer.
+- `kartArmsIK` (F1/F2): Hände folgen dem Lenkrad zu 100 % (vorher 80 %), Drehpunkt = Gruppen-Ursprung (vorher 1 cm versetzt), Rolle nur um die Griffachse ±20°.
+- Cockpitwanne an Unterarmen/Händen weiter, vorn länger und enger gerundet, F1-Boden tiefer; Cockpitrand der Automodelle an Händen/Griffen geweitet, F1-Plattenrest weg, F2-Lenksäule hinter die Nabe.
+- Prüfung `tools/lenkrad/` (Export + Abstandsprüfung): kein Clipping in F1, F1-TV, F2, F2-TV über den ganzen Lenkbereich.
+
 ## Offen / Ideen
 - Lenkrad dreht sich beim Lenken, die Hände nicht (war beim alten Fahrer genauso).
 - Leichte Knautschfalten an der Hüfte durch das Biegen (im Sitz kaum sichtbar).
