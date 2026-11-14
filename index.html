@@ -4795,7 +4795,7 @@ function chunkInstances(root, cell = 260, minCount = 120) {
   for (const ch of [...root.children]) {
     if (!ch.isInstancedMesh || ch.count < minCount || ch.userData.noChunk) continue;
     const cells = new Map();
-    const gt = ch.geometry, ntri = (gt.index ? gt.index.count : gt.attributes.position.count) / 3, cl = gt.userData.tree ? clamp(L / 19, 150, 300) : ntri < 40 ? cell * 2 : gt.userData.lod ? (ntri > 150 ? cell * 0.6 : cell * 1.4) : cell;   /* Bäume immer in kleinen Kacheln: sonst liegt auf kleinen Strecken alles in einer Kachel und die Fernstufen greifen nie */   // detailreiche Modelle mit LOD (Jachten, Palmen, Laubbäume): kleinere Kacheln, damit die Fernstufe auch greift   // kleine Objekte: größere Kacheln -> weniger Zeichenaufrufe
+    const gt = ch.geometry, ntri = (gt.index ? gt.index.count : gt.attributes.position.count) / 3, cl = gt.userData.tree ? clamp(L / 19, 150, 300) : ntri < 40 ? cell * 2 : gt.userData.lod ? (ntri > 400 || (gt.userData.lod[0] && gt.userData.lod[0][1] <= 80) ? cell * 0.6 : ntri > 150 ? cell : cell * 1.4) : cell;   /* Modelle, die schon ab ≤ 80 m vereinfacht werden (Reifenstapel): kleine Kacheln – die Stufe gilt je Kachel, in einer 500-m-Kachel blieben sonst alle Stapel voll detailliert (Abu Dhabi: 260.000 Dreiecke) */   /* mittelgroße Modelle (Füll-Häuser, 168 Dreiecke): normale Kachel statt 0,6-facher – in Abu Dhabi waren 111 Häuser-Kacheln gleichzeitig im Bild */   /* Bäume immer in kleinen Kacheln: sonst liegt auf kleinen Strecken alles in einer Kachel und die Fernstufen greifen nie */   // detailreiche Modelle mit LOD (Jachten, Palmen, Laubbäume): kleinere Kacheln, damit die Fernstufe auch greift   // kleine Objekte: größere Kacheln -> weniger Zeichenaufrufe
     if (!gt.boundingSphere) gt.computeBoundingSphere();
     for (let k = 0; k < ch.count; k++) { ch.getMatrixAt(k, m4); const key = Math.floor(m4.elements[12] / cl) + ',' + Math.floor(m4.elements[14] / cl); (cells.get(key) || cells.set(key, []).get(key)).push(k); }
     if (cells.size < 2) continue;
@@ -5485,12 +5485,16 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     const cg = new THREE.BufferGeometry(); cg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); cg.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); cg.computeVertexNormals();
     grp.add(new THREE.Mesh(cg, crowdM2));
     if (hgt > 8 && TH.tents) {   // weiße Membran-Zeltdächer mit Spitzen (Beduinenzelt-Stil), Reihe über die ganze Länge
-      const top = rh * rows, y0 = Math.max(top + 4, hgt), n = Math.max(1, Math.round(len / 12)), pz = [], tm = new THREE.MeshStandardMaterial({ color: 0xf6f7f8, roughness: .55, metalness: 0, side: THREE.DoubleSide, emissive: new THREE.Color(TH.night ? 0.25 : 0.06, TH.night ? 0.25 : 0.06, TH.night ? 0.28 : 0.07) });
+      const top = rh * rows, y0 = Math.max(top + 4, hgt), n = Math.max(1, Math.round(len / 12)), pz = [];
+      /* EIN Zeltdach- und EIN Pfosten-Material je Streckenbau (vorher je Tribüne bzw. je Pfosten ein eigenes): nur Netze mit demselben Material werden zusammengefasst –
+         in Abu Dhabi waren das 196 einzelne Pfosten = 196 Zeichenaufrufe für 4.700 Dreiecke (gemessene Ruckler bei 1.300–1.380 m) */
+      if (TENT_M.bid !== BID) { TENT_M.bid = BID; TENT_M.tm = new THREE.MeshStandardMaterial({ color: 0xf6f7f8, roughness: .55, metalness: 0, side: THREE.DoubleSide, emissive: new THREE.Color(TH.night ? 0.25 : 0.06, TH.night ? 0.25 : 0.06, TH.night ? 0.28 : 0.07) }); TENT_M.post = lam({ color: 0xe8eaec }); }
+      const tm = TENT_M.tm;
       for (let k = 0; k < n; k++) { const z = -len / 2 + (k + 0.5) * len / n, g = new THREE.ConeGeometry(1, 1, 4, 3, true).rotateY(Math.PI / 4), P = g.attributes.position;
         for (let v = 0; v < P.count; v++) { const y = P.getY(v) + 0.5, f = Math.pow(1 - y, 1.8); P.setX(v, P.getX(v) * (0.2 + 0.8 * f) / Math.SQRT1_2); P.setZ(v, P.getZ(v) * (0.2 + 0.8 * f) / Math.SQRT1_2); }
         g.scale((dep + 3) / 2, 7, len / n / 2 + 0.3).translate(dep / 2 - 0.4, y0 + 3.5, z); g.computeVertexNormals(); pz.push([g, null]); }
       const tg = new THREE.Mesh(mergeParts(pz), tm); tg.castShadow = true; grp.add(tg);
-      for (let k = 0; k <= n; k++) { const z = -len / 2 + k * len / n; for (const x of [-0.6, dep + 0.4]) { const pst = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, y0, 6), lam({ color: 0xe8eaec })); pst.position.set(x, y0 / 2, z); grp.add(pst); } } }
+      for (let k = 0; k <= n; k++) { const z = -len / 2 + k * len / n; for (const x of [-0.6, dep + 0.4]) { const pst = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, y0, 6), TENT_M.post); pst.position.set(x, y0 / 2, z); grp.add(pst); } } }
     else if (hgt > 8) { const top = rh * rows, rf = new THREE.Mesh(new THREE.BoxGeometry(dep + 2, 0.35, len + 1), roofM); rf.position.set(dep / 2 - 0.4, Math.max(top + 4, hgt), 0); rf.rotation.z = -0.06; rf.castShadow = true; grp.add(rf);
       for (const z of [-len / 2 + 1, -len / 6, len / 6, len / 2 - 1]) { const pst = new THREE.Mesh(new THREE.BoxGeometry(0.35, Math.max(top + 4, hgt), 0.35), concM); pst.position.set(x0 + rd * rows + 0.3, Math.max(top + 4, hgt) / 2, z); grp.add(pst); } }
   };
@@ -7898,7 +7902,7 @@ function placeOnGrid() {
 const WARM = { rt: null };
 // Vorwärmen: Geometrie-Puffer und Texturen ALLER Objekte (auch der Detailstufen) werden einmal pro Streckenbau auf die Grafikkarte geladen – in einem winzigen Bild (8×8).
 // Sonst lädt der Treiber jedes Teil erst, wenn es zum ersten Mal in Sicht kommt: auf langen Strecken (Spa) ruckelt es dann während der Fahrt.
-let BID = 0, WARM_ID = -1;
+let BID = 0, WARM_ID = -1; const TENT_M = { bid: -1, tm: null, post: null };
 function warmUpTrack() {
   if (WARM_ID === BID || window.__noWarm) return; WARM_ID = BID; const t0 = performance.now();
   try { const rt = new THREE.WebGLRenderTarget(8, 8), prev = renderer.getRenderTarget(), objs = []; scene.traverse(o => { if (o.isMesh || o.isPoints || o.isLine) objs.push([o, o.visible, o.frustumCulled, o.geometry]); });
@@ -9432,7 +9436,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.83'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.84'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
