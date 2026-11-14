@@ -8308,14 +8308,14 @@ const SW = (() => {
   // die Fingerspitzen liegen im Schlitz. spec: Prüfmodell (Abstandsfunktion je Teil) für tools/lenkrad/check_lenkrad.py.
   const spec = [], V = THREE.Vector3;
   const HP = [[0, 0.1], [0.085, 0.1]], qb = (a, c, b, n = 8) => { for (let k = 1; k <= n; k++) { const t = k / n, u = 1 - t; HP.push([u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], u * u * a[1] + 2 * u * t * c[1] + t * t * b[1]]); } };
-  HP.push([0.15, 0.1]); qb([0.15, 0.1], [0.172, 0.1], [0.172, 0.086]); qb([0.172, 0.086], [0.172, 0.076], [0.16, 0.076]);   // obere Ecke über dem Schlitz (das Ohr bildet der Griffbogen)
-  qb([0.16, 0.076], [0.123, 0.076], [0.122, 0.055]); HP.push([0.118, -0.04]); qb([0.118, -0.04], [0.116, -0.085], [0.085, -0.1]); HP.push([0.04, -0.108], [0, -0.108]);   // Schlitzkante, Kinn
+  HP.push([0.1, 0.1]); qb([0.1, 0.1], [0.124, 0.1], [0.124, 0.078]);   // runde obere Ecke direkt in die Schlitzkante (das Ohr bildet der Griffbogen, keine Plattenecke über dem Schlitz)
+  HP.push([0.122, 0.055]); HP.push([0.118, -0.04]); qb([0.118, -0.04], [0.116, -0.085], [0.085, -0.1]); HP.push([0.04, -0.108], [0, -0.108]);   // Schlitzkante, Kinn
   const OUT = HP.concat(HP.slice(1, -1).reverse().map(([x, y]) => [-x, y]));   // Umriss ohne Fase (Fase 6 mm kommt außen dazu)
   const sh = new THREE.Shape(OUT.map(([x, y]) => new THREE.Vector2(x, y)));
   const body = new THREE.ExtrudeGeometry(sh, { depth: 0.026, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.006, bevelSegments: 3, curveSegments: 10 });
   spec.push({ t: 'ext', pts: OUT, z0: 0, z1: 0.026, r: 0.006 });
   const cTex = TEX.carbon.clone(); cTex.repeat.set(44, 44); cTex.needsUpdate = true; const cNrm = TEX.carbonN.clone(); cNrm.repeat.set(44, 44); cNrm.needsUpdate = true;
-  mk(body, new THREE.MeshStandardMaterial({ map: cTex, normalMap: cNrm, normalScale: new THREE.Vector2(.2, .2), color: 0x2c2f35, roughness: .42, metalness: .35 }), 60);
+  const bodyMat = new THREE.MeshStandardMaterial({ map: cTex, normalMap: cNrm, normalScale: new THREE.Vector2(.2, .2), color: 0x2c2f35, roughness: .42, metalness: .35 }), carb = [body];   // carb: Mittelteil + Griffe (ein Netz, ein Material)
   { const P = [], rub = col(0x17181b), alu = col(0x3b3f46), aluL = col(0x9aa1ab), blk = col(0x0c0d0f), wht = col(0xe8eaee), cfk = col(0x1d2025), org = col(0xe8862a), yel = col(0xf2c418);
     const cyl = (r, h, x, y, z, c, seg = 20, r2 = r) => { P.push([new THREE.CylinderGeometry(r2, r, h, seg).rotateX(Math.PI / 2).translate(x, y, z), c]); spec.push({ t: 'cyl', x, y, z0: z - h / 2, z1: z + h / 2, r: Math.max(r, r2) }); };
     const box = (w, h, d, x, y, z, c, rz = 0) => { const g = new THREE.BoxGeometry(w, h, d); if (rz) g.rotateZ(rz); g.translate(x, y, z); P.push([g, c]); spec.push({ t: 'box', c: [x, y, z], h: [w / 2, h / 2, d / 2], rz }); };
@@ -8325,16 +8325,18 @@ const SW = (() => {
     const FC = new V(...F1_FIST.c).add(new V(...F1_FIST.o)), FD = new V(...F1_FIST.d2).normalize(), RG = F1_GRIP_R;
     // Griff mit veränderlicher Dicke: Querschnitte entlang des Pfads (Frenet-Rahmen), rG(u) = Radius; Enden mit Kugelkappen
     const loft = (path, rG, n = 80, k = 18) => { const fr = path.computeFrenetFrames(n, false), pos = [], idx = [], pts = [], rs = [];
+      const uv = [], Lp = path.getLength();
       for (let i = 0; i <= n; i++) { const u = i / n, c = path.getPointAt(u), r = rG(u); pts.push([c.x, c.y, c.z]); rs.push(r);
-        for (let j = 0; j <= k; j++) { const a = j / k * Math.PI * 2, N = fr.normals[i], B = fr.binormals[i]; pos.push(c.x + r * (Math.cos(a) * N.x + Math.sin(a) * B.x), c.y + r * (Math.cos(a) * N.y + Math.sin(a) * B.y), c.z + r * (Math.cos(a) * N.z + Math.sin(a) * B.z)); } }
+        for (let j = 0; j <= k; j++) { const a = j / k * Math.PI * 2, N = fr.normals[i], B = fr.binormals[i]; pos.push(c.x + r * (Math.cos(a) * N.x + Math.sin(a) * B.x), c.y + r * (Math.cos(a) * N.y + Math.sin(a) * B.y), c.z + r * (Math.cos(a) * N.z + Math.sin(a) * B.z)); uv.push(a * r, u * Lp); } }
       for (let i = 0; i < n; i++) for (let j = 0; j < k; j++) { const q = i * (k + 1) + j; idx.push(q, q + k + 1, q + 1, q + 1, q + k + 1, q + k + 2); }
-      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return { g, pts, rs }; };
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals(); return { g, pts, rs }; };
     for (const s2 of [-1, 1]) {   // Griff (Vorbild Ferrari 2026): gerades Stück auf der Griffachse (Hand t −0,09…+0,09, r 2,65 cm), unten frei und rund (Ende nach innen-vorn, weg von der Stulpe), oben als Ohr nach innen in die Oberkante
-      const m = v => new V(v.x * s2, v.y, v.z), at = t => m(FC.clone().addScaledVector(FD, t)), E0 = at(-0.11).add(new V(-s2 * 0.024, 0, -0.034)), A0 = at(-0.09), A1 = at(0.09), T1 = new V(s2 * 0.135, 0.097, 0.016);   // Ende leicht nach innen-vorn, weg vom Handgelenk
-      const path = new THREE.CurvePath(); path.add(new THREE.QuadraticBezierCurve3(E0, at(-0.1), A0)); path.add(new THREE.LineCurve3(A0, A1)); path.add(new THREE.CubicBezierCurve3(A1, at(0.135), new V(s2 * 0.172, 0.124, 0.03), T1));   // Ohr: Griff biegt oben nach innen und läuft in die Oberkante
+      const m = v => new V(v.x * s2, v.y, v.z), at = t => m(FC.clone().addScaledVector(FD, t)), E0 = at(-0.11).add(new V(-s2 * 0.024, 0, -0.034)), A0 = at(-0.09), A1 = at(0.09), T1 = new V(s2 * 0.104, 0.074, 0.013);   // Ende leicht nach innen-vorn, weg vom Handgelenk
+      const path = new THREE.CurvePath(); path.add(new THREE.QuadraticBezierCurve3(E0, at(-0.1), A0)); path.add(new THREE.LineCurve3(A0, A1)); path.add(new THREE.CubicBezierCurve3(A1, at(0.135), new V(s2 * 0.162, 0.122, 0.018), T1));   // Ohr: Griff biegt oben nach innen und läuft seitlich verjüngt ins Mittelteil
       const L0 = path.curves[0].getLength(), L1 = A0.distanceTo(A1), Lt = path.getLength(), S = t => { t = Math.min(1, Math.max(0, t)); return t * t * (3 - 2 * t); };
-      const rG = u => { const l = u * Lt; return l < L0 ? RG - 0.005 * S((L0 - l) / L0 * 1.4) : l < L0 + L1 ? RG : RG - 0.0075 * S(((l - L0 - L1) / (Lt - L0 - L1) - 0.45) / 0.55); };
-      const G = loft(path, rG); P.push([G.g, rub], [new THREE.SphereGeometry(rG(0), 18, 12).translate(E0.x, E0.y, E0.z), rub], [new THREE.SphereGeometry(rG(1), 18, 12).translate(T1.x, T1.y, T1.z), rub]);
+      const rG = u => { const l = u * Lt; return l < L0 ? RG - 0.005 * S((L0 - l) / L0 * 1.4) : l < L0 + L1 ? RG : RG - 0.0095 * S(((l - L0 - L1) / (Lt - L0 - L1) - 0.35) / 0.65); };
+      const G = loft(path, rG), cap = (r, q) => { const g = new THREE.SphereGeometry(r, 18, 12), u = g.attributes.uv; for (let i = 0; i < u.count; i++) u.setXY(i, u.getX(i) * Math.PI * 2 * r, u.getY(i) * Math.PI * r); return g.translate(q.x, q.y, q.z); };
+      carb.push(G.g, cap(rG(0), E0), cap(rG(1), T1));   // Griffe aus demselben Carbon wie das Mittelteil
       spec.push({ t: 'tube', pts: G.pts, rs: G.rs, r: RG });
       box(0.052, 0.068, 0.004, s2 * 0.099, 0.03, -0.017, cfk, s2 * 0.06);   // Schaltwippe hinter dem Mittelteil (endet vor den Fingerspitzen)
       box(0.046, 0.032, 0.004, s2 * 0.092, -0.045, -0.017, cfk, s2 * -0.05);   // Kupplungswippe
@@ -8361,6 +8363,10 @@ const SW = (() => {
     ring(0.064, -0.058, 0.027, [0xe23a3a, 0xff8a1a, 0xffd400, 0x9ad03a, 0x2fd07a, 0x2fb4e8, 0x2f6fd0, 0x8a5bf0, 0xc23ab8, 0xe23a3a, 0xff8a1a, 0xffd400]); knebel(0.064, -0.058);
     mk(mergeParts(P), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .55, metalness: .25 }), 61);
   }
+  { const L = carb.map(g => g.index ? g.toNonIndexed() : g), n = L.reduce((a, g) => a + g.attributes.position.count, 0), Pp = new Float32Array(n * 3), Nn = new Float32Array(n * 3), Uu = new Float32Array(n * 2); let o = 0;
+    for (const g of L) { Pp.set(g.attributes.position.array, o * 3); Nn.set(g.attributes.normal.array, o * 3); Uu.set(g.attributes.uv.array, o * 2); o += g.attributes.position.count; }
+    const mg = new THREE.BufferGeometry(); mg.setAttribute('position', new THREE.BufferAttribute(Pp, 3)); mg.setAttribute('normal', new THREE.BufferAttribute(Nn, 3)); mg.setAttribute('uv', new THREE.BufferAttribute(Uu, 2));
+    mk(mg, bodyMat, 60); }   // Mittelteil und Griffe: ein Netz, ein Carbon-Material
   const sc = document.createElement('canvas'); sc.width = 640; sc.height = 320; const tex = new THREE.CanvasTexture(sc); tex.colorSpace = THREE.SRGBColorSpace; tex.generateMipmaps = false; tex.minFilter = THREE.LinearFilter;   /* keine Mipmaps: sie wurden bei jeder Aktualisierung des Displays neu berechnet */
   { const dm = new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }), band = 40 / 320;   // Canvas: oben die Schaltlichter (bis y 40), darunter das Display
     const pl = (w, h, y, v0, v1) => { const g = new THREE.PlaneGeometry(w, h).translate(0, y, 0.0378), uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setY(i, v0 + (v1 - v0) * uv.getY(i)); return g; };
