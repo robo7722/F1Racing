@@ -136,6 +136,7 @@ Details: [[LENKRAD-F1F2]]. Nach `build_fahrer.py f1` muss `tools/fahrer/f1_hand_
 ## v1.93 – Handgelenk weich gewichtet, Daumen mit Ballen
 Details: [[LENKRAD-F1F2]]. Stulpe (Handschuh) hing starr an der Hand, Ärmel starr am Unterarm: bei vollem Einschlag (Knick ~54°) sprang die Stulpe aus dem Ärmel.
 `tools/fahrer/f1_handgelenk.py` (nach `f1_hand_nachbearbeitung.py`) setzt für Arm/Handschuh von −1 bis +8 cm hinter dem Handgelenk weiche Gewichte Hand ↔ Unterarm. Wiederholbar, ändert nur `bi`/`bw`.
+v1.94: Ärmel läuft zum Handgelenk schlank in die Stulpe, die Stulpe ist zum Ende hin weiter (Form einmalig, `"gelenk": "v1.94"`).
 Daumen: Die Wurzel läuft als Ballen in die Hand (`TH_ROOT` in `f1_hand_nachbearbeitung.py`), vorher stand er als eigener Schlauch ab.
 
 ## Offen / Ideen
