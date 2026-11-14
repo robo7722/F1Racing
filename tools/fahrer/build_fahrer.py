@@ -352,6 +352,7 @@ def wheel_frame(mode):
 
 
 SC = 1.0
+F1_SHEAR = 0.07                                                                        # F1: Kopf/Hals 7 cm vor den Schultern (wie mit HANS) – Schultern weiter vom nahen Lenkrad weg, Arme weniger gebeugt
 F1_NECK = 0.08                                                                         # F1: Helm reicht so weit über den Hals (Kart 4,5 cm) – Schultern sitzen höher im Cockpit, der Anzug ist von außen zu sehen
 F1_CUT = -1.0                                                                          # F1: Körper unter dieser Ruhe-Höhe weg (-1: nichts – seit das F1-Cockpit von außen offen ist, sieht man Hüfte und Beine)
 F1_LEAN = 18
@@ -396,12 +397,12 @@ def pose_kart(V, F, S, mode='kart'):
                 pen = max(0.0, el[1] - (sh[1] - EZ['drop'])) + max(0.0, el[0] - (sh[0] - EZ['out_min'])) + max(0.0, (sh[0] - EZ['out_max']) - el[0])
                 sc = -abs(np.dot(fa_, Xg)) - 8.0 * pen                                     # darin: Unterarm möglichst quer zum Kranz
                 if mode == 'f1':                                                           # F1: Unterarm fast waagerecht nach vorn, Ellbogen leicht außen und tiefer als die Hand
-                    sc = -np.linalg.norm(el - np.array([sh[0] - 0.05, wristT[1] - 0.06, (sh[2] + wristT[2]) / 2]))
+                    sc = -np.linalg.norm(el - np.array([sh[0] - 0.02, wristT[1] - 0.14, (sh[2] + wristT[2]) / 2]))   # Ellbogen unter dem Arm, innerhalb der Cockpitbreite
                 if best is None or sc > best[0]: best = (sc, el)
             el = best[1]; fa = nrm(wristT - el)
             # Hand: zwischen „gerade zum Unterarm“ und „Daumen entlang des Kranzes“ – Handgelenk höchstens ~15° abgewinkelt
             yp = nrm(fa - np.dot(fa, Xg) * Xg); ang = np.arccos(np.clip(np.dot(fa, yp), -1, 1))
-            t = 1.0 if ang < 1e-6 else min(1.0, np.radians(15) / ang)                  # Anteil Richtung „Kranz“: höchstens 15° Knick
+            t = 1.0 if ang < 1e-6 else min(1.0, np.radians(15 if mode == 'kart' else 28) / ang)   # Anteil Richtung „Kranz“: höchstens 15° (F1 28°) Knick
             Yg = nrm(fa * (1 - t) + yp * t); Xh = nrm(Xg - np.dot(Xg, Yg) * Yg)           # Rest: Kranz läuft schräg durch die Hand (wie in echt)
         return sh, el, wristT, (Xh, Yg), np.linalg.norm(wristT - sh)
 
@@ -440,7 +441,7 @@ def pose_kart(V, F, S, mode='kart'):
         # dem Halsende, wie beim Kart) genau an der Helmposition des Spiels sitzt.
         lean = np.radians(F1_LEAN); Rsp = rot_x(-lean)
         nk = (V[:, 1] / S > 0.845); Q = (V[nk] - j['pelvis']) @ Rsp.T
-        hb = 0.154; hipT = F1_HELM - np.array([0.0, Q[:, 1].max() - F1_NECK + hb, (Q[:, 2].min() + Q[:, 2].max()) / 2 + 0.02])
+        hb = 0.154; hipT = F1_HELM - np.array([0.0, Q[:, 1].max() - F1_NECK + hb, (Q[:, 2].min() + Q[:, 2].max()) / 2 + 0.02 + F1_SHEAR])   # Kopf wird danach um F1_SHEAR nach vorn geschoben (main)
         print(f'F1-Sitz: Neigung {F1_LEAN}°, Becken bei y {hipT[1]:.3f} z {hipT[2]:.3f}')
     sh, el, wristT, (Xh, Yg), dist = solve_arm(hipT)
     print(f'Hand: Daumenachse weicht {np.degrees(np.arccos(np.clip(np.dot(Xh, Xg), -1, 1))):.0f}° vom Kranz ab, Handgelenk-Knick {np.degrees(np.arccos(np.clip(np.dot(Yg, nrm(wristT - el)), -1, 1))):.0f}°')
@@ -660,6 +661,9 @@ def build_seated(mode, V, F, UV, tex, gV0, gF0, gUV0, gtex):
     for sx in (-1, 1): zone = np.maximum(zone, 1 - sst(0.03, 0.06, np.linalg.norm(kV - np.array([sx * 0.11, 0.79, -0.035]), axis=1)))
     kV = taubin_zone(kV, kF, zone, 60)
     Pk, info = pose_kart(kV * S, kF, S, mode)
+    if mode == 'f1':                                                                   # Hals nach vorn (Rumpf liegt zurück, der Kopf schaut nach vorn): oberer Hals ganz, Nacken/Schulteransatz weich
+        wn = sst(0.79, 0.85, kV[:, 1]) * (1 - sst(0.05, 0.09, np.abs(kV[:, 0]))) * ~(info['arms'][0] | info['arms'][1])
+        Pk = Pk + np.outer(wn, [0, 0.0, F1_SHEAR])
     # Nichts im Kart: Punkte, die (z. B. unter dem Gesäß) in Sitzschale/Karosserie stecken, auf deren Oberfläche + 2 mm schieben, Umgebung weich mitnehmen
     import igl
     bk = open(os.path.join(ROOT, 'kart.bin'), 'rb').read(); hl = struct.unpack('<I', bk[:4])[0]; hk = json.loads(bk[4:4 + hl]); cb = [c for c in hk['chunks'] if c['name'] == 'body'][0]
@@ -773,6 +777,7 @@ def build_seated(mode, V, F, UV, tex, gV0, gF0, gUV0, gtex):
     BW = BW / BW.sum(1, keepdims=True)
     put('bi', BI.astype(np.uint8)); put('bw', np.round(BW * 255).astype(np.uint8))
     shP, elP, wrP = info['shoulder'], info['elbow'], info['wrist']['R'][0]
+    hdr['grip'] = np.round(info['grip'][0], 4).tolist()                                 # Griffmitte rechts (Faust um diesen Punkt) – Laufzeit-IK dreht die Hand um das Rohr durch diesen Punkt
     hdr['arm'] = [np.round(v, 4).tolist() for v in (shP, elP, wrP)]                       # Gelenke rechts (Sitzhaltung); links = gespiegelt
     hdr['swC'] = np.round(info['C'], 4).tolist(); hdr['swAx'] = np.round(info['WF']['az'], 5).tolist(); hdr['rimR'] = round(float(info['WF']['R']), 4)
     put('idx', AF.astype(np.uint16 if len(AV) < 65536 else np.uint32).reshape(-1)); hdr['i32'] = len(AV) >= 65536
