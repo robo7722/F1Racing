@@ -1675,8 +1675,9 @@ function foliageMat(m) {
       { vec3 fL = directionalLights[ 0 ].direction, fV = normalize( vViewPosition ), fC = directionalLights[ 0 ].color * diffuseColor.rgb * RECIPROCAL_PI;
         float fNL = dot( normal, fL ), fWrap = clamp( ( fNL + 0.6 ) / 1.6, 0.0, 1.0 ) - clamp( fNL, 0.0, 1.0 ), fBack = pow( clamp( dot( fV, - fL ), 0.0, 1.0 ), 3.0 );
         reflectedLight.directDiffuse += fC * ( fWrap * 0.5 + fBack * 0.8 * ( 0.35 + 0.65 * clamp( 1.0 - fNL, 0.0, 1.0 ) ) ) * vec3( 0.95, 1.1, 0.55 ); }
-      #endif`); };
-  m.customProgramCacheKey = function () { return (pk ? pk.call(this) : '') + '|fol'; };
+      #endif
+      reflectedLight.directSpecular *= 0.08; reflectedLight.indirectSpecular *= 0.25;   // kein Glanz auf Laub: schräg gesehene Laubflächen spiegelten den Himmel – in der Ferne helle/weiße Punkte in den Kronen`); };
+  m.customProgramCacheKey = function () { return (pk ? pk.call(this) : '') + '|fol2'; };
   return m;
 }
 // Asphalt: bei flachem Blick spiegelt die raue Oberfläche den hellen Horizont (Fresnel) – die Fahrbahn wird zur Ferne hin heller statt gleichmäßig schwarz
@@ -1773,7 +1774,7 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 const TONE = { sat: 1, con: 1 };   /* globaler Faktor auf Sättigung/Kontrast der Streckenstimmung (1 = unverändert) */
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;   /* PCF statt PCF-Soft: kaum sichtbar, deutlich weniger Abtastungen */   // weiche Schattenkanten kosten auf dem Handy zu viel
-const maxAniso = renderer.capabilities.getMaxAnisotropy();
+const maxAniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());   /* 8-fach statt 16-fach: auf flach angeschnittener Fahrbahn/Rasen nicht zu unterscheiden, spart ~5 % Grafikzeit (Normalenkarten unten in buildTrack auf 4) */
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(64, 1, 0.3, 4000);
 const aoCam = new THREE.PerspectiveCamera(64, 1, 0.3, 300);
@@ -1928,7 +1929,12 @@ function drawOwnCar(cam = camera) {
   renderer.clearDepth(); renderer.render(scene, cam);
   cam.layers.mask = mask; scene.background = bg; renderer.shadowMap.autoUpdate = sa; renderer.autoClear = ac;
 }
-function withWorldNear(fn, cam = camera) { const n = cam.near; cam.near = n * (WORLD_NEAR / 0.07);   /* verhältnisgleich (0,07 -> 0,8 m), damit Prüfungen mit veränderter Nahgrenze weiter greifen */ cam.updateProjectionMatrix(); try { fn(); } finally { cam.near = n; cam.updateProjectionMatrix(); } }
+// Im Welt-Durchgang ist das eigene Auto ausgeblendet (es wird im zweiten Durchgang ohnehin komplett neu gezeichnet – vorher kostete es doppelt
+// Ecken und Pixel). Für die Schattenkarte wird es wieder eingeblendet: die läuft erst, nachdem das Hauptbild seine Netze eingesammelt hat (siehe shadowSwap).
+let OWNH = null;
+function withWorldNear(fn, cam = camera) { const n = cam.near; cam.near = n * (WORLD_NEAR / 0.07);   /* verhältnisgleich (0,07 -> 0,8 m), damit Prüfungen mit veränderter Nahgrenze weiter greifen */ cam.updateProjectionMatrix();
+  const g = pl && pl.mesh && pl.mesh.g; if (g && g.visible && !window.__ownTwice) { OWNH = g; g.visible = false; }
+  try { fn(); } finally { if (OWNH) { OWNH.visible = true; OWNH = null; } cam.near = n; cam.updateProjectionMatrix(); } }
 // QC-Bot: eine beliebige Kamera so zeichnen wie das Spiel (Cockpit-Nahgrenze -> zwei Durchgänge) in das gerade gesetzte Ziel
 function renderLikeGame(cam) { if (!(cam.near < 0.2 && pl && pl.mesh && pl.mesh.g)) return renderer.render(scene, cam); withWorldNear(() => renderer.render(scene, cam), cam); drawOwnCar(cam); }
 class SplitRenderPass extends RenderPass {
@@ -1966,7 +1972,7 @@ function applyLook() {
 }
 function basePR() { const dpr = devicePixelRatio || 1; if (S.gfx === 'low') return Math.min(dpr, 1); if (S.gfx === 'ultra') return Math.min(dpr, isTouch ? 2.25 : 2.5);
   // Hoch: nach Pixelbudget statt fester Stufe – Handy ~0,9 MP (z. B. S26 Ultra ≈ 1,55×), großes Laptop-/Monitorbild ~2,4 MP; jeder Vollbild-Durchgang kostet je Pixel
-  const budget = isTouch ? 0.9e6 : 2.4e6; return Math.min(dpr, 1.75, Math.max(1, Math.sqrt(budget / Math.max(1, innerWidth * innerHeight)))); }   /* Hoch: auf hochauflösenden Displays mit geringerer Renderauflösung + Nachschärfen (jeder Vollbild-Durchgang kostet auf Handy-/Laptop-GPUs viel) – Ultra rendert in voller Auflösung */
+  const budget = isTouch ? 0.75e6 : 2.4e6;   /* Handy 0,75 MP (vorher 0,9): 17 % weniger Pixel, Nachschärfen gleicht aus */ return Math.min(dpr, 1.75, Math.max(1, Math.sqrt(budget / Math.max(1, innerWidth * innerHeight)))); }   /* Hoch: auf hochauflösenden Displays mit geringerer Renderauflösung + Nachschärfen (jeder Vollbild-Durchgang kostet auf Handy-/Laptop-GPUs viel) – Ultra rendert in voller Auflösung */
 function applyGfx() {
   const hi = S.gfx !== 'low', ultra = S.gfx === 'ultra';
   renderer.setPixelRatio(basePR() * (typeof DYN !== 'undefined' ? DYN.scale : 1));
@@ -3261,7 +3267,36 @@ function numberTex(num, bg) {
     g.font = 'italic 900 62px system-ui,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(String(num), w / 2, h / 2 + 3);
   });
 }
+const CAR_LOD = [10, 35], LOD_HYS = 1.5, LOD_FADE = 0.35;   // Abstand (m) zur Kamera: darunter volle Stufe / mittlere Stufe, darüber Fernmodell (± Schaltlücke gegen Hin- und Herspringen)
+// Weiche Überblendung zwischen den Stufen statt Aufploppen: alte und neue Stufe ~0,35 s gleichzeitig, per Punktraster (wie beim Rasen) einander
+// ergänzend – jeder Pixel zeigt genau eine der beiden. Dafür hat jedes Netz eines Autos eine eigene Materialkopie (gleicher Shader, nichts wird neu übersetzt).
+function lodFadeMat(mt) { if (!mt || mt.userData.lodF) return mt; mt.userData.lodF = { value: new THREE.Vector2(0, 0) }; const prev = mt.onBeforeCompile, pk = mt.customProgramCacheKey; mt.__lfBase = [prev, mt.hasOwnProperty('customProgramCacheKey') ? pk : null];   /* für weitere Kopien: Haken ohne Überblendung (sonst stünde uLodF doppelt im Shader) */
+  mt.onBeforeCompile = function (sh, r) { if (prev) prev.call(this, sh, r); sh.uniforms.uLodF = this.userData.lodF;
+    sh.fragmentShader = 'uniform vec2 uLodF;\n' + sh.fragmentShader.replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
+      if ( uLodF.x > 0.0 ) { float lfn = fract( 52.9829189 * fract( dot( gl_FragCoord.xy, vec2( 0.06711056, 0.00583715 ) ) ) ); if ( uLodF.y > 0.5 ) lfn = 1.0 - lfn; if ( lfn >= uLodF.x ) discard; }`); };
+  mt.customProgramCacheKey = function () { return (pk ? pk.call(this) : '') + '|lodF'; }; return mt; }
+const lodMatCopy = mt => { const c = mt.clone(), [obc, pk] = mt.__lfBase || [mt.onBeforeCompile, mt.hasOwnProperty('customProgramCacheKey') ? mt.customProgramCacheKey : null]; c.onBeforeCompile = obc; if (pk) c.customProgramCacheKey = pk; delete c.userData.lodF; return lodFadeMat(c); };
+function lodFadePrep(m) {
+  m.g.traverse(o => { if (o.isMesh && !o.userData.lfMat) { o.userData.lfMat = true; o.material = Array.isArray(o.material) ? o.material.map(lodMatCopy) : lodMatCopy(o.material); } });
+  const gh = mm => { const o = new THREE.Mesh(mm.geometry, lodMatCopy(mm.material)); o.position.copy(mm.position); o.quaternion.copy(mm.quaternion); o.scale.copy(mm.scale); o.visible = false; o.userData.lfMat = true; mm.parent.add(o); return o; };
+  m.gh = { body: gh(m.body), matte: gh(m.matte), wfl: gh(m.wfl), wfr: gh(m.wfr), wrl: gh(m.wrl), wrr: gh(m.wrr) };   // Geister: halten während der Überblendung volle/mittlere Stufe
+}
+const lodF = (o, v, inv) => o.traverse(x => { if (x.isMesh) for (const mt of Array.isArray(x.material) ? x.material : [x.material]) if (mt.userData.lodF) mt.userData.lodF.value.set(v, inv); });
+function lodFadeEnd(m) { const f = m.lf; if (!f) return; m.lf = null; if (m.gh) for (const k in m.gh) { m.gh[k].visible = false; lodF(m.gh[k], 0, 0); } lodF(m.g, 0, 0); }
+function lodFadeApply(m) { const f = m.lf, t = Math.max(0.002, Math.min(0.998, f.t));
+  if (f.x) { for (const k in m.gh) { lodF(m[k], 0, 0); lodF(m.gh[k], 1 - t, 1); }   /* nur die getauschten Netze (Halo, Helm, Spiegel bleiben unverändert stehen) */ for (const k of ['wfl', 'wfr', 'wrl', 'wrr']) m.gh[k].rotation.x = m[k].rotation.x; }   // neue Stufe in den eigenen Netzen, alte in den Geistern
+  else { const inc = f.to === 2 ? [m.far] : m.detail, out = f.to === 2 ? m.detail : [m.far]; for (const o of inc) lodF(o, 0, 0); for (const o of out) lodF(o, 1 - t, 1); } }   /* neue Stufe sofort voll, nur die alte löst sich auf: wo sich die Umrisse unterscheiden, entstehen keine Löcher (sonst schien die Fahrbahn mit ihren Linien durchs Auto) */
+function lodStep(m, want, dt) {
+  if (m.lf) { m.lf.t += dt / LOD_FADE; if (m.lf.t >= 1) { const to = m.lf.to; lodFadeEnd(m); setLod(m, to, true); } else lodFadeApply(m); return; }
+  if (want === m.lod) return;
+  if (!m.gh || window.__noLodFade || Math.abs(want - m.lod) > 1 || window.__noFar) { setLod(m, want); return; }   // Sprung über zwei Stufen (Kamerawechsel): sofort
+  const from = m.lod, x = Math.max(from, want) === 1;   // x: volle <-> mittlere Stufe (Geometrie tauschen), sonst mittlere <-> Fernmodell
+  if (x) { setLod(m, want); const L = m.tp.lods[from], W = m.tp.M.W[from], G = m.gh; G.body.geometry = L.gloss; G.matte.geometry = L.matte; G.wfl.geometry = W.R[m.comp]; G.wfr.geometry = W.L[m.comp]; G.wrl.geometry = W.RL[m.comp]; G.wrr.geometry = W.RR[m.comp]; for (const k in G) G[k].visible = true; }
+  else { setLod(m, 1, true); m.far.visible = true; for (const o of m.detail) o.visible = true; }   // beide sichtbar; m.lod bleibt 1 bis zum Ende (Schatten nutzt die mittlere Stufe)
+  m.lf = { from, to: want, x, t: 0 }; lodFadeApply(m);
+}
 function setLod(m, l, force) {
+  if (force) lodFadeEnd(m);
   if (!m.tp || (!force && m.lod === l)) return; m.lod = l; const L = m.tp.lods[l], W = m.tp.M.W[l];
   m.body.geometry = L.gloss; m.matte.geometry = L.matte; m.wfl.geometry = W.R[m.comp]; m.wfr.geometry = W.L[m.comp]; m.wrl.geometry = W.RL[m.comp]; m.wrr.geometry = W.RR[m.comp];
   if (m.far) { const f = l === 2 && !window.__noFar; m.far.visible = f; for (const o of m.detail) o.visible = !f; }
@@ -4023,11 +4058,11 @@ function f1Driver(d, T, MD, g) {
   const mesh = new THREE.Mesh(K.geo, kartFahrerMat(key, col(D.base), col(D.acc), { sec: col(D.sec), style: D.style, glove: col(D.glove) })); mesh.castShadow = true;
   const off = new THREE.Vector3(0, MD.helm[0] + 0.005, MD.helm[1]).sub(new THREE.Vector3(...K.helm));   // F2: Helm sitzt etwas anders als im F1, an dem das Modell gebaut ist
   mesh.position.copy(off); g.add(mesh);
-  const W = f1Wheel(MD), bones = Array.from({ length: 7 }, () => new THREE.Matrix4()), Cl = new THREE.Vector3(), st = { mesh, off, spin: 0, cut: false };
+  const U = mesh.material.userData.U, W = f1Wheel(MD), bones = Array.from({ length: 7 }, () => new THREE.Matrix4()), Cl = new THREE.Vector3(), st = { mesh, off, spin: 0, cut: false };
   let last = NaN, lx = NaN;
   mesh.onBeforeRender = () => { const sp = st.spin, px = mesh.position.y * 7 + mesh.position.z;
     if (sp !== last || px !== lx) { Cl.copy(W.C).sub(mesh.position); kartArmsIK(bones, sp, K, Cl, W.AX, W.R); last = sp; lx = px; }   // Lenkrad im Fahrer-Rahmen (TV-Kamera verschiebt den Fahrer mit dem Helm)
-    const U = mesh.material.userData.U; U.uBone.value = bones; U.uCut.value = st.cut ? 1 : 0; mesh.material.uniformsNeedUpdate = true; };
+    U.uBone.value = bones; U.uCut.value = st.cut ? 1 : 0; mesh.material.uniformsNeedUpdate = true; };
   return st;
 }
 function makeCar0(d) {
@@ -4055,7 +4090,7 @@ function makeCar0(d) {
     const far = new THREE.Mesh(tp.far || (tp.far = farCarGeo(tp, T)), tp.glossMat); far.visible = false; g.add(far);
     const r = { g, fl, fr, wfl, wfr, rr, wrl, wrr, label, helm: hm, rl, body, matte, halo, tp, lod: 0, comp: 1, cam: MD.cam, tv: MD.tv, far, detail: [body, matte, halo, hm, fl, fr, rr].concat(mir ? [mir] : [], f1b ? [f1b.mesh] : []) };
     if (f1b) { r.f1Fahrer = f1b; f1b.m = r; }
-    return r;
+    lodFadePrep(r); return r;
   }
   const body = new THREE.Mesh(tp.gloss, tp.glossMat), matte = new THREE.Mesh(tp.matte, MATTE);
   body.castShadow = matte.castShadow = true; g.add(body, matte);
@@ -4127,10 +4162,10 @@ const cars = []; let ais = [];
 let shSwap = false;
 function shadowSwap(on) {
   if (on === shSwap || (on && window.__noShLod)) return; shSwap = on;
-  for (const c of cars) { const m = c.mesh; if (!m.tp || m.lod !== 0) continue; const k = on ? 1 : 0, L = m.tp.lods[k], W = m.tp.M.W[k];
+  for (const c of cars) { const m = c.mesh; if (!m.tp || m.lod > 1) continue; const k = on ? m.lod + 1 : m.lod, L = m.tp.lods[k], W = m.tp.M.W[k];   /* Autos ab 13 m werfen den Schatten mit der einfachsten Stufe (Schattenpunkt ≈ 6 cm – kein Unterschied) */
     m.body.geometry = L.gloss; m.matte.geometry = L.matte; m.wfl.geometry = W.R[m.comp]; m.wfr.geometry = W.L[m.comp]; m.wrl.geometry = W.RL[m.comp]; m.wrr.geometry = W.RR[m.comp]; }
 }
-for (const l of [sun, flood]) { const um = l.shadow.updateMatrices; l.shadow.updateMatrices = function (light) { shadowSwap(true); um.call(this, light); }; }
+for (const l of [sun, flood]) { const um = l.shadow.updateMatrices; l.shadow.updateMatrices = function (light) { shadowSwap(true); if (OWNH) OWNH.visible = true; um.call(this, light); }; }
 scene.onAfterRender = () => shadowSwap(false);
 
 /* ======================= Strecke bauen ======================= */
@@ -4426,6 +4461,10 @@ function mcCone(x, z) { const px = PX, pz = PZ, elev = ELEV, spi = SPI, wl = WL,
 function mcNear(x, z, t, W) { const b = Math.min(mcBase(x, z, ELEV[t.j]), mcCone(x, z)); let g = clamp((t.d - W - 1) / 12, 0, 1); g = g * g * (3 - 2 * g); return lerp(Math.min(b, ELEV[t.j]), b, g); }
 // Tribünen-Grundfläche (Monaco): innerhalb eben auf Streckenhöhe, außen über 16 m weich in den Hang
 function padH(x, z, h) { for (const P of MC_PADS) { const dx = x - P.x, dz = z - P.z; if (dx * dx + dz * dz > P.r * P.r) continue; const lx = dx * P.c - dz * P.s, lz = dx * P.s + dz * P.c, ox = Math.max(-2 - lx, lx - (P.dep + 3), 0), oz = Math.max(Math.abs(lz) - P.len / 2 - 2, 0), d = Math.hypot(ox, oz); if (d >= 16) continue; let f = 1 - d / 16; f = f * f * (3 - 2 * f); if (h > P.y) h = lerp(h, P.y, f); } return h; }
+// Kamera nie unter Fahrbahn oder Gelände: in Senken und hinter Kuppen (Eau Rouge) lag die Verfolgerkamera sonst unter dem Asphalt –
+// sie rechnet ihre Höhe nur aus der Steigung am Auto. Untergrenze = Fahrbahn (mit Querneigung) bzw. Gelände an der Kameraposition + 0,6 m.
+function camFloor(m = 0.6) { if (FLAT || !N) return; const c = camera.position, [d, j] = nearestDist(c.x, c.z), lat = (c.x - PX[j]) * RX[j] + (c.z - PZ[j]) * RZ[j];
+  let y = groundY(c.x, c.z); if (Math.abs(lat) < Math.max(WL[j], WR[j]) + 3) y = Math.max(y, ELEV[j] + bankY(j, lat)); if (c.y < y + m) c.y = y + m; }
 function groundY(x, z) { const px = PX, pz = PZ, rx = RX, rz = RZ, wl = WL, wr = WR; if (FLAT) return 0; if (MC_SEA && MC_SEA(x, z)) return -3;   /* Meeresboden unter dem Hafen */ const t = terr(x, z), j = t.j, latS = (x - px[j]) * rx[j] + (z - pz[j]) * rz[j], W = latS < 0 ? wl[j] : wr[j], bw = BANDW ? BANDW[latS < 0 ? 0 : 1][j] : BAND, f = clamp((t.d - (W + Math.min(BAND, bw + 4) - 32)) / 30, 0, 1);   /* nur absenken, wo ein Geländeband darüber liegt – sonst schweben Kies und Bäume über einer Senke */ let y = surfH(x, z, t) - 4 * (1 - f * f * (3 - 2 * f)); if (TRK.mc && t.d < W + 30) { let g = clamp((t.d - W - 4) / 26, 0, 1); g = g * g * (3 - 2 * g); y = lerp(Math.min(y, mcLow(x, z) - 3), y, g); } return y; }   /* nur direkt hinter den Mauern absenken, weich auslaufend – sonst Falten im Boden zwischen den Streckenteilen */
 // Monaco: Stützmauer an der Außenkante der Geländebänder – nur wo das Gelände dahinter wirklich tiefer liegt und nie am/im Wasser (Hafen, Meer)
 function mcTerraceWalls(inMarina) {
@@ -4512,6 +4551,8 @@ function chunkStrips(root, segLen = 900) {
     root.remove(ch); g.dispose();
   }
 }
+// einzelnes, unbewegtes Netz für mergeGroups vormerken: Hülle steht an seiner Stelle (richtige Kachel, gleiche Höhenanpassung wie das Netz allein)
+function asMerge(m) { const g = new THREE.Group(); g.position.set(m.position.x, 0, m.position.z); m.position.x = m.position.z = 0; g.add(m); g.userData.merge = true; g.userData.span = true; return g; }
 // statische Gruppen (Tribünen, Gebäude, Brücken, Tafeln) je Material und 350-m-Kachel zu einem Mesh verschmelzen -> viel weniger Zeichenaufrufe
 function mergeGroups(root, cell = 350) {
   if (window.__noMerge) return;   /* Testmodus: Gruppen einzeln lassen, damit der Überschneidungs-Test jeden Bau sieht */
@@ -4520,7 +4561,7 @@ function mergeGroups(root, cell = 350) {
     if (!g.userData.merge) continue; g.updateMatrixWorld(true);
     const cx = Math.floor(g.position.x / cell), cz = Math.floor(g.position.z / cell);
     g.traverse(o => { if (!o.isMesh || o.isInstancedMesh || Array.isArray(o.material)) return;
-      const key = o.material.uuid + '|' + cx + ',' + cz; let b = buckets.get(key); if (!b) buckets.set(key, b = { mat: o.material, list: [], cast: false, recv: false });
+      const key = o.material.uuid + '|' + cx + ',' + cz; let b = buckets.get(key); if (!b) buckets.set(key, b = { mat: o.material, list: [], cast: false, recv: false, skip: true }); b.skip &&= !!o.userData.clipSkip;
       let geo = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
       if (o.material.userData.bay && !geo.attributes.facUV) { const P = geo.attributes.position, Nn = geo.attributes.normal, n = P.count, fu = new Float32Array(n * 3), sc = o.scale;   /* Fassaden-UV vor dem Zusammenfügen aus den lokalen Koordinaten festhalten (sonst verschiebt die Drehung das Fensterraster) */
         for (let k = 0; k < n; k++) { const x = P.getX(k), y = P.getY(k), z = P.getZ(k); fu[k * 3] = Math.abs(Nn.getX(k)) > 0.5 ? (z + 0.5) * sc.z : (x + 0.5) * sc.x; fu[k * 3 + 1] = y * sc.y + o.position.y; fu[k * 3 + 2] = 7; }
@@ -4533,7 +4574,7 @@ function mergeGroups(root, cell = 350) {
     const tot = b.list.reduce((a, g) => a + g.attributes.position.count, 0), out = new THREE.BufferGeometry();
     for (const k of names) { const sz = b.list[0].attributes[k].itemSize, arr = new Float32Array(tot * sz); let o = 0; for (const g of b.list) { arr.set(g.attributes[k].array, o); o += g.attributes[k].array.length; } out.setAttribute(k, new THREE.BufferAttribute(arr, sz)); }
     b.list.forEach(g => g.dispose()); out.computeBoundingSphere();
-    const m = new THREE.Mesh(out, b.mat); m.castShadow = b.cast; m.receiveShadow = b.recv; m.userData.fixed = true; root.add(m);
+    const m = new THREE.Mesh(out, b.mat); m.castShadow = b.cast; m.receiveShadow = b.recv; m.userData.fixed = true; if (b.skip) m.userData.clipSkip = true; root.add(m);   /* clipSkip: nur aus Teilen, die die Clipping-Prüfung einzeln übersprungen hätte (flach/niedrig) */
   }
 }
 // große Instanz-Gruppen räumlich aufteilen -> Frustum-Culling (Kamera + Schatten) greift
@@ -4569,6 +4610,60 @@ function distFade(m, d0, d1) {
         if ( fdv < fdn + 0.001 ) discard; }`); };
   m.customProgramCacheKey = function () { return (pk ? pk.call(this) : '') + '|fade' + d0 + '_' + d1; };
   return m;
+}
+// Ferne Bäume als Bildtafeln: beim Laden wird jedes Baummodell (nah mit Laubflächen / fern einfach, je Laub- und Nadelbaum) aus 8 Richtungen gerendert –
+// mit dem Licht der Strecke. Ab 200 m zeigt jeder Baum die Ansicht seines eigenen Modells, die zu seiner Drehung passt, auf einer Tafel, die sich zur Kamera
+// dreht (4 Zeichenaufrufe für den ganzen Hintergrundwald). Zwischen 200 und 260 m teilen sich 3D-Baum und Tafel die Pixel per Punktraster.
+let TREESPR = null; const TREESPR_RT = [], TREE_VIEWS = 8;
+// Bild eines Baums aus 8 Richtungen (je 45°) nebeneinander: die Tafel zeigt später die Ansicht, die zur Drehung des Baums passt – so deckt sie sich
+// beim Überblenden mit dem 3D-Baum. Licht immer von der Seite (wie beim 3D-Baum aus der Ferne), dafür dreht sich der Baum statt der Kamera.
+function treeImpostor(parts, W, H) {
+  const sc = new THREE.Scene(), tree = new THREE.Group(); for (const [g, m] of parts) { const o = new THREE.Mesh(g, m); o.frustumCulled = false; tree.add(o); } sc.add(tree);
+  let sd = new THREE.Vector3(1, 1, 0.3);
+  for (const l of scene.children.filter(o => o.isLight)) { const c = l.clone(); c.castShadow = false;
+    if (l.isDirectionalLight) { const d = l.position.clone().sub(l.target.position).normalize(); if (l === sun) sd = d.clone(); c.position.copy(d).multiplyScalar(60); c.target.position.set(0, 0, 0); sc.add(c.target); } sc.add(c); }
+  sc.environment = scene.environment; sc.fog = null; sc.background = null;
+  const cd = new THREE.Vector2(-sd.z, sd.x); if (cd.lengthSq() < 1e-4) cd.set(1, 0); cd.normalize(); const a0 = Math.atan2(cd.x, cd.y);   // Blick quer zur Sonne
+  const cam = new THREE.OrthographicCamera(-W / 2, W / 2, H, 0, 0.1, 300); cam.position.set(cd.x * 80, 0, cd.y * 80); cam.lookAt(0, 0, 0); cam.updateMatrixWorld();
+  const cw = 288, ch = Math.min(1024, Math.round(cw * H / W / 8) * 8 || cw), n = TREE_VIEWS;
+  const rt = new THREE.WebGLRenderTarget(cw * n, ch, { samples: 4, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter, colorSpace: THREE.SRGBColorSpace }); TREESPR_RT.push(rt);   // sRGB 8 bit: halber Speicher, keine Farbstufen
+  const prev = renderer.getRenderTarget(), cc0 = renderer.getClearColor(new THREE.Color()), ca0 = renderer.getClearAlpha(), sa = renderer.shadowMap.autoUpdate, bo = BAKE.u.bakeOn.value;
+  renderer.shadowMap.autoUpdate = false; BAKE.u.bakeOn.value = 0;   // keine gebackenen Schatten vom Weltursprung aufs Bild
+  renderer.setRenderTarget(rt); renderer.setClearColor(0x2c3a22, 0); renderer.clear();   // dunkelgrüne, unsichtbare Füllfarbe: kein schwarzer Rand in den Mip-Stufen
+  rt.scissorTest = true;
+  for (let k = 0; k < n; k++) { tree.rotation.y = a0 - k * 2 * Math.PI / n; tree.updateMatrixWorld(true); rt.viewport.set(k * cw, 0, cw, ch); rt.scissor.set(k * cw, 0, cw, ch); renderer.setRenderTarget(rt); renderer.render(sc, cam); }   // Ansicht k = Kamera unter dem Winkel k·45° im Baum-Koordinatensystem
+  rt.scissorTest = false; rt.viewport.set(0, 0, cw * n, ch); rt.scissor.set(0, 0, cw * n, ch);
+  renderer.setRenderTarget(prev); renderer.setClearColor(cc0, ca0); renderer.shadowMap.autoUpdate = sa; BAKE.u.bakeOn.value = bo;
+  return rt.texture;
+}
+function treeSprites() {
+  for (const rt of TREESPR_RT.splice(0)) rt.dispose();
+  const T = TREESPR; if (!T) return;
+  const v = new THREE.Vector3(), sc = new THREE.Vector3(), q = new THREE.Quaternion(), m4 = new THREE.Matrix4(), n = TREE_VIEWS;
+  for (const kind of Object.keys(T.lists)) { const list = T.lists[kind]; if (!list.length) continue;
+    let r = 0, H = 0; for (const [g] of T.parts[kind]) { const P = g.attributes.position; for (let i = 0; i < P.count; i++) { r = Math.max(r, Math.hypot(P.getX(i), P.getZ(i))); H = Math.max(H, P.getY(i)); } }
+    const W = 2 * r * 1.03; H *= 1.03; const tex = treeImpostor(T.parts[kind], W, H);
+    const mat = new THREE.MeshBasicMaterial({ map: tex, alphaTest: 0.42, alphaToCoverage: true, side: THREE.DoubleSide });
+    mat.onBeforeCompile = sh => {
+      sh.vertexShader = 'varying float vTD; varying float vTK;\n' + sh.vertexShader.replace('#include <project_vertex>', `
+        vec4 tcW = modelMatrix * instanceMatrix * vec4( 0.0, 0.0, 0.0, 1.0 ); float tsx = length( instanceMatrix[0].xyz ), tsy = length( instanceMatrix[1].xyz );
+        vec2 tcv = cameraPosition.xz - tcW.xz; vec2 trg = normalize( vec2( tcv.y, -tcv.x ) + 1e-5 ); vTD = length( cameraPosition - tcW.xyz );
+        vec2 tc0 = normalize( vec2( instanceMatrix[0].x, -instanceMatrix[0].z ) + 1e-6 );   // Drehung des Baums: (cos, sin)
+        float tla = atan( tc0.x * tcv.x - tc0.y * tcv.y, tc0.y * tcv.x + tc0.x * tcv.y );   // Blickrichtung zur Kamera im Baum-Koordinatensystem
+        vTK = mod( floor( tla / ${(2 * Math.PI / n).toFixed(6)} + 0.5 ), ${n.toFixed(1)} );
+        vec3 tw = tcW.xyz + vec3( trg.x, 0.0, trg.y ) * position.x * tsx + vec3( 0.0, position.y * tsy, 0.0 );
+        if ( vTD < ${T.D0.toFixed(1)} || vTD > ${(TRK.nos ? 1000 : 1e6).toFixed(1)} ) tw = tcW.xyz;   // nah (3D-Baum) bzw. Nordschleife jenseits 1 km (Waldkante): Tafel auf einen Punkt
+        vec4 mvPosition = viewMatrix * vec4( tw, 1.0 ); gl_Position = projectionMatrix * mvPosition;`);
+      sh.fragmentShader = 'varying float vTD; varying float vTK;\n' + sh.fragmentShader.replace('#include <map_fragment>', `
+        vec4 sampledDiffuseColor = texture2D( map, vec2( ( floor( vTK + 0.5 ) + clamp( vMapUv.x, 0.004, 0.996 ) ) / ${n.toFixed(1)}, vMapUv.y ) ); diffuseColor *= sampledDiffuseColor;`)
+        .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
+        { float tsn = fract( 52.9829189 * fract( dot( gl_FragCoord.xy, vec2( 0.06711056, 0.00583715 ) ) ) ); if ( tsn <= 1.0 - smoothstep( ${T.D0.toFixed(1)}, ${T.D1.toFixed(1)}, vTD ) + 0.001 ) discard; }`);   // genau die Punkte, die der 3D-Baum dort verwirft
+    };
+    mat.customProgramCacheKey = () => 'treeSpr' + n + '_' + T.D0 + '_' + T.D1 + (TRK.nos ? 'n' : '');
+    const im = new THREE.InstancedMesh(new THREE.PlaneGeometry(W, H).translate(0, H / 2, 0), mat, list.length);
+    list.forEach(([M, c], k) => { M.decompose(v, q, sc); v.y += placeY(v.x, v.z); m4.compose(v, q, sc); im.setMatrixAt(k, m4); im.setColorAt(k, c); });
+    im.computeBoundingSphere(); im.castShadow = im.receiveShadow = false; im.userData = { noChunk: true, treeSpr: true }; trackGroup.add(im);
+  }
 }
 // Plastischer Rasen: kleine Grasbüschel (zwei gekreuzte, halb durchsichtige Flächen mit Halmen) auf ALLEN Grasflächen innerhalb der Absperrung
 // (dicht in Fahrbahnnähe, nach außen lockerer). Je 40 m Strecke und Seite eine Instanz-Gruppe; blendet zwischen 40 und 68 m weich ein.
@@ -4729,7 +4824,10 @@ function vStrip(off, y0, y1, mat, opt = {}) {
   const m = new THREE.Mesh(g, mat); m.receiveShadow = true; m.castShadow = !!opt.cast; m.userData.strip = true; trackGroup.add(m); return m;
 }
 const lam = (o) => { const m = new THREE.MeshStandardMaterial({ roughness: .9, metalness: 0, envMapIntensity: .9, ...o }); return o && o.map && o.map.userData.fol ? foliageMat(m) : o && o.map && o.map.userData.gv ? groundVar(m, o.map.userData.gv) : o && o.map === TEX.runoff ? sheenMat(m, TH && TH.night ? 0.1 : 0.28) : m; };
-const po = n => ({ polygonOffset: true, polygonOffsetFactor: n, polygonOffsetUnits: n, side: THREE.DoubleSide });
+// Bodenschichten (Fahrbahn, Linien, Curbs, Auslauf) nach vorn ziehen: neigungsabhängiger Anteil (factor) nur noch ein Viertel – er wächst bei flachem Blick
+// enorm (Helmkamera 0,9 m hoch: voller Wert = bei 50 m rund 8 m Versatz) und malte Asphalt und Linien über den Unterboden der Autos davor. Ganz ohne ihn
+// verschwanden exakt auf Fahrbahnhöhe liegende Markierungen (Startplätze); der feste Anteil (units) gleicht den Rest aus.
+const po = n => ({ polygonOffset: true, polygonOffsetFactor: n < 0 ? n * 0.25 : n, polygonOffsetUnits: n < 0 ? n * 4 : n, side: THREE.DoubleSide });
 function texRep(t, rx, ry) { const c = t.clone(); c.needsUpdate = true; c.repeat.set(rx, ry); return c; }
 
 // Auslaufzonen (Spa): Höhenfeld vorbelegen und glätten – eigene Funktionen, damit der JIT sie optimiert
@@ -4781,7 +4879,7 @@ function buildTrack(key) { BID++;
     const hp = TRK.hd.pts, hw = TRK.hd.hw, el = TRK.hd.el, m = hp.length; let j = 0; HW = new Float32Array(N); ELEV = new Float32Array(N); MJ = new Int32Array(N);
     for (let i = 0; i < N; i++) { let best = 1e18, bj = j; for (let k = -6; k <= 14; k++) { const q = (j + k + m) % m, dx = PX[i] - hp[q][0], dz = PZ[i] - hp[q][1], d = dx * dx + dz * dz; if (d < best) { best = d; bj = q; } } j = bj; HW[i] = Math.max(3.8, hw[j]); if (el) ELEV[i] = el[j]; MJ[i] = j; }
     HW = filt(HW, 8, 'avg'); FLAT = !el; if (el) ELEV = filt(filt(ELEV, 6, 'avg'), 6, 'avg');
-    MC_SEA = null; BANDS = []; HORIZ = null; BANDW = null; MC_TERR = [];
+    MC_SEA = null; BANDS = []; HORIZ = null; BANDW = null; MC_TERR = []; TREESPR = null;
     if (!el && TRK.mc) {   // Monaco: echtes Höhenprofil – vom Hafen (2–3 m) die Beau-Rivage-Steigung hinauf zum Casino (~45 m), über Mirabeau und Fairmont hinab zum Portier, durch den Tunnel zurück ans Meer
       const M = TRK.mc, sAt = p => spiNear(p[0], p[1])[1] * DS, sc = L / 3337, sCas = sAt(M.casino), sFai = sAt(M.fairmont), tA = M.tun[0] * L, tB = M.tun[1] * L, pl = M.pool || [0.73, 0.785], sRa = (M.rasc ?? 0.9) * L;
       const K = [[0, 2.5], [150 * sc, 3], [260 * sc, 4.5], [sCas - 230, 36], [sCas - 110, 43], [sCas, 45], [sCas + 120, 44], [(sCas + sFai) / 2, 37], [sFai, 27], [tA - 70, 13], [tA, 10], [(tA + tB) / 2, 8], [tB, 5], [tB + 120, 3], [pl[0] * L - 150, 2.5], [pl[0] * L, 2.5], [pl[1] * L, 2.5], [sRa, 2.5], [(sRa + L) / 2, 2.5], [L, 2.5]].sort((a, b) => a[0] - b[0]);
@@ -4997,7 +5095,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   const gsz0 = Math.max(maxX - minX, maxZ - minZ) + 3200, gsz = FLAT ? gs : gsz0 + (TH.bigGround || 0), gRep = FLAT ? gs / 16 : gs / 16 * gsz / gsz0;
   const gSeg = FLAT ? 90 : TH.bigGround ? 360 : 300, ground = new THREE.Mesh(new THREE.PlaneGeometry(gsz, gsz, gSeg, gSeg).rotateX(-Math.PI / 2), lam({ map: TH.bandStone ? STONE_T(gRep * 1.6) : texRep(TH.ground === 'grass' ? (TH.dryGrass ? DRY_GRASS() : TEX.grassP) : TH.ground === 'city' ? TEX.runoff : TEX.sand, gRep, gRep), color: TH.mainTint ?? 0xffffff, normalMap: texRep(TH.ground === 'grass' ? TEX.grassN : TH.ground === 'city' ? TEX.runoffN : TEX.sandN, gRep, gRep), normalScale: new THREE.Vector2(1.4, 1.4), color: TH.groundTint ?? 0xffffff, side: THREE.DoubleSide }));
   ground.material.map.userData.own = true; ground.material.polygonOffset = true; ground.material.polygonOffsetFactor = 4; ground.material.polygonOffsetUnits = 4;
-  ground.position.set(cx, -0.04, cz); ground.renderOrder = -1; ground.receiveShadow = true; ground.userData.ground = true; trackGroup.add(ground);
+  ground.position.set(cx, -0.04, cz); ground.renderOrder = 0.5;   /* nach allen normalen Flächen zeichnen: verdeckte Bodenpixel (unter Fahrbahn, Auslauf, Gebäuden) fallen per Tiefentest weg; die Polygonverschiebung hält ihn weiter hinter allem Deckungsgleichen */ ground.receiveShadow = true; ground.userData.ground = true; trackGroup.add(ground);
   if (!FLAT) { // weite Ebene darunter bis zum Horizont
     const far = new THREE.Mesh(new THREE.PlaneGeometry(20000, 20000).rotateX(-Math.PI / 2), lam({ map: texRep(TEX.grassP, 1200, 1200), color: 0xb8c4a8 }));
     let emin = 1e9; for (let i = 0; i < N; i++) emin = Math.min(emin, ELEV[i]);
@@ -5216,10 +5314,10 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   const line = new THREE.Mesh(new THREE.PlaneGeometry(14, 1.6).rotateX(-Math.PI / 2), lam({ map: TEX.check, ...po(-4) }));
   line.position.set(p0.x, .03, p0.z); line.rotation.y = p0.h; trackGroup.add(line);
   const markM = lam({ color: 0xffffff, ...po(-4) }), markG = new THREE.PlaneGeometry(2.6, 0.3).rotateX(-Math.PI / 2), markS = new THREE.PlaneGeometry(0.3, 1.6).rotateX(-Math.PI / 2);
-  for (let j = 0; j < DRIVERS.length; j++) {
+  for (let j = 0; j < DRIVERS.length; j++) {   // Startplatz-Markierungen: werden je Kachel zu einem Netz verschmolzen (vorher 3 Zeichenaufrufe je Startplatz)
     const p = trackAt(slotS(j) + 3.2, slotLat(j));
-    const m = new THREE.Mesh(markG, markM); m.position.set(p.x, .03, p.z); m.rotation.y = p.h; trackGroup.add(m);
-    for (const sx of [-1.15, 1.15]) { const q = trackAt(slotS(j) + 2.4, slotLat(j) + sx); const m2 = new THREE.Mesh(markS, markM); m2.position.set(q.x, .03, q.z); m2.rotation.y = q.h; trackGroup.add(m2); }
+    const m = new THREE.Mesh(markG, markM); m.userData.clipSkip = true; m.position.set(p.x, .03, p.z); m.rotation.y = p.h; trackGroup.add(asMerge(m));
+    for (const sx of [-1.15, 1.15]) { const q = trackAt(slotS(j) + 2.4, slotLat(j) + sx); const m2 = new THREE.Mesh(markS, markM); m2.userData.clipSkip = true; m2.position.set(q.x, .03, q.z); m2.rotation.y = q.h; trackGroup.add(asMerge(m2)); }
   }
   lampMats.length = 0;
   {
@@ -5249,18 +5347,20 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     hStrip(i => pitSide * (W[i] + 0.2), i => pitSide * (W[i] + 11), .015, .015, lam({ map: TEX.runoff, ...po(-1) }), { mask: inPit, uScale: 12, vScale: 12 });
     hStrip(i => pitSide * (W[i] + 5.4), i => pitSide * (W[i] + 5.6), .02, .02, white, { mask: inPit });
     const bMat = lam({ color: 0xeef1f4 }); let gk = 0; const pitP = [];
+    const nT = Object.keys(TEAMS).length, garM = lam({ map: TEX.garages }), standM = lam({ color: 0x2b3138 }), standRM = lam({ color: 0xf2f2f2 }), pitRoofM = new THREE.MeshStandardMaterial({ color: 0xf6f8fa, roughness: .35, metalness: .3 });   /* gemeinsame Materialien: alle Abschnitte einer Kachel werden zu einem Netz */
     for (let s = -290; s <= 150 && !TRK.ref && !TRK.wing; s += 30) {
       const p = trackAt(s, 0), w = wallAt(p.i, pitSide), q = trackAt(s, pitSide * (w + 18));
       { let kmax = 0; for (let ds = -15; ds <= 15; ds += 3) kmax = Math.max(kmax, Math.abs(KS[Math.floor(modL(s + ds) / DS) % N])); if (kmax > 1 / (w + 60)) continue; }   /* in engen Kurven würde sich der Abschnitt verdrehen */
       if (!footprintFree(q.x, q.z, q.h, -7, 7, 30, 0.5)) continue;
       const wA = wallAt(Math.floor(modL(s - 15) / DS) % N, pitSide), wB = wallAt(Math.floor(modL(s + 15) / DS) % N, pitSide), pz = trackPrism(s - 15, s + 15, pitSide, wA + 11, wA + 25, wB + 11, wB + 25, 9);   /* nahtlose Abschnitte, nichts schiebt sich ineinander */
       if (!convexPoly(pz.poly) || pitP.some(P => polyHit(P, pz.poly))) continue; pitP.push(pz.poly);
-      const b = new THREE.Mesh(pz.g, bMat); b.position.set(pz.cx, 0, pz.cz); b.castShadow = b.receiveShadow = true; trackGroup.add(b);
-      const f = trackAt(s, pitSide * (w + 10.95)), nT = Object.keys(TEAMS).length, gt = TEX.garages.clone(); gt.needsUpdate = true; gt.repeat.set(2 / nT, 1); gt.offset.set(((gk++ * 2) % nT) / nT, 0); gt.userData.own = true;
-      const fp = new THREE.Mesh(new THREE.PlaneGeometry(30.5, 7.6), lam({ map: gt })); fp.position.set(f.x, 3.8, f.z); fp.rotation.y = f.h + pitSide * Math.PI / 2; trackGroup.add(fp);
-      const pw = trackAt(s + 8, pitSide * (w + 1.6)), st = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.6, 7), lam({ color: 0x2b3138 })); st.position.set(pw.x, 1.3, pw.z); st.rotation.y = pw.h; trackGroup.add(st);
-      const sr = new THREE.Mesh(new THREE.BoxGeometry(3, 0.25, 7.6), lam({ color: 0xf2f2f2 })); sr.position.set(pw.x, 2.75, pw.z); sr.rotation.y = pw.h; trackGroup.add(sr);
-      if (TH.poles) { const r = new THREE.Mesh(new THREE.BoxGeometry(26, 0.6, 29.6), new THREE.MeshStandardMaterial({ color: 0xf6f8fa, roughness: .35, metalness: .3 })); r.position.set(q.x, 10.6 + (gk % 2) * 0.05, q.z); r.rotation.y = q.h; r.rotateZ(-pitSide * 0.12); r.castShadow = true; trackGroup.add(r); }
+      const b = new THREE.Mesh(pz.g, bMat); b.position.set(pz.cx, 0, pz.cz); b.castShadow = b.receiveShadow = true; trackGroup.add(asMerge(b));
+      const f = trackAt(s, pitSide * (w + 10.95)), fg = new THREE.PlaneGeometry(30.5, 7.6), fu = fg.attributes.uv, u0 = ((gk++ * 2) % nT) / nT;   // Ausschnitt der Garagentextur direkt in die UVs (statt eigener Textur-Kopie je Abschnitt)
+      for (let k = 0; k < fu.count; k++) fu.setX(k, fu.getX(k) * 2 / nT + u0);
+      const fp = new THREE.Mesh(fg, garM); fp.userData.clipSkip = true; fp.position.set(f.x, 3.8, f.z); fp.rotation.y = f.h + pitSide * Math.PI / 2; trackGroup.add(asMerge(fp));
+      const pw = trackAt(s + 8, pitSide * (w + 1.6)), st = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.6, 7), standM); st.position.set(pw.x, 1.3, pw.z); st.rotation.y = pw.h; trackGroup.add(asMerge(st));
+      const sr = new THREE.Mesh(new THREE.BoxGeometry(3, 0.25, 7.6), standRM); sr.position.set(pw.x, 2.75, pw.z); sr.rotation.y = pw.h; trackGroup.add(asMerge(sr));
+      if (TH.poles) { const r = new THREE.Mesh(new THREE.BoxGeometry(26, 0.6, 29.6), pitRoofM); r.position.set(q.x, 10.6 + (gk % 2) * 0.05, q.z); r.rotation.y = q.h; r.rotateZ(-pitSide * 0.12); r.castShadow = true; trackGroup.add(asMerge(r)); }
       excl.push([q.x, q.z, 26]);
     }
   }
@@ -5480,7 +5580,13 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     const BH2 = BH * Math.cos(TILT) / Math.cos(0.42);   // Rückwand trifft die Oberkante der Vorderseite
     const backG = new THREE.BoxGeometry(BW - 0.04, BH2, 0.03).translate(0, BH2 / 2, -0.015).rotateX(0.42).translate(0, 0.06, -BH * Math.sin(TILT) - BH2 * Math.sin(0.42) + 0.02);
     const feetG = new THREE.BoxGeometry(BW + 0.06, 0.06, 0.62).translate(0, 0.03, -0.3);
-    const brdM = {}; for (const d of [150, 100, 50]) for (const lit of [0, 1]) brdM[d + '_' + lit] = [sideM, sideM, sideM, sideM, lam({ map: bTex[d], emissive: lit ? 0x333333 : 0x000000 }), backM];
+    const brdM = {}; for (const d of [150, 100, 50]) for (const lit of [0, 1]) brdM[d + '_' + lit] = lam({ map: bTex[d], emissive: lit ? 0x333333 : 0x000000 });
+    // Tafel in Teile mit je EINEM Material zerlegen (Kanten / Schriftseite / Rückseite): so kann mergeGroups alle Schilder einer Kachel zusammenfassen (vorher ~8 Zeichenaufrufe je Schild)
+    const part = (g0, ids) => { const g = g0.toNonIndexed(), A = {}, keep = []; for (const gr of g.groups) if (ids.includes(gr.materialIndex)) keep.push(gr);
+      for (const k of ['position', 'normal', 'uv']) { const src = g.attributes[k], n = src.itemSize, out = []; for (const gr of keep) for (let v = gr.start; v < gr.start + gr.count; v++) for (let c = 0; c < n; c++) out.push(src.array[v * n + c]); A[k] = new THREE.Float32BufferAttribute(out, n); }
+      const o = new THREE.BufferGeometry(); for (const k in A) o.setAttribute(k, A[k]); g.dispose(); return o; };
+    const panelP = [part(panelG, [0, 1, 2, 3]), part(panelG, [4]), part(panelG, [5])], wedgeP = [part(wedgeF, [0, 1, 2, 3]), part(wedgeF, [4]), part(wedgeF, [5])];
+    const boardMeshes = (P, fm) => [new THREE.Mesh(P[0], sideM), new THREE.Mesh(P[1], fm), new THREE.Mesh(P[2], backM)];
     // Bremszonen: lokales Tempo-Minimum mit deutlichem Tempoabbau davor; Bezugspunkt ist der Kurveneingang (Einlenkpunkt)
     const zones = [], back = Math.round(320 / DS);
     for (let m = 0; m < N; m++) {
@@ -5507,9 +5613,9 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         const a = onWall ? 0 : 0.22,   /* an Zaun/Mauer: steht im rechten Winkel heraus, Schrift zum anrollenden Verkehr */ nx = -fx / fl * Math.cos(a) - ox / ol * Math.sin(a), nz = -fz / fl * Math.cos(a) - oz / ol * Math.sin(a);   // Blick zum anrollenden Verkehr, leicht zur Strecke gedreht
         const tx = -ox / ol * Math.cos(a) + fx / fl * Math.sin(a), tz = -oz / ol * Math.cos(a) + fz / fl * Math.sin(a);   // in der Tafelebene von der Mauer weg
         const lit = TH.night ? 1 : 0, g = new THREE.Group(); g.rotation.y = Math.atan2(nx, nz);
-        if (onWall) { g.position.set(p.x + tx * (BW / 2 + 0.02), onFence ? 3.0 - BH / 2 : Math.max(0.12, TH.wallH - BH - 0.08), p.z + tz * (BW / 2 + 0.02)); g.add(new THREE.Mesh(panelG, brdM[dist + '_' + lit])); }
-        else { g.position.set(p.x, 0, p.z); g.add(new THREE.Mesh(wedgeF, brdM[dist + '_' + lit]), new THREE.Mesh(backG, backM), new THREE.Mesh(feetG, backM)); }
-        g.traverse(o => { o.castShadow = true; }); trackGroup.add(g); window.__brakeBoards.push({ s: s0, lat, side, onWall, dist });
+        if (onWall) { g.position.set(p.x + tx * (BW / 2 + 0.02), onFence ? 3.0 - BH / 2 : Math.max(0.12, TH.wallH - BH - 0.08), p.z + tz * (BW / 2 + 0.02)); g.add(...boardMeshes(panelP, brdM[dist + '_' + lit])); }
+        else { g.position.set(p.x, 0, p.z); g.add(...boardMeshes(wedgeP, brdM[dist + '_' + lit]), new THREE.Mesh(backG, backM), new THREE.Mesh(feetG, backM)); }
+        g.traverse(o => { o.castShadow = true; o.userData.clipSkip = true; }); g.userData.merge = true; trackGroup.add(g); window.__brakeBoards.push({ s: s0, lat, side, onWall, dist });
       }
     }
   }
@@ -6895,10 +7001,18 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       for (const g of [cardB, cardC]) if (g) g.userData.lod = [[null, 130]];   /* Flächen verschwinden genau dann, wenn der Kern auf die einfache Stufe wechselt */
       ball.userData.lod = [[ballLo, 130], [ballFar, 300]]; cone.userData.lod = [[coneLo, 130], [coneFar, 260]]; ballLo.userData.lod = [[ballFar, 300]]; coneLo.userData.lod = [[coneFar, 130]]; trunk.userData.lod = [[trunkFar, 90], [null, 450]];   /* Stufen wechseln früher: ab 130 m ist der Unterschied nicht mehr zu sehen */
       if (TRK.nos) { for (const g of [ball, cone]) g.userData.lod.push([null, 1000]); for (const g of [ballLo, coneLo]) g.userData.lod.push([null, 1000]); trunk.userData.lod = [[trunkFar, 120], [null, 450]]; }   // Nordschleife: Waldkante übernimmt die Ferne
+      const SD0 = 200, SD1 = 260;   // ab hier Bildtafeln statt 3D-Bäumen (Überblendung SD0..SD1 per Punktraster, siehe treeSprites)
+      const SPR = !window.__noTreeSpr;   // Testschalter: alte Darstellung (3D bis zum Horizont)
+      // Mit Bildtafeln: jeder Baum behält seine Form (nahe mit Laubflächen, ferne als einfache Krone) bis zur Tafel – nur EIN Übergang, kein Zwischenschritt
+      // (vorher: Laubflächen lösten sich bei 92–128 m auf – Himmel schien als helle Punkte durch – und danach wechselte die Krone zweimal die Form)
+      if (SPR) { for (const g of [cardB, cardC, ball, cone, ballLo, coneLo]) if (g) g.userData.lod = [[null, SD1]]; trunk.userData.lod = [[trunkFar, 150], [null, SD1]]; }
       const ic = new THREE.InstancedMesh(cone, needleMat, place.length), ib = new THREE.InstancedMesh(ball, leafMat, place.length), it = new THREE.InstancedMesh(trunk, lam({ map: TEX.bark, normalMap: TEX.barkN, normalScale: new THREE.Vector2(1.3, 1.3), color: 0xffffff, roughness: .95 }), place.length);
       const icL = new THREE.InstancedMesh(coneLo, needleMat, place.length), ibL = new THREE.InstancedMesh(ballLo, leafMat, place.length);
-      const cardM = (t) => distFade(lam({ map: t, alphaTest: 0.42, side: THREE.DoubleSide, roughness: .85, color: 0xffffff }), 92, 128);   /* Laubflächen lösen sich vor dem Wechsel der Detailstufe auf */
+      if (SPR) for (const mt of new Set([needleMat, leafMat, it.material])) distFade(mt, SD0, SD1);   /* 3D-Bäume lösen sich zwischen 200 und 260 m auf, die Bildtafeln füllen genau diese Punkte */
+      const cardM = (t) => distFade(lam({ map: t, alphaTest: 0.42, alphaToCoverage: true, side: THREE.DoubleSide, roughness: .85, color: 0xffffff }), SPR ? SD0 : 92, SPR ? SD1 : 128);   /* Kantenglättung der Laubränder (wie beim Rasen): kein Himmel-Glitzern in einzelnen Pixeln */   /* Laubflächen: mit Tafeln erst beim Übergang zur Tafel */
       const icS = cardC ? new THREE.InstancedMesh(cardC, cardM(FOL.cardC), place.length) : null, ibS = cardB ? new THREE.InstancedMesh(cardB, cardM(FOL.card), place.length) : null;
+      const SPL = { nc: [], nl: [], fc: [], fl: [] }, bark = it.material;   // Tafeln je Modell: nah (mit Laubflächen) / fern (einfache Krone), je Nadel-/Laubbaum
+      if (SPR) TREESPR = { lists: SPL, D0: SD0, D1: SD1, parts: { nc: [[cone, needleMat], ...(icS ? [[cardC, icS.material]] : []), [trunk, bark]], nl: [[ball, leafMat], ...(ibS ? [[cardB, ibS.material]] : []), [trunk, bark]], fc: [[coneLo, needleMat], [trunk, bark]], fl: [[ballLo, leafMat], [trunk, bark]] } };
       const nearCap = S.gfx === 'ultra' ? 4200 : hi ? 2800 : 800, conF = TH.conifer ?? 0.33; let nearN = 0, aL = 0, bL = 0;
       const dTrk = place.map(([x, z]) => nearestDist(x, z)[0]), dCut = Math.min(95, Float32Array.from(dTrk).sort()[Math.min(place.length - 1, nearCap)] ?? 95);   /* die detaillierten Bäume gehen an die streckennächsten (vorher: an die ersten in der Liste) */
       let a = 0, b = 0;
@@ -6910,6 +7024,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         const isCon = Math.random() < conF;
         if (isCon) { const M2 = near ? ic : icL, n2 = near ? a++ : aL++; M2.setMatrixAt(n2, m4); M2.setColorAt(n2, cc.setHSL(CN.hsl[0] + Math.random() * .05, CN.hsl[1], CN.hsl[2] + Math.random() * .15)); if (near && icS) { icS.setMatrixAt(n2, m4); icS.setColorAt(n2, cc); } }
         else { const M2 = near ? ib : ibL, n2 = near ? b++ : bL++; M2.setMatrixAt(n2, m4); M2.setColorAt(n2, cc.setHSL(LF.hsl[0] + Math.random() * .08, LF.hsl[1], LF.hsl[2] + Math.random() * .2)); if (near && ibS) { ibS.setMatrixAt(n2, m4); ibS.setColorAt(n2, cc); } }
+        SPL[(near ? 'n' : 'f') + (isCon ? 'c' : 'l')].push([m4.clone(), cc.clone()]);
       });
       ic.count = a; ib.count = b; icL.count = aL; ibL.count = bL; ic.castShadow = ib.castShadow = true; trackGroup.add(ic, ib, it, icL, ibL);
       if (icS) { icS.count = a; if (a) trackGroup.add(icS); } if (ibS) { ibS.count = b; if (b) trackGroup.add(ibS); }
@@ -6937,7 +7052,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   hemi.color.setHex(TH.hemi[0]); hemi.groundColor.setHex(TH.hemi[1]); hemi.intensity = TH.hemi[2];
   sun.color.setHex(TH.lightCol ?? TH.sunCol); sun.intensity = TH.sunI;
   flood.intensity = TH.flood;
-  sun.castShadow = TH.flood === 0; flood.castShadow = TH.flood > 0;
+  sun.castShadow = TH.flood === 0; flood.castShadow = TH.flood > 0; flood.visible = TH.flood > 0;   /* Licht mit Stärke 0 nicht mitrechnen (sonst wertet jeder Pixel ein zweites Sonnenlicht aus) */
   renderer.toneMappingExposure = TH.exposure;
   applyElevation();
   try { HOLES = fillGroundHoles(); } catch (e) { console.warn('fillGroundHoles', e); }
@@ -6957,6 +7072,8 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   applyLook();
   buildMapBase();
   { const _bt1 = performance.now(); bakeShadows(); window.__btms = [Math.round(_bt1 - _bt0), Math.round(performance.now() - _bt1)]; }
+  try { treeSprites(); } catch (e) { console.warn('treeSprites', e); } TREESPR = null;
+  trackGroup.traverse(o => { if (o.material) for (const m of Array.isArray(o.material) ? o.material : [o.material]) if (m.normalMap && m.normalMap.anisotropy > 4) { m.normalMap.anisotropy = 4; if (m.normalMap.image) m.normalMap.needsUpdate = true; } });   /* Reliefkarten: feine Struktur mittelt sich in der Ferne ohnehin aus – 4-fach reicht */
   buildEvict(trackGroup); for (const e of EVICT) e.m.userData.evRef = e;
   // feste Objekte (Bäume, Felsen, Absperrungen, Gebäude …): Positionen nur einmal beim Laden berechnen, nicht mehr in jedem Bild
   trackGroup.updateMatrixWorld(true); trackGroup.traverse(o => { o.matrixAutoUpdate = false; o.matrixWorldAutoUpdate = true; });
@@ -7706,7 +7823,8 @@ function warmUpTrack() {
   } catch (e) { console.warn('warmUp', e); }
   window.__warmMs = Math.round(performance.now() - t0);
 }
-function precompile() { try { const prev = renderer.getRenderTarget(); if (composer) renderer.setRenderTarget(composer.renderTarget1); renderer.compile(scene, camera); renderer.setRenderTarget(prev); } catch (e) { console.warn('precompile', e); }
+function precompile() { const hid = []; for (const c of cars) { const m = c.mesh; if (!m) continue; for (const o of [m.far, ...(m.gh ? Object.values(m.gh) : [])]) if (o && !o.visible) { o.visible = true; hid.push(o); } }   /* Fernmodell und Überblend-Geister sind anfangs unsichtbar: Shader trotzdem jetzt übersetzen */
+  try { const prev = renderer.getRenderTarget(); if (composer) renderer.setRenderTarget(composer.renderTarget1); renderer.compile(scene, camera); renderer.setRenderTarget(prev); } catch (e) { console.warn('precompile', e); } finally { for (const o of hid) o.visible = false; }
   // Materialien, die erst beim Kamerawechsel auftauchen (Cockpit: aufgeschnittene Karosserie + Wanne, TV-Kamera: einfarbiges Halo), jetzt mit übersetzen – sonst Hänger beim ersten Umschalten
   try { const m = pl && pl.mesh; if (m) { const tp = m.tp || {}, k = tp.M === MODELS.f2 ? 'f2' : 'f1'; if (m.tp) { cockBuild(m); }
       const sc = new THREE.Scene(), add = (g, mt) => { const o = new THREE.Mesh(g, mt); o.frustumCulled = false; sc.add(o); }; if (m.tp) { add(m.body.geometry, tp.cutGloss); add(m.matte.geometry, tp.cutMatte); if (tp.haloFlat) add(tp.haloFlat, tp.haloMat); m.tub.traverse(o => { if (o.isMesh) add(o.geometry, o.material); }); }
@@ -8092,7 +8210,8 @@ function updateMeshes(dt) {
     else m.rl.visible = running && c.v > 25 && ((c.thr || 0) < 0.6 || c.brk > 0.1) && ((performance.now() / 110) | 0) % 2 === 0;
     m.wfl.rotation.x = m.wfr.rotation.x = m.rr.rotation.x = c.spin;
     if (m.sw) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z; m.sw.visible = c === pl || dx * dx + dz * dz < 625; }   /* Kart: Lenkrad (viele kleine Teile) nur aus der Nähe zeichnen */
-    if (m.tp) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z, d2 = dx * dx + dz * dz; setLod(m, c === pl || d2 < 13 * 13 ? 0 : d2 < 46 * 46 ? 1 : 2);   /* volle Modellstufe (50.000 Dreiecke) nur für den Spieler und Autos unter 13 m */   /* Detailstufen früher: weniger Dreiecke bei vollem Starterfeld */ }
+    if (m.tp) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z, d2 = dx * dx + dz * dz; const LD = window.__carLod || CAR_LOD, cur = m.lf ? m.lf.to : m.lod, b0 = LD[0] + (cur >= 1 ? -LOD_HYS : LOD_HYS), b1 = LD[1] + (cur >= 2 ? -LOD_HYS : LOD_HYS);
+      if (c === pl) { if (m.lod !== 0 || m.lf) setLod(m, 0, true); } else lodStep(m, d2 < b0 * b0 ? 0 : d2 < b1 * b1 ? 1 : 2, dt);   /* volle Modellstufe (50.000 Dreiecke) nur für den Spieler und Autos unter 13 m */   /* Detailstufen früher: weniger Dreiecke bei vollem Starterfeld */ }
   }
 }
 
@@ -8343,10 +8462,11 @@ function updateCamera(dt) {
     if (S.cam === 0) {
       const rdc = p.mesh.road ? 1 : 0, cs = p.mesh.camS || 1, dd = (lerp(3.9, 5.5, clamp(camK, -0.2, 1.08)) + rdc * 1.0) * cs, hh = (lerp(1.4, 1.85, clamp(camK, 0, 1.08)) + rdc * 0.45) * cs + (cs < 1 ? 0.28 : 0), rx2 = -fz, rz2 = fx;
       camera.position.set(p.x - fx * dd + rx2 * camLat, hh - camPit * 2.2 + ey - sl * dd + Math.sin(performance.now() / 70) * clamp((p.v - 75) / 20, 0, 1) * 0.015, p.z - fz * dd + rz2 * camLat);
+      camFloor();
       camera.lookAt(p.x + fx * 2.6 + rx2 * camLat * 0.25, lerp(0.55, 0.38, clamp(camK, 0, 1)) + rdc * 0.45 + ey + sl * 2.6, p.z + fz * 2.6 + rz2 * camLat * 0.25);
       camera.rotateZ(camRoll);
     }
-    else if (S.cam === 1) { camera.position.set(p.x - fx * 12, 4.4 - camPit * 3 + ey - sl * 12, p.z - fz * 12); camera.lookAt(p.x + fx * 4, 0.3 + ey + sl * 4, p.z + fz * 4); }
+    else if (S.cam === 1) { camera.position.set(p.x - fx * 12, 4.4 - camPit * 3 + ey - sl * 12, p.z - fz * 12); camFloor(); camera.lookAt(p.x + fx * 4, 0.3 + ey + sl * 4, p.z + fz * 4); }
     else { // Helmkamera: Kopf bewegt sich leicht relativ zum Auto (Fliehkraft, Bremsen, Vibration)
       const m = p.mesh.g;
       const st = S.cam === 3;   // TV-Kamera: fest am Auto montiert – kein Kopfwackeln, keine Vibration, kein Umschauen
@@ -9173,7 +9293,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.53'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.58'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -9293,7 +9413,7 @@ window.__clipAll = (margin = 0.8) => { const out = new Map(), v = new THREE.Vect
   const test = (x, y, z, h, tag) => { if (!cell.has(Math.floor(x / 25) * 100003 + Math.floor(z / 25))) return; const [d, j] = nearestDist(x, z); if (d > 200) return; if (y - (FLAT ? 0 : ELEV[j]) > 2.5 || y - (FLAT ? 0 : ELEV[j]) < -1) return;   /* tiefer als 1 m unter der Fahrbahn: steckt unsichtbar im Boden (Monaco: Fuß des Felsens) */ if (MC_ISL && Math.hypot(x - MC_ISL.x, z - MC_ISL.z) < MC_ISL.R + 1) return;   /* Palmen auf der Fairmont-Insel stehen absichtlich dort */ const lat = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j], wl = wallAt(j, lat >= 0 ? 1 : -1), lim = margin === 'road' ? Math.min(HW[j] + 1.5, wl - 0.4) : wl - margin; if (Math.abs(lat) >= lim) return;
     const k = Math.round(x / 10) * 10 + ',' + Math.round(z / 10) * 10; const e = out.get(k) || { x: Math.round(x), z: Math.round(z), n: 0, h: 0, tag, s: Math.round(j * DS), lat: Math.round(lat * 10) / 10, lim: Math.round(lim * 10) / 10 }; e.n++; e.h = Math.max(e.h, h); out.set(k, e); };
   trackGroup.updateMatrixWorld(true);
-  trackGroup.traverse(o => { if (!o.isMesh || !o.geometry || !o.geometry.attributes.position || !o.visible) return; const g = o.geometry; if (!g.boundingBox) g.computeBoundingBox(); const H = g.boundingBox.max.y - g.boundingBox.min.y, SP = Math.max(g.boundingBox.max.x - g.boundingBox.min.x, g.boundingBox.max.z - g.boundingBox.min.z); if (H < 1.2 || o.userData.strip || o.userData.tile || o.userData.flat || o.userData.ground || g.type === 'PlaneGeometry' || (o.material && o.material.transparent && o.material.polygonOffset)) return;   /* Aufkleber auf der Fahrbahn (Graffiti) sind kein Clipping */   // flache Flächen/Gelände ignorieren
+  trackGroup.traverse(o => { if (!o.isMesh || !o.geometry || !o.geometry.attributes.position || !o.visible) return; const g = o.geometry; if (!g.boundingBox) g.computeBoundingBox(); const H = g.boundingBox.max.y - g.boundingBox.min.y, SP = Math.max(g.boundingBox.max.x - g.boundingBox.min.x, g.boundingBox.max.z - g.boundingBox.min.z); if (H < 1.2 || o.userData.clipSkip || o.userData.strip || o.userData.tile || o.userData.flat || o.userData.ground || g.type === 'PlaneGeometry' || (o.material && o.material.transparent && o.material.polygonOffset)) return;   /* Aufkleber auf der Fahrbahn (Graffiti) sind kein Clipping */   // flache Flächen/Gelände ignorieren
     if (!o.isInstancedMesh && SP > 150 && H < 6) return;   // streckenlange Streifen (Leitplanke, Zaun, Banden) folgen der Absperrung selbst
     const P = g.attributes.position, st = Math.max(1, Math.floor(P.count / 600)), tag = (o.material && (o.material.customProgramCacheKey && o.material.customProgramCacheKey()) || o.material.type) + ':' + P.count;
     const gy = g.boundingBox.min.y + 2.5, lowI = []; for (let i = 0; i < P.count; i += st) if (P.getY(i) <= gy) lowI.push(i);   /* nur bodennahe Punkte prüfen */

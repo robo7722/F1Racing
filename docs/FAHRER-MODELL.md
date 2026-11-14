@@ -1,14 +1,15 @@
 # Rennfahrer-Modell
 
-Stand: 13.11.2026 (v1.53) – Kart-Fahrer im Spiel eingebaut, stehende Figur als Vorschau.
+Stand: 14.11.2026 (v1.58) – derselbe Fahrer in Kart, F1 und F2; stehende Figur als Vorschau.
 
 ## Dateien
 - `kartfahrer.bin` – sitzender Kart-Fahrer fürs Spiel: Körper + beide Handschuhe als EIN Netz (~14 200 Dreiecke).
+- `f1fahrer.bin` – derselbe Fahrer halb liegend für F1/F2 (gleiches Format, Hände an den Griffen des F1-Lenkrads).
 - `textures/kart_fahrer.jpg` – Atlas 1024×512: links Anzug (helle Stoff-Schattierung), rechts Handschuh.
 - `textures/kart_stoff.jpg` – kachelbares Nomex-Köpergewebe (Höhenkarte 256², vom Bauskript erzeugt).
 - `fahrer/fahrer.glb`, `fahrer/handschuh.glb` – stehende Figur (24 000 Dreiecke), `fahrer/vorschau.html` zeigt sie mit unserem Helm.
 - `fahrer/kart_vorschau.html` – Prüfansicht: Kart + Kart-Fahrer + Lenkradkranz (gleiche Lade-Logik wie im Spiel).
-- `tools/fahrer/build_fahrer.py <quellordner>` – baut alles neu. Quellordner: `model.obj`, `base.jpg`, `normal.jpg` (Tripo), `glove.kmz`. Vorlagen nicht im Repo (OBJ 25 MB). Braucht numpy, pillow, scipy, trimesh, pymeshlab, libigl, scikit-image (+ Systempaket libopengl0).
+- `tools/fahrer/build_fahrer.py <quellordner> [kart|f1]` – baut alles neu (oder nur einen der beiden Sitzfahrer, je ~3 min). Quellordner: `model.obj`, `base.jpg`, `normal.jpg` (Tripo), `glove.kmz`. Vorlagen nicht im Repo (OBJ 25 MB). Braucht numpy, pillow, scipy, trimesh, pymeshlab, libigl, scikit-image (+ Systempaket libopengl0).
 
 ## Ablauf im Skript
 1. **Körper aufräumen**: Splitter-Dreiecke, Kopf mit Tripo-Helm und Hände weg. Ärmel quer zum Unterarm geschnitten.
@@ -69,8 +70,28 @@ Geprüft rechnerisch (Punkte aus dem laufenden Spiel ausgelesen, Windungszahl ge
   - Durchdringung bei −1…+1: 0 Hand↔Bein, 0 Arm↔Rumpf, 0 Anzug↔Kart.
 - **Cockpitkamera Kart**: wieder höher (3 cm unter Helmmitte), Blick ~15° nach unten – Lenkrad und Hände im Bild.
 
+## v1.58 – F1/F2-Fahrer, Teamanzüge, Kart 10/2 Uhr
+**Kart**
+- Hände auf **10 und 2 Uhr** (`wheel_frame`: Griffwinkel 30° über der Waagerechten, Daumen entlang der Kranz-Tangente). Die Lenksäule rückt dafür weiter zum Fahrer (19,5 cm, Schulter–Hand 85 % der Armlänge).
+- Helmkamera höher (0,5 cm unter Helmmitte) und flacher (Blicksenkung 10 statt 15,5 → Horizont im oberen Bilddrittel, Hände und Kranz bleiben im Bild).
+
+**F1/F2** (`pose_kart(..., mode='f1')`, `build_seated('f1')` → `f1fahrer.bin`)
+- Gleicher Körper, halb liegend (Rumpf 18° zurück), Becken vorn, Beine fast waagerecht unter die Nase. Der Hals wird so gesetzt, dass der Helm **genau an der bisherigen Spielposition** (0 / 0,795 / 0,18) sitzt – Helmkamera und TV-Kamera bleiben unverändert. Der Helm reicht 8 cm über den Hals (Kart 4,5 cm): die Schultern sitzen höher im Cockpit.
+- Lenkrad aus der SW-Gruppe (`wheel_frame('f1')` = `f1Wheel()` im Spiel): Griffe bei lokal x ±0,2 · swS, Drehachse = lokale z-Achse nach Drehung (0,45 / π / 0). F2 (andere Helm- und Lenkradposition) nutzt dasselbe Modell: Körper um die Helm-Differenz verschoben, die Arm-IK greift das F2-Lenkrad.
+- Ellbogen-Wahl F1: Unterarm fast waagerecht, Ellbogen etwas außen und tiefer als die Hand. Das F1-Lenkrad sitzt nah am Fahrer (Schulter–Handgelenk 0,40 m bei 0,55 m Armlänge) – die Arme sind deutlich gebeugt, die Ellbogen gehen nach außen/unten (im Monocoque verdeckt).
+- Im Spiel: `f1Driver()` (eigenes Objekt neben der Helmgruppe, folgt deren TV-Versatz), `kartArmsIK(out, spin, K, C, AX, RIM)` verallgemeinert. Lenkwinkel wie das Cockpit-Lenkrad (`steer × SW_ROT`).
+- **Helmkamera**: Rumpf und Beine werden per Shader verworfen (`uCut`), Arme und Hände bleiben – die alten eingeblendeten Arme (`ARMS.f1`) sind aus. Nichts näher als 16 cm (Nahgrenze).
+- **TV-Kamera**: nur Helm und Fahrer ausgetauscht, Kameraposition und Helmversatz unverändert.
+- Helm mit den Kart-Korrekturen (`helmGeoKart`, ohne Anbauteil unter dem Visier).
+- **Offenes F1-Cockpit**: Das F1-Modell hatte über dem Fahrer eine Gitterplatte auf Höhe 0,576 (Cockpit von außen zu, man sah nur den Helm). `dropFaces` entfernt sie innerhalb der Cockpitöffnung (|x| < 0,2, z 0,1–0,8) – wie beim F2 sieht man jetzt Anzug, Arme und Hände.
+- Mit `lodFadePrep` (v1.56) wird das Material je Auto kopiert; die Knochen werden deshalb in die Uniforms des Originals geschrieben (`U` beim Bau gemerkt) und `uniformsNeedUpdate` an der Kopie gesetzt.
+
+**Teamanzüge** (`SUIT_F1`, `suitDesign`, `kartFahrerMat(..., des)`)
+- Je Team Grundfarbe, zweite Farbe, Akzent (Streifen, Schulterpasse) und Handschuhfarbe, ohne Logos. Schnitte: 0 einfarbig, 1 Unterteil (z. B. McLaren schwarz unten), 2 Seitenteile + Ärmel (Mercedes, Williams, Haas), 3 Schärpe (Ferrari, Red Bull), 4 Schulterpartie + Ärmel oben (Aston Martin, Alpine, Cadillac).
+- F2: aus der Lackierung (Hauptfarbe, Unterteil oder Flügelfarbe).
+
 ## Offen / Ideen
 - Lenkrad dreht sich beim Lenken, die Hände nicht (war beim alten Fahrer genauso).
 - Leichte Knautschfalten an der Hüfte durch das Biegen (im Sitz kaum sichtbar).
-- F1/F2: Kinnteil am Helm ggf. auch entfernen.
+- KI-Autos von außen: die Hände greifen das (nicht gezeichnete) Lenkrad – wie beim alten Fahrer. Ein vereinfachtes Lenkrad je Auto wäre eine Idee.
 - Stehende Figur könnte fürs Podium/Showroom eingebaut werden.
