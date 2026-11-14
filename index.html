@@ -4607,8 +4607,13 @@ function fillGroundHoles(dry = false) {
   window.__holeList = [...XZ].sort((p, q) => q[1] - p[1]).slice(0, 30); return cells; }
 function chunkStrips(root, segLen = 900) {
   const per = Math.max(60, Math.round(segLen / DS)) * 6, v = new THREE.Vector3();
+  // Normale Strecken (bis 8 km): Streifen NICHT in 900-m-Stücke teilen. Gemessen (Monza): von 106 Stücken waren rund um die Runde 30–96 gleichzeitig im Bild –
+  // das Aussortieren sparte kaum Dreiecke (alle Streifen zusammen ~84.000), kostete aber je Stück einen Zeichenaufruf. Durchsichtige Streifen bleiben geteilt
+  // (ihre Zeichenreihenfolge hängt am Abstand der Stücke). Die Nordschleife bleibt geteilt: dort werden ferne Stücke ausgeblendet und aus dem Speicher geworfen.
+  const whole = !TRK.nos && L <= 8000 && !window.__chunkAll;
   for (const ch of [...root.children]) {
     if (!ch.userData.strip || ch.geometry.index) continue;
+    if (whole && !Array.isArray(ch.material) && !ch.material.transparent) continue;
     const g = ch.geometry, n = g.attributes.position.count; if (n <= per * 1.5) continue;
     for (let a = 0; a < n; a += per) {
       const cnt = Math.min(per, n - a), sg = new THREE.BufferGeometry(); for (const k in g.attributes) { const A = g.attributes[k]; sg.setAttribute(k, new THREE.BufferAttribute(A.array.slice(a * A.itemSize, (a + cnt) * A.itemSize), A.itemSize, A.normalized)); }
@@ -4637,6 +4642,11 @@ function mergeGroups(root, cell = 350) {
       geo.applyMatrix4(o.matrixWorld); b.list.push(geo); b.cast ||= o.castShadow; b.recv ||= o.receiveShadow; });
     root.remove(g);
   }
+  // Kleinteile (Schilder, Pfosten, Tafeln …): je Material über die GANZE Strecke ein Netz statt eines je 350-m-Kachel – zusammen höchstens 40.000 Eckpunkte,
+  // das Aussortieren je Kachel sparte also nichts, kostete aber viele Zeichenaufrufe. Große Bauten (Tribünen, Gebäude) bleiben je Kachel getrennt.
+  if (!TRK.nos && !window.__chunkAll) { const big = new Map();
+    for (const [key, b] of buckets) { if (b.mat.transparent) continue; const k2 = b.mat.uuid + '|' + (b.cast ? 1 : 0) + (b.recv ? 1 : 0) + (b.skip ? 1 : 0); let e = big.get(k2); if (!e) big.set(k2, e = { keys: [], n: 0 }); e.keys.push(key); for (const g of b.list) e.n += g.attributes.position.count; }
+    for (const e of big.values()) { if (e.keys.length < 2 || e.n > 40000) continue; const b0 = buckets.get(e.keys[0]); for (const k of e.keys.slice(1)) { for (const g of buckets.get(k).list) b0.list.push(g); buckets.delete(k); } } }
   for (const b of buckets.values()) {
     const names = Object.keys(b.list[0].attributes).filter(k => b.list.every(g => g.attributes[k] && g.attributes[k].itemSize === b.list[0].attributes[k].itemSize));
     const tot = b.list.reduce((a, g) => a + g.attributes.position.count, 0), out = new THREE.BufferGeometry();
@@ -5578,7 +5588,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     const truckT = (base, stripe) => { const t = canvasTex(256, 64, (g, w, h) => { g.fillStyle = base; g.fillRect(0, 0, w, h); g.fillStyle = stripe; g.fillRect(0, h * .62, w, h * .14); g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(0, h - 5, w, 5);
         for (let k = 1; k < 8; k++) { g.fillStyle = 'rgba(0,0,0,.08)'; g.fillRect(k * w / 8, 0, 1, h * .6); } g.fillStyle = stripe; g.font = '900 italic 20px system-ui'; g.fillText('RACE LOGISTICS', 14, h * .5); }); t.userData.own = true; return lam({ map: t }); };
     const truckM = [truckT('#f2f4f6', '#e10600'), truckT('#1d232b', '#00a19c'), truckT('#c9ced4', '#1f3a8a')];
-    TRK.ref.vehicles.forEach((v2, k) => { if (v2.h < 1.5 || v2.l < 6) return; { const [vd, vj] = nearestDist(v2.c[0], v2.c[1]); if (vd < Math.max(WL[vj], WR[vj]) + Math.max(v2.l, v2.w) / 2 + 2) return; } const m = new THREE.Mesh(new THREE.BoxGeometry(v2.l, Math.min(4.2, v2.h), Math.max(2.4, Math.min(v2.w, 3))), truckM[k % 3]); m.position.set(v2.c[0], Math.min(4.2, v2.h) / 2, v2.c[1]); m.rotation.y = -v2.a; m.castShadow = true; trackGroup.add(m); excl.push([v2.c[0], v2.c[1], v2.l / 2 + 2]); });
+    TRK.ref.vehicles.forEach((v2, k) => { if (v2.h < 1.5 || v2.l < 6) return; { const [vd, vj] = nearestDist(v2.c[0], v2.c[1]); if (vd < Math.max(WL[vj], WR[vj]) + Math.max(v2.l, v2.w) / 2 + 2) return; } const m = new THREE.Mesh(new THREE.BoxGeometry(v2.l, Math.min(4.2, v2.h), Math.max(2.4, Math.min(v2.w, 3))), truckM[k % 3]); m.position.set(v2.c[0], Math.min(4.2, v2.h) / 2, v2.c[1]); m.rotation.y = -v2.a; m.castShadow = true; trackGroup.add(asMerge(m));   /* Lastwagen im Fahrerlager: je Farbe zu einem Netz zusammenfassen (vorher ein Zeichenaufruf je Wagen) */ excl.push([v2.c[0], v2.c[1], v2.l / 2 + 2]); });
   } else if (TRK.stands) {   // Tribünen exakt nach dem offiziellen Tribünenplan
     const loop = []; for (let i = 0; i < N; i += 4) loop.push([PX[i], PZ[i]]);
     const pipL = (x, z) => { let c = false; for (let i = 0, j = loop.length - 1; i < loop.length; j = i++) { const [xi, zi] = loop[i], [xj, zj] = loop[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };
@@ -9385,7 +9395,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.74'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.75'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
