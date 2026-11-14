@@ -748,7 +748,7 @@ th{background:#0c0c12!important;letter-spacing:.16em;font-size:10px!important;co
   .mnext{height:44px!important}
 }
 @media (max-height:380px){
-  .logo2{display:none!important}.tag{margin-top:0!important}
+  .logo2:not(.img){display:none!important}.logo2.img .glogo{height:clamp(22px,11vh,40px)!important}#scrTitle .logo2.img{margin-top:0!important}.tag{margin-top:0!important}
   .hero .hs,.hbtn small{display:none!important}
   .hero,.hbtn{min-height:clamp(100px,46vh,170px)!important}
   .tcard .tf{display:none}
@@ -1138,7 +1138,7 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
 <script>
 /* Eigenes Titel-Logo: liegt logos/LOGO.png im Projekt, ersetzt es den Schriftzug „FORMULA RACING“ – sofort beim Start auf dem Ladebildschirm, im Hauptmenü und klein oben in allen Untermenüs. Fehlt die Datei, bleibt der Schriftzug. */
 (function () { var im = new Image(); im.onload = function () {
-  var put = function (sel, cls) { var el = document.querySelector(sel); if (!el) return; var g = new Image(); g.src = im.src; g.className = cls; g.alt = 'Logo'; el.innerHTML = ''; el.appendChild(g); };
+  var put = function (sel, cls) { var el = document.querySelector(sel); if (!el) return; var g = new Image(); g.src = im.src; g.className = cls; g.alt = 'Logo'; el.innerHTML = ''; el.appendChild(g); el.classList.add('img'); };
   var go = function () { put('.ldLogo', 'glogo ld'); put('.logo2', 'glogo'); var m = document.getElementById('mLogo'); if (m) { m.src = im.src; m.hidden = false; } };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); };
   im.src = 'logos/LOGO.png'; })();
@@ -1347,7 +1347,7 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
   <div class="ppane" id="sExtra"><section class="panel" id="setExtra">
     <div class="tog"><span>Team RONE Racing freischalten</span><button class="sw" data-tog="rone" aria-label="Team RONE Racing freischalten"></button></div>
     <p class="hint left">Schaltet das Team RONE Racing mit Robert Nemec in der Teamauswahl frei. Es fährt nur, wenn du es selbst wählst.</p>
-    <div class="tog"><span>Gleichmäßiger Bildtakt (60 FPS)</span><button class="sw" data-tog="evenPace" aria-label="Gleichmäßiger Bildtakt"></button></div>
+    <div class="tog"><span>Auf 60 FPS begrenzen (gleichmäßiger Bildtakt)</span><button class="sw" data-tog="pace60" aria-label="Gleichmäßiger Bildtakt"></button></div>
     <p class="hint left">An: Auf schnellen Displays (120 Hz) wird genau jedes zweite Display-Bild gezeichnet – jedes Bild steht gleich lang (16,7 ms), statt zwischen 8 und 17 ms zu wechseln. Aus: so viele Bilder wie möglich, dafür ungleichmäßig, wenn das Handy die volle Bildrate nicht hält.</p>
     <div class="tog"><span>FPS- und Frame-Pacing-Anzeige</span><button class="sw" data-tog="perfHud" aria-label="FPS- und Frame-Pacing-Anzeige"></button></div>
     <p class="hint left">Zeigt im Rennen oben in der Mitte die Bildrate, die mittlere Bildzeit, die Schwankung (±) und das langsamste Bild der letzten Sekunde, darunter wie lange das Spiel pro Bild rechnet (CPU, ohne Grafikkarte). Der Graph darunter zeigt jede Bildzeit: grün = flüssig, gelb = ein Bild verpasst, rot = Ruckler. Die Linie markiert 60 FPS.</p>
@@ -1416,7 +1416,7 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platfor
 const standalone = matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 
 /* ======================= Einstellungen ======================= */
-const S = { evenPace: true, rmode: 'f1', level: true, songHist: [], rone: false, nos: false, perfHud: false, mode: 'race', ttBest: {}, song: 0, track: 'monza', driver: 'RUS', laps: 5, grid: 10, ctrl: 'touch', diff: 'mid', autogas: false, assist: false, sound: true, music: true, invert: false, cam: 0, gfx: 'high', line: 'off', champLaps: 3, volMusic: 0.7, volCar: 0.85 };
+const S = { pace60: false, rmode: 'f1', level: true, songHist: [], rone: false, nos: false, perfHud: false, mode: 'race', ttBest: {}, song: 0, track: 'monza', driver: 'RUS', laps: 5, grid: 10, ctrl: 'touch', diff: 'mid', autogas: false, assist: false, sound: true, music: true, invert: false, cam: 0, gfx: 'high', line: 'off', champLaps: 3, volMusic: 0.7, volCar: 0.85 };
 try { Object.assign(S, JSON.parse(localStorage.getItem('f1rennen') || '{}')); } catch (e) {}
 if (!S.v40) { S.rmode = 'f1'; S.v40 = true; }   // Roadster: Standard ist die F1-Variante
 if (!S.v17) { S.ctrl = 'touch'; S.autogas = false; S.assist = false; S.v17 = true; try { localStorage.setItem('f1rennen', JSON.stringify(S)); } catch (e) {} }
@@ -3319,7 +3319,7 @@ function numberTex(num, bg) {
   });
 }
 const CAR_FAR3 = 80, CAR_HIDE = 600;   /* ab 80 m das stark vereinfachte Fernmodell (clusterGeo); ab 600 m (Auto < 5 Pixel) wird ein Gegner gar nicht mehr gezeichnet */
-const CAR_LOD = [10, 35], LOD_HYS = 1.5, LOD_FADE = 0.35;   // Abstand (m) zur Kamera: darunter volle Stufe / mittlere Stufe, darüber Fernmodell (± Schaltlücke gegen Hin- und Herspringen)
+const CAR_LOD = [6, 35], LOD_HYS = 1.5, LOD_FADE = 0.35;   /* volle Stufe erst unter 6 m (bis 1.86: 10 m): im Pulk waren sonst mehrere Autos mit je über 100.000 Dreiecken gleichzeitig voll detailliert; die mittlere Stufe ist ab ~4 m nicht zu unterscheiden */   // Abstand (m) zur Kamera: darunter volle Stufe / mittlere Stufe, darüber Fernmodell (± Schaltlücke gegen Hin- und Herspringen)
 // Weiche Überblendung zwischen den Stufen statt Aufploppen: alte und neue Stufe ~0,35 s gleichzeitig, per Punktraster (wie beim Rasen) einander
 // ergänzend – jeder Pixel zeigt genau eine der beiden. Dafür hat jedes Netz eines Autos eine eigene Materialkopie (gleicher Shader, nichts wird neu übersetzt).
 function lodFadeMat(mt) { if (!mt || mt.userData.lodF) return mt; mt.userData.lodF = { value: new THREE.Vector2(0, 0) }; const prev = mt.onBeforeCompile, pk = mt.customProgramCacheKey; mt.__lfBase = [prev, mt.hasOwnProperty('customProgramCacheKey') ? pk : null];   /* für weitere Kopien: Haken ohne Überblendung (sonst stünde uLodF doppelt im Shader) */
@@ -3347,10 +3347,13 @@ function lodStep(m, want, dt) {
   else { setLod(m, 1, true); m.far.visible = true; for (const o of m.detail) o.visible = true; }   // beide sichtbar; m.lod bleibt 1 bis zum Ende (Schatten nutzt die mittlere Stufe)
   m.lf = { from, to: want, x, t: 0 }; lodFadeApply(m);
 }
+// Carbon-Teile (Unterboden, Aufhängung, Flügel-Innenseiten): beim eigenen Auto in Helm- und TV-Kamera reicht die mittlere Stufe (16.400 statt 47.000 Dreiecke) –
+// aus dem Cockpit sieht man davon nur einen Bruchteil. m.matteLo setzt updateMeshes; Testschalter window.__noMatteLo.
+const matteGeo = (m, l) => m.tp.lods[l === 0 && m.matteLo && !window.__noMatteLo ? 1 : l].matte;
 function setLod(m, l, force) {
   if (force) lodFadeEnd(m);
   if (!m.tp || (!force && m.lod === l)) return; if (m.lod !== l) EVT.car++; m.lod = l; const L = m.tp.lods[l], W = m.tp.M.W[l];
-  m.body.geometry = L.gloss; m.matte.geometry = L.matte; m.wfl.geometry = W.R[m.comp]; m.wfr.geometry = W.L[m.comp]; m.wrl.geometry = W.RL[m.comp]; m.wrr.geometry = W.RR[m.comp];
+  m.body.geometry = L.gloss; m.matte.geometry = matteGeo(m, l); m.wfl.geometry = W.R[m.comp]; m.wfr.geometry = W.L[m.comp]; m.wrl.geometry = W.RL[m.comp]; m.wrr.geometry = W.RR[m.comp];
   if (m.far) { const f = l === 2 && !window.__noFar; m.far.visible = f; for (const o of m.detail) o.visible = !f; }
 }
 // Fernmodell eines Teams: einfachste Karosserie + Carbon + Räder + Helm in einem Netz; Klasse 4 = feste Farbe (keine Lackierung)
@@ -4297,7 +4300,7 @@ let shSwap = false;
 function shadowSwap(on) {
   if (on === shSwap || (on && window.__noShLod)) return; shSwap = on;
   for (const c of cars) { const m = c.mesh; if (!m.tp || m.lod > 1) continue; const k = on ? m.lod + 1 : m.lod, L = m.tp.lods[k], W = m.tp.M.W[k];   /* Autos ab 13 m werfen den Schatten mit der einfachsten Stufe (Schattenpunkt ≈ 6 cm – kein Unterschied) */
-    m.body.geometry = L.gloss; m.matte.geometry = L.matte; m.wfl.geometry = W.R[m.comp]; m.wfr.geometry = W.L[m.comp]; m.wrl.geometry = W.RL[m.comp]; m.wrr.geometry = W.RR[m.comp]; }
+    m.body.geometry = L.gloss; m.matte.geometry = matteGeo(m, k); m.wfl.geometry = W.R[m.comp]; m.wfr.geometry = W.L[m.comp]; m.wrl.geometry = W.RL[m.comp]; m.wrr.geometry = W.RR[m.comp]; }
 }
 for (const l of [sun, flood]) { const um = l.shadow.updateMatrices; l.shadow.updateMatrices = function (light) { shadowSwap(true); if (OWNH) OWNH.visible = true; um.call(this, light); }; }
 scene.onAfterRender = () => shadowSwap(false);
@@ -7965,6 +7968,7 @@ function gridOrder() {
 function placeOnGrid() {
   pl = byCode(S.driver) || ALL[0];
   cars.length = 0; ALL.forEach(c => { c.mesh.g.visible = false; });
+  if (!TRK) return;   // im Menü vor der ersten Streckenwahl gibt es noch keine Strecke (seit 1.82) – aufgestellt wird nach dem Bau
   const TT = (S.mode === 'tt' && !CHP) || QL;   // Zeitfahren: allein auf der Strecke, von der Pole
   (TT ? [DRIVERS.find(d => d[0] === pl.code)] : gridOrder()).forEach((d, j) => {
     const c = byCode(d[0]), s = QL ? -220 : slotS(j), p = trackAt(s, slotLat(j));
@@ -8425,6 +8429,7 @@ function updateMeshes(dt) {
     if (m.sw) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z; m.sw.visible = c === pl || dx * dx + dz * dz < 625; }   /* Kart: Lenkrad (viele kleine Teile) nur aus der Nähe zeichnen */
     if (m.tp) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z, d2 = dx * dx + dz * dz; const LD = window.__carLod || CAR_LOD, cur = m.lf ? m.lf.to : m.lod, b0 = LD[0] + (cur >= 1 ? -LOD_HYS : LOD_HYS), b1 = LD[1] + (cur >= 2 ? -LOD_HYS : LOD_HYS);
       if (c === pl) { const w = window.__plLod ?? (!running || S.cam === 2 || S.cam === 3 ? 0 : 1);   /* eigenes Auto: volle Stufe (~112.000 Dreiecke) nur im Cockpit/TV-Kamera und im Stand; in den Verfolgerkameras die mittlere (~37.000) – im Bild nicht zu unterscheiden */
+        const ml = running && (S.cam === 2 || S.cam === 3); if (m.matteLo !== ml) { m.matteLo = ml; setLod(m, w, true); }
         if (m.lod !== w || m.lf) setLod(m, w, true); if (m.g.visible === !!window.__hideOwn) m.g.visible = !window.__hideOwn; }
       else { const hd = window.__carHide || CAR_HIDE, vis = d2 < (m.g.visible ? hd + 25 : hd) ** 2; if (m.g.visible !== vis) { m.g.visible = vis; EVT.car++; }
         if (vis) { lodStep(m, d2 < b0 * b0 ? 0 : d2 < b1 * b1 ? 1 : 2, dt);
@@ -9575,7 +9580,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.87'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.90'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -9682,7 +9687,7 @@ function rlogEnd() {
   let gpu = ''; try { const gl = renderer.getContext(), e = gl.getExtension('WEBGL_debug_renderer_info'); gpu = e ? String(gl.getParameter(e.UNMASKED_RENDERER_WEBGL)).slice(0, 60) : ''; } catch (e) {}
   const tot = Math.max(1, R.n - 40), nl = R.late.length, pc = (a, b) => (100 * a / Math.max(1, b)).toFixed(0) + ' %';
   const tags = f => RL_KEYS.filter(([k]) => f[k] && k !== 'tick' && k !== 'gauge').map(([k, t]) => t + (f[k] > 1 ? ' ×' + f[k] : '')).join(', ') || '–';
-  const head = 'Ruckler-Protokoll · v' + VERSION + ' · ' + TRK.name + ' · Grafik ' + S.gfx + ' · Kamera ' + S.cam + ' · ' + canvas.width + '×' + canvas.height + (S.evenPace !== false ? ' · Bildtakt an' : ' · Bildtakt aus');
+  const head = 'Ruckler-Protokoll · v' + VERSION + ' · ' + TRK.name + ' · Grafik ' + S.gfx + ' · Kamera ' + S.cam + ' · ' + canvas.width + '×' + canvas.height + (S.pace60 === true ? ' · Bildtakt an' : ' · Bildtakt aus');
   const sum = tot + ' Bilder · Takt ' + R.base.toFixed(1) + ' ms · ' + nl + ' Ruckler (' + (100 * nl / tot).toFixed(1) + ' %) · längstes ' + R.mx.toFixed(0) + ' ms · ' + Math.round(pl.d - R.d0) + ' m gefahren';
   const rows = RL_KEYS.map(([k, t]) => [t, R.all[k] || 0, R.lat[k] || 0]).filter(r => (r[1] || r[2]) && r[1] < tot * 0.95);   /* was ohnehin vor fast jedem Bild passiert (Tacho), sagt nichts aus */
   const worst = R.late.slice().sort((a, b) => b.d - a.d).slice(0, 8).sort((a, b) => a.s - b.s);
@@ -9763,7 +9768,7 @@ window.__ltest = () => LTEST;
    60 Hz → jedes Bild, 144 Hz → jedes 2. (72), 90 Hz → jedes 2. (45). */
 const FPACE = { last: 0 };
 function frame(now) { requestAnimationFrame(frame);
-  if (S.evenPace !== false && running && !paused) { const d = now - FPACE.last; if (d > 0 && d < 13.5) return; } FPACE.last = now;
+  if (S.pace60 === true && running && !paused) { const d = now - FPACE.last; if (d > 0 && d < 13.5) return; } FPACE.last = now;
   const t0 = performance.now(), lg = RLOG.on; let i0 = null; PERF.drew = false;
   if (lg) { const inf = renderer.info; i0 = [inf.programs.length, inf.memory.geometries, inf.memory.textures]; }
   for (const k in EVT) EVT[k] = 0;
