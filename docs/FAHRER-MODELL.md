@@ -120,7 +120,7 @@ Gemessen mit einem Durchlauf des Lenkeinschlags −1…+1 in Schritten von 0,01 
 Wunsch: Anzug und Handschuhe wirkten einfarbig, sie sollen texturiert sein, und die Texturen dürfen nicht abgeschnitten sein oder flimmern. Alles im Shader `kartFahrerMat`, nur für F1/F2 (`uStyle > 0`), Karts unverändert.
 - **Stoff**: Falten und Schattierung der Vorlage kräftiger (Kontrast × 2,2). Zusätzlich eine gröbere Köper-Struktur (Kachel ~3 cm), die auch auf Entfernung sichtbar bleibt (feines Gewebe verschwand ab ~0,5 m). Nähte deutlich dunkler.
 - **Aufnäher mit Aufdruck**: Brust (zwei je Seite), Gürtel, Oberarm vorn. Der Aufdruck besteht aus Blockbuchstaben aus Zufall (`prt`), keine echten Marken. Er wird weich ausgeblendet, sobald er kleiner als ein Bildpunkt würde (kein Flimmern). Der Oberarm-Aufnäher liegt vorn neben dem Ärmelstreifen statt darüber (vorher war der Streifen dort abgeschnitten).
-- **Handschuhe zweifarbig**: Helle Flächen der Vorlage in Handschuhfarbe, Polster und Griffflächen in Anzugfarbe (bei hellem Anzug: zweite Teamfarbe). Relief aus der Vorlage (Nähte, Polster) plus Ledernarbung.
+- **Handschuhe zweifarbig**: Helle Flächen der Vorlage in Handschuhfarbe, nur die schwarzen Griffflächen in Anzugfarbe (bei hellem Anzug: zweite Teamfarbe) – der Handrücken bleibt in Handschuhfarbe, sonst wirkte er in der Helmkamera wieder dunkel. Relief aus der Vorlage (Nähte, Polster) plus Ledernarbung.
 
 ## Offen / Ideen
 - Lenkrad dreht sich beim Lenken, die Hände nicht (war beim alten Fahrer genauso).

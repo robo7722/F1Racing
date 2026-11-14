@@ -3665,7 +3665,7 @@ function kartFahrerMat(tk, suit, acc, des = null) {   // des (F1/F2-Anzüge): { 
           if (uStyle > 0.5) {   // F1/F2: zweifarbig nach Team – helle Flächen der Vorlage in Handschuhfarbe, Polster/Griffflächen in Anzugfarbe; Relief aus der Vorlage + Ledernarbung
             float gl = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114)), gr = texture2D(uWeave, vMapUv * 70.0).r;
             vec3 gd = dot(uSuit, vec3(0.299, 0.587, 0.114)) > 0.5 ? uSec : uSuit; if (dot(abs(gd - uGlove), vec3(1.0)) < 0.25) gd = uGlove * 0.35;
-            c = mix(gd * 0.9, uGlove, smoothstep(0.2, 0.55, gl)); diffuseColor.rgb = vec3(0.78 + 0.3 * gl) * (0.94 + 0.12 * gr);
+            c = mix(gd * 0.9, uGlove, smoothstep(0.07, 0.2, gl));   /* nur die schwarzen Griffflächen in der zweiten Farbe, Handrücken in Handschuhfarbe */ diffuseColor.rgb = vec3(0.78 + 0.3 * gl) * (0.94 + 0.12 * gr);
             gH = gl * 0.9 + gr * 0.12; } gRough = 0.62; gSheen = 0.35; gBump = uStyle > 0.5 ? 0.8 : 0.0; }
         else if (shoe) { c = uShoe; gRough = 0.38; gSheen = 0.0; gBump = 0.15;
           c = mix(c, uAcc, bnd(p.y, 0.052, 0.062, 0.001)); if (p.y < 0.006) { c = vec3(0.07); gRough = 0.8; } }
