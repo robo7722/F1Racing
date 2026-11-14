@@ -4690,8 +4690,8 @@ function distFade(m, d0, d1) {
   return m;
 }
 // Ferne Bäume als Bildtafeln: beim Laden wird jedes Baummodell (nah mit Laubflächen / fern einfach, je Laub- und Nadelbaum) aus 8 Richtungen gerendert –
-// mit dem Licht der Strecke. Ab 200 m zeigt jeder Baum die Ansicht seines eigenen Modells, die zu seiner Drehung passt, auf einer Tafel, die sich zur Kamera
-// dreht (4 Zeichenaufrufe für den ganzen Hintergrundwald). Zwischen 200 und 260 m teilen sich 3D-Baum und Tafel die Pixel per Punktraster.
+// mit dem Licht der Strecke. Ab 120 m zeigt jeder Baum die Ansicht seines eigenen Modells, die zu seiner Drehung passt, auf einer Tafel, die sich zur Kamera
+// dreht (4 Zeichenaufrufe für den ganzen Hintergrundwald). Zwischen 120 und 170 m teilen sich 3D-Baum und Tafel die Pixel per Punktraster.
 let TREESPR = null; const TREESPR_RT = [], TREE_VIEWS = 8;
 // Bild eines Baums aus 8 Richtungen (je 45°) nebeneinander: die Tafel zeigt später die Ansicht, die zur Drehung des Baums passt – so deckt sie sich
 // beim Überblenden mit dem 3D-Baum. Licht immer von der Seite (wie beim 3D-Baum aus der Ferne), dafür dreht sich der Baum statt der Kamera.
@@ -5342,7 +5342,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     if (spots.length) {
       const tyres = TH.wallKind === 'armco';
       const geo = tyres ? mergeParts([0.13, 0.39, 0.65].map(y => [new THREE.CylinderGeometry(0.33, 0.33, 0.25, 10).translate(0, y, 0), col(0x141414)])) : mergeParts([[new THREE.CylinderGeometry(0.34, 0.34, 0.95, 16).translate(0, 0.475, 0), col(0xffffff)], [new THREE.CylinderGeometry(0.345, 0.345, 0.12, 16).translate(0, 0.85, 0), col(0x222222)]]);
-      geo.userData.lod = [[tyres ? mergeParts([[new THREE.CylinderGeometry(0.33, 0.33, 0.78, 6).translate(0, 0.39, 0), col(0x141414)]]) : mergeParts([[new THREE.CylinderGeometry(0.34, 0.34, 0.95, 6).translate(0, 0.475, 0), col(0xffffff)]]), 130]];
+      geo.userData.lod = [[tyres ? mergeParts([[new THREE.CylinderGeometry(0.33, 0.33, 0.78, 6).translate(0, 0.39, 0), col(0x141414)]]) : mergeParts([[new THREE.CylinderGeometry(0.34, 0.34, 0.95, 6).translate(0, 0.475, 0), col(0xffffff)]]), 70]];   /* Reifenstapel/Poller: einfache Stufe schon ab 70 m (dort ~6 Pixel hoch) statt 130 m */
       const belt = tyres ? new THREE.PlaneGeometry(0.66, 0.78).translate(0, 0.39, 0.34) : null;
       const im = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true }), spots.length);
       const ib = belt ? new THREE.InstancedMesh(belt, new THREE.MeshLambertMaterial({ side: THREE.DoubleSide }), spots.length) : null;
@@ -7081,14 +7081,14 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       for (const g of [cardB, cardC]) if (g) g.userData.lod = [[null, 130]];   /* Flächen verschwinden genau dann, wenn der Kern auf die einfache Stufe wechselt */
       ball.userData.lod = [[ballLo, 130], [ballFar, 300]]; cone.userData.lod = [[coneLo, 130], [coneFar, 260]]; ballLo.userData.lod = [[ballFar, 300]]; coneLo.userData.lod = [[coneFar, 130]]; trunk.userData.lod = [[trunkFar, 90], [null, 450]];   /* Stufen wechseln früher: ab 130 m ist der Unterschied nicht mehr zu sehen */
       if (TRK.nos) { for (const g of [ball, cone]) g.userData.lod.push([null, 1000]); for (const g of [ballLo, coneLo]) g.userData.lod.push([null, 1000]); trunk.userData.lod = [[trunkFar, 120], [null, 450]]; }   // Nordschleife: Waldkante übernimmt die Ferne
-      const SD0 = 200, SD1 = 260;   // ab hier Bildtafeln statt 3D-Bäumen (Überblendung SD0..SD1 per Punktraster, siehe treeSprites)
+      const SD0 = window.__treeD ? window.__treeD[0] : 120, SD1 = window.__treeD ? window.__treeD[1] : 170;   /* vorher 200/260 m: ab 120 m ist ein Baum nur noch ~50 Pixel hoch, die Tafel (288 Pixel breit, 8 Ansichten) ist dort nicht vom 3D-Baum zu unterscheiden – spart rund die Hälfte der Baum-Dreiecke */   // ab hier Bildtafeln statt 3D-Bäumen (Überblendung SD0..SD1 per Punktraster, siehe treeSprites)
       const SPR = !window.__noTreeSpr;   // Testschalter: alte Darstellung (3D bis zum Horizont)
       // Mit Bildtafeln: jeder Baum behält seine Form (nahe mit Laubflächen, ferne als einfache Krone) bis zur Tafel – nur EIN Übergang, kein Zwischenschritt
       // (vorher: Laubflächen lösten sich bei 92–128 m auf – Himmel schien als helle Punkte durch – und danach wechselte die Krone zweimal die Form)
-      if (SPR) { for (const g of [cardB, cardC, ball, cone, ballLo, coneLo]) if (g) g.userData.lod = [[null, SD1]]; trunk.userData.lod = [[trunkFar, 150], [null, SD1]]; }
+      if (SPR) { for (const g of [cardB, cardC, ball, cone, ballLo, coneLo]) if (g) g.userData.lod = [[null, SD1]]; trunk.userData.lod = [[trunkFar, 90], [null, SD1]]; }
       const ic = new THREE.InstancedMesh(cone, needleMat, place.length), ib = new THREE.InstancedMesh(ball, leafMat, place.length), it = new THREE.InstancedMesh(trunk, lam({ map: TEX.bark, normalMap: TEX.barkN, normalScale: new THREE.Vector2(1.3, 1.3), color: 0xffffff, roughness: .95 }), place.length);
       const icL = new THREE.InstancedMesh(coneLo, needleMat, place.length), ibL = new THREE.InstancedMesh(ballLo, leafMat, place.length);
-      if (SPR) for (const mt of new Set([needleMat, leafMat, it.material])) distFade(mt, SD0, SD1);   /* 3D-Bäume lösen sich zwischen 200 und 260 m auf, die Bildtafeln füllen genau diese Punkte */
+      if (SPR) for (const mt of new Set([needleMat, leafMat, it.material])) distFade(mt, SD0, SD1);   /* 3D-Bäume lösen sich zwischen SD0 und SD1 auf, die Bildtafeln füllen genau diese Punkte */
       const cardM = (t) => distFade(lam({ map: t, alphaTest: 0.42, alphaToCoverage: true, side: THREE.DoubleSide, roughness: .85, color: 0xffffff }), SPR ? SD0 : 92, SPR ? SD1 : 128);   /* Kantenglättung der Laubränder (wie beim Rasen): kein Himmel-Glitzern in einzelnen Pixeln */   /* Laubflächen: mit Tafeln erst beim Übergang zur Tafel */
       const icS = cardC ? new THREE.InstancedMesh(cardC, cardM(FOL.cardC), place.length) : null, ibS = cardB ? new THREE.InstancedMesh(cardB, cardM(FOL.card), place.length) : null;
       const SPL = { nc: [], nl: [], fc: [], fl: [] }, bark = it.material;   // Tafeln je Modell: nah (mit Laubflächen) / fern (einfache Krone), je Nadel-/Laubbaum
@@ -9395,7 +9395,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.75'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.76'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -9447,7 +9447,7 @@ function sphereTick(dt) { // Bildschirm der LED-Kugel: meist das Emoji mit wechs
 }
 
 /* FPS- und Frame-Pacing-Anzeige (Extras): Abstand zwischen tatsächlich gezeichneten Bildern */
-const PERF = { on: null, prev: 0, buf: new Float32Array(120), i: 0, n: 0, tUpd: 0, el: null, txt: null, g: null, cx: null, drew: false, cS: 0, cM: 0, cN: 0 };
+const PERF = { on: null, prev: 0, buf: new Float32Array(120), i: 0, n: 0, tUpd: 0, el: null, txt: null, g: null, cx: null, drew: false, cS: 0, cM: 0, cN: 0, rS: 0, rT: 0 };
 function perfTick(now) {
   if (PERF.on !== !!S.perfHud) { PERF.on = !!S.perfHud; PERF.el = PERF.el || $('#perf'); PERF.el.classList.toggle('hidden', !PERF.on); PERF.prev = 0; PERF.n = 0; }
   if (!PERF.on) return;
@@ -9466,9 +9466,9 @@ function perfTick(now) {
   for (let k = 1; k <= cnt; k++) { const e = PERF.buf[(PERF.i - k + L) % L] - avg; vr += e * e; }
   const fps = Math.round(1000 / avg), sd = Math.sqrt(vr / cnt);
   const lo = Array.from(PERF.buf.subarray(0, PERF.n)).sort((x, y) => x - y)[Math.floor(PERF.n * 0.1)], hz = Math.round(1000 / lo / 10) * 10;   // Display-Takt ≈ kürzeste Bildabstände
-  PERF.txt.innerHTML = `<b style="color:${fps >= 55 ? '#22c55e' : fps >= 30 ? '#eab308' : '#ef4444'}">${fps}</b> FPS <i>·</i> ~${hz} Hz <i>·</i> ${avg.toFixed(1)} ms <i>·</i> ±${sd.toFixed(1)} <i>·</i> max ${mx.toFixed(1)}<br>CPU Ø ${(PERF.cS / Math.max(1, PERF.cN)).toFixed(1)} <i>/</i> max ${PERF.cM.toFixed(1)} ms`; PERF.cS = PERF.cM = PERF.cN = 0;   /* CPU = Rechenzeit des Spiels pro Bild (ohne die Grafikkarte) */
+  PERF.txt.innerHTML = `<b style="color:${fps >= 55 ? '#22c55e' : fps >= 30 ? '#eab308' : '#ef4444'}">${fps}</b> FPS <i>·</i> ~${hz} Hz <i>·</i> ${avg.toFixed(1)} ms <i>·</i> ±${sd.toFixed(1)} <i>·</i> max ${mx.toFixed(1)}<br>CPU Ø ${(PERF.cS / Math.max(1, PERF.cN)).toFixed(1)} <i>/</i> max ${PERF.cM.toFixed(1)} ms <i>·</i> Zeichnen ${(PERF.rS / Math.max(1, PERF.cN)).toFixed(1)}`; PERF.cS = PERF.cM = PERF.cN = PERF.rS = 0;   /* CPU = Rechenzeit des Spiels pro Bild (ohne die Grafikkarte) */
 }
-function frame(now) { requestAnimationFrame(frame); const t0 = performance.now(); PERF.drew = false; tick(now); if (PERF.drew) { const c = performance.now() - t0; PERF.cS += c; PERF.cN++; if (c > PERF.cM) PERF.cM = c; } }
+function frame(now) { requestAnimationFrame(frame); const t0 = performance.now(); PERF.drew = false; tick(now); if (PERF.drew) { const c = performance.now() - t0; PERF.cS += c; PERF.rS += PERF.rT; PERF.cN++; if (c > PERF.cM) PERF.cM = c; } }
 let REBUILD = false;
 function tick(now, forced) {
   if (REBUILD) { last = now; return; }   /* Grafik wird gerade umgestellt */   // forced: Testhilfen zeichnen direkt, ohne eine zweite Bildschleife zu starten
@@ -9499,7 +9499,9 @@ function tick(now, forced) {
   if (HORIZ) { HORIZ.position.x = camera.position.x; HORIZ.position.z = camera.position.z; }
   // Pause: das Bild steht still, also nur zwei Bilder zeichnen und dann die Grafikkarte schonen
   if (running && paused) { if (pauseDrawn >= 2) return; pauseDrawn++; } else pauseDrawn = 0;
+  const tR0 = performance.now(); PERF.rT = 0;
   if (!window.__norender && !(!running && settingsFrom === 'menu' && !$('#settings').classList.contains('hidden')) && !(!running && !SHOW.on && !$('#menu').classList.contains('hidden'))) {   /* Einstellungen aus dem Menü: nichts neu zeichnen – sonst lief dahinter die Strecke des letzten Rennens weiter */   /* Hauptmenü: fester Hintergrund statt Kamerafahrt – dort wird die Strecke nicht gerendert (spart Akku) */ if (SHOW.on && !running && !$('#menu').classList.contains('hidden')) { showroomFrame(dt); const bo = BAKE.u.bakeOn.value, et = ENVP.tex; BAKE.u.bakeOn.value = 0; if (SHOW.env) ENVP.tex = SHOW.env; renderer.render(SHOW.scene, SHOW.cam); ENVP.tex = et; BAKE.u.bakeOn.value = bo;   /* im Showroom spiegelt sich das Studio, nicht die Strecke */ } else if (composer) { syncAoCam(); composer.render(dt); } else renderPlain(); }
+  PERF.rT = performance.now() - tR0;   /* Anteil „Zeichnen“ an der Rechenzeit: Befehle an die Grafikkarte abschicken (inkl. Warten, falls sie nicht nachkommt) */
   if (window.__qcF) window.__qcF(now, forced);   /* QC-Bot: Bildzeiten messen und direkt nach dem Zeichnen Bilder auswerten */
 }
 applyGfx();
