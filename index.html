@@ -226,7 +226,9 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 #unit b{font-size:15px;color:var(--acc)}
 #msg{position:absolute;left:50%;top:26%;transform:translateX(-50%);font-size:30px;font-weight:900;font-style:italic;text-align:center;white-space:nowrap;text-shadow:0 3px 12px rgba(0,0,0,.8);opacity:0;transition:opacity .2s}
 #msg.show{opacity:1}
-#perf{position:absolute;top:max(4px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:6;padding:3px 8px 4px;background:rgba(8,8,12,.72);border-top:2px solid var(--f1r,#e10600);text-align:center;pointer-events:none}
+#perf{position:absolute;top:max(4px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:6;padding:3px 8px 4px;background:rgba(8,8,12,.72);border-top:2px solid var(--f1r,#e10600);text-align:center;pointer-events:auto}
+body.ptNoHud #hud,body.ptNoHud #controls{display:none!important}
+#ptRes{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;background:rgba(8,8,12,.94);color:#fff;padding:10px 14px;font:700 12px/1.55 system-ui,sans-serif;border-top:2px solid #e10600;max-width:96vw;white-space:nowrap}#ptRes table{border-collapse:collapse;margin:4px 0}#ptRes td,#ptRes th{padding:0 9px;text-align:right;font-variant-numeric:tabular-nums}#ptRes td:first-child,#ptRes th:first-child{text-align:left;padding-left:0}#ptRes th{color:rgba(255,255,255,.6);font-weight:700}#ptRes small{color:rgba(255,255,255,.6);font-weight:600}
 #perfTxt{font-size:11px;font-weight:700;line-height:14px;white-space:nowrap;font-variant-numeric:tabular-nums;color:#fff}#perfTxt b{font-weight:900}#perfTxt i{color:rgba(255,255,255,.55)}
 #perfG{display:block;width:120px;height:22px;margin:2px auto 0}
 #lights{position:absolute;left:50%;top:14%;transform:translateX(-50%);display:flex;gap:10px;padding:10px 14px;border-radius:12px;background:rgba(10,10,10,.75)}
@@ -1345,6 +1347,8 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
   <div class="ppane" id="sExtra"><section class="panel" id="setExtra">
     <div class="tog"><span>Team RONE Racing freischalten</span><button class="sw" data-tog="rone" aria-label="Team RONE Racing freischalten"></button></div>
     <p class="hint left">Schaltet das Team RONE Racing mit Robert Nemec in der Teamauswahl frei. Es fährt nur, wenn du es selbst wählst.</p>
+    <div class="tog"><span>Gleichmäßiger Bildtakt (60 FPS)</span><button class="sw" data-tog="evenPace" aria-label="Gleichmäßiger Bildtakt"></button></div>
+    <p class="hint left">An: Auf schnellen Displays (120 Hz) wird genau jedes zweite Display-Bild gezeichnet – jedes Bild steht gleich lang (16,7 ms), statt zwischen 8 und 17 ms zu wechseln. Aus: so viele Bilder wie möglich, dafür ungleichmäßig, wenn das Handy die volle Bildrate nicht hält.</p>
     <div class="tog"><span>FPS- und Frame-Pacing-Anzeige</span><button class="sw" data-tog="perfHud" aria-label="FPS- und Frame-Pacing-Anzeige"></button></div>
     <p class="hint left">Zeigt im Rennen oben in der Mitte die Bildrate, die mittlere Bildzeit, die Schwankung (±) und das langsamste Bild der letzten Sekunde, darunter wie lange das Spiel pro Bild rechnet (CPU, ohne Grafikkarte). Der Graph darunter zeigt jede Bildzeit: grün = flüssig, gelb = ein Bild verpasst, rot = Ruckler. Die Linie markiert 60 FPS.</p>
     <div class="tog"><span>Nordschleife freischalten</span><button class="sw" data-tog="nos" aria-label="Nordschleife freischalten"></button></div>
@@ -1411,7 +1415,7 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platfor
 const standalone = matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 
 /* ======================= Einstellungen ======================= */
-const S = { rmode: 'f1', level: true, songHist: [], rone: false, nos: false, perfHud: false, mode: 'race', ttBest: {}, song: 0, track: 'monza', driver: 'RUS', laps: 5, grid: 10, ctrl: 'touch', diff: 'mid', autogas: false, assist: false, sound: true, music: true, invert: false, cam: 0, gfx: 'high', line: 'off', champLaps: 3, volMusic: 0.7, volCar: 0.85 };
+const S = { evenPace: true, rmode: 'f1', level: true, songHist: [], rone: false, nos: false, perfHud: false, mode: 'race', ttBest: {}, song: 0, track: 'monza', driver: 'RUS', laps: 5, grid: 10, ctrl: 'touch', diff: 'mid', autogas: false, assist: false, sound: true, music: true, invert: false, cam: 0, gfx: 'high', line: 'off', champLaps: 3, volMusic: 0.7, volCar: 0.85 };
 try { Object.assign(S, JSON.parse(localStorage.getItem('f1rennen') || '{}')); } catch (e) {}
 if (!S.v40) { S.rmode = 'f1'; S.v40 = true; }   // Roadster: Standard ist die F1-Variante
 if (!S.v17) { S.ctrl = 'touch'; S.autogas = false; S.assist = false; S.v17 = true; try { localStorage.setItem('f1rennen', JSON.stringify(S)); } catch (e) {} }
@@ -9395,7 +9399,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.76'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.78'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -9451,6 +9455,7 @@ const PERF = { on: null, prev: 0, buf: new Float32Array(120), i: 0, n: 0, tUpd: 
 function perfTick(now) {
   if (PERF.on !== !!S.perfHud) { PERF.on = !!S.perfHud; PERF.el = PERF.el || $('#perf'); PERF.el.classList.toggle('hidden', !PERF.on); PERF.prev = 0; PERF.n = 0; }
   if (!PERF.on) return;
+  if (PTEST.on) return;   // Selbsttest läuft: Anzeige ruht (sie soll das Ergebnis nicht verfälschen)
   if (!PERF.prev || now - PERF.prev > 1000) { PERF.prev = now; PERF.tUpd = now; return; }   // nach Pausen/Tabwechsel neu anfangen
   const d = now - PERF.prev; PERF.prev = now; PERF.drew = true;
   PERF.buf[PERF.i] = d; PERF.i = (PERF.i + 1) % PERF.buf.length; PERF.n = Math.min(PERF.n + 1, PERF.buf.length);
@@ -9466,9 +9471,51 @@ function perfTick(now) {
   for (let k = 1; k <= cnt; k++) { const e = PERF.buf[(PERF.i - k + L) % L] - avg; vr += e * e; }
   const fps = Math.round(1000 / avg), sd = Math.sqrt(vr / cnt);
   const lo = Array.from(PERF.buf.subarray(0, PERF.n)).sort((x, y) => x - y)[Math.floor(PERF.n * 0.1)], hz = Math.round(1000 / lo / 10) * 10;   // Display-Takt ≈ kürzeste Bildabstände
-  PERF.txt.innerHTML = `<b style="color:${fps >= 55 ? '#22c55e' : fps >= 30 ? '#eab308' : '#ef4444'}">${fps}</b> FPS <i>·</i> ~${hz} Hz <i>·</i> ${avg.toFixed(1)} ms <i>·</i> ±${sd.toFixed(1)} <i>·</i> max ${mx.toFixed(1)}<br>CPU Ø ${(PERF.cS / Math.max(1, PERF.cN)).toFixed(1)} <i>/</i> max ${PERF.cM.toFixed(1)} ms <i>·</i> Zeichnen ${(PERF.rS / Math.max(1, PERF.cN)).toFixed(1)}`; PERF.cS = PERF.cM = PERF.cN = PERF.rS = 0;   /* CPU = Rechenzeit des Spiels pro Bild (ohne die Grafikkarte) */
+  PERF.txt.innerHTML = `<b style="color:${fps >= 55 ? '#22c55e' : fps >= 30 ? '#eab308' : '#ef4444'}">${fps}</b> FPS <i>·</i> ~${hz} Hz <i>·</i> ${avg.toFixed(1)} ms <i>·</i> ±${sd.toFixed(1)} <i>·</i> max ${mx.toFixed(1)}<br>CPU Ø ${(PERF.cS / Math.max(1, PERF.cN)).toFixed(1)} <i>/</i> max ${PERF.cM.toFixed(1)} ms <i>·</i> Zeichnen ${(PERF.rS / Math.max(1, PERF.cN)).toFixed(1)}<br><i>antippen = Selbsttest</i>`; PERF.cS = PERF.cM = PERF.cN = PERF.rS = 0;   /* CPU = Rechenzeit des Spiels pro Bild (ohne die Grafikkarte) */
 }
-function frame(now) { requestAnimationFrame(frame); const t0 = performance.now(); PERF.drew = false; tick(now); if (PERF.drew) { const c = performance.now() - t0; PERF.cS += c; PERF.rS += PERF.rT; PERF.cN++; if (c > PERF.cM) PERF.cM = c; } }
+/* Selbsttest (Leistungsanzeige im Rennen antippen): fährt ~19 s selbst und misst die Bildrate nacheinander mit je einem abgeschalteten Teil.
+   Was die Bildrate deutlich hebt, ist der Engpass auf DIESEM Gerät – das lässt sich am Laptop nicht nachstellen. Ergebnis als Tabelle zum Abfotografieren. */
+const PTEST = { on: false, i: -1, t0: 0, t1: 0, n: 0, cpu: 0, rnd: 0, res: [], bot: null };
+const PT_STEPS = [
+  ['Normal', () => {}, () => {}],
+  ['ohne Anzeigen und Tasten', () => document.body.classList.add('ptNoHud'), () => document.body.classList.remove('ptNoHud')],
+  ['ohne Gegner', () => { window.__carHide = 0.01; }, () => { window.__carHide = 0; }],
+  ['ohne Strecke', () => { trackGroup.visible = false; }, () => { trackGroup.visible = true; }],
+  ['ohne Nachbearbeitung', () => { window.__ptPlain = true; }, () => { window.__ptPlain = false; }],
+  ['halbe Auflösung', () => { DYN.scale = 0.5; resize(); }, () => { DYN.scale = 1; resize(); }],
+  ['ohne 3D-Bild', () => { window.__norender = true; }, () => { window.__norender = false; }],
+];
+function perfTest() { if (PTEST.on || !running || paused || raceState !== 'race') return; PTEST.on = true; PTEST.i = -1; PTEST.res = []; PTEST.bot = [window.__plAI, profBot]; window.__plAI = true; profBot = buildProfile(45.5, VTOP, 44, KR); const r = $('#ptRes'); if (r) r.remove(); ptNext(performance.now()); }
+function ptNext(now, abort) {
+  if (PTEST.i >= 0) { const s = PT_STEPS[PTEST.i], n = Math.max(1, PTEST.n); if (!abort && PTEST.t1) PTEST.res.push([s[0], PTEST.n * 1000 / Math.max(1, now - PTEST.t1), PTEST.cpu / n, PTEST.rnd / n]); s[2](); }
+  PTEST.i++;
+  if (abort || PTEST.i >= PT_STEPS.length) { PTEST.on = false; window.__plAI = PTEST.bot[0]; profBot = PTEST.bot[1]; ptShow(); return; }
+  PT_STEPS[PTEST.i][1](); PTEST.t0 = now; PTEST.t1 = 0; PTEST.n = 0; PTEST.cpu = PTEST.rnd = 0;
+  if (PERF.txt) PERF.txt.innerHTML = 'Selbsttest ' + (PTEST.i + 1) + '/' + PT_STEPS.length + ' <i>·</i> ' + PT_STEPS[PTEST.i][0] + '<br>das Auto fährt solange selbst';
+}
+function ptFrame(now, c) {
+  if (!running || paused) { ptNext(now, true); return; }
+  const el = now - PTEST.t0; if (el < 700) return;   // Einschwingen (Umschalten kann ein paar Bilder kosten)
+  if (!PTEST.t1) { PTEST.t1 = now; return; }
+  PTEST.n++; PTEST.cpu += c; PTEST.rnd += PERF.rT;
+  if (el >= 2700) ptNext(now);
+}
+function ptShow() {
+  if (!PTEST.res.length) return; let gpu = ''; try { const gl = renderer.getContext(), e = gl.getExtension('WEBGL_debug_renderer_info'); gpu = e ? String(gl.getParameter(e.UNMASKED_RENDERER_WEBGL)).slice(0, 60) : ''; } catch (e) {}
+  const d = document.createElement('div'); d.id = 'ptRes';
+  d.innerHTML = '<b>Selbsttest · v' + VERSION + ' · Grafik ' + S.gfx + ' · Kamera ' + S.cam + ' · ' + canvas.width + '×' + canvas.height + '</b><br><small>' + gpu + '</small><table><tr><th>Messung</th><th>FPS</th><th>CPU ms</th><th>Zeichnen ms</th></tr>' +
+    PTEST.res.map(r => '<tr><td>' + r[0] + '</td><td>' + r[1].toFixed(0) + '</td><td>' + r[2].toFixed(1) + '</td><td>' + r[3].toFixed(1) + '</td></tr>').join('') + '</table><small>Bitte abfotografieren · Antippen schließt</small>';
+  d.addEventListener('click', () => d.remove()); document.body.appendChild(d);
+}
+{ const el = document.getElementById('perf'); if (el) el.addEventListener('click', perfTest); }
+/* Gleichmäßiger Bildtakt: requestAnimationFrame kommt im Takt des Displays. Schafft das Handy dessen volle Rate nicht (gemessen: ~67 FPS auf 120 Hz,
+   d. h. Bilder stehen abwechselnd 8,3 und 16,7 ms = sichtbares Ruckeln), wird nur gezeichnet, wenn seit dem letzten gezeichneten Bild mindestens
+   ~1/60 s vergangen ist. Bewusst OHNE Messung der Display-Rate (die frühere Begrenzung v1.66–1.72 erkannte sie falsch): 120 Hz → jedes 2. Bild (60 FPS),
+   60 Hz → jedes Bild, 144 Hz → jedes 2. (72), 90 Hz → jedes 2. (45). Während des Selbsttests aus. */
+const FPACE = { last: 0 };
+function frame(now) { requestAnimationFrame(frame);
+  if (S.evenPace !== false && running && !paused && !PTEST.on) { const d = now - FPACE.last; if (d > 0 && d < 13.5) return; } FPACE.last = now;
+  const t0 = performance.now(); PERF.drew = false; tick(now); const c = performance.now() - t0; if (PERF.drew) { PERF.cS += c; PERF.rS += PERF.rT; PERF.cN++; if (c > PERF.cM) PERF.cM = c; } if (PTEST.on) ptFrame(now, c); }
 let REBUILD = false;
 function tick(now, forced) {
   if (REBUILD) { last = now; return; }   /* Grafik wird gerade umgestellt */   // forced: Testhilfen zeichnen direkt, ohne eine zweite Bildschleife zu starten
@@ -9500,7 +9547,7 @@ function tick(now, forced) {
   // Pause: das Bild steht still, also nur zwei Bilder zeichnen und dann die Grafikkarte schonen
   if (running && paused) { if (pauseDrawn >= 2) return; pauseDrawn++; } else pauseDrawn = 0;
   const tR0 = performance.now(); PERF.rT = 0;
-  if (!window.__norender && !(!running && settingsFrom === 'menu' && !$('#settings').classList.contains('hidden')) && !(!running && !SHOW.on && !$('#menu').classList.contains('hidden'))) {   /* Einstellungen aus dem Menü: nichts neu zeichnen – sonst lief dahinter die Strecke des letzten Rennens weiter */   /* Hauptmenü: fester Hintergrund statt Kamerafahrt – dort wird die Strecke nicht gerendert (spart Akku) */ if (SHOW.on && !running && !$('#menu').classList.contains('hidden')) { showroomFrame(dt); const bo = BAKE.u.bakeOn.value, et = ENVP.tex; BAKE.u.bakeOn.value = 0; if (SHOW.env) ENVP.tex = SHOW.env; renderer.render(SHOW.scene, SHOW.cam); ENVP.tex = et; BAKE.u.bakeOn.value = bo;   /* im Showroom spiegelt sich das Studio, nicht die Strecke */ } else if (composer) { syncAoCam(); composer.render(dt); } else renderPlain(); }
+  if (!window.__norender && !(!running && settingsFrom === 'menu' && !$('#settings').classList.contains('hidden')) && !(!running && !SHOW.on && !$('#menu').classList.contains('hidden'))) {   /* Einstellungen aus dem Menü: nichts neu zeichnen – sonst lief dahinter die Strecke des letzten Rennens weiter */   /* Hauptmenü: fester Hintergrund statt Kamerafahrt – dort wird die Strecke nicht gerendert (spart Akku) */ if (SHOW.on && !running && !$('#menu').classList.contains('hidden')) { showroomFrame(dt); const bo = BAKE.u.bakeOn.value, et = ENVP.tex; BAKE.u.bakeOn.value = 0; if (SHOW.env) ENVP.tex = SHOW.env; renderer.render(SHOW.scene, SHOW.cam); ENVP.tex = et; BAKE.u.bakeOn.value = bo;   /* im Showroom spiegelt sich das Studio, nicht die Strecke */ } else if (composer && !window.__ptPlain) { syncAoCam(); composer.render(dt); } else renderPlain(); }
   PERF.rT = performance.now() - tR0;   /* Anteil „Zeichnen“ an der Rechenzeit: Befehle an die Grafikkarte abschicken (inkl. Warten, falls sie nicht nachkommt) */
   if (window.__qcF) window.__qcF(now, forced);   /* QC-Bot: Bildzeiten messen und direkt nach dem Zeichnen Bilder auswerten */
 }
