@@ -1611,7 +1611,7 @@ const THEMES = {
   spa: { asph: 'spa', phys: { turb: 2.4, ray: 1.05, mie: .0035, g: .8, gain: .55 }, sky: [0x2468c8, 0x84bcec, 0xe2eef8], fog: 0xc6d6e6, fogNear: 550, fogFar: 5200, sunDir: [-0.45, 0.6, 0.55], sunCol: 0xfff4e2, sunI: 3.4, clouds: [0.6, 0.53, 0.8, 0], cloudCol: 0xffffff,   /* Spa bei schönem Wetter: klarer Himmel, Schönwetterwolken, weite Sicht */
     hemi: [0xd2e2f4, 0x4c5c30, 0.46], flood: 0, exposure: 0.97, ground: 'grass', wall: 12, runoff: 20, wallH: 1.0, wallKind: 'armco', runoffKind: 'gravel',
     ads: ['SPA-FRANCORCHAMPS', 'EAU ROUGE', 'RAIDILLON', 'LA SOURCE', 'BLANCHIMONT', 'ARDENNES', 'STAVELOT'], adCols: ['#f2c200', '#111111', '#c8102e', '#ffffff', '#0b3a8a', '#0b6e3a'],
-    trees: 'forest', conifer: .6, treeMul: 1.1, hills: { h: 90, v: 70, col: [0x2c4a26, 0x3a5a2e] }, kerb: [0xd8231b, 0xf5c518], belt: ['#c8102e', '#f5c518'], flare: .7, paint: [[840, 1135]],
+    trees: 'forest', conifer: .6, treeMul: .88, hills: { h: 90, v: 70, col: [0x2c4a26, 0x3a5a2e] }, kerb: [0xd8231b, 0xf5c518], belt: ['#c8102e', '#f5c518'], flare: .7, paint: [[840, 1135]],
     look: { sh: [0.92, 1.0, 1.06], hi: [1.05, 1.03, 0.95], sat: 1.08, con: 1.08, vig: .3, tint: [1.0, 1.02, .98], lift: [.003, .006, .006], bloom: .34, thr: .95, rad: .4, warm: .22, fade: [.004, .006, .004], grain: .011 } },
   rbr: { asph: 'rbr', phys: { turb: 2.4, ray: 0.9, mie: .004, g: .8, gain: .55 }, sky: [0x2a68c0, 0x86b8e8, 0xdbe9f3], fog: 0xc6d6e6, fogNear: 500, fogFar: 7500, camFar: 9500, sunDir: [0.4, 0.5, -0.5], sunCol: 0xfff3e0, sunI: 3.3, clouds: [0.7, 0.5, 0.8, 0], cloudCol: 0xf4f6fa,
     hemi: [0xcfe0f5, 0x4a5a30, 0.38], flood: 0, exposure: 0.95, ground: 'grass', wall: 12, runoff: 24, wallH: 1.0, wallKind: 'armco', runoffKind: 'paved',
@@ -2464,7 +2464,12 @@ const ACG = {};
   const img = src => new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
   const cut = (c, o) => { const cv = document.createElement('canvas'); cv.width = c.width; cv.height = c.height; const g = cv.getContext('2d'); g.drawImage(c, 0, 0);
     const oc = document.createElement('canvas'); oc.width = c.width; oc.height = c.height; const og = oc.getContext('2d'); og.drawImage(o, 0, 0, c.width, c.height);
-    const d = g.getImageData(0, 0, cv.width, cv.height), a = og.getImageData(0, 0, cv.width, cv.height).data; for (let i = 0; i < a.length; i += 4) d.data[i + 3] = a[i]; g.putImageData(d, 0, 0); return cv; };
+    const d = g.getImageData(0, 0, cv.width, cv.height), a = og.getImageData(0, 0, cv.width, cv.height).data, D = d.data; for (let i = 0; i < a.length; i += 4) D[i + 3] = a[i];
+    // Blattränder: im Foto deutlich heller als das Blatt (Laub 66/99/18, Rand 149/160/93) – mit Sonne, Leuchten und Nachschärfen wurden daraus weiße Punkte
+    // in den Baumkronen (v. a. auf dem Handy). Ränder auf höchstens 15 % über der mittleren Blatthelligkeit abdunkeln.
+    let sl = 0, sn = 0; for (let i = 0; i < D.length; i += 4) if (D[i + 3] > 200) { sl += D[i] * 0.3 + D[i + 1] * 0.59 + D[i + 2] * 0.11; sn++; }
+    const lMax = (sl / Math.max(1, sn)) * 1.15; for (let i = 0; i < D.length; i += 4) { if (D[i + 3] > 230) continue; const l = D[i] * 0.3 + D[i + 1] * 0.59 + D[i + 2] * 0.11; if (l > lMax) { const f = lMax / l; D[i] *= f; D[i + 1] *= f; D[i + 2] *= f; } }
+    g.putImageData(d, 0, 0); return cv; };
   await Promise.all([
     Promise.all(['Color', 'NormalGL'].map(m => new THREE.TextureLoader().loadAsync(`textures/acg_Grass004_${m}.jpg`).catch(() => null))).then(([d, n]) => { if (!d || !n) return;
       for (const t of [d, n]) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = maxAniso; } d.colorSpace = THREE.SRGBColorSpace; n.colorSpace = THREE.NoColorSpace; ACG.grass = { d, n }; }),
@@ -4619,7 +4624,7 @@ function distFade(m, d0, d1) {
   m.onBeforeCompile = function (sh, r) { if (prev) prev.call(this, sh, r);
     sh.fragmentShader = sh.fragmentShader.replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
       { float fdv = 1.0 - smoothstep( ${d0.toFixed(1)}, ${d1.toFixed(1)}, length( vViewPosition ) ); float fdn = fract( 52.9829189 * fract( dot( gl_FragCoord.xy, vec2( 0.06711056, 0.00583715 ) ) ) );
-        if ( fdv < fdn + 0.001 ) discard; }`); };
+        if ( fdv <= fdn ) discard; }`); };   /* fdn liegt in [0,1): voll sichtbar (1) verwirft nie etwas – vorher (fdv < fdn + 0.001) fehlte jedes ~1000. Pixel fest am Bildschirm: weiße Punkte in den Bäumen */
   m.customProgramCacheKey = function () { return (pk ? pk.call(this) : '') + '|fade' + d0 + '_' + d1; };
   return m;
 }
@@ -4669,7 +4674,7 @@ function treeSprites() {
       sh.fragmentShader = 'varying float vTD; varying float vTK;\n' + sh.fragmentShader.replace('#include <map_fragment>', `
         vec4 sampledDiffuseColor = texture2D( map, vec2( ( floor( vTK + 0.5 ) + clamp( vMapUv.x, 0.004, 0.996 ) ) / ${n.toFixed(1)}, vMapUv.y ) ); diffuseColor *= sampledDiffuseColor;`)
         .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
-        { float tsn = fract( 52.9829189 * fract( dot( gl_FragCoord.xy, vec2( 0.06711056, 0.00583715 ) ) ) ); if ( tsn <= 1.0 - smoothstep( ${T.D0.toFixed(1)}, ${T.D1.toFixed(1)}, vTD ) + 0.001 ) discard; }`);   // genau die Punkte, die der 3D-Baum dort verwirft
+        { float tsn = fract( 52.9829189 * fract( dot( gl_FragCoord.xy, vec2( 0.06711056, 0.00583715 ) ) ) ); if ( tsn < 1.0 - smoothstep( ${T.D0.toFixed(1)}, ${T.D1.toFixed(1)}, vTD ) ) discard; }`);   // genau die Punkte, die der 3D-Baum dort verwirft
     };
     mat.customProgramCacheKey = () => 'treeSpr' + n + '_' + T.D0 + '_' + T.D1 + (TRK.nos ? 'n' : '');
     const im = new THREE.InstancedMesh(new THREE.PlaneGeometry(W, H).translate(0, H / 2, 0), mat, list.length);
@@ -4846,7 +4851,9 @@ function texRep(t, rx, ry) { const c = t.clone(); c.needsUpdate = true; c.repeat
 function zoneSeed(Y, FX, SEG, near, x0, z0, bw, bh) { const G1 = SEG + 1, px = PX, pz = PZ, hw = HW, el = ELEV;
   for (let iz = 0; iz < G1; iz++) for (let ix = 0; ix < G1; ix++) { const x = x0 + ix * bw / SEG, z = z0 + iz * bh / SEG, k = iz * G1 + ix; let bd = 1e18, bj = near[0], under = 1e9;
     for (const i of near) { const d = (x - px[i]) ** 2 + (z - pz[i]) ** 2; if (d < bd) { bd = d; bj = i; } if (d < (hw[i] + 1.5) ** 2) under = Math.min(under, el[i]); }
-    if (FLAT) { Y[k] = -0.07; FX[k] = 1; } else if (under < 1e8) { Y[k] = under - 0.07; FX[k] = 1; } else Y[k] = el[bj] - 0.07; } }
+    if (FLAT) { Y[k] = -0.07; FX[k] = 1; } else if (under < 1e8) { Y[k] = under - 0.07; FX[k] = 1; } else { Y[k] = el[bj] - 0.07;
+      /* Außenbereich (nur ein Streckenast in der Nähe): fest auf Höhe des nächsten Streckenpunkts wie Grasstreifen und Geländeband – frei geglättet fiel der Kies sonst seitlich bis 1,8 m ab und endete an einer Stufe (Spa, Les Combes) */
+      const d1 = Math.sqrt(bd); if (d1 > hw[bj] + 4) { let d2 = 1e18; for (const i of near) { let di = Math.abs(i - bj); di = Math.min(di, px.length - di); if (di * DS < 2 * d1 + 20) continue; const d = (x - px[i]) ** 2 + (z - pz[i]) ** 2; if (d < d2) d2 = d; } if (Math.sqrt(d2) > d1 + 25) FX[k] = 1; } } } }
 function relaxZone(Y, FX, SEG) { const G1 = SEG + 1;
   for (let it = 0; it < 700; it++) for (let iz = 0; iz < G1; iz++) for (let ix = 0; ix < G1; ix++) { const k = iz * G1 + ix; if (FX[k]) continue;
     const a = Y[ix > 0 ? k - 1 : k + 1], b = Y[ix < SEG ? k + 1 : k - 1], c = Y[iz > 0 ? k - G1 : k + G1], d = Y[iz < SEG ? k + G1 : k - G1]; Y[k] += 1.85 * ((a + b + c + d) * 0.25 - Y[k]); } }
@@ -9316,7 +9323,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.60'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.63'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
