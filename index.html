@@ -4093,9 +4093,9 @@ function makeCar0(d) {
     const hAcc = helmAcc(d.helmet, T.acc);
     const hOff = pr => pr.map(([g2, c2]) => [g2.translate(0, MD.helm[0], MD.helm[1]), c2]);
     const F1F = F1FAHRER, hm = new THREE.Group(), hsh = new THREE.Mesh(F1F ? helmGeoKart() : helmGeoNew(), helmMat(d, hAcc, !!F1F)); hsh.position.set(0, MD.helm[0] + 0.005, MD.helm[1]); hsh.castShadow = true; hm.add(hsh); g.add(hm);   // Gruppe: wird als Ganzes ein-/ausgeblendet und (TV-Kamera) verschoben   // neuer Fahrer: Helm mit den Korrekturen vom Kart (ohne Anbauteil unter dem Visier)
-    let f1b = null;
-    if (F1F) f1b = f1Driver(d, T, MD, g);   // Oberkörper mit Armen und Händen aus f1fahrer.bin (eigenes Objekt: bleibt in der Helmkamera für Arme und Hände sichtbar)
-    else { const dv = new THREE.Mesh(mergeParts(hOff(driverParts(col(uiCol(T)), hAcc))), KDRV.suit); hm.add(dv); }   // Fahrer hängt am Helm: wird mit ihm ausgeblendet (Cockpitansicht, Fernmodell)
+    // Fahrer: einfaches Modell aus Grundformen (hängt am Helm, wird mit ihm ausgeblendet). Der neue Fahrer aus f1fahrer.bin kommt nur ins eigene Auto
+    // (f1Own, Leistung): er wird erzeugt, sobald das Auto dem Spieler gehört, und das einfache Modell ausgeblendet.
+    const oldDrv = new THREE.Mesh(mergeParts(hOff(driverParts(col(uiCol(T)), hAcc))), KDRV.suit); hm.add(oldDrv);
     const rl = new THREE.Mesh(new THREE.BoxGeometry(...(MD.rlS || [0.13, 0.045, 0.02])), RLMAT); rl.position.set(0, MD.rl[0], MD.rl[1]); g.add(rl);   /* F2: Regenlicht sitzt außen auf der Heck-Crashstruktur (vorher 6 cm im Karosserieteil versenkt) */ // Regenlicht unten am Heck (nicht am Auspuff)
     const fl = new THREE.Group(); fl.position.set(fw[0], fw[1], fw[2]); const wm = wheelMat(d.team), wfl = new THREE.Mesh(W.R[1], wm); wfl.castShadow = true; fl.add(wfl); g.add(fl);
     const fr = new THREE.Group(); fr.position.set(-fw[0], fw[1], fw[2]); const wfr = new THREE.Mesh(W.L[1], wm); wfr.castShadow = true; fr.add(wfr); g.add(fr);
@@ -4105,8 +4105,7 @@ function makeCar0(d) {
     const label = carLabel(d, T); g.add(label); scene.add(g);
     // Fernmodell: ab 120 m ist das ganze Auto EIN Netz mit EINEM Zeichenaufruf (statt Karosserie, Carbon, Halo, Helm, Spiegel und vier Rädern einzeln)
     const far = new THREE.Mesh(tp.far || (tp.far = farCarGeo(tp, T)), tp.glossMat); far.visible = false; g.add(far);
-    const r = { g, fl, fr, wfl, wfr, rr, wrl, wrr, label, helm: hm, rl, body, matte, halo, tp, lod: 0, comp: 1, cam: MD.cam, tv: MD.tv, far, detail: [body, matte, halo, hm, fl, fr, rr].concat(mir ? [mir] : [], f1b ? [f1b.mesh] : []) };
-    if (f1b) { r.f1Fahrer = f1b; f1b.m = r; }
+    const r = { g, fl, fr, wfl, wfr, rr, wrl, wrr, label, helm: hm, rl, body, matte, halo, tp, lod: 0, comp: 1, cam: MD.cam, tv: MD.tv, far, detail: [body, matte, halo, hm, fl, fr, rr].concat(mir ? [mir] : []), oldDrv, mkF1: F1F ? () => f1Driver(d, T, MD, g) : null };
     lodFadePrep(r); return r;
   }
   const body = new THREE.Mesh(tp.gloss, tp.glossMat), matte = new THREE.Mesh(tp.matte, MATTE);
@@ -8223,6 +8222,7 @@ function updateMeshes(dt) {
     m.g.position.set(c.x, c.ey, c.z); m.g.rotation.set(FLAT ? 0 : -Math.atan(SLOPE[c.idx] * fw), c.h, roll);
     m.fl.rotation.y = m.fr.rotation.y = -c.steer * 0.35;
     c.spin = (c.spin + (c.v || 0) * dt / (m.wr || 0.36)) % (Math.PI * 2);   // echte Raddrehzahl, ohne Deckel
+    if (m.mkF1) f1Own(m, c === pl);
     if (m.f1Fahrer) { const F = m.f1Fahrer; F.spin = -(c.steer || 0) * SW_ROT; if (!F.sw) f1CarWheel(m); F.sw.rotation.z = F.spin; }   // F1/F2: Hände und Lenkrad (dreht wie SW in der Cockpitansicht)
     if ((m.road || m.kart) && m.swSpin) m.swSpin.rotation.z = -(c.steer || 0) * (m.kartFahrer ? KART_SW_ROT : 1.6);   /* Kart mit neuem Fahrer: weniger Drehung – die Hände bleiben am Kranz, bei 92° lag der Arm quer vor dem Gesicht */
     if (m.road) m.brakeMat.emissiveIntensity = running && c.brk > 0.1 ? 4 : 0.15;
@@ -8368,6 +8368,12 @@ function poseArm(a, gx, gy, gz, rz, ex, ey, ez) {
 }
 // Lenkrad im Auto für die Außenansicht (F1/F2, alle Autos): Kopie des Cockpit-Lenkrads (Carbon-Körper + Griffe/Tasten, ohne Display), normal gezeichnet.
 // In Helm- und TV-Kamera des Spielers übernimmt das Cockpit-Lenkrad SW.
+// Neuer F1/F2-Fahrer nur im Spielerauto: bei Bedarf erzeugen, sonst entfernen (andere Autos: einfaches Modell – spart Netz, Skinning und Arm-Rechnung je Bild)
+function f1Own(m, on) {
+  if (!m.mkF1 || on === !!m.f1Fahrer) return;
+  if (on) { const st = m.mkF1(); st.m = m; m.f1Fahrer = st; m.detail.push(st.mesh); st.mesh.visible = m.body.visible; m.oldDrv.visible = false; }
+  else { const st = m.f1Fahrer; m.g.remove(st.mesh); if (st.sw) m.g.remove(st.sw); m.detail = m.detail.filter(o => o !== st.mesh && o !== st.sw); m.f1Fahrer = null; m.oldDrv.visible = true; }
+}
 const SWX = { mats: null };
 function f1CarWheel(m) {
   const F = m.f1Fahrer, MD = m.tp.M, w = new THREE.Group(); w.rotation.order = 'XYZ';
@@ -8381,7 +8387,7 @@ const SW_ROT = 0.95;   // sichtbare Lenkraddrehung bei vollem Einschlag (~55°):
 const ARMS = { f1: null, road: null }, _gc = new THREE.Color(), _gw = new THREE.Color(0xffffff);
 function armsTick() {
   const cock = running && (S.cam === 2 || S.cam === 3) && !!(pl && pl.mesh), road = !!(pl && pl.mesh && (pl.mesh.road || pl.mesh.kart)), col = pl && TEAMS[pl.team] ? uiCol(TEAMS[pl.team]) : 0xffffff;
-  const own = !!(pl && pl.mesh && (pl.mesh.kartFahrer || pl.mesh.f1Fahrer));   // neuer Fahrer (Kart, F1/F2): eigene Arme und Hände am Modell, keine eingeblendeten
+  const own = !!(pl && pl.mesh && (pl.mesh.kartFahrer || pl.mesh.mkF1));   // neuer Fahrer (Kart, F1/F2): eigene Arme und Hände am Modell, keine eingeblendeten
   if (ARMS.f1) ARMS.f1.g.visible = cock && !road && !own; if (ARMS.road) ARMS.road.g.visible = cock && road && !own;
   if (own) return;
   if (!cock) return;
@@ -9323,7 +9329,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.63'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.64'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
