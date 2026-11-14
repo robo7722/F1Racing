@@ -226,6 +226,9 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 #unit b{font-size:15px;color:var(--acc)}
 #msg{position:absolute;left:50%;top:26%;transform:translateX(-50%);font-size:30px;font-weight:900;font-style:italic;text-align:center;white-space:nowrap;text-shadow:0 3px 12px rgba(0,0,0,.8);opacity:0;transition:opacity .2s}
 #msg.show{opacity:1}
+#perf{position:absolute;top:max(4px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:6;padding:3px 8px 4px;background:rgba(8,8,12,.72);border-top:2px solid var(--f1r,#e10600);text-align:center;pointer-events:none}
+#perfTxt{font-size:11px;font-weight:700;line-height:14px;white-space:nowrap;font-variant-numeric:tabular-nums;color:#fff}#perfTxt b{font-weight:900}#perfTxt i{color:rgba(255,255,255,.55)}
+#perfG{display:block;width:120px;height:22px;margin:2px auto 0}
 #lights{position:absolute;left:50%;top:14%;transform:translateX(-50%);display:flex;gap:10px;padding:10px 14px;border-radius:12px;background:rgba(10,10,10,.75)}
 #lights i{width:34px;height:34px;border-radius:50%;background:#2a0d0d;border:2px solid #111}
 #lights i.on{background:radial-gradient(circle at 40% 35%,#ff7a6a,#e10600 60%,#8a0000);box-shadow:0 0 18px #ff2200}
@@ -1157,6 +1160,7 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
   <canvas id="haloHud"></canvas>
   <div id="msg"></div>
   <div id="lights" class="hidden"><i></i><i></i><i></i><i></i><i></i></div>
+  <div id="perf" class="hidden"><div id="perfTxt"></div><canvas id="perfG" width="240" height="44"></canvas></div>
 </div>
 
 <div id="controls" class="hidden">
@@ -1329,8 +1333,8 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
   <div class="ppane" id="sGfx"><section class="panel" id="setGfx">
     <div class="seg gfx" data-key="gfx"><button data-v="low">Schnell</button><button data-v="high">Schön</button><button data-v="ultra">Ultra</button></div>
     <p class="hint left" id="gfxInfo"></p>
-    <div class="tog"><span>Unbegrenzte FPS</span><button class="sw" data-tog="fpsFree" aria-label="Unbegrenzte FPS"></button></div>
-    <p class="hint left">An: so viele Bilder pro Sekunde, wie das Display schafft (z. B. 90/120 Hz). Aus: auf 60 FPS begrenzt – spart Akku und hält das Handy kühler.</p>
+    <div class="field"><label>Bildrate</label><div class="seg" data-key="fpsCap"><button data-v="30">30</button><button data-v="40">40</button><button data-v="60">60</button><button data-v="max">Max</button></div></div>
+    <p class="hint left">Das Spiel zeichnet im Takt des Displays (V-Sync) und lässt gleichmäßig Bilder aus, damit jedes Bild gleich lang steht. 40 FPS geht gleichmäßig nur auf 120-Hz-Displays – auf 60 Hz wird daraus 30. Max: so viele Bilder, wie das Display schafft. Niedrigere Bildraten sparen Akku und halten das Handy kühler.</p>
   </section></div>
   <div class="ppane" id="sCtl"><section class="panel" id="setCtl">
     <div class="field"><label>Steuerung</label><div class="seg" data-key="ctrl"><button data-v="tilt">Neigen</button><button data-v="touch">Touch</button></div></div>
@@ -1343,6 +1347,8 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
   <div class="ppane" id="sExtra"><section class="panel" id="setExtra">
     <div class="tog"><span>Team RONE Racing freischalten</span><button class="sw" data-tog="rone" aria-label="Team RONE Racing freischalten"></button></div>
     <p class="hint left">Schaltet das Team RONE Racing mit Robert Nemec in der Teamauswahl frei. Es fährt nur, wenn du es selbst wählst.</p>
+    <div class="tog"><span>FPS- und Frame-Pacing-Anzeige</span><button class="sw" data-tog="perfHud" aria-label="FPS- und Frame-Pacing-Anzeige"></button></div>
+    <p class="hint left">Zeigt im Rennen oben in der Mitte die Bildrate, die mittlere Bildzeit, die Schwankung (±) und das langsamste Bild der letzten Sekunde. Der Graph darunter zeigt jede Bildzeit: grün = flüssig, gelb = ein Bild verpasst, rot = Ruckler. Die Linie markiert 60 FPS.</p>
     <div class="tog"><span>Nordschleife freischalten</span><button class="sw" data-tog="nos" aria-label="Nordschleife freischalten"></button></div>
     <p class="hint left">Die komplette Nürburgring-Nordschleife (20,8 km) als Zusatzstrecke im schnellen Spiel und Zeitrennen. In der Karriere fährt sie nicht mit.</p>
     <button class="big alt danger" id="careerReset" style="margin-top:10px">Karriere zurücksetzen</button>
@@ -1407,8 +1413,9 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platfor
 const standalone = matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 
 /* ======================= Einstellungen ======================= */
-const S = { fpsFree: true, rmode: 'f1', level: true, songHist: [], rone: false, nos: false, mode: 'race', ttBest: {}, song: 0, track: 'monza', driver: 'RUS', laps: 5, grid: 10, ctrl: 'touch', diff: 'mid', autogas: false, assist: false, sound: true, music: true, invert: false, cam: 0, gfx: 'high', line: 'off', champLaps: 3, volMusic: 0.7, volCar: 0.85 };
+const S = { fpsFree: true, fpsCap: null, rmode: 'f1', level: true, songHist: [], rone: false, nos: false, perfHud: false, mode: 'race', ttBest: {}, song: 0, track: 'monza', driver: 'RUS', laps: 5, grid: 10, ctrl: 'touch', diff: 'mid', autogas: false, assist: false, sound: true, music: true, invert: false, cam: 0, gfx: 'high', line: 'off', champLaps: 3, volMusic: 0.7, volCar: 0.85 };
 try { Object.assign(S, JSON.parse(localStorage.getItem('f1rennen') || '{}')); } catch (e) {}
+if (!['30', '40', '60', 'max'].includes(S.fpsCap)) S.fpsCap = S.fpsFree ? 'max' : '60';   // alte Einstellung „Unbegrenzte FPS“ übernehmen
 if (!S.v40) { S.rmode = 'f1'; S.v40 = true; }   // Roadster: Standard ist die F1-Variante
 if (!S.v17) { S.ctrl = 'touch'; S.autogas = false; S.assist = false; S.v17 = true; try { localStorage.setItem('f1rennen', JSON.stringify(S)); } catch (e) {} }
 const save = () => { try { localStorage.setItem('f1rennen', JSON.stringify(S)); } catch (e) {} };
@@ -9332,7 +9339,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.65'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.67'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -9383,12 +9390,49 @@ function sphereTick(dt) { // Bildschirm der LED-Kugel: meist das Emoji mit wechs
   const e = EMS.cur; U.uE.value.set(e[0], e[1], e[2], e[3]); U.uP.value.set(e[4], e[5], Math.max(e[6], bl), Math.max(e[7], bl)); U.uM.value.set(e[8], e[9], e[10], 0.5 + e[9] * 0.5);
 }
 
-let fpsAcc = 0, fpsPrev = 0;
+/* Bildraten-Begrenzer im V-Sync-Takt: requestAnimationFrame kommt immer synchron zum Display. Statt nach Zeit zu
+   zählen (ergab bei 60 FPS auf 90/120/144 Hz ein Wechselspiel aus 1 und 2 Display-Bildern), wird die Bildwiederhol-
+   rate gemessen und genau jedes n-te Display-Bild gezeichnet. So steht jedes Bild gleich lang. */
+const VS = { prev: 0, d: new Float32Array(64), i: 0, n: 0, P: 1000 / 60, hz: 60, k: 0, step: 1, lastDraw: 0 };
+const HZ_STD = [30, 48, 50, 60, 72, 75, 90, 100, 120, 144, 165, 240];
+function vsyncGate(now) {
+  if (VS.prev) { const d = now - VS.prev; if (d > 2 && d < 60) { VS.d[VS.i] = d; VS.i = (VS.i + 1) % VS.d.length; VS.n = Math.min(VS.n + 1, VS.d.length); } }
+  VS.prev = now;
+  if (VS.n >= 16 && ++VS.k >= 30) {   // Bildwiederholrate: Median der letzten Display-Abstände, auf übliche Werte eingerastet
+    VS.k = 0; const a = Array.from(VS.d.subarray(0, VS.n)).sort((x, y) => x - y); let hz = 1000 / a[a.length >> 1];
+    const st = HZ_STD.find(h => Math.abs(h - hz) / h < 0.04); hz = st || Math.round(hz); VS.hz = hz; VS.P = 1000 / hz;
+  }
+  const cap = S.fpsCap === 'max' ? 0 : +S.fpsCap || 60;
+  VS.step = cap ? Math.max(1, Math.ceil(VS.hz / cap - 0.05)) : 1;   // nie über der Grenze: 60 Hz/40 → 2 (30 FPS), 120/40 → 3 (40), 120/60 → 2 (60), 90/60 → 2 (45), 144/60 → 3 (48)
+  if (VS.step > 1 && VS.lastDraw && now - VS.lastDraw < (VS.step - 0.5) * VS.P) return false;
+  VS.lastDraw = now; return true;
+}
+/* FPS- und Frame-Pacing-Anzeige (Extras): Abstand zwischen tatsächlich gezeichneten Bildern */
+const PERF = { on: null, prev: 0, buf: new Float32Array(120), i: 0, n: 0, tUpd: 0, el: null, txt: null, g: null, cx: null };
+function perfTick(now) {
+  if (PERF.on !== !!S.perfHud) { PERF.on = !!S.perfHud; PERF.el = PERF.el || $('#perf'); PERF.el.classList.toggle('hidden', !PERF.on); PERF.prev = 0; PERF.n = 0; }
+  if (!PERF.on) return;
+  if (!PERF.prev || now - PERF.prev > 1000) { PERF.prev = now; PERF.tUpd = now; return; }   // nach Pausen/Tabwechsel neu anfangen
+  const d = now - PERF.prev; PERF.prev = now;
+  PERF.buf[PERF.i] = d; PERF.i = (PERF.i + 1) % PERF.buf.length; PERF.n = Math.min(PERF.n + 1, PERF.buf.length);
+  if (!PERF.g) { PERF.txt = $('#perfTxt'); PERF.g = $('#perfG'); PERF.cx = PERF.g.getContext('2d'); }
+  const L = PERF.buf.length, c = PERF.cx, W = PERF.g.width, H = PERF.g.height, sc = H / 50, bw = W / L;   // Graph: 0–50 ms
+  c.clearRect(0, 0, W, H);
+  for (let k = 0; k < PERF.n; k++) { const v = PERF.buf[(PERF.i - PERF.n + k + L) % L]; c.fillStyle = v <= 20 ? '#22c55e' : v <= 36 ? '#eab308' : '#ef4444'; const h = Math.max(1, Math.min(H, v * sc)); c.fillRect((L - PERF.n + k) * bw, H - h, Math.max(1, bw - 0.5), h); }
+  c.fillStyle = 'rgba(255,255,255,.55)'; c.fillRect(0, Math.round(H - 16.67 * sc), W, 1);
+  if (now - PERF.tUpd < 250) return; PERF.tUpd = now;   // Text 4× pro Sekunde
+  let sum = 0, mx = 0, cnt = 0;   // Werte der letzten Sekunde
+  for (let k = 1; k <= PERF.n && sum < 1000; k++) { const v = PERF.buf[(PERF.i - k + L) % L]; sum += v; if (v > mx) mx = v; cnt++; }
+  const avg = sum / cnt; let vr = 0;
+  for (let k = 1; k <= cnt; k++) { const e = PERF.buf[(PERF.i - k + L) % L] - avg; vr += e * e; }
+  const fps = Math.round(1000 / avg), sd = Math.sqrt(vr / cnt);
+  const tgt = Math.round(VS.hz / VS.step); PERF.txt.innerHTML = `<b style="color:${fps >= tgt - 2 ? '#22c55e' : fps >= tgt * 0.75 ? '#eab308' : '#ef4444'}">${fps}</b>/${tgt} FPS <i>·</i> ${VS.hz} Hz <i>·</i> ${avg.toFixed(1)} ms <i>·</i> ±${sd.toFixed(1)} <i>·</i> max ${mx.toFixed(1)}`;
+}
 function frame(now) { requestAnimationFrame(frame); tick(now); }
 let REBUILD = false;
 function tick(now, forced) {
   if (REBUILD) { last = now; return; }   /* Grafik wird gerade umgestellt */   // forced: Testhilfen zeichnen direkt, ohne eine zweite Bildschleife zu starten
-  if (!forced) { const e = fpsPrev ? now - fpsPrev : 1000 / 60; fpsPrev = now; fpsAcc = Math.min(fpsAcc + e, 1000 / 30); if (!S.fpsFree && fpsAcc < 1000 / 60 - 1.5) return; fpsAcc = Math.max(0, fpsAcc - 1000 / 60); }   // FPS auf 60 begrenzen (120-Hz-Displays)
+  if (!forced) { if (!vsyncGate(now)) return; perfTick(now); }   // Bildrate begrenzen: nur jedes n-te Display-Bild zeichnen (gleichmäßiges Frame-Pacing)
   const dt = clamp((now - last) / 1000, 0, 0.05); last = now;
   if (running && !paused) { const n = dt > 0.025 ? 2 : 1; for (let k = 0; k < n; k++) step(dt / n); }
   if (!running || !paused) updateMeshes(running && !paused ? dt : 0);
