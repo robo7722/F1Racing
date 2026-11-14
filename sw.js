@@ -1,7 +1,7 @@
 // Service Worker: macht das Spiel offline-fähig und installierbar
-const CACHE = 'f1-rennen-1.95';
+const CACHE = 'f1-rennen-1.96';
 const APP = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './car.bin', './f2car.bin', './kart.bin', './textures/kart_body.jpg', './textures/kart_body_n.jpg', './textures/kart_wheel.jpg', './kartfahrer.bin', './f1fahrer.bin', './textures/kart_fahrer.jpg', './textures/kart_stoff.jpg', './roadcar.bin', './menu.mp3',
-  ...['f1_mittel', 'f1_hoch', 'f2_mittel', 'f2_hoch', 'kart_mittel', 'kart_hoch'].map(n => './sounds/' + n + '.wav'), ...['auto', 'wand', 'schwer', 'kart'].map(n => './sounds/crash_' + n + '.mp3'),   // Motor-/Crash-Aufnahmen (ElevenLabs)
+  ...['f1_mittel', 'f1_hoch', 'f2_mittel', 'f2_hoch', 'kart_mittel', 'kart_hoch'].map(n => './sounds/' + n + '.wav'), ...['leicht', 'auto', 'wand', 'schwer', 'kart'].map(n => './sounds/crash_' + n + '.wav'),   // Motor-/Crash-Aufnahmen (ElevenLabs)
   ...['asphalt_track', 'asphalt_pit_lane', 'sand_01', 'gravel_floor'].flatMap(t => ['diff', 'nor_gl'].map(m => './textures/' + t + '_' + m + '_1k.jpg')),
   ...['Grass004_Color', 'Grass004_NormalGL', 'LeafSet004_Color', 'LeafSet004_Opacity', 'LeafSet019_Color', 'LeafSet019_Opacity', 'Foliage001_Color', 'Foliage001_Opacity'].map(f => './textures/acg_' + f + '.jpg')];
 const MBUSY = new Set();

@@ -5,7 +5,8 @@ gleich laut überblenden (0,25 s), auf gleiche Lautheit (RMS) bringen, als WAV (
 WAV statt MP3: MP3 fügt am Anfang Stille ein (Encoder-Verzögerung) – beim Loopen knackt es dann alle 3 s.
 Grundton (Hz) des fertigen Loops wird gemessen und ausgegeben (Autokorrelation) – Wert gehört in SND_ENG in index.html.
 
-Crash: leiser Vorlauf bis zum Einsatz abgeschnitten, Spitzenpegel auf -1 dBFS, mono, MP3 128 kbit/s (Einzelschuss, die Encoder-Verzögerung stört dort nicht).
+Crash: leiser Vorlauf bis zum Einsatz abgeschnitten, auf Höchstlänge gekürzt (ausgeblendet), Spitzenpegel auf -1 dBFS, WAV (mono, 32 kHz) –
+auch hier kein MP3: dessen Encoder-Verzögerung (~25 ms Stille) ließ den Schlag verspätet kommen.
 
 Aufruf: python tools/sounds/aufbereiten.py
 """
@@ -25,7 +26,9 @@ LOOPS = {
     'kart_mittel': (0.40, 2.90),
     'kart_hoch': (0.75, 3.60),
 }
-CRASH = ['crash_auto', 'crash_wand', 'crash_schwer', 'crash_kart']
+# Crash: Datei -> größte Länge ab Einsatz (s); danach 60 ms ausblenden. v1.96: neue, kurze Einzelschläge (die ersten Aufnahmen waren 2–3 s lang,
+# „schwer“ 1,3 s Breitbandrauschen, „Wand“ ein Doppelschlag) – „leicht“ hat zwei Klopfer, nur der erste bleibt
+CRASH = {'crash_leicht': 0.17, 'crash_auto': 0.6, 'crash_wand': 0.9, 'crash_schwer': 1.3, 'crash_kart': 0.45}
 XF = 0.25            # Überblendung am Loop-Übergang (s)
 RMS = 0.14           # Ziel-Lautheit der Loops
 
@@ -66,13 +69,15 @@ def main():
         save_wav(os.path.join(OUT, name + '.wav'), y)
         p = pitch(y); naht = abs(y[-1] - y[0])
         print(f'{name}.wav  {len(y) / SR:.2f} s  Tonhöhe Median {np.median(p):.0f} Hz (Werte {np.round(p).astype(int).tolist()})  Naht-Sprung {naht:.3f}')
-    for name in CRASH:
-        src = os.path.join(ROH, name + '.mp3'); x = load(src, 44100); g = 0.89 / np.abs(x).max()
+    for name, dmax in CRASH.items():
+        x = load(os.path.join(ROH, name + '.mp3'))   # 32 kHz mono
         # Einsatz: erster Zeitpunkt, an dem die Hüllkurve (5 ms) 25 % ihres Maximums erreicht – davor (leiser Vorlauf) abschneiden, sonst kommt der Schlag im Spiel verspätet
-        w = 220; env = np.sqrt(np.convolve(x ** 2, np.ones(w) / w, 'same')); on = max(0, int(np.argmax(env > 0.25 * env.max())) - 220)
-        subprocess.run(['ffmpeg', '-v', 'quiet', '-y', '-ss', f'{on / 44100:.4f}', '-i', src, '-ac', '1', '-af', f'volume={g:.4f},afade=t=in:d=0.004', '-b:a', '128k', os.path.join(OUT, name + '.mp3')], check=True)
-        print(f'{name}.mp3  {len(x) / 44100:.2f} s  Einsatz nach {on / 44.1:.0f} ms abgeschnitten  Verstärkung {g:.2f}')
-
+        w = SR // 200; env = np.sqrt(np.convolve(x ** 2, np.ones(w) / w, 'same')); on = max(0, int(np.argmax(env > 0.25 * env.max())) - SR // 500)
+        n = min(int(dmax * SR), len(x) - on); y = x[on:on + n].copy()
+        fi, fo = int(0.001 * SR), int(0.06 * SR); y[:fi] *= np.linspace(0, 1, fi); y[-fo:] *= np.linspace(1, 0, fo)   # 1 ms ein (Knackschutz, der Schlag bleibt), 60 ms aus
+        g = 0.8 / np.percentile(np.abs(y), 99.9); y = np.clip(y * g, -0.98, 0.98)                               # Pegel des verwendeten Stücks; 99,9-%-Wert statt Maximum (einzelne Spitzen der Aufnahme ließen „leicht“ viel zu leise)
+        save_wav(os.path.join(OUT, name + '.wav'), y)
+        print(f'{name}.wav  roh {len(x) / SR:.2f} s -> {n / SR:.2f} s  Einsatz nach {on / SR * 1000:.0f} ms abgeschnitten  Verstärkung {g:.2f}  RMS {np.sqrt(np.mean(y ** 2)):.3f}')
 
 if __name__ == '__main__':
     main()
