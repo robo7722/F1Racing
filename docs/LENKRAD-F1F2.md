@@ -63,9 +63,32 @@ Handrolle höchstens 20°. Vorher (altes Lenkrad): Zeigefinger durch die Griffsc
 
 ![[bilder/f2_nase_v187.png]]
 
+## v1.93 – Handgelenke, Daumen, Wagenfarbe in der Öffnung, F2-Zacken
+Rückmeldung mit drei Bildern (Spa, McLaren F1 und F2).
+
+1. **Handgelenke clippen** (Helmkamera, starker Einschlag): Die Handschuh-Stulpe (Zylinder r 3,1 cm, bis 4,5 cm hinter dem Handgelenk) hing **starr an der Hand**, der Ärmel steckt mit r 2,7 cm darin und hing **starr am Unterarm**. Bei vollem Einschlag knickt die obere Hand gemessen bis **~54°** gegen den Unterarm ab (halber Einschlag ~10°). Die Stulpe schwenkte als Ganzes aus dem Ärmel, das Ärmelende stach als schwarze Spitze heraus und man sah ins offene Stulpenende.
+   - Neu: `tools/fahrer/f1_handgelenk.py` gibt Arm- und Handschuhpunkten von 1 cm vor bis 8 cm hinter dem Handgelenk **weiche Gewichte** Hand ↔ Unterarm (smoothstep entlang Handgelenk → Ellbogen). Stulpe und Ärmel haben an gleicher Stelle dasselbe Gewicht, sie biegen also gemeinsam (je Seite 416 Punkte). Das Skript ist wiederholbar und ändert nur `bi`/`bw`.
+   - Shader: Die dunkle Grifffläche (Wildleder) endet am Handgelenk. Vorher lag die Unterseite der Stulpe bei Hand oben als großer schwarzer Fleck im Bild.
+   - Der große dunkle Unterarm im Bild bei vollem Einschlag ist der McLaren-Anzug (dunkel), kein Fehler.
+2. **Wagenfarbe in der Cockpitöffnung** (TV-Kamera neben dem Helm, Helmkamera vorn an den Ecken): Seit v1.73 reicht die Wanne vorn bis z 0,765 (vorher 0,74). Die Ausnahme im Schnitt-Shader, die die Spiegelfüße des Originalmodells stehen lässt, begann aber schon bei z 0,742. Dadurch blieben innen in der Öffnung Streifen und Kanten der Karosserie in Wagenfarbe stehen.
+   - Neu: `ckOpen(G)` liefert die Öffnungsbreite je z als Tabelle für den Shader. Die Ausnahme gilt nur noch außerhalb der Öffnung. Vorn an der Rundung (ab z1 − 3 cm bis 2 mm vor die Armaturenwand) wird alles verworfen.
+3. **F2: Zacken an den Cockpitschultern** (Helmkamera): Die Innenwand der Wanne wurde in v1.73 nach außen gerückt (+6,6 cm, Platz für Unterarme). Vorn wird die Wanne aber schmaler (`hw` 0,37 → 0,30). Beim F2 blieben deshalb für die Schulter (Einfassung bis Außenflanke) nur **8 mm**, und das Schulterprofil klappte zu spitzen Zacken zusammen.
+   - Neu: `ckWo` begrenzt die Innenwand so, dass die Schulter überall mindestens `CK_SCH` = 3,2 cm breit bleibt. Das betrifft beim F2 z > 0,62 (Wand dort bis 2,2 cm weiter innen), beim F1 nur ab z 0,69 um höchstens 2 mm.
+
+4. **Daumen wirkte wie ein eigenes Teil**: Der neue Daumen (v1.74) war ein Schlauch, der am Handrücken frei begann. Zwischen ihm und der Hand blieb ein Spalt, er stand als Bogen ab.
+   - Neu in `thumb_mesh` (`TH_ROOT`): Die Wurzel läuft als **Daumenballen** 30 % weiter zurück in die Hand. Der Bogen geht 28° weiter nach außen, 1,2 cm Richtung Handgelenk und tiefer in den Handballen (5 cm von der Griffachse). Er wird dicker (1,85 cm), entlang der Griffachse 35 % breiter und ist hinten geschlossen. Dicker wird er nur nach außen, die Luft zum Griff bleibt 2,4 mm (lokal) wie vorher.
+   - `f1fahrer.bin` neu aus der Vorlage vor der Nachbearbeitung (Stand v1.65) erzeugt: `f1_hand_nachbearbeitung.py`, danach `f1_handgelenk.py`.
+
+![[bilder/daumen_v193.png]]
+(oben vorher, unten nachher; Hand in Bindhaltung)
+
+Prüfung danach (`export.cjs` + `check_lenkrad.py`, STEP=2): **kein Clipping**. Handschuh ≥ 1,8 mm. Arm F1-TV +25,1, F2 +29,4, F2-TV +7,0 mm (vorher +22,1 / +26,2 / +3,1). Unterarme/Hände in der Wanne frei. Karosserie F1 +10,2 / F2 +4,1 mm.
+Hinweis: `f1_handgelenk.py` muss nach jedem Neubau von f1fahrer.bin laufen, nach `f1_hand_nachbearbeitung.py`.
+
 ## Offen / Ideen
 - An der Faust bleibt oben ein kleiner Grat (Rest der Zeigefingerkuppe), nur in Nahansicht von außen sichtbar.
-- Handschuh-Nachbearbeitung muss nach jedem Neubau von f1fahrer.bin (build_fahrer.py) erneut laufen.
+- Handschuh-Nachbearbeitung (`f1_hand_nachbearbeitung.py`, danach `f1_handgelenk.py`) muss nach jedem Neubau von f1fahrer.bin (build_fahrer.py) erneut laufen.
+- Bei vollem Einschlag knickt die obere Hand weiter ~54° ab (jetzt weich gebogen). Weniger ginge mit mehr Handrolle (`F1_ROLL`) oder höherem Ellbogen, beides braucht neue Clipping-Prüfung.
 - Ellbogen/Oberarme hinter z 0,40 liegen wie bisher gewollt unter dem Rand im Monocoque (nicht geprüft).
 - Außen-Lenkrad (`f1CarWheel`) ohne Display (wie bisher, Leistung).
 

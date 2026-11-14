@@ -102,30 +102,43 @@ def process_hand(P, F, gmask):
 
 TH_SWEEP, TH_RISE = 105.0, 0.010      # neuer Daumen: Bogen um den Griff (Grad) und Anstieg entlang der Achse (lokal)
 TH_RAD = (0.0135, 0.0118, 0.0108)     # Daumenradius Grund / Mitte / Spitze (lokal)
+TH_ROOT = (-0.3, 28.0, 0.012, 0.050, 0.0185)   # Daumenwurzel (v1.93): Länge in u, Bogen weiter nach außen (Grad), Versatz Richtung Handgelenk, Abstand zur Griffachse, Dicke
 
 
-def thumb_mesh(fr, n=28, k=14):
+def thumb_mesh(fr, n=36, k=14):
     """Neuer Daumen im Spielrahmen (rechte Hand): Schlauch vom Grundgelenk über die Fahrerseite des Griffs nach innen, runde Kuppe.
+    v1.93: Wurzel (u < 0) läuft als Daumenballen in die Hand hinein – Bogen weiter nach außen, tiefer in den Handballen, dicker und
+    entlang der Griffachse breiter, hinten geschlossen. Vorher begann der Schlauch frei am Handrücken und wirkte wie ein eigenes Teil.
     Gibt (Punkte, Dreiecke, Längsanteil u je Punkt) zurück."""
     e1, e2 = fr['e1'], fr['e2']; rc = GRIP_R + 0.0045 + TH_RAD[1]
+    S = lambda x: (lambda c: c * c * (3 - 2 * c))(np.clip(x, 0, 1))
     def center(u):
-        a = fr['aB'] - np.radians(TH_SWEEP) * u; tt = fr['tB'] - 0.004 + TH_RISE * u; rr = rc
+        b = S(-u / -TH_ROOT[0]) if u < 0 else 0.0                                  # 0 am Grundgelenk, 1 am Wurzelende
+        a = fr['aB'] - np.radians(TH_SWEEP) * u if u >= 0 else fr['aB'] + np.radians(TH_ROOT[1]) * b
+        tt = fr['tB'] - 0.004 + TH_RISE * max(u, 0) - TH_ROOT[2] * b; rr = rc + (TH_ROOT[3] - rc) * b
         return CC + tt * D2 + rr * (np.cos(a) * e1 + np.sin(a) * e2)
-    us = np.linspace(0, 1, n); C = np.array([center(u) for u in us])
+    us = np.r_[np.linspace(TH_ROOT[0], 0, 8)[:-1], np.linspace(0, 1, n)]; C = np.array([center(u) for u in us])
     T = np.gradient(C, axis=0); T /= np.linalg.norm(T, axis=1, keepdims=True)
-    rad_of = lambda u: np.interp(u, [0, 0.5, 1], TH_RAD)
-    pts, uu = [], []
+    def rad_of(u):
+        if u < 0: return TH_RAD[0] + (TH_ROOT[4] - TH_RAD[0]) * S(-u / -TH_ROOT[0])
+        return np.interp(u, [0, 0.5, 1], TH_RAD) + (TH_RAD[0] * 0.25) * (1 - S(u / 0.3))   # Ballen läuft weich in den Daumen
+    pts, uu = [], []; nr = len(us)
     for i, u in enumerate(us):
         Nv = nrm(np.cross(T[i], D2)); Bv = np.cross(T[i], Nv); r = rad_of(u) * (1.0 if u < 0.85 else np.sqrt(max(0.0, 1 - ((u - 0.85) / 0.15) ** 2)) * 0.85 + 0.15)
+        base_r = np.interp(max(u, 0.0), [0, 0.5, 1], TH_RAD) if u >= 0 else TH_RAD[0]; rd = C[i] - CC; rd -= (rd @ D2) * D2; rd = nrm(rd)
+        Ci = C[i] + (rad_of(u) - base_r) * rd                                       # dicker nur nach außen: Innenseite (zum Griff) bleibt wo sie war
+        sb = 1.0 + 0.35 * (S(-u / -TH_ROOT[0]) if u < 0 else (1 - S(u / 0.3)))      # Wurzel entlang der Griffachse breiter (Ballen statt Rohr)
         for j in range(k):
-            a = j / k * 2 * np.pi; pts.append(C[i] + r * (np.cos(a) * Nv * 0.85 + np.sin(a) * Bv)); uu.append(u)   # leicht flach (Daumenballen-Seite)
+            a = j / k * 2 * np.pi; pts.append(Ci + r * (np.cos(a) * Nv * 0.85 + np.sin(a) * Bv * sb)); uu.append(max(u, 0.0))   # leicht flach (Daumenballen-Seite)
     tip = C[-1] + T[-1] * TH_RAD[2] * 0.6; pts.append(tip); uu.append(1.0)
+    root = C[0] - T[0] * TH_ROOT[4] * 0.5; pts.append(root); uu.append(0.0)
     F = []
-    for i in range(n - 1):
+    for i in range(nr - 1):
         for j in range(k):
             a0 = i * k + j; a1 = i * k + (j + 1) % k; b0 = a0 + k; b1 = a1 + k; F += [(a0, b0, a1), (a1, b0, b1)]
-    ti = len(pts) - 1
-    for j in range(k): F.append(((n - 1) * k + j, ti, (n - 1) * k + (j + 1) % k))
+    ti, ri = len(pts) - 2, len(pts) - 1
+    for j in range(k): F.append(((nr - 1) * k + j, ti, (nr - 1) * k + (j + 1) % k))
+    for j in range(k): F.append((j, (j + 1) % k, ri))                              # Wurzel geschlossen
     return np.array(pts), np.array(F), np.array(uu)
 
 
