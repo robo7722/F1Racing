@@ -2725,6 +2725,10 @@ function widenRim(M, X, y0, y1, zA, zB) { if (!M) return; const S = t => { t = c
       p.setX(i, Math.sign(x) * (ax + (X - ax) * w)); ch = true; }
     if (ch) { p.needsUpdate = true; g.computeBoundingSphere(); } } }
 widenRim(CARM, 0.24, 0.56, 0.64, 0.48, 0.71); widenRim(CARM2, 0.24, 0.56, 0.70, 0.46, 0.70);
+// F2-Modell: Lenksäule (dünner Kegel, Spitze bei z 0,573) stach durch die Lenkradmitte und ragte vor dem Display heraus – Spitze hinter die Nabe legen
+if (CARM2) for (const Lv of CARM2.lods) { const g = Lv.matte; if (!g) continue; const p = g.attributes.position; let ch = false;
+  for (let i = 0; i < p.count; i++) if (Math.abs(p.getX(i)) < 0.004 && Math.abs(p.getY(i) - 0.594) < 0.006 && p.getZ(i) > 0.55 && p.getZ(i) < 0.6) { p.setZ(i, 0.69); ch = true; }
+  if (ch) p.needsUpdate = true; }
 // F2-Modell: auf der Nase (Mitte) steckten zwei dünne dunkle Stäbe aus dem Quellmodell – in Cockpit- und TV-Sicht ein schwebender Strich mit Punkt vor dem Auto:
 //  a) Antenne über der Vorderachse (z ≈ 1,40, y 0,669–0,903, 3–4 mm dick, mit Kappe oben)   b) Nadel weiter vorn (z ≈ 1,54–1,57, y 0,647–0,788)
 // Alles oberhalb des Fußes auf den Fuß zurückziehen: die Stäbe fallen zu Flächen knapp unter dem Nasenlack zusammen und sind unsichtbar.
@@ -3028,9 +3032,9 @@ const COCK_PAD = new THREE.MeshStandardMaterial({ color: 0x24252b, roughness: .9
 // Es misst nichts am Fahrzeugmodell und schließt nirgends daran an: das Fahrzeugmodell wird in diesem Bereich (Kasten um das neue Modell) in der Cockpitansicht nicht gezeichnet.
 // Erst kurz vor der Vorderachse taucht das neue Modell 1,5 cm kleiner in die echte Nase ein. Maße: hw = halbe Breite, hC = Deckhöhe in der Mitte (je Längsposition z).
 const CK = {
-  f1: { zB: -0.35, z1: 0.74, rc: 0.09, wo: 0.2, wx: [[0.12, 0], [0.30, 0.03], [0.36, 0.05], [0.48, 0.066]], yR: 0.615, fl: 0.30, zCut: 1.82, zF: 2.0, yLo: 0.31,
+  f1: { zB: -0.35, z1: 0.74, rc: 0.05, wo: 0.2, wx: [[0.12, 0], [0.30, 0.03], [0.36, 0.05], [0.48, 0.066]], yR: 0.615, fl: 0.30, zCut: 1.82, zF: 2.0, yLo: 0.31,
     hw: [[-0.35, 0.37], [0.45, 0.37], [0.74, 0.31], [1.0, 0.285], [1.4, 0.23], [1.6, 0.19], [2.0, 0.14]], hC: [[0.74, 0.665], [1.6, 0.655], [1.8, 0.635], [2.0, 0.605]] },
-  f2: { zB: -0.35, z1: 0.70, rc: 0.09, wo: 0.21, wx: [[0.12, 0], [0.30, 0.03], [0.36, 0.05], [0.48, 0.066]], yR: 0.655, fl: 0.14, zCut: 1.72, zF: 1.9, yLo: 0.30,
+  f2: { zB: -0.35, z1: 0.70, rc: 0.05, wo: 0.21, wx: [[0.12, 0], [0.30, 0.03], [0.36, 0.05], [0.48, 0.066]], yR: 0.655, fl: 0.14, zCut: 1.72, zF: 1.9, yLo: 0.30,
     hw: [[-0.35, 0.37], [0.45, 0.37], [0.70, 0.30], [0.8, 0.25], [1.0, 0.24], [1.2, 0.22], [1.4, 0.20], [1.6, 0.18], [1.9, 0.165]], hC: [[0.70, 0.705], [0.8, 0.705], [1.0, 0.695], [1.4, 0.685], [1.6, 0.655], [1.8, 0.615], [1.9, 0.59]] } };
 // Innenwand der Wanne: neben Ellbogen, Unterarmen und Händen weiter außen (wx: Zuschlag je Längsposition z, weich) – Unterarme und Hände am Lenkrad lagen sonst bis 2 cm in der Wand (x 0,20)
 const ckWo = (G, z) => { const T = G.wx; if (z <= T[0][0]) return G.wo; for (let i = 1; i < T.length; i++) if (z <= T[i][0]) { const t = (z - T[i - 1][0]) / (T[i][0] - T[i - 1][0]); return G.wo + lerp(T[i - 1][1], T[i][1], t * t * (3 - 2 * t)); } return G.wo + T[T.length - 1][1]; };
