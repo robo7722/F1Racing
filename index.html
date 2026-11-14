@@ -7969,7 +7969,7 @@ function startRace() {
   document.body.classList.toggle('noBoost', !!SERIES[SER].noBoost);
   diff = DIFF[S.diff] || DIFF.mid;
   seriesProfiles();
-  placeOnGrid(); precompile(); warmUpTrack(); visorNew(); document.body.classList.add('warmhelm'); setTimeout(() => document.body.classList.remove('warmhelm'), 1800);   /* Helmrand einmal unsichtbar zeichnen lassen */
+  placeOnGrid(); warmRace(); visorNew(); document.body.classList.add('warmhelm'); setTimeout(() => document.body.classList.remove('warmhelm'), 1800);   /* Helmrand einmal unsichtbar zeichnen lassen */
   DYN.acc = DYN.n = DYN.bad = DYN.calm = 0; DYN.tChg = performance.now() + 5000;   /* Auflösung in den ersten 15 s nicht umschalten: jede Umschaltung legt alle Render-Ziele neu an (Hänger genau am Start) */
   raceSongPick(false);
   $('#hud').style.visibility = ''; running = true; hadRace = true; paused = false; resultsShown = false; raceState = 'lights'; lightsT = 0; lightsOut = 5 + Math.random() * 1.4;
@@ -7982,13 +7982,24 @@ function startRace() {
   $$('#lights i').forEach(i => i.classList.remove('on'));
   document.body.classList.add('racing'); applyLine();
   layoutControls();
-  warmCams();
 }
 // Alle Kameras einmal vorwärmen. Jede Kamera schaltet eigene Teile und Materialien ein (Verfolger: Halo in Lackfarbe und mittlere Detailstufe des eigenen
 // Autos; Helmkamera: aufgeschnittenes Cockpit, Geister-Halo, Lenkrad, Arme; TV-Kamera: einfarbiges Halo). Vorgewärmt war bisher nur die Kamera, mit der das
 // Rennen startet – beim ersten Umschalten mitten im Rennen übersetzte der Browser dann 4–5 Shader (Hänger). Jetzt stellt das Spiel beim Rennstart jede Kamera
 // kurz ein und zeichnet sie einmal auf genau dem Weg, den auch das Rennen nimmt (dabei sind alle Autoteile sichtbar, damit auch die Varianten ferner Autos
 // dabei sind). Zu sehen ist davon nichts: alles läuft in einem Zug, angezeigt wird erst das letzte, normale Bild.
+// Vorwärmen für das Rennen (Shader übersetzen, Geometrien/Texturen hochladen, alle Kameras einmal zeichnen) – dauert auf dem Handy einige Sekunden.
+// Läuft deshalb schon im Ladebildschirm der Strecke (nach buildTrack + placeOnGrid), nicht mehr erst beim Druck auf „Rennen starten“ (dort stand das Bild).
+// Der Schlüssel merkt sich, wofür vorgewärmt wurde (Strecke, Grafik, Klasse, eigenes Auto, Starterfeld); passt er beim Rennstart noch, entfällt die Arbeit.
+let WARM_KEY = '';
+const warmKey = () => BID + '|' + S.gfx + '|' + SER + '|' + (pl ? pl.code : '') + '|' + cars.map(c => c.code).sort().join(',');
+function warmRace() {
+  const key = warmKey(); if (key === WARM_KEY || window.__noWarm || !TRK || !cars.length) return false;
+  precompile(); warmUpTrack();
+  const r0 = running, p0 = paused, h0 = camH; running = true; paused = false; camH = pl.h;   /* die Kamera-Funktionen schalten ihre Teile nur im Rennen um */
+  try { warmCams(); } finally { running = r0; paused = p0; camH = h0; }
+  WARM_KEY = key; return true;
+}
 function warmCams() {
   if (window.__noWarm || !pl || !pl.mesh || !TRK) return; const c0 = S.cam, t0 = performance.now(); const log = window.__warmLog = [[-1, renderer.info.programs.length, 0]];
   const set = c => { S.cam = c; updateMeshes(0); updateCamera(0); drawWheel(0); }, draw = () => { if (composer) { syncAoCam(); composer.render(0); } else renderPlain(); };
@@ -8883,7 +8894,7 @@ function setupCareerRace(laps) {
   S.grid = QL ? 1 : (CHP.qpos || fieldSize()); applyPM();
   ['#results', '#pause'].forEach(x => $(x).classList.add('hidden'));
   const go = () => { placeOnGrid(); $('#go').click(); };
-  if (TRK !== TRACKS[S.track]) { loading(true); setTimeout(() => { buildTrack(S.track); loading(false); go(); }, 30); } else go();
+  if (TRK !== TRACKS[S.track]) { loading(true); setTimeout(() => { try { buildTrack(S.track); placeOnGrid(); warmRace(); } finally { loading(false); } go(); }, 30); } else go();
 }
 function careerStartQuali() { if (!CHP || CHP.round >= CAL.length) return; QL = true; CHP.phase = 'quali'; setupCareerRace(1); }
 const LEN_LAPS = { s: 3, m: 5, l: 8 }, LEN_NAME = { s: 'Kurz', m: 'Mittel', l: 'Lang' };   // Rennlänge in der Karriere: wählbar auf dem Saison-Bildschirm
@@ -9054,7 +9065,7 @@ function menuNext() {
   if (k === 'series') { setSeries(SER, true); MENU.team = (byCode(S.driver) || ALL[0]).team; return showScreen('team'); }
   if (k === 'track') {
     const go = () => showScreen('race');
-    if (TRK !== TRACKS[S.track]) { loading(true); setTimeout(() => { buildTrack(S.track); placeOnGrid(); loading(false); go(); }, 30); } else go();
+    if (TRK !== TRACKS[S.track]) { loading(true); setTimeout(() => { try { buildTrack(S.track); placeOnGrid(); warmRace(); } finally { loading(false); } go(); }, 30); } else go();   /* Strecke bauen UND fürs Rennen vorwärmen in einer Ladezeit */
     return;
   }
   if (k === 'team') { if (!teamOpen(MENU.team)) return; const d = byCode(S.driver); if (!d || d.team !== MENU.team) { S.driver = ALL.find(c => c.team === MENU.team).code; save(); placeOnGrid(); } return showScreen('driver'); }
@@ -9424,7 +9435,9 @@ $('#go').addEventListener('click', () => {
     if (S.ctrl === 'tilt') enableMotion();
   }
   initAudio();
-  if (ROAD_WAIT) { const w = ROAD_WAIT; ROAD_WAIT = null; Promise.race([w, new Promise(r => setTimeout(r, 2000))]).then(() => startRace()); } else startRace();   /* Asphalt-Foto erst fertig laden: sonst wird das Fahrbahn-Material mitten im Start neu übersetzt */
+  /* Ist noch nicht (oder für ein anderes Starterfeld/Auto) vorgewärmt, läuft das Vorwärmen jetzt – dann aber hinter dem Ladebildschirm statt mit stehendem Bild */
+  const launch = () => { placeOnGrid(); if (warmKey() !== WARM_KEY && !window.__noWarm) { loading(true); setTimeout(() => { try { startRace(); } finally { loading(false); } }, 40); } else startRace(); };
+  if (ROAD_WAIT) { const w = ROAD_WAIT; ROAD_WAIT = null; Promise.race([w, new Promise(r => setTimeout(r, 2000))]).then(launch); } else launch();   /* Asphalt-Foto erst fertig laden: sonst wird das Fahrbahn-Material mitten im Start neu übersetzt */
 });
 function loading(on) { if (on) { const t = typeof TRACKS !== 'undefined' && TRACKS[S.track]; $('#ldTrk').textContent = t ? t.name + (t.land ? ' · ' + t.land : '') : ''; } $('#loading').classList.toggle('hidden', !on); }
 
@@ -9436,7 +9449,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.84'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.85'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
