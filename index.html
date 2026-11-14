@@ -7669,13 +7669,13 @@ function applyVolumes() {
   if (SFX) SFX.gain.setTargetAtTime(S.sound ? S.volCar * 1.2 : 0, ac.currentTime, 0.05);
 }
 // ===== Aufgenommene Sounds (ElevenLabs Sound Effects, Ordner sounds/, siehe docs/SOUNDS.md) =====
-// Motor je Klasse: zwei nahtlose Loops (mittlere / hohe Drehzahl) mit gemessenem Grundton (Hz, Zündfrequenz der Aufnahme). Im Spiel wird jede Aufnahme
-// auf die aktuelle Zündfrequenz umgestimmt (playbackRate) und zwischen beiden gleich laut überblendet (Kosinus/Sinus über die Frequenz, logarithmisch).
+// Motor je Klasse: zwei nahtlose Loops (mittlere / hohe Drehzahl) mit gemessenem Grundton (Hz). Im Spiel wird jede Aufnahme auf die aktuelle
+// Zündfrequenz × tp umgestimmt (playbackRate) und je nach Drehzahl gleich laut überblendet (Kosinus/Sinus).
 // Fehlt eine Datei oder lädt sie nicht, bleibt der synthetische Motor (Oszillatoren) – das Spiel klingt nie stumm.
-const SND_ENG = {
-  f1: { cyl: 3, vol: 0.2, lo: ['sounds/f1_mittel.mp3', 230], hi: ['sounds/f1_hoch.mp3', 0] },
-  f2: { cyl: 3, vol: 0.2, lo: ['sounds/f2_mittel.mp3', 248], hi: ['sounds/f2_hoch.mp3', 0] },
-  kart: { cyl: 1, vol: 0.2, lo: ['sounds/kart_mittel.mp3', 0], hi: ['sounds/kart_hoch.mp3', 0] } };   // Grundton 0 = noch nicht gemessen → Aufnahme nicht verwenden
+const SND_ENG = {   // cyl: Zündungen je Umdrehung · tp: Tonhöhen-Faktor (Aufnahme klingt eine Stufe tiefer als die reine Zündfrequenz, sonst bis 2,6-fach hochgestimmt = dünn) · x: Drehzahl, ab/bis der hohe Loop übernimmt
+  f1: { cyl: 3, tp: 0.6, vol: 0.55, x: [7000, 10500], lo: ['sounds/f1_mittel.wav', 230], hi: ['sounds/f1_hoch.wav', 260] },
+  f2: { cyl: 3, tp: 0.6, vol: 0.55, x: [6000, 9000], lo: ['sounds/f2_mittel.wav', 255], hi: ['sounds/f2_hoch.wav', 280] },
+  kart: { cyl: 1, tp: 1.0, vol: 0.5, x: [8000, 12000], lo: ['sounds/kart_mittel.wav', 155], hi: ['sounds/kart_hoch.wav', 177] } };   // Grundton (Hz) gemessen mit tools/sounds/aufbereiten.py; 0 = Aufnahme nicht verwenden
 const SND_CRASH = { auto: 'sounds/crash_auto.mp3', wand: 'sounds/crash_wand.mp3', schwer: 'sounds/crash_schwer.mp3', kart: 'sounds/crash_kart.mp3' };
 const SNDB = {};   // url -> AudioBuffer | 'laedt' | null (fehlt)
 function sndLoad(url) { if (!ac || SNDB[url] !== undefined) return; SNDB[url] = 'laedt';
@@ -7690,15 +7690,15 @@ function sndEngine(E, cls, on, load, t) {
   const key = cls + (bLo ? 'L' : '') + (bHi ? 'H' : '');
   if (M.cls !== key) { for (const v of M.v) { try { v.src.stop(t + 0.05); } catch (e) {} } M.v = []; M.cls = key;
     for (const [b, base] of [[bLo, D.lo[1]], [bHi, D.hi[1]]]) { if (!b) { M.v.push(null); continue; } const src = ac.createBufferSource(), g = ac.createGain(); src.buffer = b; src.loop = true; g.gain.value = 0; src.connect(g); g.connect(M.lp); src.start(t, Math.random() * b.duration); M.v.push({ src, g, base }); } }
-  const fq = E.rpm / 60 * D.cyl, [L, H] = M.v;
-  let x = 0; if (L && H) x = clamp(Math.log(fq / L.base) / Math.log(H.base / L.base), 0, 1); else if (H) x = 1;
+  const fq = E.rpm / 60 * D.cyl * D.tp, [L, H] = M.v;   // beide Loops auf dieselbe Zieltonhöhe gestimmt (kein Schweben/zwei Motoren beim Überblenden)
+  let x = 0; if (L && H) { x = clamp((E.rpm - D.x[0]) / (D.x[1] - D.x[0]), 0, 1); x = x * x * (3 - 2 * x); } else if (H) x = 1;   // Klangfarbe: unten der mittlere, oben der hohe (hellere) Loop
   if (L) { L.src.playbackRate.setTargetAtTime(clamp(fq / L.base, 0.45, 2.6), t, 0.015); L.g.gain.setTargetAtTime(Math.cos(x * Math.PI / 2), t, 0.03); }
   if (H) { H.src.playbackRate.setTargetAtTime(clamp(fq / H.base, 0.45, 2.6), t, 0.015); H.g.gain.setTargetAtTime(Math.sin(x * Math.PI / 2), t, 0.03); }
   M.lp.frequency.setTargetAtTime(1500 + load * 10500, t, 0.05);   // Gas weg: dumpfer (Schub), Vollgas: offen
   M.out.gain.setTargetAtTime(on ? D.vol * (E.cut > 0 ? 0.35 : 0.55 + 0.45 * load) : 0, t, E.cut > 0 ? 0.01 : 0.04);
   return true;
 }
-window.__snd = (init) => { if (init) initAudio(); return { ac: !!ac, dateien: Object.fromEntries(Object.entries(SNDB).map(([k, v]) => [k, v && typeof v === 'object' ? +v.duration.toFixed(2) + ' s' : v])), aktiv: ENG && ENG.smp ? ENG.smp.cls : null }; };   // Test/Diagnose
+window.__snd = (init) => { if (init) initAudio(); return { ac: !!ac, dateien: Object.fromEntries(Object.entries(SNDB).map(([k, v]) => [k, v && typeof v === 'object' ? +v.duration.toFixed(2) + ' s' : v])), aktiv: ENG && ENG.smp ? ENG.smp.cls : null, drehzahl: ENG ? Math.round(ENG.rpm) : null, loops: ENG && ENG.smp ? ENG.smp.v.map(v => v && { tempo: +v.src.playbackRate.value.toFixed(2), anteil: +v.g.gain.value.toFixed(2) }) : null, pegel: ENG && ENG.smp ? +ENG.smp.out.gain.value.toFixed(3) : null }; };   // Test/Diagnose
 function initAudio() {
   if (ac) { ac.resume && ac.resume(); return; }
   try {
@@ -9635,7 +9635,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.94'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.95'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
