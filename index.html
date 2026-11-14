@@ -1348,7 +1348,7 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
     <div class="tog"><span>Team RONE Racing freischalten</span><button class="sw" data-tog="rone" aria-label="Team RONE Racing freischalten"></button></div>
     <p class="hint left">Schaltet das Team RONE Racing mit Robert Nemec in der Teamauswahl frei. Es fährt nur, wenn du es selbst wählst.</p>
     <div class="tog"><span>FPS- und Frame-Pacing-Anzeige</span><button class="sw" data-tog="perfHud" aria-label="FPS- und Frame-Pacing-Anzeige"></button></div>
-    <p class="hint left">Zeigt im Rennen oben in der Mitte die Bildrate, die mittlere Bildzeit, die Schwankung (±) und das langsamste Bild der letzten Sekunde. Der Graph darunter zeigt jede Bildzeit: grün = flüssig, gelb = ein Bild verpasst, rot = Ruckler. Die Linie markiert 60 FPS.</p>
+    <p class="hint left">Zeigt im Rennen oben in der Mitte die Bildrate, die mittlere Bildzeit, die Schwankung (±) und das langsamste Bild der letzten Sekunde. Der Graph darunter zeigt jede Bildzeit: grün = im Takt der gewählten Bildrate, gelb = ein Bild zu spät, rot = Ruckler. Die Linie markiert die Ziel-Bildzeit (z. B. 16,7 ms bei 60 FPS).</p>
     <div class="tog"><span>Nordschleife freischalten</span><button class="sw" data-tog="nos" aria-label="Nordschleife freischalten"></button></div>
     <p class="hint left">Die komplette Nürburgring-Nordschleife (20,8 km) als Zusatzstrecke im schnellen Spiel und Zeitrennen. In der Karriere fährt sie nicht mit.</p>
     <button class="big alt danger" id="careerReset" style="margin-top:10px">Karriere zurücksetzen</button>
@@ -9339,7 +9339,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.68'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.69'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -9393,20 +9393,27 @@ function sphereTick(dt) { // Bildschirm der LED-Kugel: meist das Emoji mit wechs
 /* Bildraten-Begrenzer im V-Sync-Takt: requestAnimationFrame kommt immer synchron zum Display. Statt nach Zeit zu
    zählen (ergab bei 60 FPS auf 90/120/144 Hz ein Wechselspiel aus 1 und 2 Display-Bildern), wird die Bildwiederhol-
    rate gemessen und genau jedes n-te Display-Bild gezeichnet. So steht jedes Bild gleich lang. */
-const VS = { prev: 0, d: new Float32Array(48), i: 0, n: 0, P: 1000 / 60, hz: 0, step: 1, lastDraw: 0, skip: false, cal: 24, cand: 0, cc: 0 };
+const VS = { prev: 0, all: new Float32Array(120), ai: 0, an: 0, d: new Float32Array(48), i: 0, n: 0, P: 1000 / 60, hz: 0, step: 1, lastDraw: 0, skip: false, cal: 24, k: 0, cand: 0, cc: 0 };
 const HZ_STD = [30, 48, 50, 60, 72, 75, 90, 100, 120, 144, 165, 240];
-/* Messung: Nur der Abstand direkt nach einem AUSGELASSENEN Bild ist der reine Display-Takt – nach einem gezeichneten Bild
-   ist er um die Zeichenzeit verlängert (v1.66 hielt ein 120-Hz-Handy deshalb für 60 Hz: 60er-Modus lief ungebremst mit ~80).
-   Zum Start (und nach Rückkehr in die App) wird darum kurz jedes zweite Bild ausgelassen (Kalibrierung, < 0,5 s);
-   danach dienen die im Betrieb ohnehin ausgelassenen Bilder zum Nachführen. */
+/* Display-Takt messen. requestAnimationFrame kommt nie schneller als das Display – aber langsamer, wenn das Zeichnen
+   länger dauert oder das Handy das Display gerade herunterschaltet (viele 120-Hz-Handys laufen im ruhigen Menü mit 60 Hz).
+   Deshalb zählen die KÜRZESTEN Abstände (10-%-Wert), nie der Durchschnitt:
+   - Kalibrierung beim Start/nach Rückkehr: kurz jedes zweite Bild auslassen, Abstände danach sind der reine Takt.
+   - hochschalten (z. B. 60 → 120 Hz, sobald das Rennen läuft): wenn genug Abstände kurz sind – zweimal hintereinander.
+   - herunterschalten: nur, wenn auch nach ausgelassenen Bildern fast nie ein kurzer Abstand kommt – sechsmal hintereinander.
+   v1.66–1.68 nahmen den Median: ein 120-Hz-Handy galt dann als 60 Hz (60er-Modus lief mit ~80, 30er ruckelte zwischen 25/33/42 ms). */
+function vsLow(buf, n) { const a = Array.from(buf.subarray(0, n)).sort((x, y) => x - y), hz = Math.min(240, 1000 / a[Math.floor(n * 0.1)]); return HZ_STD.find(h => Math.abs(h - hz) / h < 0.05) || Math.round(hz); }
 function vsyncGate(now) {
-  const d = now - VS.prev, pure = VS.prev && VS.skip && d > 2 && d < 60; VS.prev = now;
+  const d = now - VS.prev, ok = VS.prev && d > 2 && d < 60, pure = ok && VS.skip; VS.prev = now;
+  if (ok) { VS.all[VS.ai] = d; VS.ai = (VS.ai + 1) % VS.all.length; VS.an = Math.min(VS.an + 1, VS.all.length); }
   if (pure) { VS.d[VS.i] = d; VS.i = (VS.i + 1) % VS.d.length; VS.n = Math.min(VS.n + 1, VS.d.length); }
   if (VS.cal > 0) {   // Kalibrierung
-    if (pure && --VS.cal === 0) { VS.hz = vsHz(); VS.cc = 0; }
+    if (pure && --VS.cal === 0) { VS.hz = vsLow(VS.d, VS.n); VS.cc = 0; VS.k = 0; }
     else { VS.skip = !VS.skip; if (VS.skip) return false; VS.lastDraw = now; return true; }
-  } else if (pure && VS.n >= 24 && VS.i % 12 === 0) {   // Nachführen (z. B. Handy schaltet auf 60 Hz)
-    const hz = vsHz(); if (hz !== VS.hz) { if (hz === VS.cand) VS.cc++; else { VS.cand = hz; VS.cc = 1; } if (VS.cc >= 3) { VS.hz = hz; VS.cc = 0; } } else VS.cc = 0;
+  } else if (++VS.k >= 20 && VS.an >= 40) {   // Nachführen
+    VS.k = 0; const up = vsLow(VS.all, VS.an), dn = VS.n >= 24 ? vsLow(VS.d, VS.n) : VS.hz;
+    const hz = up > VS.hz ? up : dn < VS.hz ? dn : VS.hz;
+    if (hz !== VS.hz) { if (hz === VS.cand) VS.cc++; else { VS.cand = hz; VS.cc = 1; } if (VS.cc >= (hz > VS.hz ? 2 : 6)) { VS.hz = hz; VS.cc = 0; } } else VS.cc = 0;
   }
   VS.P = 1000 / VS.hz;
   const cap = S.fpsCap === 'max' ? 0 : +S.fpsCap || 60;
@@ -9414,8 +9421,7 @@ function vsyncGate(now) {
   if (VS.step > 1 && VS.lastDraw && now - VS.lastDraw < (VS.step - 0.5) * VS.P) return (VS.skip = true, false);
   VS.skip = false; VS.lastDraw = now; return true;
 }
-function vsHz() { const a = Array.from(VS.d.subarray(0, VS.n)).sort((x, y) => x - y), hz = 1000 / a[a.length >> 1]; return HZ_STD.find(h => Math.abs(h - hz) / h < 0.05) || Math.round(hz); }
-document.addEventListener('visibilitychange', () => { if (!document.hidden) { VS.cal = 16; VS.prev = 0; VS.n = VS.i = 0; } });   // nach Rückkehr neu messen
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { VS.cal = 16; VS.prev = 0; VS.n = VS.i = VS.an = VS.ai = 0; } });   // nach Rückkehr neu messen
 /* FPS- und Frame-Pacing-Anzeige (Extras): Abstand zwischen tatsächlich gezeichneten Bildern */
 const PERF = { on: null, prev: 0, buf: new Float32Array(120), i: 0, n: 0, tUpd: 0, el: null, txt: null, g: null, cx: null };
 function perfTick(now) {
@@ -9425,10 +9431,10 @@ function perfTick(now) {
   const d = now - PERF.prev; PERF.prev = now;
   PERF.buf[PERF.i] = d; PERF.i = (PERF.i + 1) % PERF.buf.length; PERF.n = Math.min(PERF.n + 1, PERF.buf.length);
   if (!PERF.g) { PERF.txt = $('#perfTxt'); PERF.g = $('#perfG'); PERF.cx = PERF.g.getContext('2d'); }
-  const L = PERF.buf.length, c = PERF.cx, W = PERF.g.width, H = PERF.g.height, sc = H / 50, bw = W / L;   // Graph: 0–50 ms
+  const T = 1000 * VS.step / (VS.hz || 60), L = PERF.buf.length, c = PERF.cx, W = PERF.g.width, H = PERF.g.height, sc = H / Math.max(50, T * 1.6), bw = W / L;   // Graph: 0–50 ms (bei 30 FPS mehr)
   c.clearRect(0, 0, W, H);
-  for (let k = 0; k < PERF.n; k++) { const v = PERF.buf[(PERF.i - PERF.n + k + L) % L]; c.fillStyle = v <= 20 ? '#22c55e' : v <= 36 ? '#eab308' : '#ef4444'; const h = Math.max(1, Math.min(H, v * sc)); c.fillRect((L - PERF.n + k) * bw, H - h, Math.max(1, bw - 0.5), h); }
-  c.fillStyle = 'rgba(255,255,255,.55)'; c.fillRect(0, Math.round(H - 16.67 * sc), W, 1);
+  for (let k = 0; k < PERF.n; k++) { const v = PERF.buf[(PERF.i - PERF.n + k + L) % L]; c.fillStyle = v <= T * 1.15 + 1 ? '#22c55e' : v <= T * 2 + 1 ? '#eab308' : '#ef4444';   /* grün = im Takt des Ziels, gelb = ein Bild zu spät, rot = Ruckler */ const h = Math.max(1, Math.min(H, v * sc)); c.fillRect((L - PERF.n + k) * bw, H - h, Math.max(1, bw - 0.5), h); }
+  c.fillStyle = 'rgba(255,255,255,.55)'; c.fillRect(0, Math.round(H - T * sc), W, 1);   // Linie = Ziel-Bildzeit
   if (now - PERF.tUpd < 250) return; PERF.tUpd = now;   // Text 4× pro Sekunde
   let sum = 0, mx = 0, cnt = 0;   // Werte der letzten Sekunde
   for (let k = 1; k <= PERF.n && sum < 1000; k++) { const v = PERF.buf[(PERF.i - k + L) % L]; sum += v; if (v > mx) mx = v; cnt++; }
