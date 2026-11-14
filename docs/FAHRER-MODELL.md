@@ -1,6 +1,6 @@
 # Rennfahrer-Modell
 
-Stand: 14.11.2026 (v1.58) – derselbe Fahrer in Kart, F1 und F2; stehende Figur als Vorschau.
+Stand: 14.11.2026 (v1.59) – derselbe Fahrer in Kart, F1 und F2; stehende Figur als Vorschau.
 
 ## Dateien
 - `kartfahrer.bin` – sitzender Kart-Fahrer fürs Spiel: Körper + beide Handschuhe als EIN Netz (~14 200 Dreiecke).
@@ -90,8 +90,12 @@ Geprüft rechnerisch (Punkte aus dem laufenden Spiel ausgelesen, Windungszahl ge
 - Je Team Grundfarbe, zweite Farbe, Akzent (Streifen, Schulterpasse) und Handschuhfarbe, ohne Logos. Schnitte: 0 einfarbig, 1 Unterteil (z. B. McLaren schwarz unten), 2 Seitenteile + Ärmel (Mercedes, Williams, Haas), 3 Schärpe (Ferrari, Red Bull), 4 Schulterpartie + Ärmel oben (Aston Martin, Alpine, Cadillac).
 - F2: aus der Lackierung (Hauptfarbe, Unterteil oder Flügelfarbe).
 
+## v1.59 – F1-Cockpit von außen wie beim F2
+- Wunsch: auch beim F1 von außen ins modellierte Cockpit sehen und den Anzug erkennen.
+- **Innenraum dunkel**: Sitzlehne, Kopfstütze, Innenwände neben den Schultern und der Cockpitrand werden in Cockpitfarbe gezeichnet statt in Wagenfarbe (zweiter Bereich `COCK.f1.b2`: |x| < 0,25, z −0,25…0,38, y < 0,76; wirkt in `inCock` und `cockGLSL`). Vorher saß der Fahrer zwischen orangen bzw. teamfarbenen Wänden.
+- **Lenkrad im Auto** (F1 und F2, alle Autos): `f1CarWheel` – Kopie des Cockpit-Lenkrads (Carbon-Körper, Griffe, Tasten; ohne Display) an `swPos`, dreht mit dem Einschlag; die Hände greifen es jetzt sichtbar (vorher griffen sie ins Leere). In Helm- und TV-Kamera des Spielers bleibt das Cockpit-Lenkrad SW zuständig, die Kopie ist dann aus. Gehört zu den Detailteilen (Fernmodell blendet es aus).
+
 ## Offen / Ideen
 - Lenkrad dreht sich beim Lenken, die Hände nicht (war beim alten Fahrer genauso).
 - Leichte Knautschfalten an der Hüfte durch das Biegen (im Sitz kaum sichtbar).
-- KI-Autos von außen: die Hände greifen das (nicht gezeichnete) Lenkrad – wie beim alten Fahrer. Ein vereinfachtes Lenkrad je Auto wäre eine Idee.
 - Stehende Figur könnte fürs Podium/Showroom eingebaut werden.
