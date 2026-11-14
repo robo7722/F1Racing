@@ -2464,7 +2464,12 @@ const ACG = {};
   const img = src => new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
   const cut = (c, o) => { const cv = document.createElement('canvas'); cv.width = c.width; cv.height = c.height; const g = cv.getContext('2d'); g.drawImage(c, 0, 0);
     const oc = document.createElement('canvas'); oc.width = c.width; oc.height = c.height; const og = oc.getContext('2d'); og.drawImage(o, 0, 0, c.width, c.height);
-    const d = g.getImageData(0, 0, cv.width, cv.height), a = og.getImageData(0, 0, cv.width, cv.height).data; for (let i = 0; i < a.length; i += 4) d.data[i + 3] = a[i]; g.putImageData(d, 0, 0); return cv; };
+    const d = g.getImageData(0, 0, cv.width, cv.height), a = og.getImageData(0, 0, cv.width, cv.height).data, D = d.data; for (let i = 0; i < a.length; i += 4) D[i + 3] = a[i];
+    // Blattränder: im Foto deutlich heller als das Blatt (Laub 66/99/18, Rand 149/160/93) – mit Sonne, Leuchten und Nachschärfen wurden daraus weiße Punkte
+    // in den Baumkronen (v. a. auf dem Handy). Ränder auf höchstens 15 % über der mittleren Blatthelligkeit abdunkeln.
+    let sl = 0, sn = 0; for (let i = 0; i < D.length; i += 4) if (D[i + 3] > 200) { sl += D[i] * 0.3 + D[i + 1] * 0.59 + D[i + 2] * 0.11; sn++; }
+    const lMax = (sl / Math.max(1, sn)) * 1.15; for (let i = 0; i < D.length; i += 4) { if (D[i + 3] > 230) continue; const l = D[i] * 0.3 + D[i + 1] * 0.59 + D[i + 2] * 0.11; if (l > lMax) { const f = lMax / l; D[i] *= f; D[i + 1] *= f; D[i + 2] *= f; } }
+    g.putImageData(d, 0, 0); return cv; };
   await Promise.all([
     Promise.all(['Color', 'NormalGL'].map(m => new THREE.TextureLoader().loadAsync(`textures/acg_Grass004_${m}.jpg`).catch(() => null))).then(([d, n]) => { if (!d || !n) return;
       for (const t of [d, n]) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = maxAniso; } d.colorSpace = THREE.SRGBColorSpace; n.colorSpace = THREE.NoColorSpace; ACG.grass = { d, n }; }),
@@ -9233,7 +9238,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.57'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.58'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
