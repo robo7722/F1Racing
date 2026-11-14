@@ -3276,6 +3276,7 @@ function numberTex(num, bg) {
     g.font = 'italic 900 62px system-ui,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(String(num), w / 2, h / 2 + 3);
   });
 }
+const CAR_FAR3 = 80, CAR_HIDE = 600;   /* ab 80 m das stark vereinfachte Fernmodell (clusterGeo); ab 600 m (Auto < 5 Pixel) wird ein Gegner gar nicht mehr gezeichnet */
 const CAR_LOD = [10, 35], LOD_HYS = 1.5, LOD_FADE = 0.35;   // Abstand (m) zur Kamera: darunter volle Stufe / mittlere Stufe, darüber Fernmodell (± Schaltlücke gegen Hin- und Herspringen)
 // Weiche Überblendung zwischen den Stufen statt Aufploppen: alte und neue Stufe ~0,35 s gleichzeitig, per Punktraster (wie beim Rasen) einander
 // ergänzend – jeder Pixel zeigt genau eine der beiden. Dafür hat jedes Netz eines Autos eine eigene Materialkopie (gleicher Shader, nichts wird neu übersetzt).
@@ -3321,6 +3322,30 @@ function farCarGeo(tp, T) {
   const hg = new THREE.SphereGeometry(0.15, 10, 7).scale(1, 0.97, 1.1).translate(0, MD.helm[0], MD.helm[1]); add(hg, 0, 0, 0, 4, 1, col(T.acc)); hg.dispose();
   const o = new THREE.BufferGeometry(); o.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); o.setAttribute('normal', new THREE.Float32BufferAttribute(Nn, 3)); o.setAttribute('color', new THREE.Float32BufferAttribute(C, 3)); o.setAttribute('aCls', new THREE.Float32BufferAttribute(K, 1));
   o.setIndex(I); o.computeBoundingSphere(); return o;
+}
+// Fernmodell für große Abstände (ab CAR_FAR3): das Fernmodell wird beim Laden auf höchstens ~3.000 Dreiecke vereinfacht. Eckpunkte, die in dieselbe
+// Rasterzelle fallen (gleiche Lackklasse, gleiche Hauptrichtung der Normale), werden zu einem Punkt gemittelt; zusammengefallene Dreiecke entfallen.
+// Ab 80 m ist ein Auto höchstens ~35 Pixel lang – die Zellen (wenige cm) liegen weit unter einem Pixel.
+function clusterGeo(g, maxTris = 3000) {
+  const P = g.attributes.position, Nn = g.attributes.normal, C = g.attributes.color, K = g.attributes.aCls, I = g.index.array, n = P.count;
+  for (let cell = 0.04; ; cell *= 1.25) {
+    const map = new Map(), rm = new Int32Array(n), acc = [];   // acc: je neuem Punkt 10 Summen (Ort, Normale, Farbe, Anzahl) + Klasse
+    for (let i = 0; i < n; i++) { const nx = Nn.getX(i), ny = Nn.getY(i), nz = Nn.getZ(i), ax = Math.abs(nx), ay = Math.abs(ny), az = Math.abs(nz);
+      const nd = ax >= ay && ax >= az ? (nx < 0 ? 0 : 1) : ay >= az ? (ny < 0 ? 2 : 3) : (nz < 0 ? 4 : 5), cls = Math.round(K.getX(i));
+      const key = (((Math.floor(P.getX(i) / cell) + 512) * 1024 + Math.floor(P.getY(i) / cell) + 512) * 1024 + Math.floor(P.getZ(i) / cell) + 512) * 64 + cls * 8 + nd;
+      let j = map.get(key); if (j === undefined) { j = acc.length / 11; map.set(key, j); acc.push(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, cls); }
+      const b = j * 11; acc[b] += P.getX(i); acc[b + 1] += P.getY(i); acc[b + 2] += P.getZ(i); acc[b + 3] += nx; acc[b + 4] += ny; acc[b + 5] += nz; acc[b + 6] += C.getX(i); acc[b + 7] += C.getY(i); acc[b + 8] += C.getZ(i); acc[b + 9]++; rm[i] = j; }
+    const idx = [], seen = new Set(), m = acc.length / 11;
+    for (let t = 0; t < I.length; t += 3) { const a = rm[I[t]], b = rm[I[t + 1]], c = rm[I[t + 2]]; if (a === b || b === c || a === c) continue;
+      const lo = Math.min(a, b, c), k = lo === a ? (a * m + b) * m + c : lo === b ? (b * m + c) * m + a : (c * m + a) * m + b; if (seen.has(k)) continue; seen.add(k); idx.push(a, b, c); }
+    if (idx.length / 3 > maxTris && cell < 0.3) continue;
+    const p = new Float32Array(m * 3), nn = new Float32Array(m * 3), cc = new Float32Array(m * 3), kk = new Float32Array(m);
+    for (let j = 0; j < m; j++) { const b = j * 11, w = 1 / acc[b + 9], l = Math.hypot(acc[b + 3], acc[b + 4], acc[b + 5]) || 1;
+      p[j * 3] = acc[b] * w; p[j * 3 + 1] = acc[b + 1] * w; p[j * 3 + 2] = acc[b + 2] * w; nn[j * 3] = acc[b + 3] / l; nn[j * 3 + 1] = acc[b + 4] / l; nn[j * 3 + 2] = acc[b + 5] / l;
+      cc[j * 3] = acc[b + 6] * w; cc[j * 3 + 1] = acc[b + 7] * w; cc[j * 3 + 2] = acc[b + 8] * w; kk[j] = acc[b + 10]; }
+    const o = new THREE.BufferGeometry(); o.setAttribute('position', new THREE.BufferAttribute(p, 3)); o.setAttribute('normal', new THREE.BufferAttribute(nn, 3)); o.setAttribute('color', new THREE.BufferAttribute(cc, 3)); o.setAttribute('aCls', new THREE.BufferAttribute(kk, 1));
+    o.setIndex(idx); o.boundingSphere = g.boundingSphere.clone(); return o;
+  }
 }
 let ROAD_DASH = null;
 // RONE Racing: Roadster aus dem hochgeladenen 3D-Modell (vereinfacht auf ~87k Dreiecke), mit eigener Lackierung nach den Fotos.
@@ -4131,6 +4156,7 @@ function makeCar0(d) {
     const label = carLabel(d, T); g.add(label); scene.add(g);
     // Fernmodell: ab 120 m ist das ganze Auto EIN Netz mit EINEM Zeichenaufruf (statt Karosserie, Carbon, Halo, Helm, Spiegel und vier Rädern einzeln)
     const far = new THREE.Mesh(tp.far || (tp.far = farCarGeo(tp, T)), tp.glossMat); far.visible = false; g.add(far);
+    if (!tp.far3) { try { tp.far3 = clusterGeo(tp.far); } catch (e) { console.warn('far3', e); tp.far3 = tp.far; } }   // ab CAR_FAR3: ~3.000 statt ~13.600 Dreiecke
     const r = { g, fl, fr, wfl, wfr, rr, wrl, wrr, label, helm: hm, rl, body, matte, halo, tp, lod: 0, comp: 1, cam: MD.cam, tv: MD.tv, far, detail: [body, matte, halo, hm, fl, fr, rr].concat(mir ? [mir] : []), oldDrv, mkF1: F1F ? () => f1Driver(d, T, MD, g) : null };
     lodFadePrep(r); return r;
   }
@@ -8256,7 +8282,11 @@ function updateMeshes(dt) {
     m.wfl.rotation.x = m.wfr.rotation.x = m.rr.rotation.x = c.spin;
     if (m.sw) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z; m.sw.visible = c === pl || dx * dx + dz * dz < 625; }   /* Kart: Lenkrad (viele kleine Teile) nur aus der Nähe zeichnen */
     if (m.tp) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z, d2 = dx * dx + dz * dz; const LD = window.__carLod || CAR_LOD, cur = m.lf ? m.lf.to : m.lod, b0 = LD[0] + (cur >= 1 ? -LOD_HYS : LOD_HYS), b1 = LD[1] + (cur >= 2 ? -LOD_HYS : LOD_HYS);
-      if (c === pl) { if (m.lod !== 0 || m.lf) setLod(m, 0, true); } else lodStep(m, d2 < b0 * b0 ? 0 : d2 < b1 * b1 ? 1 : 2, dt);   /* volle Modellstufe (50.000 Dreiecke) nur für den Spieler und Autos unter 13 m */   /* Detailstufen früher: weniger Dreiecke bei vollem Starterfeld */ }
+      if (c === pl) { const w = window.__plLod ?? (!running || S.cam === 2 || S.cam === 3 ? 0 : 1);   /* eigenes Auto: volle Stufe (~112.000 Dreiecke) nur im Cockpit/TV-Kamera und im Stand; in den Verfolgerkameras die mittlere (~37.000) – im Bild nicht zu unterscheiden */
+        if (m.lod !== w || m.lf) setLod(m, w, true); if (!m.g.visible) m.g.visible = true; }
+      else { const hd = window.__carHide || CAR_HIDE, vis = d2 < (m.g.visible ? hd + 25 : hd) ** 2; if (m.g.visible !== vis) m.g.visible = vis;
+        if (vis) { lodStep(m, d2 < b0 * b0 ? 0 : d2 < b1 * b1 ? 1 : 2, dt);
+          if (m.far && m.tp.far3) { const f3 = window.__noFar3 ? m.tp.far : d2 > (m.far.geometry === m.tp.far3 ? CAR_FAR3 - 5 : CAR_FAR3 + 5) ** 2 ? m.tp.far3 : m.tp.far; if (m.far.geometry !== f3) m.far.geometry = f3; } } }  /* volle Modellstufe (50.000 Dreiecke) nur für den Spieler und Autos unter 13 m */   /* Detailstufen früher: weniger Dreiecke bei vollem Starterfeld */ }
   }
 }
 
@@ -9355,7 +9385,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.73'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.74'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
