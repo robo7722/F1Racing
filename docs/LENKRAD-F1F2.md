@@ -44,9 +44,20 @@ Einschlag −1…+1 in 0,02-Schritten, kleinster Abstand (mm, Welt; negativ wär
 Karosserie/Wanne ↔ drehendes Lenkrad: F1 +29,8 mm, F2 +0,2 mm. **Ergebnis: kein Clipping.**
 Handrolle höchstens 20°. Vorher (altes Lenkrad): Zeigefinger durch die Griffschlaufe, Fingerspitzen im Mittelteil, Griffe/Fäuste bis 2 cm im Cockpitrand, Unterarme bis 2 cm in der Wannenwand.
 
+## v1.74 – Daumen, Handschuh, Zittern, Arme, Display
+- **Daumen vorn auf dem Griff**: Das Netz hatte nur einen kurzen Daumenstummel außen am Griff (nach oben). `tools/fahrer/f1_hand_nachbearbeitung.py` zieht den Stummel in die Faust ein, drückt die spitz herausstehende Zeigefingerkuppe flacher und setzt einen **neuen Daumen** als Teil des Handschuhs ein (Schlauch, starr am Handknochen): von außen über die Fahrerseite um den Griff, Spitze nach innen Richtung Tasten (Bogen 105°, 4,5 mm Luft zum Griff). Vorher versucht: Stummel umbiegen bzw. um die Achse drehen → Netz zerknitterte (zu grob, ~35 Punkte).
+- **Handschuh-Design** (F1/F2): statt der fleckigen Foto-Textur der Vorlage ein schlichtes Design aus der Geometrie (aRest der Handschuh-Punkte vom Skript): Handrücken in Handschuhfarbe, alle Flächen zur Griffachse dunkles Wildleder, Naht an der Grenze, Stulpe mit Klettband in Anzugfarbe, feine Ledernarbung (blendet vor dem Flimmern aus).
+- **Zittern der Hand**: Die Handrolle wurde nachgeregelt und sprang bei kleinen Lenkkorrekturen um die Mitte bis 2,3° je 0,01 Einschlag (mit Hysterese bis 15° bei Geradeaus). Jetzt fest aus dem Lenkwinkel: `F1_ROLL · tanh(Einschlag / 0,35)` → höchstens 0,57° je 0,01, geradeaus 0°.
+- **Arme/Hände schwarz**: Test mit knallrotem Anzug zeigte – die dunklen Flächen unten im Helmbild sind die Handschuhe im Schatten der Cockpitwand, die Ärmel liegen fast ganz unter dem Bildrand. Streulicht angehoben: Handschuhe 32 %, Arme 40 % der eigenen Farbe (vorher 16 % / 5 %).
+- **Display „MODE“**: Text lief rechts aus dem Display („BAL…“), weil die Beschriftung davor die Ausrichtung auf links stellte – jetzt rechtsbündig mit Höchstbreite.
+- Prüfung danach: kein Clipping (Handschuh ≥ 1,8 mm, F2-TV Arm +3,1 mm, Karosserie F1 +29,8 / F2 +0,2 mm).
+
+![[bilder/hand_v174_daumen.png]]
+![[bilder/hand_v174_seite.png]]
+
 ## Offen / Ideen
-- Daumen liegen entlang des Griffs nach oben (Faust aus der Vorlage); beim Vorbild liegen sie vorn auf dem Lenkrad. Dafür müsste der Handschuh im Bauskript neu gebogen werden (Vorlage `glove.kmz` nicht im Repo).
-- Handrolle steht beim Lenken meist an der Grenze ±20° – mehr Rolle ließe die Fingerspitzen an den Schlitz kommen.
+- An der Faust bleibt oben ein kleiner Grat (Rest der Zeigefingerkuppe), nur in Nahansicht von außen sichtbar.
+- Handschuh-Nachbearbeitung muss nach jedem Neubau von f1fahrer.bin (build_fahrer.py) erneut laufen.
 - Ellbogen/Oberarme hinter z 0,40 liegen wie bisher gewollt unter dem Rand im Monocoque (nicht geprüft).
 - Außen-Lenkrad (`f1CarWheel`) ohne Display (wie bisher, Leistung).
 

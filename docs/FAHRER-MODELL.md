@@ -129,7 +129,9 @@ Details: [[LENKRAD-F1F2]]. Lenkrad nach Ferrari-Prototyp 2026 (lange, fast senkr
 - Cockpitwanne an Unterarmen/Händen weiter, vorn länger und enger gerundet, F1-Boden tiefer; Cockpitrand der Automodelle an Händen/Griffen geweitet, F1-Plattenrest weg, F2-Lenksäule hinter die Nabe.
 - Prüfung `tools/lenkrad/` (Export + Abstandsprüfung): kein Clipping in F1, F1-TV, F2, F2-TV über den ganzen Lenkbereich.
 
+## v1.74 – Daumen, Handschuh, Hand-Rolle
+Details: [[LENKRAD-F1F2]]. Nach `build_fahrer.py f1` muss `tools/fahrer/f1_hand_nachbearbeitung.py` laufen (neuer Daumen vorn auf dem Griff, Handschuh-Designdaten in aRest, Normalen). Kopf-Eintrag `"hand": "v1.73"` verhindert doppeltes Anwenden.
+
 ## Offen / Ideen
-- Lenkrad dreht sich beim Lenken, die Hände nicht (war beim alten Fahrer genauso).
 - Leichte Knautschfalten an der Hüfte durch das Biegen (im Sitz kaum sichtbar).
 - Stehende Figur könnte fürs Podium/Showroom eingebaut werden.
