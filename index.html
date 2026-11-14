@@ -7978,7 +7978,25 @@ function startRace() {
   $$('#lights i').forEach(i => i.classList.remove('on'));
   document.body.classList.add('racing'); applyLine();
   layoutControls();
+  warmCams();
 }
+// Alle Kameras einmal vorwärmen. Jede Kamera schaltet eigene Teile und Materialien ein (Verfolger: Halo in Lackfarbe und mittlere Detailstufe des eigenen
+// Autos; Helmkamera: aufgeschnittenes Cockpit, Geister-Halo, Lenkrad, Arme; TV-Kamera: einfarbiges Halo). Vorgewärmt war bisher nur die Kamera, mit der das
+// Rennen startet – beim ersten Umschalten mitten im Rennen übersetzte der Browser dann 4–5 Shader (Hänger). Jetzt stellt das Spiel beim Rennstart jede Kamera
+// kurz ein und zeichnet sie einmal auf genau dem Weg, den auch das Rennen nimmt (dabei sind alle Autoteile sichtbar, damit auch die Varianten ferner Autos
+// dabei sind). Zu sehen ist davon nichts: alles läuft in einem Zug, angezeigt wird erst das letzte, normale Bild.
+function warmCams() {
+  if (window.__noWarm || !pl || !pl.mesh || !TRK) return; const c0 = S.cam, t0 = performance.now(); const log = window.__warmLog = [[-1, renderer.info.programs.length, 0]];
+  const set = c => { S.cam = c; updateMeshes(0); updateCamera(0); drawWheel(0); }, draw = () => { if (composer) { syncAoCam(); composer.render(0); } else renderPlain(); };
+  /* zwei Durchläufe: nach einem Besuch in Helm-/TV-Kamera haben die Teile der Verfolgerkamera andere Materialzustände als beim ersten Mal (gemessen: 12 weitere Shader); ein dritter Durchlauf fand nichts Neues mehr */
+  try { const order = [0, 1, 2].concat(pl.mesh.tv ? [3] : []).filter(c => c !== c0).concat([c0]); for (const c of order.concat(order)) { set(c);
+      const hid = [], fc = []; for (const k of cars) if (k.mesh && k.mesh.g) k.mesh.g.traverse(o => { if ((o.isMesh || o.isGroup) && !o.visible) { o.visible = true; hid.push(o); } if (o.isMesh && o.frustumCulled) { o.frustumCulled = false; fc.push(o); } });   /* auch Autos hinter der Kamera mitzeichnen: jedes Team hat eigene Lack-Shader */
+      try { draw(); log.push([c, renderer.info.programs.length, hid.length]); } finally { for (const o of hid) o.visible = false; for (const o of fc) o.frustumCulled = true; } } }
+  catch (e) { console.warn('warmCams', e); }
+  finally { try { set(c0); draw(); } catch (e) { S.cam = c0; } }
+  window.__warmCamMs = Math.round(performance.now() - t0);
+}
+window.__warmCams = () => warmCams();
 const PADS = ['bL', 'bR', 'bBrakeL', 'bBrake', 'bGas', 'bBoost'];
 function applyLayout() {
   const L = S.layout || {};
@@ -9414,7 +9432,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.82'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.83'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

@@ -248,13 +248,16 @@ function drive(R) {
     const camFor = (lap, s) => CFG.mode === 'quick' && !CFG.laps ? cams[Math.min(nc - 1, Math.floor(s / A.L * nc))] : cams[lap % nc];
     const hb = setInterval(() => { const p = A.pl; log('Fahrt: ' + A.raceState + ' t=' + (A.raceTime || 0).toFixed(0) + ' s · ' + Math.round(sLap()) + ' m · Runde ' + (lapC == null ? '-' : lapC < 0 ? 'Anlauf' : lapC + 1) + ' · ' + Math.round((p.v || 0) * 3.6) + ' km/h · Kamera ' + CAMN[A.S.cam] + ' · ' + F.t.length + ' Bilder · ' + samples.length + ' Ansichten' + (A.paused ? ' · PAUSE' : '') + (document.hidden ? ' · VERSTECKT' : '') + ' · rAF ' + rafN + ' · hook ' + hookN + ' · selbst ' + PUMP.n); rafN = hookN = PUMP.n = 0; }, 10000);
     let cur = null;
+    // Nachladen im Rennen: Zählerstände der Grafikkarte (Shader, Texturen, Geometrien) nach jedem Bild des SPIELS. Was der Bot selbst für seine Prüfbilder anlegt,
+    // zählt nicht mit (der Stand wird am Ende des Hakens neu gemerkt). Ein neuer Shader mitten im Rennen = Hänger beim ersten Auftreten (fehlt im Vorwärmen).
+    const ld = { p: -1, t: 0, g: 0, progs: [], tex: 0, geo: 0 }, ldMark = () => { const inf = A.renderer.info; ld.p = inf.programs.length; ld.t = inf.memory.textures; ld.g = inf.memory.geometries; };
     // eine Bildzeit verbuchen – k 0: echter Abstand zweier angezeigter Bilder, k 1: Rechenzeit inkl. Grafikkarte (Fenster verdeckt)
     const rec = (dt, k) => { if (!cur) return; const { s, cm, lr, now } = cur; if (skip > 0) { skip--; return; } if (!(dt > 0 && dt < 5000)) return;
       F.t.push(+dt.toFixed(1)); F.s.push(Math.round(s)); F.cam.push(cm); F.lap.push(lr); F.k.push(k);
       if (dt > 30) { const h = { s: Math.round(s), dt: Math.round(dt), cam: cm, lap: lr, k, lt: longTasks.filter(x => x.t > now - dt - 50).reduce((a, x) => Math.max(a, x.d), 0) | 0 };
         hitches.push(h); if (dt > 45 && hitchShots < 8 * (lr + 1)) { hitchShots++; imgLater(screenJpeg(), 'ruckler', p => h.img = p); } } };
     PUMP.cb = w => rec(w, 1);
-    const finish = why => { PUMP.cb = null; clearInterval(hb); window.__qcF = null; R.drive = { why, ms: Math.round(performance.now() - t0) }; R.frames = F; R.hitches = hitches; R.samples = samples; done(); };
+    const finish = why => { PUMP.cb = null; clearInterval(hb); window.__qcF = null; R.load = ld; R.drive = { why, ms: Math.round(performance.now() - t0) }; R.frames = F; R.hitches = hitches; R.samples = samples; done(); };
     window.__qcF = (now, forced) => {
       if (forced) return; hookN++;
       const st = A.raceState; if (st !== 'race' || A.raceTime < 2 || A.paused) { prev = now; return; }
@@ -263,6 +266,7 @@ function drive(R) {
       if (lastS > A.L - 400 && s < 400) lapC++;
       const lr = lapC; if (lr < 0) { lastS = s; prev = now; return; }
       if (lr >= lapsWanted) return finish('fertig');
+      { const inf = A.renderer.info; if (ld.p >= 0) { if (inf.programs.length > ld.p) ld.progs.push({ s: Math.round(s), lap: lr, cam: camNow, n: inf.programs.length - ld.p }); ld.tex += Math.max(0, inf.memory.textures - ld.t); ld.geo += Math.max(0, inf.memory.geometries - ld.g); } ldMark(); }
       if (A.raceTime > tRace || performance.now() - t0 > tMax * 4) return finish('Zeitlimit – Runden nicht geschafft (Bot zu langsam oder hängt fest)');
       const cm = camFor(lr, s); if (cm !== camNow) { A.S.cam = cm; camNow = cm; skip = 3; R.events.push({ t: 'Kamera', s: Math.round(s), lap: lr, v: CAMN[cm] }); }
       if (lr !== lastLap) { lastLap = lr; nextShot = s + CFG.shot * 0.5; uiHead = 'QC-Bot · ' + R.name + ' · Runde ' + (lr + 1) + '/' + lapsWanted; }
@@ -289,6 +293,7 @@ function drive(R) {
           const q = probe(c3), sm2 = { s: Math.round(s), lap: lr, cam: CAMN[0], view: nm, void: q.void, zf: q.zfBlocks, zfPx: q.zf, mean: +q.mean.toFixed(1), std: +q.std.toFixed(1) };
           renderTo(rtA, c3, bufA); samples.push(sm2); imgLater(rtJpeg(bufA, q.marks), 'rund', pth => sm2.img = pth); flagSample(R, sm2, q, 0);
         }
+        ldMark();   /* die Prüfbilder des Bots haben eigene Shader/Ziele angelegt – nicht dem Spiel anrechnen */
       }
     };
   });
@@ -377,6 +382,10 @@ async function runTrack(key) {
   for (const e of R.events) if (/Bot steht/.test(e.t)) issue(R, 'mittel', 'Fahrbarkeit', 'Bot-Auto bleibt stehen (Runde ' + (e.lap + 1) + ')', e.s, 'mögliche Kante, Mauer oder Fehler in der Ideallinie');
   { const off = R.events.filter(e => /neben/.test(e.t)); if (off.length >= 2) issue(R, 'info', 'Fahrbarkeit', 'Bot-Auto kommt ' + off.length + '× von der Strecke ab', off[0].s, off.map(e => at(e.s)).slice(0, 8).join(', ')); }
   if (R.drive.why !== 'fertig') issue(R, 'hoch', 'Ablauf', R.drive.why, null, '');
+  if (R.load) { const P = R.load.progs;   // neue Shader mitten im Rennen: jede Stelle einzeln (höchstens 12), Texturen/Geometrien nur als Summe
+    for (const e of P.slice(0, 12)) issue(R, 'mittel', 'Nachladen', (e.n > 1 ? e.n + ' neue Shader' : 'Neuer Shader') + ' mitten im Rennen (Runde ' + (e.lap + 1) + ', Kamera ' + CAMN[e.cam] + ')', e.s, 'wird beim Rennstart nicht vorgewärmt (precompile/warmCams in index.html) – Hänger beim ersten Auftreten');
+    if (P.length > 12) issue(R, 'mittel', 'Nachladen', 'Weitere ' + (P.length - 12) + ' Stellen mit neuen Shadern', null, P.slice(12, 40).map(e => at(e.s)).join(', '));
+    if (R.load.tex + R.load.geo > 0) issue(R, 'info', 'Nachladen', R.load.tex + ' Texturen und ' + R.load.geo + ' Geometrien wurden erst im Rennen hochgeladen', null, 'meist Detailstufen naher Autos; nur bei spürbaren Rucklern relevant'); }
   return finishTrack(R);
 }
 async function finishTrack(R) {
