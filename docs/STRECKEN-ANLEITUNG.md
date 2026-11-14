@@ -419,7 +419,7 @@ Für einen vollständigen Überschneidungstest vor dem Bau `window.__noMerge = t
 3. `__perf()` → Mittel über 20 volle Spielbilder (`calls`, `tris`, `ms`, Pixelverhältnis). `__ri()` zeigt zusätzlich Geometrie-, Textur- und Shaderzahl; `__cpu()` die reine Skriptzeit.
 4. An zwei bis drei weiteren Stellen wiederholen (`__view` auf die dichteste Stelle: Stadt, Tribünen, Wald), denn die Startaufstellung ist nicht immer der schlimmste Punkt.
 5. `__btms` ansehen: Bau- und Backzeit sollten im Rahmen der vorhandenen Strecken bleiben.
-6. **Auf dem Handy** (das Vorschaufenster am Rechner taugt nicht für Bildzeiten): in den Einstellungen die „FPS- und Frame-Pacing-Anzeige“ einschalten, im Rennen antippen.
+6. **Auf dem Handy** (das Vorschaufenster am Rechner taugt nicht für Bildzeiten): in den Einstellungen unter Extras das „Debug-Menü“ (FPS- und Frame-Pacing-Anzeige) einschalten, im Rennen antippen.
    - **Ruckler-Protokoll (1 Runde)**: das Auto fährt selbst; jedes zu lange Bild wird mit Streckenmeter und dem festgehalten, was in den zwei Bildern davor passiert ist (neuer Shader,
      neue Textur/Geometrie, Detailstufenwechsel, HUD, lange Rechenzeit). „Alles kopieren“ liefert den Text. Häufen sich Einträge an einer Stelle bei erhöhter Zeichenzeit, liegt dort
      zu viel im Bild; stehen „neuer Shader“ davor, fehlt etwas im Vorwärmen. Zwei Runden hintereinander vergleichen: was nur in der ersten auftritt, ist Nachladen.

@@ -167,6 +167,7 @@ h2{font-size:22px;font-weight:900;font-style:italic;margin-bottom:10px}
 .seg button{flex:1;min-width:0;height:34px;border:0;background:transparent;color:var(--mut);border-radius:8px;font-weight:800;font-size:13px;padding:0 2px}
 .seg button.on{background:var(--acc);color:#ffffff}
 .tog{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+.devm{border-bottom:1px solid var(--line);overflow:hidden}.devm summary{display:flex;align-items:center;justify-content:space-between;padding:9px 0;font-size:13px;cursor:pointer;list-style:none}.devm summary::-webkit-details-marker{display:none}.devm summary::after{content:"›";font-size:20px;line-height:1;color:var(--mut);transition:transform .15s}.devm[open] summary::after{transform:rotate(90deg)}.devm[open] summary{border-bottom:1px solid var(--line)}.devm .tog{border-bottom:0}
 .sw{width:46px;height:26px;border-radius:13px;border:0;background:#2a333e;position:relative;flex:none}
 .sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#cfd6dd;transition:transform .15s}
 .sw.on{background:var(--acc)}
@@ -1335,6 +1336,8 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
   <div class="ppane" id="sGfx"><section class="panel" id="setGfx">
     <div class="seg gfx" data-key="gfx"><button data-v="low">Schnell</button><button data-v="high">Schön</button><button data-v="ultra">Ultra</button></div>
     <p class="hint left" id="gfxInfo"></p>
+    <div class="tog"><span>Auf 60 FPS begrenzen (gleichmäßiger Bildtakt)</span><button class="sw" data-tog="pace60" aria-label="Gleichmäßiger Bildtakt"></button></div>
+    <p class="hint left">An: Auf schnellen Displays (120 Hz) wird genau jedes zweite Display-Bild gezeichnet – jedes Bild steht gleich lang (16,7 ms), statt zwischen 8 und 17 ms zu wechseln. Aus: so viele Bilder wie möglich, dafür ungleichmäßig, wenn das Handy die volle Bildrate nicht hält.</p>
   </section></div>
   <div class="ppane" id="sCtl"><section class="panel" id="setCtl">
     <div class="field"><label>Steuerung</label><div class="seg" data-key="ctrl"><button data-v="tilt">Neigen</button><button data-v="touch">Touch</button></div></div>
@@ -1347,12 +1350,12 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
   <div class="ppane" id="sExtra"><section class="panel" id="setExtra">
     <div class="tog"><span>Team RONE Racing freischalten</span><button class="sw" data-tog="rone" aria-label="Team RONE Racing freischalten"></button></div>
     <p class="hint left">Schaltet das Team RONE Racing mit Robert Nemec in der Teamauswahl frei. Es fährt nur, wenn du es selbst wählst.</p>
-    <div class="tog"><span>Auf 60 FPS begrenzen (gleichmäßiger Bildtakt)</span><button class="sw" data-tog="pace60" aria-label="Gleichmäßiger Bildtakt"></button></div>
-    <p class="hint left">An: Auf schnellen Displays (120 Hz) wird genau jedes zweite Display-Bild gezeichnet – jedes Bild steht gleich lang (16,7 ms), statt zwischen 8 und 17 ms zu wechseln. Aus: so viele Bilder wie möglich, dafür ungleichmäßig, wenn das Handy die volle Bildrate nicht hält.</p>
-    <div class="tog"><span>FPS- und Frame-Pacing-Anzeige</span><button class="sw" data-tog="perfHud" aria-label="FPS- und Frame-Pacing-Anzeige"></button></div>
-    <p class="hint left">Zeigt im Rennen oben in der Mitte die Bildrate, die mittlere Bildzeit, die Schwankung (±) und das langsamste Bild der letzten Sekunde, darunter wie lange das Spiel pro Bild rechnet (CPU, ohne Grafikkarte). Der Graph darunter zeigt jede Bildzeit: grün = flüssig, gelb = ein Bild verpasst, rot = Ruckler. Die Linie markiert 60 FPS.</p>
     <div class="tog"><span>Nordschleife freischalten</span><button class="sw" data-tog="nos" aria-label="Nordschleife freischalten"></button></div>
     <p class="hint left">Die komplette Nürburgring-Nordschleife (20,8 km) als Zusatzstrecke im schnellen Spiel und Zeitrennen. In der Karriere fährt sie nicht mit.</p>
+    <details class="devm"><summary>Entwickler</summary>
+    <div class="tog"><span>Debug-Menü</span><button class="sw" data-tog="perfHud" aria-label="Debug-Menü"></button></div>
+    <p class="hint left">Zeigt im Rennen oben in der Mitte die Bildrate, die mittlere Bildzeit, die Schwankung (±) und das langsamste Bild der letzten Sekunde, darunter wie lange das Spiel pro Bild rechnet (CPU, ohne Grafikkarte). Der Graph darunter zeigt jede Bildzeit: grün = flüssig, gelb = ein Bild verpasst, rot = Ruckler. Die Linie markiert 60 FPS.</p>
+    </details>
     <button class="big alt danger" id="careerReset" style="margin-top:10px">Karriere zurücksetzen</button>
     <p class="hint left">Löscht Namen, Freischaltungen, Upgrades und die laufende Saison der Karriere.</p>
     <div class="field" style="margin-top:12px"><label>Spielstand sichern <span>automatisch gespeichert</span></label>
@@ -9477,7 +9480,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.89'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.90'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -9530,7 +9533,7 @@ function sphereTick(dt) { // Bildschirm der LED-Kugel: meist das Emoji mit wechs
   const e = EMS.cur; U.uE.value.set(e[0], e[1], e[2], e[3]); U.uP.value.set(e[4], e[5], Math.max(e[6], bl), Math.max(e[7], bl)); U.uM.value.set(e[8], e[9], e[10], 0.5 + e[9] * 0.5);
 }
 
-/* FPS- und Frame-Pacing-Anzeige (Extras): Abstand zwischen tatsächlich gezeichneten Bildern */
+/* Debug-Menü (Extras; FPS- und Frame-Pacing-Anzeige): Abstand zwischen tatsächlich gezeichneten Bildern */
 const PERF = { on: null, prev: 0, buf: new Float32Array(120), i: 0, n: 0, tUpd: 0, el: null, txt: null, g: null, cx: null, drew: false, cS: 0, cM: 0, cN: 0, rS: 0, rT: 0 };
 function perfTick(now) {
   if (PERF.on !== !!S.perfHud) { PERF.on = !!S.perfHud; PERF.el = PERF.el || $('#perf'); PERF.el.classList.toggle('hidden', !PERF.on); PERF.prev = 0; PERF.n = 0; }
