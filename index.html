@@ -3636,7 +3636,7 @@ function kartFahrerMat(tk, suit, acc, des = null) {   // des (F1/F2-Anzüge): { 
       ` + sh.vertexShader.replace('#include <beginnormal_vertex>', '#include <beginnormal_vertex>\n mat4 skM = uBone[int(aBi.x)] * aBw.x + uBone[int(aBi.y)] * aBw.y + uBone[int(aBi.z)] * aBw.z + uBone[int(aBi.w)] * aBw.w; objectNormal = normalize(mat3(skM) * objectNormal);')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\n transformed = (skM * vec4(transformed, 1.0)).xyz; vReg = aReg; vRy = aRy; vRest = aRest; vRN = aRN;');
     sh.fragmentShader = `uniform vec3 uSuit, uAcc, uDark, uShoe, uPatch, uSec, uGlove; uniform float uStyle, uCut; uniform sampler2D uWeave; varying float vReg; varying float vRy; varying vec3 vRest; varying vec3 vRN;
-      float gH = 0.0, gRough = 0.85, gMetal = 0.0, gSheen = 1.0, gBump = 1.0;
+      float gH = 0.0, gRough = 0.85, gMetal = 0.0, gSheen = 1.0, gBump = 1.0; vec3 gEm = vec3(0.0);
       float bnd(float x, float a, float b, float w) { return smoothstep(a - w, a, x) * (1.0 - smoothstep(b, b + w, x)); }
       float ln(float x, float a, float w) { return 1.0 - smoothstep(0.0, w, abs(x - a)); }
       float weave(vec3 p, vec3 n, float sc) { vec3 b = pow(abs(n), vec3(4.0)); b /= max(b.x + b.y + b.z, 1e-4);
@@ -3653,7 +3653,7 @@ function kartFahrerMat(tk, suit, acc, des = null) {   // des (F1/F2-Anzüge): { 
         float ta = p.y < 0.54 ? 0.106 : p.y < 0.57 ? mix(0.106, 0.095, (p.y - 0.54) / 0.03) : p.y < 0.60 ? mix(0.095, 0.089, (p.y - 0.57) / 0.03)
                  : p.y < 0.635 ? 0.089 : p.y < 0.66 ? mix(0.089, 0.1, (p.y - 0.635) / 0.025) : 0.1 + max(0.0, p.y - 0.74) * 0.5;
         bool glove = vReg > 2.5, shoe = !glove && vRy < 0.072, arm = !glove && p.y > 0.4 && p.y < 0.82 && ax > ta, leg = !glove && !arm && p.y < 0.535;
-        if (glove) { c = uGlove; gRough = 0.62; gSheen = 0.35; gBump = 0.0; }
+        if (glove) { c = uGlove; if (uStyle > 0.5) diffuseColor.rgb = mix(vec3(0.3), vec3(1.0), diffuseColor.rgb);   /* F1/F2: schwarze Griffflächen der Vorlage aufhellen (Teamfarbe bleibt erkennbar) */ gRough = 0.62; gSheen = 0.35; gBump = 0.0; }
         else if (shoe) { c = uShoe; gRough = 0.38; gSheen = 0.0; gBump = 0.15;
           c = mix(c, uAcc, bnd(p.y, 0.052, 0.062, 0.001)); if (p.y < 0.006) { c = vec3(0.07); gRough = 0.8; } }
         else {
@@ -3699,8 +3699,9 @@ function kartFahrerMat(tk, suit, acc, des = null) {   // des (F1/F2-Anzüge): { 
           c *= 1.0 - 0.28 * clamp(seam, 0.0, 1.0); c *= 1.0 + 0.2 * (wv - 0.5);
           gRough = mix(0.86, 0.8, clamp(knit, 0.0, 1.0));
         }
-        diffuseColor.rgb *= c; }`)
+        diffuseColor.rgb *= c; if (uStyle > 0.5) gEm = diffuseColor.rgb * (glove ? 0.16 : 0.05); }`)   /* F1/F2: Aufhellung im Schatten (Streulicht im Cockpit) – im Gegenlicht sah man sonst nur schwarze Handrücken */
       .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n roughnessFactor = gRough;')
+      .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance += gEm;')
       .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\n metalnessFactor = gMetal;')
       .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\n normal = bumpN(-vViewPosition, normal, vec2(dFdx(gH), dFdy(gH)) * 0.0025 * gBump, faceDirection);')
       .replace('#include <lights_physical_fragment>', '#include <lights_physical_fragment>\n material.sheenColor = diffuseColor.rgb * 0.6 * gSheen + 0.05 * gSheen;'); };
@@ -4056,23 +4057,25 @@ function driverParts(cs, cg) { const dk = col(0x15171b), P = [];
   return P; }
 // F1/F2-Rennanzüge (2026, nach Teamfarben, ohne Logos): base = Grundfarbe, sec = zweite Farbe im Schnitt, acc = Streifen/Passe, glove = Handschuhe.
 // style: 0 einfarbig, 1 Unterteil, 2 Seitenteile + Ärmel, 3 Schärpe, 4 Schulterpartie + Ärmel oben (siehe kartFahrerMat)
+// Handschuhe in einer hellen Teamfarbe (v1.65: vorher bei vielen Teams schwarz/dunkelblau – mit den schwarzen Griffflächen der Vorlage wirkten sie ganz schwarz)
 const SUIT_F1 = {
-  MER: { base: 0x16181b, sec: 0x9aa1a9, acc: 0x00d2be, style: 2, glove: 0x16181b },
+  MER: { base: 0x202328, sec: 0x9aa1a9, acc: 0x00d2be, style: 2, glove: 0xd5dade },
   FER: { base: 0xd10a0a, sec: 0xf0f0f0, acc: 0xffd400, style: 3, glove: 0xd10a0a },
   MCL: { base: 0xff8000, sec: 0x16181b, acc: 0x47c7fc, style: 1, glove: 0xff8000 },
-  RBR: { base: 0x1c2b5e, sec: 0xd8102c, acc: 0xffc906, style: 3, glove: 0x1c2b5e },
-  AST: { base: 0x00594f, sec: 0x003d36, acc: 0xcedc00, style: 4, glove: 0x00594f },
-  WIL: { base: 0x0c2d73, sec: 0x37bedd, acc: 0xf0f0f0, style: 2, glove: 0x0c2d73 },
+  RBR: { base: 0x1c2b5e, sec: 0xd8102c, acc: 0xffc906, style: 3, glove: 0xd8102c },
+  AST: { base: 0x00594f, sec: 0x003d36, acc: 0xcedc00, style: 4, glove: 0xcedc00 },
+  WIL: { base: 0x0c2d73, sec: 0x37bedd, acc: 0xf0f0f0, style: 2, glove: 0x37bedd },
   RB:  { base: 0xf0f0f0, sec: 0x2347d6, acc: 0xe01e2b, style: 1, glove: 0x2347d6 },
-  ALP: { base: 0x0a5fb4, sec: 0xff6fb5, acc: 0xf0f0f0, style: 4, glove: 0x0a5fb4 },
-  HAA: { base: 0xf0f0f0, sec: 0x16181b, acc: 0xd2201e, style: 2, glove: 0x16181b },
-  AUD: { base: 0xa3a8ad, sec: 0x16181b, acc: 0xe8321e, style: 1, glove: 0x16181b },
-  CAD: { base: 0x141414, sec: 0x2b2e33, acc: 0xf0f0f0, style: 4, glove: 0x141414 },
+  ALP: { base: 0x0a5fb4, sec: 0xff6fb5, acc: 0xf0f0f0, style: 4, glove: 0xff6fb5 },
+  HAA: { base: 0xf0f0f0, sec: 0x16181b, acc: 0xd2201e, style: 2, glove: 0xe6e8ec },
+  AUD: { base: 0xa3a8ad, sec: 0x16181b, acc: 0xe8321e, style: 1, glove: 0xe6e8ec },
+  CAD: { base: 0x202226, sec: 0x2b2e33, acc: 0xf0f0f0, style: 4, glove: 0xe6e8ec },
 };
 function suitDesign(d, T) {   // F2: aus der Lackierung (Hauptfarbe, Unterteil bzw. Flügelfarbe)
   const D = SUIT_F1[d.team]; if (D) return D;
   const L = (d.liv && LIVS[d.liv]) || T, sec = L.low ?? (L.acc !== L.body ? L.acc : 0x16181b);
-  return { base: L.body, sec, acc: L.tip !== L.body ? L.tip : L.acc, style: L.low != null ? 1 : 2, glove: L.body };
+  const lum = h => { const c = col(h); return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b; }, glove = [L.body, L.acc, L.tip, sec].sort((a, b) => lum(b) - lum(a))[0];   // Handschuh: hellste Teamfarbe
+  return { base: L.body, sec, acc: L.tip !== L.body ? L.tip : L.acc, style: L.low != null ? 1 : 2, glove: lum(glove) > 0.12 ? glove : 0xe6e8ec };
 }
 // Wagen-Lenkrad (SW-Gruppe, siehe drawWheel): Mitte, Drehachse und Griffradius im Fahrzeug-Rahmen
 const _swQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.45, Math.PI, 0));
@@ -4102,7 +4105,7 @@ function makeCar0(d) {
     const F1F = F1FAHRER, hm = new THREE.Group(), hsh = new THREE.Mesh(F1F ? helmGeoKart() : helmGeoNew(), helmMat(d, hAcc, !!F1F)); hsh.position.set(0, MD.helm[0] + 0.005, MD.helm[1]); hsh.castShadow = true; hm.add(hsh); g.add(hm);   // Gruppe: wird als Ganzes ein-/ausgeblendet und (TV-Kamera) verschoben   // neuer Fahrer: Helm mit den Korrekturen vom Kart (ohne Anbauteil unter dem Visier)
     // Fahrer: einfaches Modell aus Grundformen (hängt am Helm, wird mit ihm ausgeblendet). Der neue Fahrer aus f1fahrer.bin kommt nur ins eigene Auto
     // (f1Own, Leistung): er wird erzeugt, sobald das Auto dem Spieler gehört, und das einfache Modell ausgeblendet.
-    const oldDrv = new THREE.Mesh(mergeParts(hOff(driverParts(col(uiCol(T)), hAcc))), KDRV.suit); hm.add(oldDrv);
+    const SD = suitDesign(d, T), oldDrv = new THREE.Mesh(mergeParts(hOff(driverParts(col(SD.base), col(SD.glove)))), KDRV.suit); hm.add(oldDrv);   // gleiche Teamfarben wie der neue Fahrer (Anzug, Handschuhe)
     const rl = new THREE.Mesh(new THREE.BoxGeometry(...(MD.rlS || [0.13, 0.045, 0.02])), RLMAT); rl.position.set(0, MD.rl[0], MD.rl[1]); g.add(rl);   /* F2: Regenlicht sitzt außen auf der Heck-Crashstruktur (vorher 6 cm im Karosserieteil versenkt) */ // Regenlicht unten am Heck (nicht am Auspuff)
     const fl = new THREE.Group(); fl.position.set(fw[0], fw[1], fw[2]); const wm = wheelMat(d.team), wfl = new THREE.Mesh(W.R[1], wm); wfl.castShadow = true; fl.add(wfl); g.add(fl);
     const fr = new THREE.Group(); fr.position.set(-fw[0], fw[1], fw[2]); const wfr = new THREE.Mesh(W.L[1], wm); wfr.castShadow = true; fr.add(wfr); g.add(fr);
