@@ -1,16 +1,21 @@
 // Exportiert aus dem laufenden Spiel alles für die Clipping-Prüfung von F1/F2-Lenkrad und Händen (check_lenkrad.py):
 // Prüfmodell des Lenkrads (SW.spec), Knochen der Arm-IK über den ganzen Lenkbereich (F1, F1-TV, F2, F2-TV) und die Karosserie/Wanne rund ums Lenkrad.
-// Aufruf (Spiel muss über http laufen, z. B. python -m http.server 8765 im Repo):
-//   node tools/lenkrad/export.cjs [http://localhost:8765/index.html] [ausgabe.json]
+// Aufruf: node tools/lenkrad/export.cjs [url|repo] [ausgabe.json]
+//   ohne url (oder mit einem Ordner): die Dateien des Repos werden direkt ausgeliefert (kein Webserver nötig)
 const { chromium } = require('playwright');
 const fs = require('fs');
 (async () => {
-  const url = process.argv[2] || 'http://localhost:8765/index.html', out = process.argv[3] || 'lenkrad_export.json';
+  const path = require('path'), arg = process.argv[2] || path.join(__dirname, '..', '..'), out = process.argv[3] || 'lenkrad_export.json';
+  const local = !/^https?:/.test(arg), root = local ? path.resolve(arg) : null, url = local ? 'http://f1.local/index.html' : arg;
+  const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.mp3': 'audio/mpeg', '.webmanifest': 'application/manifest+json', '.glb': 'model/gltf-binary' };
+  const serve = async p => { if (!local) return; await p.route('http://f1.local/**', r => { const f = path.join(root, decodeURIComponent(new URL(r.request().url()).pathname));
+    if (!f.startsWith(root) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) return r.fulfill({ status: 404, body: '' });
+    r.fulfill({ status: 200, contentType: MIME[path.extname(f)] || 'application/octet-stream', body: fs.readFileSync(f) }); }); };
   const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const R = { cases: {}, car: {} };
   for (const ser of ['f1', 'f2']) {   // je Klasse eine frische Seite
     const p = await b.newPage({ viewport: { width: 640, height: 360 } });
-    p.on('pageerror', e => console.log('Seitenfehler', e.message));
+    p.on('pageerror', e => console.log('Seitenfehler', e.message)); await serve(p);
     await p.goto(url, { timeout: 120000 });
     await p.waitForFunction(() => window.__race && window.__qcApi && window.__f1dbg, null, { timeout: 180000 });
     const ok = await p.evaluate(async ser => { const A = window.__qcApi; A.S.gfx = 'low'; const k = Object.keys(A.TRACKS).find(k => /monza/i.test(k)) || Object.keys(A.TRACKS)[0];
