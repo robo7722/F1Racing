@@ -1,4 +1,4 @@
-# Motor- und Crash-Sounds (ElevenLabs) – v1.95
+# Motor- und Crash-Sounds (ElevenLabs) – v1.95/v1.96
 
 Stand: 14.11.2026.
 Zugehörig: Sound-Code in `index.html` (Abschnitt „Sound“: `SND_ENG`, `SND_CRASH`, `sndEngine`, `bump`), Aufbereitung `tools/sounds/aufbereiten.py`.
@@ -59,6 +59,44 @@ Arbeitsfläche: „F1Racing – Motor- und Crash-Sounds“ (https://elevenlabs.i
 ## Prüfung
 - Browser-Test Kart, F2, F1: Alle 10 Dateien laden. Beide Loops laufen, in der Startaufstellung nur der mittlere. Keine Seitenfehler.
 - `__bumpTest` (offline gerendert): Auto 0,5 → Spitze 0,26, 0,6 s. Wand 0,6 → 0,33, 1,5 s. Stärke 1 → 0,74 (Begrenzer), schwerer Einschlag.
+
+## v1.96 – Crash-Sounds neu (Rückmeldung: „klingen grauenvoll und falsch“)
+**Ursachen:**
+1. **Auslösung:** Schon jedes leichte Antippen (Auto-Auto ab 0,6 m/s Geschwindigkeitsänderung, Wand ab 3 m/s) spielte einen kompletten 2–3-s-Unfall mit splitterndem Carbon. Beim Aneinanderreiben kam er alle 0,35 s neu und lief übereinander.
+2. **Aufnahmen (Spektrogramm):**
+   - „schwer“ war 1,3 s Breitbandrauschen auf vollem Pegel (wie eine Rausch-Explosion),
+   - „Wand“ ein Doppelschlag (Vorschlag und Hauptschlag nach 0,3 s),
+   - „Kart“ mehrere Klapper-Schläge.
+
+**Neu erzeugt** (Prompt-Treue 0,75, je „single … impact, short decay, no explosion, no engine“):
+
+| Datei | Prompt (Kurz) | Länge im Spiel |
+|---|---|---|
+| `crash_leicht.wav` (neu) | leichte Berührung, ein kurzer dumpfer Carbon-Klopfer | 0,17 s (nur der erste von zwei Klopfern) |
+| `crash_auto.wav` | einzelner harter Seitentreffer, Carbon-Knacken + dumpfer Schlag | 0,6 s |
+| `crash_wand.wav` | einzelner Aufprall an der Streckenbegrenzung, schwerer Schlag + Carbon-Knirschen | 0,9 s |
+| `crash_schwer.wav` | heftiger Einschlag in die Reifenmauer, Teile brechen ab und schlittern | 1,3 s |
+| `crash_kart.wav` | Kart rempelt Kart, ein hohler Plastik-Klopfer + kleines Metall-Klirren | 0,45 s |
+
+**Aufbereitung:**
+- Crashs jetzt auch als **WAV**. Neu kodiertes MP3 hatte ~25 ms Stille vorn.
+- Vorlauf abgeschnitten, auf Höchstlänge gekürzt (60 ms ausgeblendet).
+- Pegel nach dem 99,9-%-Wert des verwendeten Stücks.
+
+**Auslösung (`bump`):**
+- **Art nach Stärke:** < 0,5 leicht, sonst Auto bzw. Wand, > 0,9 (Wand > 0,85) schwer. Kart: immer Kart.
+- **Nachklang nach Stärke gekürzt:** 0,12 s + Länge · (0,3 + 0,7 · Stärke).
+- **Kein Übereinander:** Ein laufender Crash wird nur von einem mindestens 30 % stärkeren abgelöst (der alte blendet in 20 ms aus).
+- Aufnahmen gehen direkt auf den Ausgang. Die Vorausschau des Begrenzers drückte kurze Schläge („leicht“ auf etwa ein Fünftel).
+
+**Messung (`__bumpTest`, offline):**
+
+| Treffer | Spitze | Dauer |
+|---|---|---|
+| leicht 0,3 | 0,30 | 80 ms |
+| Auto 0,6 | 0,54 | 0,2 s |
+| Wand 0,6 | 0,62 | 0,45 s |
+| schwer (Stärke 1) | 0,8 | 0,75 s |
 
 ## Offen / Ideen
 - Fremde Autos ebenfalls mit Aufnahmen (mit Doppler über `playbackRate`).

@@ -7684,7 +7684,8 @@ const SND_ENG = {   // cyl: Zündungen je Umdrehung · tp: Tonhöhen-Faktor (Auf
   f1: { cyl: 3, tp: 0.6, vol: 0.55, x: [7000, 10500], lo: ['sounds/f1_mittel.wav', 230], hi: ['sounds/f1_hoch.wav', 260] },
   f2: { cyl: 3, tp: 0.6, vol: 0.55, x: [6000, 9000], lo: ['sounds/f2_mittel.wav', 255], hi: ['sounds/f2_hoch.wav', 280] },
   kart: { cyl: 1, tp: 1.0, vol: 0.5, x: [8000, 12000], lo: ['sounds/kart_mittel.wav', 155], hi: ['sounds/kart_hoch.wav', 177] } };   // Grundton (Hz) gemessen mit tools/sounds/aufbereiten.py; 0 = Aufnahme nicht verwenden
-const SND_CRASH = { auto: 'sounds/crash_auto.mp3', wand: 'sounds/crash_wand.mp3', schwer: 'sounds/crash_schwer.mp3', kart: 'sounds/crash_kart.mp3' };
+const SND_CRASH = { leicht: 'sounds/crash_leicht.wav', auto: 'sounds/crash_auto.wav', wand: 'sounds/crash_wand.wav', schwer: 'sounds/crash_schwer.wav', kart: 'sounds/crash_kart.wav' };   // v1.96: kurze Einzelschläge (WAV, ohne Vorlauf)
+const CRS = { end: 0, st: 0, g: null };   // gerade klingender Crash: Ende, Stärke, Lautstärke-Knoten
 const SNDB = {};   // url -> AudioBuffer | 'laedt' | null (fehlt)
 function sndLoad(url) { if (!ac || SNDB[url] !== undefined) return; SNDB[url] = 'laedt';
   fetch(url).then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status)).then(b => new Promise((res, rej) => ac.decodeAudioData(b, res, rej))).then(buf => { SNDB[url] = buf; }).catch(() => { SNDB[url] = null; }); }
@@ -7706,6 +7707,7 @@ function sndEngine(E, cls, on, load, t) {
   M.out.gain.setTargetAtTime(on ? D.vol * (E.cut > 0 ? 0.35 : 0.55 + 0.45 * load) : 0, t, E.cut > 0 ? 0.01 : 0.04);
   return true;
 }
+window.__sndPk = url => { const b = sndBuf(url); if (!b) return null; const d = b.getChannelData(0); let m = 0; for (let i = 0; i < d.length; i++) m = Math.max(m, Math.abs(d[i])); return { pk: +m.toFixed(2), sr: b.sampleRate, n: b.length }; };   // Test
 window.__snd = (init) => { if (init) initAudio(); return { ac: !!ac, dateien: Object.fromEntries(Object.entries(SNDB).map(([k, v]) => [k, v && typeof v === 'object' ? +v.duration.toFixed(2) + ' s' : v])), aktiv: ENG && ENG.smp ? ENG.smp.cls : null, drehzahl: ENG ? Math.round(ENG.rpm) : null, loops: ENG && ENG.smp ? ENG.smp.v.map(v => v && { tempo: +v.src.playbackRate.value.toFixed(2), anteil: +v.g.gain.value.toFixed(2) }) : null, pegel: ENG && ENG.smp ? +ENG.smp.out.gain.value.toFixed(3) : null }; };   // Test/Diagnose
 function initAudio() {
   if (ac) { ac.resume && ac.resume(); return; }
@@ -7815,8 +7817,15 @@ let BUMP_NB = null;
 function bump(strength = 1, kind = 'car') {
   if (!ac || !S.sound) return;
   try { const t = ac.currentTime, st = clamp(strength, 0.2, 1), out = ac.createGain(), lim = ac.createDynamicsCompressor(); lim.threshold.value = -10; lim.ratio.value = 8; lim.attack.value = 0.002; lim.release.value = 0.08; out.gain.value = 0.85 * st; out.connect(lim); lim.connect(sfxBus());   /* Begrenzer: nie Übersteuern, auch bei Treffern in Serie */
-    { const kt = !!(pl && pl.mesh && pl.mesh.kart), b = sndBuf(SND_CRASH[kt ? 'kart' : kind === 'wall' ? (st > 0.85 ? 'schwer' : 'wand') : st > 0.9 ? 'schwer' : 'auto']);   // Aufnahme (ElevenLabs): Kart-Rempler, Leitplanke, Auto-Auto, sehr harte Treffer schwer
-      if (b) { const n = ac.createBufferSource(), g = ac.createGain(); n.buffer = b; n.playbackRate.value = 0.92 + Math.random() * 0.16; g.gain.value = 0.35 + 0.65 * st; n.connect(g); g.connect(out); n.start(t); return; } }
+    // Aufnahme (ElevenLabs): leichte Berührung / Auto-Auto / Wand / schwerer Einschlag bzw. Kart-Rempler. v1.96: vorher spielte schon jedes Antippen einen 2–3 s langen Unfall,
+    // beim Aneinanderreiben alle 0,35 s neu und übereinander. Jetzt: Art nach Stärke, Nachklang nach Stärke gekürzt, ein laufender Crash wird nur von einem deutlich stärkeren abgelöst.
+    { const kt = !!(pl && pl.mesh && pl.mesh.kart), key = kt ? 'kart' : st < 0.5 ? 'leicht' : st > (kind === 'wall' ? 0.85 : 0.9) ? 'schwer' : kind === 'wall' ? 'wand' : 'auto', b = sndBuf(SND_CRASH[key]);
+      if (b) { if (ac.currentTime < CRS.end && st < CRS.st * 1.3) return;   // noch klingend und nicht deutlich härter: nichts Neues (kein Geprassel beim Reiben)
+        if (CRS.g && ac.currentTime < CRS.end) { CRS.g.gain.cancelScheduledValues(t); CRS.g.gain.setTargetAtTime(0, t, 0.02); }
+        // direkt auf den Ausgang, nicht durch den Begrenzer: dessen Vorausschau drückte kurze Schläge („leicht“) auf ein Fünftel; die Aufnahmen sind auf sichere Pegel gebracht und laufen nie übereinander
+        const n = ac.createBufferSource(), g = ac.createGain(), dur = Math.min(b.duration, 0.12 + b.duration * (kt ? 0.4 + 0.6 * st : 0.3 + 0.7 * st)), v = 0.85 * (key === 'leicht' ? 0.25 + 0.5 * st : kt ? 0.3 + 0.6 * st : 0.35 + 0.65 * st);
+        n.buffer = b; n.playbackRate.value = 0.94 + Math.random() * 0.12; g.gain.setValueAtTime(v, t); g.gain.setValueAtTime(v, t + dur * 0.6); g.gain.linearRampToValueAtTime(0.0001, t + dur);
+        n.connect(g); g.connect(sfxBus()); n.start(t); n.stop(t + dur + 0.02); CRS.end = t + dur; CRS.st = st; CRS.g = g; return; } }
     if (!BUMP_NB) { BUMP_NB = ac.createBuffer(1, ac.sampleRate, ac.sampleRate); const d = BUMP_NB.getChannelData(0); for (let k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1; }
     const nz = (f, q, v, dur, off = 0) => { const n = ac.createBufferSource(), bp = ac.createBiquadFilter(), g = ac.createGain(); n.buffer = BUMP_NB; bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = q; g.gain.setValueAtTime(v, t + off); g.gain.exponentialRampToValueAtTime(0.001, t + off + dur); n.connect(bp); bp.connect(g); g.connect(out); n.start(t + off, Math.random() * 0.5); n.stop(t + off + dur + 0.02); };
     { const o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(95, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.16); g.gain.setValueAtTime(0.42, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.16 + 0.1 * st); o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.4); }   // Schlag (leiser als vorher: lag zu 98 % unter 150 Hz und war auf Handylautsprechern kaum zu hören)
@@ -7830,13 +7839,13 @@ function bump(strength = 1, kind = 'car') {
 }
 
 // Test: Kollisionsklang offline rendern und messen (Spitzenpegel, Pegelverlauf, Energie je Frequenzband) – ohne Lautsprecher prüfbar
-window.__bumpTest = async (kind = 'car', st = 1) => { const ac0 = ac, sfx0 = SFX, snd0 = S.sound, nb0 = BUMP_NB; try { const sr = 44100; ac = new OfflineAudioContext(1, Math.round(sr * 1.5), sr); SFX = null; BUMP_NB = null; S.sound = true; bump(st, kind); const buf = await ac.startRendering(), d = buf.getChannelData(0);
+window.__bumpTest = async (kind = 'car', st = 1) => { const ac0 = ac, sfx0 = SFX, snd0 = S.sound, nb0 = BUMP_NB, crs0 = { ...CRS }; CRS.end = 0; try { const sr = 44100; ac = new OfflineAudioContext(1, Math.round(sr * 1.5), sr); SFX = null; BUMP_NB = null; S.sound = true; bump(st, kind); const buf = await ac.startRendering(), d = buf.getChannelData(0);
     let pk = 0; for (let i = 0; i < d.length; i++) pk = Math.max(pk, Math.abs(d[i]));
     const win = Math.round(sr * 0.1), env = []; for (let w = 0; w < 15; w++) { let e = 0; for (let i = w * win; i < (w + 1) * win && i < d.length; i++) e += d[i] * d[i]; env.push(+Math.sqrt(e / win).toFixed(3)); }
     const N = 2048, seg = d.subarray(Math.round(sr * 0.02), Math.round(sr * 0.02) + N), bands = { 'unter150': 0, '150-1k': 0, '1k-4k': 0, 'ueber4k': 0 }; for (let k = 1; k < N / 2; k += 2) { let re = 0, im = 0; for (let n = 0; n < N; n++) { const a2 = 2 * Math.PI * k * n / N, wv = 0.5 - 0.5 * Math.cos(2 * Math.PI * n / N); re += seg[n] * wv * Math.cos(a2); im -= seg[n] * wv * Math.sin(a2); } const f = k * sr / N, e = re * re + im * im; bands[f < 150 ? 'unter150' : f < 1000 ? '150-1k' : f < 4000 ? '1k-4k' : 'ueber4k'] += e; }
     const tot = Object.values(bands).reduce((q, v) => q + v, 0) || 1; for (const k in bands) bands[k] = +(bands[k] / tot * 100).toFixed(0) + ' %';
     let last = 0; for (let i = d.length - 1; i >= 0; i--) if (Math.abs(d[i]) > 0.01) { last = i; break; }
-    return { kind, stärke: st, spitze: +pk.toFixed(2), dauerMs: Math.round(last / sr * 1000), pegelProHundertMs: env, spektrum: bands }; } finally { ac = ac0; SFX = sfx0; S.sound = snd0; BUMP_NB = nb0; } };
+    return { kind, stärke: st, spitze: +pk.toFixed(2), dauerMs: Math.round(last / sr * 1000), pegelProHundertMs: env, spektrum: bands }; } finally { ac = ac0; SFX = sfx0; S.sound = snd0; BUMP_NB = nb0; Object.assign(CRS, crs0); } };
 
 /* ======================= Musik (live erzeugt, orchestral-episch) ======================= */
 const MUS = { bus: null, rev: null, step: 0, nextT: 0, noise: null, song: null };
