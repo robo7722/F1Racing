@@ -168,6 +168,8 @@ h2{font-size:22px;font-weight:900;font-style:italic;margin-bottom:10px}
 .seg button.on{background:var(--acc);color:#ffffff}
 .tog{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
 .devm{border-bottom:1px solid var(--line);overflow:hidden}.devm summary{display:flex;align-items:center;justify-content:space-between;padding:9px 0;font-size:13px;cursor:pointer;list-style:none}.devm summary::-webkit-details-marker{display:none}.devm summary::after{content:"›";font-size:20px;line-height:1;color:var(--mut);transition:transform .15s}.devm[open] summary::after{transform:rotate(90deg)}.devm[open] summary{border-bottom:1px solid var(--line)}.devm .tog{border-bottom:0}
+/* Schalter mit Erklärung darunter: Trennlinie erst unter dem Erklärtext, nicht zwischen Schalter und Text */
+.tog:has(+ .hint){border-bottom:0}.tog + .hint{margin-top:2px;padding-bottom:10px;border-bottom:1px solid var(--line)}.devm .tog + .hint{border-bottom:0}
 .sw{width:46px;height:26px;border-radius:13px;border:0;background:#2a333e;position:relative;flex:none}
 .sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#cfd6dd;transition:transform .15s}
 .sw.on{background:var(--acc)}
@@ -9583,7 +9585,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.90'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.92'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
