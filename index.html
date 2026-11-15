@@ -1972,7 +1972,7 @@ const TRACKS = {
   cota: { name: 'Austin', full: 'Circuit of the Americas', land: 'USA', km: '5,513 km', laps: 56, pts: TRACK_HD['us-2012'].pts.filter((_, k) => k % 3 === 0), hd: TRACK_HD['us-2012'], theme: 'cota', cota: COTA_LM, stands: [[-370, -50, 'opp', 46], [270, 370, 'out', 40], [3290, 3420, 'R', 40], [3430, 3500, 'R', 40], [3940, 4120, 'R', 44], [4600, 4760, 'R', 44]] },   /* Tribünen nach OSM: Haupttribüne gegenüber der Box, Kurve 1, Kurven 12–15, Kurve 19 */
   /*}@cota:track*/
   /*@mex:track{*/
-  mex: { name: 'Mexiko-Stadt', full: 'Autódromo Hermanos Rodríguez', land: 'Mexiko', km: '4,304 km', laps: 71, pts: TRACK_HD['mx-2015'].pts.filter((_, k) => k % 3 === 0), hd: TRACK_HD['mx-2015'], theme: 'mex', mex: OSM_MEX, cityMul: 0, stands: [[-214, 120, 'opp', 44], [900, 1000, 'out', 40], [1030, 1140, 'out', 40], [1770, 1900, 'out', 40], [1960, 2070, 'out', 40], [2330, 2400, 'out', 40], [2700, 2780, 'out', 40], [3380, 3440, 'out', 40]] },
+  mex: { name: 'Mexiko-Stadt', full: 'Autódromo Hermanos Rodríguez', land: 'Mexiko', km: '4,304 km', laps: 71, pts: TRACK_HD['mx-2015'].pts.filter((_, k) => k % 3 === 0), hd: TRACK_HD['mx-2015'], theme: 'mex', mex: OSM_MEX, cityMul: 0, stands: [[-214, 120, 'opp', 44], [900, 1000, 'out', 40], [1030, 1140, 'out', 40], [1770, 1900, 'out', 40], [1960, 2070, 'out', 40], [2330, 2400, 'out', 40], [2700, 2780, 'out', 40], [3380, 3380, 'out', 40], [3415, 3415, 'out', 24]] },
   /*}@mex:track*/
   /*@bra:track{*/
   bra: { name: 'São Paulo', full: 'Autódromo José Carlos Pace', land: 'Brasilien', km: '4,309 km', laps: 71, pts: TRACK_HD['br-1940'].pts.filter((_, k) => k % 3 === 0), hd: TRACK_HD['br-1940'], theme: 'bra', bra: OSM_BRA, cityMul: 0, stands: [[-560, 130, 'opp', 44], [250, 330, 'out', 40], [360, 480, 'out', 40], [500, 640, 'out', 40], [900, 1300, 'out', 44], [1370, 1460, 'out', 40], [2280, 2380, 'out', 40], [2400, 2540, 'out', 40], [2700, 2790, 'out', 40], [3210, 3290, 'out', 40], [3350, 3400, 'out', 40], [3600, 3670, 'out', 40]] },
@@ -3106,13 +3106,15 @@ function facadeMat(o) {
   // o.pbr: spiegelnde Glasfassade (Himmel und Abendlicht spiegeln sich), sonst matte Putzfassade
   const m = o.pbr ? new THREE.MeshStandardMaterial({ ...mo, roughness: o.rough ?? .3, metalness: o.metal ?? .45, envMapIntensity: 1.2 }) : new THREE.MeshLambertMaterial(mo);
   const tile = new THREE.Vector2(bays * (o.bayM || 4), floors * (o.floorM || 3.5)); m.userData.bay = o.bayM || 4; m.userData.flo = o.floorM || 3.5;
+  const BAYQ = (o.bayM || 4).toFixed(4), FLOQ = (o.floorM || 3.5).toFixed(4);
   m.onBeforeCompile = sh => { sh.uniforms.facTile = { value: tile };
     sh.vertexShader = 'uniform vec2 facTile;\nattribute float aRoof;\nattribute vec3 facUV;\n' + sh.vertexShader.replace('#include <uv_vertex>', `#include <uv_vertex>
-      vec3 fsc = vec3(1.0);
+      vec3 fsc = vec3(1.0); vec2 fq = vec2(1.0);
       #ifdef USE_INSTANCING
         fsc = vec3(length(instanceMatrix[0].xyz), length(instanceMatrix[1].xyz), length(instanceMatrix[2].xyz));
+        { float wl = abs(normal.x) > 0.5 ? fsc.z : fsc.x; fq = vec2(max(1.0, floor(wl / ${BAYQ} + 0.5)) * ${BAYQ} / max(wl, 0.01), max(1.0, floor(fsc.y / ${FLOQ} + 0.5)) * ${FLOQ} / max(fsc.y, 0.01)); }   // ganze Fensterachsen je Wand und ganze Geschosse: keine angeschnittenen Fenster an Ecken und Dachkante
       #endif
-      vec2 fuv = vec2(abs(normal.x) > 0.5 ? (position.z + 0.5) * fsc.z : (position.x + 0.5) * fsc.x, position.y * fsc.y) / facTile;   // ab der Kante: Fensterachsen enden bündig
+      vec2 fuv = vec2((abs(normal.x) > 0.5 ? (position.z + 0.5) * fsc.z : (position.x + 0.5) * fsc.x) * fq.x, position.y * fsc.y * fq.y) / facTile;   // ab der Kante: Fensterachsen enden bündig
       if (abs(facUV.z - 7.0) < 0.5) fuv = facUV.xy / facTile;   // Kennwert 7: Standardwerte fehlender Attribute (0 oder 1) lösen das nie aus   // zusammengefügte Bauten: vorab gespeicherte lokale Fassaden-UV
       if (abs(normal.y) > 0.5 || aRoof > 0.5) fuv = vec2(0.008, 0.992);
       #ifdef USE_MAP
@@ -5348,7 +5350,8 @@ function mergeGroups(root, cell = 350) {
       const sg = sigOf(o.material), key = sg + '|' + cx + ',' + cz; let b = buckets.get(key); if (!b) buckets.set(key, b = { mat: o.material, sig: sg, list: [], cast: false, recv: false, skip: true }); b.skip &&= !!o.userData.clipSkip;
       let geo = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
       if (o.material.userData.bay && !geo.attributes.facUV) { const P = geo.attributes.position, Nn = geo.attributes.normal, n = P.count, fu = new Float32Array(n * 3), sc = o.scale;   /* Fassaden-UV vor dem Zusammenfügen aus den lokalen Koordinaten festhalten (sonst verschiebt die Drehung das Fensterraster) */
-        for (let k = 0; k < n; k++) { const x = P.getX(k), y = P.getY(k), z = P.getZ(k); fu[k * 3] = Math.abs(Nn.getX(k)) > 0.5 ? (z + 0.5) * sc.z : (x + 0.5) * sc.x; fu[k * 3 + 1] = y * sc.y + o.position.y; fu[k * 3 + 2] = 7; }
+        const bq = o.material.userData.bay, fl = o.material.userData.flo || 3.5, qq2 = (L, s) => Math.max(1, Math.round(L / s)) * s / Math.max(L, 0.01), qz = qq2(sc.z, bq), qx = qq2(sc.x, bq), qy = qq2(sc.y, fl);   /* ganze Fensterachsen und Geschosse */
+        for (let k = 0; k < n; k++) { const x = P.getX(k), y = P.getY(k), z = P.getZ(k); fu[k * 3] = Math.abs(Nn.getX(k)) > 0.5 ? (z + 0.5) * sc.z * qz : (x + 0.5) * sc.x * qx; fu[k * 3 + 1] = y * sc.y * qy + o.position.y; fu[k * 3 + 2] = 7; }
         geo.setAttribute('facUV', new THREE.BufferAttribute(fu, 3)); }
       geo.applyMatrix4(o.matrixWorld); b.list.push(geo); b.cast ||= o.castShadow; b.recv ||= o.receiveShadow; });
     root.remove(g);
@@ -9220,11 +9223,11 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       const qd = (P, Cc, a, b, c, d, cl, nd) => ori(a, b, c, nd) ? quad(P, Cc, a, b, c, d, cl) : quad(P, Cc, a, d, c, b, cl);
       const qv = (P, U, a, b, c, d, ua, ub, uc, ud, nd) => { if (!ori(a, b, c, nd)) { [b, d] = [d, b]; [ub, ud] = [ud, ub]; } P.push(...a, ...b, ...c, ...a, ...c, ...d); U.push(...ua, ...ub, ...uc, ...ua, ...uc, ...ud); };
       const normals = O => { const n = O.length; return O.map((p, k) => { const a = O[Math.max(0, k - 1)], b = O[Math.min(n - 1, k + 1)]; let nx = -(b[1] - a[1]), nz = b[0] - a[0]; const l = Math.hypot(nx, nz) || 1; nx /= l; nz /= l; if ((fx - p[0]) * nx + (fz - p[1]) * nz < 0) { nx = -nx; nz = -nz; } return [nx, nz]; }); };
-      const FPf = builtFootprints(trackGroup), H = 24, yL = 1.8, yM = 10.4, yU = 13.4;   // Oberkante, Unterrang 1,8→10,4 m, Oberrang ab 13,4 m (dazwischen das LED-Band)
+      const H = 24, yL = 1.8, yM = 10.4, yU = 13.4;   // Oberkante, Unterrang 1,8→10,4 m, Oberrang ab 13,4 m (dazwischen das LED-Band)
       const wing = (O0, D) => {   // O0: Außenkante (Rückseite) des Rangs, D: Tiefe bis zum Spielfeld
         const O = dens(O0, 4), n = O.length, nr = normals(O), tS = D * 0.5;
         const P = (k, t) => [O[k][0] + nr[k][0] * t, O[k][1] + nr[k][1] * t];
-        const ok = O.map((_, k) => [0, D * 0.33, D * 0.66, D].every(t => { const [x, z] = P(k, t); return trackFree(x, z, 1.6); })), okF = O.map((_, k) => [-12, -9, -6, -3].every(t => { const [x, z] = P(k, t); return trackFree(x, z, 1.6) && !FPf.some(f => Math.hypot(x - f.cx, z - f.cz) < f.r + 3 && [[0, 0], [3, 0], [-3, 0], [0, 3], [0, -3]].some(([dx, dz]) => pipM(f.H, x + dx, z + dz))); }));   /* Tragwerk nicht in vorhandene Bauten (Standard-Tribüne am Südrang) */
+        const ok = O.map((_, k) => [0, D * 0.33, D * 0.66, D].every(t => { const [x, z] = P(k, t); return trackFree(x, z, 1.6); })), okF = O.map((_, k) => [-12, -9, -6, -3].every(t => { const [x, z] = P(k, t); return trackFree(x, z, 1.6); }));   /* Tragwerk vollständig; die Standard-Tribüne davor ist gekürzt */
         let acc = 0;
         for (let k = 0; k < n - 1; k++) { const sl = Math.hypot(O[k + 1][0] - O[k][0], O[k + 1][1] - O[k][1]); if (!ok[k] || !ok[k + 1]) { acc += sl; continue; }
           const tn = [(nr[k][0] + nr[k + 1][0]) / 2, 0, (nr[k][1] + nr[k + 1][1]) / 2], tb = [-tn[0], 0, -tn[2]], aisle = k % 5 === 4, us = ((O[k + 1][0] - O[k][0]) * tn[2] - (O[k + 1][1] - O[k][1]) * tn[0]) >= 0 ? 1 : -1;   /* us: Schrift von vorn (Feldseite) lesbar */
@@ -12496,7 +12499,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.34'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.35'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
