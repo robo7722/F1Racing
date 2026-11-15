@@ -1036,8 +1036,8 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 .mnext,.mnext.start{padding:0 18px 0 24px!important}
 .mnext span{border-radius:6px}
 .tinfo{box-shadow:none!important;border-left:3px solid var(--tc,#e10600)!important}
-/* Infotafel: nichts abschneiden – etwas breiter, Werte ohne Breitengrenze, Kennzahlen in drei Spalten, Kurs in Zeile 2 neben dem Land (zwei Zeilen passen auch auf niedrige Handys); Streckenkarte behält ihr Seitenverhältnis (object-fit: contain – vorher wurde sie bei begrenzter Breite in die Höhe gezogen und wirkte gestaucht) (vorher „Runden (G…“, „Br…“, „Autódromo José Carl…“) */
-.tinfo{max-width:42%!important}.tinfo{padding-top:5px!important;padding-bottom:5px!important}.tinfo .tst{row-gap:clamp(1px,.9vh,8px)!important}.tinfo .tst b{font-size:clamp(11px,3vh,15px)!important;line-height:1.1}.tinfo canvas{width:min(12vw,24vh)!important;height:auto!important;max-width:none!important;aspect-ratio:7/5;align-self:center;object-fit:contain!important}.tinfo .tst{grid-template-columns:auto auto!important;column-gap:12px!important}.tinfo .tst b{max-width:none!important}.tinfo .tst small{overflow:visible!important;text-overflow:clip!important;letter-spacing:.08em!important}.tinfo .tst{grid-template-columns:auto auto auto!important;align-content:center}.tinfo .tst .w{grid-column:span 2!important}.tinfo .tst .w b{font-size:clamp(10px,2.8vh,14px)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Infotafel: Kursname als Überschrift oben über die ganze Breite, darunter Karte + vier Kennzahlen in zwei Spalten (schmal, nichts abgeschnitten); Karte behält ihr Seitenverhältnis */
+.tinfo{flex-wrap:wrap!important;align-content:flex-start;row-gap:2px!important;padding-top:5px!important;padding-bottom:5px!important}.tinfo .tkopf{flex-basis:100%;padding-left:8px;font-weight:800;font-size:clamp(13px,4vh,18px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid rgba(255,255,255,.16);padding-bottom:2px}.tinfo canvas{width:min(10.5vw,22vh)!important;height:auto!important;max-width:none!important;aspect-ratio:7/5;align-self:center;object-fit:contain!important}.tinfo .tst{flex:1;row-gap:clamp(1px,.9vh,8px)!important}.tinfo .tst b{max-width:none!important;font-size:clamp(11px,3vh,15px)!important;line-height:1.1}.tinfo .tst small{overflow:visible!important;text-overflow:clip!important;letter-spacing:.08em!important}
 /* Kacheln des Hauptmenüs mit Bild (aus dem Spiel aufgenommen), nach unten abgedunkelt, damit die Schrift lesbar bleibt */
 #qPlay::before{background:linear-gradient(180deg,rgba(12,13,16,.7),rgba(12,13,16,.2) 42%,rgba(12,13,16,.78)),url(textures/menu_quick.jpg) center/cover no-repeat!important}
 #tPlay::before{background:linear-gradient(90deg,rgba(14,15,18,.5),rgba(14,15,18,0) 45%),url(textures/menu_tt.jpg) 78% 50%/cover no-repeat,#0e0f12!important}
@@ -5587,7 +5587,7 @@ ASPH_X.zan = { b: 46, c: 18, t: [0, 1, 2], sp: 8000, pa: 8, cr: 4, rep: 0 };
 /*}@zan:top*/
 /*@mad:top{*/
 /* Madrid: Steineichen (breit, dunkel, trocken) und Pinien/Aleppokiefern mit Schirmkrone */
-TREE_STYLE.mad = { leaf: { lobes: [[0, 4.6, 0, 2.6], [1.8, 4.4, 0.8, 2.0], [-1.7, 4.3, -1.0, 2.1], [0.3, 5.6, -0.4, 1.7]], cards: 34, sz: 2.5, lo: [2.8, 0.7, 4.6],   /* Kronen 1,8 m höher: der gemeinsame Stamm (5,6 m) stach oben aus den Laubkronen heraus */ hsl: [0.24, .24, .30] }, con: { kind: 'pine', y0: 5.2, y1: 8.2, r: 3.6, tiers: 3, per: 8, droop: .34, hsl: [0.27, .30, .30] }, trunkH: 5.6 };
+TREE_STYLE.mad = TREE_STYLE.bcn;   /* auf Wunsch: Bäume wie in Barcelona (mediterrane Kiefern und Laubbäume) – der eigene Madrider Stil sah falsch aus */
 ROADTEX.mad = 'asphalt_06';
 ASPH_X.mad = { b: 56, c: 20, t: [2, 1, 0], sp: 7000, pa: 6, cr: 1, rep: 0 };
 /*}@mad:top*/
@@ -12295,7 +12295,7 @@ function trkMap(cv, t, col2, lw = 3) { const g = cv.getContext('2d'), W2 = cv.wi
   const p0 = t.pts[0]; g.fillStyle = '#fff'; g.beginPath(); g.arc(fx(p0[0]), fz(p0[1]), lw * 1.7, 0, 7); g.fill(); g.fillStyle = '#e10600'; g.beginPath(); g.arc(fx(p0[0]), fz(p0[1]), lw, 0, 7); g.fill(); }
 // Streckenwahl: links Infotafel der gewählten Strecke (große Skizze + Daten), dahinter der Name als Konturschrift, unten die Leiste aller Strecken
 function renderTrackInfo() { const k = S.track, t = TRACKS[k]; if (!t || MENU.trkShown === k + SER) return; MENU.trkShown = k + SER; const ti = TRACK_INFO[k] || { turns: '–', col: '#e10600' };
-  $('#trkInfo').innerHTML = '<canvas width="420" height="300"></canvas><div class="tst"><div><small>Kurven</small><b>' + ti.turns + '</b></div><div><small>Länge</small><b>' + t.km + '</b></div><div><small>Runden (GP)</small><b>' + t.laps + '</b></div><div><small>Land</small><b>' + flagSVG(k) + t.land + '</b></div><div class="w"><small>Kurs</small><b>' + t.full + '</b></div></div>';
+  $('#trkInfo').innerHTML = '<div class="tkopf">' + t.full + '</div><canvas width="420" height="300"></canvas><div class="tst"><div><small>Kurven</small><b>' + ti.turns + '</b></div><div><small>Länge</small><b>' + t.km + '</b></div><div><small>Runden (GP)</small><b>' + t.laps + '</b></div><div><small>Land</small><b>' + flagSVG(k) + t.land + '</b></div></div>';
   $('#trkInfo').style.setProperty('--tc', ti.col); trkMap($('#trkInfo canvas'), t, ti.col, 5); $('#trkBig').textContent = t.name; if (SHOW.on && MENU.scr === 'track' && MENU.team) showroomWall(MENU.team, t.name); }
 function renderTracks() {
   if (TRACKS[S.track] && ((TRACKS[S.track].extra && !S.nos) || (TRACKS[S.track].kartOnly && SER !== 'kart'))) S.track = 'monza';
@@ -12526,7 +12526,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.40'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.41'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
