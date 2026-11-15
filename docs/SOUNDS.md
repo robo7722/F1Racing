@@ -286,3 +286,6 @@ Stand: 15.11.2026. Ohne Credits.
 - Änderung nur dort: 1.000–4.400 U/min granular aus Durchzug A wie in v2.08 (dessen Anfahren der Nutzer als richtig bestätigt hat; Körner im Abstand einer Zündung wie dort). Ab 3.900–4.400 übernehmen wieder die Stufen `mx5e_5200`/`mx5e_6900` aus v2.07d. Leerlauf, Gasstöße, hohe Drehzahl unverändert wie v2.07d.
 - `SND_ENG.road.gran.aus = [3900, 4400]`: Bereich, in dem die Granular-Wiedergabe wieder ausblendet. Stufen-Schleifen jetzt `mx5e_leer`, `mx5e_5200`, `mx5e_6900` (1.600/2.400/3.500 entfallen).
 - Hörproben-Ordner: nummeriert 01–16 (siehe Chat), 16 = v2.14.
+
+> [!tip] Anleitung zum Nachbauen
+> Die Zusammensetzung des abgenommenen Roadster-Sounds (v2.14) ist als eigenständige Anleitung beschrieben: [[MOTORSOUND-ANLEITUNG]] – Vorlage auch für das Rally-Spiel. Hörprobe ohne Spiel: `tools/sounds/hoerprobe_mx5.py`.
