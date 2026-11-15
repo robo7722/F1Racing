@@ -1,0 +1,155 @@
+{
+ "mx5_leer": {
+  "quelle": "mx5_leer_1.mp3",
+  "laenge": 3.0,
+  "wert": 0.107,
+  "grundton": 2666.7
+ },
+ "mx5_3000": {
+  "quelle": "mx5_3000_1.mp3",
+  "laenge": 3.0,
+  "wert": 0.031,
+  "grundton": 133.9
+ },
+ "mx5_5000": {
+  "quelle": "mx5_5000_1.mp3",
+  "laenge": 3.0,
+  "wert": 0.544,
+  "grundton": 130.1
+ },
+ "mx5_7000": {
+  "quelle": "mx5_7000_2.mp3",
+  "laenge": 3.0,
+  "wert": 0.813,
+  "grundton": 81.7
+ },
+ "mx5_schub": {
+  "quelle": "mx5_schub_2.mp3",
+  "laenge": 2.5,
+  "wert": 0.087,
+  "grundton": 2666.7
+ },
+ "schaben_metall": {
+  "quelle": "schaben_metall_2.mp3",
+  "laenge": 2.5,
+  "wert": 0.511
+ },
+ "schaben_beton": {
+  "quelle": "schaben_beton_2.mp3",
+  "laenge": 2.5,
+  "wert": 0.503
+ },
+ "schaben_auto": {
+  "quelle": "schaben_auto_1.mp3",
+  "laenge": 2.5,
+  "wert": 0.204
+ },
+ "kies": {
+  "quelle": "kies_1.mp3",
+  "laenge": 3.0,
+  "wert": 0.474
+ },
+ "rasen": {
+  "quelle": "rasen_2.mp3",
+  "laenge": 3.0,
+  "wert": 0.598
+ },
+ "kerb": {
+  "quelle": "kerb_1.mp3",
+  "laenge": 2.5,
+  "wert": 0.082
+ },
+ "quietschen_slick": {
+  "quelle": "quietschen_slick_1.mp3",
+  "laenge": 2.5,
+  "wert": 0.62
+ },
+ "quietschen_strasse": {
+  "quelle": "quietschen_strasse_1.mp3",
+  "laenge": 2.5,
+  "wert": 0.253
+ },
+ "wind": {
+  "quelle": "wind_1.mp3",
+  "laenge": 3.0,
+  "wert": 0.255
+ },
+ "cf_leicht": {
+  "quelle": "cf_leicht_1.mp3",
+  "laenge": 0.35,
+  "spitzen": 1,
+  "bis_spitze_s": 0.005
+ },
+ "cf_auto": {
+  "quelle": "cf_auto_1.mp3",
+  "laenge": 0.9,
+  "spitzen": 1,
+  "bis_spitze_s": 0.01
+ },
+ "cf_armco": {
+  "quelle": "cf_armco_1.mp3",
+  "laenge": 1.2,
+  "spitzen": 1,
+  "bis_spitze_s": 0.0
+ },
+ "cf_beton": {
+  "quelle": "cf_beton_2.mp3",
+  "laenge": 1.1,
+  "spitzen": 1,
+  "bis_spitze_s": 0.03
+ },
+ "reifenstapel": {
+  "quelle": "reifenstapel_2.mp3",
+  "laenge": 0.9,
+  "spitzen": 1,
+  "bis_spitze_s": 0.005
+ },
+ "cf_schwer": {
+  "quelle": "cf_schwer_1.mp3",
+  "laenge": 2.2,
+  "spitzen": 1,
+  "bis_spitze_s": 0.3
+ },
+ "stahl_leicht": {
+  "quelle": "stahl_leicht_2.mp3",
+  "laenge": 0.4,
+  "spitzen": 1,
+  "bis_spitze_s": 0.005
+ },
+ "stahl_auto": {
+  "quelle": "stahl_auto_2.mp3",
+  "laenge": 0.9,
+  "spitzen": 1,
+  "bis_spitze_s": 0.13
+ },
+ "stahl_wand": {
+  "quelle": "stahl_wand_2.mp3",
+  "laenge": 1.2,
+  "spitzen": 1,
+  "bis_spitze_s": 0.095
+ },
+ "stahl_schwer": {
+  "quelle": "stahl_schwer_2.mp3",
+  "laenge": 2.2,
+  "spitzen": 2,
+  "bis_spitze_s": 0.195
+ },
+ "kart_kart": {
+  "quelle": "kart_kart_1.mp3",
+  "laenge": 0.5,
+  "spitzen": 1,
+  "bis_spitze_s": 0.0
+ },
+ "kart_wand": {
+  "quelle": "kart_wand_2.mp3",
+  "laenge": 0.7,
+  "spitzen": 1,
+  "bis_spitze_s": 0.0
+ },
+ "kies_einschlag": {
+  "quelle": "kies_einschlag_1.mp3",
+  "laenge": 1.0,
+  "spitzen": 1,
+  "bis_spitze_s": 0.04
+ }
+}
