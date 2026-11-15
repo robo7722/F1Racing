@@ -9786,8 +9786,8 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     for (const [L2, M2, C2] of [[lo, resiM, cols], [hiB, TRK.resiTall ? resiM : towM, gcols]]) { if (!L2.length) continue; const bay = M2.userData.bay || 4, flo = M2.userData.flo || 3.5; for (const b of L2) { b[2] = Math.max(bay * 2, Math.floor(b[2] / bay) * bay); b[4] = Math.max(bay * 2, Math.floor(b[4] / bay) * bay); b[3] = Math.max(flo * 2, Math.round(b[3] / flo) * flo + 0.6) + (b[7] || 0); }   /* ganze Fensterachsen und Geschosse */
       const ib = new THREE.InstancedMesh(L2 === lo && !rivi ? kit : box1, M2, L2.length);   /* Monaco: einfacher Quader (Detail steckt in der Fassadentextur) – kein Wechsel der Detailstufe, kein Pop-up */
       L2.forEach(([x, z, w, h2, l, r, y0], k) => { qq.setFromAxisAngle(_v2, r); m4.compose(pv.set(x, y0 || 0, z), qq, sc.set(w, h2, l)); ib.setMatrixAt(k, m4); ib.setColorAt(k, cc.setHex(C2[k % C2.length])); }); trackGroup.add(ib); }
-    // flache Häuser: umlaufende Dachbrüstung (Attika) und dunkler abgesetztes Erdgeschoss mit Schaufenstern – keine glatten Kisten mehr
-    if (lo.length && !['chn', 'bhr', 'jed', 'mia', 'bcn', 'hun', 'zan', 'mad', 'baku', 'cota', 'mex', 'bra', 'qat'].some(k => TRK === TRACKS[k])) { const base = new THREE.InstancedMesh(box1, new THREE.MeshStandardMaterial({ color: 0x2a3038, roughness: .25, metalness: .5, emissive: new THREE.Color(TH.night ? 0.9 : 0.25, TH.night ? 0.7 : 0.18, TH.night ? 0.45 : 0.1) }), lo.length);
+    // flache Häuser: abgesetztes Erdgeschoss (Sockel) auf allen Strecken entfernt – leuchtete nachts als heller Streifen; die Fassade darunter zeigt ganze Fenster
+    if (false && lo.length) { const base = new THREE.InstancedMesh(box1, new THREE.MeshStandardMaterial({ color: 0x2a3038, roughness: .25, metalness: .5, emissive: new THREE.Color(TH.night ? 0.9 : 0.25, TH.night ? 0.7 : 0.18, TH.night ? 0.45 : 0.1) }), lo.length);
       lo.forEach(([x, z, w, h2, l, r, y0], k) => { qq.setFromAxisAngle(_v2, r); m4.compose(pv.set(x, (y0 || 0) + (lo[k][7] || 0), z), qq, sc.set(w + 0.12, Math.min(4, h2 * 0.3), l + 0.12)); base.setMatrixAt(k, m4); });
       trackGroup.add(base); }
     if (roofU.length) { const ru = new THREE.InstancedMesh(box1, lam({ color: TH.night ? 0x6a6c70 : 0xb8b4ac }), roofU.length);
@@ -12570,7 +12570,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.52'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.53'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
