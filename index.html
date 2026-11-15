@@ -5795,12 +5795,12 @@ function softBeamMat(col) { const m = new THREE.MeshBasicMaterial({ vertexColors
           bn = bn * mat3( instanceMatrix ); bp = ( instanceMatrix * vec4( position, 1.0 ) ).xyz;
         #endif
         vec3 vp = ( bmv * vec4( bp, 1.0 ) ).xyz; vBF = abs( dot( normalize( bn * nn ), normalize( -vp ) ) ); }`);
-    sh.fragmentShader = 'varying float vBF;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n diffuseColor.rgb *= pow( vBF, 3.0 ) * 1.6;'); };
+    sh.fragmentShader = 'varying float vBF;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n diffuseColor.rgb *= pow( vBF, 3.0 );'); };
   m.customProgramCacheKey = () => 'softBeam'; return m; }
 /* Schleier um Scheinwerferfelder: weicher Lichthof mit fester Bildschirmgröße – nah klein gegen das Lampenfeld, in der Ferne deutlicher Glanz im Dunst. pts = Weltpositionen [x, y, z, …] */
 function lampHalos(pts, col) { const t = canvasTex(128, 128, (g, w, h) => { const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.18, 'rgba(235,238,255,.55)'); gr.addColorStop(.5, 'rgba(200,210,255,.14)'); gr.addColorStop(1, 'rgba(170,180,230,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); t.userData.own = true;
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-  const m = new THREE.Points(g, new THREE.PointsMaterial({ map: t, size: 64, sizeAttenuation: false, color: col, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+  const m = new THREE.Points(g, new THREE.PointsMaterial({ map: t, size: 52, sizeAttenuation: false, color: col.clone().multiplyScalar(0.7), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
   m.userData.fixed = true; m.userData.clipSkip = true; m.frustumCulled = false; m.renderOrder = 3; return m; }
 function poolMesh(list, w, l, mat) { const pos = [], uv = [], NX = 12, NZ = 16;
   /* Höhe: auf der Fahrbahn exakt die Asphalthöhe (Streckenhöhe + Querneigung), daneben das Gelände; nur 1 cm darüber – mit 5 cm und grobem Raster schwebte der Schein sichtbar über dem Asphalt */
@@ -6178,6 +6178,9 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     for (const [a, b, sd, len = 44] of TRK.stands) for (let s2 = a; s2 <= b + 0.1; s2 += len + 2) { if (TRK.standSkip && TRK.standSkip.some(([u, v]) => s2 >= u && s2 <= v)) continue; let side; if (sd === 'opp') side = -(TRK.pitOut ? -inSign : inSign); else if (sd === 'L') side = -1; else if (sd === 'R') side = 1; else { const q = trackAt(s2, 40), ins = pip(q.x, q.z) ? 1 : -1; side = sd === 'in' ? ins : -ins; }
       const p = trackAt(s2, 0), w = wallAt(p.i, side), q = trackAt(s2, side * (w + 4)), rot = side < 0 ? q.h : q.h + Math.PI;
       MC_PADS.push({ x: q.x, z: q.z, c: Math.cos(rot), s: Math.sin(rot), dep, len, y: ELEV[p.i], r: Math.max(dep, len) / 2 + 40 }); } }
+  /* São Paulo: Gelände hinter Boxengebäude und Haupttribüne an der Zielgeraden auf Streckenhöhe einebnen – der Hang stieg dort über die Dächer und stach von hinten durch die Gebäude */
+  if (TRK === TRACKS.bra && !FLAT) { MC_PADS = MC_PADS || []; for (let s2 = 3900; s2 <= 4560; s2 += 44) for (const side of [-1, 1]) { const p = trackAt(modL(s2), 0), w = wallAt(p.i, side), q = trackAt(modL(s2), side * (w + 4)), rot = side < 0 ? q.h : q.h + Math.PI;
+      MC_PADS.push({ x: q.x, z: q.z, c: Math.cos(rot), s: Math.sin(rot), dep: 75, len: 46, y: ELEV[p.i] - 0.3, r: 120 }); } }
   const gsz0 = Math.max(maxX - minX, maxZ - minZ) + 3200, gsz = FLAT ? gs : gsz0 + (TH.bigGround || 0), gRep = FLAT ? gs / 16 : gs / 16 * gsz / gsz0;
   const gSeg = FLAT ? 90 : TH.bigGround ? 360 : 300, ground = new THREE.Mesh(new THREE.PlaneGeometry(gsz, gsz, gSeg, gSeg).rotateX(-Math.PI / 2), lam({ map: TH.bandStone ? STONE_T(gRep * 1.6) : texRep(TH.ground === 'grass' ? (TH.dryGrass ? DRY_GRASS() : TEX.grassP) : TH.ground === 'city' ? TEX.runoff : TEX.sand, gRep, gRep), color: TH.mainTint ?? 0xffffff, normalMap: texRep(TH.ground === 'grass' ? TEX.grassN : TH.ground === 'city' ? TEX.runoffN : TEX.sandN, gRep, gRep), normalScale: new THREE.Vector2(1.4, 1.4), color: TH.groundTint ?? 0xffffff, side: THREE.DoubleSide }));
   ground.material.map.userData.own = true; ground.material.polygonOffset = true; ground.material.polygonOffsetFactor = 4; ground.material.polygonOffsetUnits = 4;
@@ -9455,6 +9458,10 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     const pipM = (R, x, z) => { let c = false; for (let i = 0, j = R.length - 1; i < R.length; j = i++) { const [xi, zi] = R[i], [xj, zj] = R[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };
     const geoOf = (pos, cols, uv) => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); if (cols) g.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3)); if (uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.computeVertexNormals(); g.computeBoundingSphere(); return g; };
 
+    // ---------- Stützmauer hinter dem Boxengebäude: der untere Streckenabschnitt (~13 m tiefer) blickt auf die Rückseite – vorher lief der Grashang schräg durch die Gebäuderückwand ----------
+    { const pos = [], uv = []; let u = 0; for (let s2 = 3975; s2 < 4350; s2 += 5) { const qa = trackAt(modL(s2), -34.6), qb = trackAt(modL(s2 + 5), -34.6), ea = ELEV[qa.i], eb = ELEV[qb.i], ya0 = Math.min(groundY(qa.x, qa.z), ea) - 16, yb0 = Math.min(groundY(qb.x, qb.z), eb) - 16, ya1 = ea - 0.2, yb1 = eb - 0.2;
+        pos.push(qa.x, ya0, qa.z, qb.x, yb0, qb.z, qb.x, yb1, qb.z, qa.x, ya0, qa.z, qb.x, yb1, qb.z, qa.x, ya1, qa.z); uv.push(u, ya0 / 3, u + 5 / 3, yb0 / 3, u + 5 / 3, yb1 / 3, u, ya0 / 3, u + 5 / 3, yb1 / 3, u, ya1 / 3); u += 5 / 3; }
+      const w = new THREE.Mesh(geoOf(pos, null, uv), lam({ map: STONE_T(1), color: 0xd8d4cc, roughness: .9, side: DSD })); w.geometry.computeVertexNormals(); w.userData.fixed = true; w.receiveShadow = true; w.castShadow = true; trackGroup.add(w); }
     // ---------- Paddock-Club über den Garagen: zweites Geschoss mit Glasband und weißem Dach (die Garagen selbst baut die Boxengasse) ----------
     { const facT = canvasTex(1024, 98, (g, w, h) => { g.fillStyle = '#2f4d63'; g.fillRect(0, 0, w, h); const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, 'rgba(255,255,255,.28)'); gr.addColorStop(.6, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); g.fillStyle = '#e9ecee'; for (let x = 0; x < w; x += 64) g.fillRect(x, 0, 5, h); g.fillRect(0, 0, w, 5); g.fillStyle = '#009c3b'; g.fillRect(0, h - 22, w, 22); g.fillStyle = '#ffdf00'; g.font = 'bold 17px sans-serif'; g.fillText('AUTÓDROMO JOSÉ CARLOS PACE · INTERLAGOS · SÃO PAULO', 40, h - 6); }); facT.userData.own = true; const facM = lam({ map: facT, roughness: .7, side: DSD });
       const wallM = lam({ color: 0xe8eaec, roughness: .7 }), glassM = lam({ color: 0x2c4658, roughness: .7 }), roofM3 = lam({ color: 0xf4f5f6, roughness: .8 });
@@ -9629,13 +9636,13 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         const beamG = (() => { const yT = H + 2.3, T = [[-4.7, yT - 2.1, 0.7], [4.7, yT - 2.1, 0.7], [4.7, yT + 2.1, 0.2], [-4.7, yT + 2.1, 0.2]], Bm = [[-11, 0, 10], [11, 0, 10], [11, 0, 32], [-11, 0, 32]], pos = [], col = [];
           const uvs = []; for (let k = 0; k < 4; k++) { const k2 = (k + 1) % 4; for (const [P, c, u] of [[T[k], 1, 0], [Bm[k], 0, 0], [Bm[k2], 0, 1], [T[k], 1, 0], [Bm[k2], 0, 1], [T[k2], 1, 1]]) { pos.push(...P); col.push(c, c, c); uvs.push(u, c); } }
           const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); return g; })();
-        const beams = new THREE.InstancedMesh(beamUV(beamG), softBeamMat(new THREE.Color(0.06, 0.07, 0.105)), bm.length);
+        const beams = new THREE.InstancedMesh(beamUV(beamG), softBeamMat(new THREE.Color(0.032, 0.037, 0.056)), bm.length);
         bm.forEach(([x, z, a, sc], k) => { qq.setFromAxisAngle(upv, a); sv.set(sc, sc, sc); m4.compose(pv.set(x, 0, z), qq, sv); beams.setMatrixAt(k, m4); }); beams.frustumCulled = false; beams.userData.clipSkip = true; beams.renderOrder = 2; trackGroup.add(beams);
         /* Schleier um die Scheinwerferfelder: weicher Lichthof mit fester Bildschirmgröße – nah klein gegen das Lampenfeld, in der Ferne ein deutlicher Glanz (wie Bloom im Dunst) */
         const haloT = canvasTex(128, 128, (g, w, h) => { const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.18, 'rgba(225,235,255,.55)'); gr.addColorStop(.5, 'rgba(180,200,255,.14)'); gr.addColorStop(1, 'rgba(150,170,230,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); haloT.userData.own = true;
         const hp = []; for (const [x, z, a, sc] of pp) { const ca = Math.cos(a), sa = Math.sin(a); hp.push(x + sa * 0.4 * sc, (FLAT ? 0 : placeY(x, z)) + (H + 2.3) * sc, z + ca * 0.4 * sc); }
         const hg = new THREE.BufferGeometry(); hg.setAttribute('position', new THREE.Float32BufferAttribute(hp, 3));
-        const halo = new THREE.Points(hg, new THREE.PointsMaterial({ map: haloT, size: 64, sizeAttenuation: false, color: new THREE.Color(0.26, 0.29, 0.38), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+        const halo = new THREE.Points(hg, new THREE.PointsMaterial({ map: haloT, size: 52, sizeAttenuation: false, color: new THREE.Color(0.17, 0.19, 0.25), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
         halo.userData.fixed = true; halo.userData.clipSkip = true; halo.frustumCulled = false; halo.renderOrder = 3; trackGroup.add(halo); }
       for (const [x, z] of pp) excl.push([x, z, 3]);
       if (night) { // Lichtkegel auf dem Asphalt: dicht über die ganze Runde, wechselnd links/rechts
@@ -12560,7 +12567,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.47'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.48'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
