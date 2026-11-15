@@ -619,7 +619,8 @@ body.noBoost #bBoost,body.noBoost #bat{display:none!important}
 .msteps i.on{color:#fff!important;background:linear-gradient(180deg,rgba(225,6,0,.0),rgba(225,6,0,.22))!important}
 .msteps i.on::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--f1r);transform-origin:left;animation:f1bar .45s cubic-bezier(.2,.8,.2,1)}
 .msteps i.on b{color:var(--f1r2)!important}
-.msteps i.done{color:rgba(255,255,255,.75)!important}.msteps i.done b{color:var(--f1r)!important}
+.msteps i.done{color:rgba(255,255,255,.75)!important;cursor:pointer}.msteps i.done b{color:var(--f1r)!important}
+.msteps i.done:hover{color:#fff!important;background:rgba(255,255,255,.07)!important}
 .msteps i,.msteps i>b{transform:none!important}
 .msteps i b,.msteps i.on b,.msteps i.done b{background:none!important;box-shadow:none!important}
 #scrTitle .tver{top:calc(12px + env(safe-area-inset-top))!important;bottom:auto!important}
@@ -9846,7 +9847,7 @@ function renderTracks() {
       + '<div class="ts"><div><b>' + t.km + '</b><small>Länge</small></div><div><b>' + ti.turns + '</b><small>Kurven</small></div><div><b>' + t.laps + '</b><small>Runden</small></div></div></button>'; }).join('');
   $$('#tracks .tcard').forEach(b => {
     trkMap(b.querySelector('canvas'), TRACKS[b.dataset.trk], getComputedStyle(b).getPropertyValue('--tc') || '#e10600', 5);
-    b.addEventListener('click', () => { S.track = b.dataset.trk; save(); renderMenu(); b.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); });
+    b.addEventListener('click', () => { S.track = b.dataset.trk; save(); renderMenu(); { const bar = $('#tracks'), r = b.getBoundingClientRect(), br = bar.getBoundingClientRect(); bar.scrollTo({ left: bar.scrollLeft + (r.left - br.left) - (br.width - r.width) / 2, behavior: 'smooth' }); } });   /* nur die Streckenleiste scrollen: scrollIntoView verschob sonst auch Kopfzeile, Infotafel und Fußleiste um einige Pixel */
 
   });
 }
@@ -9864,6 +9865,7 @@ function buildMenu2() {
   $('#tSettings').addEventListener('click', () => openSettings('menu'));
   $('#mGear').addEventListener('click', () => openSettings('menu'));
   $('#mNext').addEventListener('click', menuNext); $('#mBack').addEventListener('click', menuBack);
+  $('#mSteps').addEventListener('click', e => { const i = e.target.closest('i'); if (!i || !i.classList.contains('done') || MENU.mode === 'career') return; const n = [...i.parentNode.children].indexOf(i) + 1; if (n >= 1 && n < SCR.indexOf(MENU.scr)) showScreen(SCR[n]); });   /* Klick auf einen früheren Schritt (Klasse, Team, Fahrer …) springt dorthin zurück; nach vorn geht es nicht */
 }
 function renderDrivers() {
   const T = TEAMS[MENU.team], ds = ALL.filter(c => c.team === MENU.team), c1 = hex(uiCol(T)), c2 = hex(T.acc), c3 = contrast(uiCol(T));
@@ -10067,7 +10069,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.23'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.24'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
