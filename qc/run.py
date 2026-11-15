@@ -232,12 +232,12 @@ def main():
         return f'http://127.0.0.1:{a.port}/index.html?' + '&'.join(f'{k}={v}' for k, v in {**params, 'i': i}.items())
 
     browser = find_browser(a.browser)
-    kill_leftovers('f1qc-')
+    kill_leftovers(f'f1qc-{a.port}-')
     profs = []
     w, h = a.size.split(',')
 
     def launch(i):
-        prof = tempfile.mkdtemp(prefix='f1qc-'); profs.append(prof)   # jeder Start mit frischem Profil – sonst übernimmt ein hängender Edge den Neustart
+        prof = tempfile.mkdtemp(prefix=f'f1qc-{a.port}-'); profs.append(prof)   # jeder Start mit frischem Profil – sonst übernimmt ein hängender Edge den Neustart
         return subprocess.Popen([browser, f'--user-data-dir={prof}', f'--remote-debugging-port={a.port + 1}', '--no-first-run', '--no-default-browser-check',
                                  # frisches Profil darf sich nicht mit dem Windows-Konto anmelden: sonst kommen Sync und Erweiterungen mit, öffnen eigene Tabs und der Spiel-Tab wird im Hintergrund angehalten
                                  '--disable-extensions', '--disable-component-extensions-with-background-pages', '--disable-sync', '--disable-default-apps',
@@ -274,7 +274,7 @@ def main():
                 nxt = len(STATE['tracks_done'])
                 name = keys[nxt] if nxt < len(keys) else 'Bericht'
                 tries[nxt] = tries.get(nxt, 0) + 1
-                kill_tree(proc); kill_leftovers('f1qc-'); time.sleep(3)
+                kill_tree(proc); kill_leftovers(f'f1qc-{a.port}-'); time.sleep(3)
                 # Neustart für den Bericht festhalten (letzte Meldung zeigt, wo es passierte)
                 rs_path = os.path.join(OUT, run, 'restarts.json')
                 try: rs = json.load(open(rs_path, encoding='utf-8'))
@@ -299,7 +299,7 @@ def main():
         except Exception: pass
         srv.shutdown()
         keep_awake(False)
-        kill_leftovers('f1qc-'); time.sleep(1)
+        kill_leftovers(f'f1qc-{a.port}-'); time.sleep(1)
         for p in profs:
             shutil.rmtree(p, ignore_errors=True)
 

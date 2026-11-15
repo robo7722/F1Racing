@@ -678,3 +678,48 @@ Was bleibt: Aus der Kies-Tasche heraus Richtung Boxen steigt der Kies zum letzte
 (Leitplanke um die Kies-Zonen: Bus-Stop schräg von oben, Blick aus dem Kies zur Tribüne/Boxen, Kies vor der Tribüne, Les Combes)
 
 Testhilfe `__zwall()`: Linienzüge der Planke. Prüfskripte (Arbeitsordner, nicht im Repo): Objekte im Kies (Fußpunkt unter Zonenhöhe innerhalb der Kiesmaske ± 1,5 m) und Kies an den Wandfüßen. Bei neuen Zonen beides prüfen.
+
+---
+
+## Nachtrag: Stand Version 2.27 – 13 neue Strecken des Kalenders 2026
+
+Neu im Spiel: Shanghai (`chn`), Bahrain (`bhr`), Jeddah (`jed`), Miami (`mia`), Barcelona (`bcn`), Hungaroring (`hun`), Zandvoort (`zan`), Madrid (`mad`), Baku (`baku`), Austin (`cota`), Mexiko-Stadt (`mex`), São Paulo (`bra`), Lusail (`qat`). Suzuka (`suz`) folgt (Strecke kreuzt sich selbst).
+
+### Bereiche je Strecke (Marker im Code)
+Jede neue Strecke steht in festen Bereichen `/*@KEY:REGION{*/ … /*}@KEY:REGION*/`:
+`data` (vor `TRACKS`: `TRACK_HD`, OSM-Daten, `CHORD_X.KEY`, `ASPH_X.KEY`), `track` (eine Zeile in `TRACKS`), `theme` (in `THEMES`), `top` (nach `TREE_STYLE`: Bäume, `ROADTEX`, globale Helfer),
+`edge` (in `buildTrack` nach den Absperrungs-Sonderfällen), `lm` (in `buildTrack` vor den OSM-Gebäuden: Wahrzeichen). Allgemeine Engine-Ergänzungen stehen in eigenen Bereichen `KEY:xN`
+direkt hinter einer vorhandenen Zeile und sind an ein Streckenfeld gekoppelt – andere Strecken bleiben unverändert. So können mehrere Leute/Bots gleichzeitig an verschiedenen Strecken arbeiten
+und die Bereiche danach per Skript zusammengeführt werden.
+
+- `CHORD_X.KEY = [[von, bis], …]` schaltet die Sehnen-Absperrung (`CHORD_OK`) für eine neue Strecke ein (Ausnahmen in Metern). `ASPH_X.KEY = { b, c, t, sp, pa, cr, rep }` ist die Asphaltmischung.
+
+### Neue allgemeine Bausteine (an Streckenfelder gekoppelt)
+| Feld | Bereich | Wirkung |
+|---|---|---|
+| `bank: [[sVon, sBis, Grad, Übergang = 30]]` | `zan:x1–x5` | Steilkurve: Fahrbahn, Rand und Absperrung geneigt (Grad > 0 = rechte Seite höher), mehr Haftung, Kamera rollt mit, eigenes Tempoprofil (Zandvoort 19°/18°, Madrid La Monumental 13,5°) |
+| `seatCol`, `crowdTint` | `zan:x5` | Sitzfarbe und Zuschauerfarbe der Tribünen (orange in Zandvoort) |
+| `TH.sandBands` | `bhr:x1` | Geländebänder aus Sand statt Gras (Wüste) |
+| `palmZ` | `bhr:x2` | Palmen nur in Gärten/Alleen statt verstreut |
+| `ownPit` | `bhr:x3` | kein Standard-Boxengebäude (eigenes nach OSM) |
+| `osmMerge` | `bhr:x4` | OSM-Gebäude werden zusammengefasst (weniger Zeichenaufrufe) |
+| `TH.rise.fn(x, z, d)` | `bra:x1` | eigene Geländefunktion (São Paulo: Höhenraster aus SRTM) |
+
+Globale Helfer: `farSkyline(group, ll, türme, { R, y0, hs })` (in `mia:top`) stellt Hochhäuser nach Geokoordinaten an den Horizont – weiter als `R` entfernte rücken heran und schrumpfen im selben Maß,
+Richtung und Blickwinkel bleiben echt. `horizonRing()` (in `mex:data`): Bergketten und Hochhäuser nach Peilung, Entfernung und Höhenwinkel. `desertHorizon(o)` (in `bhr:top`): Wüstenhorizont mit Ortslichtern.
+
+### Regeln, die jetzt für jede Strecke gelten
+- **Eigenes Colorgrading**: vollständiger `look`-Block (alle 13 Werte), abgestimmt auf echte Fotos; keine Werte einer anderen Strecke übernehmen.
+- **Horizont stimmt**: Skyline, Berge, Meer, Hügel in echter Richtung, Entfernung und Größe (Geokoordinaten); keine Zufallshügel (`hills`) oder Zufallsstädte (`city`), wo es in echt anders aussieht.
+  Wo ein Wahrzeichen sonst unsichtbar wäre (hinter Baumkronen/Waldkante), darf es überhöht werden – im Kommentar vermerken (Montserrat, Austin-Skyline).
+- **Menü**: `TRACK_INFO` – jede Strecke hat eine eigene Farbe; Flagge in `flagSVG`; die Streckenwahl folgt der Reihenfolge des F1-Kalenders.
+
+### Kalender und Karriere
+- `CAL_F1`: alle 24 Rennen 2026 in Reihenfolge (ohne Nordschleife); F2-Kalender unverändert. Eine F1-Saison aus einer älteren Version (ohne `CHP.cal24`) läuft mit `CAL_F1_10` und den alten Preisen zu Ende (`oldF1()`).
+- Upgrades: `UCOST24 = [14, 19, 24, 29, 34]` → 6 Bereiche × 120 = 720 Punkte = 24 × (Sieg 25 + Pole 5). Wer alle Rennen gewinnt und jede Pole holt, kann sich genau alles leisten.
+
+### Werkzeuge
+- `python qc/probe.py KEY [--view s,lat,h,s2,lat2,h2] [--top s,höhe] [--cam x,y,z,tx,ty,tz] [--eval "JS"] [--script datei.js] [--race] [--gfx low|ultra] --port P`:
+  baut die Strecke im unsichtbaren Edge, nimmt Bilder auf und gibt Konsolenwerte als JSON aus (Syntaxfehler mit Zeilennummer). Im Skript nimmt `await shot('name')` ein Bild auf.
+- `qc/run.py` und `probe.py` nutzen Edge-Profile je Port (`f1qc-<port>-…`): mehrere Läufe mit verschiedenen `--port` stören sich nicht mehr.
+- Bekannte Fehlalarme: `__onRoad()` meldet Baum-Tafeln (`treeSpr`, Lage per Shader) und Boxengassen-Markierungen (`clipSkip`); QC „Loch im Boden“ am Rand einer Steilkurve (Querneigung).
