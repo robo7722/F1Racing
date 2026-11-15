@@ -4,6 +4,9 @@ Stand: 15.11.2026 · Spielstand v1.96.
 Zugehörig: [[SOUNDS]] (Erzeugung und Einbau), Code in `index.html` (`SND_ENG`, `sndEngine`, `updateAudio`, `gearInfo`).
 Messung: Spektrum und Autokorrelation der Spiel-Loops in `sounds/*.wav` (Skript unten).
 
+> [!success] Umgesetzt in v1.99
+> Alle Empfehlungen unten sind umgesetzt (Details in [[SOUNDS]], Abschnitt v1.99): echte Tonhöhe für F1/F2/Kart über offline erzeugte Drehzahlstufen, F2-Oktavfehler behoben, F2 mit 6 Gängen und Begrenzer 8.750, Kart-Drehzahl proportional mit Kupplung, Gegner mit Aufnahmen in gleicher Tonhöhe, eigene „Gas weg“-Loops, kürzere F1-Schaltlücke, MGU-K-Heulen. Die Tabellen unten beschreiben den Stand **vor** v1.99.
+
 ## Kurzfazit
 
 | Klasse | Drehzahl-Bereich | Tonhöhe | Klang | Gesamt |

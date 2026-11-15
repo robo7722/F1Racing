@@ -1663,7 +1663,7 @@ const STREET = { p: 162000 * 0.85 * 0.9, m: 1135, trac: 4.8, cd: 0.423 / 1135, r
 const streetDrive = v => { const pw = STREET.p * (0.45 + 0.55 * Math.min(1, v / 22)); return Math.min(STREET.trac, pw / (STREET.m * Math.max(v, 0.5))); };
 const RATIO_S = [0, 450, 270, 193, 154, 132, 115];
 function streetGear(kmh) { const v = kmh / 3.6; let g = 1; while (g < 6 && v * RATIO_S[g] > 7300) g++; const rpm = clamp(v * RATIO_S[g], 900, 7600); return { g, f: clamp((rpm - 900) / 6600, 0, 1), rpm }; }
-const gearP = kmh => (pl && pl.street ? streetGear(kmh) : gearInfo(kmh));
+const gearP = kmh => (pl && pl.street ? streetGear(kmh) : gearInfo(kmh, SER === 'f2' && !(pl && pl.mesh && pl.mesh.road)));   // F2: eigenes 6-Gang-Getriebe
 
 /* ======================= Renderer & Szene ======================= */
 // Umgebungslicht: matte Flächen bekommen ihr Himmelslicht aus einer billigen SH-Lichtsonde statt aus der teuren Umgebungs-Cubemap;
@@ -7471,7 +7471,7 @@ function haloDraw(g, o) {
     quad(tl + w * 0.2, tl + w * 0.8, t * 0.2, t * 0.85, onB ? '#ff3b2f' : 'rgba(255,255,255,.12)'); quad(tr + w * 0.2, tr + w * 0.8, t * 0.2, t * 0.85, onT ? '#33e070' : 'rgba(255,255,255,.12)'); }
   txt('BRAKE', thC - aw - 0.02, t + t * 0.28, Math.max(7, t * 0.24), 'rgba(255,255,255,.8)', 600, 'right'); txt('THROTTLE', thC + aw + 0.02, t + t * 0.28, Math.max(7, t * 0.24), 'rgba(255,255,255,.8)', 600, 'left');   /* bündig neben dem Tacho-Kreis: mittig gesetzt verschwand das „T“ von THROTTLE hinter dem Kreis */
   // Gänge + Drehzahl rechts
-  { const n0 = thC + aw + bs + 0.07, n1 = Math.max(n0 + 0.2, Math.min(th1 - 0.06, visR - 0.07, n0 + 0.5)), G = ['N', 1, 2, 3, 4, 5, 6, 7, 8], cur = pl.v < 0.5 || pre ? 'N' : gi.g;
+  { const n0 = thC + aw + bs + 0.07, n1 = Math.max(n0 + 0.2, Math.min(th1 - 0.06, visR - 0.07, n0 + 0.5)), G = ['N', ...Array.from({ length: gi.n || 8 }, (_, k) => k + 1)], cur = pl.v < 0.5 || pre ? 'N' : gi.g;
     G.forEach((v, i) => { const th = n0 + (n1 - n0) * i / (G.length - 1), on = String(v) === String(cur); txt(String(v), th, t * 0.36, on ? t * 0.62 : t * 0.34, on ? '#ffffff' : 'rgba(255,255,255,.55)', on ? 800 : 600); });
     txt('GEARS', n1 + 0.035, t * 0.36, Math.max(6, t * 0.2), 'rgba(255,255,255,.6)', 600, 'left');
     g.lineWidth = Math.max(1.5, t * 0.07); g.strokeStyle = 'rgba(255,255,255,.18)'; g.beginPath(); g.ellipse(cx, cy, rx - t * 0.78, ry - t * 0.78 * k, 0, n0, n1); g.stroke();
@@ -7677,38 +7677,52 @@ function applyVolumes() {
   if (SFX) SFX.gain.setTargetAtTime(S.sound ? S.volCar * 1.2 : 0, ac.currentTime, 0.05);
 }
 // ===== Aufgenommene Sounds (ElevenLabs Sound Effects, Ordner sounds/, siehe docs/SOUNDS.md) =====
-// Motor je Klasse: zwei nahtlose Loops (mittlere / hohe Drehzahl) mit gemessenem Grundton (Hz). Im Spiel wird jede Aufnahme auf die aktuelle
-// Zündfrequenz × tp umgestimmt (playbackRate) und je nach Drehzahl gleich laut überblendet (Kosinus/Sinus).
+// Motor je Klasse (v1.99): mehrere nahtlose Loops über die Drehzahl, jeder mit gemessenem Grundton (Hz). Gestimmt wird auf die ECHTE Zündfrequenz
+// (V6: U/min ÷ 60 × 3, Zweitakt-Einzylinder: U/min ÷ 60). Die höheren Stufen sind offline mit Rubberband aus den ElevenLabs-Aufnahmen erzeugt
+// (Formanten bleiben, tools/sounds/varianten.py) – im Spiel wird jede Stufe nur noch ~0,8–1,25-fach nachgestimmt. Zwischen den zwei Stufen, die den
+// aktuellen Ton einschließen, wird gleich laut überblendet. schub: eigener Loop für „Gas weg“ (Knallen/Blubbern), am Tiefpass vorbei.
 // Fehlt eine Datei oder lädt sie nicht, bleibt der synthetische Motor (Oszillatoren) – das Spiel klingt nie stumm.
-const SND_ENG = {   // cyl: Zündungen je Umdrehung · tp: Tonhöhen-Faktor (Aufnahme klingt eine Stufe tiefer als die reine Zündfrequenz, sonst bis 2,6-fach hochgestimmt = dünn) · x: Drehzahl, ab/bis der hohe Loop übernimmt
-  f1: { cyl: 3, tp: 0.6, vol: 0.55, x: [7000, 10500], lo: ['sounds/f1_mittel.wav', 230], hi: ['sounds/f1_hoch.wav', 260] },
-  f2: { cyl: 3, tp: 0.6, vol: 0.55, x: [6000, 9000], lo: ['sounds/f2_mittel.wav', 255], hi: ['sounds/f2_hoch.wav', 280] },
-  kart: { cyl: 1, tp: 1.0, vol: 0.5, x: [8000, 12000], lo: ['sounds/kart_mittel.wav', 155], hi: ['sounds/kart_hoch.wav', 177] } };   // Grundton (Hz) gemessen mit tools/sounds/aufbereiten.py; 0 = Aufnahme nicht verwenden
+const SND_ENG = {   // cyl: Zündungen je Umdrehung · loops: [Datei, Grundton] aufsteigend · schub: [Datei, Grundton, Lautstärke] · cut: Schalt-Lücke [Dauer s, Pegel]
+  f1: { cyl: 3, vol: 0.55, cut: [0.025, 0.65], loops: [['sounds/f1_mittel.wav', 230], ['sounds/f1_v2.wav', 344], ['sounds/f1_v3.wav', 438], ['sounds/f1_v4.wav', 552]], schub: ['sounds/v6_schub.wav', 390, 0.55] },   // nahtloses 8-Gang-Getriebe: kurze, flache Lücke; 2026: viel Ernten beim Lupfen -> leiser Schub
+  f2: { cyl: 3, vol: 0.6, cut: [0.06, 0.35], loops: [['sounds/f2_mittel.wav', 255], ['sounds/f2_v2.wav', 342], ['sounds/f2_v3.wav', 444]], schub: ['sounds/v6_schub.wav', 390, 0.95] },   // 6-Gang mit Zündunterbrechung, rau und laut, kräftiges Knallen
+  kart: { cyl: 1, vol: 0.5, cut: [0, 1], loops: [['sounds/kart_v0.wav', 78], ['sounds/kart_v1.wav', 104], ['sounds/kart_mittel.wav', 156], ['sounds/kart_v3.wav', 224]], schub: ['sounds/kart_schub.wav', 152, 0.8] } };   // Grundton gemessen mit tools/sounds/varianten.py
+const SND_FERN = { f1: 2, f2: 1, kart: 2 };   // Gegner (Doppler) nutzen eine Stufe aus der Mitte des Renn-Drehzahlbereichs
 const SND_CRASH = { leicht: 'sounds/crash_leicht.wav', auto: 'sounds/crash_auto.wav', wand: 'sounds/crash_wand.wav', schwer: 'sounds/crash_schwer.wav', kart: 'sounds/crash_kart.wav' };   // v1.96: kurze Einzelschläge (WAV, ohne Vorlauf)
 const CRS = { end: 0, st: 0, g: null };   // gerade klingender Crash: Ende, Stärke, Lautstärke-Knoten
 const SNDB = {};   // url -> AudioBuffer | 'laedt' | null (fehlt)
 function sndLoad(url) { if (!ac || SNDB[url] !== undefined) return; SNDB[url] = 'laedt';
   fetch(url).then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status)).then(b => new Promise((res, rej) => ac.decodeAudioData(b, res, rej))).then(buf => { SNDB[url] = buf; }).catch(() => { SNDB[url] = null; }); }
 const sndBuf = url => (SNDB[url] && typeof SNDB[url] === 'object' ? SNDB[url] : null);
-function sndPreload() { for (const k in SND_ENG) for (const s of ['lo', 'hi']) if (SND_ENG[k][s][1] > 0) sndLoad(SND_ENG[k][s][0]); for (const k in SND_CRASH) sndLoad(SND_CRASH[k]); }
+function sndPreload() { for (const k in SND_ENG) { for (const l of SND_ENG[k].loops) sndLoad(l[0]); sndLoad(SND_ENG[k].schub[0]); } for (const k in SND_CRASH) sndLoad(SND_CRASH[k]); }
 // Motor-Aufnahmen abspielen: gibt true zurück, wenn die Aufnahme läuft (dann schweigt der synthetische Motor)
 function sndEngine(E, cls, on, load, t) {
   const M = E.smp; if (!M) return false;
-  const D = cls && SND_ENG[cls], bLo = D && D.lo[1] > 0 ? sndBuf(D.lo[0]) : null, bHi = D && D.hi[1] > 0 ? sndBuf(D.hi[0]) : null;
-  if (!bLo && !bHi) { if (M.cls) { for (const v of M.v) { try { v.src.stop(); } catch (e) {} } M.v = []; M.cls = null; M.out.gain.setTargetAtTime(0, t, 0.05); } return false; }
-  const key = cls + (bLo ? 'L' : '') + (bHi ? 'H' : '');
-  if (M.cls !== key) { for (const v of M.v) { try { v.src.stop(t + 0.05); } catch (e) {} } M.v = []; M.cls = key;
-    for (const [b, base] of [[bLo, D.lo[1]], [bHi, D.hi[1]]]) { if (!b) { M.v.push(null); continue; } const src = ac.createBufferSource(), g = ac.createGain(); src.buffer = b; src.loop = true; g.gain.value = 0; src.connect(g); g.connect(M.lp); src.start(t, Math.random() * b.duration); M.v.push({ src, g, base }); } }
-  const fq = E.rpm / 60 * D.cyl * D.tp, [L, H] = M.v;   // beide Loops auf dieselbe Zieltonhöhe gestimmt (kein Schweben/zwei Motoren beim Überblenden)
-  let x = 0; if (L && H) { x = clamp((E.rpm - D.x[0]) / (D.x[1] - D.x[0]), 0, 1); x = x * x * (3 - 2 * x); } else if (H) x = 1;   // Klangfarbe: unten der mittlere, oben der hohe (hellere) Loop
-  if (L) { L.src.playbackRate.setTargetAtTime(clamp(fq / L.base, 0.45, 2.6), t, 0.015); L.g.gain.setTargetAtTime(Math.cos(x * Math.PI / 2), t, 0.03); }
-  if (H) { H.src.playbackRate.setTargetAtTime(clamp(fq / H.base, 0.45, 2.6), t, 0.015); H.g.gain.setTargetAtTime(Math.sin(x * Math.PI / 2), t, 0.03); }
+  const D = cls && SND_ENG[cls], bufs = D ? D.loops.map(l => sndBuf(l[0])) : [], bS = D ? sndBuf(D.schub[0]) : null;
+  if (!D || bufs.some(b => !b)) { if (M.cls) { for (const v of M.v) { try { v.src.stop(); } catch (e) {} } if (M.s) { try { M.s.src.stop(); } catch (e) {} } M.v = []; M.s = null; M.cls = null; M.out.gain.setTargetAtTime(0, t, 0.05); } return false; }   // erst wenn alle Stufen geladen sind (sonst Lücken im Drehzahlband)
+  const key = cls + (bS ? 'S' : '');
+  if (M.cls !== key) { for (const v of M.v) { try { v.src.stop(t + 0.05); } catch (e) {} } if (M.s) { try { M.s.src.stop(t + 0.05); } catch (e) {} } M.v = []; M.s = null; M.cls = key;
+    D.loops.forEach(([, base], i) => { const src = ac.createBufferSource(), g = ac.createGain(); src.buffer = bufs[i]; src.loop = true; g.gain.value = 0; src.connect(g); g.connect(M.lp); src.start(t, Math.random() * bufs[i].duration); M.v.push({ src, g, base }); });
+    if (bS) { const g = ac.createGain(); g.gain.value = 0; g.connect(M.out); M.s = { src: null, g, base: D.schub[1], on: false }; } }
+  const fq = E.rpm / 60 * D.cyl, V = M.v, n = V.length;   // echte Zündfrequenz
+  // die zwei Stufen, die fq einschließen: gleich laut (Kosinus/Sinus) im logarithmischen Abstand überblenden – beide auf dieselbe Tonhöhe gestimmt, also kein Schweben
+  let i = 0; while (i < n - 2 && fq > V[i + 1].base) i++;
+  let x = clamp(Math.log(fq / V[i].base) / Math.log(V[i + 1].base / V[i].base), 0, 1); x = x * x * (3 - 2 * x);
+  V.forEach((v, k) => { const w = k === i ? Math.cos(x * Math.PI / 2) : k === i + 1 ? Math.sin(x * Math.PI / 2) : 0;
+    v.g.gain.setTargetAtTime(w, t, 0.03); if (w > 0.001 || v.g.gain.value > 0.001) v.src.playbackRate.setTargetAtTime(clamp(fq / v.base, 0.4, 2.2), t, 0.015); });
+  // Gas weg: Schub-Loop (Knallen/Blubbern) bei hoher Drehzahl, bei jedem Lupfen an zufälliger Stelle neu gestartet (sonst hört man die Wiederholung)
+  const rpmHi = cls === 'kart' ? 7000 : cls === 'f2' ? 5500 : 6500, sAmt = on ? clamp((0.45 - load) / 0.35, 0, 1) * clamp((E.rpm - rpmHi) / 2000, 0, 1) : 0;
+  if (M.s) { const S = M.s;
+    if (sAmt > 0.05 && !S.on) { S.on = true; try { S.src && S.src.stop(t + 0.1); } catch (e) {} const src = ac.createBufferSource(); src.buffer = bS; src.loop = true; src.connect(S.g); src.start(t, Math.random() * bS.duration); S.src = src; }
+    else if (sAmt < 0.01 && S.on && S.g.gain.value < 0.01) { S.on = false; try { S.src.stop(t + 0.05); } catch (e) {} S.src = null; }
+    if (S.src) S.src.playbackRate.setTargetAtTime(clamp(fq / S.base, 0.5, 1.8), t, 0.03);
+    S.g.gain.setTargetAtTime(sAmt * D.schub[2] * D.vol, t, sAmt > S.g.gain.value ? 0.03 : 0.12); }
   M.lp.frequency.setTargetAtTime(1500 + load * 10500, t, 0.05);   // Gas weg: dumpfer (Schub), Vollgas: offen
-  M.out.gain.setTargetAtTime(on ? D.vol * (E.cut > 0 ? 0.35 : 0.55 + 0.45 * load) : 0, t, E.cut > 0 ? 0.01 : 0.04);
+  const cut = E.cut > 0 ? D.cut[1] : 1;
+  M.out.gain.setTargetAtTime(on ? D.vol * cut * (0.5 + 0.5 * load) * (1 - 0.35 * sAmt) : 0, t, E.cut > 0 ? 0.008 : 0.04);
   return true;
 }
 window.__sndPk = url => { const b = sndBuf(url); if (!b) return null; const d = b.getChannelData(0); let m = 0; for (let i = 0; i < d.length; i++) m = Math.max(m, Math.abs(d[i])); return { pk: +m.toFixed(2), sr: b.sampleRate, n: b.length }; };   // Test
-window.__snd = (init) => { if (init) initAudio(); return { ac: !!ac, dateien: Object.fromEntries(Object.entries(SNDB).map(([k, v]) => [k, v && typeof v === 'object' ? +v.duration.toFixed(2) + ' s' : v])), aktiv: ENG && ENG.smp ? ENG.smp.cls : null, drehzahl: ENG ? Math.round(ENG.rpm) : null, loops: ENG && ENG.smp ? ENG.smp.v.map(v => v && { tempo: +v.src.playbackRate.value.toFixed(2), anteil: +v.g.gain.value.toFixed(2) }) : null, pegel: ENG && ENG.smp ? +ENG.smp.out.gain.value.toFixed(3) : null }; };   // Test/Diagnose
+window.__snd = (init) => { if (init) initAudio(); return { ac: !!ac, dateien: Object.fromEntries(Object.entries(SNDB).map(([k, v]) => [k, v && typeof v === 'object' ? +v.duration.toFixed(2) + ' s' : v])), aktiv: ENG && ENG.smp ? ENG.smp.cls : null, drehzahl: ENG ? Math.round(ENG.rpm) : null, kmh: pl ? Math.round(pl.v * 3.6) : null, gang: pl ? gearP(pl.v * 3.6).g : null, phase: raceState, gegner: ENG ? ENG.others.map(O => O.smp ? +O.smp.src.playbackRate.value.toFixed(2) : 'syn').join(' ') : null, loops: ENG && ENG.smp ? ENG.smp.v.map(v => v && { tempo: +v.src.playbackRate.value.toFixed(2), anteil: +v.g.gain.value.toFixed(2) }) : null, schub: ENG && ENG.smp && ENG.smp.s ? +ENG.smp.s.g.gain.value.toFixed(2) : null, pegel: ENG && ENG.smp ? +ENG.smp.out.gain.value.toFixed(3) : null }; };   // Test/Diagnose
 function initAudio() {
   if (ac) { ac.resume && ac.resume(); return; }
   try {
@@ -7736,17 +7750,19 @@ function initAudio() {
     for (let k = 0; k < 4; k++) {
       const fo = ac.createOscillator(), fo2 = ac.createOscillator(), fl = ac.createBiquadFilter(), fg = ac.createGain(), pan = ac.createStereoPanner ? ac.createStereoPanner() : null;
       fo.type = 'sawtooth'; fo2.type = 'square'; fl.type = 'lowpass'; fl.frequency.value = 1600; fg.gain.value = 0;
-      fo.connect(fl); fo2.connect(fl); fl.connect(fg); if (pan) { fg.connect(pan); pan.connect(ob); } else fg.connect(ob); fo.start(); fo2.start();
-      others.push({ fo, fo2, fl, fg, pan });
+      const sg = ac.createGain(); fo.connect(sg); fo2.connect(sg); sg.connect(fl); fl.connect(fg); if (pan) { fg.connect(pan); pan.connect(ob); } else fg.connect(ob); fo.start(); fo2.start();
+      others.push({ fo, fo2, sg, fl, fg, pan, smp: null });   // sg: synthetischer Anteil (stumm, sobald die Aufnahme läuft)
     }
     ENG = { out, lp, o1, o2, o3, o4, nbp, ng, turbo, tg, ers, ers2, ers3, ebp, eg, others, rpm: 4000, gear: 1, cut: 0, popT: 0, nb, wasBoost: false };
     { const so = ac.createGain(), sl = ac.createBiquadFilter(); so.gain.value = 0; sl.type = 'lowpass'; sl.frequency.value = 8000; sl.Q.value = 0.7; sl.connect(so); so.connect(sfxBus()); ENG.smp = { out: so, lp: sl, cls: null, v: [] }; }
     sndPreload();
   } catch (e) { try { ac && ac.close(); } catch (_) {} ac = null; ENG = null; SFX = null; }
 }
-// Getriebe: 8 Gänge, Drehzahl 4.000–12.000 U/min
-const RATIO = [0, 420, 332, 272, 226, 190, 162, 140, 118];
-function gearInfo(kmh) { const v = kmh / 3.6; let g = 1; while (g < 8 && v * RATIO[g] > 11600) g++; const rpm = clamp(v * RATIO[g], 4000, 13200); return { g, f: clamp((rpm - 4000) / 8000, 0, 1), rpm }; }
+// Getriebe: F1 8 Gänge, 4.000–12.000 U/min (Regel-Grenze 15.000, ab ~10.500 bringt der Benzinfluss kaum noch etwas)
+// F2 (v1.99): Mecachrome V634T, 6 Gänge (Hewland), Begrenzer 8.750 U/min, geschaltet bei ~8.600 – vorher nutzte F2 das F1-Getriebe und drehte bis ~9.450
+const RATIO = [0, 420, 332, 272, 226, 190, 162, 140, 118], RATIO_F2 = [0, 245, 195, 160, 134, 113, 96];
+function gearInfo(kmh, f2 = SER === 'f2') { const v = kmh / 3.6, R = f2 ? RATIO_F2 : RATIO, n = R.length - 1, up = f2 ? 8600 : 11600, top = f2 ? 8750 : 12000;
+  let g = 1; while (g < n && v * R[g] > up) g++; const rpm = clamp(v * R[g], 4000, top + 1200); return { g, n, f: clamp((rpm - 4000) / (top - 4000), 0, 1), rpm }; }
 function updateAudio(thr) {
   if (!ac || !ENG) return;
   const E = ENG, on = S.sound && running && !paused && !resultsShown, t = ac.currentTime, gi = gearP(pl.v * 3.6);
@@ -7755,9 +7771,12 @@ function updateAudio(thr) {
   const rev = pl.rev || 0, lim = rev > 0.93 ? (Math.random() - .5) * 700 : 0;   // Begrenzer flattert oben
   const kfr = clamp(pl.v / (VTOP * SERPH.top), 0, 1.1);
   let target0 = raceState === 'lights' ? (road ? 950 + rev * 6400 + lim : 4200 + rev * 8000 + lim) : road ? (pl.street ? gi.rpm : 1100 + (gi.rpm / 12000) * 6200) : gi.rpm;
-  const target = kart ? (raceState === 'lights' ? 6000 + rev * 7000 + lim : 6500 + kfr * 7500 + lim * 0.4)
-    : f2 ? (raceState === 'lights' ? 4800 + rev * 5600 + lim : 4500 + (gi.rpm - 4000) / 9200 * 6000) : target0;
-  if (kart) E.gear = gi.g; else if (gi.g !== E.gear) { E.cut = gi.g > E.gear ? 0.07 : 0.04; E.gear = gi.g; }   // Kart: kein Getriebe, kein Schaltruck
+  // Kart (v1.99): Direktantrieb, Drehzahl proportional zur Geschwindigkeit (14.000 bei Höchstgeschw.), Begrenzer ~15.500. Darunter hält die Fliehkraftkupplung
+  // die Drehzahl: Leerlauf ~2.800, mit Gas schleifend ~5.000. Am Start nur Gasstöße unterhalb der Kupplung (darüber würde das Kart losfahren).
+  // F2 (v1.99): eigenes 6-Gang-Getriebe (gearP), Drehzahl direkt, Begrenzer 8.750.
+  const target = kart ? (raceState === 'lights' ? 2800 + rev * 1700 + lim * 0.3 : Math.min(15500, Math.max(14000 * kfr, thr > 0.1 ? 4600 + thr * 600 : 2800)) + (kfr > 1.08 ? lim * 0.5 : 0))
+    : f2 ? (raceState === 'lights' ? 4000 + rev * 4750 + (rev > 0.93 ? (Math.random() - .5) * 500 : 0) : gi.rpm) : target0;
+  if (kart) E.gear = gi.g; else if (gi.g !== E.gear) { const C = SND_ENG[f2 ? 'f2' : 'f1'].cut; E.cut = gi.g > E.gear ? C[0] : C[0] * 0.6; E.gear = gi.g; }   // Kart: kein Getriebe · F1: nahtlos (kurz), F2: Zündunterbrechung
   E.cut = Math.max(0, E.cut - 1 / 60);
   E.rpm += (target - E.rpm) * 0.35; const jit = 1 + (Math.random() - .5) * 0.006;
   if (!isFinite(E.rpm)) E.rpm = 4000;   /* nie NaN an die Audio-Parameter geben (wirft sonst jedes Bild) */
@@ -7773,7 +7792,7 @@ function updateAudio(thr) {
   E.out.gain.setTargetAtTime(vol, t, E.cut > 0 ? 0.01 : 0.04);
   E.turbo.frequency.setTargetAtTime(2600 + (E.rpm / 12000) * 2600, t, 0.05); E.tg.gain.setTargetAtTime(on && !road && !kart ? load * (f2 ? 0.006 : 0.012) : 0, t, 0.1);
   const ef = 380 + pl.v * 22; E.ers.frequency.setTargetAtTime(ef, t, 0.04); E.ers2.frequency.setTargetAtTime(ef * 2, t, 0.04); E.ers3.frequency.setTargetAtTime(ef * 3.01, t, 0.04); E.ebp.frequency.setTargetAtTime(ef * 2.2, t, 0.05);
-  E.eg.gain.setTargetAtTime(on && pl.boosting ? 0.09 : 0, t, pl.boosting ? 0.06 : 0.15);
+  E.eg.gain.setTargetAtTime(on && pl.boosting ? 0.09 : on && !kart && !f2 && !road && pl.v > 6 ? 0.018 * clamp((thr - 0.5) / 0.5, 0, 1) : 0, t, pl.boosting ? 0.06 : 0.15);   // F1 2026: MGU-K (350 kW) heult beim Beschleunigen leise mit, beim Boost kräftig
   if (on && pl.boosting && !E.wasBoost) { // Zisch beim Zuschalten
     const s2 = ac.createBufferSource(), g2 = ac.createGain(), f2 = ac.createBiquadFilter(); s2.buffer = E.nb; f2.type = 'bandpass'; f2.Q.value = 1.5; f2.frequency.setValueAtTime(600, t); f2.frequency.exponentialRampToValueAtTime(7000, t + 0.45);
     s2.connect(f2); f2.connect(g2); g2.connect(sfxBus()); g2.gain.setValueAtTime(0.0001, t); g2.gain.exponentialRampToValueAtTime(0.25, t + 0.12); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.6); s2.start(t); s2.stop(t + 0.65);
@@ -7787,10 +7806,16 @@ function updateAudio(thr) {
     const nd = near[k] ? near[k][0] : 1e9, c = near[k] && near[k][1];
     if (!c || !on || nd > 140) { O.fg.gain.setTargetAtTime(0, t, 0.1); return; }
     const dx = c.x - pl.x, dz = c.z - pl.z, dl = nd || 1, vr = ((Math.sin(c.h) * c.v - Math.sin(pl.h) * pl.v) * dx + (Math.cos(c.h) * c.v - Math.cos(pl.h) * pl.v) * dz) / dl;
-    const oRpm = kart ? 6500 + clamp(c.v / (VTOP * SERPH.top), 0, 1.1) * 7500 : f2 ? 4500 + (gearInfo(c.v * 3.6).rpm - 4000) / 9200 * 6000 : gearInfo(c.v * 3.6).rpm;
+    const oRpm = kart ? Math.max(5000, Math.min(15500, 14000 * c.v / (VTOP * SERPH.top))) : gearInfo(c.v * 3.6, f2).rpm;   // wie beim eigenen Auto (v1.99)
     const fn = oRpm / 60 * (kart ? 1 : 3) * clamp(340 / (340 + vr), 0.65, 1.5);
-    O.fo.frequency.setTargetAtTime(fn, t, 0.03); O.fo2.frequency.setTargetAtTime(fn * 0.5, t, 0.03); O.fl.frequency.setTargetAtTime(700 + (c.thr || 0) * 1600, t, 0.05);
-    O.fg.gain.setTargetAtTime(0.06 * Math.pow(1 - nd / 140, 2) * (0.5 + 0.5 * (c.thr || 0)), t, 0.05);
+    // v1.99: Aufnahme (eine Stufe aus der Mitte des Drehzahlbands, Doppler über das Tempo) statt Sägezahn – synthetisch nur, solange sie nicht geladen ist
+    const oc = kart ? 'kart' : f2 ? 'f2' : road ? null : 'f1', L = oc && SND_ENG[oc].loops[SND_FERN[oc]], ob2 = L && sndBuf(L[0]);
+    if (ob2 && (!O.smp || O.smp.url !== L[0])) { try { O.smp && O.smp.src.stop(); } catch (e) {} const src = ac.createBufferSource(); src.buffer = ob2; src.loop = true; src.connect(O.fl); src.start(t, Math.random() * ob2.duration); O.smp = { src, url: L[0], base: L[1] }; }
+    else if (!ob2 && O.smp) { try { O.smp.src.stop(); } catch (e) {} O.smp = null; }
+    if (O.smp) O.smp.src.playbackRate.setTargetAtTime(clamp(fn / O.smp.base, 0.4, 2.2), t, 0.03);
+    O.sg.gain.setTargetAtTime(O.smp ? 0 : 1, t, 0.05);
+    O.fo.frequency.setTargetAtTime(fn, t, 0.03); O.fo2.frequency.setTargetAtTime(fn * 0.5, t, 0.03); O.fl.frequency.setTargetAtTime((O.smp ? 1400 + (c.thr || 0) * 3600 : 700 + (c.thr || 0) * 1600) * (1 - 0.5 * nd / 140), t, 0.05);   // weiter weg: dumpfer
+    O.fg.gain.setTargetAtTime((O.smp ? 0.3 : 0.06) * Math.pow(1 - nd / 140, 2) * (0.5 + 0.5 * (c.thr || 0)), t, 0.05);
     if (O.pan) { const side = (dx * Math.cos(pl.h) - dz * Math.sin(pl.h)) / dl; O.pan.pan.setTargetAtTime(clamp(side, -0.9, 0.9), t, 0.05); }
   });
 }
@@ -9652,7 +9677,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.98'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.99'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

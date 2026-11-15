@@ -103,3 +103,34 @@ Arbeitsfläche: „F1Racing – Motor- und Crash-Sounds“ (https://elevenlabs.i
 - Eigene Aufnahmen für Gas weg / Schub (Knallen, Blubbern) und Leerlauf in der Box.
 - Kart hoch ist kaum höher als Kart mittel. Bei Bedarf neu erzeugen („very high-pitched“).
 - Realismus-Vergleich mit echter F1/F2/Kart (u. a. F2-Stimmungsfehler im hohen Loop): siehe [[SOUNDS-REALISMUS]].
+
+## v1.99 – Motoren in echter Tonhöhe (Umsetzung von [[SOUNDS-REALISMUS]])
+Stand: 15.11.2026.
+
+**Ausgangslage:** F1/F2 klangen 0,6 × echt (≈ 9 Halbtöne zu tief), der hohe F2-Loop war eine Oktave falsch eingetragen (280 statt ~560 Hz), Gegner klangen höher als das eigene Auto, F2 nutzte das F1-Getriebe, die Kart-Drehzahl hing nicht proportional an der Geschwindigkeit.
+
+**Credits:** ElevenLabs (kostenloser Tarif) hatte nur noch 39 Credits. Zwei neue Aufnahmen à 17 Credits (Schätzung sagte 100), Rest ~5. Neue Drehzahlstufen deshalb **offline** erzeugt.
+
+**Neue Dateien:**
+- `tools/sounds/varianten.py`: Tonhöhen-Varianten mit Rubberband (`ffmpeg -af rubberband=…:formant=preserved`), Formanten bleiben → kein „Spielzeugmotor“. Naht: Loop 3× hintereinander, mittleres Drittel, 0,12 s überblendet.
+- Rohaufnahmen „Gas weg“: `sounds/roh/kart_schub.mp3` (1 s, Zweitakt-Brabbeln), `sounds/roh/v6_schub.mp3` (3 s, V6 Knallen/Blubbern, Drehzahl fällt; verwendet 0–1,3 s, +8 Halbtöne).
+
+| Klasse | Loops (Grundton ≈ U/min) | Schub |
+|---|---|---|
+| F1 | f1_mittel 230 (4.600) · f1_v2 344 (6.900) · f1_v3 438 (8.750) · f1_v4 552 (11.000) | v6_schub 390, leise (2026: Ernten beim Lupfen) |
+| F2 | f2_mittel 255 (5.100) · f2_v2 342 (6.850) · f2_v3 444 (8.900) | v6_schub 390, laut |
+| Kart | kart_v0 78 (4.700) · kart_v1 104 (6.250) · kart_mittel 156 (9.350) · kart_v3 224 (13.400) | kart_schub 152 |
+
+`f1_hoch`, `f2_hoch`, `kart_hoch` sind nur noch Quellen für die Varianten (nicht mehr im Spiel/Service-Worker).
+
+**Einbau (`index.html`):**
+- `SND_ENG[klasse] = { cyl, vol, cut: [Dauer, Pegel], loops: [[Datei, Grundton], …], schub: [Datei, Grundton, Lautstärke] }`. `tp` entfällt: Zielton = **echte Zündfrequenz** (V6 U/min ÷ 20, Kart U/min ÷ 60).
+- Überblendung zwischen den zwei Stufen, die den Zielton einschließen (logarithmisch, Kosinus/Sinus). Tempo je Stufe ~0,8–1,25.
+- Motor-Aufnahmen starten erst, wenn **alle** Stufen einer Klasse geladen sind (sonst bleibt der Synthesizer).
+- **Gas weg:** Anteil = `(0,45 − Gas)/0,35` × Drehzahl über Schwelle (F1 6.500, F2 5.500, Kart 7.000). Beim Lupfen an zufälliger Stelle neu gestartet. Läuft am Tiefpass vorbei, Hauptmotor dabei −35 %.
+- **Schalten:** F1 25 ms auf 65 % (nahtlos), F2 60 ms auf 35 % (Zündunterbrechung), Runterschalten 60 % davon.
+- **F2-Getriebe:** `RATIO_F2 = [245, 195, 160, 134, 113, 96]`, Hochschalten bei 8.600, Begrenzer 8.750. `gearInfo(kmh, f2)` liefert jetzt auch `n` (Ganganzahl); die Halo-Anzeige zeigt N–6 bei F2.
+- **Kart:** Drehzahl = 14.000 × v/v_max (max. 15.500), darunter Fliehkraftkupplung (Leerlauf 2.800, mit Gas ~5.000). Am Start nur Gasstöße bis ~4.500.
+- **Gegner:** Aufnahme statt Sägezahn (F1 f1_v3, F2 f2_v2, Kart kart_mittel), Doppler über `playbackRate`, gleiche Drehzahl-Logik wie das eigene Auto, weiter weg dumpfer. Synthetisch nur noch als Rückfall.
+- **F1 MGU-K:** leises Heulen auch beim normalen Beschleunigen (Gas > 50 %), beim Boost wie bisher kräftig.
+- **Diagnose:** `__snd()` zeigt zusätzlich km/h, Gang, Phase, Schub-Anteil und das Tempo der Gegner-Aufnahmen.
