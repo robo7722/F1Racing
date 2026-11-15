@@ -180,7 +180,7 @@ Stand: 15.11.2026. Konto jetzt im Starter-Tarif (~30.000 Credits/Monat).
 - Alte Crash-Dateien (`crash_*.wav`) entfernt.
 - **Diagnose:** `__snd()` zeigt zusätzlich `surf` und aktive Fahr-Geräusche (`fx`). Testschalter `window.__surfTest = 'gravel'` erzwingt einen Untergrund.
 
-## v2.01 – Rückmeldung: MX-5 unrealistisch, Crashs übertrieben, Quietschen im Pulk, „Wellen“ bei hohem Tempo
+## v2.02 (Sound-Teil von „v2.01“, Versionsnummer wegen paralleler Spa-Änderung auf 2.02 erhöht) – Rückmeldung: MX-5 unrealistisch, Crashs übertrieben, Quietschen im Pulk, „Wellen“ bei hohem Tempo
 Stand: 15.11.2026.
 
 - **Schwere Crashs entfernt** (`cf_schwer`, `stahl_schwer`, `reifenstapel`): starke Treffer nutzen dieselbe Aufnahme wie normale (Auto/Leitplanke/Mauer), nur länger. Höchstlautstärke starker Treffer gesenkt (0,35 + 0,45 · Stärke statt 0,65).
