@@ -1942,7 +1942,7 @@ const TRACKS = {
   chn: { name: 'Shanghai', full: 'Shanghai International Circuit', land: 'China', km: '5,451 km', laps: 56, pts: TRACK_HD['cn-2004'].pts.filter((_, k) => k % 3 === 0), hd: TRACK_HD['cn-2004'], theme: 'chn', osm: OSM_CHN, chn: OSM_CHN, stands: [], skyline: [121.505, 31.236] },
   /*}@chn:track*/
   /*@suz:track{*/
-  suz: { name: 'Suzuka', full: 'Suzuka International Racing Course', land: 'Japan', km: '5,807 km', laps: 53, pts: TRACK_HD['jp-1962'].pts.filter((_, k) => k % 3 === 0), hd: TRACK_HD['jp-1962'], theme: 'suz', noStands: true, osmMerge: true, osm: { b: OSM_SUZ.b }, suz: OSM_SUZ, cross: SUZ_X, cityMul: 0, stands: [] },
+  suz: { name: 'Suzuka', full: 'Suzuka International Racing Course', land: 'Japan', km: '5,807 km', laps: 53, pts: TRACK_HD['jp-1962'].pts.filter((_, k) => k % 3 === 0), hd: TRACK_HD['jp-1962'], theme: 'suz', noStands: true, suz: OSM_SUZ, cross: SUZ_X, cityMul: 0, stands: [] },
   /*}@suz:track*/
   /*@bhr:track{*/
   bhr: { name: 'Bahrain', full: 'Bahrain International Circuit', land: 'Bahrain', km: '5,412 km', laps: 57, pts: TRACK_HD['bh-2004'].pts.filter((_, k) => k % 3 === 0), hd: TRACK_HD['bh-2004'], theme: 'bhr', noStands: true, ownPit: true, osmMerge: true, osm: { b: OSM_BHR.b }, bhr: OSM_BHR, palmZ: OSM_BHR.palmZ },
@@ -5966,6 +5966,8 @@ function buildTrack(key) { BID++;
     const X = xc();
     for (const [B, wIn, a0, a1] of [[X.lo, 2.6, 46, 34], [X.up, 1.7, 30, 26]]) for (let k = -B.k; k <= B.k; k++) { const i = (B.c + k + N) % N, d = Math.abs(k) * DS, f = clamp((d - a0) / a1, 0, 1), e = f * f * (3 - 2 * f);
       for (const W of [WL, WR]) W[i] = Math.min(W[i], lerp(HW[i] + wIn, W[i], e)); }
+    /* Die Absperrung des einen Asts liegt an der Kreuzung über/unter der Fahrbahn des anderen – die Engine nimmt sie dort als „in der Haarnadel gefaltet“ weg (NOWALL). Hier ist sie echt: wieder setzen */
+    for (const B of [X.lo, X.up]) for (let k = -B.k; k <= B.k; k++) NOWALL[(B.c + k + N) % N] = 0;
     /* Auslauf nie in den ummauerten Bereich eines anderen Streckenteils (Haarnadel: Kies des Anfahrtsschenkels lag unter dem Grasstreifen des Ausgangs) */
     const skip = Math.round(80 / DS);
     for (const [W, sg] of [[WL, -1], [WR, 1]]) for (let i = 0; i < N; i++) { if (xcIn(X.lo, i) || xcIn(X.up, i)) continue;
@@ -7928,6 +7930,11 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     const iAt = s => Math.floor(modL(s) / DS) % N, cen = R => [R.reduce((a, p) => a + p[0], 0) / R.length, R.reduce((a, p) => a + p[1], 0) / R.length];
     const pip = (P, x, z) => { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const [xi, zi] = P[i], [xj, zj] = P[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };
     const ringFree = (R, m) => R.every((p, i) => { const q = R[(i + 1) % R.length], n = Math.max(1, Math.ceil(Math.hypot(q[0] - p[0], q[1] - p[1]) / 4)); for (let k = 0; k < n; k++) if (!trackFree(p[0] + (q[0] - p[0]) * k / n, p[1] + (q[1] - p[1]) * k / n, m)) return false; return true; });
+    /* Bau auf den tiefsten Bodenpunkt unter seiner Grundfläche setzen: applyElevation hebt Gruppen nur um placeY(Mitte) – am Hang schwebte die Talseite (v2.28). span = keine zweite Absenkung */
+    const seat = (g, pts) => { const y0 = placeY(g.position.x, g.position.z); let m = y0; for (const [x, z] of pts) m = Math.min(m, placeY(x, z)); g.position.y = m - y0 - 0.15; g.userData.span = true; return y0 - m; };
+    const extr = (R, h, wm, rm) => { const [cx, cz] = cen(R), y0 = placeY(cx, cz); let m = y0; for (const [x, z] of R) m = Math.min(m, placeY(x, z)); const up = y0 - m;   /* Bergseite: Wände reichen bis unter den Boden */
+      let M = m; for (const [x, z] of R) M = Math.max(M, placeY(x, z)); const g = osmExtrude(R.map(([x, z]) => [x - cx, z - cz]), h + 1.5 + (M - m), wm, rm, -1.5); g.position.set(cx, 0, cz); g.position.y = -up - 0.15 + 0; g.userData.span = true;
+      return g; };
     const vc = lam({ vertexColors: true }), vcM = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .45, metalness: .45 });
     // Sichtbeton mit Schalungsfugen (Brücken, Widerlager, Türme)
     const concT = canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#b9b5ab'; g.fillRect(0, 0, w, h); for (let k = 0; k < 2600; k++) { const v = 150 + Math.random() * 70 | 0; g.fillStyle = `rgba(${v},${v - 3},${v - 9},.16)`; g.fillRect(Math.random() * w, Math.random() * h, 2 + Math.random() * 5, 2 + Math.random() * 5); }
@@ -7935,6 +7942,9 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     concT.userData.own = true; concT.wrapS = concT.wrapT = THREE.RepeatWrapping;
     const conc = lam({ map: concT, color: 0xf0ece4, side: THREE.DoubleSide }), concD = lam({ map: concT, color: 0xa29e96, side: THREE.DoubleSide });
     for (let s = 3120; s <= 3480; s += 5) { const i = iAt(s), q = trackAt(s, -WL[i] * 0.5); excl.push([q.x, q.z, WL[i] * 0.5 + 9]); }   /* Spoon-Innenseite: keine Einzelbäume im Auslauf (die Suche nach dem nächsten Streckenpunkt springt dort zwischen den Scheiteln) */
+    /* Standard-Boxengebäude (schon gebaut): die Blöcke stehen auf placeY ihrer Mitte, hinten fällt das Gelände ab – Unterkante 3 m in den Boden verlängern */
+    for (const g of trackGroup.children) { if (!g.userData.merge || g.children.length !== 1) continue; const m = g.children[0]; if (!m.isMesh || !m.material.color || m.material.color.getHex() !== 0xeef1f4 || m.geometry.attributes.position.count !== 36) continue;
+      const P = m.geometry.attributes.position; for (let k = 0; k < P.count; k++) if (P.getY(k) < 0.01) P.setY(k, -3); P.needsUpdate = true; m.geometry.computeBoundingBox(); m.geometry.computeBoundingSphere(); }
     // ---------- Kreuzungsbrücke: die Gegengerade (oben) überquert die Strecke zwischen Degner und Haarnadel (unten, im Einschnitt) ----------
     { const pos = [], uv = [], posD = [], uvD = [];
       const quad = (out, ou, a, b, c, d, u0, u1, v0, v1) => { out.push(...a, ...b, ...c, ...a, ...c, ...d); ou.push(u0, v0, u1, v0, u1, v1, u0, v0, u1, v1, u0, v1); };
@@ -7978,7 +7988,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       const isV = big(st.n), bigS = isV || A2 > 3000, len = clamp(along * 2, 14, isV ? 240 : 150), dep = clamp(across * 2, 8, isV ? 34 : bigS ? 28 : 16), hgt = isV ? 22 : bigS ? 16 : 8, rot = Math.atan2(-uz, ux);
       let fx = cx - ux * dep / 2, fz = cz - uz * dep / 2, shift = 0; while (shift <= 30 && !footprintFree(fx, fz, rot, -0.5, dep + 0.8, len + 1, 1.5)) { fx += ux * 3; fz += uz * 3; shift += 3; } if (shift > 30) { (window.__lmSkip = window.__lmSkip || []).push('stand ' + st.n); continue; }
       const fp = [[-0.5, -len / 2], [dep + 0.5, -len / 2], [dep + 0.5, len / 2], [-0.5, len / 2]].map(([lx, lz]) => [fx + lx * Math.cos(rot) + lz * Math.sin(rot), fz - lx * Math.sin(rot) + lz * Math.cos(rot)]); if (standP.some(P => polyHit(P, fp))) continue; standP.push(fp);
-      const grp = new THREE.Group(); grp.position.set(fx, 0, fz); grp.rotation.y = rot; trackGroup.add(grp); buildStand(grp, len, dep, hgt);
+      const grp = new THREE.Group(); grp.position.set(fx, 0, fz); grp.rotation.y = rot; trackGroup.add(grp); buildStand(grp, len, dep, hgt); seat(grp, fp);
       if (st.n) { const nt = canvasTex(128, 64, (c, w, h) => { c.fillStyle = '#1b1f2a'; c.fillRect(0, 0, w, h); c.fillStyle = '#ffffff'; c.font = '900 46px system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(st.n.replace(/[１～]/g, ''), w / 2, h / 2 + 2); }); nt.userData.own = true;
         const sg2 = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 2.1), lam({ map: nt })); sg2.position.set(dep + 0.75, Math.min(hgt, 8) + 3.2, len / 2 - 3); sg2.rotation.y = Math.PI / 2; grp.add(sg2); }
       if (isV) { // Haupttribüne: weit auskragendes Dach mit Fachwerkbindern, getragen von Stützen hinter der letzten Reihe
@@ -7987,6 +7997,10 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         for (let z = -len / 2 + 2; z <= len / 2 - 1.9; z += 12) { P2.push([box(0.7, hgt + 7, 0.7, dep + 0.2, (hgt + 7) / 2, z), null], [rod([dep + 0.2, hgt + 6.9, z], [-6.5, hgt + 5.4, z], 0.22, 6), null], [rod([dep + 0.2, hgt + 2.5, z], [-6.5, hgt + 5.2, z], 0.16, 6), null]); }
         const rm = new THREE.Mesh(mergeParts(P2), rM); rm.castShadow = true; grp.add(rm); }
       excl.push([cx, cz, Math.max(len, dep) / 2 + 4]); }
+    // ---------- OSM-Gebäude (Fahrerlager, Teamgebäude, Westkurs, Fabriken, Wohnhäuser) – hier statt im allgemeinen OSM-Pfad, der Bauten am Hang auf die Höhe von Start/Ziel stellt ----------
+    { const roofM = lam({ color: 0x9a9890 }), mats = {}; window.__osmSkip = window.__osmSkip || [];
+      for (const b of O.b) { const R = b.r; if (R.some(([x, z]) => !trackFree(x, z, 2) || inMarina(x, z))) { window.__osmSkip.push(b.n); continue; }
+        const [cx, cz] = cen(R), m = mats[b.s] || (mats[b.s] = osmMat(b.s)), grp = extr(R, b.h, m, roofM); grp.userData.merge = true; trackGroup.add(grp); excl.push([cx, cz, Math.max(...R.map(p => Math.hypot(p[0] - cx, p[1] - cz))) + 2]); } }
     // ---------- Riesenrad „Circuit Wheel“ im Freizeitpark (Motopia) hinter der Haupttribüne: OSM way 184107083, Ebene entlang der Längsachse der Grundfläche ----------
     if (O.wheel) { const W0 = O.wheel, [wx, wz] = cen(W0); let sxx = 0, sxz = 0, szz = 0; for (const [x, z] of W0) { sxx += (x - wx) ** 2; sxz += (x - wx) * (z - wz); szz += (z - wz) ** 2; }
       const ang = 0.5 * Math.atan2(2 * sxz, sxx - szz), R = 22, hub = 27.5, D2 = 2.6, g = new THREE.Group(); g.position.set(wx, 0, wz); g.rotation.y = -ang; g.userData.span = true;
@@ -7999,18 +8013,18 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       for (const sz of [-1, 1]) for (const sx of [-1, 1]) SP.push([rod([sx * 10.5, 0, sz * (D2 + 4.2)], [0, hub, sz * (D2 + 0.6)], 0.55, 8), null]);
       const sm = new THREE.Mesh(mergeParts(SP), steel); sm.castShadow = true; g.add(sm); const cm = new THREE.Mesh(mergeParts(CP), vcM); cm.castShadow = true; g.add(cm);
       const st = new THREE.Mesh(box(16, 4.2, 9, 0, 2.1, 0), lam({ color: 0xf4f1ea })); g.add(st); const rf = new THREE.Mesh(box(18, 0.5, 11, 0, 4.4, 0), lam({ color: 0xc62828 })); g.add(rf);
-      trackGroup.add(g); excl.push([wx, wz, 28]); }
+      seat(g, [[-11, -8], [11, -8], [11, 8], [-11, 8]].map(([a, b]) => [wx + a * Math.cos(ang) - b * Math.sin(ang), wz + a * Math.sin(ang) + b * Math.cos(ang)])); trackGroup.add(g); excl.push([wx, wz, 28]); }
     // ---------- Freizeitpark (Motopia, Adventure Island), Hotel und Parkgebäude nach OSM ----------
     { const parkM = [['#f6f1e7', '#d84a3a'], ['#eef3f6', '#2f6fb3'], ['#fbf3d8', '#e3a21a'], ['#eef6ee', '#3c8d4a'], ['#f8eef3', '#c2477b']].map(([w, r], k) => [osmMat('white'), lam({ color: new THREE.Color(r) })]);
-      let k = 0; for (const b of O.park) { const R = b.r; if (R.length < 3 || !ringFree(R, 4)) continue; const [cx, cz] = cen(R), [wm, rm] = parkM[k++ % parkM.length], grp = osmExtrude(R, b.h, wm, rm); grp.userData.merge = true; trackGroup.add(grp); excl.push([cx, cz, Math.max(...R.map(p => Math.hypot(p[0] - cx, p[1] - cz))) + 2]); }
-      const hW = osmMat('white'), hR = lam({ color: 0x6d7378 }); for (const b of O.hotel) { const R = b.r; if (R.length < 3 || !ringFree(R, 4)) continue; const [cx, cz] = cen(R), grp = osmExtrude(R, b.h, hW, hR); grp.userData.merge = true; trackGroup.add(grp); excl.push([cx, cz, Math.max(...R.map(p => Math.hypot(p[0] - cx, p[1] - cz))) + 2]); } }
+      let k = 0; for (const b of O.park) { const R = b.r; if (R.length < 3 || !ringFree(R, 4)) continue; const [cx, cz] = cen(R), [wm, rm] = parkM[k++ % parkM.length], grp = extr(R, b.h, wm, rm); grp.userData.merge = true; trackGroup.add(grp); excl.push([cx, cz, Math.max(...R.map(p => Math.hypot(p[0] - cx, p[1] - cz))) + 2]); }
+      const hW = osmMat('white'), hR = lam({ color: 0x6d7378 }); for (const b of O.hotel) { const R = b.r; if (R.length < 3 || !ringFree(R, 4)) continue; const [cx, cz] = cen(R), grp = extr(R, b.h, hW, hR); grp.userData.merge = true; trackGroup.add(grp); excl.push([cx, cz, Math.max(...R.map(p => Math.hypot(p[0] - cx, p[1] - cz))) + 2]); } }
     // ---------- Leader-Turm an Kurve 1 (OSM): schlanker Betonschaft mit Positions-Anzeige ----------
     if (O.leader) { const [lx, lz] = cen(O.leader), [, jl] = nearestDist(lx, lz), h = 30, g = new THREE.Group(); g.position.set(lx, 0, lz); g.rotation.y = Math.atan2(-(PZ[jl] - lz), PX[jl] - lx) + Math.PI / 2;
       const bd = canvasTex(256, 512, (c, w, hh) => { c.fillStyle = '#0c0d10'; c.fillRect(0, 0, w, hh); c.fillStyle = '#bc002d'; c.fillRect(0, 0, w, 56); c.fillStyle = '#fff'; c.font = '900 34px system-ui,sans-serif'; c.textAlign = 'center'; c.fillText('SUZUKA', w / 2, 40);
         const cd = ['ANT', 'NOR', 'LEC', 'PIA', 'VER', 'HAM', 'RUS', 'ALO', 'SAI', 'ALB']; c.font = '700 34px monospace'; c.textAlign = 'left'; for (let i = 0; i < 10; i++) { c.fillStyle = '#f2c200'; c.fillText(String(i + 1).padStart(2, ' '), 26, 100 + i * 42); c.fillStyle = '#e8eef4'; c.fillText(cd[i], 110, 100 + i * 42); } });
       bd.userData.own = true; g.add(new THREE.Mesh(box(3.2, h, 3.2, 0, h / 2, 0), conc)); const pn = new THREE.Mesh(new THREE.PlaneGeometry(6, 12), new THREE.MeshBasicMaterial({ map: bd })); pn.position.set(0, h - 5, 1.75); g.add(pn);
       const pb = new THREE.Mesh(new THREE.PlaneGeometry(6, 12), new THREE.MeshBasicMaterial({ map: bd })); pb.position.set(0, h - 5, -1.75); pb.rotation.y = Math.PI; g.add(pb); g.add(new THREE.Mesh(box(6.6, 12.6, 3.3, 0, h - 5, 0), lam({ color: 0x2a2d33 })));
-      if (trackFree(lx, lz, 3)) { g.userData.merge = true; trackGroup.add(g); excl.push([lx, lz, 8]); } }
+      if (trackFree(lx, lz, 3)) { seat(g, [[lx - 3, lz - 3], [lx + 3, lz - 3], [lx + 3, lz + 3], [lx - 3, lz + 3]]); g.userData.merge = true; trackGroup.add(g); excl.push([lx, lz, 8]); } }
     // ---------- Werbe- und Fußgängerbrücken über die Strecke: Dunlop-Brücke (gelb, Ausgang der Dunlop-Kurve) und Brücke vor Kurve 1 ----------
     const adBridge = (s, text, bg, fg, h0 = 6.6) => { const i = iAt(s), wl = WL[i] + 2.5, wr = WR[i] + 2.5, a = trackAt(s, -wl), b = trackAt(s, wr); if (!trackFree(a.x, a.z, 1) || !trackFree(b.x, b.z, 1)) return;
       const span = wl + wr, g = new THREE.Group(), m = trackAt(s, (wr - wl) / 2); g.position.set(m.x, 0, m.z); g.rotation.y = m.h; g.userData.span = true;
@@ -8018,14 +8032,14 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       const adM = lam({ map: T }), fr = new THREE.MeshStandardMaterial({ color: 0x9aa1a8, roughness: .5, metalness: .6 }), Y = h0 + ELEV[i];   /* Höhe über der Fahrbahn: die Gruppe steht auf dem Gelände (placeY), deshalb relativ */
       const P = []; P.push([box(span + 2, 0.5, 3.2, 0, h0, 0), null], [box(span + 2, 1.15, 0.12, 0, h0 + 0.85, -1.55), null], [box(span + 2, 1.15, 0.12, 0, h0 + 0.85, 1.55), null], [box(span + 2, 0.15, 3.2, 0, h0 + 3.0, 0), null]);
       for (let x = -span / 2; x <= span / 2 + 0.1; x += span / 8) for (const z of [-1.55, 1.55]) P.push([box(0.15, 2.6, 0.15, x, h0 + 1.6, z), null]);
-      for (const sx of [-1, 1]) { P.push([box(2.4, h0 + 3.3, 2.4, sx * (span / 2 + 1.6), (h0 + 3.3) / 2, 0), null]); for (let st2 = 0; st2 < 6; st2++) P.push([box(1.2, 0.2, 1.2, sx * (span / 2 + 3.3), st2 * h0 / 6 + 0.5, (st2 % 2 ? 1 : -1) * 0.8), null]); }
+      for (const sx of [-1, 1]) { P.push([box(2.4, h0 + 23.3, 2.4, sx * (span / 2 + 1.6), (h0 + 3.3) / 2 - 10, 0), null]);   /* Turm reicht bis 20 m unter die Fahrbahnhöhe (Gelände neben der Strecke tiefer) */ for (let st2 = 0; st2 < 6; st2++) P.push([box(1.2, 0.2, 1.2, sx * (span / 2 + 2.9), st2 * h0 / 6 + 0.5, (st2 % 2 ? 1 : -1) * 0.8), null]); }
       const fm = new THREE.Mesh(mergeParts(P), fr); fm.castShadow = true; g.add(fm);
       for (const sz of [-1, 1]) { const ad = new THREE.Mesh(new THREE.PlaneGeometry(span - 0.4, 1.9), adM); ad.position.set(0, h0 + 1.6, sz * 1.62); if (sz < 0) ad.rotation.y = Math.PI; g.add(ad); }
       void Y; trackGroup.add(g); excl.push([a.x, a.z, 6], [b.x, b.z, 6]); };
     adBridge(1745, 'DUNLOP', '#f6c400', '#141414'); adBridge(420, 'SUZUKA CIRCUIT', '#ffffff', '#bc002d'); adBridge(3090, 'NISSIN HAIRPIN', '#1a3d8f', '#ffffff', 6.8);
     // Fußgängerbrücken an der Schikane (OSM, Zugänge der Tribünen Q/R)
     { const P = []; for (const R of O.fb) { const [a, b] = [R[0], R[R.length - 1]], l = Math.hypot(b[0] - a[0], b[1] - a[1]); if (l < 4 || !trackFree(a[0], a[1], 1) || !trackFree(b[0], b[1], 1)) continue; const rot = Math.atan2(-(b[1] - a[1]), b[0] - a[0]), mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
-        const g = new THREE.Group(); g.position.set(mx, 0, mz); g.rotation.y = rot; g.add(new THREE.Mesh(mergeParts([[box(l + 1, 0.4, 2.6, 0, 5.2, 0), null], [box(l + 1, 1.1, 0.1, 0, 5.9, -1.25), null], [box(l + 1, 1.1, 0.1, 0, 5.9, 1.25), null], [box(1.4, 5.2, 1.4, -l / 2, 2.6, 0), null], [box(1.4, 5.2, 1.4, l / 2, 2.6, 0), null]]), conc)); g.userData.merge = true; trackGroup.add(g); } }
+        const g = new THREE.Group(); g.position.set(mx, 0, mz); g.rotation.y = rot; g.add(new THREE.Mesh(mergeParts([[box(l + 1, 0.4, 2.6, 0, 5.2, 0), null], [box(l + 1, 1.1, 0.1, 0, 5.9, -1.25), null], [box(l + 1, 1.1, 0.1, 0, 5.9, 1.25), null], [box(1.4, 11.2, 1.4, -l / 2, -0.4, 0), null], [box(1.4, 11.2, 1.4, l / 2, -0.4, 0), null]]), conc)); g.userData.span = true; g.userData.merge = true; trackGroup.add(g); } }
     // ---------- Kirschbäume (Sakura, Ende März in voller Blüte) am Haupteingang, im Fahrerlager und am Freizeitpark ----------
     { const pts = []; let sd = 11; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
       for (let t = 0; t < 2600 && pts.length < 260; t++) { const x = -260 + rnd() * 760, z = -720 + rnd() * 700; if (!trackFree(x, z, 10) || inMarina(x, z) || excl.some(e => (x - e[0]) ** 2 + (z - e[1]) ** 2 < (e[2] + 3) ** 2)) continue; pts.push([x, z, 0.75 + rnd() * 0.5, rnd() * TAU]); }
@@ -12409,7 +12423,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.28'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.29'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
