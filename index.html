@@ -5778,7 +5778,16 @@ function texRep(t, rx, ry) { const c = t.clone(); c.needsUpdate = true; c.repeat
 /* Lichtpfützen der Flutlichter: ein Netz, jeder Eckpunkt auf Fahrbahnhöhe (placeY) – als Instanzen wurden die großen Flächen von applyElevation auf den tiefsten Eckpunkt gesenkt und lagen unter dem Asphalt (unsichtbar, an Mauern abgeschnitten) */
 /* Lichtkegel als EIN weicher Strahl: Helligkeit nach Blickwinkel auf die Fläche (frontal hell, streifend dunkel) – die Kanten des Pyramidenstumpfs verschwinden,
    statt zwei getrennter Streifen (je Fläche ausgeblendet) sieht man einen breiten Kegel; längs fällt die Vertexfarbe wie bisher auf null */
-function beamUV(g) { g.computeVertexNormals(); return g; }
+function beamUV(g) {   /* runder Strahl: aus dem bisherigen vierkantigen Kegel (Lampenfeld oben, Fläche unten) einen elliptischen Kegel mit 24 Segmenten und runden Normalen machen –
+     am Rand steht die Fläche dann genau streifend zum Blick und blendet ganz aus (keine harte Kante, kein Streifen je Fläche) */
+  const P = g.attributes.position, C = g.attributes.color, n = P.count, E = [[1e9, -1e9, 0, 1e9, -1e9, 0], [1e9, -1e9, 0, 1e9, -1e9, 0]], cnt = [0, 0];
+  for (let i = 0; i < n; i++) { const e = E[C.getX(i) > 0.5 ? 0 : 1], x = P.getX(i), y = P.getY(i), z = P.getZ(i); e[0] = Math.min(e[0], x); e[1] = Math.max(e[1], x); e[2] += y; e[3] = Math.min(e[3], z); e[4] = Math.max(e[4], z); cnt[C.getX(i) > 0.5 ? 0 : 1]++; }
+  const R = E.map((e, k) => ({ x: (e[0] + e[1]) / 2, y: e[2] / (cnt[k] || 1), z: (e[3] + e[4]) / 2, rx: (e[1] - e[0]) / 2 * 1.12, rz: (e[4] - e[3]) / 2 * 1.12 })), [Tt, Bb] = R, S = 24, pos = [], col = [], nor = [];
+  const ax = [Bb.x - Tt.x, Bb.y - Tt.y, Bb.z - Tt.z], al = Math.hypot(...ax); for (let k = 0; k < 3; k++) ax[k] /= al;
+  const V = (r, a) => [r.x + Math.cos(a) * r.rx, r.y, r.z + Math.sin(a) * r.rz], Nr = (p, r) => { const v = [p[0] - Tt.x, p[1] - Tt.y, p[2] - Tt.z], d = v[0] * ax[0] + v[1] * ax[1] + v[2] * ax[2], q = [v[0] - ax[0] * d, v[1] - ax[1] * d, v[2] - ax[2] * d], l = Math.hypot(...q) || 1; return [q[0] / l, q[1] / l, q[2] / l]; };
+  for (let k = 0; k < S; k++) { const a0 = k / S * Math.PI * 2, a1 = (k + 1) / S * Math.PI * 2, t0 = V(Tt, a0), t1 = V(Tt, a1), b0 = V(Bb, a0), b1 = V(Bb, a1);
+    for (const [p, c] of [[t0, 1], [b0, 0], [b1, 0], [t0, 1], [b1, 0], [t1, 1]]) { pos.push(...p); col.push(c, c, c); nor.push(...Nr(p)); } }
+  const o = new THREE.BufferGeometry(); o.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); o.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); o.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); return o; }
 function softBeamMat(col) { const m = new THREE.MeshBasicMaterial({ vertexColors: true, color: col, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false });
   m.onBeforeCompile = sh => { sh.vertexShader = 'varying float vBF;\n' + sh.vertexShader.replace('#include <project_vertex>', `#include <project_vertex>
       { mat4 bmv = modelViewMatrix; mat3 bn = mat3( bmv ); vec3 bp = position; vec3 nn = normal;
@@ -5786,7 +5795,7 @@ function softBeamMat(col) { const m = new THREE.MeshBasicMaterial({ vertexColors
           bn = bn * mat3( instanceMatrix ); bp = ( instanceMatrix * vec4( position, 1.0 ) ).xyz;
         #endif
         vec3 vp = ( bmv * vec4( bp, 1.0 ) ).xyz; vBF = abs( dot( normalize( bn * nn ), normalize( -vp ) ) ); }`);
-    sh.fragmentShader = 'varying float vBF;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n diffuseColor.rgb *= smoothstep( 0.05, 0.75, vBF );'); };
+    sh.fragmentShader = 'varying float vBF;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n diffuseColor.rgb *= smoothstep( 0.0, 0.8, vBF ) * 1.15;'); };
   m.customProgramCacheKey = () => 'softBeam'; return m; }
 /* Schleier um Scheinwerferfelder: weicher Lichthof mit fester Bildschirmgröße – nah klein gegen das Lampenfeld, in der Ferne deutlicher Glanz im Dunst. pts = Weltpositionen [x, y, z, …] */
 function lampHalos(pts, col) { const t = canvasTex(128, 128, (g, w, h) => { const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.18, 'rgba(235,238,255,.55)'); gr.addColorStop(.5, 'rgba(200,210,255,.14)'); gr.addColorStop(1, 'rgba(170,180,230,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); t.userData.own = true;
@@ -12551,7 +12560,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.45'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.46'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
