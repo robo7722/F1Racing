@@ -5572,7 +5572,7 @@ function farSkyline(group, ll, T, o = {}) {
 }
 /*}@mia:top*/
 /*@bcn:top{*/
-TREE_STYLE.bcn = { leaf: { lobes: [[0, 5.0, 0, 2.9], [1.8, 5.6, 0.9, 2.2], [-1.6, 5.5, -1.0, 2.3], [0.3, 6.8, -0.3, 2.0]], cards: 56, sz: 3.2, lo: [3.4, 0.85], hsl: [0.24, .34, .34] }, con: { kind: 'pine', y0: 6.4, y1: 10.4, r: 4.0, tiers: 4, per: 8, droop: .34, hsl: [0.3, .32, .4] }, trunkH: 8.2 };   // Vallès: Aleppo-Kiefern (lichte Schirmkronen hoch am Stamm) und Steineichen (dunkel, rund)
+TREE_STYLE.bcn = { leaf: { lobes: [[0, 5.0, 0, 2.9], [1.8, 5.6, 0.9, 2.2], [-1.6, 5.5, -1.0, 2.3], [0.3, 6.8, -0.3, 2.0]], cards: 56, sz: 3.2, lo: [3.4, 0.85], hsl: [0.24, .34, .34] }, con: { kind: 'pine', y0: 6.4, y1: 10.4, r: 4.0, tiers: 4, per: 8, droop: .34, hsl: [0.3, .32, .4] }, trunkH: 7.8 };   // Vallès: Aleppo-Kiefern (lichte Schirmkronen hoch am Stamm) und Steineichen (dunkel, rund)
 ROADTEX.bcn = 'asphalt_06';
 /*}@bcn:top*/
 /*@hun:top{*/
@@ -5587,7 +5587,7 @@ ASPH_X.zan = { b: 46, c: 18, t: [0, 1, 2], sp: 8000, pa: 8, cr: 4, rep: 0 };
 /*}@zan:top*/
 /*@mad:top{*/
 /* Madrid: Steineichen (breit, dunkel, trocken) und Pinien/Aleppokiefern mit Schirmkrone */
-TREE_STYLE.mad = { leaf: { lobes: [[0, 2.8, 0, 2.6], [1.8, 2.6, 0.8, 2.0], [-1.7, 2.5, -1.0, 2.1], [0.3, 3.8, -0.4, 1.7]], cards: 34, sz: 2.5, lo: [2.8, 0.7, 2.8], hsl: [0.24, .24, .30] }, con: { kind: 'pine', y0: 5.2, y1: 8.2, r: 3.6, tiers: 3, per: 8, droop: .34, hsl: [0.27, .30, .30] }, trunkH: 5.6 };
+TREE_STYLE.mad = { leaf: { lobes: [[0, 4.6, 0, 2.6], [1.8, 4.4, 0.8, 2.0], [-1.7, 4.3, -1.0, 2.1], [0.3, 5.6, -0.4, 1.7]], cards: 34, sz: 2.5, lo: [2.8, 0.7, 4.6],   /* Kronen 1,8 m höher: der gemeinsame Stamm (5,6 m) stach oben aus den Laubkronen heraus */ hsl: [0.24, .24, .30] }, con: { kind: 'pine', y0: 5.2, y1: 8.2, r: 3.6, tiers: 3, per: 8, droop: .34, hsl: [0.27, .30, .30] }, trunkH: 5.6 };
 ROADTEX.mad = 'asphalt_06';
 ASPH_X.mad = { b: 56, c: 20, t: [2, 1, 0], sp: 7000, pa: 6, cr: 1, rep: 0 };
 /*}@mad:top*/
@@ -12526,7 +12526,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.39'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.40'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
