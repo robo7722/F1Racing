@@ -5608,7 +5608,7 @@ ROADTEX.mex = 'asphalt_track';
 /*}@mex:top*/
 /*@bra:top{*/
 // São Paulo (Interlagos): Tipuana, Eukalyptus und Palmen im Innenfeld – breite, dichte Kronen, nur wenige Nadelbäume
-TREE_STYLE.bra = { leaf: { lobes: [[0, 6.4, 0, 3.0], [2.0, 7.1, 0.9, 2.4], [-1.8, 6.9, -1.1, 2.5], [0.3, 8.4, -0.4, 2.2], [-0.6, 6.6, 2.0, 2.0]], cards: 64, sz: 3.0, lo: [4.0, 0.8], hsl: [0.26, .42, .42] },   /* runder, dichter belaubt wie die Eichen am Hungaroring, heller und satter grün (vorher grobe, dunkle Klumpen) */ con: { kind: 'pine', y0: 4.5, y1: 9.5, r: 3.4, tiers: 3, per: 6, droop: .3, hsl: [0.33, .3, .34] }, trunkH: 7.0 };   /* Schirmkiefer: Krone (Mitte (y0+y1)/2) muss auf dem Stamm sitzen – vorher Mitte 9,2 m über 5,5 m Stamm, die Krone schwebte bis 6 m */
+TREE_STYLE.bra = TREE_STYLE.hun;   /* auf Wunsch: Bäume wie am Hungaroring (dichte runde Laubbäume, Kiefern) – der eigene Stil sah schlecht aus */
 ROADTEX.bra = 'asphalt_03';
 /*}@bra:top*/
 /*@qat:top{*/
@@ -12567,7 +12567,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.48'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.49'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
