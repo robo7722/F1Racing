@@ -7744,7 +7744,7 @@ const SND_ENG = {   // cyl: Zündungen je Umdrehung · loops: [Datei, Grundton, 
   f1: { cyl: 3, vol: 0.55, cut: [0.025, 0.65], loops: [['sounds/f1_mittel.wav', 230], ['sounds/f1_v2.wav', 344], ['sounds/f1_v3.wav', 438], ['sounds/f1_v4.wav', 552]], schub: ['sounds/v6_schub.wav', 390, 0.55] },   // nahtloses 8-Gang-Getriebe: kurze, flache Lücke; 2026: viel Ernten beim Lupfen -> leiser Schub
   f2: { cyl: 3, vol: 0.6, cut: [0.06, 0.35], loops: [['sounds/f2_mittel.wav', 255], ['sounds/f2_v2.wav', 342], ['sounds/f2_v3.wav', 444]], schub: ['sounds/v6_schub.wav', 390, 0.95] },   // 6-Gang mit Zündunterbrechung, rau und laut, kräftiges Knallen
   kart: { cyl: 1, vol: 0.5, cut: [0, 1], loops: [['sounds/kart_v0.wav', 78], ['sounds/kart_v1.wav', 104], ['sounds/kart_mittel.wav', 156], ['sounds/kart_v3.wav', 224]], schub: ['sounds/kart_schub.wav', 152, 0.8] } };   // Grundton gemessen mit tools/sounds/varianten.py
-SND_ENG.road = { cyl: 2, vol: 0.6, cut: [0.16, 0.3], loops: [['sounds/mx5n_leer.wav', 28.3, [0.4, 0.12]], ['sounds/mx5n_tief2.wav', 116.2, [0, 0.3]], ['sounds/mx5n_hoch.wav', 228.2]], schub: ['sounds/mx5n_schub.wav', 253.3, 0.55] };   // v2.03: MX-5 (ND2, 2,0-l-Vierzylinder, 2 Zündungen je Umdrehung). Im ganzen Renn-Drehzahlbereich (≈ 4.100–7.500) läuft NUR mx5n_hoch (Tempo 0,6–1,1) – Wechsel zwischen Aufnahmen waren hörbar; überblendet wird nur beim Anfahren (Fenster je Stufe: Leerlauf→tief bei ~1.600 U/min, tief→hoch bei 3.500–4.100)
+SND_ENG.road = { cyl: 2, vol: 0.6, cut: [0.16, 0.3], loops: [['sounds/mx5n_leer.wav', 27.1], ['sounds/mx5n_tief3.wav', 59.7], ['sounds/mx5n_tief2.wav', 116.2, [0, 0.3]], ['sounds/mx5n_hoch.wav', 228.2]], schub: ['sounds/mx5n_schub.wav', 253.3, 0.55] };   // v2.04: MX-5 (ND2, 2,0-l-Vierzylinder, 2 Zündungen je Umdrehung). Leerlauf neu (klares Pulsieren ≈ 810 U/min), Zwischenstufe ≈ 1.750 für Gasstöße im Stand; im Renn-Drehzahlbereich (≈ 4.100–7.500) läuft nur mx5n_hoch
 const SND_FERN = { f1: 2, f2: 1, kart: 2, road: 2 };   // Gegner (Doppler) nutzen eine Stufe aus der Mitte des Renn-Drehzahlbereichs
 // v2.00: Einschläge je Fahrzeugart (cf = F1/F2-Carbon, stahl = Roadster, kart) und Ziel (Auto / Leitplanke / Betonmauer), nach Stärke abgestuft
 // v2.01: keine eigenen „schweren“ Unfälle mehr (zu übertrieben) – starke Treffer nutzen dieselbe Aufnahme, nur etwas lauter und länger
@@ -7753,7 +7753,7 @@ const SND_CRASH = {
   stahl: { leicht: 'sounds/stahl_leicht.wav', auto: 'sounds/stahl_auto.wav', armco: 'sounds/stahl_wand.wav', beton: 'sounds/stahl_wand.wav' },
   kart: { leicht: 'sounds/kart_kart.wav', auto: 'sounds/kart_kart.wav', armco: 'sounds/kart_wand.wav', beton: 'sounds/kart_wand.wav' } };
 // Loops und Einzelgeräusche rund ums Fahren (v2.00): Untergrund, Reifen, Schaben an Bande/Auto, Fahrtwind
-const SND_FX = { kies: 'sounds/kies.wav', rasen: 'sounds/rasen.wav', kerb: 'sounds/kerb.wav', kiesEin: 'sounds/kies_einschlag.wav', slick: 'sounds/quietschen_slick.wav', strasse: 'sounds/quietschen_strasse.wav',
+const SND_FX = { kies: 'sounds/kies.wav', rasen: 'sounds/rasen.wav', kerb: 'sounds/kerb.wav', kiesEin: 'sounds/kies_einschlag.wav',
   metall: 'sounds/schaben_metall.wav', beton: 'sounds/schaben_beton.wav', wind: 'sounds/wind.wav' };
 const CRS = { end: 0, st: 0, g: null };   // gerade klingender Crash: Ende, Stärke, Lautstärke-Knoten
 const SNDB = {};   // url -> AudioBuffer | 'laedt' | null (fehlt)
@@ -7907,10 +7907,7 @@ function fxTick(t, on, cls) {
   fxLoop('kerb', on && sf === 'kerb' && v > 4 ? (cls === 'kart' ? 0.4 : 0.6) * sp(20) : 0, clamp(0.55 + v / 55, 0.55, 1.9), t);
   if (on && (sf === 'gravel' || sf === 'grass') && FXS.surf !== 'gravel' && FXS.surf !== 'grass' && v > 12) fxShot('kiesEin', (sf === 'gravel' ? 0.8 : 0.45) * sp(40), t);   // Abflug ins Kiesbett
   FXS.surf = sf;
-  // Reifen an der Haftgrenze (nur auf festem Belag): Slicks dumpf radierend, Straßenreifen hell quietschend
-  const paved = sf === 'road' || sf === 'kerb' || sf === 'runoff';
-  const sq = on && paved && v > 12 && pl.rubT <= 0 ? clamp(Math.max((pl.latUse || 0) - 0.9, 0) / 0.1, 0, 1) * 0.8 * sp(30) : 0;   // v2.01: nur an der Haftgrenze (nicht mehr nach jedem Kontakt / neben anderen Autos)
-  fxLoop(cls === 'stahl' ? 'strasse' : 'slick', sq * (cls === 'stahl' ? 0.45 : cls === 'kart' ? 0.3 : 0.35), 0.95 + 0.1 * sq, t);
+  // v2.04: Reifenquietschen entfernt (klang falsch)
   // Schaben an der Bande (Leitplanke: Metall, Mauer: Beton) und Reiben Auto an Auto
   const wall = on && pl.wallT > 0 && v > 3 ? (cls === 'kart' ? 0.4 : 0.65) * Math.max(0.25, sp(25)) : 0, concrete = TH && TH.wallKind === 'concrete';
   fxLoop('metall', concrete || cls === 'kart' ? 0 : wall, 0.85 + v / 150, t); fxLoop('beton', concrete || cls === 'kart' ? wall : 0, 0.85 + v / 150, t);
@@ -9788,7 +9785,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.03'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.04'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

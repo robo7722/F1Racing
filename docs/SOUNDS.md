@@ -204,3 +204,12 @@ Stand: 15.11.2026.
 > [!warning] Credits: API ≈ 30× teurer als die Arbeitsfläche
 > `POST /v1/sound-generation` (tools/sounds/erzeugen.py) kostete ≈ **100 Credits je Sekunde** Ton (74 Aufnahmen, 209 s ≈ 22.300 Credits). Dieselben Sounds auf der ElevenLabs-Arbeitsfläche (Flows): ≈ 3–4 Credits je Sekunde (4-s-Loop ≈ 13). Die Angaben weiter oben („~330 Credits“, „~250 Credits“) waren Schätzungen nach Arbeitsflächen-Preis und für die API falsch.
 > **Künftig nur über die Arbeitsfläche erzeugen** (creative_add_flow_node + creative_run_flow_nodes, vorher `estimate_only`) und vor jedem Lauf den Kontostand prüfen. Stand nach v2.03: 23.972 von 30.005 verbraucht, Aufladung ~15.12.2026.
+
+## v2.04 – Reifenquietschen entfernt, MX-5-Leerlauf neu
+Stand: 15.11.2026. Ohne neue Credits (nur vorhandene Aufnahmen).
+- **Reifenquietschen komplett entfernt** (Rückmeldung: klingt falsch). Dateien `quietschen_*.wav` gelöscht; `c.latUse` bleibt in der Fahrphysik (falls später ein besseres Geräusch kommt).
+- **MX-5-Leerlauf** (Rückmeldung: „komplett falsch“). Zwei Ursachen:
+  1. Die Leerlauf-Aufnahme `mx5b_leer_1` war eher ein gleichmäßiges Dröhnen (~120 Hz) als das Pulsieren eines Vierzylinders. Jetzt `mx5_leer_1` aus dem ersten Lauf: klarstes Pulsieren, 27,1 Hz ≈ 810 U/min. Drei Kandidaten wurden als Hörprobe verglichen (A bisher, B gewählt, C ≈ 1.000 U/min).
+  2. Zwischen Leerlauf (850) und der nächsten Stufe (3.500 U/min) lag eine riesige Lücke – Gasstöße im Stand spielten den Leerlauf 2-fach und die Fahr-Aufnahme 0,4-fach. Neue Zwischenstufe `mx5n_tief3` (Fahr-Aufnahme −19 HT, 59,7 Hz ≈ 1.800 U/min).
+- Stufen jetzt: `mx5n_leer` 27,1 · `mx5n_tief3` 59,7 · `mx5n_tief2` 116,2 · `mx5n_hoch` 228,2 (+ `mx5n_schub` 253,3).
+- Nach `aufbereiten_v2.py` immer `pegel.py` laufen lassen (sonst sind die Fahr-Geräusch-Loops wieder ungeglättet).

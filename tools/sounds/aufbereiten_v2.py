@@ -19,13 +19,13 @@ ENGINE = []   # Motor-Loops werden fest gewählt (MX5 unten): die KI trifft die 
 # und dreht innerhalb des Clips leicht hoch/runter. Deshalb: wenige Aufnahmen eines Stils, Tonhöhe geglättet (glaetten.py), kaum verschoben.
 # Ziel: (Rohdatei, Abschnitt s, Tonhöhe ca. (Hz, zum Messen), Halbtöne danach) – Grundton in index.html: leer 28,3 (fest = 850 U/min), sonst gemessen
 MX5 = {
-    'mx5n_leer': ('mx5b_leer_1.mp3', (0.2, 3.8), 122, 0),     # Leerlauf, im Spiel nur unter ~1.500 U/min
-    'mx5n_tief': ('mx5b_tief_1.mp3', (0.2, 3.8), 170, 0),     # 173 Hz ≈ 5.200 U/min
+    'mx5n_leer': ('mx5_leer_1.mp3', None, None, 0),           # v2.04: Leerlauf aus dem ersten Lauf (klarstes Pulsieren 27,1 Hz ≈ 810 U/min), ungeglättet
     'mx5n_tief2': ('mx5b_tief_1.mp3', (0.2, 3.8), 170, -7),   # 116 Hz ≈ 3.500 U/min
+    'mx5n_tief3': ('mx5b_tief_1.mp3', (0.2, 3.8), 170, -19),  # v2.04: 58 Hz ≈ 1.750 U/min – Zwischenstufe, damit Gasstöße im Stand nicht 2-fach/0,4-fach gestimmt werden
     'mx5n_hoch': ('mx5b_hoch_1.mp3', (0.2, 3.8), 268, -3),    # 271 -> 228 Hz ≈ 6.850 U/min
     'mx5n_schub': ('mx5b_schub_3.mp3', (0.2, 2.8), 255, 0),   # Gas weg, 253 Hz
 }
-LOOPS = ['schaben_metall', 'schaben_beton', 'kies', 'rasen', 'kerb', 'quietschen_slick', 'quietschen_strasse', 'wind']
+LOOPS = ['schaben_metall', 'schaben_beton', 'kies', 'rasen', 'kerb', 'wind']
 HITS = {'cf_leicht': 0.35, 'cf_auto': 0.9, 'cf_armco': 1.2, 'cf_beton': 1.1, 'stahl_leicht': 0.4,
         'stahl_auto': 0.9, 'stahl_wand': 1.2, 'kart_kart': 0.5, 'kart_wand': 0.7, 'kies_einschlag': 1.0}   # Höchstlänge ab Einsatz (s)
 
@@ -77,10 +77,13 @@ if __name__ == '__main__':
     from varianten import shift, seam
     from glaetten import flatten, track
     for name, (src, cut, p0, st) in MX5.items():
-        x = load(os.path.join(ROH, src))[int(cut[0] * SR):int(cut[1] * SR)]
-        y, ref, _ = flatten(x, p0); y = norm_rms(loopify(y, int(0.25 * SR)))
+        x = load(os.path.join(ROH, src))
+        if p0 is None:   # ohne Glätten: ruhigsten 3-s-Abschnitt nehmen
+            a, _ = best_window(x[int(0.1 * SR):], int(3.0 * SR)); a += int(0.1 * SR); y = norm_rms(loopify(x[a:a + int(3.0 * SR)], int(0.25 * SR))); ref = 27.1
+        else:
+            x = x[int(cut[0] * SR):int(cut[1] * SR)]; y, ref, _ = flatten(x, p0); y = norm_rms(loopify(y, int(0.25 * SR)))
         if st: n = len(y); y = norm_rms(seam(shift(np.concatenate([y, y, y]), st), n, int(0.12 * SR)))
-        _, p = track(y, ref * 2 ** (st / 12)); save(os.path.join(SND, name + '.wav'), y)
+        _, p = track(y, ref * 2 ** (st / 12)) if p0 else (None, np.array([ref])); save(os.path.join(SND, name + '.wav'), y)
         info[name] = {'quelle': src, 'halbtoene': st, 'grundton': round(float(np.median(p)), 1), 'laenge': round(len(y) / SR, 2)}; print(name, info[name], flush=True)
     for name in ENGINE + LOOPS:
         best = None

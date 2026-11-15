@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from varianten import SND, SR, save
 import wave
 
-NAMES = ['wind', 'kies', 'rasen', 'quietschen_slick', 'quietschen_strasse', 'schaben_metall', 'schaben_beton']
+NAMES = ['wind', 'kies', 'rasen', 'schaben_metall', 'schaben_beton']
 
 
 def read(path):
