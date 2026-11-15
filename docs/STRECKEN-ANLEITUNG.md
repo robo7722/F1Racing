@@ -660,9 +660,21 @@ Lösung:
 
 Gemessen (Spa, F1): kein Objekt mit Fuß unter dem Kies (vorher Tribüne, Bäume, Büsche bis 0,55 m); Kies an allen Wandfüßen der beiden Zonen −0,06 … −0,12 m (gewollt −0,07, vorher bis −1,01). `__clipAll()` leer.
 
-Bleibt (gewollt, echte Geländeform): Aus dem Bus-Stop-Kies steigt die Fläche zur Start-Ziel-Geraden um 3,3 m an. Aus Fahrerhöhe tief im Kies verschwindet deshalb der untere Rand der fernen Banden hinter der Kuppe – wie hinter einem Hügel.
+Die Schenkel der Bus-Stop-Schikane liegen bis 5 m übereinander, der Kies dazwischen muss geneigt sein. Aus Fahrerhöhe tief im Kies verschwand deshalb der untere Rand der fernen Banden hinter der Kuppe.
+Wunsch: „Verdecke es ansonsten mit einer Wand“ → **Leitplanke um die Kies-Zonen** (`ZWALL`, `zoneOutline`):
+- Vorher war in den Zonen keine Absperrung gezeichnet (`NOWALL`), die Autos prallten trotzdem an der Linie `WL`/`WR` ab (Kollision nutzt `wallAt` unabhängig von `NOWALL`).
+- Die Planke läuft am **Umriss der Kiesmaske** entlang (Marching Squares, 0,4-m-Raster, geglättet, ≈ 1 m Punktabstand). Erster Versuch je Streckenpunkt an `WL`/`WR` scheiterte an der gemeinsamen Kies-Tasche zwischen mittlerem und letztem Schenkel (Öffnung zur Start-Ziel-Geraden): dort liegt die Außenkante an keinem einzelnen Streckenpunkt.
+- Nur die äußere Schleife; ohne Stücke näher als Fahrbahn + 3 m und an den Zonenenden (nächster Streckenpunkt ±3 Abschnitte nicht in der Zone) – dort stünde sie quer über dem Auslauf.
+- **Fuß auf dem Kies** (`zoneH`), nicht auf Streckenhöhe: die Kieshöhe weicht an der Kante bis 2 m davon ab. Den Kies stattdessen an der Wand festzulegen gab Hügel im Kiesbett. Darunter die übliche Schürze (3,6 m).
+- `WL`/`WR` in den Zonen höchstens Fahrbahn + 31 m (= Kiesradius): Sehnen hinter den engen Kurven sprangen auf 48–56 m (Autos prallten 20 m hinter dem Kies ab).
+- Material wie die Spa-Leitplanken (`wallMat`, Armco). Zwei Netze (Planke + Schürze) für beide Zonen, 4 Linienzüge ≈ 1,1 km.
+
+Was bleibt: Aus der Kies-Tasche heraus Richtung Boxen steigt der Kies zum letzten Schenkel (Fahrbahn 4 m höher) an. Dort kann keine Wand stehen, sonst wäre der Weg zurück auf die Strecke zu.
 
 ![[bilder/spa_busstop_v199.jpg]]
-(oben: Bus-Stop von oben, Kies endet an der Absperrungslinie; unten: Blick aus dem Kies auf Tribüne und Banden)
+(oben: Bus-Stop von oben, Kies endet an der Absperrungslinie; unten: Blick aus dem Kies auf Tribüne und Banden – Stand vor der Leitplanke)
 
-Prüfskripte (Arbeitsordner, nicht im Repo): Objekte im Kies (Fußpunkt unter Zonenhöhe innerhalb der Kiesmaske ± 1,5 m) und Kies an den Wandfüßen. Bei neuen Zonen beides prüfen.
+![[bilder/spa_leitplanke_v199.jpg]]
+(Leitplanke um die Kies-Zonen: Bus-Stop schräg von oben, Blick aus dem Kies zur Tribüne/Boxen, Kies vor der Tribüne, Les Combes)
+
+Testhilfe `__zwall()`: Linienzüge der Planke. Prüfskripte (Arbeitsordner, nicht im Repo): Objekte im Kies (Fußpunkt unter Zonenhöhe innerhalb der Kiesmaske ± 1,5 m) und Kies an den Wandfüßen. Bei neuen Zonen beides prüfen.

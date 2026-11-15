@@ -4335,7 +4335,7 @@ for (const l of [sun, flood]) { const um = l.shadow.updateMatrices; l.shadow.upd
 scene.onAfterRender = () => shadowSwap(false);
 
 /* ======================= Strecke bauen ======================= */
-let ZONEH = [];
+let ZONEH = [], ZWALL = [];   // ZWALL: Linienzüge [[x, z], …] der Leitplanke um die Kies-Zonen (v1.99)
 function zoneH(x, z) { for (const Z of ZONEH) { const fx = (x - Z.x0) / Z.bw * Z.SEG, fz = (z - Z.z0) / Z.bh * Z.SEG; if (fx < 0 || fz < 0 || fx >= Z.SEG || fz >= Z.SEG) continue;
   const ix = Math.floor(fx), iz = Math.floor(fz), u = fx - ix, v = fz - iz, G1 = Z.SEG + 1, k = iz * G1 + ix, Y = Z.Y; return (Y[k] * (1 - u) + Y[k + 1] * u) * (1 - v) + (Y[k + G1] * (1 - u) + Y[k + G1 + 1] * u) * v; } return null; }
 let BANK = null, KSD = 1;
@@ -5047,6 +5047,29 @@ function zoneSeed(Y, FX, SEG, near, x0, z0, bw, bh) { const G1 = SEG + 1, px = P
         const dw = (x - wx) ** 2 + (z - wz) ** 2; if (dw > cs * cs || dw >= BD[k]) continue; let under = false; for (const j of near) if ((x - px[j]) ** 2 + (z - pz[j]) ** 2 < (hw[j] + 1.5) ** 2) { under = true; break; } if (under) continue;
         Y[k] = el[i] - 0.07; FX[k] = 1; BD[k] = dw; } } } }
 
+// Umriss der Kiesfläche einer Zone (Marching Squares auf der Kiesmaske, 0,4-m-Raster): Linienzüge für die Leitplanke (v1.99).
+// Nur die äußere Schleife; ohne Stücke an der Fahrbahn (näher als Fahrbahn + 3 m) und an den Zonenenden (Schnitt quer über den Auslauf).
+function zoneOutline(MK, x0, z0, kx) {
+  const st = Math.max(1, Math.round(0.4 * kx)), C = Math.floor(MK.w / st), R = Math.floor(MK.h / st);
+  const on = (c, r) => c >= 0 && r >= 0 && c <= C && r <= R && MK.a[(Math.min(MK.h - 1, r * st) * MK.w + Math.min(MK.w - 1, c * st)) * 4 + 3] > 127 ? 1 : 0;
+  const adj = new Map(), P = new Map(), link = (a, b) => { (adj.get(a) || adj.set(a, []).get(a)).push(b); (adj.get(b) || adj.set(b, []).get(b)).push(a); };
+  const eH = (c, r) => { const k = 'h' + c + ',' + r; P.set(k, [x0 + (c + 0.5) * st / kx, z0 + r * st / kx]); return k; }, eV = (c, r) => { const k = 'v' + c + ',' + r; P.set(k, [x0 + c * st / kx, z0 + (r + 0.5) * st / kx]); return k; };
+  for (let r = -1; r <= R; r++) for (let c = -1; c <= C; c++) {
+    const q = on(c, r) | on(c + 1, r) << 1 | on(c + 1, r + 1) << 2 | on(c, r + 1) << 3; if (q === 0 || q === 15) continue;
+    const T = eH(c, r), Rt = eV(c + 1, r), B = eH(c, r + 1), Lf = eV(c, r);
+    switch (q) { case 1: case 14: link(Lf, T); break; case 2: case 13: link(T, Rt); break; case 3: case 12: link(Lf, Rt); break; case 4: case 11: link(Rt, B); break;
+      case 6: case 9: link(T, B); break; case 7: case 8: link(Lf, B); break; case 5: link(Lf, T); link(Rt, B); break; case 10: link(T, Rt); link(Lf, B); break; } }
+  const seen = new Set(), loops = [];
+  for (const k0 of adj.keys()) { if (seen.has(k0)) continue; const lp = [k0]; seen.add(k0); let prev = null, cur = k0;
+    for (;;) { const nx = (adj.get(cur) || []).find(k => k !== prev && !seen.has(k)); if (!nx) break; seen.add(nx); lp.push(nx); prev = cur; cur = nx; } loops.push(lp); }
+  if (!loops.length) return [];
+  let pts = loops.reduce((a, b) => b.length > a.length ? b : a).map(k => P.get(k));
+  for (let it = 0; it < 2; it++) pts = pts.map((p, i) => { const a = pts[(i - 1 + pts.length) % pts.length], b = pts[(i + 1) % pts.length]; return [(a[0] + 2 * p[0] + b[0]) / 4, (a[1] + 2 * p[1] + b[1]) / 4]; });   /* Treppen glätten */
+  const ok = p => { const [d, j] = nearestDist(p[0], p[1]); if (d < HW[j] + 3) return false; for (let k = -3; k <= 3; k++) if (!PAVEZ[(j + k + N) % N]) return false; return true; };
+  const okA = pts.map(ok), runs = []; let s0 = okA.findIndex(v => !v); if (s0 < 0) s0 = 0;
+  let cur = []; for (let n = 1; n <= pts.length; n++) { const i = (s0 + n) % pts.length; if (okA[i]) cur.push(pts[i]); else { if (cur.length) runs.push(cur); cur = []; } } if (cur.length) runs.push(cur);
+  return runs.filter(r => { let l = 0; for (let i = 1; i < r.length; i++) l += Math.hypot(r[i][0] - r[i - 1][0], r[i][1] - r[i - 1][1]); return l > 6; })
+    .map(r => r.filter((p, i) => i % 3 === 0 || i === r.length - 1)); }   /* jeder dritte Punkt reicht (≈ 1 m) */
 function relaxZone(Y, FX, SEG) { const G1 = SEG + 1;
   for (let it = 0; it < 700; it++) for (let iz = 0; iz < G1; iz++) for (let ix = 0; ix < G1; ix++) { const k = iz * G1 + ix; if (FX[k]) continue;
     const a = Y[ix > 0 ? k - 1 : k + 1], b = Y[ix < SEG ? k + 1 : k - 1], c = Y[iz > 0 ? k - G1 : k + G1], d = Y[iz < SEG ? k + G1 : k - G1]; Y[k] += 1.85 * ((a + b + c + d) * 0.25 - Y[k]); } }
@@ -5402,6 +5425,11 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     hStrip(i => Math.min(HW[i] + 1.5 + wd(i), WR[i] - 1), i => Math.max(HW[i] + 2, WR[i] - 1.2), .018, .018, am, { mask: i => PZ2[i] === 1 || (PZ2[i] === 2 && i * DS > L - 120), uScale: 12, vScale: 12, conform: true });
     for (let i = 0; i < N; i++) if (PZ2[i] === 1) GRR[i] = 0;
   }
+  // Leitplanke um die Kies-Zonen (v1.99, Wunsch „verdecke es mit einer Wand“): Dort war keine Absperrung gezeichnet, die Autos prallten aber an der Linie WL/WR ab.
+  // Der Kies steigt zwischen den Schenkeln der Schikane bis 5 m an – aus dem Kies verschwanden Banden und Tribünensockel dahinter halb hinter der Kuppe.
+  // Die Planke läuft am Umriss der Kiesfläche entlang (ZWALL, unten aus der Kiesmaske), so auch an der gemeinsamen Kies-Tasche zweier Schenkel.
+  ZWALL = [];
+  if (PAVEZ) for (let i = 0; i < N; i++) if (PAVEZ[i]) { const m = HW[i] + 31; WL[i] = Math.min(WL[i], m); WR[i] = Math.min(WR[i], m); }   /* Linie nicht weiter als der Kies (Sehnen hinter engen Kurven sprangen auf 48–56 m) */
   // Schikanen mit Auslaufzone (Spa: Bus-Stop, Les Combes): EINE ebene Fläche, von oben gemalt – Kies, Asphalt, Farbstreifen ohne Überschneidungen
   ZONEH = [];
   if (PAVEZ) {
@@ -5411,6 +5439,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       let hw = 0; for (const i of ids) hw += HW[i]; hw /= ids.length;
       const R = hw + 31; let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (const i of ids) { x0 = Math.min(x0, PX[i] - R); x1 = Math.max(x1, PX[i] + R); z0 = Math.min(z0, PZ[i] - R); z1 = Math.max(z1, PZ[i] + R); }
       const bw = x1 - x0, bh = z1 - z0, CS = 2048, kx = CS / Math.max(bw, bh), cw = Math.ceil(bw * kx), chh = Math.ceil(bh * kx);
+      let MK = null;   /* Kiesmaske (für den Umriss der Leitplanke) */
       const tex = canvasTex(cw, chh, (g, w, h) => {
         g.clearRect(0, 0, w, h); g.lineJoin = g.lineCap = 'round';
         const path = () => { g.beginPath(); ids.forEach((i, n) => { const x = (PX[i] - x0) * kx, y = (PZ[i] - z0) * kx; n ? g.lineTo(x, y) : g.moveTo(x, y); }); };
@@ -5427,7 +5456,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
           const ext = [(za - 1 + N) % N, ...ids, (zb + 1) % N];   /* ein Abschnitt Überlappung mit den normalen Streifen davor/danach */
           for (let n = 0; n + 1 < ext.length; n++) { const a = ext[n], b = ext[n + 1], q = [pt(a, -eL(a)), pt(b, -eL(b)), pt(b, eR(b)), pt(a, eR(a))];
             mg.beginPath(); q.forEach(([x, y], k) => k ? mg.lineTo(x, y) : mg.moveTo(x, y)); mg.closePath(); mg.fill(); mg.stroke(); }   /* je Abschnitt ein Viereck (ein Umriss über die Schikane würde sich selbst schneiden) */
-          g.globalCompositeOperation = 'destination-in'; g.drawImage(mc, 0, 0); g.globalCompositeOperation = 'source-over'; }
+          g.globalCompositeOperation = 'destination-in'; g.drawImage(mc, 0, 0); g.globalCompositeOperation = 'source-over'; MK = { a: mg.getImageData(0, 0, w, h).data, w, h }; }
         g.globalCompositeOperation = 'source-atop'; g.globalAlpha = .1; for (let k = 0; k < 40000; k++) { g.fillStyle = Math.random() < .5 ? '#000' : '#fff'; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
         g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
       });
@@ -5441,6 +5470,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       for (let v = 0; v < P.count; v++) { const x = P.getX(v) + x0 + bw / 2, z = P.getZ(v) + z0 + bh / 2, ix = Math.round((x - x0) / bw * SEG), iz = Math.round((z - z0) / bh * SEG);
         P.setXYZ(v, x, Y[clamp(iz, 0, SEG) * G1 + clamp(ix, 0, SEG)], z); U.setXY(v, (x - x0) / bw, 1 - (z - z0) / bh); }
       ZONEH.push({ x0, z0, bw, bh, SEG, Y });
+      if (MK) ZWALL.push(...zoneOutline(MK, x0, z0, kx));
       geo.computeVertexNormals(); geo.computeBoundingSphere();
       const m = new THREE.Mesh(geo, lam({ map: tex, alphaTest: 0.5, roughness: .85, polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 2 })); m.receiveShadow = true; m.userData.fixed = true; trackGroup.add(m);
     }
@@ -5462,6 +5492,14 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       g.fillStyle = 'rgba(40,36,30,.25)'; g.fillRect(0, h * .86, w, h * .14); g.fillStyle = 'rgba(0,0,0,.35)'; for (let k = 0; k <= 8; k++) g.fillRect(k * w / 8 - 1, 0, 2, h); });
     tt.userData.own = true; tricolM = lam({ map: tt, roughness: .85, side: THREE.DoubleSide });   /* glatt, ohne Relief */
   }
+  if (ZWALL.length) {   /* Leitplanke um die Kies-Zonen (ZWALL): steht auf dem Kies (Fuß = Kieshöhe, die bis 2 m von der Streckenhöhe abweicht), Schürze darunter */
+    const wp = [], wu = [], sp = [], su = [];
+    for (const run of ZWALL) { let u = 0; const Y = run.map(([x, z]) => { const h = zoneH(x, z); return (h === null ? placeY(x, z) : h) - 0.02; });
+      for (let k = 0; k + 1 < run.length; k++) { const [ax, az] = run[k], [bx, bz] = run[k + 1], ya = Y[k], yb = Y[k + 1], l = Math.hypot(bx - ax, bz - az), u1 = u + l / 4;
+        wp.push(ax, ya, az, bx, yb, bz, ax, ya + wH, az, ax, ya + wH, az, bx, yb, bz, bx, yb + wH, bz); wu.push(u, 0, u1, 0, u, 1, u, 1, u1, 0, u1, 1);
+        sp.push(ax, ya - 3.6, az, bx, yb - 3.6, bz, ax, ya, az, ax, ya, az, bx, yb - 3.6, bz, bx, yb, bz); su.push(u, 0, u1, 0, u, 1, u, 1, u1, 0, u1, 1); u = u1; } }
+    for (const [pp, uu, mt, cast] of [[wp, wu, wallMat, true], [sp, su, skirtM, false]]) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pp, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uu, 2)); g.computeVertexNormals();
+      const m = new THREE.Mesh(g, mt); m.receiveShadow = true; m.castShadow = cast; m.userData.strip = true; trackGroup.add(m); } }
   for (const [W, s] of [[WL, -1], [WR, 1]]) {
     const nb = s < 0 ? 1 : 2;
     const WT = s < 0 ? WTL : WTR;
@@ -10014,6 +10052,7 @@ window.__holes = () => HOLES; window.__holesLeft = () => fillGroundHoles(true);
 window.__scr = k => { showScreen(k); return MENU.scr; };   /* Test: Menübildschirm direkt öffnen */
 window.__season = tier => { if (!CAREER) { CAREER = carDef(); CAREER.name = 'Robert Nemec'; } if (tier !== 'kart' && !CAREER.slot[tier]) CAREER.slot[tier] = mkSlot(tier, SERIES[tier].drivers[4][3], null); (CAREER.intro ||= {})[tier] = 1; startSeason(tier); return MENU.scr; };   /* Test: Saison-Bildschirm öffnen */
 window.__f1dbg = () => ({ K: F1FAHRER, MODELS, f1Wheel, f1Fist, kartArmsIK, SW, SW_ROT });   // Prüfskript tools/lenkrad (Durchdringung Hand/Lenkrad/Fahrer)
+window.__zwall = () => ZWALL;   /* Test: Linienzüge der Leitplanke um die Kies-Zonen */
 window.__arms = () => ARMS; window.__sw = () => SW; window.__f1f = () => F1FAHRER;
 window.__layout = () => { effCtrl = S.ctrl; layoutControls(); return effCtrl; };   /* Test: Touch-Tasten zeigen */
 window.__ks = s2 => KS[Math.floor(modL(s2) / DS) % N]; window.__head = () => HEAD; window.__tp = s2 => { const q = trackAt(s2, 0); pl.x = q.x; pl.z = q.z; pl.h = q.h; camH = q.h; projectCar(pl); pl.sPrev = modL(s2); return pl.idx; };
