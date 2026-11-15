@@ -3,6 +3,7 @@
 Jeder Eintrag: Name -> (Prompt, Länge s, Prompt-Treue, Loop). Je Eintrag VARIANTEN Aufnahmen (sounds/roh/v2/<name>_<k>.mp3);
 die beste wählt tools/sounds/aufbereiten_v2.py nach Messwerten aus. Vorhandene Dateien werden nicht neu erzeugt (kostet Credits).
 Aufruf: python tools/sounds/erzeugen.py [name ...]   (API-Schlüssel kommt über den Proxy bzw. ELEVEN_API_KEY)
+ACHTUNG Kosten: die API berechnet ≈ 100 Credits je Sekunde Ton (≈ 30× teurer als die ElevenLabs-Arbeitsfläche) – lieber dort erzeugen.
 """
 import json, os, sys, time, urllib.request, urllib.error
 

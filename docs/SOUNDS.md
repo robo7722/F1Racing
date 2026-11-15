@@ -138,7 +138,7 @@ Stand: 15.11.2026.
 ## v2.00 – Roadster, neue Einschläge, Fahr-Geräusche (alles ElevenLabs)
 Stand: 15.11.2026. Konto jetzt im Starter-Tarif (~30.000 Credits/Monat).
 
-**Erzeugung:** neu direkt über die API (`tools/sounds/erzeugen.py`, `POST /v1/sound-generation`, Schlüssel kommt über den Proxy) statt über die Arbeitsfläche – dort bremste das Gleichzeitigkeits-Limit, und das Herunterladen ließ sich nicht skripten. 27 Sounds × 2 Varianten, ~330 Credits (Schätzung der Arbeitsfläche: 984). Rohdateien in `sounds/roh/v2/`. Ein Lauf über die Arbeitsfläche (gleiche Prompts, ~330 Credits) ist ungenutzt.
+**Erzeugung:** neu direkt über die API (`tools/sounds/erzeugen.py`, `POST /v1/sound-generation`, Schlüssel kommt über den Proxy; ACHTUNG: ≈ 100 Credits/s, siehe v2.03) statt über die Arbeitsfläche – dort bremste das Gleichzeitigkeits-Limit, und das Herunterladen ließ sich nicht skripten. 27 Sounds × 2 Varianten, ~330 Credits (Schätzung der Arbeitsfläche: 984). Rohdateien in `sounds/roh/v2/`. Ein Lauf über die Arbeitsfläche (gleiche Prompts, ~330 Credits) ist ungenutzt.
 **Auswahl/Aufbereitung:** `tools/sounds/aufbereiten_v2.py` wählt je Paar automatisch: Loops nach gleichmäßigster Lautheit, Einschläge nach „genau ein Hauptschlag, steiler Einsatz“. Gewählte Varianten stehen in `sounds/roh/v2/auswahl.json`.
 
 ### Roadster (MX-5 ND2, 2,0-l-Vierzylinder, Sportauspuff)
@@ -194,3 +194,13 @@ Stand: 15.11.2026.
   2. Gegner: die 4 nächsten Autos spielten dieselbe Aufnahme fast gleich hoch (Flanger-Effekt). Jetzt abwechselnd zwei verschiedene Aufnahmen, Lautstärke 0,2 statt 0,3.
   3. Fahr-Geräusch-Loops schwollen an und ab (Rasen bis 12-fach, Quietschen/Kies 2,5-fach). `tools/sounds/pegel.py` gleicht den Pegel aus (zyklischer gleitender RMS 300 ms, Teilen durch Hüllkurve^0,9) → langsame Schwankung ≤ 2,2-fach. Wind zusätzlich leiser (0,12 statt 0,3).
 - Reihenfolge der Skripte: `erzeugen.py` → `aufbereiten_v2.py` → `pegel.py`.
+
+## v2.03 – Musik-Regler (iPhone), MX-5 ohne hörbare Übergänge
+Stand: 15.11.2026.
+- **Musik ließ sich nicht leiser stellen/ein-/ausblenden:** Menü- und Renn-Musik wurden nur über `audio.volume` gesteuert – iPhone/iPad (Safari) ignorieren diese Eigenschaft (immer 100 %). Jetzt hängt jedes Musik-Element (`TITLE`, `RP[0..1]`) über `createMediaElementSource` an einem eigenen Lautstärke-Knoten im AudioContext (`musRoute`, `musVol`); der AudioContext startet bei der ersten Berührung. Diagnose: `__mus()`. Browser-Test: Regler 0 % → Menü-Musik pausiert, 40 % → Knoten 0,30, 100 % → 0,74.
+- **MX-5:** Übergänge zwischen Aufnahmen waren hörbar. Jetzt läuft im ganzen Renn-Drehzahlbereich (≈ 4.100–7.500) nur `mx5n_hoch` (Tempo 0,6–1,1); Überblend-Fenster je Stufe (`loops[i][2]`): Leerlauf → `mx5n_tief2` um ~1.600 U/min, `tief2` → `hoch` bei 3.500–4.100. `mx5n_tief` entfällt. Schub leiser (0,55).
+- `__bumpTest` (Offline-Rendern) und die neuen Musik-Knoten: `updateAudio`/`musRoute` laufen nicht, solange ein OfflineAudioContext aktiv ist.
+
+> [!warning] Credits: API ≈ 30× teurer als die Arbeitsfläche
+> `POST /v1/sound-generation` (tools/sounds/erzeugen.py) kostete ≈ **100 Credits je Sekunde** Ton (74 Aufnahmen, 209 s ≈ 22.300 Credits). Dieselben Sounds auf der ElevenLabs-Arbeitsfläche (Flows): ≈ 3–4 Credits je Sekunde (4-s-Loop ≈ 13). Die Angaben weiter oben („~330 Credits“, „~250 Credits“) waren Schätzungen nach Arbeitsflächen-Preis und für die API falsch.
+> **Künftig nur über die Arbeitsfläche erzeugen** (creative_add_flow_node + creative_run_flow_nodes, vorher `estimate_only`) und vor jedem Lauf den Kontostand prüfen. Stand nach v2.03: 23.972 von 30.005 verbraucht, Aufladung ~15.12.2026.

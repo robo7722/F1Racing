@@ -7740,12 +7740,12 @@ function applyVolumes() {
 // (Formanten bleiben, tools/sounds/varianten.py) – im Spiel wird jede Stufe nur noch ~0,8–1,25-fach nachgestimmt. Zwischen den zwei Stufen, die den
 // aktuellen Ton einschließen, wird gleich laut überblendet. schub: eigener Loop für „Gas weg“ (Knallen/Blubbern), am Tiefpass vorbei.
 // Fehlt eine Datei oder lädt sie nicht, bleibt der synthetische Motor (Oszillatoren) – das Spiel klingt nie stumm.
-const SND_ENG = {   // cyl: Zündungen je Umdrehung · loops: [Datei, Grundton] aufsteigend · schub: [Datei, Grundton, Lautstärke] · cut: Schalt-Lücke [Dauer s, Pegel]
+const SND_ENG = {   // cyl: Zündungen je Umdrehung · loops: [Datei, Grundton, Überblend-Fenster zur nächsten Stufe (Anteil des log. Abstands: [Beginn, Breite]), optional] aufsteigend · schub: [Datei, Grundton, Lautstärke] · cut: Schalt-Lücke [Dauer s, Pegel]
   f1: { cyl: 3, vol: 0.55, cut: [0.025, 0.65], loops: [['sounds/f1_mittel.wav', 230], ['sounds/f1_v2.wav', 344], ['sounds/f1_v3.wav', 438], ['sounds/f1_v4.wav', 552]], schub: ['sounds/v6_schub.wav', 390, 0.55] },   // nahtloses 8-Gang-Getriebe: kurze, flache Lücke; 2026: viel Ernten beim Lupfen -> leiser Schub
   f2: { cyl: 3, vol: 0.6, cut: [0.06, 0.35], loops: [['sounds/f2_mittel.wav', 255], ['sounds/f2_v2.wav', 342], ['sounds/f2_v3.wav', 444]], schub: ['sounds/v6_schub.wav', 390, 0.95] },   // 6-Gang mit Zündunterbrechung, rau und laut, kräftiges Knallen
   kart: { cyl: 1, vol: 0.5, cut: [0, 1], loops: [['sounds/kart_v0.wav', 78], ['sounds/kart_v1.wav', 104], ['sounds/kart_mittel.wav', 156], ['sounds/kart_v3.wav', 224]], schub: ['sounds/kart_schub.wav', 152, 0.8] } };   // Grundton gemessen mit tools/sounds/varianten.py
-SND_ENG.road = { cyl: 2, vol: 0.6, cut: [0.16, 0.3], loops: [['sounds/mx5n_leer.wav', 28.3], ['sounds/mx5n_tief2.wav', 116.2], ['sounds/mx5n_tief.wav', 174], ['sounds/mx5n_hoch.wav', 228.2]], schub: ['sounds/mx5n_schub.wav', 253.3, 0.9] };   // v2.01: MX-5 (ND2, 2,0-l-Vierzylinder): 2 Zündungen je Umdrehung; wenige Aufnahmen eines Stils, Tonhöhe geglättet (tools/sounds/glaetten.py) – vorher 7 zusammengestückelte Stufen
-const SND_FERN = { f1: 2, f2: 1, kart: 2, road: 3 };   // Gegner (Doppler) nutzen eine Stufe aus der Mitte des Renn-Drehzahlbereichs
+SND_ENG.road = { cyl: 2, vol: 0.6, cut: [0.16, 0.3], loops: [['sounds/mx5n_leer.wav', 28.3, [0.4, 0.12]], ['sounds/mx5n_tief2.wav', 116.2, [0, 0.3]], ['sounds/mx5n_hoch.wav', 228.2]], schub: ['sounds/mx5n_schub.wav', 253.3, 0.55] };   // v2.03: MX-5 (ND2, 2,0-l-Vierzylinder, 2 Zündungen je Umdrehung). Im ganzen Renn-Drehzahlbereich (≈ 4.100–7.500) läuft NUR mx5n_hoch (Tempo 0,6–1,1) – Wechsel zwischen Aufnahmen waren hörbar; überblendet wird nur beim Anfahren (Fenster je Stufe: Leerlauf→tief bei ~1.600 U/min, tief→hoch bei 3.500–4.100)
+const SND_FERN = { f1: 2, f2: 1, kart: 2, road: 2 };   // Gegner (Doppler) nutzen eine Stufe aus der Mitte des Renn-Drehzahlbereichs
 // v2.00: Einschläge je Fahrzeugart (cf = F1/F2-Carbon, stahl = Roadster, kart) und Ziel (Auto / Leitplanke / Betonmauer), nach Stärke abgestuft
 // v2.01: keine eigenen „schweren“ Unfälle mehr (zu übertrieben) – starke Treffer nutzen dieselbe Aufnahme, nur etwas lauter und länger
 const SND_CRASH = {
@@ -7773,7 +7773,7 @@ function sndEngine(E, cls, on, load, t) {
   const fq = E.rpm / 60 * D.cyl, V = M.v, n = V.length;   // echte Zündfrequenz
   // die zwei Stufen, die fq einschließen: gleich laut (Kosinus/Sinus) im logarithmischen Abstand überblenden – beide auf dieselbe Tonhöhe gestimmt, also kein Schweben
   let i = 0; while (i < n - 2 && fq > V[i + 1].base) i++;
-  let x = clamp(Math.log(fq / V[i].base) / Math.log(V[i + 1].base / V[i].base), 0, 1); x = clamp((x - 0.38) / 0.24, 0, 1); x = x * x * (3 - 2 * x);   // v2.01: nur im mittleren Viertel überblenden – zwei Aufnahmen gleicher Tonhöhe dauerhaft gemischt ergaben ein „wellenartiges“ Schweben (z. B. F1 bei Vmax)
+  let x = clamp(Math.log(fq / V[i].base) / Math.log(V[i + 1].base / V[i].base), 0, 1); const XF = D.loops[i][2] || D.xf || [0.38, 0.24]; x = clamp((x - XF[0]) / XF[1], 0, 1); x = x * x * (3 - 2 * x);   // v2.01: nur im mittleren Viertel überblenden – zwei Aufnahmen gleicher Tonhöhe dauerhaft gemischt ergaben ein „wellenartiges“ Schweben (z. B. F1 bei Vmax)
   V.forEach((v, k) => { const w = k === i ? Math.cos(x * Math.PI / 2) : k === i + 1 ? Math.sin(x * Math.PI / 2) : 0;
     v.g.gain.setTargetAtTime(w, t, 0.03); if (w > 0.001 || v.g.gain.value > 0.001) v.src.playbackRate.setTargetAtTime(clamp(fq / v.base, 0.4, 2.2), t, 0.015); });
   // Gas weg: Schub-Loop (Knallen/Blubbern) bei hoher Drehzahl, bei jedem Lupfen an zufälliger Stelle neu gestartet (sonst hört man die Wiederholung)
@@ -7831,7 +7831,7 @@ const RATIO = [0, 420, 332, 272, 226, 190, 162, 140, 118], RATIO_F2 = [0, 245, 1
 function gearInfo(kmh, f2 = SER === 'f2') { const v = kmh / 3.6, R = f2 ? RATIO_F2 : RATIO, n = R.length - 1, up = f2 ? 8600 : 11600, top = f2 ? 8750 : 12000;
   let g = 1; while (g < n && v * R[g] > up) g++; const rpm = clamp(v * R[g], 4000, top + 1200); return { g, n, f: clamp((rpm - 4000) / (top - 4000), 0, 1), rpm }; }
 function updateAudio(thr) {
-  if (!ac || !ENG) return;
+  if (!ac || !ENG || (typeof OfflineAudioContext !== 'undefined' && ac instanceof OfflineAudioContext)) return;   // __bumpTest rendert gerade offline
   const E = ENG, on = S.sound && running && !paused && !resultsShown, t = ac.currentTime, gi = gearP(pl.v * 3.6);
   const road = !!(pl.mesh && pl.mesh.road);   // Roadster: MX-5 ND2, 2,0-l-Reihenvierzylinder, Begrenzer ~7.500 U/min
   const kart = !!(pl.mesh && pl.mesh.kart), f2 = SER === 'f2' && !road && !kart;   // Kart: hoher Einzylinder-Zweitakter (direkt, ohne Getriebe) · F2: rauer V6-Turbo bis ~10.500 U/min, kein ERS
@@ -8022,6 +8022,11 @@ function taiko(t, v) { const o = ac.createOscillator(), g = ac.createGain(); o.f
 function swell(t, dur, v) { const src = ac.createBufferSource(), fl = ac.createBiquadFilter(), g = ac.createGain(); src.buffer = MUS.noise; src.loop = true; fl.type = 'highpass'; fl.frequency.setValueAtTime(800, t); fl.frequency.exponentialRampToValueAtTime(6000, t + dur); src.connect(fl); fl.connect(g); g.connect(MUS.bus); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + dur); g.gain.linearRampToValueAtTime(0.0001, t + dur + 0.05); src.start(t); src.stop(t + dur + 0.1); }
 // Titelmusik: „Evermore“ von Alegend (freetouse.com) – läuft im Menü in Schleife, blendet beim Rennstart aus
 const TITLE = new Audio('./menu.mp3'); TITLE.loop = true; TITLE.preload = 'auto'; TITLE.volume = 0; let titleVol = 0;
+// v2.03: Lautstärke der Musik über Web Audio statt audio.volume – iPhone/iPad (Safari) ignorieren audio.volume (immer 100 %),
+// dort ließ sich die Musik nicht leiser stellen und nicht ein-/ausblenden. Sobald der AudioContext läuft, hängt jedes Musik-Element an einem eigenen Lautstärke-Knoten.
+function musRoute(el) { if (el._g || !ac || (typeof OfflineAudioContext !== 'undefined' && ac instanceof OfflineAudioContext)) return; try { const src = ac.createMediaElementSource(el), g = ac.createGain(); g.gain.value = el.volume; src.connect(g); g.connect(ac.destination); el._g = g; el.volume = 1; } catch (e) { el._g = null; } }
+window.__mus = () => [TITLE, ...RP].map((a, n) => ({ n: n ? 'Rennen' + n : 'Menü', pausiert: a.paused, volume: a.volume, knoten: a._g ? +a._g.gain.value.toFixed(3) : null }));   // Test/Diagnose
+function musVol(el, v) { if (ac && !el._g) musRoute(el); if (el._g && el._g.context !== ac && !(ac instanceof AudioContext)) return; if (el._g) { el._g.gain.value = v; if (el.volume !== 1) el.volume = 1; } else el.volume = v; }
 let titleT = performance.now();
 const rpVol = [0, 0];   // Lautstärke der beiden Renn-Musik-Player
 let hadRace = false;    // ab dem ersten Rennen läuft die Renn-Musik auch nach dem Rennen und in den Menüs weiter
@@ -8031,12 +8036,12 @@ function titleTick() {
   const menuMus = !running && !hadRace;   // nach einem Rennen läuft die Renn-Musik in Ergebnis-/Folgemenüs weiter, bis man im Hauptmenü ist
   const want = S.music && menuMus && !document.hidden && rpVol[0] + rpVol[1] < 0.15 ? 0.75 * (S.volMusic ?? 0.7) : 0;
   titleVol += (want - titleVol) * Math.min(1, dt * (want > titleVol ? 1.2 : 3)); if (Math.abs(want - titleVol) < 0.003) titleVol = want;
-  TITLE.volume = clamp(titleVol, 0, 1);
+  musVol(TITLE, clamp(titleVol, 0, 1));
   if (titleVol > 0.001 && TITLE.paused && TITLE.dataset.ok) TITLE.play().catch(() => {});
   if (titleVol <= 0.001 && !TITLE.paused) TITLE.pause();
 }
-addEventListener('pointerdown', () => { if (!TITLE.dataset.ok) { TITLE.dataset.ok = 1; if (S.music && !running) TITLE.play().catch(() => {}); } }, true);
-addEventListener('keydown', () => { if (!TITLE.dataset.ok) { TITLE.dataset.ok = 1; if (S.music && !running) TITLE.play().catch(() => {}); } }, true);
+addEventListener('pointerdown', () => { initAudio(); if (!TITLE.dataset.ok) { TITLE.dataset.ok = 1; if (S.music && !running) TITLE.play().catch(() => {}); } }, true);   // initAudio: Musik-Lautstärke braucht den AudioContext (iOS: nur nach Berührung)
+addEventListener('keydown', () => { initAudio(); if (!TITLE.dataset.ok) { TITLE.dataset.ok = 1; if (S.music && !running) TITLE.play().catch(() => {}); } }, true);
 TITLE.play().then(() => { TITLE.dataset.ok = 1; }).catch(() => {});   // klappt, wenn der Browser Autoplay erlaubt (z. B. installierte App)
 // Renn-Musik: alle Lieder im Ordner music/ (einfach Dateien hineinlegen), jedes Rennen startet mit einem zufälligen Titel.
 // GitHub Pages kann keine Ordner auflisten, daher wird der Inhalt über die GitHub-API gelesen (Besitzer/Repo aus <name>.github.io/<repo>/).
@@ -8093,7 +8098,7 @@ function raceMusicTick(dt) {
     const a = RP[n], want = n === rpCur ? base : 0, full = Math.max(0.05, 0.8 * (S.volMusic ?? 0.7));
     // einblenden in ~1,5 s, ausblenden in ~3 s (linear, gut hörbar)
     rpVol[n] = clamp(rpVol[n] + clamp(want - rpVol[n], -dt * full / 3, dt * full / 1.5), 0, 1);
-    a.volume = rpVol[n];
+    musVol(a, rpVol[n]);
     if (want > 0 && a.paused && a.src) a.play().catch(() => {});
     if (rpVol[n] <= 0.0005 && want === 0 && !a.paused) a.pause();
   }
@@ -9783,7 +9788,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.02'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.03'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
