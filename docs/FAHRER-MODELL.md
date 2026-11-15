@@ -151,6 +151,9 @@ die Ärmeltextur ist in der Außenansicht nur wenige Bildpunkte groß). Wunsch: 
 - Wieder wie v1.96: `f1Own(m, c === pl)`, Lenkrad-Kopie `f1CarWheel` in der Außenansicht, Ärmel-Stofftextur in allen Kameras.
 - Falls Leistung doch knapp wird: auf dem Handy mit der Leistungsanzeige an derselben Stelle v1.96/v1.97 vergleichen, bevor es wieder umgestellt wird.
 
+## v1.99 – Daumenkuppe ohne Nadel
+Details: [[LENKRAD-F1F2]]. Der Spitzenpunkt der Daumenkuppe lag 6,5 mm vor dem letzten Ring (Nadel), jetzt 0,5 mm (`TIP_OUT` in `f1_hand_nachbearbeitung.py`). Datei neu aus der Vorlage v1.65 gebaut (Ablauf wie v1.96).
+
 ## Offen / Ideen
 - Leichte Knautschfalten an der Hüfte durch das Biegen (im Sitz kaum sichtbar).
 - Stehende Figur könnte fürs Podium/Showroom eingebaut werden.

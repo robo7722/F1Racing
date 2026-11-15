@@ -642,3 +642,39 @@ Die Bäume der `trees: 'forest'`-Strecken bestehen nicht mehr aus Kugeln und Keg
 ### Oberfläche
 - Gestaltung nach dem F1-Spiel: eckig (Radius 0), Carbon-Flächen mit Tiefe, Titillium Web aufrecht, Rot `#E10600`. Alle Regeln im Block „UI 2027c“ am Ende des Stils.
 - Testgrößen: 891×412 (S26 Ultra quer als App) und 891×360 (im Browser mit Leisten).
+
+---
+
+## Nachtrag: Version 1.99 (mit main zusammengeführt als 2.01) – Spa, Kiesflächen der Schikanen (Bus-Stop, Les Combes)
+Rückmeldung (Handy, Spa, letzte Kurve, Auto im Kies): „clippt noch alles“ – Werbetafeln (EAU ROUGE, FRANCORCHAMPS) halb im Kies, Tribünensockel im Kies.
+Die Korrektur aus v1.57 (Kies außen auf Streckenhöhe, keine Stufe zum Gras) war noch drin – das hier waren andere Ursachen.
+
+Die Zonenfläche (`ZONEH`, ein Netz mit gemalter Textur je Schikane, Abschnitt „Schikanen mit Auslaufzone“) hatte drei Fehler:
+1. **Kies mit festem Radius** `R = Fahrbahn + 31 m` um die Mittellinie – unabhängig von der Absperrungslinie `WL`/`WR`. Wo die Linie näher lag (Boxengasse, Tribünen, Bäume), lag Kies unter Tribüne, Werbetafeln, Bäumen, Schild „STAVELOT“ und der Ferrari-Box.
+2. **Runde Enden** der Malschichten (Kies 25–30 m, Asphalt und Farbstreifen bis 20 m) reichten über die Bande der anschließenden Start-Ziel-Geraden.
+3. **Höhe am Rand**: Die Kieshöhe kam vom nächstgelegenen Schikanenpunkt. Direkt an der Bande der Geraden lag der Kies dadurch 1 m tiefer als deren Fuß (dunkle Schürze als Keil sichtbar) bzw. an anderen Stellen darüber (Bande halb verdeckt).
+
+Lösung:
+- Alle Malschichten werden mit einer Maske zugeschnitten: je Streckenabschnitt ein Viereck von `−min(R, WL + 0,5)` bis `+min(R, WR + 0,5)`, ein Abschnitt Überlappung vor und nach der Zone, keine runden Enden mehr (`destination-in` mit einer zweiten Leinwand).
+- `zoneSeed`: Rasterpunkte an jeder Wandlinie (nicht `NOWALL`) werden fest auf die Fußhöhe dieser Wand gesetzt (je Punkt die nächste Wandlinie, nicht unter einer Fahrbahn). Das Feld nutzen auch die Autos abseits der Fahrbahn.
+
+Gemessen (Spa, F1): kein Objekt mit Fuß unter dem Kies (vorher Tribüne, Bäume, Büsche bis 0,55 m); Kies an allen Wandfüßen der beiden Zonen −0,06 … −0,12 m (gewollt −0,07, vorher bis −1,01). `__clipAll()` leer.
+
+Die Schenkel der Bus-Stop-Schikane liegen bis 5 m übereinander, der Kies dazwischen muss geneigt sein. Aus Fahrerhöhe tief im Kies verschwand deshalb der untere Rand der fernen Banden hinter der Kuppe.
+Wunsch: „Verdecke es ansonsten mit einer Wand“ → **Leitplanke um die Kies-Zonen** (`ZWALL`, `zoneOutline`):
+- Vorher war in den Zonen keine Absperrung gezeichnet (`NOWALL`), die Autos prallten trotzdem an der Linie `WL`/`WR` ab (Kollision nutzt `wallAt` unabhängig von `NOWALL`).
+- Die Planke läuft am **Umriss der Kiesmaske** entlang (Marching Squares, 0,4-m-Raster, geglättet, ≈ 1 m Punktabstand). Erster Versuch je Streckenpunkt an `WL`/`WR` scheiterte an der gemeinsamen Kies-Tasche zwischen mittlerem und letztem Schenkel (Öffnung zur Start-Ziel-Geraden): dort liegt die Außenkante an keinem einzelnen Streckenpunkt.
+- Nur die äußere Schleife; ohne Stücke näher als Fahrbahn + 3 m und an den Zonenenden (nächster Streckenpunkt ±3 Abschnitte nicht in der Zone) – dort stünde sie quer über dem Auslauf.
+- **Fuß auf dem Kies** (`zoneH`), nicht auf Streckenhöhe: die Kieshöhe weicht an der Kante bis 2 m davon ab. Den Kies stattdessen an der Wand festzulegen gab Hügel im Kiesbett. Darunter die übliche Schürze (3,6 m).
+- `WL`/`WR` in den Zonen höchstens Fahrbahn + 31 m (= Kiesradius): Sehnen hinter den engen Kurven sprangen auf 48–56 m (Autos prallten 20 m hinter dem Kies ab).
+- Material wie die Spa-Leitplanken (`wallMat`, Armco). Zwei Netze (Planke + Schürze) für beide Zonen, 4 Linienzüge ≈ 1,1 km.
+
+Was bleibt: Aus der Kies-Tasche heraus Richtung Boxen steigt der Kies zum letzten Schenkel (Fahrbahn 4 m höher) an. Dort kann keine Wand stehen, sonst wäre der Weg zurück auf die Strecke zu.
+
+![[bilder/spa_busstop_v199.jpg]]
+(oben: Bus-Stop von oben, Kies endet an der Absperrungslinie; unten: Blick aus dem Kies auf Tribüne und Banden – Stand vor der Leitplanke)
+
+![[bilder/spa_leitplanke_v199.jpg]]
+(Leitplanke um die Kies-Zonen: Bus-Stop schräg von oben, Blick aus dem Kies zur Tribüne/Boxen, Kies vor der Tribüne, Les Combes)
+
+Testhilfe `__zwall()`: Linienzüge der Planke. Prüfskripte (Arbeitsordner, nicht im Repo): Objekte im Kies (Fußpunkt unter Zonenhöhe innerhalb der Kiesmaske ± 1,5 m) und Kies an den Wandfüßen. Bei neuen Zonen beides prüfen.
