@@ -7785,7 +7785,7 @@ function sndEngine(E, cls, on, load, t) {
   let x = clamp(Math.log(fq / V[i].base) / Math.log(V[i + 1].base / V[i].base), 0, 1); const XF = D.loops[i][2] || D.xf || [0.38, 0.24]; x = clamp((x - XF[0]) / XF[1], 0, 1); x = x * x * (3 - 2 * x);   // v2.01: nur im mittleren Viertel überblenden – zwei Aufnahmen gleicher Tonhöhe dauerhaft gemischt ergaben ein „wellenartiges“ Schweben (z. B. F1 bei Vmax)
   V.forEach((v, k) => { const w = k === i ? Math.cos(x * Math.PI / 2) : k === i + 1 ? Math.sin(x * Math.PI / 2) : 0;
     v.g.gain.setTargetAtTime(w * Math.cos(gw * Math.PI / 2), t, 0.03); if (w > 0.001 || v.g.gain.value > 0.001) v.src.playbackRate.setTargetAtTime(clamp(fq / v.base, 0.4, 2.2), t, 0.015); }); }
-  if (D.gran && on && gw > 0) { const G = D.gran; let x2 = G.quellen.length > 1 ? clamp((E.rpm - (G.wechsel - G.xf)) / (2 * G.xf), 0, 1) : 0; x2 = x2 * x2 * (3 - 2 * x2);   // Übergabe Durchzug 1 → 2
+  M.gw = gw; if (D.gran && on && gw > 0) { const G = D.gran; let x2 = G.quellen.length > 1 ? clamp((E.rpm - (G.wechsel - G.xf)) / (2 * G.xf), 0, 1) : 0; x2 = x2 * x2 * (3 - 2 * x2);   // Übergabe Durchzug 1 → 2
     const a = Math.sin(gw * Math.PI / 2); M.gr ||= []; G.quellen.forEach((q, i) => { const w = a * (i === 0 ? Math.cos(x2 * Math.PI / 2) : Math.sin(x2 * Math.PI / 2)); granTick(M, q, E.rpm, t, w, i); }); }
   // Gas weg: Schub-Loop (Knallen/Blubbern) bei hoher Drehzahl, bei jedem Lupfen an zufälliger Stelle neu gestartet (sonst hört man die Wiederholung)
   const rpmHi = cls === 'kart' ? 7000 : cls === 'f2' ? 5500 : cls === 'road' ? 3200 : 6500, sAmt = on ? clamp((0.45 - load) / 0.35, 0, 1) * clamp((E.rpm - rpmHi) / 2000, 0, 1) : 0;
@@ -7801,8 +7801,8 @@ function sndEngine(E, cls, on, load, t) {
     if (load < 0.4) M.blArm = true;   // scharf, sobald das Gas fast weg ist (an der Ampel steigt die Drehzahl weich an – kein Sprung von Bild zu Bild)
     if (!B && on && still && load > 0.45 && M.blArm) { M.blArm = false; const bufs = D.blips.map(sndBuf).filter(Boolean);
       if (bufs.length) { const b = bufs[Math.floor(Math.random() * bufs.length)], src = ac.createBufferSource(), g = ac.createGain(); src.buffer = b; src.playbackRate.value = 0.96 + Math.random() * 0.08;
-        g.gain.value = 1; src.connect(g); g.connect(sfxBus()); src.start(t);   /* Leerlauf-Anteil so laut wie die Leerlauf-Schleife (Stand v2.07d) */ M.bl = { src, g, peak: t + 0.45, end: t + b.duration / src.playbackRate.value }; } }
-    else if (B && (t > B.end - 0.3 || !on || !still || (load > 0.5 && t > B.peak + 0.15))) { B.g.gain.setTargetAtTime(0, t, 0.08);   /* 0,3 s vor dem Ende: Gasstoß blendet aus, während die Schleife einblendet (Stand v2.07d) */ try { B.src.stop(t + 0.5); } catch (e) {} M.bl = null; M.blRel = t + 0.4; }
+        g.gain.value = 1; src.connect(g); g.connect(sfxBus()); src.start(t);   /* Leerlauf-Anteil so laut wie die Leerlauf-Schleife (Stand v2.07d) */ M.bl = { src, g, peak: t + 0.3, end: t + b.duration / src.playbackRate.value }; } }
+    else if (B && (t > B.end - 0.3 || !on || !still || (load > 0.5 && t > B.peak))) { B.g.gain.setTargetAtTime(0, t, load > 0.5 ? 0.05 : 0.08);   /* v2.15: Gas gehalten → schon an der Spitze ausblenden (sonst hört man den Abfall unter dem gehaltenen Ton) */   /* 0,3 s vor dem Ende: Gasstoß blendet aus, während die Schleife einblendet (Stand v2.07d) */ try { B.src.stop(t + 0.5); } catch (e) {} M.bl = null; M.blRel = t + 0.4; }
   }
   M.lp.frequency.setTargetAtTime(1500 + load * 10500, t, 0.05);   // Gas weg: dumpfer (Schub), Vollgas: offen
   const cut = E.cut > 0 ? D.cut[1] : 1;
@@ -7833,7 +7833,7 @@ function granTick(M, G, rpm, t, amp, idx) {
   }
 }
 window.__sndPk = url => { const b = sndBuf(url); if (!b) return null; const d = b.getChannelData(0); let m = 0; for (let i = 0; i < d.length; i++) m = Math.max(m, Math.abs(d[i])); return { pk: +m.toFixed(2), sr: b.sampleRate, n: b.length }; };   // Test
-window.__snd = (init) => { if (init) initAudio(); return { ac: !!ac, dateien: Object.fromEntries(Object.entries(SNDB).map(([k, v]) => [k, v && typeof v === 'object' ? +v.duration.toFixed(2) + ' s' : v])), aktiv: ENG && ENG.smp ? ENG.smp.cls : null, drehzahl: ENG ? Math.round(ENG.rpm) : null, kmh: pl ? Math.round(pl.v * 3.6) : null, gang: pl ? gearP(pl.v * 3.6).g : null, phase: raceState, gegner: ENG ? ENG.others.map(O => O.smp ? +O.smp.src.playbackRate.value.toFixed(2) : 'syn').join(' ') : null, loops: ENG && ENG.smp ? ENG.smp.v.map(v => v && { tempo: +v.src.playbackRate.value.toFixed(2), anteil: +v.g.gain.value.toFixed(2) }) : null, fx: typeof FXL === 'object' ? Object.keys(FXL).map(k => k + ':' + FXL[k].g.gain.value.toFixed(2)).join(' ') : null, surf: pl ? pl.surf : null, gasstoss: ENG && ENG.smp ? !!ENG.smp.bl : null, schub: ENG && ENG.smp && ENG.smp.s ? +ENG.smp.s.g.gain.value.toFixed(2) : null, pegel: ENG && ENG.smp ? +ENG.smp.out.gain.value.toFixed(3) : null }; };   // Test/Diagnose
+window.__snd = (init) => { if (init) initAudio(); return { ac: !!ac, dateien: Object.fromEntries(Object.entries(SNDB).map(([k, v]) => [k, v && typeof v === 'object' ? +v.duration.toFixed(2) + ' s' : v])), aktiv: ENG && ENG.smp ? ENG.smp.cls : null, drehzahl: ENG ? Math.round(ENG.rpm) : null, kmh: pl ? Math.round(pl.v * 3.6) : null, gang: pl ? gearP(pl.v * 3.6).g : null, phase: raceState, gegner: ENG ? ENG.others.map(O => O.smp ? +O.smp.src.playbackRate.value.toFixed(2) : 'syn').join(' ') : null, loops: ENG && ENG.smp ? ENG.smp.v.map(v => v && { tempo: +v.src.playbackRate.value.toFixed(2), anteil: +v.g.gain.value.toFixed(2) }) : null, fx: typeof FXL === 'object' ? Object.keys(FXL).map(k => k + ':' + FXL[k].g.gain.value.toFixed(2)).join(' ') : null, surf: pl ? pl.surf : null, gasstoss: ENG && ENG.smp ? !!ENG.smp.bl : null, granular: ENG && ENG.smp ? +(ENG.smp.gw || 0).toFixed(2) : null, schub: ENG && ENG.smp && ENG.smp.s ? +ENG.smp.s.g.gain.value.toFixed(2) : null, pegel: ENG && ENG.smp ? +ENG.smp.out.gain.value.toFixed(3) : null }; };   // Test/Diagnose
 function initAudio() {
   if (ac) { ac.resume && ac.resume(); return; }
   try {
@@ -7881,10 +7881,11 @@ function updateAudio(thr) {
   const kart = !!(pl.mesh && pl.mesh.kart), f2 = SER === 'f2' && !road && !kart;   // Kart: hoher Einzylinder-Zweitakter (direkt, ohne Getriebe) · F2: rauer V6-Turbo bis ~10.500 U/min, kein ERS
   const rev = pl.rev || 0, lim = rev > 0.93 ? (Math.random() - .5) * 700 : 0;   // Begrenzer flattert oben
   const kfr = clamp(pl.v / (VTOP * SERPH.top), 0, 1.1);
-  let target0 = raceState === 'lights' ? (road ? 950 + rev * 6400 + lim : 4200 + rev * 8000 + lim) : road ? (pl.street ? gi.rpm : 1100 + (gi.rpm / 12000) * 6200) : gi.rpm;
+  let target0 = raceState === 'lights' ? (road ? 950 + rev * 3600 : 4200 + rev * 8000 + lim) : road ? (pl.street ? gi.rpm : 1100 + (gi.rpm / 12000) * 6200) : gi.rpm;
   // Kart (v1.99): Direktantrieb, Drehzahl proportional zur Geschwindigkeit (14.000 bei Höchstgeschw.), Begrenzer ~15.500. Darunter hält die Fliehkraftkupplung
   // die Drehzahl: Leerlauf ~2.800, mit Gas schleifend ~5.000. Am Start nur Gasstöße unterhalb der Kupplung (darüber würde das Kart losfahren).
   // F2 (v1.99): eigenes 6-Gang-Getriebe (gearP), Drehzahl direkt, Begrenzer 8.750.
+  if (road && raceState === 'race' && pl.v < 12 && thr > 0.3) target0 = Math.max(target0, 4300 - pl.v * 50);   // v2.15 Roadster-Start: Kupplung schleift, Drehzahl bleibt ~4.000–4.300 (vorher fiel sie von 7.350 auf 3.170)
   const target = kart ? (raceState === 'lights' ? 2800 + rev * 1700 + lim * 0.3 : Math.min(15500, Math.max(14000 * kfr, thr > 0.1 ? 4600 + thr * 600 : 2800)) + (kfr > 1.08 ? lim * 0.5 : 0))
     : f2 ? (raceState === 'lights' ? 4000 + rev * 4750 + (rev > 0.93 ? (Math.random() - .5) * 500 : 0) : gi.rpm) : target0;
   if (kart) E.gear = gi.g; else if (gi.g !== E.gear) { const C = SND_ENG[road ? 'road' : f2 ? 'f2' : 'f1'].cut; E.cut = gi.g > E.gear ? C[0] : C[0] * 0.6; E.gear = gi.g; }   // Kart: kein Getriebe · F1: nahtlos (kurz), F2: Zündunterbrechung
@@ -7928,7 +7929,7 @@ function updateAudio(thr) {
     if (O.smp) O.smp.src.playbackRate.setTargetAtTime(clamp(fn / O.smp.base, 0.4, 2.2), t, 0.03);
     O.sg.gain.setTargetAtTime(O.smp ? 0 : 1, t, 0.05);
     O.fo.frequency.setTargetAtTime(fn, t, 0.03); O.fo2.frequency.setTargetAtTime(fn * 0.5, t, 0.03); O.fl.frequency.setTargetAtTime((O.smp ? 1400 + (c.thr || 0) * 3600 : 700 + (c.thr || 0) * 1600) * (1 - 0.5 * nd / 140), t, 0.05);   // weiter weg: dumpfer
-    O.fg.gain.setTargetAtTime((O.smp ? 0.2 : 0.06) * Math.pow(1 - nd / 140, 2) * (0.5 + 0.5 * (c.thr || 0)), t, 0.05);
+    O.fg.gain.setTargetAtTime((O.smp ? 0.1 : 0.04) * clamp(c.v / 20, 0.2, 1) * Math.pow(1 - nd / 140, 2) * (0.5 + 0.5 * (c.thr || 0)), t, 0.05);   // v2.15: halb so laut, im Stand/langsam 5× leiser – an der Startaufstellung waren die Gegner so laut wie der eigene Motor („Dopplung“)
     if (O.pan) { const side = (dx * Math.cos(pl.h) - dz * Math.sin(pl.h)) / dl; O.pan.pan.setTargetAtTime(clamp(side, -0.9, 0.9), t, 0.05); }
   });
 }
@@ -8769,7 +8770,7 @@ function roadDashTick(dt) {
   const D = ROAD_DASH; if (!D) return;
   D.t += dt; if (D.t < 1 / 30) return; D.t = 0; D.flip = !D.flip;
   const gi = gearP(pl.v * 3.6), lights = raceState === 'lights';
-  const tr = lights ? 950 + (pl.rev || 0) * 6400 + ((pl.rev || 0) > 0.93 ? (Math.random() - .5) * 700 : 0) : (pl.street ? gi.rpm : 1100 + (gi.rpm / 12000) * 6200) - (ENG ? ENG.cut * 9000 : 0);
+  const tr = lights ? 950 + (pl.rev || 0) * 3600 : (pl.street ? gi.rpm : 1100 + (gi.rpm / 12000) * 6200) - (ENG ? ENG.cut * 9000 : 0);
   D.rpm = (D.rpm ?? 900) + (tr - (D.rpm ?? 900)) * 0.45; D.kmh = (D.kmh ?? 0) + (pl.v * 3.6 - (D.kmh ?? 0)) * 0.6; D.temp = Math.min(92, D.temp + 0.03);
   if (D.flip) {   // Instrumente
     const c = D.gcv.getContext('2d'); c.drawImage(D.gbg, 0, 0);
@@ -9830,7 +9831,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.14'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.15'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

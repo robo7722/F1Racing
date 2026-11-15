@@ -289,3 +289,10 @@ Stand: 15.11.2026. Ohne Credits.
 
 > [!tip] Anleitung zum Nachbauen
 > Die Zusammensetzung des abgenommenen Roadster-Sounds (v2.14) ist als eigenständige Anleitung beschrieben: [[MOTORSOUND-ANLEITUNG]] – Vorlage auch für das Rally-Spiel. Hörprobe ohne Spiel: `tools/sounds/hoerprobe_mx5.py`.
+
+## v2.15 – Start mit Vollgas, „Dopplungen“ im Spiel (geprüft mit echtem Mitschnitt)
+- **Neues Prüfverfahren:** Mitschnitt des echten Spiel-Tons im Test-Browser – `AudioNode.prototype.connect` wird per Init-Skript so umgeleitet, dass jede Verbindung zum Lautsprecher zusätzlich in einen `MediaStreamDestination` geht; `MediaRecorder` nimmt auf. Dazu alle 0,5 s `__snd()` (Phase, Drehzahl, Gasstoß, Granular-Anteil, Schleifen). Viel aussagekräftiger als nachgerechnete Hörproben.
+- **Befund Start (v2.14):** Vollgas an der Ampel → Drehzahl am Begrenzer 7.200–7.350, ±350 Zufalls-Zittern je Bild, gespielt mit der hochgestimmten 6.900er-Stufe; beim Start in 0,6 s Absturz auf 3.170 U/min (Mindestdrehzahl von `gearInfo`).
+- **Änderungen:** Roadster an der Ampel `950 + Gas · 3.600` (hält ~4.550, kein Begrenzer-Zittern; Cockpit-Drehzahlmesser ebenso). Start: solange < 12 m/s und Gas > 30 % mindestens `4.300 − v · 50` (schleifende Kupplung). Gasstoß bei gehaltenem Gas schon an der Spitze (0,3 s) ausblenden.
+- **Befund „Dopplung“:** Gegner (im Roadster-Rennen F1-Autos) liefen in der Nähe hörbar mit (in Fahrt −17 dB). Gegner jetzt halb so laut (0,1 statt 0,2) und bei geringem Tempo bis 5× leiser (`clamp(v / 20, 0,2, 1)`). Die starken Töne im Leerlauf (96–189 Hz) sind die Obertöne des eigenen Leerlaufs, keine Gegner.
+- Diagnose: `__snd().granular` (Anteil der Granular-Wiedergabe).
