@@ -252,3 +252,8 @@ Stand: 15.11.2026. Ohne Credits.
 - Gasgeben blendet beim Roadster weich ein (Zeitkonstante 0,14 s ≈ 0,4 s), Gas weg bleibt schnell.
 - Rückmeldung zu v2.08: Anfahren klingt richtig, höhere Drehzahl falsch (Durchzug A hängt oben bei ~5.050 und endet bei 6.115) → v2.09 mit Durchzug B oben.
 - Stufen-Dateien `mx5e_1600…6900` entfallen. Offen: Browser-Test der v2.09 wurde abgebrochen (Syntax geprüft, v2.08 lief fehlerfrei).
+
+## v2.10 – MX-5 „klingt doppelt“, „springt zu schnell auf Standgas“
+- Granular-Körner beginnen jetzt im Abstand eines ganzen **Arbeitszyklus** (4 Zündungen = 2 Umdrehungen, `per = 120 / U/min`) statt einer Zündung. Jeder Zylinder klingt etwas anders; überlappende Körner, die bei verschiedenen Zylindern begannen, klangen wie zwei Motoren.
+- Übergabe Durchzug A → B nur noch ±120 U/min um 3.900 (vorher ±250 – dort liefen beide Aufnahmen gleichzeitig).
+- Drehzahl fällt beim Roadster im Stand bzw. unter 2.500 U/min mit 0,045 je Bild statt 0,35 (≈ 1 s von 5.000 auf Leerlauf statt Bruchteilen einer Sekunde).
