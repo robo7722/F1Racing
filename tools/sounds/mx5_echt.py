@@ -22,7 +22,7 @@ from glaetten import flatten, track
 ROH = os.path.join(SND, 'roh', 'echt')
 # Name: (Start s, Länge s, ungefährer Grundton Hz)   – Zeiten in der Commons-Aufnahme
 CUT = {'leer': (132.8, 2.9, 28.4), 'r1100': (393.8, 3.0, 35.8), 'r2400': (448.1, 4.8, 79.6), 'r3500': (436.7, 4.5, 115.9), 'r5200': (481.5, 2.0, 173.0), 'schub': None}
-OUT = {'mx5e_leer': ('leer', 0)}   # v2.08: nur noch der Leerlauf als Schleife – alles darüber kommt granular aus dem Durchzug (vorher 2400/3500/5200/6900-Stufen)
+OUT = {'mx5e_leer': ('leer', 0), 'mx5e_1600': ('r2400', -7), 'mx5e_2400': ('r2400', 0), 'mx5e_3500': ('r3500', 0), 'mx5e_5200': ('r5200', 0), 'mx5e_6900': ('r5200', 5)}   # v2.13: zurück auf den Stand v2.07d (vom Nutzer als richtiger Klang gewählt)
 
 
 def loopify(x, xf):
@@ -91,7 +91,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         for name, (a, d) in BLIPS.items(): save(os.path.join(ROH, name.replace('mx5e_', 'mx5_') + '.wav'), x[int((a - 0.12) * SR):int((a + d + 1.4) * SR)] / (np.abs(x).max() + 1e-9))
     for name in BLIPS:
-        seg = load(os.path.join(ROH, name.replace('mx5e_', 'mx5_') + '.wav')); fo = int(0.01 * SR); fi = int(0.01 * SR)   # v2.12: Ende nur 10 ms ausblenden – das Spiel überblendet selbst (vorher 0,25 s → Loch beim Wechsel zur Leerlauf-Schleife)
+        seg = load(os.path.join(ROH, name.replace('mx5e_', 'mx5_') + '.wav')); fo = int(0.25 * SR); fi = int(0.01 * SR)   # v2.13: wieder wie v2.07d (0,25 s Ausblenden)
         # v2.12: abfall_strecken nicht mehr verwendet (klang schlimmer)
         seg[-fo:] *= np.linspace(1, 0, fo) ** 2; seg[:fi] *= np.linspace(0, 1, fi); y = blip_angleichen(seg); save(os.path.join(SND, name + '.wav'), y)
         h = int(0.05 * SR); e = np.array([np.sqrt(np.mean(y[i:i + h] ** 2)) for i in range(0, len(y) - h, h)])

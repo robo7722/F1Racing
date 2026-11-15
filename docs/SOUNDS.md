@@ -273,3 +273,10 @@ Stand: 15.11.2026. Ohne Credits.
   3. 0,3 s Überlappung = zwei verschiedene Leerläufe gleichzeitig; die Schleife lief an der Ampel bei 950 statt echten ~850 U/min.
 - Jetzt: Gasstoß-Dateien nur 10 ms ausgeblendet; im Spiel läuft der Gasstoß bis in seinen eigenen Leerlauf, erst die letzten 0,12 s blendet die Schleife ein (35 ms Zeitkonstante); eigener Tiefpass des Gasstoßes folgt dem Motor-Tiefpass; Roadster-Leerlauf an der Ampel 850 U/min (Cockpit-Drehzahlmesser ebenso).
 - Hörprobe Straßen-Variante (6 Gänge `RATIO_S`, Schalten bei 7.300, Kupplungslücke, Tiefpass, Gas-weg-Loop) nach der Spiel-Logik gerechnet. Über ~6.300 U/min steigt der Ton kaum (Aufnahme endet bei 6.115, Tempo höchstens 1,04).
+
+## v2.13 – Roadster zurück auf Stand v2.07d
+- Rückmeldung: „Am Anfang hattest du den richtigen Klang, mit jeder Version klingt es schlechter.“ Der Nutzer hat aus den Hörproben **MX5_echt_v2.07d** als richtigen Klang gewählt.
+- Wiederhergestellt: 6 echte Drehzahl-Stufen (`mx5e_leer/1600/2400/3500/5200/6900`, Überblend-Fenster wie v2.07d), echte Gasstöße ungestreckt mit 0,25-s-Ausblenden, Übergabe 0,3 s vor Ende (Zeitkonstante 0,08), Leerlauf 950, Roadster-Drehzahl im F1-Modus `1100 + gi.rpm / 12000 · 6200`, Drehzahl-Nachführung 0,35, Schaltwarnung 6.900, Gasstoß ohne eigenen Tiefpass.
+- Granular-Wiedergabe (`granTick`, Durchzüge, v2.08–v2.12) ist abgeschaltet (Code bleibt, kein `gran`-Eintrag); `mx5e_durchzug*.wav` nicht mehr im Service-Worker.
+- Prüfung: Hörprobe mit den neu erzeugten Dateien und dem v2.07d-Verfahren gerechnet → identisch zur gewählten Probe (Korrelation 1,0; 0,76 % Unterschied = MP3).
+- **Lehre:** Einen vom Nutzer bestätigten Stand festhalten und danach nur die genannten Stellen ändern, nicht das Verfahren umbauen. Der Nutzer kann hören, ich nicht – Hörproben im Zweifel vorher vergleichen lassen.
