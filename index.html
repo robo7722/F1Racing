@@ -3803,7 +3803,7 @@ function buildRacingLine(prof) {
   idx.forEach((i, k) => { const p = trackAt(i * DS, RL[i]); q.setFromAxisAngle(up, p.h); m4.compose(v.set(p.x, (FLAT ? 0 : ELEV[p.i] + bankY(p.i, RL[i])) + 0.11, p.z), q, one); im.setMatrixAt(k, m4); base.push(m4.clone()); im.setColorAt(k, c); });
   im.userData.fixed = true; im.userData.noChunk = true; im.renderOrder = 3; im.frustumCulled = false; trackGroup.add(im);
   // weißer Rand um die roten Pfeile (wie die Menü-Knöpfe)
-  const om = new THREE.InstancedMesh(ch, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .5, depthWrite: false, side: THREE.DoubleSide, toneMapped: false, fog: false, polygonOffset: true, polygonOffsetFactor: -5, polygonOffsetUnits: -12 }), idx.length), obase = [], os = new THREE.Vector3(1.2, 1, 1.18);
+  const om = new THREE.InstancedMesh(ch, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .5, depthWrite: false, side: THREE.DoubleSide, toneMapped: false, fog: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }), idx.length), obase = [], os = new THREE.Vector3(1.2, 1, 1.18);
   idx.forEach((i, k) => { const p = trackAt(i * DS, RL[i]); q.setFromAxisAngle(up, p.h); m4.compose(v.set(p.x, (FLAT ? 0 : ELEV[p.i] + bankY(p.i, RL[i])) + 0.105, p.z), q, os); obase.push(m4.clone()); om.setMatrixAt(k, m4); om.setColorAt(k, LINE_DARK); });
   om.userData.fixed = true; om.userData.noChunk = true; om.renderOrder = 2; om.frustumCulled = false; trackGroup.add(om);
   Object.assign(RLINE, { mesh: im, out: om, idx, base, obase, prof, t: 0 }); applyLine();
@@ -5795,7 +5795,7 @@ function softBeamMat(col) { const m = new THREE.MeshBasicMaterial({ vertexColors
           bn = bn * mat3( instanceMatrix ); bp = ( instanceMatrix * vec4( position, 1.0 ) ).xyz;
         #endif
         vec3 vp = ( bmv * vec4( bp, 1.0 ) ).xyz; vBF = abs( dot( normalize( bn * nn ), normalize( -vp ) ) ); }`);
-    sh.fragmentShader = 'varying float vBF;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n diffuseColor.rgb *= pow( vBF, 4.5 ) * 1.5 * ( 1.0 - 0.45 * vColor.r * vColor.r );'); };
+    sh.fragmentShader = 'varying float vBF;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n float bf = clamp( vBF, 0.001, 1.0 ); bf = bf * bf * bf * bf * sqrt( bf ); diffuseColor.rgb *= bf * 1.5 * ( 1.0 - 0.45 * vColor.r * vColor.r );'); };   /* ohne pow(0, ...): manche Handy-GPUs liefern dort NaN, das ergab schwarze Linien an den Kegelrändern */
   m.customProgramCacheKey = () => 'softBeam'; return m; }
 /* Schleier um Scheinwerferfelder: weicher Lichthof mit fester Bildschirmgröße – nah klein gegen das Lampenfeld, in der Ferne deutlicher Glanz im Dunst. pts = Weltpositionen [x, y, z, …] */
 function lampHalos(pts, col) { const t = canvasTex(128, 128, (g, w, h) => { const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.18, 'rgba(235,238,255,.55)'); gr.addColorStop(.5, 'rgba(200,210,255,.14)'); gr.addColorStop(1, 'rgba(170,180,230,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); t.userData.own = true;
@@ -5804,8 +5804,8 @@ function lampHalos(pts, col) { const t = canvasTex(128, 128, (g, w, h) => { cons
   m.userData.fixed = true; m.userData.clipSkip = true; m.frustumCulled = false; m.renderOrder = 3; return m; }
 function poolMesh(list, w, l, mat) { const pos = [], uv = [], NX = 12, NZ = 16;
   /* Höhe: auf der Fahrbahn exakt die Asphalthöhe (Streckenhöhe + Querneigung), daneben das Gelände; nur 1 cm darüber – mit 5 cm und grobem Raster schwebte der Schein sichtbar über dem Asphalt */
-  const hY = (x, z) => { if (FLAT) return 0; const [d, j] = nearestDist(x, z); const lat = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j]; return Math.abs(lat) <= HW[j] + 0.3 ? ELEV[j] + bankY(j, lat) : Math.min(placeY(x, z), ELEV[j] + bankY(j, lat) + Math.max(0, d - HW[j]) * 0.3); };
-  for (const [x0, z0, ang] of list) { const c = Math.cos(ang), sn = Math.sin(ang), V = (i, j) => { const lx = (i / NX - 0.5) * w, lz = (j / NZ - 0.5) * l, x = x0 + lx * c + lz * sn, z = z0 - lx * sn + lz * c; return [x, hY(x, z) + 0.04, z, i / NX, j / NZ]; };
+  const hY = (x, z) => { if (FLAT) return 0; const [d, j] = nearestDist(x, z); const lat = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j]; return Math.abs(lat) <= HW[j] + 0.3 ? ELEV[j] + bankY(j, lat) : Math.min(placeY(x, z), ELEV[j] + bankY(j, Math.sign(lat) * HW[j]) - 0.02); };   /* neben der Fahrbahn (Randstein, Auslauf liegen tiefer): auf Auslaufhöhe – vorher schwebte der Schein dort bis 12 cm */
+  for (const [x0, z0, ang] of list) { const c = Math.cos(ang), sn = Math.sin(ang), V = (i, j) => { const lx = (i / NX - 0.5) * w, lz = (j / NZ - 0.5) * l, x = x0 + lx * c + lz * sn, z = z0 - lx * sn + lz * c; return [x, hY(x, z) + 0.03, z, i / NX, j / NZ]; };
     for (let i = 0; i < NX; i++) for (let j = 0; j < NZ; j++) for (const q of [[i, j], [i + 1, j + 1], [i + 1, j], [i, j], [i, j + 1], [i + 1, j + 1]]) { const v = V(q[0], q[1]); pos.push(v[0], v[1], v[2]); uv.push(v[3], v[4]); } }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); const m = new THREE.Mesh(g, mat); m.userData.fixed = true; m.userData.clipSkip = true; m.renderOrder = 1; m.frustumCulled = false; return m; }
 
@@ -6773,7 +6773,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       trackGroup.add(pole, head);
       if (TH.night) { // Lichtkegel der Flutlichter auf dem Asphalt (weicher, warm-weißer Schein)
         const lt = canvasTex(128, 128, (g, w, h) => { const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); gr.addColorStop(0, 'rgba(255,244,225,1)'); gr.addColorStop(.45, 'rgba(255,238,210,.55)'); gr.addColorStop(1, 'rgba(255,230,200,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); lt.userData.own = true;
-        const poolM = new THREE.MeshBasicMaterial({ map: lt, color: new THREE.Color(0.3, 0.28, 0.25), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -5, polygonOffsetUnits: -12 }); trackGroup.add(poolMesh(pp.map(p => { const [, j] = nearestDist(p[0], p[1]); return [lerp(p[0], PX[j], 0.75), lerp(p[1], PZ[j], 0.75), Math.atan2(TX[j], TZ[j])]; }), 26, 34, poolM));
+        const poolM = new THREE.MeshBasicMaterial({ map: lt, color: new THREE.Color(0.3, 0.28, 0.25), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }); trackGroup.add(poolMesh(pp.map(p => { const [, j] = nearestDist(p[0], p[1]); return [lerp(p[0], PX[j], 0.75), lerp(p[1], PZ[j], 0.75), Math.atan2(TX[j], TZ[j])]; }), 26, 34, poolM));
         /* Lichtkegel je Mast wie in Las Vegas/Lusail: Pyramidenstumpf vom Lampenfeld zur Strecke, Helligkeit fällt per Vertexfarbe auf null – kein Klippen an Mauern */
         const bg = (() => { const T = [[-1.9, 19.4, -1.7], [-0.5, 19.4, -1.7], [-0.5, 20.6, 1.7], [-1.9, 20.6, 1.7]], B = [[-22, 0, -8], [-6, 0, -8], [-6, 0, 8], [-22, 0, 8]], ps = [], cl = [];
           for (let k = 0; k < 4; k++) { const k2 = (k + 1) % 4; for (const [P, c] of [[T[k], 1], [B[k], 0], [B[k2], 0], [T[k], 1], [B[k2], 0], [T[k2], 1]]) { ps.push(...P); cl.push(c, c, c); } }
@@ -8317,7 +8317,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       if (night) { // Lichtkegel der Flutlichter auf dem Asphalt: gleichmäßig über die ganze Runde, wechselnd links/rechts
         const lt = canvasTex(128, 128, (g, w, h) => { const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); gr.addColorStop(0, 'rgba(255,240,215,1)'); gr.addColorStop(.45, 'rgba(255,232,200,.55)'); gr.addColorStop(1, 'rgba(255,225,190,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); lt.userData.own = true;
         const ps = []; for (let s = 10, k = 0; s < L; s += 38, k++) ps.push([s, k % 2 ? 1 : -1]);
-        const poolM = new THREE.MeshBasicMaterial({ map: lt, color: new THREE.Color(0.3, 0.25, 0.18), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -5, polygonOffsetUnits: -12 }); trackGroup.add(poolMesh(ps.map(([s, sd]) => { const p = trackAt(s, sd * HW[Math.floor(s / DS) % N] * 0.45); return [p.x, p.z, p.h]; }), 30, 40, poolM)); } }
+        const poolM = new THREE.MeshBasicMaterial({ map: lt, color: new THREE.Color(0.3, 0.25, 0.18), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }); trackGroup.add(poolMesh(ps.map(([s, sd]) => { const p = trackAt(s, sd * HW[Math.floor(s / DS) % N] * 0.45); return [p.x, p.z, p.h]; }), 30, 40, poolM)); } }
 
     // ---------- Rasen und Gärten (Turm, Paddock, Kurve 1): flache Grünflächen nach OSM, nur dort, wo keine Strecke ist ----------
     { const pos = [], uv = [];
@@ -9650,7 +9650,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       if (night) { // Lichtkegel auf dem Asphalt: dicht über die ganze Runde, wechselnd links/rechts
         const lt = canvasTex(128, 128, (g, w, h) => { const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); gr.addColorStop(0, 'rgba(235,242,255,1)'); gr.addColorStop(.45, 'rgba(225,235,255,.55)'); gr.addColorStop(1, 'rgba(215,228,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); lt.userData.own = true;
         const ps = []; for (let s = 6, k = 0; s < L; s += 24, k++) ps.push([s, k % 2 ? 1 : -1]);
-        const poolM = new THREE.MeshBasicMaterial({ map: lt, color: new THREE.Color(0.42, 0.45, 0.55), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }); trackGroup.add(poolMesh(ps.map(([s, sd]) => { const p = trackAt(s, sd * HW[Math.floor(s / DS) % N] * 0.4); return [p.x, p.z, p.h]; }), 24, 28, poolM)); } }
+        const poolM = new THREE.MeshBasicMaterial({ map: lt, color: new THREE.Color(0.42, 0.45, 0.55), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }); trackGroup.add(poolMesh(ps.map(([s, sd]) => { const p = trackAt(s, sd * HW[Math.floor(s / DS) % N] * 0.4); return [p.x, p.z, p.h]; }), 24, 28, poolM)); } }
 
     // ---------- Horizont nach Geokoordinaten: flache Wüste ringsum; Skyline von Lusail im Südosten (Lusail Plaza, Marina mit Katara Towers) und das Lusail-Stadion ----------
     desertHorizon({ col: [0x6a645a, 0x75705f], low: 0.12, far: 0x0a0e13, glow: 0xdfe8ff, towns: [[...llx(25.505, 51.40), 2500, 60, 0.3], [...llx(25.56, 51.46), 3500, 90, 0.3], [...llx(25.46, 51.395), 1800, 40, 0.3]] });   /* Umm Salal / Al Daayen im Westen und Norden (Lichterhaufen) */
@@ -12569,7 +12569,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.50'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.51'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
