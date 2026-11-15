@@ -6423,6 +6423,9 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   if (TRK.seatCol) { seatC[0] = col(TRK.seatCol[0]); seatC[1] = col(TRK.seatCol[1]); } if (TRK.crowdTint) crowdM2.color.setHex(TRK.crowdTint);   /* eigene Sitzfarben / Zuschauer-Tönung (Zandvoort: orange) */
 /*}@zan:x5*/
   // Tribüne in lokalen Koordinaten: x = weg von der Strecke, z = Länge; Stufen bis zum Boden, Zuschauer auf den Setzstufen, Sockel gegen Schweben am Hang
+  /* Rückwand der Tribünen: Betonfassade mit Pfeilern, Geschossbändern und Lüftungsschlitzen statt einer glatten hellen Fläche (von hinten/außen gesehen) */
+  const standBackM = (() => { const ft = canvasTex(128, 128, (g, w, h) => { g.fillStyle = '#a39b8d'; g.fillRect(0, 0, w, h); g.fillStyle = '#bdb5a6'; for (let x = 0; x < w; x += 32) g.fillRect(x, 0, 5, h); g.fillStyle = '#7a7266'; g.fillRect(0, h - 5, w, 5); g.fillRect(0, 0, w, 3); g.fillStyle = '#403b35'; for (let x = 0; x < w; x += 32) g.fillRect(x + 9, 40, 16, 30); });
+    ft.userData.own = true; ft.wrapS = ft.wrapT = THREE.RepeatWrapping; return lam({ map: ft, side: THREE.DoubleSide }); })();
   const buildStand = (grp, len, dep, hgt) => {
     const rows = Math.max(4, Math.round(dep * 0.8 / 1.7)), rd = dep * 0.8 / rows, rh = Math.min(1.25, (hgt * 0.62) / rows), x0 = 0.6, parts = [];
     parts.push([box(dep + 0.6, 6, len + 0.6, dep / 2, -3, 0), col(0x7d848c)]);
@@ -6430,6 +6433,8 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     parts.push([box(0.6, rh * rows + 1.4, len, x0 + rd * rows + 0.3, (rh * rows + 1.4) / 2, 0), stepC]);
     parts.push([box(0.4, 1.0, len, 0.2, 0.5, 0), col(0xe9ecef)]);
     const steps = new THREE.Mesh(mergeParts(parts), standSolidM); steps.castShadow = steps.receiveShadow = true; grp.add(steps); grp.userData.merge = true;
+    { const rhh = rh * rows + 1.4 + 6, pg = new THREE.PlaneGeometry(len, rhh).rotateY(Math.PI / 2).translate(x0 + rd * rows + 0.66, rhh / 2 - 6, 0), uv = pg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * len / 8, uv.getY(i) * rhh / 4);
+      grp.add(new THREE.Mesh(pg, standBackM)); }
     const pos = [], uv = []; // Zuschauer: senkrechte Streifen an jeder Stufe (Textur wiederholt sich alle 9 m)
     for (let k = 0; k < rows; k++) { const x = x0 + rd * k - 0.02, y0 = rh * k + (k ? 0 : 0.0), y1 = rh * (k + 1) + 0.55, z0 = -len / 2, z1 = len / 2, u1 = len / 9, vv = (k % 3) / 3;
       pos.push(x, y0, z1, x, y0, z0, x, y1, z1, x, y1, z1, x, y0, z0, x, y1, z0); uv.push(0, vv, u1, vv, 0, vv + 0.34, 0, vv + 0.34, u1, vv, u1, vv + 0.34); }
@@ -9229,7 +9234,9 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       grp.userData.merge = true; trackGroup.add(grp); excl.push([cx, cz, Ro + 26]); }
 
     // ---------- Estadio Alfredo Harp Helú (Diablos Rojos, 2019): weißes Membrandach „Tridente“ mit drei hohen Spitzen über der Haupttribüne ----------
-    { const memM = new THREE.MeshStandardMaterial({ color: 0xf7f7f5, roughness: .55, side: DSD, emissive: new THREE.Color(0.07, 0.07, 0.075) }), redSeat = lam({ color: 0xb01f24 }), conc = lam({ color: 0xcfcac2 });
+    { const memM = new THREE.MeshStandardMaterial({ color: 0xf7f7f5, roughness: .55, side: DSD, emissive: new THREE.Color(0.07, 0.07, 0.075) }), redSeat = lam({ color: 0xb01f24 }), conc = (() => { /* Tribünenblock mit Fassade (Fensterband, Pfeiler, Geschossband) statt einer glatten hellen Platte */
+        const ft = canvasTex(128, 128, (g, w, h) => { g.fillStyle = '#c9c3b8'; g.fillRect(0, 0, w, h); g.fillStyle = '#e2dccf'; g.fillRect(0, 0, 12, h); g.fillStyle = '#8f887c'; g.fillRect(0, h - 6, w, 6); g.fillStyle = '#4a463f'; g.fillRect(30, 20, 68, 56); g.fillStyle = '#2f3c48'; g.fillRect(34, 24, 60, 48); g.fillStyle = 'rgba(255,255,255,.22)'; g.fillRect(34, 24, 60, 7); g.fillStyle = '#e2dccf'; g.fillRect(63, 24, 3, 48); });
+        ft.userData.own = true; ft.wrapS = ft.wrapT = THREE.RepeatWrapping; return lam({ map: ft, side: DSD }); })();
       const okR = R => R.every(([x, z]) => trackFree(x, z, 2));
       if (okR(M.harpG)) trackGroup.add(osmExtrude(M.harpG, 14, conc, redSeat));
       if (okR(M.harpJ)) trackGroup.add(osmExtrude(M.harpJ, 6, conc, redSeat));
@@ -12449,7 +12456,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.31'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.32'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
