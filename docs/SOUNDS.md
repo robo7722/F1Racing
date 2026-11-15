@@ -296,3 +296,9 @@ Stand: 15.11.2026. Ohne Credits.
 - **Änderungen:** Roadster an der Ampel `950 + Gas · 3.600` (hält ~4.550, kein Begrenzer-Zittern; Cockpit-Drehzahlmesser ebenso). Start: solange < 12 m/s und Gas > 30 % mindestens `4.300 − v · 50` (schleifende Kupplung). Gasstoß bei gehaltenem Gas schon an der Spitze (0,3 s) ausblenden.
 - **Befund „Dopplung“:** Gegner (im Roadster-Rennen F1-Autos) liefen in der Nähe hörbar mit (in Fahrt −17 dB). Gegner jetzt halb so laut (0,1 statt 0,2) und bei geringem Tempo bis 5× leiser (`clamp(v / 20, 0,2, 1)`). Die starken Töne im Leerlauf (96–189 Hz) sind die Obertöne des eigenen Leerlaufs, keine Gegner.
 - Diagnose: `__snd().granular` (Anteil der Granular-Wiedergabe).
+
+## v2.16 – „Motor läuft unsauber bei höheren Drehzahlen“ (Solo-Rennen)
+- Prüfung mit echtem Mitschnitt im **Zeitfahren** (`S.mode = 'tt'`, keine Gegner), Computer fährt (`__qcApi.botOn()`), Protokoll alle 0,5 s.
+- **Ursache:** Im Rennbereich mischte das Spiel dauerhaft zwei Fassungen **derselben** Aufnahme: bei ~6.100–6.250 U/min `mx5e_5200` und `mx5e_6900` (= 5.200er +5 HT), bei ~4.250 U/min Durchzug und `mx5e_5200`. Nach fast jedem Hochschalten landete die Drehzahl genau dort. Zwei fast gleiche, leicht versetzte Aufnahmen = Kammfilter → unsauber/doppelt. 15 von 64 Messpunkten im Rennen betroffen.
+- **Lösung:** Übergänge schmal und außerhalb des Fahrbereichs: 5.200 → 6.900 bei 5.500–5.600 (`[0.2, 0.06]`), Durchzug → Schleife bei 3.900–4.000. Im Rennbereich (5.600–7.100) läuft nur `mx5e_6900` (Tempo 0,8–1,03). Danach 0 von 62 Messpunkten mit Mischung.
+- **Regel für die Anleitung:** Wo die Drehzahl im Spiel lange verweilt (nach dem Schalten, Kurven), darf **nie** überblendet werden – Übergänge nur in Bereiche legen, die schnell durchfahren werden.

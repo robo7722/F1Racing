@@ -96,11 +96,11 @@ Gasstöße ───────────────────────
 ```js
 { cyl: 2, vol: 0.6, cut: [0.16, 0.3],                                   // 2 Zündungen/Umdrehung, Schaltlücke 0,16 s auf 30 %
   loops: [['sounds/mx5e_leer.wav', 28.4, [0.4, 0.4]],                    // [Datei, Grundton Hz, Überblend-Fenster zur nächsten Stufe]
-          ['sounds/mx5e_5200.wav', 172.8, [0.3, 0.4]],
+          ['sounds/mx5e_5200.wav', 172.8, [0.2, 0.06]],                  // v2.16: Wechsel nur bei 5.500–5.600 (unter dem Fahrbereich)
           ['sounds/mx5e_6900.wav', 230.5]],
   schub: ['sounds/mx5n_schub.wav', 253.3, 0.3],                          // [Datei, Grundton, Lautstärke]
   blips: ['sounds/mx5e_blip1.wav', 'sounds/mx5e_blip2.wav', 'sounds/mx5e_blip3.wav'],
-  gran: { von: 950, bis: 1500, aus: [3900, 4400],                         // Granular ein (950→1.500) und aus (3.900→4.400)
+  gran: { von: 950, bis: 1500, aus: [3900, 4000],                         // Granular ein (950→1.500) und aus (3.900→4.000)
           quellen: [{ file: 'sounds/mx5e_durchzug.wav', tab: [[0.032,1207], …, [3.632,6114]] }] } }
 ```
 
@@ -108,6 +108,7 @@ Gasstöße ───────────────────────
 1. **Tonhöhe = echte Zündfrequenz.** Tempo jeder Schleife = `U/min / 60 × cyl / Grundton`, begrenzt auf 0,4–2,2. Im Betrieb sollte eine Stufe nur **0,8–1,25-fach** laufen – sonst klingt sie künstlich.
 2. **Überblenden immer gleich laut** (Kosinus/Sinus), nie linear (linear sackt in der Mitte ab). Position im **logarithmischen** Abstand zweier Grundtöne; Fenster `[Beginn, Breite]` als Anteil dieses Abstands, darin Smoothstep.
    - Unten (Anfahren) breit, oben schmal: wo die Drehzahl **lange konstant** bleibt, schweben zwei gemischte Aufnahmen („Wellen“).
+   - **Übergänge nie dorthin legen, wo im Spiel gefahren wird** (Drehzahl nach dem Hochschalten, Kurven): zwei Fassungen derselben Aufnahme gleichzeitig = Kammfilter, „läuft unsauber/doppelt“ (v2.16). Mit dem Spiel-Protokoll prüfen, wo die Drehzahl verweilt, und den Übergang darunter legen.
 3. **Granular** (`granTick`): alle **33 ms** ein Korn von **100 ms**, Hann-Fenster ÷ 1,5 (3-fach überlappt = konstante Lautstärke).
    - Startstelle = Stelle im Durchzug, deren Drehzahl (Tabelle) zur aktuellen passt.
    - **Phasenrichtig**: neues Korn beginnt bei „Fortsetzung des vorigen Korns + ganze Zündabstände“, möglichst nah an der Zielstelle (Suche ±60 ms). Sonst löschen sich überlappende Körner aus oder schweben.
@@ -124,7 +125,11 @@ Gasstöße ───────────────────────
 
 ---
 
-## 6. Prüfen ohne das Spiel: Hörprobe rechnen
+## 6. Prüfen: Hörprobe rechnen und echtes Spiel mitschneiden
+
+**Echter Mitschnitt (am aussagekräftigsten):** im Test-Browser (Playwright) per Init-Skript `AudioNode.prototype.connect` umleiten, sodass jede Verbindung zum Lautsprecher zusätzlich in einen `MediaStreamDestination` geht, und mit `MediaRecorder` aufnehmen; parallel alle 0,5 s den Motor-Zustand protokollieren (`__snd()`: Drehzahl, aktive Schleifen mit Tempo/Anteil, Granular-Anteil, Gasstoß). So sieht man, welche Schichten wann gleichzeitig laufen.
+
+### Hörprobe ohne Spiel
 
 `tools/sounds/hoerprobe_mx5.py` bildet die Spiel-Logik (Schleifen, Granular, Gasstöße, Lautstärken) in Python nach und rechnet einen festen Ablauf als MP3:
 
