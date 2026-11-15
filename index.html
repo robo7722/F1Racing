@@ -9171,7 +9171,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     const exM = (R, pad) => { const [cx, cz] = cenM(R); excl.push([cx, cz, Math.max(...R.map(p => Math.hypot(p[0] - cx, p[1] - cz))) + pad]); };
 
     // ---------- Foro Sol: die Strecke führt mitten durch das Baseballstadion; zwei L-förmige Ränge mit orangem Faltdach umschließen das Feld ----------
-    { const [fx, fz] = M.fieldC, rows = [], cols = [], crowd = [], cuv = [], roof = [], back = [], bcol = [], posts = [];
+    { const [fx, fz] = M.fieldC, rows = [], cols = [], crowd = [], cuv = [], roof = [], back = [], bcol = [], posts = [], bw = [], bwu = [];
       const seatA = col(0xd8682c), seatB = col(0xe9a23b), stepC = col(0xb9b4ab), wallC = col(0xc9c1b4), frontC = col(0xf2f2f0);
       const wing = (O0, D, H) => {   // O0: Außenkante (Rückseite) des Rangs, D: Tiefe bis zum Spielfeld, H: Höhe der obersten Reihe
         const O = dens(O0, 3.2), n = O.length, nr = O.map((p, k) => { const a = O[Math.max(0, k - 1)], b = O[Math.min(n - 1, k + 1)]; let nx = -(b[1] - a[1]), nz = b[0] - a[0]; const l = Math.hypot(nx, nz) || 1; nx /= l; nz /= l; if ((fx - p[0]) * nx + (fz - p[1]) * nz < 0) { nx = -nx; nz = -nz; } return [nx, nz]; });
@@ -9185,7 +9185,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
             const u0 = acc / 9, u1 = (acc + sl) / 9, v = (r % 3) / 3; crowd.push(ax - nr[k][0] * 0.1, yl, az - nr[k][1] * 0.1, bx - nr[k + 1][0] * 0.1, yl, bz - nr[k + 1][1] * 0.1, bx - nr[k + 1][0] * 0.1, y + 0.55, bz - nr[k + 1][1] * 0.1, ax - nr[k][0] * 0.1, yl, az - nr[k][1] * 0.1, bx - nr[k + 1][0] * 0.1, y + 0.55, bz - nr[k + 1][1] * 0.1, ax - nr[k][0] * 0.1, y + 0.55, az - nr[k][1] * 0.1);
             cuv.push(u0, v, u1, v, u1, v + 0.34, u0, v, u1, v + 0.34, u0, v + 0.34); }
           const [ax, az] = P(k, 0), [bx, bz] = P(k + 1, 0), [fx1, fz1] = P(k, D), [fx2, fz2] = P(k + 1, D);
-          quad(back, bcol, [ax, -8, az], [bx, -8, bz], [bx, H + 1.2, bz], [ax, H + 1.2, az], wallC);   /* Rückwand bis über die oberste Reihe */
+          { const A0 = [ax, -8, az], B0 = [bx, -8, bz], C0 = [bx, H + 1.2, bz], D0 = [ax, H + 1.2, az], u0 = acc / 8, u1 = (acc + sl) / 8, v1 = (H + 9.2) / 4; bw.push(...A0, ...B0, ...C0, ...A0, ...C0, ...D0); bwu.push(u0, 0, u1, 0, u1, v1, u0, 0, u1, v1, u0, v1); }   /* Rückwand bis über die oberste Reihe – mit Fassadentextur (Betonrampen, Lüftungsschlitze) statt einer glatten Fläche */
           quad(back, bcol, [fx1, -8, fz1], [fx2, -8, fz2], [fx2, y0, fz2], [fx1, y0, fz1], frontC);   /* Brüstung zum Spielfeld */
           // Faltdach: Grate quer zum Rang, außen 7 m über der obersten Reihe, nach innen leicht fallend, Vorderkante 4 m vor dem Spielfeldrand
           const f1 = k % 2 ? 1.1 : -1.1, f2 = (k + 1) % 2 ? 1.1 : -1.1, ti = D - 4, [qx1, qz1] = P(k, -1.5), [qx2, qz2] = P(k + 1, -1.5), [ix1, iz1] = P(k, ti), [ix2, iz2] = P(k + 1, ti);
@@ -9199,6 +9199,8 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       wing(M.foroS.slice(0, 10), 33, 18);   // Südrang
       const sm = new THREE.Mesh(geoOf(rows, cols), standSolidM); sm.castShadow = sm.receiveShadow = true; trackGroup.add(asMerge(sm));
       const cm = new THREE.Mesh(geoOf(crowd, null, cuv), crowdM2); trackGroup.add(asMerge(cm));
+      if (bw.length) { const ft = canvasTex(128, 128, (g, w, h) => { g.fillStyle = '#b9b0a0'; g.fillRect(0, 0, w, h); g.fillStyle = '#d3cbbb'; for (let x = 0; x < w; x += 32) g.fillRect(x, 0, 5, h); g.fillStyle = '#857d70'; g.fillRect(0, h - 5, w, 5); g.fillRect(0, 0, w, 3); g.fillStyle = '#3e3a34'; for (let x = 0; x < w; x += 32) g.fillRect(x + 9, 34, 16, 34); g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(0, 70, w, 2); });
+        ft.userData.own = true; ft.wrapS = ft.wrapT = THREE.RepeatWrapping; const fm = new THREE.Mesh(geoOf(bw, null, bwu), lam({ map: ft, side: DSD })); fm.castShadow = fm.receiveShadow = true; trackGroup.add(asMerge(fm)); }
       const bm = new THREE.Mesh(geoOf(back, bcol), standSolidM); bm.castShadow = bm.receiveShadow = true; trackGroup.add(asMerge(bm));
       const rm = new THREE.Mesh(geoOf(roof), lam({ color: 0xd9733a, roughness: .7, side: DSD })); rm.castShadow = true; rm.receiveShadow = true; trackGroup.add(asMerge(rm));
       if (posts.length) trackGroup.add(asMerge(new THREE.Mesh(mergeParts(posts), lam({ color: 0xe9e9e6, roughness: .5, metalness: .3 }))));
@@ -12447,7 +12449,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.30'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.31'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
