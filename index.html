@@ -1036,6 +1036,8 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 .mnext,.mnext.start{padding:0 18px 0 24px!important}
 .mnext span{border-radius:6px}
 .tinfo{box-shadow:none!important;border-left:3px solid var(--tc,#e10600)!important}
+/* Infotafel: nichts abschneiden – etwas breiter, Werte ohne Breitengrenze, Kursname darf zweizeilig umbrechen (vorher „Runden (G…“, „Br…“, „Autódromo José Carl…“) */
+.tinfo{max-width:42%!important}.tinfo canvas{max-width:10.5vw!important}.tinfo .tst{grid-template-columns:auto auto!important;column-gap:12px!important}.tinfo .tst b{max-width:none!important}.tinfo .tst small{overflow:visible!important;text-overflow:clip!important;letter-spacing:.08em!important}.tinfo .tst .w b{white-space:normal!important;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 /* Kacheln des Hauptmenüs mit Bild (aus dem Spiel aufgenommen), nach unten abgedunkelt, damit die Schrift lesbar bleibt */
 #qPlay::before{background:linear-gradient(180deg,rgba(12,13,16,.7),rgba(12,13,16,.2) 42%,rgba(12,13,16,.78)),url(textures/menu_quick.jpg) center/cover no-repeat!important}
 #tPlay::before{background:linear-gradient(90deg,rgba(14,15,18,.5),rgba(14,15,18,0) 45%),url(textures/menu_tt.jpg) 78% 50%/cover no-repeat,#0e0f12!important}
@@ -5774,8 +5776,10 @@ const lam = (o) => { const m = new THREE.MeshStandardMaterial({ roughness: .9, m
 const po = n => ({ polygonOffset: true, polygonOffsetFactor: n < 0 ? n * 0.25 : n, polygonOffsetUnits: n < 0 ? n * 4 : n, side: THREE.DoubleSide });
 function texRep(t, rx, ry) { const c = t.clone(); c.needsUpdate = true; c.repeat.set(rx, ry); return c; }
 /* Lichtpfützen der Flutlichter: ein Netz, jeder Eckpunkt auf Fahrbahnhöhe (placeY) – als Instanzen wurden die großen Flächen von applyElevation auf den tiefsten Eckpunkt gesenkt und lagen unter dem Asphalt (unsichtbar, an Mauern abgeschnitten) */
-function poolMesh(list, w, l, mat) { const pos = [], uv = [], NX = 6, NZ = 8;
-  for (const [x0, z0, ang] of list) { const c = Math.cos(ang), sn = Math.sin(ang), V = (i, j) => { const lx = (i / NX - 0.5) * w, lz = (j / NZ - 0.5) * l, x = x0 + lx * c + lz * sn, z = z0 - lx * sn + lz * c; return [x, (FLAT ? 0 : placeY(x, z)) + 0.05, z, i / NX, j / NZ]; };
+function poolMesh(list, w, l, mat) { const pos = [], uv = [], NX = 12, NZ = 16;
+  /* Höhe: auf der Fahrbahn exakt die Asphalthöhe (Streckenhöhe + Querneigung), daneben das Gelände; nur 1 cm darüber – mit 5 cm und grobem Raster schwebte der Schein sichtbar über dem Asphalt */
+  const hY = (x, z) => { if (FLAT) return 0; const [d, j] = nearestDist(x, z); const lat = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j]; return Math.abs(lat) <= HW[j] + 0.3 ? ELEV[j] + bankY(j, lat) : Math.min(placeY(x, z), ELEV[j] + bankY(j, lat) + Math.max(0, d - HW[j]) * 0.3); };
+  for (const [x0, z0, ang] of list) { const c = Math.cos(ang), sn = Math.sin(ang), V = (i, j) => { const lx = (i / NX - 0.5) * w, lz = (j / NZ - 0.5) * l, x = x0 + lx * c + lz * sn, z = z0 - lx * sn + lz * c; return [x, hY(x, z) + 0.012, z, i / NX, j / NZ]; };
     for (let i = 0; i < NX; i++) for (let j = 0; j < NZ; j++) for (const q of [[i, j], [i + 1, j + 1], [i + 1, j], [i, j], [i, j + 1], [i + 1, j + 1]]) { const v = V(q[0], q[1]); pos.push(v[0], v[1], v[2]); uv.push(v[3], v[4]); } }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); const m = new THREE.Mesh(g, mat); m.userData.fixed = true; m.userData.clipSkip = true; m.renderOrder = 1; m.frustumCulled = false; return m; }
 
@@ -8587,7 +8591,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       const quad = (A, B, a, b) => { A.push(...a[0], ...b[1], ...b[0], ...a[0], ...a[1], ...b[1]); B.push(0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1); };
       for (const T of M.tp) { const P = []; for (let k = 0; k < T.p.length; k += 3) P.push([T.p[k], T.p[k + 1], T.p[k + 2]]); const hw2 = T.k ? 4.2 : 7.6;
         if (P.some(([x, z, h]) => h > 1 && !trackFree(x, z, 10))) continue;   /* Rampen, die über der Strecke oder nahe an ihr verlaufen, ganz weglassen (clippten mit den Tribünen) */
-        for (let k = 0; k < P.length - 1; k++) { const [x1, z1, h1] = P[k], [x2, z2, h2] = P[k + 1], l = Math.hypot(x2 - x1, z2 - z1); if (l < 0.5) continue; const nx = -(z2 - z1) / l, nz = (x2 - x1) / l;
+        for (let k = 0; k < P.length - 1; k++) { const [x1, z1, h1] = P[k], [x2, z2, h2] = P[k + 1], l = Math.hypot(x2 - x1, z2 - z1); if (l < 0.5 || h1 > 0.3 || h2 > 0.3) continue;   /* nur ebenerdige Fahrbahnen: erhöhte Rampen endeten neben der Strecke abrupt in der Luft (Brückenreste) */ const nx = -(z2 - z1) / l, nz = (x2 - x1) / l;
           let bad = false; for (const t of [0, 0.5, 1]) { const x = x1 + (x2 - x1) * t, z = z1 + (z2 - z1) * t, h = h1 + (h2 - h1) * t; for (const o of [-hw2 - 0.6, 0, hw2 + 0.6]) if (h < 6.4 && !trackFree(x + nx * o, z + nz * o, 1)) bad = true; } if (bad) continue;   // ebenerdig nie in der Strecke
           const y1 = GY(x1, z1, h1), y2 = GY(x2, z2, h2), L1 = [x1 - nx * hw2, y1, z1 - nz * hw2], R1 = [x1 + nx * hw2, y1, z1 + nz * hw2], L2 = [x2 - nx * hw2, y2, z2 - nz * hw2], R2 = [x2 + nx * hw2, y2, z2 + nz * hw2];
           quad(DP, DU, [L1, R1], [L2, R2]);
@@ -12522,7 +12526,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.37'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.38'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
