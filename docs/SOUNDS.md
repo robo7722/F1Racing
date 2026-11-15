@@ -102,3 +102,4 @@ Arbeitsfläche: „F1Racing – Motor- und Crash-Sounds“ (https://elevenlabs.i
 - Fremde Autos ebenfalls mit Aufnahmen (mit Doppler über `playbackRate`).
 - Eigene Aufnahmen für Gas weg / Schub (Knallen, Blubbern) und Leerlauf in der Box.
 - Kart hoch ist kaum höher als Kart mittel. Bei Bedarf neu erzeugen („very high-pitched“).
+- Realismus-Vergleich mit echter F1/F2/Kart (u. a. F2-Stimmungsfehler im hohen Loop): siehe [[SOUNDS-REALISMUS]].
