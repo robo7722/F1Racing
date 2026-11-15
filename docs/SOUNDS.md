@@ -220,3 +220,35 @@ Stand: 15.11.2026. Ohne Credits.
 - Das wellige Geräusch bei hohem Tempo war der Fahrtwind: Die ElevenLabs-Aufnahme pulsierte 7–8-mal je Sekunde (Böen am Helm). `pegel.py` glättete nur langsame Schwankungen (300-ms-Fenster), dieses schnelle Pulsieren blieb.
 - Jetzt `tools/sounds/wind.py`: Rauschen direkt im Frequenzbereich geformt (tiefes Rauschen ab 350 Hz abfallend + leichtes Zischen um 2,2 kHz, zufällige Phasen). Das Signal ist dadurch exakt periodisch (4 s, keine Naht) und hat keine Pegelschwankung außer dem normalen Rauschen (50-ms-Pegel 0,126–0,161).
 - `wind` ist aus `aufbereiten_v2.py` und `pegel.py` herausgenommen (würde sonst die alte Aufnahme zurückholen).
+
+## v2.06/v2.07 – MX-5 aus echter Aufnahme, echte Gasstöße, F2 ohne „zwei Motoren“, Effekte leiser
+Stand: 15.11.2026. Ohne Credits.
+
+### F2 „klingt manchmal nach 2 Motoren“
+Im Rennbereich (~7.800 U/min) wechselte F2 zwischen `f2_v2` (aus `f2_mittel`) und `f2_v3` (aus `f2_hoch`) – zwei verschiedene KI-Aufnahmen. Jetzt `f2_mittel` (unten) + `f2_v4` (= `f2_hoch` −6 HT, 395 Hz ≈ 7.900 U/min) für den ganzen Rennbereich; Wechsel nur bei ~5.300–5.900 U/min (`loops[i][2] = [0.1, 0.25]`). Gegner abwechselnd `f2_v4` und `f2_v3` (`SND_ENG.f2.alt`).
+
+### Effekte zu laut (z. B. Kies)
+Kies lag mit 0,75 × RMS 0,14 über dem Motor (0,55 × 0,14). Alle Fahr-Geräusche etwa halbiert (Kies 0,3, Rasen 0,25, Randsteine 0,3/Kart 0,2, Kies-Einschlag 0,4, Schaben 0,35). Neuer Regler **Effekte** (Einstellungen → Audio, `S.volFx`, Standard 60 %) – eigener Bus `fxBus()` für Fahr-Geräusche und Einschläge, unabhängig von „Motor & Autos“.
+
+### MX-5 aus einer echten Aufnahme
+- Quelle: „Mazda MX-5 Miata – engine and exhaust sound“, Ride in Japan (YouTube), Wikimedia Commons, **CC BY 3.0** (Namensnennung im Spiel: Einstellungen → Extras → Credits). NA 1,6 l, 9 min: Start, Leerlauf, Gasstöße, Fahren. Freesound braucht einen API-Schlüssel (403), Commons ist frei abrufbar.
+- `tools/sounds/mx5_echt.py`: Aufnahme nach Abschnitten konstanter Drehzahl durchsucht (≥ 1,5 s, Schwankung < 2,5 %); Ausschnitte unbearbeitet in `sounds/roh/echt/`.
+- Stufen: `mx5e_leer` 28,4 Hz (850 U/min) · `mx5e_1600` (2.400er −7 HT, 53 Hz) · `mx5e_2400` 79,5 · `mx5e_3500` 115,6 · `mx5e_5200` 172,8 (Beschleunigung, heller) · `mx5e_6900` (5.200er +5 HT, 230,5). Die 1.070er-Stelle (`r1100`) war Fahren unter Last (heller, gequält) und klang bei Gasstößen falsch → ersetzt.
+- Überblendung: unter ~4.500 U/min über die ganze Breite (weich beim Anfahren), darüber schmal (kein Schweben bei konstanter Drehzahl).
+
+### Echte Gasstöße im Stand (Rückmeldung: „klingt synthetisch“)
+- Ursache: Schleifen konstanter Drehzahl, schnell hoch- und runtergezogen, klingen wie eine Sirene – Ansaugen, Knall und Nachblubbern eines echten Gasstoßes fehlen.
+- Jetzt: drei echte Gasstöße aus der Aufnahme (19,95 s, 25,55 s, 28,35 s; 850 → ~5.200 → 850 U/min) als `mx5e_blip1..3`. Im Stand (v < 1 m/s, z. B. Ampel) löst Gas (scharf unter 40 %, Auslösen über 45 % – an der Ampel steigt die Drehzahl weich an) einen zufälligen Gasstoß aus, die Schleifen schweigen. Gas nach dem Hochdrehen gehalten (> 0,6 s) → Gasstoß blendet aus, Schleifen übernehmen. 0,3 s vor Ende überlappen Gasstoß und Leerlauf-Schleife.
+- **Pegel angleichen** (`blip_angleichen`): echte Dynamik Spitze/Leerlauf ≈ 26× → Pegel über dem Leerlauf mit Exponent 0,45 zusammengedrückt (≈ 5×), Leerlauf-Anteil so laut wie die Leerlauf-Schleife im Spiel. Ohne das fiel der Pegel beim Wechsel auf ein Zehntel („abgehackt“).
+- Diagnose: `__snd().gasstoss`.
+- Hörproben werden mit `demo_spiel`-Logik in einem Durchgang mit den Spiel-Lautstärken gerechnet (getrennt gerechnete und normierte Teile hatten einen künstlichen Pegelsprung).
+
+## v2.08/v2.09 – MX-5 granular aus echten Durchzügen
+Stand: 15.11.2026. Ohne Credits.
+- Rückmeldung: Übergänge beim Anfahren „abgehackt/falsch“ – Stückwerk aus 6 Ausschnitten (Leerlauf, konstante Fahrt, Beschleunigung) klang je Ausschnitt anders.
+- **Granular-Wiedergabe** (`granTick`): ein echter Durchzug (gleichmäßige Beschleunigung) wird in 100-ms-Körnern abgespielt, alle 33 ms ein Korn von der Stelle, deren Drehzahl zur aktuellen passt (Hann-Fenster, 3-fach überlappt). Körner beginnen phasenrichtig (Fortsetzung des vorigen Korns + ganze Zündabstände), sonst Schweben/Auslöschung. Über dem Ende des Durchzugs wird höher gespielt (Tempo = U/min ÷ U/min der Stelle, max. 1,3).
+- Quellen (Commons-Aufnahme, `tools/sounds/mx5_echt.py`): **Durchzug A** 469,3–473,0 s, 1.207 → 6.115 U/min (Anfahren, bis 3.900) · **Durchzug B** 489,5–498,8 s, 3.706 → 6.115 U/min in 9 s, konstanter Pegel (ab 3.900; Übergabe 3.650–4.150, gleich laut). Durchzug 118,3–122,3 s (bis 6.960) ist ein Vorbeifahren (Pegel ×16) – ungeeignet.
+- Leerlauf bleibt Schleife; Überblendung Leerlauf → Durchzug 950–1.500 U/min gleich laut (Kosinus/Sinus – linear sackte die Mitte ab).
+- Gasgeben blendet beim Roadster weich ein (Zeitkonstante 0,14 s ≈ 0,4 s), Gas weg bleibt schnell.
+- Rückmeldung zu v2.08: Anfahren klingt richtig, höhere Drehzahl falsch (Durchzug A hängt oben bei ~5.050 und endet bei 6.115) → v2.09 mit Durchzug B oben.
+- Stufen-Dateien `mx5e_1600…6900` entfallen. Offen: Browser-Test der v2.09 wurde abgebrochen (Syntax geprüft, v2.08 lief fehlerfrei).

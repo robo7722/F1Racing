@@ -1333,6 +1333,7 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
   <div class="ppane on" id="sAudio"><section class="panel" id="setAudio">
     <div class="slider"><span>Musik</span><input type="range" min="0" max="100" step="1" id="volMusic"><b id="volMusicV"></b></div>
     <div class="slider"><span>Motor &amp; Autos</span><input type="range" min="0" max="100" step="1" id="volCar"><b id="volCarV"></b></div>
+    <div class="slider"><span>Effekte</span><input type="range" min="0" max="100" step="1" id="volFx"><b id="volFxV"></b></div>
     <button class="big alt" id="nextSong">⏭ Nächstes Lied</button>
   </section></div>
   <div class="ppane" id="sGfx"><section class="panel" id="setGfx">
@@ -1366,6 +1367,7 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
       <p class="hint left">Die Karriere wird nach jedem Qualifying, Rennen und Upgrade im Browser gespeichert. Mit dem Exportcode kannst du den Spielstand sichern oder auf ein anderes Gerät übertragen.</p></div>
     <div class="field" style="margin-top:12px"><label>Credits</label>
       <p class="hint left">Titelmusik: Alegend – Evermore (freetouse.com) · Rennmusik (alle Titel): <span id="creditSongs"></span></p>
+      <p class="hint left">Roadster-Motor: „Mazda MX-5 Miata – engine and exhaust sound“ von Ride in Japan (YouTube), über Wikimedia Commons, Lizenz CC BY 3.0 (creativecommons.org/licenses/by/3.0), geschnitten und geloopt · Weitere Geräusche: ElevenLabs Sound Effects</p>
       <p class="hint left">Streckendaten: TUM racetrack-database (LGPL-3.0), bacinger/f1-circuits (MIT) · Wahrzeichen-Lage: © OpenStreetMap-Mitwirkende (ODbL)</p>
       <p class="hint left">F1-Fahrzeugmodell: basiert auf „F1 2026 concept (polygon model)“ von Qvist_designs (sketchfab.com/Qvist_Designs), CC-BY-4.0 – vereinfacht und in Lack/Carbon aufgeteilt</p></div>
   </section></div>
@@ -7733,7 +7735,11 @@ function sfxBus() { if (!SFX) { SFX = ac.createGain(); SFX.connect(ac.destinatio
 function applyVolumes() {
   if (!ac) return;
   if (SFX) SFX.gain.setTargetAtTime(S.sound ? S.volCar * 1.2 : 0, ac.currentTime, 0.05);
+  if (FXB) FXB.gain.setTargetAtTime(S.sound ? (S.volFx ?? 0.6) * 1.2 : 0, ac.currentTime, 0.05);
 }
+// v2.06: eigener Lautstärke-Regler „Effekte“ (Einschläge, Kies/Rasen/Randsteine, Schaben, Wind) – unabhängig von „Motor & Autos“
+let FXB = null;
+function fxBus() { if (!FXB || FXB.context !== ac) { FXB = ac.createGain(); FXB.gain.value = S.sound ? (S.volFx ?? 0.6) * 1.2 : 0; FXB.connect(ac.destination); } return FXB; }
 // ===== Aufgenommene Sounds (ElevenLabs Sound Effects, Ordner sounds/, siehe docs/SOUNDS.md) =====
 // Motor je Klasse (v1.99): mehrere nahtlose Loops über die Drehzahl, jeder mit gemessenem Grundton (Hz). Gestimmt wird auf die ECHTE Zündfrequenz
 // (V6: U/min ÷ 60 × 3, Zweitakt-Einzylinder: U/min ÷ 60). Die höheren Stufen sind offline mit Rubberband aus den ElevenLabs-Aufnahmen erzeugt
@@ -7742,10 +7748,11 @@ function applyVolumes() {
 // Fehlt eine Datei oder lädt sie nicht, bleibt der synthetische Motor (Oszillatoren) – das Spiel klingt nie stumm.
 const SND_ENG = {   // cyl: Zündungen je Umdrehung · loops: [Datei, Grundton, Überblend-Fenster zur nächsten Stufe (Anteil des log. Abstands: [Beginn, Breite]), optional] aufsteigend · schub: [Datei, Grundton, Lautstärke] · cut: Schalt-Lücke [Dauer s, Pegel]
   f1: { cyl: 3, vol: 0.55, cut: [0.025, 0.65], loops: [['sounds/f1_mittel.wav', 230], ['sounds/f1_v2.wav', 344], ['sounds/f1_v3.wav', 438], ['sounds/f1_v4.wav', 552]], schub: ['sounds/v6_schub.wav', 390, 0.55] },   // nahtloses 8-Gang-Getriebe: kurze, flache Lücke; 2026: viel Ernten beim Lupfen -> leiser Schub
-  f2: { cyl: 3, vol: 0.6, cut: [0.06, 0.35], loops: [['sounds/f2_mittel.wav', 255], ['sounds/f2_v2.wav', 342], ['sounds/f2_v3.wav', 444]], schub: ['sounds/v6_schub.wav', 390, 0.95] },   // 6-Gang mit Zündunterbrechung, rau und laut, kräftiges Knallen
+  f2: { cyl: 3, vol: 0.6, cut: [0.06, 0.35], loops: [['sounds/f2_mittel.wav', 255, [0.1, 0.25]], ['sounds/f2_v4.wav', 395]], alt: ['sounds/f2_v3.wav', 444], schub: ['sounds/v6_schub.wav', 390, 0.95] },   // 6-Gang mit Zündunterbrechung, rau und laut, kräftiges Knallen · v2.06: im Rennbereich (≈ 5.900–8.750) nur f2_v4 – der Wechsel f2_v2 (aus f2_mittel) ↔ f2_v3 (aus f2_hoch) bei ~7.800 klang wie zwei Motoren
   kart: { cyl: 1, vol: 0.5, cut: [0, 1], loops: [['sounds/kart_v0.wav', 78], ['sounds/kart_v1.wav', 104], ['sounds/kart_mittel.wav', 156], ['sounds/kart_v3.wav', 224]], schub: ['sounds/kart_schub.wav', 152, 0.8] } };   // Grundton gemessen mit tools/sounds/varianten.py
-SND_ENG.road = { cyl: 2, vol: 0.6, cut: [0.16, 0.3], loops: [['sounds/mx5n_leer.wav', 27.1], ['sounds/mx5n_tief3.wav', 59.7], ['sounds/mx5n_tief2.wav', 116.2, [0, 0.3]], ['sounds/mx5n_hoch.wav', 228.2]], schub: ['sounds/mx5n_schub.wav', 253.3, 0.55] };   // v2.04: MX-5 (ND2, 2,0-l-Vierzylinder, 2 Zündungen je Umdrehung). Leerlauf neu (klares Pulsieren ≈ 810 U/min), Zwischenstufe ≈ 1.750 für Gasstöße im Stand; im Renn-Drehzahlbereich (≈ 4.100–7.500) läuft nur mx5n_hoch
-const SND_FERN = { f1: 2, f2: 1, kart: 2, road: 2 };   // Gegner (Doppler) nutzen eine Stufe aus der Mitte des Renn-Drehzahlbereichs
+SND_ENG.road = { cyl: 2, vol: 0.6, cut: [0.16, 0.3], loops: [['sounds/mx5e_leer.wav', 28.4]], schub: ['sounds/mx5n_schub.wav', 253.3, 0.3], blips: ['sounds/mx5e_blip1.wav', 'sounds/mx5e_blip2.wav', 'sounds/mx5e_blip3.wav'],
+  gran: { von: 950, bis: 1500, wechsel: 3900, xf: 250, quellen: [{ file: 'sounds/mx5e_durchzug.wav', tab: [[0.032,1207],[0.132,1279],[0.232,1399],[0.332,1497],[0.432,1540],[0.532,1652],[0.632,1801],[0.732,1931],[0.832,2055],[0.932,2176],[1.032,2291],[1.132,2399],[1.232,2526],[1.332,2651],[1.432,2823],[1.532,2953],[1.632,3076],[1.732,3232],[1.832,3380],[1.932,3542],[2.032,3678],[2.132,3809],[2.232,3950],[2.332,4120],[2.432,4285],[2.532,4485],[2.632,4660],[2.732,4923],[2.832,5052],[2.932,5079],[3.032,5245],[3.132,5485],[3.232,5614],[3.332,5714],[3.432,5853],[3.532,6037],[3.632,6114]] }, { file: 'sounds/mx5e_durchzug2.wav', tab: [[0.032,3706],[0.182,3720],[0.332,3720],[0.482,3720],[0.632,3720],[0.782,3750],[0.932,3764],[1.082,3794],[1.232,3824],[1.382,3886],[1.532,3918],[1.682,3966],[1.832,4000],[1.982,4033],[2.132,4085],[2.282,4137],[2.432,4173],[2.582,4210],[2.732,4266],[2.882,4324],[3.032,4363],[3.182,4403],[3.332,4465],[3.482,4485],[3.632,4549],[3.782,4637],[3.932,4660],[4.082,4729],[4.232,4776],[4.382,4799],[4.532,4873],[4.682,4923],[4.832,4948],[4.982,5000],[5.132,5026],[5.282,5079],[5.432,5133],[5.582,5161],[5.732,5217],[5.882,5245],[6.032,5303],[6.182,5333],[6.332,5363],[6.482,5423],[6.632,5454],[6.782,5517],[6.932,5549],[7.082,5581],[7.232,5614],[7.382,5647],[7.532,5714],[7.682,5748],[7.832,5783],[7.982,5818],[8.132,5853],[8.282,5889],[8.432,5925],[8.582,5962],[8.732,5962],[8.882,5999],[9.032,6075],[9.182,6114]] }] } };   // v2.09: MX-5 aus ECHTER Aufnahme (Wikimedia Commons, Ride in Japan, CC BY 3.0 – tools/sounds/mx5_echt.py). Leerlauf = Schleife (bis 950–1.500 U/min überblendet), darüber Granular-Wiedergabe aus zwei echten Durchzügen: 1.207 → 6.115 (Anfahren, bis 3.900) und 3.706 → 6.115 (9 s, sehr gleichmäßig, ab 3.900); tab: [Sekunde im Durchzug, U/min]
+const SND_FERN = { f1: 2, f2: 1, kart: 2, road: 0 };   // Gegner (Doppler) nutzen eine Stufe aus der Mitte des Renn-Drehzahlbereichs
 // v2.00: Einschläge je Fahrzeugart (cf = F1/F2-Carbon, stahl = Roadster, kart) und Ziel (Auto / Leitplanke / Betonmauer), nach Stärke abgestuft
 // v2.01: keine eigenen „schweren“ Unfälle mehr (zu übertrieben) – starke Treffer nutzen dieselbe Aufnahme, nur etwas lauter und länger
 const SND_CRASH = {
@@ -7760,22 +7767,26 @@ const SNDB = {};   // url -> AudioBuffer | 'laedt' | null (fehlt)
 function sndLoad(url) { if (!ac || SNDB[url] !== undefined) return; SNDB[url] = 'laedt';
   fetch(url).then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status)).then(b => new Promise((res, rej) => ac.decodeAudioData(b, res, rej))).then(buf => { SNDB[url] = buf; }).catch(() => { SNDB[url] = null; }); }
 const sndBuf = url => (SNDB[url] && typeof SNDB[url] === 'object' ? SNDB[url] : null);
-function sndPreload() { for (const k in SND_ENG) { for (const l of SND_ENG[k].loops) sndLoad(l[0]); sndLoad(SND_ENG[k].schub[0]); } for (const c in SND_CRASH) for (const k in SND_CRASH[c]) sndLoad(SND_CRASH[c][k]); for (const k in SND_FX) sndLoad(SND_FX[k]); }
+function sndPreload() { for (const k in SND_ENG) { for (const l of SND_ENG[k].loops) sndLoad(l[0]); sndLoad(SND_ENG[k].schub[0]); if (SND_ENG[k].alt) sndLoad(SND_ENG[k].alt[0]); for (const b of SND_ENG[k].blips || []) sndLoad(b); for (const q of (SND_ENG[k].gran || {}).quellen || []) sndLoad(q.file); } for (const c in SND_CRASH) for (const k in SND_CRASH[c]) sndLoad(SND_CRASH[c][k]); for (const k in SND_FX) sndLoad(SND_FX[k]); }
 // Motor-Aufnahmen abspielen: gibt true zurück, wenn die Aufnahme läuft (dann schweigt der synthetische Motor)
 function sndEngine(E, cls, on, load, t) {
   const M = E.smp; if (!M) return false;
   const D = cls && SND_ENG[cls], bufs = D ? D.loops.map(l => sndBuf(l[0])) : [], bS = D ? sndBuf(D.schub[0]) : null;
   if (!D || bufs.some(b => !b)) { if (M.cls) { for (const v of M.v) { try { v.src.stop(); } catch (e) {} } if (M.s) { try { M.s.src.stop(); } catch (e) {} } M.v = []; M.s = null; M.cls = null; M.out.gain.setTargetAtTime(0, t, 0.05); } return false; }   // erst wenn alle Stufen geladen sind (sonst Lücken im Drehzahlband)
   const key = cls + (bS ? 'S' : '');
-  if (M.cls !== key) { for (const v of M.v) { try { v.src.stop(t + 0.05); } catch (e) {} } if (M.s) { try { M.s.src.stop(t + 0.05); } catch (e) {} } M.v = []; M.s = null; M.cls = key;
+  if (M.cls !== key) { for (const v of M.v) { try { v.src.stop(t + 0.05); } catch (e) {} } if (M.s) { try { M.s.src.stop(t + 0.05); } catch (e) {} } M.v = []; M.s = null; M.gr = null; M.cls = key;
     D.loops.forEach(([, base], i) => { const src = ac.createBufferSource(), g = ac.createGain(); src.buffer = bufs[i]; src.loop = true; g.gain.value = 0; src.connect(g); g.connect(M.lp); src.start(t, Math.random() * bufs[i].duration); M.v.push({ src, g, base }); });
     if (bS) { const g = ac.createGain(); g.gain.value = 0; g.connect(M.out); M.s = { src: null, g, base: D.schub[1], on: false }; } }
   const fq = E.rpm / 60 * D.cyl, V = M.v, n = V.length;   // echte Zündfrequenz
+  let gw = 0; if (D.gran && D.gran.quellen.every(q => sndBuf(q.file))) { gw = clamp((E.rpm - D.gran.von) / (D.gran.bis - D.gran.von), 0, 1); gw = gw * gw * (3 - 2 * gw); }   // Anteil der Granular-Wiedergabe
   // die zwei Stufen, die fq einschließen: gleich laut (Kosinus/Sinus) im logarithmischen Abstand überblenden – beide auf dieselbe Tonhöhe gestimmt, also kein Schweben
+  if (n === 1) { V[0].g.gain.setTargetAtTime(Math.cos(gw * Math.PI / 2), t, 0.03);   /* gleich laut überblenden (linear sackte die Mitte ab) */ V[0].src.playbackRate.setTargetAtTime(clamp(fq / V[0].base, 0.4, 2.2), t, 0.015); } else {
   let i = 0; while (i < n - 2 && fq > V[i + 1].base) i++;
   let x = clamp(Math.log(fq / V[i].base) / Math.log(V[i + 1].base / V[i].base), 0, 1); const XF = D.loops[i][2] || D.xf || [0.38, 0.24]; x = clamp((x - XF[0]) / XF[1], 0, 1); x = x * x * (3 - 2 * x);   // v2.01: nur im mittleren Viertel überblenden – zwei Aufnahmen gleicher Tonhöhe dauerhaft gemischt ergaben ein „wellenartiges“ Schweben (z. B. F1 bei Vmax)
   V.forEach((v, k) => { const w = k === i ? Math.cos(x * Math.PI / 2) : k === i + 1 ? Math.sin(x * Math.PI / 2) : 0;
-    v.g.gain.setTargetAtTime(w, t, 0.03); if (w > 0.001 || v.g.gain.value > 0.001) v.src.playbackRate.setTargetAtTime(clamp(fq / v.base, 0.4, 2.2), t, 0.015); });
+    v.g.gain.setTargetAtTime(w * (1 - gw), t, 0.03); if (w > 0.001 || v.g.gain.value > 0.001) v.src.playbackRate.setTargetAtTime(clamp(fq / v.base, 0.4, 2.2), t, 0.015); }); }
+  if (D.gran && on && gw > 0) { const G = D.gran; let x2 = clamp((E.rpm - (G.wechsel - G.xf)) / (2 * G.xf), 0, 1); x2 = x2 * x2 * (3 - 2 * x2);   // Übergabe Durchzug 1 → 2
+    const a = Math.sin(gw * Math.PI / 2); M.gr ||= []; G.quellen.forEach((q, i) => { const w = a * (i === 0 ? Math.cos(x2 * Math.PI / 2) : Math.sin(x2 * Math.PI / 2)); granTick(M, q, E.rpm, t, w, i); }); }
   // Gas weg: Schub-Loop (Knallen/Blubbern) bei hoher Drehzahl, bei jedem Lupfen an zufälliger Stelle neu gestartet (sonst hört man die Wiederholung)
   const rpmHi = cls === 'kart' ? 7000 : cls === 'f2' ? 5500 : cls === 'road' ? 3200 : 6500, sAmt = on ? clamp((0.45 - load) / 0.35, 0, 1) * clamp((E.rpm - rpmHi) / 2000, 0, 1) : 0;
   if (M.s) { const S = M.s;
@@ -7783,13 +7794,46 @@ function sndEngine(E, cls, on, load, t) {
     else if (sAmt < 0.01 && S.on && S.g.gain.value < 0.01) { S.on = false; try { S.src.stop(t + 0.05); } catch (e) {} S.src = null; }
     if (S.src) S.src.playbackRate.setTargetAtTime(clamp(fq / S.base, 0.5, 1.8), t, 0.03);
     S.g.gain.setTargetAtTime(sAmt * D.schub[2] * D.vol, t, sAmt > S.g.gain.value ? 0.03 : 0.12); }
+  // v2.07: Gasstoß im Stand = echte Aufnahme (Roadster). Schleifen konstanter Drehzahl klingen schnell hoch- und runtergezogen wie eine Sirene;
+  // ein echter Gasstoß hat Ansaugen, Knall beim Hochdrehen und Nachblubbern. Bei Gas-Antippen im Stand läuft einer von drei echten Gasstößen,
+  // die Schleifen schweigen solange. Wird das Gas nach dem Hochdrehen gehalten, blendet der Gasstoß aus und die Schleifen übernehmen.
+  if (D.blips) { const B = M.bl, still = !(pl && pl.v > 1);
+    if (load < 0.4) M.blArm = true;   // scharf, sobald das Gas fast weg ist (an der Ampel steigt die Drehzahl weich an – kein Sprung von Bild zu Bild)
+    if (!B && on && still && load > 0.45 && M.blArm) { M.blArm = false; const bufs = D.blips.map(sndBuf).filter(Boolean);
+      if (bufs.length) { const b = bufs[Math.floor(Math.random() * bufs.length)], src = ac.createBufferSource(), g = ac.createGain(); src.buffer = b; src.playbackRate.value = 0.96 + Math.random() * 0.08;
+        g.gain.value = 1; src.connect(g); g.connect(sfxBus()); src.start(t);   /* Dateien sind so angeglichen, dass ihr Leerlauf-Anteil genau so laut ist wie die Leerlauf-Schleife */ M.bl = { src, g, peak: t + 0.45, end: t + b.duration / src.playbackRate.value }; } }
+    else if (B && (t > B.end - 0.3 || !on || !still || (load > 0.5 && t > B.peak + 0.15))) { B.g.gain.setTargetAtTime(0, t, 0.08);   /* 0,3 s vor dem Ende: Gasstoß blendet aus, während die Schleife einblendet (sonst kurze Lücke) */ try { B.src.stop(t + 0.5); } catch (e) {} M.bl = null; M.blRel = t + 0.4; }
+  }
   M.lp.frequency.setTargetAtTime(1500 + load * 10500, t, 0.05);   // Gas weg: dumpfer (Schub), Vollgas: offen
   const cut = E.cut > 0 ? D.cut[1] : 1;
-  M.out.gain.setTargetAtTime(on ? D.vol * cut * (0.5 + 0.5 * load) * (1 - 0.35 * sAmt) : 0, t, E.cut > 0 ? 0.008 : 0.04);
+  const gv = on && !M.bl ? D.vol * cut * (0.5 + 0.5 * load) * (1 - 0.35 * sAmt) : 0;
+  M.out.gain.setTargetAtTime(gv, t, M.bl ? 0.02 : M.blRel && t < M.blRel ? 0.08 : E.cut > 0 ? 0.008 : D.gran && gv > M.out.gain.value ? 0.14 : 0.04);   // Roadster: Gasgeben blendet weich ein (~0,4 s), Gas weg bleibt schnell   // während eines echten Gasstoßes schweigen die Schleifen
   return true;
 }
+// ===== Granular-Wiedergabe (v2.08) =====
+// Ein echter Durchzug (gleichmäßige Beschleunigung) wird in 100-ms-Körnern abgespielt: alle 33 ms ein Korn von der Stelle, deren Drehzahl
+// zur aktuellen passt (Hann-Fenster, 3-fach überlappt → konstante Lautstärke). Damit sich überlappende Körner nicht auslöschen/schweben,
+// beginnt jedes Korn phasenrichtig: Fortsetzung des vorigen Korns plus ganze Zündabstände, möglichst nah an der Ziel-Stelle.
+// Über dem Ende des Durchzugs wird die letzte Stelle höher gespielt (Tempo = U/min / U/min der Stelle). Wie Rennspiele „Granular Engine Sound“.
+const GR_LEN = 0.1, GR_HOP = GR_LEN / 3, GR_WIN = (() => { const n = 64, w = new Float32Array(n); for (let k = 0; k < n; k++) w[k] = Math.sin(Math.PI * k / (n - 1)) ** 2 / 1.5; return w; })();
+function granTick(M, G, rpm, t, amp, idx) {
+  const buf = sndBuf(G.file); if (!buf) return;
+  if (!G.tt) { G.tt = G.tab.map(a => a[0]); G.rr = G.tab.map(a => a[1]); }
+  const S = M.gr[idx] || (M.gr[idx] = { next: t + 0.01, s: 0, T: t, rate: 1 }), TT = G.tt, RR = G.rr, last = RR.length - 1;
+  if (S.next < t) S.next = t + 0.005;   // nach einer Pause (Tab im Hintergrund)
+  while (S.next < t + 0.07) {
+    const T0 = S.next, r = clamp(rpm, RR[0], RR[last]); let k = 0; while (k < last - 1 && RR[k + 1] < r) k++;
+    const f = (r - RR[k]) / Math.max(1, RR[k + 1] - RR[k]), p = TT[k] + clamp(f, 0, 1) * (TT[k + 1] - TT[k]), rate = clamp(rpm / r, 0.6, 1.3), per = 30 / r;
+    const cont = S.s + (T0 - S.T) * S.rate; let s0 = cont + Math.round((p - cont) / per) * per;
+    if (!(Math.abs(s0 - p) < 0.06) || s0 < 0) s0 = p;
+    s0 = clamp(s0, 0, buf.duration - GR_LEN * rate - 0.005);
+    if (amp > 0.002) { const src = ac.createBufferSource(), g = ac.createGain(), w = GR_WIN.map(v => v * amp);
+      src.buffer = buf; src.playbackRate.value = rate; g.gain.value = 0; g.gain.setValueCurveAtTime(w, T0, GR_LEN); src.connect(g); g.connect(M.lp); src.start(T0, s0, GR_LEN * rate + 0.002); }
+    S.s = s0; S.T = T0; S.rate = rate; S.next += GR_HOP;
+  }
+}
 window.__sndPk = url => { const b = sndBuf(url); if (!b) return null; const d = b.getChannelData(0); let m = 0; for (let i = 0; i < d.length; i++) m = Math.max(m, Math.abs(d[i])); return { pk: +m.toFixed(2), sr: b.sampleRate, n: b.length }; };   // Test
-window.__snd = (init) => { if (init) initAudio(); return { ac: !!ac, dateien: Object.fromEntries(Object.entries(SNDB).map(([k, v]) => [k, v && typeof v === 'object' ? +v.duration.toFixed(2) + ' s' : v])), aktiv: ENG && ENG.smp ? ENG.smp.cls : null, drehzahl: ENG ? Math.round(ENG.rpm) : null, kmh: pl ? Math.round(pl.v * 3.6) : null, gang: pl ? gearP(pl.v * 3.6).g : null, phase: raceState, gegner: ENG ? ENG.others.map(O => O.smp ? +O.smp.src.playbackRate.value.toFixed(2) : 'syn').join(' ') : null, loops: ENG && ENG.smp ? ENG.smp.v.map(v => v && { tempo: +v.src.playbackRate.value.toFixed(2), anteil: +v.g.gain.value.toFixed(2) }) : null, fx: typeof FXL === 'object' ? Object.keys(FXL).map(k => k + ':' + FXL[k].g.gain.value.toFixed(2)).join(' ') : null, surf: pl ? pl.surf : null, schub: ENG && ENG.smp && ENG.smp.s ? +ENG.smp.s.g.gain.value.toFixed(2) : null, pegel: ENG && ENG.smp ? +ENG.smp.out.gain.value.toFixed(3) : null }; };   // Test/Diagnose
+window.__snd = (init) => { if (init) initAudio(); return { ac: !!ac, dateien: Object.fromEntries(Object.entries(SNDB).map(([k, v]) => [k, v && typeof v === 'object' ? +v.duration.toFixed(2) + ' s' : v])), aktiv: ENG && ENG.smp ? ENG.smp.cls : null, drehzahl: ENG ? Math.round(ENG.rpm) : null, kmh: pl ? Math.round(pl.v * 3.6) : null, gang: pl ? gearP(pl.v * 3.6).g : null, phase: raceState, gegner: ENG ? ENG.others.map(O => O.smp ? +O.smp.src.playbackRate.value.toFixed(2) : 'syn').join(' ') : null, loops: ENG && ENG.smp ? ENG.smp.v.map(v => v && { tempo: +v.src.playbackRate.value.toFixed(2), anteil: +v.g.gain.value.toFixed(2) }) : null, fx: typeof FXL === 'object' ? Object.keys(FXL).map(k => k + ':' + FXL[k].g.gain.value.toFixed(2)).join(' ') : null, surf: pl ? pl.surf : null, gasstoss: ENG && ENG.smp ? !!ENG.smp.bl : null, schub: ENG && ENG.smp && ENG.smp.s ? +ENG.smp.s.g.gain.value.toFixed(2) : null, pegel: ENG && ENG.smp ? +ENG.smp.out.gain.value.toFixed(3) : null }; };   // Test/Diagnose
 function initAudio() {
   if (ac) { ac.resume && ac.resume(); return; }
   try {
@@ -7878,7 +7922,7 @@ function updateAudio(thr) {
     const oRpm = oc === 'kart' ? Math.max(5000, Math.min(15500, 14000 * c.v / (VTOP * SERPH.top))) : oc === 'road' ? 1100 + gearInfo(c.v * 3.6, false).rpm / 12000 * 6200 : gearInfo(c.v * 3.6, f2).rpm;   // wie beim eigenen Auto
     const fn = oRpm / 60 * SND_ENG[oc].cyl * clamp(340 / (340 + vr), 0.65, 1.5);
     // v1.99: Aufnahme (eine Stufe aus der Mitte des Drehzahlbands, Doppler über das Tempo) statt Sägezahn – synthetisch nur, solange sie nicht geladen ist
-    const LS = SND_ENG[oc].loops, L = LS[k % 2 ? (SND_FERN[oc] + 1 < LS.length ? SND_FERN[oc] + 1 : SND_FERN[oc] - 1) : SND_FERN[oc]], ob2 = sndBuf(L[0]);   // v2.01: Nachbar-Stimmen abwechselnd aus zwei Aufnahmen (gleiche Aufnahme mehrfach = Flanger-„Wellen“)
+    const LS = SND_ENG[oc].loops, L = k % 2 && SND_ENG[oc].alt ? SND_ENG[oc].alt : LS[k % 2 ? (SND_FERN[oc] + 1 < LS.length ? SND_FERN[oc] + 1 : SND_FERN[oc] - 1) : SND_FERN[oc]], ob2 = sndBuf(L[0]);   // v2.01: Nachbar-Stimmen abwechselnd aus zwei Aufnahmen (gleiche Aufnahme mehrfach = Flanger-„Wellen“)
     if (ob2 && (!O.smp || O.smp.url !== L[0])) { try { O.smp && O.smp.src.stop(); } catch (e) {} const src = ac.createBufferSource(); src.buffer = ob2; src.loop = true; src.connect(O.fl); src.start(t, Math.random() * ob2.duration); O.smp = { src, url: L[0], base: L[1] }; }
     else if (!ob2 && O.smp) { try { O.smp.src.stop(); } catch (e) {} O.smp = null; }
     if (O.smp) O.smp.src.playbackRate.setTargetAtTime(clamp(fn / O.smp.base, 0.4, 2.2), t, 0.03);
@@ -7893,23 +7937,24 @@ function updateAudio(thr) {
 const FXL = {}, FXS = { t: 0, surf: 'road' };
 function fxLoop(k, gain, rate, t) {
   let L = FXL[k]; const b = sndBuf(SND_FX[k]); if (!b) return;
-  if (!L) { if (gain < 0.003) return; const src = ac.createBufferSource(), g = ac.createGain(); src.buffer = b; src.loop = true; g.gain.value = 0; src.connect(g); g.connect(sfxBus()); src.start(t, Math.random() * b.duration); L = FXL[k] = { src, g }; }
+  if (!L) { if (gain < 0.003) return; const src = ac.createBufferSource(), g = ac.createGain(); src.buffer = b; src.loop = true; g.gain.value = 0; src.connect(g); g.connect(fxBus()); src.start(t, Math.random() * b.duration); L = FXL[k] = { src, g }; }
   L.g.gain.setTargetAtTime(gain, t, gain > L.g.gain.value ? 0.04 : 0.12); L.src.playbackRate.setTargetAtTime(rate, t, 0.05);
   if (gain < 0.003 && L.g.gain.value < 0.004) { try { L.src.stop(); } catch (e) {} delete FXL[k]; }
 }
-function fxShot(k, gain, t) { const b = sndBuf(SND_FX[k]); if (!b || gain < 0.01) return; const n = ac.createBufferSource(), g = ac.createGain(); n.buffer = b; n.playbackRate.value = 0.93 + Math.random() * 0.14; g.gain.value = gain; n.connect(g); g.connect(sfxBus()); n.start(t); }
+function fxShot(k, gain, t) { const b = sndBuf(SND_FX[k]); if (!b || gain < 0.01) return; const n = ac.createBufferSource(), g = ac.createGain(); n.buffer = b; n.playbackRate.value = 0.93 + Math.random() * 0.14; g.gain.value = gain; n.connect(g); g.connect(fxBus()); n.start(t); }
 function fxTick(t, on, cls) {
   const dt = clamp(t - FXS.t, 0, 0.1); FXS.t = t; const v = on ? pl.v : 0, sf = window.__surfTest || pl.surf || 'road', sp = k => clamp(v / k, 0, 1);
   pl.wallT = Math.max(0, (pl.wallT || 0) - dt); pl.rubT = Math.max(0, (pl.rubT || 0) - dt);
+  // Lautstärken v2.06 etwa halbiert (Kies lag über dem Motor); Gesamtpegel über den Regler „Effekte“
   // Untergrund: Kies (Prasseln, Steine am Unterboden), Rasen (Rauschen, Holpern), Randsteine (Rattern, schneller mit dem Tempo)
-  fxLoop('kies', on && sf === 'gravel' ? 0.75 * Math.max(0.15, sp(25)) * (v > 1 ? 1 : 0) : 0, 0.85 + 0.3 * sp(40), t);
-  fxLoop('rasen', on && sf === 'grass' ? 0.6 * sp(25) : 0, 0.9 + 0.2 * sp(40), t);
-  fxLoop('kerb', on && sf === 'kerb' && v > 4 ? (cls === 'kart' ? 0.4 : 0.6) * sp(20) : 0, clamp(0.55 + v / 55, 0.55, 1.9), t);
-  if (on && (sf === 'gravel' || sf === 'grass') && FXS.surf !== 'gravel' && FXS.surf !== 'grass' && v > 12) fxShot('kiesEin', (sf === 'gravel' ? 0.8 : 0.45) * sp(40), t);   // Abflug ins Kiesbett
+  fxLoop('kies', on && sf === 'gravel' ? 0.3 * Math.max(0.15, sp(25)) * (v > 1 ? 1 : 0) : 0, 0.85 + 0.3 * sp(40), t);
+  fxLoop('rasen', on && sf === 'grass' ? 0.25 * sp(25) : 0, 0.9 + 0.2 * sp(40), t);
+  fxLoop('kerb', on && sf === 'kerb' && v > 4 ? (cls === 'kart' ? 0.2 : 0.3) * sp(20) : 0, clamp(0.55 + v / 55, 0.55, 1.9), t);
+  if (on && (sf === 'gravel' || sf === 'grass') && FXS.surf !== 'gravel' && FXS.surf !== 'grass' && v > 12) fxShot('kiesEin', (sf === 'gravel' ? 0.4 : 0.22) * sp(40), t);   // Abflug ins Kiesbett
   FXS.surf = sf;
   // v2.04: Reifenquietschen entfernt (klang falsch)
   // Schaben an der Bande (Leitplanke: Metall, Mauer: Beton) und Reiben Auto an Auto
-  const wall = on && pl.wallT > 0 && v > 3 ? (cls === 'kart' ? 0.4 : 0.65) * Math.max(0.25, sp(25)) : 0, concrete = TH && TH.wallKind === 'concrete';
+  const wall = on && pl.wallT > 0 && v > 3 ? (cls === 'kart' ? 0.22 : 0.35) * Math.max(0.25, sp(25)) : 0, concrete = TH && TH.wallKind === 'concrete';
   fxLoop('metall', concrete || cls === 'kart' ? 0 : wall, 0.85 + v / 150, t); fxLoop('beton', concrete || cls === 'kart' ? wall : 0, 0.85 + v / 150, t);
   // v2.01: Reiben Auto an Auto entfernt – die Aufnahme quietschte und lief schon bei leichtester Berührung im Pulk
   // Fahrtwind: offenes Cockpit bzw. offener Roadster, wächst mit dem Quadrat des Tempos
@@ -7948,7 +7993,7 @@ function bump(strength = 1, kind = 'car', src = null) {   // src: anderes Auto b
         // direkt auf den Ausgang, nicht durch den Begrenzer: dessen Vorausschau drückte kurze Schläge („leicht“) auf ein Fünftel; die Aufnahmen sind auf sichere Pegel gebracht und laufen nie übereinander
         const n = ac.createBufferSource(), g = ac.createGain(), dur = Math.min(b.duration, 0.12 + b.duration * (kt ? 0.4 + 0.6 * st : 0.3 + 0.7 * st)), v = 0.85 * (key === 'leicht' ? 0.25 + 0.5 * st : kt ? 0.3 + 0.5 * st : 0.35 + 0.45 * st);
         n.buffer = b; n.playbackRate.value = 0.94 + Math.random() * 0.12; g.gain.setValueAtTime(v, t); g.gain.setValueAtTime(v, t + dur * 0.6); g.gain.linearRampToValueAtTime(0.0001, t + dur);
-        n.connect(g); g.connect(sfxBus()); n.start(t); n.stop(t + dur + 0.02); CRS.end = t + dur; CRS.st = st; CRS.g = g; return; } }
+        n.connect(g); g.connect(fxBus()); n.start(t); n.stop(t + dur + 0.02); CRS.end = t + dur; CRS.st = st; CRS.g = g; return; } }
     if (!BUMP_NB) { BUMP_NB = ac.createBuffer(1, ac.sampleRate, ac.sampleRate); const d = BUMP_NB.getChannelData(0); for (let k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1; }
     const nz = (f, q, v, dur, off = 0) => { const n = ac.createBufferSource(), bp = ac.createBiquadFilter(), g = ac.createGain(); n.buffer = BUMP_NB; bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = q; g.gain.setValueAtTime(v, t + off); g.gain.exponentialRampToValueAtTime(0.001, t + off + dur); n.connect(bp); bp.connect(g); g.connect(out); n.start(t + off, Math.random() * 0.5); n.stop(t + off + dur + 0.02); };
     { const o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(95, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.16); g.gain.setValueAtTime(0.42, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.16 + 0.1 * st); o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.4); }   // Schlag (leiser als vorher: lag zu 98 % unter 150 Hz und war auf Handylautsprechern kaum zu hören)
@@ -9100,8 +9145,8 @@ $$('.ptabs').forEach(tb => tb.querySelectorAll('button').forEach(b => b.addEvent
 function openSettings(from) { settingsFrom = from; mountSettings('settings'); $('#' + from).classList.add('hidden'); $('#settings').classList.remove('hidden'); renderMenu(); }
 function closeSettings() { $('#settings').classList.add('hidden'); if (settingsFrom) $('#' + settingsFrom).classList.remove('hidden'); }
 $('#closeSettings').addEventListener('click', closeSettings); $('#settingsDone').addEventListener('click', closeSettings);
-for (const k of ['volMusic', 'volCar']) $('#' + k).addEventListener('input', e => {
-  S[k] = +e.target.value / 100; if (k === 'volCar') S.sound = S.volCar > 0; else S.music = S.volMusic > 0;
+for (const k of ['volMusic', 'volCar', 'volFx']) $('#' + k).addEventListener('input', e => {
+  S[k] = +e.target.value / 100; if (k === 'volCar') S.sound = S.volCar > 0; else if (k === 'volMusic') S.music = S.volMusic > 0;
   $('#' + k + 'V').textContent = e.target.value + ' %'; e.target.style.setProperty('--p', e.target.value + '%'); save(); initAudio(); initMusic(); applyVolumes();
 });
 $('#nextSong').addEventListener('click', () => { nextSong(); $('#nextSong').textContent = '⏭ Nächstes Lied (jetzt: ' + raceSongName() + ')'; });
@@ -9617,7 +9662,7 @@ function renderMenu() {
   $('#lapChips').innerHTML = (tr.extra ? [1, 2, 3, 5] : tr.kartOnly ? [3, 5, 8, 12, full] : [3, 5, 10, 20, full]).map(n => '<button data-l="' + n + '" class="' + (n === S.laps ? 'on' : '') + '">' + (n === full && !tr.extra ? n + ' (voll)' : n) + '</button>').join('');
   $$('#lapChips button').forEach(b => b.addEventListener('click', () => { S.laps = +b.dataset.l; save(); renderMenu(); }));
   $('#creditSongs').textContent = RACE_SONGS.map(sg => (sg.artist ? sg.artist + ' – ' : '') + sg.name).join(' · ');
-  for (const k of ['volMusic', 'volCar']) { const v = Math.round((S[k] ?? 0.8) * 100); $('#' + k).value = v; $('#' + k).style.setProperty('--p', v + '%'); $('#' + k + 'V').textContent = v + ' %'; }
+  for (const k of ['volMusic', 'volCar', 'volFx']) { const v = Math.round((S[k] ?? (k === 'volFx' ? 0.6 : 0.8)) * 100); $('#' + k).value = v; $('#' + k).style.setProperty('--p', v + '%'); $('#' + k + 'V').textContent = v + ' %'; }
   $('#gfxInfo').textContent = { low: 'Ohne Schatten und Nachbearbeitung – für ältere Handys.', high: 'Schatten, Umgebungsverdeckung (AO), Bloom, Sonnenreflexe und Tempo-Effekte. Auf hochauflösenden Displays mit angepasster Renderauflösung und Nachschärfen für flüssige Bildraten.', ultra: 'Wie „Schön“, dazu feinere Umgebungsverdeckung, schärfere Schatten, volle Auflösung, mehr Bäume und Gebäude. Braucht ein starkes Gerät.' }[S.gfx] || '';
   $$('.seg').forEach(seg => { if (!seg.dataset.key) return; seg.querySelectorAll('button').forEach(b => b.classList.toggle('on', S[seg.dataset.key] === b.dataset.v)); });   /* Karriere-Auswahl (Schwierigkeit/Länge) hat keinen Einstellungsschlüssel: nicht zurücksetzen */
   $$('.sw').forEach(b => b.classList.toggle('on', !!S[b.dataset.tog]));
@@ -9785,7 +9830,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.05'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.09'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

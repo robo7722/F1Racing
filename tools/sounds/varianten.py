@@ -24,8 +24,8 @@ VAR = {
     'f1_v2': ('f1_mittel.wav', 7),     # 230 -> ~345 Hz ≈ 6.900 U/min
     'f1_v3': ('f1_hoch.wav', 9),       # 260 -> ~437 Hz ≈ 8.700 U/min
     'f1_v4': ('f1_hoch.wav', 13),      # 260 -> ~551 Hz ≈ 11.000 U/min
-    'f2_v2': ('f2_mittel.wav', 5),     # 255 -> ~340 Hz ≈ 6.800 U/min
-    'f2_v3': ('f2_hoch.wav', -4),      # 556 -> ~441 Hz ≈ 8.800 U/min
+    'f2_v3': ('f2_hoch.wav', -4),      # 556 -> ~441 Hz ≈ 8.800 U/min (v2.06: nur noch für Gegner)
+    'f2_v4': ('f2_hoch.wav', -6),      # v2.06: 556 -> ~393 Hz ≈ 7.900 U/min, deckt den ganzen F2-Rennbereich ab
     'kart_v0': ('kart_mittel.wav', -12),  # 156 -> ~78 Hz ≈ 4.700 U/min
     'kart_v1': ('kart_mittel.wav', -7),   # 156 -> ~104 Hz ≈ 6.250 U/min
     'kart_v3': ('kart_hoch.wav', 4),      # 177 -> ~223 Hz ≈ 13.400 U/min
