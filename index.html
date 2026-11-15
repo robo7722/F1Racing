@@ -2714,11 +2714,13 @@ function parseCarBin(CARBIN) {
 }
 const CARM = parseCarBin(CARBIN), CARM2 = parseCarBin(F2BIN);
 // Modellkorrektur: kleine Finnen am Cockpitrand ragten in der TV-Kamera wie Zacken unter dem Halo ins Bild -> auf die Höhe des Cockpitrands einebnen
-function flatFins(M, x0, x1, z0, z1, yMax) {
+function flatFins(M, x0, x1, z0, z1, yMax, keep) {
   if (!M) return; for (const Lv of M.lods) for (const k of ['gloss', 'matte']) { const g = Lv[k]; if (!g) continue; const p = g.attributes.position;
-    for (let i = 0; i < p.count; i++) { const ax = Math.abs(p.getX(i)), z = p.getZ(i); if (ax >= x0 && ax <= x1 && z >= z0 && z <= z1 && p.getY(i) > yMax) p.setY(i, yMax); } }
+    for (let i = 0; i < p.count; i++) { const ax = Math.abs(p.getX(i)), z = p.getZ(i), y = p.getY(i); if (ax >= x0 && ax <= x1 && z >= z0 && z <= z1 && y > yMax && !(keep && keep(ax, y, z))) p.setY(i, yMax); } }
 }
-flatFins(CARM, 0.12, 0.30, 0.70, 0.92, 0.64);
+// v1.99: Spiegelarm (waagerecht auf y 0,68–0,70) und Kopf seines Pfostens (|x| ≈ 0,20) liegen im selben Bereich – sie wurden mit auf 0,64 gedrückt:
+// der Arm lief als schräge Klinge zum Spiegel, mit Zacken aus verzogenen Dreiecken (Helmkamera, rechts und links). Diese Punkte bleiben jetzt stehen.
+flatFins(CARM, 0.12, 0.30, 0.70, 0.92, 0.64, (ax, y, z) => y > 0.665 && ax > 0.19 && z > 0.75 && z < 0.86);
 // F1-Modell: Über dem Fahrer lag eine Gitterplatte auf Höhe 0,576 (Cockpit von außen geschlossen, vom Fahrer sah man nur den Helm).
 // Platte innerhalb der Cockpitöffnung entfernen – wie beim F2 sieht man jetzt in das Cockpit auf den Fahrer im Rennanzug.
 function dropFaces(M, test) {
@@ -5035,7 +5037,16 @@ function zoneSeed(Y, FX, SEG, near, x0, z0, bw, bh) { const G1 = SEG + 1, px = P
     for (const i of near) { const d = (x - px[i]) ** 2 + (z - pz[i]) ** 2; if (d < bd) { bd = d; bj = i; } if (d < (hw[i] + 1.5) ** 2) under = Math.min(under, el[i]); }
     if (FLAT) { Y[k] = -0.07; FX[k] = 1; } else if (under < 1e8) { Y[k] = under - 0.07; FX[k] = 1; } else { Y[k] = el[bj] - 0.07;
       /* Außenbereich (nur ein Streckenast in der Nähe): fest auf Höhe des nächsten Streckenpunkts wie Grasstreifen und Geländeband – frei geglättet fiel der Kies sonst seitlich bis 1,8 m ab und endete an einer Stufe (Spa, Les Combes) */
-      const d1 = Math.sqrt(bd); if (d1 > hw[bj] + 4) { let d2 = 1e18; for (const i of near) { let di = Math.abs(i - bj); di = Math.min(di, px.length - di); if (di * DS < 2 * d1 + 20) continue; const d = (x - px[i]) ** 2 + (z - pz[i]) ** 2; if (d < d2) d2 = d; } if (Math.sqrt(d2) > d1 + 25) FX[k] = 1; } } } }
+      const d1 = Math.sqrt(bd); if (d1 > hw[bj] + 4) { let d2 = 1e18; for (const i of near) { let di = Math.abs(i - bj); di = Math.min(di, px.length - di); if (di * DS < 2 * d1 + 20) continue; const d = (x - px[i]) ** 2 + (z - pz[i]) ** 2; if (d < d2) d2 = d; } if (Math.sqrt(d2) > d1 + 25) FX[k] = 1; } } }
+  /* Banden/Mauern in der Fläche (Enden der Schikanen-Zone, Nachbargerade): Kies an der Wandlinie fest auf deren Fußhöhe. Sonst kam die Höhe vom nächstgelegenen
+     Schikanenpunkt – an der Bus-Stop-Ausfahrt lag der Kies 1 m unter der Bande, ihre dunkle Schürze stand als Keil frei (bzw. der Kies verdeckte Banden halb) (v1.99) */
+  if (!FLAT) { const cs = Math.max(bw, bh) / SEG * 1.2, BD = new Float32Array(G1 * G1).fill(1e9);   /* je Rasterpunkt die nächste Wandlinie */
+    for (const i of near) for (const [W, sg, nb] of [[WL, -1, 1], [WR, 1, 2]]) { if (NOWALL[i] & nb) continue; const wx = px[i] + RX[i] * W[i] * sg, wz = pz[i] + RZ[i] * W[i] * sg;
+      const ix0 = Math.floor((wx - cs - x0) / bw * SEG), ix1 = Math.ceil((wx + cs - x0) / bw * SEG), iz0 = Math.floor((wz - cs - z0) / bh * SEG), iz1 = Math.ceil((wz + cs - z0) / bh * SEG);
+      for (let iz = Math.max(0, iz0); iz <= Math.min(SEG, iz1); iz++) for (let ix = Math.max(0, ix0); ix <= Math.min(SEG, ix1); ix++) { const k = iz * G1 + ix, x = x0 + ix * bw / SEG, z = z0 + iz * bh / SEG;
+        const dw = (x - wx) ** 2 + (z - wz) ** 2; if (dw > cs * cs || dw >= BD[k]) continue; let under = false; for (const j of near) if ((x - px[j]) ** 2 + (z - pz[j]) ** 2 < (hw[j] + 1.5) ** 2) { under = true; break; } if (under) continue;
+        Y[k] = el[i] - 0.07; FX[k] = 1; BD[k] = dw; } } } }
+
 function relaxZone(Y, FX, SEG) { const G1 = SEG + 1;
   for (let it = 0; it < 700; it++) for (let iz = 0; iz < G1; iz++) for (let ix = 0; ix < G1; ix++) { const k = iz * G1 + ix; if (FX[k]) continue;
     const a = Y[ix > 0 ? k - 1 : k + 1], b = Y[ix < SEG ? k + 1 : k - 1], c = Y[iz > 0 ? k - G1 : k + G1], d = Y[iz < SEG ? k + G1 : k - G1]; Y[k] += 1.85 * ((a + b + c + d) * 0.25 - Y[k]); } }
@@ -5405,9 +5416,18 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         const path = () => { g.beginPath(); ids.forEach((i, n) => { const x = (PX[i] - x0) * kx, y = (PZ[i] - z0) * kx; n ? g.lineTo(x, y) : g.moveTo(x, y); }); };
         const pat = (img, m) => { const p = g.createPattern(img, 'repeat'); p.setTransform(new DOMMatrix().scale(m * kx / img.width)); return p; };
         const layer = (r, style) => { path(); g.lineWidth = 2 * r * kx; g.strokeStyle = style; g.stroke(); };
+        // Zonenfläche je Seite nur bis zur Absperrungslinie (WL/WR + 0,5 m), höchstens R (v1.99, Bus-Stop). Vorher Kiesbett überall R = Fahrbahn + 31 m
+        // und runde Enden (Kies 25–30 m, Asphalt/Farbstreifen bis 20 m): wo die Linie näher lag (Boxengasse, Tribüne, Bäume, Bande der Start-Ziel-Geraden),
+        // lag die Fläche unter Tribünen, Werbetafeln (EAU ROUGE/FRANCORCHAMPS halb im Kies), Bäumen und Boxen.
         layer(R, pat(TEX.gravel.image, 10));                    // Kiesbett
         layer(hw + 15, pat(TEX.runoff.image, 12));              // Asphalt-Auslauf
         for (const [r, c] of [[hw + 12.5, '#e4312b'], [hw + 10.5, '#f5c518'], [hw + 9.3, '#f5f2ea'], [hw + 7.5, '#e4312b'], [hw + 5.3, '#f5c518'], [hw + 3.2, '#f5f2ea'], [hw + 2.6, '#3a3c40']]) layer(r, c);
+        { const mc = document.createElement('canvas'); mc.width = w; mc.height = h; const mg = mc.getContext('2d'); mg.fillStyle = mg.strokeStyle = '#000'; mg.lineWidth = 2;
+          const eL = i => Math.min(R, WL[i] + 0.5), eR = i => Math.min(R, WR[i] + 0.5), pt = (i, o) => [(PX[i] + RX[i] * o - x0) * kx, (PZ[i] + RZ[i] * o - z0) * kx];
+          const ext = [(za - 1 + N) % N, ...ids, (zb + 1) % N];   /* ein Abschnitt Überlappung mit den normalen Streifen davor/danach */
+          for (let n = 0; n + 1 < ext.length; n++) { const a = ext[n], b = ext[n + 1], q = [pt(a, -eL(a)), pt(b, -eL(b)), pt(b, eR(b)), pt(a, eR(a))];
+            mg.beginPath(); q.forEach(([x, y], k) => k ? mg.lineTo(x, y) : mg.moveTo(x, y)); mg.closePath(); mg.fill(); mg.stroke(); }   /* je Abschnitt ein Viereck (ein Umriss über die Schikane würde sich selbst schneiden) */
+          g.globalCompositeOperation = 'destination-in'; g.drawImage(mc, 0, 0); g.globalCompositeOperation = 'source-over'; }
         g.globalCompositeOperation = 'source-atop'; g.globalAlpha = .1; for (let k = 0; k < 40000; k++) { g.fillStyle = Math.random() < .5 ? '#000' : '#fff'; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
         g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
       });
@@ -9652,7 +9672,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '1.98'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '1.99'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

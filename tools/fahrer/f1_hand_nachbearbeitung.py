@@ -108,6 +108,7 @@ TH_SWEEP, TH_RISE = 105.0, 0.010      # neuer Daumen: Bogen um den Griff (Grad) 
 TH_RAD = (0.0135, 0.0118, 0.0108)     # Daumenradius Grund / Mitte / Spitze (lokal)
 TIP_K = 0.6                           # Zeigefinger-Kuppe: Anteil, um den sie oberhalb T0 an die Faust gedrückt wird (v1.94: 0,92 quetschte sie zu einer Doppelfläche = dunkler Spalt oben auf der Hand)
 TH_ROOT = (-0.3, 28.0, 0.012, 0.050, 0.0185)   # Daumenwurzel (v1.93): Länge in u, Bogen weiter nach außen (Grad), Versatz Richtung Handgelenk, Abstand zur Griffachse, Dicke
+TIP_OUT = 0.05                        # Daumenkuppe: Spitzenpunkt vor dem letzten Ring (Anteil von TH_RAD[2]); 0,6 ergab eine nadelartige Spitze (v1.99)
 
 
 def thumb_mesh(fr, n=36, k=14):
@@ -135,7 +136,7 @@ def thumb_mesh(fr, n=36, k=14):
         sb = 1.0 + 0.35 * (S(-u / -TH_ROOT[0]) if u < 0 else (1 - S(u / 0.3)))      # Wurzel entlang der Griffachse breiter (Ballen statt Rohr)
         for j in range(k):
             a = j / k * 2 * np.pi; pts.append(Ci + r * (np.cos(a) * Nv * 0.85 + np.sin(a) * Bv * sb)); uu.append(max(u, 0.0))   # leicht flach (Daumenballen-Seite)
-    tip = C[-1] + T[-1] * TH_RAD[2] * 0.6; pts.append(tip); uu.append(1.0)
+    tip = C[-1] + T[-1] * TH_RAD[2] * TIP_OUT; pts.append(tip); uu.append(1.0)   # v1.99: vorher 0,6 – Nadel 6,5 mm vor dem letzten Ring (r 1,5 mm)
     root = C[0] - T[0] * TH_ROOT[4] * 0.5; pts.append(root); uu.append(0.0)
     F = []
     for i in range(nr - 1):

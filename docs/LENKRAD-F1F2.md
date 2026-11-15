@@ -139,9 +139,25 @@ Rückmeldung (Ferrari, Spa, Helmkamera, Einschlag rechts): oben an der rechten F
 
 Nicht neu geprüft: Clipping (`export.cjs` + `check_lenkrad.py`) – der Stummel wird nur in die Faust eingezogen, nichts wandert nach außen.
 
+## v1.99 – Nadel an der Daumenkuppe, Zacken am Spiegelarm
+Rückmeldung (Ferrari, Spa, Helmkamera): „Die Daumen haben so eine Spitze“ und „die Rückspiegel haben einen kleinen Fehler, da sind ein paar Dreiecke zu viel“.
+
+1. **Daumenspitze**: `thumb_mesh` endet mit einem Ring von nur 1,5 mm Radius, davor saß ein einzelner Spitzenpunkt 0,6 × `TH_RAD[2]` = 6,5 mm weiter vorn – eine Nadel.
+   Jetzt `TIP_OUT = 0,05` (0,5 mm): die Kuppe endet rund. `f1fahrer.bin` neu aus der Vorlage v1.65 (`git show 03c9550:f1fahrer.bin`, dann `f1_hand_nachbearbeitung.py`, dann `f1_handgelenk.py`).
+   Ohne die Änderung ergibt dieser Ablauf die bisherige Datei bitgenau; mit ihr haben sich nur die zwei Spitzenpunkte (je Hand einer) bewegt.
+2. **Spiegelarm**: kein Fehler des Spiegels selbst, sondern der Modellkorrektur `flatFins` (seit v1.01, „kleine Finnen am Cockpitrand ragten in der TV-Kamera wie Zacken unter dem Halo“).
+   Sie drückt alle Punkte mit |x| 0,12–0,30, z 0,70–0,92 über 0,64 auf 0,64. Dort liegen aber auch der Pfosten (|x| ≈ 0,20) und das innere Stück des waagerechten Spiegelarms (y 0,68–0,70):
+   Der Arm lief als schräge „Klinge“ zum Spiegel, mit dunklen Zacken aus verzogenen Dreiecken. Gefunden per Strahl aus der Helmkamera durch die Zacken – alle getroffenen Punkte lagen genau auf 0,640.
+   Jetzt bleiben Punkte über 0,665 im Spiegelbereich (|x| > 0,19, z 0,75–0,86) stehen. Helm- und TV-Kamera geprüft: Arm gerade auf dem Pfosten, keine Zacken unter dem Halo.
+
+![[bilder/daumen_spiegel_v199.jpg]]
+(links v1.98, rechts v1.99; oben rechte Faust, darunter rechter und linker Spiegelarm aus der Helmkamera, gezoomt)
+
+Nicht neu geprüft: Clipping Hand/Lenkrad (`export.cjs` + `check_lenkrad.py`) – die Daumenspitze ist nur 6 mm kürzer geworden, nichts wandert nach außen.
+
 ## Offen / Ideen
 - ~~An der Faust bleibt oben ein kleiner Grat~~ – erledigt in v1.96 (war die Spitze des alten Daumens).
-- Die Spitze des neuen Daumens (`thumb_mesh`) läuft in eine kleine Spitze aus, nur stark gezoomt sichtbar.
+- ~~Die Spitze des neuen Daumens (`thumb_mesh`) läuft in eine kleine Spitze aus~~ – erledigt in v1.99 (`TIP_OUT`).
 - Ärmel-Schattierung: schärfer ginge nur mit der Vorlage (`base.jpg`) – dann die Ärmel-UV-Inseln im Atlas größer backen.
 - Handschuh-Nachbearbeitung (`f1_hand_nachbearbeitung.py`, danach `f1_handgelenk.py`) muss nach jedem Neubau von f1fahrer.bin (build_fahrer.py) erneut laufen.
 - Bei vollem Einschlag knickt die obere Hand weiter ~54° ab (jetzt weich gebogen). Weniger ginge mit mehr Handrolle (`F1_ROLL`) oder höherem Ellbogen, beides braucht neue Clipping-Prüfung.

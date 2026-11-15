@@ -642,3 +642,27 @@ Die Bäume der `trees: 'forest'`-Strecken bestehen nicht mehr aus Kugeln und Keg
 ### Oberfläche
 - Gestaltung nach dem F1-Spiel: eckig (Radius 0), Carbon-Flächen mit Tiefe, Titillium Web aufrecht, Rot `#E10600`. Alle Regeln im Block „UI 2027c“ am Ende des Stils.
 - Testgrößen: 891×412 (S26 Ultra quer als App) und 891×360 (im Browser mit Leisten).
+
+---
+
+## Nachtrag: Version 1.99 – Spa, Kiesflächen der Schikanen (Bus-Stop, Les Combes)
+Rückmeldung (Handy, Spa, letzte Kurve, Auto im Kies): „clippt noch alles“ – Werbetafeln (EAU ROUGE, FRANCORCHAMPS) halb im Kies, Tribünensockel im Kies.
+Die Korrektur aus v1.57 (Kies außen auf Streckenhöhe, keine Stufe zum Gras) war noch drin – das hier waren andere Ursachen.
+
+Die Zonenfläche (`ZONEH`, ein Netz mit gemalter Textur je Schikane, Abschnitt „Schikanen mit Auslaufzone“) hatte drei Fehler:
+1. **Kies mit festem Radius** `R = Fahrbahn + 31 m` um die Mittellinie – unabhängig von der Absperrungslinie `WL`/`WR`. Wo die Linie näher lag (Boxengasse, Tribünen, Bäume), lag Kies unter Tribüne, Werbetafeln, Bäumen, Schild „STAVELOT“ und der Ferrari-Box.
+2. **Runde Enden** der Malschichten (Kies 25–30 m, Asphalt und Farbstreifen bis 20 m) reichten über die Bande der anschließenden Start-Ziel-Geraden.
+3. **Höhe am Rand**: Die Kieshöhe kam vom nächstgelegenen Schikanenpunkt. Direkt an der Bande der Geraden lag der Kies dadurch 1 m tiefer als deren Fuß (dunkle Schürze als Keil sichtbar) bzw. an anderen Stellen darüber (Bande halb verdeckt).
+
+Lösung:
+- Alle Malschichten werden mit einer Maske zugeschnitten: je Streckenabschnitt ein Viereck von `−min(R, WL + 0,5)` bis `+min(R, WR + 0,5)`, ein Abschnitt Überlappung vor und nach der Zone, keine runden Enden mehr (`destination-in` mit einer zweiten Leinwand).
+- `zoneSeed`: Rasterpunkte an jeder Wandlinie (nicht `NOWALL`) werden fest auf die Fußhöhe dieser Wand gesetzt (je Punkt die nächste Wandlinie, nicht unter einer Fahrbahn). Das Feld nutzen auch die Autos abseits der Fahrbahn.
+
+Gemessen (Spa, F1): kein Objekt mit Fuß unter dem Kies (vorher Tribüne, Bäume, Büsche bis 0,55 m); Kies an allen Wandfüßen der beiden Zonen −0,06 … −0,12 m (gewollt −0,07, vorher bis −1,01). `__clipAll()` leer.
+
+Bleibt (gewollt, echte Geländeform): Aus dem Bus-Stop-Kies steigt die Fläche zur Start-Ziel-Geraden um 3,3 m an. Aus Fahrerhöhe tief im Kies verschwindet deshalb der untere Rand der fernen Banden hinter der Kuppe – wie hinter einem Hügel.
+
+![[bilder/spa_busstop_v199.jpg]]
+(oben: Bus-Stop von oben, Kies endet an der Absperrungslinie; unten: Blick aus dem Kies auf Tribüne und Banden)
+
+Prüfskripte (Arbeitsordner, nicht im Repo): Objekte im Kies (Fußpunkt unter Zonenhöhe innerhalb der Kiesmaske ± 1,5 m) und Kies an den Wandfüßen. Bei neuen Zonen beides prüfen.
