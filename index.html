@@ -7895,11 +7895,11 @@ function updateAudio(thr) {
   const f = E.rpm / 60 * (kart ? 1 : road ? 2 : 3), load = raceState === 'lights' ? 0.2 + 0.8 * (pl.rev || 0) : thr;   // V6: 3 Zündungen pro Umdrehung · Roadster-Vierzylinder: 2 · Zweitakt-Kart: 1
   if (kart) { E.o1.frequency.setTargetAtTime(f * jit, t, 0.012); E.o2.frequency.setTargetAtTime(f * 2.01, t, 0.012); E.o3.frequency.setTargetAtTime(f * 0.5, t, 0.012); E.o4.frequency.setTargetAtTime(f * 3.02, t, 0.012); }
   else if (f2) { E.o1.frequency.setTargetAtTime(f * jit, t, 0.012); E.o2.frequency.setTargetAtTime(f * 1.503, t, 0.012); E.o3.frequency.setTargetAtTime(f * 0.5, t, 0.012); E.o4.frequency.setTargetAtTime(f * 0.75 * 1.004, t, 0.012); }
-  else if (road) { E.o1.frequency.setTargetAtTime(f * jit, t, 0.02); E.o2.frequency.setTargetAtTime(f * 1.5, t, 0.02); E.o3.frequency.setTargetAtTime(f * 0.5, t, 0.02); E.o4.frequency.setTargetAtTime(f * 0.25 * 1.003, t, 0.02); }
+  else if (road) { /* MX-5-Vierzylinder: f = Zündfrequenz (2. Motorordnung); 1,5·f = 3. Ordnung, 0,5·f = Kurbelwelle (1.), 0,25·f = Arbeitsspiel (½) */ E.o1.frequency.setTargetAtTime(f * jit, t, 0.02); E.o2.frequency.setTargetAtTime(f * 1.5, t, 0.02); E.o3.frequency.setTargetAtTime(f * 0.5, t, 0.02); E.o4.frequency.setTargetAtTime(f * 0.25 * 1.003, t, 0.02); }
   else { E.o1.frequency.setTargetAtTime(f * jit, t, 0.012); E.o2.frequency.setTargetAtTime(f * 2.005, t, 0.012); E.o3.frequency.setTargetAtTime(f * 0.5, t, 0.012); E.o4.frequency.setTargetAtTime(f * 1.5, t, 0.012); }
   E.nbp.frequency.setTargetAtTime(f * (kart ? 4 : 2.5), t, 0.02); E.ng.gain.setTargetAtTime(kart ? 0.1 + load * 0.2 : f2 ? 0.16 + load * 0.26 : 0.12 + load * 0.22, t, 0.05);
   E.lp.frequency.setTargetAtTime(kart ? Math.min(5200, 1300 + load * 2700 + (E.rpm / 14000) * 1500) : f2 ? Math.min(3300, 450 + load * 2000 + (E.rpm / 10500) * 1000) : road ? Math.min(1900, 260 + load * 900 + (E.rpm / 7300) * 700) : Math.min(4200, 500 + load * 2600 + (E.rpm / 12000) * 1300), t, 0.03);
-  const rec = sndEngine(E, road ? 'road' : kart ? 'kart' : f2 ? 'f2' : 'f1', on, load, t);   // Aufnahme läuft → synthetischer Motor still (Turbo-Pfeifen, ERS und Fehlzündungen bleiben)
+  const rec = sndEngine(E, road ? null : kart ? 'kart' : f2 ? 'f2' : 'f1', on, load, t);   // v2.17: Roadster wieder SYNTHETISCH (Wunsch des Nutzers) – Aufnahmen aus; Synthesizer jetzt als Vierzylinder (2 Zündungen/Umdrehung, vor v2.00 fälschlich 3 wie ein Sechszylinder)   // Aufnahme läuft → synthetischer Motor still (Turbo-Pfeifen, ERS und Fehlzündungen bleiben)
   const vol = on && !rec ? (E.cut > 0 ? 0.03 : (kart ? 0.055 + load * 0.065 : f2 ? 0.075 + load * 0.085 : road ? 0.09 + load * 0.09 : 0.07 + load * 0.08)) : 0;
   E.out.gain.setTargetAtTime(vol, t, E.cut > 0 ? 0.01 : 0.04);
   E.turbo.frequency.setTargetAtTime(2600 + (E.rpm / 12000) * 2600, t, 0.05); E.tg.gain.setTargetAtTime(on && !road && !kart ? load * (f2 ? 0.006 : 0.012) : 0, t, 0.1);
@@ -9831,7 +9831,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.16'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.17'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

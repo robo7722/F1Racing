@@ -1,5 +1,8 @@
 # Anleitung: Motorsound aus einer echten Aufnahme zusammensetzen
 
+> [!note] Stand im Spiel
+> Seit v2.17 nutzt das F1Racing-Spiel für den Roadster wieder den **Synthesizer** (Wunsch des Nutzers). Die hier beschriebene Zusammensetzung aus der echten Aufnahme ist im Code abgeschaltet, aber vollständig vorhanden (`SND_ENG.road`). Die Anleitung beschreibt das Verfahren, nicht den aktuellen Spiel-Klang.
+
 Stand: 15.11.2026 · Vorlage: **Roadster (MX-5) im F1Racing-Spiel, Version 2.14** – vom Nutzer als „passt“ abgenommen (Hörprobe `16_MX5_v2.14`).
 Gedacht als Vorlage für weitere Spiele (z. B. das Rally-Spiel). Alles hier ist Web Audio (Browser), lässt sich aber auf jede Audio-Engine übertragen.
 Ausführliche Entstehungsgeschichte und Messwerte: [[SOUNDS]] (Abschnitte v2.06–v2.14).

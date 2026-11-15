@@ -302,3 +302,10 @@ Stand: 15.11.2026. Ohne Credits.
 - **Ursache:** Im Rennbereich mischte das Spiel dauerhaft zwei Fassungen **derselben** Aufnahme: bei ~6.100–6.250 U/min `mx5e_5200` und `mx5e_6900` (= 5.200er +5 HT), bei ~4.250 U/min Durchzug und `mx5e_5200`. Nach fast jedem Hochschalten landete die Drehzahl genau dort. Zwei fast gleiche, leicht versetzte Aufnahmen = Kammfilter → unsauber/doppelt. 15 von 64 Messpunkten im Rennen betroffen.
 - **Lösung:** Übergänge schmal und außerhalb des Fahrbereichs: 5.200 → 6.900 bei 5.500–5.600 (`[0.2, 0.06]`), Durchzug → Schleife bei 3.900–4.000. Im Rennbereich (5.600–7.100) läuft nur `mx5e_6900` (Tempo 0,8–1,03). Danach 0 von 62 Messpunkten mit Mischung.
 - **Regel für die Anleitung:** Wo die Drehzahl im Spiel lange verweilt (nach dem Schalten, Kurven), darf **nie** überblendet werden – Übergänge nur in Bereiche legen, die schnell durchfahren werden.
+
+## v2.17 – Roadster wieder synthetisch (Wunsch des Nutzers), als Vierzylinder
+- Der Nutzer bricht die Arbeit an der echten Aufnahme ab und will den **alten synthetischen MX-5-Sound** – aber nach dem richtigen Motor klingend.
+- Roadster: `sndEngine(E, road ? null : …)` → alle Aufnahmen aus (Stufen, Gasstöße, Durchzug, Schub-Loop); es läuft der Synthesizer wie vor v2.00 (4 Oszillatoren + Rauschen, Verzerrer, Tiefpass `min(1.900, 260 + Gas·900 + U/min/7.300·700)`, Lautstärke `0,09 + Gas·0,09`).
+- **Richtiger Motor:** Grundfrequenz `U/min ÷ 60 × 2` (Vierzylinder, 2 Zündungen je Umdrehung) statt × 3 (vor v2.00 wie ein Reihensechszylinder → 1,5-fach zu hoch). Oszillator-Verhältnisse unverändert: f (2. Motorordnung), 1,5·f (3.), 0,5·f (Kurbelwelle), 0,25·f (Arbeitsspiel).
+- Geprüft im echten Mitschnitt (Zeitfahren): Leerlauf 31 Hz ≈ 950 U/min, bei 6.300 U/min stärkster Ton 211 Hz ≈ U/min ÷ 30.
+- Unverändert aus v2.15/v2.16: Ampel hält ~4.550 U/min, Start mit schleifender Kupplung. Die Aufnahme-Konfiguration `SND_ENG.road` und die Dateien bleiben im Projekt (abgeschaltet) – Rückkehr: `road ? 'road'` in `updateAudio`.
