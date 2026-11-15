@@ -992,8 +992,8 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 .hub .hero{grid-column:span 3;min-height:clamp(120px,37vh,250px)!important}
 .hub #qPlay{grid-column:span 3;min-height:clamp(120px,37vh,250px)!important}
 .hub #qPlay b{font-size:clamp(19px,6vh,34px)!important}
-.hub #tPlay,.hub #tSettings,.hub #install{grid-column:span 2;min-height:clamp(62px,19vh,120px)!important}
-.hub:has(#install.hidden) #tPlay,.hub:has(#install.hidden) #tSettings{grid-column:span 3}
+.hub #tPlay,.hub #tHub,.hub #tSettings,.hub #install{grid-column:span 2;min-height:clamp(62px,19vh,120px)!important}
+.hub:has(#install.hidden) #tPlay,.hub:has(#install.hidden) #tHub,.hub:has(#install.hidden) #tSettings{grid-column:span 2}
 @media (max-height:430px){.logo2 span{font-size:clamp(22px,7vh,34px)!important}.tag{margin:4px 0 8px!important}}
 /* Streckenwahl: das gewählte Auto steht rechts im Studio, der Streckenname auf der Rückwand */
 #menu[data-scr=track]::before{background:linear-gradient(180deg,rgba(5,7,11,.72),transparent 30%,transparent 78%,rgba(5,7,11,.8)),linear-gradient(90deg,rgba(5,7,11,.85),transparent 30%)!important}
@@ -1038,9 +1038,10 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 /* Kacheln des Hauptmenüs mit Bild (aus dem Spiel aufgenommen), nach unten abgedunkelt, damit die Schrift lesbar bleibt */
 #qPlay::before{background:linear-gradient(180deg,rgba(12,13,16,.7),rgba(12,13,16,.2) 42%,rgba(12,13,16,.78)),url(textures/menu_quick.jpg) center/cover no-repeat!important}
 #tPlay::before{background:linear-gradient(90deg,rgba(14,15,18,.5),rgba(14,15,18,0) 45%),url(textures/menu_tt.jpg) 78% 50%/cover no-repeat,#0e0f12!important}
+#tHub::before{background:linear-gradient(90deg,rgba(14,15,18,.55),rgba(14,15,18,0) 50%),url(textures/menu_hub.jpg) 100% 50%/cover no-repeat,#0e0f12!important}
 #tSettings::before{background:linear-gradient(90deg,rgba(18,19,22,.82),rgba(18,19,22,.35) 60%,rgba(18,19,22,.6)),url(textures/menu_set.jpg) center/cover no-repeat!important}
-#qPlay b,#tPlay b,#tSettings b{color:#fff!important;text-shadow:0 2px 10px rgba(0,0,0,.8)}
-#qPlay small,#tPlay small,#tSettings small{color:rgba(255,255,255,.85)!important;text-shadow:0 1px 6px rgba(0,0,0,.9)}
+#qPlay b,#tPlay b,#tSettings b,#tHub b{color:#fff!important;text-shadow:0 2px 10px rgba(0,0,0,.8)}
+#qPlay small,#tPlay small,#tSettings small,#tHub small{color:rgba(255,255,255,.85)!important;text-shadow:0 1px 6px rgba(0,0,0,.9)}
 .hbody{background:linear-gradient(90deg,rgba(0,0,0,.5),rgba(0,0,0,0) 48%)!important}
 
 .logo2 .glogo{display:block;height:clamp(38px,15vh,96px);width:auto;max-width:min(60vw,460px);object-fit:contain;object-position:left center}
@@ -1051,8 +1052,8 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 @media (orientation:portrait){.mtop .mlogo{display:none}}
 
 /* Kachelbilder leicht unscharf (eigene Ebene hinter dem Text): mehr Kontrast zur Schrift */
-#qPlay,#tPlay,#tSettings{background:#0e0f12!important;isolation:isolate}
-#qPlay::before,#tPlay::before,#tSettings::before{content:""!important;display:block!important;position:absolute!important;inset:-10px!important;width:auto!important;height:auto!important;-webkit-mask:none!important;mask:none!important;filter:blur(1.1px) brightness(.85);z-index:-1;pointer-events:none}
+#qPlay,#tPlay,#tHub,#tSettings{background:#0e0f12!important;isolation:isolate}
+#qPlay::before,#tPlay::before,#tHub::before,#tSettings::before{content:""!important;display:block!important;position:absolute!important;inset:-10px!important;width:auto!important;height:auto!important;-webkit-mask:none!important;mask:none!important;filter:blur(1.1px) brightness(.85);z-index:-1;pointer-events:none}
 
 /* ===== Symbole in Knöpfen als gezeichnete Formen (keine Schriftzeichen): sitzen exakt mittig ===== */
 .mback,.mgear,.hb{display:grid!important;place-items:center!important;padding:0!important;line-height:0!important}
@@ -1140,6 +1141,152 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
 #serCards.stc .sbig img{height:clamp(36px,26vh,150px)!important;width:66%!important}
 /* Karriere-Tabelle und Saison-Tasten eckig wie das übrige Design */
 #seTbl .strow,#seBtns .mbtn{border-radius:0!important}
+/* ===== F1 Hub (im Spiel): Querformat, Graphitglas wie die übrigen Menüs ===== */
+#hub{background:radial-gradient(80% 90% at 88% -10%,rgba(225,6,0,.2),transparent 62%),linear-gradient(180deg,#15161b,#0a0b0e)!important;align-items:stretch;justify-content:center;z-index:30}
+#hub.hidden{display:none!important}
+#hub .xw{position:relative;width:min(1240px,100%);height:100%;display:flex;flex-direction:column;min-height:0;gap:10px}
+#hub .xh{display:flex;align-items:center;gap:14px;flex:none}
+#hub .xh h2{margin:0;font-weight:900;font-size:clamp(20px,5.4vh,30px);line-height:1;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+#hub .xh h2{display:flex;align-items:center;gap:10px}
+#hub .xlogo{height:clamp(26px,8vh,38px);width:auto;display:block}
+#hub .xh h2 span{font-weight:900;font-size:clamp(15px,4vh,20px);letter-spacing:.14em;color:#fff;padding-left:10px;border-left:3px solid var(--f1r);line-height:1}
+#hub .xh .ptabs{flex:1;max-width:560px;margin:0!important}
+#hub #hub-close{position:relative;flex:none;display:grid;place-items:center;padding:0;font-size:0;line-height:0;margin-left:auto}
+#hub #hub-close::before,#hub #hub-close::after{content:"";position:absolute;left:50%;top:50%;width:16px;height:2px;margin:-1px 0 0 -8px;background:#fff}
+#hub #hub-close::before{transform:rotate(45deg)}#hub #hub-close::after{transform:rotate(-45deg)}
+
+#hub .xp{display:none;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:2px 4px 8px 2px;overscroll-behavior:contain}
+#hub .xp.on{display:block}
+#hub #hub-p-t.on{display:grid;grid-template-columns:minmax(230px,31%) minmax(0,1fr);gap:14px;overflow:hidden;padding:2px 0 0}
+#hub .xaside,#hub .xmain{min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding-right:4px;overscroll-behavior:contain}
+#hub .xaside{display:flex;flex-direction:column;gap:10px}
+#hub #hub-p-n.on,#hub #hub-p-r.on{display:block;column-width:300px;column-gap:10px}
+#hub #hub-p-n .xnw,#hub #hub-p-r .xrs{break-inside:avoid;margin-bottom:10px;display:block}
+#hub .xfoot2{column-span:all;text-align:center;color:var(--mut);font-size:11px;padding:6px 0 2px}
+
+/* gemeinsame Karten: Graphitglas, 9-px-Ecken */
+#hub .xgp,#hub .xrs,#hub .xnw,#hub .xhero,#hub .xsheet,#hub .xtable{background:linear-gradient(180deg,rgba(74,78,86,.42),rgba(34,36,42,.62));border:1px solid rgba(255,255,255,.14);border-top-color:rgba(255,255,255,.26);box-shadow:0 10px 24px -14px rgba(0,0,0,.75)}
+#hub .xgp{border-left:3px solid var(--f1r);margin-bottom:10px;overflow:hidden}
+#hub .xgh{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px 6px}
+#hub .xgt{display:flex;align-items:center;gap:10px;min-width:0}
+#hub .xgt b{display:block;font-weight:900;text-transform:uppercase;letter-spacing:.03em;font-size:clamp(14px,3.6vh,17px);line-height:1.1}
+#hub .xgt span{display:block;font-size:12px;color:var(--mut);margin-top:2px}
+#hub .xfl{width:30px;height:20px;object-fit:cover;flex:none;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
+#hub .xfl.x0{width:auto;height:auto;font-size:20px;box-shadow:none}
+#hub .xtrk{width:74px;height:44px;flex:none}
+#hub .xtrk path{fill:none;stroke:#fff;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke;opacity:.9}
+#hub .xwx{padding:0 12px 8px;font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:2px 14px}
+#hub .xwx b{color:#fff;font-weight:700;margin-right:4px}
+#hub .xwx em{font-style:normal;opacity:.7}
+#hub .xdh{padding:4px 12px;font-size:11px;color:var(--mut);background:rgba(0,0,0,.28);border-top:1px solid rgba(255,255,255,.08);text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+#hub .xrow{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid rgba(255,255,255,.09)}
+#hub .xrow.past{opacity:.42}
+#hub .xs{flex:1;min-width:0}
+#hub .xs b{display:block;font-size:14px;font-weight:700}
+#hub .xs i,#hub .xs em.xspr{font-style:normal;font-size:11.5px;color:var(--mut)}
+#hub .xs em.xspr{font-weight:800;border:1px solid var(--f1r);color:var(--f1r);padding:0 5px;margin-left:8px;text-transform:uppercase;font-size:9.5px;letter-spacing:.08em}
+#hub .xtm{text-align:right;font-variant-numeric:tabular-nums}
+#hub .xtm b{display:block;font-size:15px;font-weight:800}
+#hub .xtm span{font-size:11px;color:var(--mut)}
+#hub .xtag{display:inline-block;min-width:30px;text-align:center;font-size:10.5px;font-weight:900;letter-spacing:.06em;padding:3px 7px;color:#fff;}
+#hub .xtag.F1{background:var(--f1r)}#hub .xtag.F2{background:#2d7dff}
+#hub .xic{background:none;border:0;color:var(--mut);font-size:17px;padding:4px 7px}
+#hub .xempty{text-align:center;color:var(--mut);padding:30px 0}
+#hub .xpos{width:26px;font-weight:900;color:var(--mut);text-align:right}
+#hub .xtc{background:linear-gradient(90deg,color-mix(in srgb,var(--tc) 24%,transparent),color-mix(in srgb,var(--tc) 4%,transparent) 78%);box-shadow:inset 4px 0 0 var(--tc)}
+
+/* Hero: nächste Session mit Countdown */
+#hub .xhero{position:relative;overflow:hidden;color:#fff}
+#hub .xhbg{position:absolute;inset:-8px;background-size:cover;background-position:center;filter:blur(3.5px) saturate(1.1)}
+#hub .xhov{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.28),rgba(0,0,0,.62))}
+#hub .xhc{position:relative;padding:12px 14px;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+#hub .xhc small{opacity:.85;text-transform:uppercase;letter-spacing:.14em;font-size:10.5px;font-weight:700}
+#hub .xht{font-size:clamp(16px,4.4vh,22px);font-weight:900;text-transform:uppercase;line-height:1.1;margin:3px 0}
+#hub .xhd{opacity:.9;font-size:13px}
+#hub .xcd{display:flex;gap:8px;margin-top:10px}
+#hub .xcd div{background:rgba(0,0,0,.4);padding:6px 4px;min-width:0;flex:1;text-align:center;}
+#hub .xcd b{display:block;font-size:clamp(18px,5vh,24px);font-weight:900;font-variant-numeric:tabular-nums}
+#hub .xcd span{font-size:9.5px;text-transform:uppercase;opacity:.8;letter-spacing:.08em}
+
+/* Knöpfe */
+#hub .xchips{display:flex;gap:6px;flex-wrap:wrap}
+#hub #hub-p-w .xchips{margin-bottom:10px}
+#hub .xchip,#hub .xch2,#hub .xb{height:34px;padding:0 14px;color:#fff;font-weight:800;font-size:12px;letter-spacing:.1em;text-transform:uppercase;background:linear-gradient(180deg,rgba(74,78,86,.5),rgba(40,42,48,.62));border:1px solid rgba(255,255,255,.16);transition:filter .15s,transform .1s}
+#hub .xchip.on,#hub .xch2.on,#hub .xb.pri{background:linear-gradient(180deg,#e0263a,#a5101f);border-color:rgba(255,255,255,.3)}
+#hub .xchip:active,#hub .xch2:active,#hub .xb:active{transform:translateY(1px);filter:brightness(1.15)}
+#hub .xbtns{display:flex;gap:6px}#hub .xbtns .xb{flex:1;padding:0 8px}
+#hub .xnote{margin:0;font-size:11px;line-height:1.4;color:var(--mut)}
+#hub .xst{font-size:10.5px;line-height:1.5;color:var(--mut)}
+#hub .xsub{font-size:12px;color:var(--mut);margin:0 0 8px}
+
+/* WM-Tabellen: zwei Spalten im Querformat */
+#hub .xtable{column-width:330px;column-gap:0;padding:0;overflow:hidden}
+#hub .xtable .xrow{break-inside:avoid}
+#hub .xtable .xrow:first-child{border-top:0}
+
+/* Ergebnisse */
+#hub .xrs{border-left:3px solid var(--f1r);overflow:hidden}
+#hub .xrs>summary,#hub .xss>summary{list-style:none;cursor:pointer;position:relative}
+#hub .xrs>summary::-webkit-details-marker,#hub .xss>summary::-webkit-details-marker{display:none}
+#hub .xrs>summary{padding:10px 34px 10px 12px}
+#hub .xrs>summary::after,#hub .xss>summary::after{content:"";position:absolute;right:13px;top:50%;margin-top:-6px;width:7px;height:7px;border-right:2px solid var(--mut);border-bottom:2px solid var(--mut);transform:rotate(45deg);transition:transform .25s}
+#hub .xrs[open]>summary::after,#hub .xss[open]>summary::after{transform:rotate(-135deg);margin-top:-2px}
+#hub .xrtop{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#hub .xrh small{display:block;color:var(--mut);font-size:10.5px;text-transform:uppercase;letter-spacing:.1em}
+#hub .xrh b{display:block;font-weight:900;font-size:15px;text-transform:uppercase;line-height:1.15}
+#hub .xrk{display:flex;flex-direction:column;gap:6px;margin-top:8px;font-size:13px}
+#hub .xrk i,#hub .xsw i{display:inline-block;font-style:normal;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);margin-right:6px}
+#hub .xrk em,#hub .xtr em,#hub .xsw em{font-style:normal;color:var(--mut);font-size:11.5px}
+#hub .xrb{border-top:1px solid rgba(255,255,255,.1);padding:0 12px 6px}
+#hub .xss{border-top:1px solid rgba(255,255,255,.09)}#hub .xss:first-child{border-top:0}
+#hub .xss>summary{padding:10px 22px 10px 0}
+#hub .xss>summary b{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--f1r);margin-bottom:2px}
+#hub .xsw{font-size:13px;display:block}
+#hub .xtb{padding-bottom:8px}
+#hub .xtr{display:flex;align-items:center;gap:8px;padding:5px 8px 5px 12px;margin:3px 0;font-size:12.5px;}
+#hub .xtr .xp0{width:24px;text-align:right;color:var(--mut);flex:none}
+#hub .xtr .xn{flex:1;min-width:0}#hub .xtr .xn em{display:block}
+#hub .xtr .xt0{font-variant-numeric:tabular-nums;text-align:right;font-size:12px;flex:none}
+#hub .xtr .xt0.fl{color:#b84dff;font-weight:700}
+#hub .xtr .xpt{width:26px;text-align:right;font-weight:800;flex:none}
+
+/* News */
+#hub .xnw{display:block;padding:11px 13px;color:inherit;text-decoration:none}
+#hub .xnw small{color:var(--mut);font-size:11.5px;display:flex;align-items:center;gap:6px}
+#hub .xnw h3{margin:6px 0 0;font-size:14.5px;line-height:1.3;font-weight:700}
+#hub .xnw p{margin:0;color:var(--mut)}
+#hub a.xnw:hover{border-color:rgba(255,255,255,.4)}
+
+#hub .xny{margin:18px 0 10px}
+#hub .xchk{height:10px;background:repeating-conic-gradient(#111 0 25%,#fff 0 50%) 0 0/10px 10px}
+#hub .xny h2{margin:10px 0 2px;font-size:22px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
+#hub .xny h2 b{color:var(--f1r)}#hub .xny small{color:var(--mut);font-size:11.5px}
+
+/* Termin bearbeiten */
+#hub .xmodal{position:absolute;inset:-8px;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);z-index:5}
+#hub .xmodal.show{display:flex}
+#hub .xsheet{width:min(560px,94%);max-height:100%;overflow:auto;padding:14px 16px;background:linear-gradient(180deg,#2a2c31,#1b1c20)}
+#hub .xsheet h3{margin:0 0 10px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+#hub .xform{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
+#hub .xform label{display:block;font-size:11px;color:var(--mut);margin:0 0 3px;text-transform:uppercase;letter-spacing:.08em}
+#hub .xform input,#hub .xform select{width:100%;height:38px;padding:0 10px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.4);color:#fff;font-size:15px}
+#hub .xacts{display:flex;gap:8px;margin-top:12px}#hub .xacts .xb{flex:1;height:40px}
+
+/* schmal / hoch: eine Spalte */
+@media (max-width:700px),(orientation:portrait){
+  #hub #hub-p-t.on{display:block;overflow-y:auto}
+  #hub .xaside,#hub .xmain{overflow:visible}
+  #hub .xaside{margin-bottom:12px}
+  #hub .xtable{column-width:auto}
+  #hub .xform{grid-template-columns:1fr}
+}
+@media (max-height:430px){
+  #hub .xrow{padding:6px 12px}
+  #hub .xh .ptabs button{height:34px!important}
+  #hub .xhc{padding:9px 12px}#hub .xcd{margin-top:7px}
+}
+#hub .xhero{clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%)}
+#hub .xchip,#hub .xch2,#hub .xb{clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%)}
 </style>
 </head>
 <body>
@@ -1211,6 +1358,7 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
           <button class="hbtn" id="tPlay"><i class="hi"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="27" r="15"/><path d="M24 27l6-7M20 6h8M24 6v6M36 14l3-3"/></svg></i><b>Zeitrennen</b><small>Allein gegen die Uhr · Runden wählbar</small></button>
         </div>
         <div class="hfoot">
+          <button class="hbtn ghost" id="tHub"><i class="hi"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="9" width="34" height="30" rx="2"/><path d="M7 18h34M15 26h10M15 32h18M33 26h2"/></svg></i><b>F1 Hub</b><small>Termine, WM, Ergebnisse, News</small></button>
           <button class="hbtn ghost" id="tSettings"><i class="hi"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 13h32M8 24h32M8 35h32"/><circle cx="17" cy="13" r="4"/><circle cx="31" cy="24" r="4"/><circle cx="20" cy="35" r="4"/></svg></i><b>Einstellungen</b><small>Grafik, Audio, Steuerung, Spielstand</small></button>
           <button class="hbtn ghost hidden" id="install"><i class="hi"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 7v22M15 21l9 9 9-9M9 35v4a3 3 0 0 0 3 3h24a3 3 0 0 0 3-3v-4"/></svg></i><span class="ic steel"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span><span class="mt"><b>App installieren</b><small>Vollbild vom Startbildschirm</small></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </div>
@@ -1332,6 +1480,65 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
   </footer>
   <p class="hint mhint hidden" id="hint"></p>
   <button id="go" class="hidden"></button>
+</div>
+
+<div id="hub" class="overlay hidden" role="dialog" aria-label="F1 Hub">
+  <div class="xw">
+    <div class="xh">
+      <h2><img class="xlogo" src="textures/f1hub_logo.png" alt="Formel 1"><span>Hub</span></h2>
+      <div class="ptabs"><button class="on" data-k="t">Termine</button><button data-k="w">WM</button><button data-k="r">Ergebnisse</button><button data-k="n">News</button></div>
+      <button class="iconbtn" id="hub-close" aria-label="Schließen">✕</button>
+    </div>
+
+    <div class="xp on" id="hub-p-t">
+      <aside class="xaside">
+        <div id="hub-hero"></div>
+        <div class="xchips">
+          <button class="xchip on" data-f="ALL">Alle</button>
+          <button class="xchip" data-f="F1">Formel 1</button>
+          <button class="xchip" data-f="F2">Formel 2</button>
+        </div>
+        <div class="xbtns">
+          <button class="xb" id="hub-past">Vergangene zeigen</button>
+          <button class="xb" id="hub-edit">Bearbeiten</button>
+        </div>
+        <div class="xbtns" id="hub-editbar" style="display:none">
+          <button class="xb pri" id="hub-add">+ Termin</button>
+          <button class="xb" id="hub-reset">Zurücksetzen</button>
+        </div>
+        <p class="xnote">Änderungen werden nur auf diesem Gerät gespeichert. Zeiten ohne Gewähr – bei Änderungen der Veranstalter bitte anpassen.</p>
+        <div class="xst" id="hub-st"></div>
+        <button class="xb" id="hub-rl">Daten neu laden</button>
+      </aside>
+      <div class="xmain">
+        <div id="hub-list"></div>
+        <div id="hub-y27"></div>
+      </div>
+    </div>
+
+    <div class="xp" id="hub-p-w">
+      <div class="xchips"><button class="xch2 on" data-w="f1d">F1 Fahrer</button><button class="xch2" data-w="f1t">F1 Teams</button><button class="xch2" data-w="f2d">F2 Fahrer</button><button class="xch2" data-w="f2t">F2 Teams</button></div>
+      <div id="hub-wmlist"></div>
+    </div>
+    <div class="xp" id="hub-p-r"></div>
+    <div class="xp" id="hub-p-n"></div>
+
+    <div class="xmodal" id="hub-modal"><div class="xsheet">
+      <h3 id="hub-mt">Termin</h3>
+      <div class="xform">
+        <div><label>Serie</label>
+        <select id="hub-fs"><option>F1</option><option>F2</option></select></div>
+        <div><label>Grand Prix / Ort</label>
+        <input id="hub-fg" placeholder="z. B. 🇺🇸 USA (Austin)"></div>
+        <div><label>Session</label>
+        <input id="hub-fn" list="hub-sess" placeholder="z. B. Qualifying">
+        <datalist id="hub-sess"><option>1. Freies Training</option><option>2. Freies Training</option><option>3. Freies Training</option><option>Freies Training</option><option>Qualifying</option><option>Sprint-Qualifying</option><option>Sprint</option><option>Rennen</option><option>Sprint Race</option><option>Feature Race</option></datalist></div>
+        <div><label>Datum &amp; Uhrzeit (deutsche Zeit)</label>
+        <input id="hub-fd" type="datetime-local"></div>
+      </div>
+      <div class="xacts"><button class="xb" id="hub-cancel">Abbrechen</button><button class="xb pri" id="hub-save">Speichern</button></div>
+    </div></div>
+  </div>
 </div>
 
 <div id="settings" class="overlay hidden"><div class="card settings tabbed">
@@ -7686,7 +7893,7 @@ function pollPad(dt) {
 }
 
 // ---- Controller-Menüsteuerung: Fokus springt räumlich zwischen den sichtbaren Bedienelementen ----
-function gpLayer() { for (const id of ['congrats', 'results', 'settings', 'pause']) { const e = $('#' + id); if (e && !e.classList.contains('hidden')) return e; } const m = $('#menu'); return m && !m.classList.contains('hidden') ? m : null; }
+function gpLayer() { for (const id of ['congrats', 'results', 'hub', 'settings', 'pause']) { const e = $('#' + id); if (e && !e.classList.contains('hidden')) return e; } const m = $('#menu'); return m && !m.classList.contains('hidden') ? m : null; }
 function gpItems(L) { return [...L.querySelectorAll('button, input[type=range], select')].filter(e => !e.disabled && e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden' && !e.closest('.hidden') && e.id !== 'go'); }
 const gpKey = e => e.id ? '#' + e.id : (e.tagName + '|' + JSON.stringify({ ...e.dataset }) + '|' + (e.dataset && Object.keys(e.dataset).length ? '' : e.textContent.trim().slice(0, 30)));
 function gpCur(L) { let e = GP.focus; if (e && (!document.contains(e) || !L.contains(e) || !e.getClientRects().length)) { const k = GP.fKey; e = gpItems(L).find(x => gpKey(x) === k) || null; } return e; }
@@ -7703,11 +7910,13 @@ function gpMove([dx, dy]) {
 }
 function gpPress() { const L = gpLayer(); if (!L) return; const cur = gpCur(L); if (!cur) { const d = gpDefault(L); if (d) gpSet(d); return; } const k = gpKey(cur); cur.click(); setTimeout(() => { const L2 = gpLayer(); if (L2) { const again = gpItems(L2).find(x => gpKey(x) === k); gpSet(again || gpDefault(L2)); } }, 60); }
 function gpBack() {
+  if (window.F1Hub && F1Hub.on) return F1Hub.close();
   if (!$('#settings').classList.contains('hidden')) return $('#closeSettings').click();
   if (!$('#pause').classList.contains('hidden')) return resume();
   if (!$('#menu').classList.contains('hidden')) { if (MENU.scr !== 'title') { menuBack(); gpSet(null); } }
 }
 function gpStart() {
+  if (window.F1Hub && F1Hub.on) return F1Hub.close();
   if (!$('#pause').classList.contains('hidden')) return resume();
   if (!$('#settings').classList.contains('hidden')) return $('#closeSettings').click();
   if (resultsShown) return gpPress();
@@ -9862,7 +10071,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.19'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.20'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -10061,6 +10270,7 @@ function tick(now, forced) {
   if (REBUILD) { last = now; return; }   /* Grafik wird gerade umgestellt */   // forced: Testhilfen zeichnen direkt, ohne eine zweite Bildschleife zu starten
   if (!forced) perfTick(now);   // keine Bildratenbegrenzung: gezeichnet wird jedes Bild, das der Browser anfordert
   const dt = clamp((now - last) / 1000, 0, 0.05); last = now;
+  if (window.F1Hub && F1Hub.on && !running) { pollPad(dt); musicTick(); return; }   /* F1 Hub offen: dahinter nichts zeichnen (spart Akku) */
   if (!TRK) {   // Spielstart: es ist noch keine Strecke gebaut (sie entsteht erst nach der Streckenwahl) – nur Menü und Showroom
     pollPad(dt); musicTick();
     if (SHOW.on && !window.__norender && !$('#menu').classList.contains('hidden') && !(settingsFrom === 'menu' && !$('#settings').classList.contains('hidden'))) { showroomFrame(dt); const on = ENVP.on, et = ENVP.tex; ENVP.on = true; if (SHOW.env) ENVP.tex = SHOW.env; renderer.render(SHOW.scene, SHOW.cam); ENVP.tex = et; ENVP.on = on; }
@@ -10222,6 +10432,326 @@ window.__qcApi = { THREE, renderer, camera, scene, trackGroup, sky, skyBox, S, T
   botOn: () => { window.__plAI = true; profBot = buildProfile(45.5, VTOP, 44, KR); }, resume: () => { if (paused) { $('#pause').classList.add('hidden'); resume(); } }, pause: () => pause() };
 if (/[?&]qc=/.test(location.search)) { const sc = document.createElement('script'); sc.type = 'module'; sc.src = 'qc/qc-bot.js?v=' + Date.now(); document.body.appendChild(sc); }
 requestAnimationFrame(frame);
+</script>
+<script>
+/* ===== F1 Hub (Kopie der F1-Hub-App, ins Spiel eingebaut: Querformat, Spiel-Design) ===== */
+(function () {
+"use strict";
+var H = { on: false };
+function $(i) { return document.getElementById("hub-" + i); }
+function $$(s) { return Array.prototype.slice.call(document.querySelectorAll("#hub " + s)); }
+var TZ="Europe/Berlin";
+var DEF=[
+["F1","🇺🇸 USA (Austin)","1. Freies Training","2026-10-23T17:30:00Z"],
+["F1","🇺🇸 USA (Austin)","2. Freies Training","2026-10-23T21:00:00Z"],
+["F1","🇺🇸 USA (Austin)","3. Freies Training","2026-10-24T17:30:00Z"],
+["F1","🇺🇸 USA (Austin)","Qualifying","2026-10-24T21:00:00Z"],
+["F1","🇺🇸 USA (Austin)","Rennen","2026-10-25T19:00:00Z"],
+["F1","🇲🇽 Mexiko-Stadt","1. Freies Training","2026-10-30T18:30:00Z"],
+["F1","🇲🇽 Mexiko-Stadt","2. Freies Training","2026-10-30T22:00:00Z"],
+["F1","🇲🇽 Mexiko-Stadt","3. Freies Training","2026-10-31T17:30:00Z"],
+["F1","🇲🇽 Mexiko-Stadt","Qualifying","2026-10-31T21:00:00Z"],
+["F1","🇲🇽 Mexiko-Stadt","Rennen","2026-11-01T20:00:00Z"],
+["F1","🇧🇷 São Paulo","1. Freies Training","2026-11-06T15:30:00Z"],
+["F1","🇧🇷 São Paulo","2. Freies Training","2026-11-06T19:00:00Z"],
+["F1","🇧🇷 São Paulo","3. Freies Training","2026-11-07T14:30:00Z"],
+["F1","🇧🇷 São Paulo","Qualifying","2026-11-07T18:00:00Z"],
+["F1","🇧🇷 São Paulo","Rennen","2026-11-08T17:00:00Z"],
+["F1","🇺🇸 Las Vegas","1. Freies Training","2026-11-20T00:30:00Z"],
+["F1","🇺🇸 Las Vegas","2. Freies Training","2026-11-20T04:00:00Z"],
+["F1","🇺🇸 Las Vegas","3. Freies Training","2026-11-21T00:30:00Z"],
+["F1","🇺🇸 Las Vegas","Qualifying","2026-11-21T04:00:00Z"],
+["F1","🇺🇸 Las Vegas","Rennen","2026-11-22T04:00:00Z"],
+["F1","🇶🇦 Katar","1. Freies Training","2026-11-27T13:00:00Z"],
+["F1","🇶🇦 Katar","2. Freies Training","2026-11-27T17:00:00Z"],
+["F1","🇶🇦 Katar","3. Freies Training","2026-11-28T14:30:00Z"],
+["F1","🇶🇦 Katar","Qualifying","2026-11-28T18:00:00Z"],
+["F1","🇶🇦 Katar","Rennen","2026-11-29T16:00:00Z"],
+["F2","🇶🇦 Katar","Freies Training","2026-11-27T08:55:00Z",1],
+["F2","🇶🇦 Katar","Qualifying","2026-11-27T12:55:00Z",1],
+["F2","🇶🇦 Katar","Sprint Race","2026-11-28T07:35:00Z",1],
+["F2","🇶🇦 Katar","Feature Race","2026-11-29T07:40:00Z",1],
+["F1","🇦🇪 Abu Dhabi","1. Freies Training","2026-12-04T09:30:00Z",1],
+["F1","🇦🇪 Abu Dhabi","2. Freies Training","2026-12-04T13:00:00Z",1],
+["F1","🇦🇪 Abu Dhabi","3. Freies Training","2026-12-05T10:30:00Z",1],
+["F1","🇦🇪 Abu Dhabi","Qualifying","2026-12-05T14:00:00Z"],
+["F1","🇦🇪 Abu Dhabi","Rennen","2026-12-06T13:00:00Z"],
+["F2","🇦🇪 Abu Dhabi","Freies Training","2026-12-04T07:55:00Z",1],
+["F2","🇦🇪 Abu Dhabi","Qualifying","2026-12-04T11:55:00Z",1],
+["F2","🇦🇪 Abu Dhabi","Sprint Race","2026-12-05T06:35:00Z",1],
+["F2","🇦🇪 Abu Dhabi","Feature Race","2026-12-06T06:40:00Z",1]
+];
+var WX={"🇺🇸 USA (Austin)":{q:"☀️ ca. 29 °C, trocken (Regen 0 %)",r:"⛅ ca. 27–29 °C, Regen 7–20 %, Wind bis 40 km/h",u:"21.10."}};
+var STD={
+f1d:{s:"Formel 1 · Fahrer · Stand nach Singapur (11.10.)",r:[["Kimi Antonelli","Mercedes",340],["George Russell","Mercedes",238],["Lewis Hamilton","Ferrari",229],["Max Verstappen","Red Bull",221],["Charles Leclerc","Ferrari",215],["Lando Norris","McLaren",201],["Oscar Piastri","McLaren",138],["Isack Hadjar","Red Bull",97],["Liam Lawson","Racing Bulls",75],["Pierre Gasly","Alpine",41],["Arvid Lindblad","Racing Bulls",38],["Franco Colapinto","Alpine",27],["Oliver Bearman","Haas",23],["Nico Hülkenberg","Audi",13],["Gabriel Bortoleto","Audi",10],["Esteban Ocon","Haas",7],["Fernando Alonso","Aston Martin",7],["Carlos Sainz","Williams",7],["Alex Albon","Williams",5],["Yuki Tsunoda","Racing Bulls",1],["Lance Stroll","Aston Martin",0],["Valtteri Bottas","Cadillac",0],["Sergio Pérez","Cadillac",0]]},
+f1t:{s:"Formel 1 · Teams · Stand nach Singapur (11.10.) – Quellen weichen bei Red Bull/Racing Bulls leicht ab",r:[["Mercedes","",578],["Ferrari","",444],["McLaren","",339],["Red Bull","",332],["Racing Bulls","",100],["Alpine","",68],["Haas","",30],["Audi","",23],["Williams","",12],["Aston Martin","",7],["Cadillac","",0]]},
+f2d:{s:"Formel 2 · Fahrer · Stand nach Baku (26.09.)",r:[["Rafael Câmara","Invicta Racing",207],["Nikola Tsolov","Campos Racing",200],["Alex Dunne","Rodin Motorsport",189],["Gabriele Minì","MP Motorsport",163],["Dino Beganovic","DAMS Lucas Oil",137],["Noel León","Campos Racing",133],["Martinius Stenshorne","Rodin Motorsport",107],["Joshua Dürksen","Invicta Racing",90],["Kush Maini","ART Grand Prix",90],["Laurens van Hoepen","Trident",90],["Tasanapol Inthraphuvasak","ART Grand Prix",71],["Ritomo Miyata","Hitech",70],["Rafael Villagómez","Van Amersfoort",42],["John Bennett","Trident",38],["Oliver Goethe","MP Motorsport",37],["Roman Bilinski","DAMS Lucas Oil",36],["Sebastián Montoya","Prema",30],["Emerson Fittipaldi Jr.","AIX Racing",28],["Colton Herta","Hitech",26],["Mari Boya","Prema",21],["Nico Varrone","Van Amersfoort",15],["Cian Shields","AIX Racing",10],["Hiyu Yamakoshi","Van Amersfoort",2]]},
+f2t:{s:"Formel 2 · Teams · Stand nach Baku (26.09.)",r:[["Campos Racing","",333],["Invicta Racing","",297],["Rodin Motorsport","",296],["MP Motorsport","",200],["DAMS Lucas Oil","",173],["ART Grand Prix","",161],["Trident","",128],["Hitech","",96],["Van Amersfoort","",59],["Prema","",51],["AIX Racing","",38]]}};
+var ev=[],filt="ALL",showPast=false,editing=false,editId=null;
+var UKEY="f1hub.user.v3",HKEY="f1hub.hide.v3",base=[],user=[],hide={};
+function mk(a){return{id:"b|"+a[0]+"|"+a[1]+"|"+a[2],s:a[0],g:a[1],n:a[2],t:Date.parse(a[3]),p:a[4]||0}}
+function rd(k,d){try{var r=localStorage.getItem(k);if(r)return JSON.parse(r)}catch(e){}return d}
+function wr(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function build(){ev=base.filter(function(e){return!hide[e.id]}).concat(user)}
+function load(){base=DEF.map(mk);user=rd(UKEY,[]);hide=rd(HKEY,{});if(!Array.isArray(user))user=[];build()}
+function store(){wr(UKEY,user);wr(HKEY,hide);build()}
+function parts(ts){var o={};new Intl.DateTimeFormat("en-GB",{timeZone:TZ,hourCycle:"h23",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"}).formatToParts(ts).forEach(function(p){o[p.type]=p.value});return o}
+function toInput(ts){var p=parts(ts);return p.year+"-"+p.month+"-"+p.day+"T"+p.hour+":"+p.minute}
+function fromInput(v){var m=v.match(/(\d+)-(\d+)-(\d+)T(\d+):(\d+)/);if(!m)return NaN;var base=Date.UTC(+m[1],m[2]-1,+m[3],+m[4],+m[5]);var g=base;for(var i=0;i<3;i++){var p=parts(g);g=base-(Date.UTC(+p.year,p.month-1,+p.day,+p.hour,+p.minute)-g)}return g}
+var fDay=new Intl.DateTimeFormat("de-DE",{timeZone:TZ,weekday:"short",day:"2-digit",month:"2-digit"});
+var fTime=new Intl.DateTimeFormat("de-DE",{timeZone:TZ,hour:"2-digit",minute:"2-digit"});
+var fShort=new Intl.DateTimeFormat("de-DE",{timeZone:TZ,day:"numeric",month:"short"});
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function vis(){var now=Date.now();return ev.filter(function(e){return(filt==="ALL"||e.s===filt)&&(showPast||e.t>=now-3*3600e3)}).sort(function(a,b){return a.t-b.t})}
+var wm="f1d";
+function ccOf(g){var a=Array.from(g||"");if(a.length<2)return"";var x=a[0].codePointAt(0),y=a[1].codePointAt(0);if(x<0x1F1E6||x>0x1F1FF||y<0x1F1E6||y>0x1F1FF)return"";return String.fromCharCode(x-0x1F1E6+97,y-0x1F1E6+97)}
+function flag(g){var c=ccOf(g);return c?'<img class="xfl" src="https://flagcdn.com/w40/'+c+'.png" alt="" loading="lazy">':'<span class="xfl x0">🏁</span>'}
+function gname(g){return String(g).replace(/^[\u{1F1E6}-\u{1F1FF}]{2}\s*/u,"").replace(/^🏁\s*/u,"")}
+function wxLine(g){var w=WXL[g]||WX[g];return '<div class="xwx">'+(w?'<span><b>Quali</b> '+w.q+'</span><span><b>Rennen</b> '+w.r+'</span><em>Stand '+w.u+'</em>':'<em>Wetterprognose folgt ca. 5 Tage vor dem Wochenende</em>')+'</div>'}
+function render(){
+  var now=Date.now(),list=vis(),groups={},order=[];
+  list.forEach(function(e){if(!groups[e.g]){groups[e.g]=[];order.push(e.g)}groups[e.g].push(e)});
+  var h="";
+  order.forEach(function(g){var a=groups[g],first=a[0].t,last=a[a.length-1].t;
+    var rng=fShort.format(first)+(fShort.format(first)!==fShort.format(last)?" – "+fShort.format(last):"");
+    h+='<div class="xgp"><div class="xgh"><div class="xgt">'+flag(g)+'<div><b>'+esc(gname(g))+'</b><span>'+rng+'</span></div></div>'+trkSvg(g)+'</div>'+wxLine(g);var ld="";
+    a.forEach(function(e){var past=e.t<now,dk=fDay.format(e.t);
+      if(dk!==ld){ld=dk;h+='<div class="xdh">'+dk+'</div>'}
+      h+='<div class="xrow'+(past?" past":"")+'"><span class="xtag '+e.s+'">'+e.s+'</span><div class="xs"><b>'+esc(e.n)+'</b></div><div class="xtm"><b>'+(e.p===2?'Zeit offen':fTime.format(e.t)+' Uhr')+'</b>'+(e.p===1?'<span>vorläufig</span>':'')+'</div>'+
+      (editing?'<button class="xic" data-e="'+esc(e.id)+'" aria-label="Bearbeiten">✎</button><button class="xic" data-x="'+esc(e.id)+'" aria-label="Löschen">✕</button>':'')+'</div>'});
+    h+='</div>'});
+  $("list").innerHTML=h||'<div class="xempty">Keine anstehenden Termine.<br>Mit „Bearbeiten“ kannst du neue hinzufügen.</div>';
+  render27();hero();
+}
+var heroKey="";
+function hero(){
+  var now=Date.now(),nx=ev.filter(function(e){return e.t>now&&e.p!==2&&(filt==="ALL"||e.s===filt)}).sort(function(a,b){return a.t-b.t})[0];
+  var el=$("hero");
+  if(!nx){el.innerHTML="";heroKey="";return}
+  var d=nx.t-now,v=[Math.floor(d/864e5),Math.floor(d%864e5/36e5),Math.floor(d%36e5/6e4),Math.floor(d%6e4/1e3)];
+  var key=nx.id+"|"+nx.t;
+  if(key!==heroKey){heroKey=key;var cc=ccOf(nx.g),bg=cc?' style="background-image:url(https://flagcdn.com/w640/'+cc+'.png)"':'';
+    el.innerHTML='<div class="xhero"><div class="xhbg"'+bg+'></div><div class="xhov"></div><div class="xhc"><small>Als Nächstes · '+nx.s+'</small><div class="xht">'+esc(gname(nx.g))+' – '+esc(nx.n)+'</div><div class="xhd">'+fDay.format(nx.t)+', '+fTime.format(nx.t)+' Uhr</div><div class="xcd"><div><b id="hub-cd0"></b><span>Tage</span></div><div><b id="hub-cd1"></b><span>Std</span></div><div><b id="hub-cd2"></b><span>Min</span></div><div><b id="hub-cd3"></b><span>Sek</span></div></div></div></div>'}
+  for(var i=0;i<4;i++){var c=document.getElementById("hub-cd"+i);if(c)c.textContent=v[i]}
+}
+function openM(e){editId=e?e.id:null;$("mt").textContent=e?"Termin bearbeiten":"Neuer Termin";$("fs").value=e?e.s:"F1";$("fg").value=e?e.g:"";$("fn").value=e?e.n:"";$("fd").value=e?toInput(e.t):"";$("modal").classList.add("show")}
+function closeM(){$("modal").classList.remove("show")}
+function wmRender(){var d=STD[wm],h='<div class="xsub">'+esc(d.s)+'</div><div class="xtable">';d.r.forEach(function(r,i){var c=tcol(wm==="f1t"||wm==="f2t"?r[0]:r[1]);h+='<div class="xrow'+(c?' xtc':'')+'"'+(c?' style="--tc:'+c+'"':'')+'><span class="xpos">'+(i+1)+'</span><div class="xs"><b>'+esc(r[0])+'</b>'+(r[1]?'<i>'+esc(r[1])+'</i>':'')+'</div><div class="xtm"><b>'+r[2]+'</b><span>Pkt</span></div></div>'});$("wmlist").innerHTML=h+'</div>'}
+function newsRender(){var h="";
+  if(NEWSL&&NEWSL.length){h=NEWSL.map(function(n){return '<a class="xnw" href="'+esc(n.u)+'" target="_blank" rel="noopener"><small><span class="xtag '+n.s+'">'+n.s+'</span> '+fNews.format(n.t)+(n.src?' · '+esc(n.src):'')+'</small><h3>'+esc(n.title)+'</h3></a>'}).join('')+'<div class="xfoot2">Schlagzeilen · Stand '+NEWST+'</div>'}
+  else{h='<div class="xnw"><p>Noch keine News geladen.</p></div>'}
+  $("p-n").innerHTML=h}
+function render27(){var el=$("y27");if(!el)return;if(filt==="F2"){el.innerHTML="";return}
+  var h='<div class="xny"><div class="xchk"></div><h2>Saison <b>2027</b></h2><small>Geplanter Kalender · 24 Rennen · 10 Sprints · Termine können sich ändern</small></div><div class="xgp"><div class="xrow" style="border-top:0"><span class="xtag F1">TEST</span><div class="xs"><b>Wintertest Bahrain</b><i>24.–27. Februar</i></div></div>';
+  Y27.forEach(function(r){h+='<div class="xrow">'+flag(r[0])+'<div class="xs"><b>'+esc(r[1])+(r[3]?'<em class="xspr">Sprint</em>':'')+'</b><i>'+r[2]+'</i></div>'+trkSvg("27|"+r[1])+'</div>'});
+  el.innerHTML=h+'</div>'}
+function rtbl(t,rows,q,id){if(!rows||!rows.length)return"";var w=rows[0];
+  var sub='<span class="xsw"><i>'+(q?"Pole Position":"Sieger")+'</i>'+esc(w[1])+' <em>'+esc(w[2])+'</em></span>';
+  return'<details class="xss" data-id="'+id+'"'+(resOpen[id]?" open":"")+'><summary><b>'+t+'</b>'+sub+'</summary><div class="xtb">'+rows.map(function(e){var c=tcol(e[2]);return'<div class="xtr'+(c?' xtc':'')+'"'+(c?' style="--tc:'+c+'"':'')+'><span class="xp0">'+esc(String(e[0]))+'</span><span class="xn">'+esc(e[1])+'<em>'+esc(e[2])+'</em></span><span class="xt0'+(e[5]?' fl':'')+'">'+esc(String(e[3]))+'</span>'+(q?'':'<span class="xpt">'+esc(String(e[4]))+'</span>')+'</div>'}).join("")+'</div></details>'}
+function resRender(){var el=$("p-r");if(!el)return;
+  if(!RES){el.innerHTML='<div class="xnw"><p>Ergebnisse werden geladen …</p></div>';return}
+  var h="";
+  RES.forEach(function(x){var id="r"+x.r,w=x.R&&x.R[0],fl=null;(x.R||[]).forEach(function(e){if(e[5])fl=e});
+    h+='<details class="xrs" data-id="'+id+'"'+(resOpen[id]?" open":"")+'><summary><div class="xrtop"><div class="xrh"><small>Rennen '+x.r+' · '+fShort.format(Date.parse(x.d))+'</small><b>'+esc(x.n)+'</b></div>'+trkSvg("R|"+x.ci)+'</div>';
+    if(w)h+='<div class="xrk"><span><i>Sieger</i>'+esc(w[1])+' <em>'+esc(w[2])+'</em></span>'+(fl?'<span><i>Schnellste Runde</i>'+esc(fl[1])+' <em>'+esc(fl[5])+'</em></span>':'')+'</div>';
+    else if(x.Q&&x.Q[0])h+='<div class="xrk"><span><i>Pole Position</i>'+esc(x.Q[0][1])+' <em>'+esc(x.Q[0][2])+'</em></span></div>';
+    h+='</summary><div class="xrb">'+rtbl("Sprint-Qualifikation",x.SQ,1,id+"sq")+rtbl("Sprint",x.S,0,id+"s")+rtbl("Qualifikation",x.Q,1,id+"q")+rtbl("Rennen",x.R,0,id+"r")+'</div></details>'});
+  el.innerHTML=h+'<div class="xfoot2">Formel 1 · Quelle: Jolpica F1 · Stand '+fNews.format(RESAT)+'<br>Sprint-Qualifying liefert die Datenquelle nicht.</div>'}
+var WXL={};
+var COORD={"🇺🇸 USA (Austin)":[30.1328,-97.6411],"🇲🇽 Mexiko-Stadt":[19.4042,-99.0907],"🇧🇷 São Paulo":[-23.7036,-46.6997],"🇺🇸 Las Vegas":[36.1147,-115.1728],"🇶🇦 Katar":[25.49,51.4542],"🇦🇪 Abu Dhabi":[24.4672,54.6031]};
+function wIcon(c){return c===0?"☀️":c<=2?"⛅":c===3?"☁️":c<=48?"🌫️":c<=67?"🌧️":c<=77?"❄️":c<=82?"🌦️":"⛈️"}
+function tf(u,ms){var c=typeof AbortController!=="undefined"?new AbortController():null,t=c&&setTimeout(function(){c.abort()},ms||8000);return fetch(u,c?{signal:c.signal}:{}).then(function(r){clearTimeout(t);return r},function(e){clearTimeout(t);throw e})}
+function getJ(u){return tf(u).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})}
+function nowT(){return new Date().toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit",timeZone:TZ})+" Uhr"}
+function loadStd(){var A="https://api.jolpi.ca/ergast/f1/current/";
+  return Promise.all([getJ(A+"driverstandings.json"),getJ(A+"constructorstandings.json")]).then(function(x){
+    var dl=x[0].MRData.StandingsTable.StandingsLists[0].DriverStandings,cl=x[1].MRData.StandingsTable.StandingsLists[0].ConstructorStandings,t=nowT();
+    STD.f1d={s:"Formel 1 · Fahrer · live (Abruf "+t+")",r:dl.map(function(d){var c=d.Constructors||[];return[d.Driver.givenName+" "+d.Driver.familyName,c.length?c[c.length-1].name:"",+d.points]})};
+    STD.f1t={s:"Formel 1 · Teams · live (Abruf "+t+")",r:cl.map(function(c){return[c.Constructor.name,"",+c.points]})};
+    stat("f1",1);saveStd();wmRender()}).catch(function(){stat("f1",0)})}
+function loadWx(){var gps={};ev.forEach(function(e){if(e.s==="F1"&&COORD[e.g])gps[e.g]=1});
+  Object.keys(gps).forEach(function(g){var c=COORD[g];
+    getJ("https://api.open-meteo.com/v1/forecast?latitude="+c[0]+"&longitude="+c[1]+"&hourly=temperature_2m,precipitation_probability,weathercode&timezone="+encodeURIComponent(TZ)+"&forecast_days=16").then(function(j){
+      var H=j.hourly,o={};
+      ev.forEach(function(e){if(e.g!==g||e.s!=="F1"||(e.n!=="Qualifying"&&e.n!=="Rennen"))return;
+        var k=H.time.indexOf(toInput(e.t).slice(0,13)+":00");if(k<0)return;
+        var pr=H.precipitation_probability[k];
+        o[e.n==="Rennen"?"r":"q"]=wIcon(H.weathercode[k])+" "+Math.round(H.temperature_2m[k])+" °C, Regen "+(pr==null?"?":pr)+" %"});
+      if(o.q||o.r){o.q=o.q||"–";o.r=o.r||"–";o.u=nowT();WXL[g]=o;wr("f1hub.wx.v1",WXL);stat("w",1);render()}}).catch(function(){if(!("w" in ST))stat("w",0)})})}
+var ST={},STN={z:"Zeitplan",f1:"F1-Tabellen",f2:"F2-Tabellen",n:"News",w:"Wetter",s:"Strecken",e:"Ergebnisse",q:"Sprint-Quali"};
+var WHY={};function stat(k,ok,why){ST[k]=ok;if(why!==undefined)WHY[k]=String(why&&why.message||why);var h=Object.keys(STN).filter(function(x){return x in ST}).map(function(x){return STN[x]+(ST[x]?" ✔ live":" ⚠ gespeichert"+(WHY[x]?" ("+WHY[x]+")":""))}).join(" · ")+" · v19";var el=$("st");if(el)el.textContent=h}
+var CIRC={americas:"🇺🇸 USA (Austin)",rodriguez:"🇲🇽 Mexiko-Stadt",interlagos:"🇧🇷 São Paulo",vegas:"🇺🇸 Las Vegas",losail:"🇶🇦 Katar",yas_marina:"🇦🇪 Abu Dhabi"};
+var SESS=[["FirstPractice","1. Freies Training"],["SecondPractice","2. Freies Training"],["ThirdPractice","3. Freies Training"],["SprintQualifying","Sprint-Qualifying"],["Sprint","Sprint"],["Qualifying","Qualifying"]];
+function nearG(rt){var g=null;DEF.forEach(function(a){if(a[0]==="F1"&&a[2]==="Rennen"&&Math.abs(Date.parse(a[3])-rt)<2*864e5)g=a[1]});return g}
+function loadSched(){return getJ("https://api.jolpi.ca/ergast/f1/current.json?limit=40").then(function(j){
+  var R=j.MRData.RaceTable.Races,L=[],now=Date.now();
+  function add(g,n,d,t){if(!d||!t)return;var ts=Date.parse(d+"T"+t);if(!isNaN(ts))L.push(mk(["F1",g,n,new Date(ts).toISOString()]))}
+  R.forEach(function(r){var rt=Date.parse(r.date+"T"+(r.time||"")),g;if(isNaN(rt)||rt<now-4*864e5)return;
+    g=CIRC[r.Circuit.circuitId]||nearG(rt)||("🏁 "+r.raceName);
+    SESS.forEach(function(s){if(r[s[0]])add(g,s[1],r[s[0]].date,r[s[0]].time)});
+    add(g,"Rennen",r.date,r.time)});
+  if(!L.length)throw 0;
+  applySched(L);wr("f1hub.sched.v1",{at:Date.now(),L:L});render();loadWx()})}
+function nrm(s){return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim()}
+function cellTxt(c){return c.textContent.replace(/\[[^\]]*\]/g,"").replace(/\s+/g," ").trim()}
+function wikiRows(html,kind){var d=new DOMParser().parseFromString(html,"text/html"),best=[];
+  Array.prototype.forEach.call(d.querySelectorAll("table.wikitable"),function(t){
+    if(!t.rows.length)return;var hd=t.rows[0].textContent;if(!/Pos/i.test(hd)||(kind==="d"?!/Driver/i.test(hd)||/Team|Entrant/i.test(hd):!/Team|Entrant/i.test(hd)))return;
+    var span=!!t.querySelector("td[rowspan],th[rowspan]"),out=[];
+    Array.prototype.forEach.call(t.rows,function(r){var c=r.cells;if(c.length<3||!/^\d{1,2}$/.test(cellTxt(c[0])))return;
+      if(kind==="t"&&span&&c[0].rowSpan<2)return;
+      var nm=cellTxt(c[1]),pt=parseFloat(cellTxt(c[c.length-1]).replace(/[^\d.]/g,""));
+      if(nm&&!isNaN(pt))out.push([nm,"",pt])});
+    if(out.length>best.length)best=out});
+  return best}
+function goodRows(rows,min,ref){if(rows.length<min||rows[0][2]<ref)return false;for(var i=1;i<rows.length;i++)if(rows[i][2]>rows[i-1][2])return false;return true}
+function loadF2(){var W="https://en.wikipedia.org/w/api.php?format=json&formatversion=2&origin=*&action=parse&prop=text&redirects=1&page=2026_Formula_2_Championship";
+  return getJ(W).then(function(x){var h=x.parse.text,t=nowT(),ok=false,tm={};
+    STD.f2d.r.forEach(function(r){tm[nrm(r[0])]=r[1]});
+    var dr=wikiRows(h,"d");
+    if(goodRows(dr,10,STD.f2d.r[0][2])){STD.f2d={s:"Formel 2 · Fahrer · live (Wikipedia, Abruf "+t+")",r:dr.map(function(r){return[r[0],tm[nrm(r[0])]||"",r[2]]})};ok=true}
+    var tr=wikiRows(h,"t");if(goodRows(tr,5,STD.f2t.r[0][2])){STD.f2t={s:"Formel 2 · Teams · live (Wikipedia, Abruf "+t+")",r:tr};ok=true}
+    if(!ok)throw new Error("Tabelle nicht erkannt ("+dr.length+"/"+tr.length+" Zeilen)");saveStd();wmRender()})}
+var NEWSL=null,NEWST="",fNews=new Intl.DateTimeFormat("de-DE",{timeZone:TZ,day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+function loadNews(){return tf("https://raw.githubusercontent.com/robo7722/F1/main/news.json?"+Date.now(),9000).then(function(r){if(!r.ok)throw new Error("news.json HTTP "+r.status);return r.json()}).then(function(j){
+  if(!j.items||!j.items.length)throw new Error("news.json leer");
+  NEWSL=j.items;NEWST=fNews.format(j.at);wr("f1hub.news.v2",{at:j.at,items:j.items});newsRender()})}
+
+var Y27=[
+["🇧🇭","Bahrain","12.–14. März",1,[26.0325,50.5106]],
+["🇸🇦","Saudi-Arabien (Dschidda)","19.–21. März",0,[21.6319,39.1044]],
+["🇦🇺","Australien (Melbourne)","2.–4. April",1,[-37.8497,144.968]],
+["🇯🇵","Japan (Suzuka)","9.–11. April",1,[34.8431,136.541]],
+["🇨🇳","China (Shanghai)","16.–18. April",0,[31.3389,121.22]],
+["🇺🇸","Miami","30. April – 2. Mai",0,[25.9581,-80.2389]],
+["🇨🇦","Kanada (Montreal)","21.–23. Mai",1,[45.5,-73.5228]],
+["🇲🇨","Monaco","4.–6. Juni",1,[43.7347,7.4206]],
+["🇵🇹","Portugal (Portimão)","18.–20. Juni",0,[37.227,-8.6267]],
+["🇬🇧","Großbritannien (Silverstone)","2.–4. Juli",1,[52.0786,-1.0169]],
+["🇦🇹","Österreich (Spielberg)","9.–11. Juli",0,[47.2197,14.7647]],
+["🇧🇪","Belgien (Spa)","23.–25. Juli",0,[50.4372,5.9714]],
+["🇭🇺","Ungarn (Budapest)","30. Juli – 1. August",0,[47.5789,19.2486]],
+["🇮🇹","Italien (Monza)","3.–5. September",1,[45.6156,9.2811]],
+["🇪🇸","Spanien (Madrid)","10.–12. September",0,[40.4655,-3.615]],
+["🇦🇿","Aserbaidschan (Baku)","24.–26. September",0,[40.3725,49.8533]],
+["🇹🇷","Türkei (Istanbul)","1.–3. Oktober",0,[40.9517,29.4058]],
+["🇸🇬","Singapur","8.–10. Oktober",0,[1.2914,103.864]],
+["🇺🇸","USA (Austin)","22.–24. Oktober",0,[30.1328,-97.6411]],
+["🇲🇽","Mexiko-Stadt","29.–31. Oktober",0,[19.4042,-99.0907]],
+["🇧🇷","São Paulo","5.–7. November",1,[-23.7036,-46.6997]],
+["🇺🇸","Las Vegas","18.–20. November",0,[36.1147,-115.1728]],
+["🇶🇦","Katar","3.–5. Dezember",1,[25.49,51.4542]],
+["🇦🇪","Abu Dhabi","10.–12. Dezember",1,[24.4672,54.6031]]
+];
+var ALLC={};Object.keys(COORD).forEach(function(k){ALLC[k]=COORD[k]});Y27.forEach(function(r){if(r[4])ALLC["27|"+r[1]]=r[4]});
+var TP=rd("f1hub.trk.v3",{}),TPT=rd("f1hub.trk.t3",0);
+if(!TP||typeof TP!=="object")TP={};
+function trkSvg(k){return TP[k]?'<svg class="xtrk" viewBox="0 0 100 60" aria-hidden="true"><path d="'+TP[k]+'"/></svg>':''}
+function trkPath(pts){var k=Math.cos(pts[0][1]*Math.PI/180),st=Math.max(1,Math.ceil(pts.length/140)),q=[],i;
+  for(i=0;i<pts.length;i+=st)q.push([pts[i][0]*k,-pts[i][1]]);
+  var a=1e9,b=-1e9,c=1e9,d=-1e9;q.forEach(function(p){a=Math.min(a,p[0]);b=Math.max(b,p[0]);c=Math.min(c,p[1]);d=Math.max(d,p[1])});
+  var w=b-a||1,h=d-c||1,sc=Math.min(90/w,50/h),ox=(100-w*sc)/2,oy=(60-h*sc)/2;
+  return q.map(function(p,j){return(j?"L":"M")+((p[0]-a)*sc+ox).toFixed(1)+" "+((p[1]-c)*sc+oy).toFixed(1)}).join("")+"Z"}
+function trkBuild(gj){var cs=[];(gj.features||[]).forEach(function(f){var g=f.geometry;if(!g)return;
+    var L=g.type==="LineString"?[g.coordinates]:g.type==="MultiLineString"?g.coordinates:[],pts=[].concat.apply([],L);if(pts.length<20)return;
+    var a=1e9,b=-1e9,c=1e9,d=-1e9;pts.forEach(function(p){a=Math.min(a,p[0]);b=Math.max(b,p[0]);c=Math.min(c,p[1]);d=Math.max(d,p[1])});
+    cs.push({la:(c+d)/2,lo:(a+b)/2,p:pts})});
+  var out={};Object.keys(ALLC).forEach(function(k){var t=ALLC[k],best=null,bd=0.12;
+    cs.forEach(function(x){var dd=Math.max(Math.abs(x.la-t[0]),Math.abs(x.lo-t[1]));if(dd<bd){bd=dd;best=x}});
+    if(best)out[k]=trkPath(best.p)});
+  return out}
+function loadTracks(){var need=Object.keys(ALLC).some(function(k){return!TP[k]});
+  if(!need||(Date.now()-TPT<6048e5&&Object.keys(ALLC).length<=rd("f1hub.trk.n",0)))return Promise.resolve();
+  return getJ("https://raw.githubusercontent.com/bacinger/f1-circuits/master/f1-circuits.geojson").catch(function(){return getJ("https://cdn.jsdelivr.net/gh/bacinger/f1-circuits@master/f1-circuits.geojson")}).then(function(gj){
+    var o=trkBuild(gj);if(!Object.keys(o).length)throw new Error("keine Strecken erkannt");
+    TP=Object.assign(TP,o);wr("f1hub.trk.v3",TP);wr("f1hub.trk.t3",Date.now());wr("f1hub.trk.n",Object.keys(ALLC).length);render();resRender()})}
+
+function applySched(L){var ids={};L.forEach(function(e){ids[e.id]=1});base=base.filter(function(e){return!(e.s==="F1"&&ids[e.id])}).concat(L);build()}
+function saveStd(){wr("f1hub.std.v1",{at:Date.now(),d:STD})}
+function restoreCache(){var W6=6048e5,c;
+  c=rd("f1hub.sched.v1",null);if(c&&c.L&&c.L.length&&Date.now()-c.at<W6)applySched(c.L);
+  c=rd("f1hub.std.v1",null);if(c&&c.d&&c.d.f1d&&c.d.f1t&&c.d.f2d&&c.d.f2t&&Date.now()-c.at<W6)STD=c.d;
+  c=rd("f1hub.wx.v1",null);if(c&&typeof c==="object")for(var k in c)WXL[k]=c[k];
+  c=rd("f1hub.res.v2",null);if(c&&c.L&&c.L.length){RES=c.L;RESAT=c.at;addRC(RES)}
+  try{localStorage.removeItem("f1hub.news.v1")}catch(e){}
+  c=rd("f1hub.news.v2",null);if(c&&c.items&&c.items.length){NEWSL=c.items;NEWST=fNews.format(c.at)}}
+
+var RES=null,RESAT=0,resOpen={};
+function pageAll(path,sub){var b="https://api.jolpi.ca/ergast/f1/current/"+path+".json?limit=100&offset=";
+  return getJ(b+0).then(function(j){var tot=+j.MRData.total||0,ps=[Promise.resolve(j)];for(var o=100;o<tot;o+=100)ps.push(getJ(b+o));return Promise.all(ps)}).then(function(a){var m={},out=[];
+    a.forEach(function(j){j.MRData.RaceTable.Races.forEach(function(r){var x=m[r.round];if(!x){m[r.round]=r;out.push(r)}else x[sub]=(x[sub]||[]).concat(r[sub]||[])})});return out})}
+function dn(d){return d.givenName+" "+d.familyName}
+function loadResults(){return Promise.all([pageAll("results","Results"),pageAll("qualifying","QualifyingResults"),pageAll("sprint","SprintResults")]).then(function(a){
+  var m={};function g(r){var c=r.Circuit||{},l=c.Location||{};return m[r.round]||(m[r.round]={r:+r.round,n:r.raceName,d:r.date,ci:c.circuitId||"",la:parseFloat(l.lat),lo:parseFloat(l.long)})}
+  function rows(arr){return(arr||[]).map(function(e){return[e.positionText||e.position,dn(e.Driver),e.Constructor.name,e.Time?e.Time.time:e.status,e.points,e.FastestLap&&e.FastestLap.rank==="1"&&e.FastestLap.Time?e.FastestLap.Time.time:""]})}
+  a[0].forEach(function(r){g(r).R=rows(r.Results)});
+  a[2].forEach(function(r){g(r).S=rows(r.SprintResults)});
+  a[1].forEach(function(r){g(r).Q=(r.QualifyingResults||[]).map(function(e){return[e.position,dn(e.Driver),e.Constructor.name,e.Q3||e.Q2||e.Q1||"–"]})});
+  var L=Object.keys(m).map(function(k){return m[k]}).sort(function(x,y){return y.r-x.r});
+  if(!L.length)throw new Error("keine Ergebnisse");
+  if(RES)L.forEach(function(l){var o=RES.filter(function(r){return r.r===l.r})[0];if(o&&o.SQ)l.SQ=o.SQ});
+  RES=L;addRC(L);RESAT=Date.now();wr("f1hub.res.v2",{at:RESAT,L:L});resRender();loadTracks().catch(function(){})})}
+function addRC(L){L.forEach(function(x){if(x.ci&&!isNaN(x.la)&&!isNaN(x.lo))ALLC["R|"+x.ci]=[x.la,x.lo]})}
+function fmtT(v){if(v==null||isNaN(v))return"–";var m=Math.floor(v/60),r=v-m*60;return m>0?m+":"+(r<10?"0":"")+r.toFixed(3):r.toFixed(3)}
+function tcase(t){return String(t||"").toLowerCase().replace(/(^|[\s-])(\S)/g,function(a,b,c){return b+c.toUpperCase()})}
+function oj(p){return getJ("https://api.openf1.org/v1/"+p)}
+function loadSQ(){if(!RES)return Promise.resolve();
+  var need=RES.filter(function(x){return x.S&&x.S.length&&!x.SQ});
+  if(!need.length||Date.now()-rd("f1hub.sq.t",0)<9e5)return Promise.resolve();
+  wr("f1hub.sq.t",Date.now());
+  return oj("sessions?year=2026").then(function(all){
+    var ss=all.filter(function(z){return/sprint (qualifying|shootout)/i.test(z.session_name||"")});
+    var jobs=[];need.forEach(function(x){var m=ss.filter(function(z){var d=(Date.parse(x.d)-Date.parse(z.date_start))/864e5;return d>=0&&d<=4})[0];if(m)jobs.push([x,m.session_key])});
+    var p=Promise.resolve(),err=null;
+    jobs.forEach(function(j){p=p.then(function(){return new Promise(function(r){setTimeout(r,450)})}).then(function(){return oj("session_result?session_key="+j[1])}).then(function(res){
+      return new Promise(function(r){setTimeout(r,450)}).then(function(){return oj("drivers?session_key="+j[1])}).then(function(dr){
+        var dm={};dr.forEach(function(d){dm[d.driver_number]=d});
+        var rows=res.filter(function(e){return e.position!=null}).sort(function(a,b){return a.position-b.position}).map(function(e){var d=dm[e.driver_number]||{},du=e.duration,b=null;
+          if(Array.isArray(du)){for(var i=du.length-1;i>=0;i--)if(du[i]!=null){b=du[i];break}}else b=du;
+          return[e.position,tcase(d.full_name||("#"+e.driver_number)),d.team_name||"",fmtT(b)]});
+        if(rows.length)j[0].SQ=rows})}).catch(function(e){err=e})});
+    return p.then(function(){if(err&&!jobs.some(function(j){return j[0].SQ}))throw err;wr("f1hub.res.v2",{at:RESAT,L:RES});resRender()})})}
+var TCOL=[["mercedes","#27f4d2"],["ferrari","#e80020"],["mclaren","#ff8000"],["racing bulls","#6692ff"],["rb f1","#6692ff"],["alphatauri","#6692ff"],["red bull","#3671c6"],["aston","#229971"],["alpine","#0093cc"],["williams","#64c4ff"],["haas","#b6babd"],["audi","#f50537"],["cadillac","#ffffff"],["campos","#ffb000"],["invicta","#e5007d"],["rodin","#00b3a4"],["mp motorsport","#ff6a13"],["dams","#2e8bea"],["art grand","#c8cbd0"],["trident","#19b26b"],["hitech","#7b2cbf"],["amersfoort","#2b3a8c"],["aix","#9acd32"],["prema","#e4002b"]];
+function tcol(n){var k=nrm(n||"");if(!k)return"";for(var i=0;i<TCOL.length;i++)if(k.indexOf(TCOL[i][0])>=0)return TCOL[i][1];return""}
+var lastLive=0;
+function loadLive(){lastLive=Date.now();
+  loadSched().then(function(){stat("z",1)},function(e){stat("z",0,e);loadWx()});
+  loadStd();
+  loadF2().then(function(){stat("f2",1)},function(e){stat("f2",0,e)});
+  loadNews().then(function(){stat("n",1)},function(e){stat("n",0,e)});
+  var rp=(!RES||Date.now()-RESAT>48e4)?loadResults().then(function(){stat("e",1)},function(e){stat("e",0,e)}):Promise.resolve();
+  rp.then(loadSQ).then(function(){stat("q",1)},function(e){stat("q",0,e)});
+  loadTracks().then(function(){stat("s",1)},function(e){stat("s",0,e)})}
+var tH=0,tR=0,tL=0,inited=false;
+$$(".xchip").forEach(function(c){c.onclick=function(){filt=c.dataset.f;$$(".xchip").forEach(function(x){x.classList.toggle("on",x===c)});render()}});
+$("past").onclick=function(){showPast=!showPast;this.textContent=showPast?"Vergangene ausblenden":"Vergangene zeigen";render()};
+$("edit").onclick=function(){editing=!editing;this.textContent=editing?"Fertig":"Bearbeiten";$("editbar").style.display=editing?"flex":"none";render()};
+$("add").onclick=function(){openM(null)};
+$("cancel").onclick=closeM;
+$("save").onclick=function(){var t=fromInput($("fd").value),g=$("fg").value.trim(),n=$("fn").value.trim();if(isNaN(t)||!g||!n){alert("Bitte alle Felder ausfüllen.");return}
+  var o={s:$("fs").value,g:g,n:n,t:t,p:0};
+  if(editId){var u=user.filter(function(x){return x.id===editId})[0];if(u){u.s=o.s;u.g=o.g;u.n=o.n;u.t=o.t}else{hide[editId]=1;o.id="u"+Date.now();user.push(o)}}else{o.id="u"+Date.now();user.push(o)}
+  store();closeM();render()};
+$("reset").onclick=function(){if(confirm("Alle eigenen Änderungen verwerfen?")){user=[];hide={};store();render()}};
+$("list").onclick=function(e){var b=e.target.closest("button");if(!b)return;
+  if(b.dataset.e){openM(ev.filter(function(x){return x.id===b.dataset.e})[0])}
+  if(b.dataset.x&&confirm("Termin löschen?")){var id=b.dataset.x;if(id.charAt(0)==="u"){user=user.filter(function(x){return x.id!==id})}else{hide[id]=1}store();render()}};
+$$(".ptabs button").forEach(function(b){b.onclick=function(){var k=b.dataset.k;["t","w","n","r"].forEach(function(x){$("p-"+x).classList.toggle("on",x===k)});$$(".ptabs button").forEach(function(x){x.classList.toggle("on",x===b)});if(k==="t")hero()}});
+$$(".xch2").forEach(function(b){b.onclick=function(){wm=b.dataset.w;$$(".xch2").forEach(function(x){x.classList.toggle("on",x===b)});wmRender()}});
+$("p-r").addEventListener("toggle",function(e){var d=e.target;if(d&&d.dataset&&d.dataset.id)resOpen[d.dataset.id]=d.open},true);
+$("rl").onclick=function(){try{localStorage.removeItem("f1hub.res.v2");localStorage.removeItem("f1hub.sq.t")}catch(e){}RES=null;RESAT=0;resRender();loadLive()};
+$("close").onclick=function(){H.close()};
+function start(){
+  if(!inited){inited=true;load();restoreCache();render();wmRender();newsRender();resRender();loadLive()}
+  else{render();if(Date.now()-lastLive>300000)loadLive()}
+  tH=setInterval(hero,1000);tR=setInterval(render,60000);tL=setInterval(loadLive,900000)}
+function stop(){clearInterval(tH);clearInterval(tR);clearInterval(tL)}
+H.open=function(){if(H.on)return;H.on=true;document.getElementById("hub").classList.remove("hidden");start()};
+H.close=function(){if(!H.on)return;H.on=false;closeM();document.getElementById("hub").classList.add("hidden");stop()};
+addEventListener("keydown",function(e){if(H.on&&e.key==="Escape"){if($("modal").classList.contains("show"))closeM();else H.close()}},true);
+var tb=document.getElementById("tHub");if(tb)tb.addEventListener("click",H.open);
+window.F1Hub=H;
+})();
 </script>
 </body>
 </html>
