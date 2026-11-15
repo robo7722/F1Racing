@@ -280,3 +280,9 @@ Stand: 15.11.2026. Ohne Credits.
 - Granular-Wiedergabe (`granTick`, Durchzüge, v2.08–v2.12) ist abgeschaltet (Code bleibt, kein `gran`-Eintrag); `mx5e_durchzug*.wav` nicht mehr im Service-Worker.
 - Prüfung: Hörprobe mit den neu erzeugten Dateien und dem v2.07d-Verfahren gerechnet → identisch zur gewählten Probe (Korrelation 1,0; 0,76 % Unterschied = MP3).
 - **Lehre:** Einen vom Nutzer bestätigten Stand festhalten und danach nur die genannten Stellen ändern, nicht das Verfahren umbauen. Der Nutzer kann hören, ich nicht – Hörproben im Zweifel vorher vergleichen lassen.
+
+## v2.14 – Stand 10 (v2.07d) + Anfahren aus Durchzug
+- Nutzer hat alle Hörproben (01–15) verglichen und **10 (v2.07d)** gewählt; falsch klingt dort nur **9,2–11,6 s (Anfahren mit Vollgas)** – vier Stufenwechsel in 2 s.
+- Änderung nur dort: 1.000–4.400 U/min granular aus Durchzug A wie in v2.08 (dessen Anfahren der Nutzer als richtig bestätigt hat; Körner im Abstand einer Zündung wie dort). Ab 3.900–4.400 übernehmen wieder die Stufen `mx5e_5200`/`mx5e_6900` aus v2.07d. Leerlauf, Gasstöße, hohe Drehzahl unverändert wie v2.07d.
+- `SND_ENG.road.gran.aus = [3900, 4400]`: Bereich, in dem die Granular-Wiedergabe wieder ausblendet. Stufen-Schleifen jetzt `mx5e_leer`, `mx5e_5200`, `mx5e_6900` (1.600/2.400/3.500 entfallen).
+- Hörproben-Ordner: nummeriert 01–16 (siehe Chat), 16 = v2.14.
