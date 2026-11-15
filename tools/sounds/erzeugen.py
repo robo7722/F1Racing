@@ -67,13 +67,29 @@ def gen(prompt, dur, infl, loop):
     raise RuntimeError('zu viele Versuche')
 
 
+def used():
+    req = urllib.request.Request('https://api.elevenlabs.io/v1/user/subscription', headers={'xi-api-key': os.environ.get('ELEVEN_API_KEY', 'proxy')})
+    with urllib.request.urlopen(req, timeout=30) as r: d = json.load(r)
+    return d['character_count'], d['character_limit']
+
+
 if __name__ == '__main__':
+    # Credit-Sperre (seit v2.03): ohne --budget N läuft nichts. Vor dem Start und nach JEDER Aufnahme wird der Kontostand gelesen;
+    # ist das Budget erreicht, bricht das Skript sofort ab. Die API kostet ≈ 100 Credits je Sekunde Ton.
+    args = sys.argv[1:]
+    if '--budget' not in args: sys.exit('Abbruch: Budget fehlt. Aufruf: python tools/sounds/erzeugen.py --budget 300 [name ...]  (≈ 100 Credits je Sekunde Ton!)')
+    i = args.index('--budget'); budget = int(args[i + 1]); names = args[:i] + args[i + 2:]
     os.makedirs(OUT, exist_ok=True)
-    names = sys.argv[1:] or list(SFX)
+    names = names or list(SFX)
+    start, limit = used(); need = sum(SFX[n][1] for n in names) * VARIANTEN * 100
+    print(f'Kontostand: {start} von {limit} verbraucht. Geschätzte Kosten: {need:.0f} Credits, Budget: {budget}', flush=True)
+    if need > budget: sys.exit(f'Abbruch: geschätzte Kosten {need:.0f} > Budget {budget}')
     for n in names:
         p, d, i, l = SFX[n]
         for k in range(1, VARIANTEN + 1):
             f = os.path.join(OUT, f'{n}_{k}.mp3')
             if os.path.exists(f): continue
-            try: data = gen(p, d, i, l); open(f, 'wb').write(data); print(n, k, len(data), 'Bytes', flush=True)
-            except Exception as e: print(n, k, 'FEHLER', e, flush=True)
+            try: data = gen(p, d, i, l); open(f, 'wb').write(data)
+            except Exception as e: print(n, k, 'FEHLER', e, flush=True); continue
+            now = used()[0]; print(n, k, len(data), 'Bytes, bisher', now - start, 'Credits', flush=True)
+            if now - start >= budget: sys.exit(f'Budget erreicht ({now - start} Credits) – Abbruch')
