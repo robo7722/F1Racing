@@ -1036,8 +1036,8 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 .mnext,.mnext.start{padding:0 18px 0 24px!important}
 .mnext span{border-radius:6px}
 .tinfo{box-shadow:none!important;border-left:3px solid var(--tc,#e10600)!important}
-/* Infotafel: nichts abschneiden – etwas breiter, Werte ohne Breitengrenze, Kursname darf zweizeilig umbrechen (vorher „Runden (G…“, „Br…“, „Autódromo José Carl…“) */
-.tinfo{max-width:42%!important}.tinfo canvas{max-width:10.5vw!important}.tinfo .tst{grid-template-columns:auto auto!important;column-gap:12px!important}.tinfo .tst b{max-width:none!important}.tinfo .tst small{overflow:visible!important;text-overflow:clip!important;letter-spacing:.08em!important}.tinfo .tst .w b{white-space:normal!important;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+/* Infotafel: nichts abschneiden – etwas breiter, Werte ohne Breitengrenze, Kennzahlen in drei Spalten, Kurs in Zeile 2 neben dem Land (zwei Zeilen passen auch auf niedrige Handys); Streckenkarte behält ihr Seitenverhältnis (object-fit: contain – vorher wurde sie bei begrenzter Breite in die Höhe gezogen und wirkte gestaucht) (vorher „Runden (G…“, „Br…“, „Autódromo José Carl…“) */
+.tinfo{max-width:42%!important}.tinfo{padding-top:5px!important;padding-bottom:5px!important}.tinfo .tst{row-gap:clamp(1px,.9vh,8px)!important}.tinfo .tst b{font-size:clamp(11px,3vh,15px)!important;line-height:1.1}.tinfo canvas{width:min(12vw,24vh)!important;height:auto!important;max-width:none!important;aspect-ratio:7/5;align-self:center;object-fit:contain!important}.tinfo .tst{grid-template-columns:auto auto!important;column-gap:12px!important}.tinfo .tst b{max-width:none!important}.tinfo .tst small{overflow:visible!important;text-overflow:clip!important;letter-spacing:.08em!important}.tinfo .tst{grid-template-columns:auto auto auto!important;align-content:center}.tinfo .tst .w{grid-column:span 2!important}.tinfo .tst .w b{font-size:clamp(10px,2.8vh,14px)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* Kacheln des Hauptmenüs mit Bild (aus dem Spiel aufgenommen), nach unten abgedunkelt, damit die Schrift lesbar bleibt */
 #qPlay::before{background:linear-gradient(180deg,rgba(12,13,16,.7),rgba(12,13,16,.2) 42%,rgba(12,13,16,.78)),url(textures/menu_quick.jpg) center/cover no-repeat!important}
 #tPlay::before{background:linear-gradient(90deg,rgba(14,15,18,.5),rgba(14,15,18,0) 45%),url(textures/menu_tt.jpg) 78% 50%/cover no-repeat,#0e0f12!important}
@@ -5779,7 +5779,7 @@ function texRep(t, rx, ry) { const c = t.clone(); c.needsUpdate = true; c.repeat
 function poolMesh(list, w, l, mat) { const pos = [], uv = [], NX = 12, NZ = 16;
   /* Höhe: auf der Fahrbahn exakt die Asphalthöhe (Streckenhöhe + Querneigung), daneben das Gelände; nur 1 cm darüber – mit 5 cm und grobem Raster schwebte der Schein sichtbar über dem Asphalt */
   const hY = (x, z) => { if (FLAT) return 0; const [d, j] = nearestDist(x, z); const lat = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j]; return Math.abs(lat) <= HW[j] + 0.3 ? ELEV[j] + bankY(j, lat) : Math.min(placeY(x, z), ELEV[j] + bankY(j, lat) + Math.max(0, d - HW[j]) * 0.3); };
-  for (const [x0, z0, ang] of list) { const c = Math.cos(ang), sn = Math.sin(ang), V = (i, j) => { const lx = (i / NX - 0.5) * w, lz = (j / NZ - 0.5) * l, x = x0 + lx * c + lz * sn, z = z0 - lx * sn + lz * c; return [x, hY(x, z) + 0.012, z, i / NX, j / NZ]; };
+  for (const [x0, z0, ang] of list) { const c = Math.cos(ang), sn = Math.sin(ang), V = (i, j) => { const lx = (i / NX - 0.5) * w, lz = (j / NZ - 0.5) * l, x = x0 + lx * c + lz * sn, z = z0 - lx * sn + lz * c; return [x, hY(x, z) + 0.04, z, i / NX, j / NZ]; };
     for (let i = 0; i < NX; i++) for (let j = 0; j < NZ; j++) for (const q of [[i, j], [i + 1, j + 1], [i + 1, j], [i, j], [i, j + 1], [i + 1, j + 1]]) { const v = V(q[0], q[1]); pos.push(v[0], v[1], v[2]); uv.push(v[3], v[4]); } }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); const m = new THREE.Mesh(g, mat); m.userData.fixed = true; m.userData.clipSkip = true; m.renderOrder = 1; m.frustumCulled = false; return m; }
 
@@ -8814,7 +8814,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       for (const [tt, ofs] of [[t1, [-60, -14, 32]], [t4, [-40, 6]]]) if (tt) for (const o of ofs) { const sd = tt[1] ? -1 : 1; if (!stand(tt[0] + o, sd, 44)) window.__hunSkip.push('Tribüne ' + Math.round(tt[0] + o)); } }
     // --- Naturtribünen: Grashänge hinter dem Zaun, die bis 12 m ansteigen, mit Zuschauerreihen (die Strecke liegt in einer Talmulde) ---
     { const pos = [], uv = [], cpos = [], cuv = [], put = (A, P, a, b, c) => { for (const q of [a, b, c]) { A.push(q[0], q[1], q[2]); P.push(q[3], q[4]); } };
-      const SL = [[300, 760, 1], [1050, 1500, 1], [1500, 1900, -1], [2150, 2700, 1], [2850, 3200, -1], [3300, 3700, 1], [3850, 4150, 1]];   // [von, bis, außen(1)/innen(-1)]
+      const SL = [];   /* Naturtribünen auf Wunsch entfernt: die Grashang-Keile stachen durch Bäume und Gelände (vorher [[300, 760, 1], [1050, 1500, 1], [1500, 1900, -1], [2150, 2700, 1], [2850, 3200, -1], [3300, 3700, 1], [3850, 4150, 1]]) */
       const loop = []; for (let i = 0; i < N; i += 4) loop.push([PX[i], PZ[i]]); const inL = (x, z) => { let c = false; for (let i = 0, j = loop.length - 1; i < loop.length; j = i++) { const [xi, zi] = loop[i], [xj, zj] = loop[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };
       for (const [s0, s1, io] of SL) { const q0 = trackAt((s0 + s1) / 2, 40), sd = (inL(q0.x, q0.z) ? 1 : -1) * -io;   // Seite: außen bzw. innen
         let prev = null; for (let s = s0; s <= s1; s += 8) { const p = trackAt(s, 0), w = wallAt(p.i, sd), d0 = w + 7, d1 = w + 42, a = trackAt(s, sd * d0), b = trackAt(s, sd * d1), mid = trackAt(s, sd * (d0 + d1) / 2);
@@ -12526,7 +12526,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.38'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.39'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
