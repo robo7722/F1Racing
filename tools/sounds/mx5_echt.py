@@ -38,7 +38,7 @@ BLIPS = {'mx5e_blip1': (19.95, 0.75), 'mx5e_blip2': (25.55, 1.15), 'mx5e_blip3':
 
 
 def abfall_strecken(seg, faktor=1.8, laenge=1.0):
-    """v2.10: Der echte Abfall nach dem Gasstoß (5.000 → Leerlauf in ~0,5 s, leichte Schwungmasse) wirkte im Spiel zu hart.
+    """(v2.11, seit v2.12 nicht mehr verwendet – das Problem war die Mischung mit der Leerlauf-Schleife danach, nicht der Abfall) v2.10: Der echte Abfall nach dem Gasstoß (5.000 → Leerlauf in ~0,5 s, leichte Schwungmasse) wirkte im Spiel zu hart.
     Ab kurz nach der Spitze wird 1 s Abfall per Rubberband zeitlich gestreckt (Tonhöhe bleibt) – die Drehzahl sinkt echt klingend, nur langsamer."""
     h = int(0.02 * SR); env = np.array([np.sqrt(np.mean(seg[i:i + h] ** 2)) for i in range(0, len(seg) - h, h)])
     a = (int(np.argmax(env)) + 4) * h; b = min(len(seg), a + int(laenge * SR))
@@ -91,8 +91,9 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         for name, (a, d) in BLIPS.items(): save(os.path.join(ROH, name.replace('mx5e_', 'mx5_') + '.wav'), x[int((a - 0.12) * SR):int((a + d + 1.4) * SR)] / (np.abs(x).max() + 1e-9))
     for name in BLIPS:
-        seg = load(os.path.join(ROH, name.replace('mx5e_', 'mx5_') + '.wav')); fo = int(0.25 * SR); fi = int(0.01 * SR)
-        seg = abfall_strecken(seg); seg[-fo:] *= np.linspace(1, 0, fo) ** 2; seg[:fi] *= np.linspace(0, 1, fi); y = blip_angleichen(seg); save(os.path.join(SND, name + '.wav'), y)
+        seg = load(os.path.join(ROH, name.replace('mx5e_', 'mx5_') + '.wav')); fo = int(0.01 * SR); fi = int(0.01 * SR)   # v2.12: Ende nur 10 ms ausblenden – das Spiel überblendet selbst (vorher 0,25 s → Loch beim Wechsel zur Leerlauf-Schleife)
+        # v2.12: abfall_strecken nicht mehr verwendet (klang schlimmer)
+        seg[-fo:] *= np.linspace(1, 0, fo) ** 2; seg[:fi] *= np.linspace(0, 1, fi); y = blip_angleichen(seg); save(os.path.join(SND, name + '.wav'), y)
         h = int(0.05 * SR); e = np.array([np.sqrt(np.mean(y[i:i + h] ** 2)) for i in range(0, len(y) - h, h)])
         print(f'{name}: {len(y) / SR:.2f} s, Leerlauf-Pegel {e[:2].mean():.3f}, Spitze {e.max():.3f} (×{e.max() / e[:2].mean():.1f}), Ende {e[-6:-4].mean():.3f}')
     if len(sys.argv) > 1:

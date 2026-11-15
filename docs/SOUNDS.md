@@ -264,3 +264,12 @@ Stand: 15.11.2026. Ohne Credits.
   - Granular-Tempo über dem Ende der Aufnahme höchstens 1,04.
   - Roadster-Drehzahl im F1-Modus `1000 + gi.rpm / 12000 · 5400` (vorher `1100 + … · 6200`): schaltet bei ~6.200, fällt auf ~5.100 (passt zum NA 1,6 l der Aufnahme). Gasstoß im Stand bis ~6.350 statt 7.350. Schaltwarnung im Roadster-Cockpit ab 6.000 (vorher 6.900).
 - Straßen-Modus (`streetGear`, 6 Gänge bis 7.300) unverändert; dort wird über 6.300 nur minimal höher gestimmt.
+
+## v2.12 – Übergang Gasstoß → Leerlauf, Hörprobe Straßen-Variante
+- Rückmeldung: Nicht der Abfall selbst ist schlimm, sondern die Mischung mit dem, was danach kommt. Das Strecken des Abfalls (v2.11) ist zurückgenommen.
+- Ursachen der schlechten Mischung:
+  1. In den Gasstoß-Dateien steckte ein 0,25-s-Ausblenden, das Spiel blendete zusätzlich aus → kurzes Loch (Pegel auf ein Drittel).
+  2. Die Leerlauf-Schleife läuft durch den Motor-Tiefpass (Gas weg: 1.500 Hz), der Gasstoß nicht → Klangfarbe sprang.
+  3. 0,3 s Überlappung = zwei verschiedene Leerläufe gleichzeitig; die Schleife lief an der Ampel bei 950 statt echten ~850 U/min.
+- Jetzt: Gasstoß-Dateien nur 10 ms ausgeblendet; im Spiel läuft der Gasstoß bis in seinen eigenen Leerlauf, erst die letzten 0,12 s blendet die Schleife ein (35 ms Zeitkonstante); eigener Tiefpass des Gasstoßes folgt dem Motor-Tiefpass; Roadster-Leerlauf an der Ampel 850 U/min (Cockpit-Drehzahlmesser ebenso).
+- Hörprobe Straßen-Variante (6 Gänge `RATIO_S`, Schalten bei 7.300, Kupplungslücke, Tiefpass, Gas-weg-Loop) nach der Spiel-Logik gerechnet. Über ~6.300 U/min steigt der Ton kaum (Aufnahme endet bei 6.115, Tempo höchstens 1,04).
