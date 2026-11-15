@@ -1037,7 +1037,7 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 .mnext span{border-radius:6px}
 .tinfo{box-shadow:none!important;border-left:3px solid var(--tc,#e10600)!important}
 /* Infotafel: Kursname als Überschrift oben über die ganze Breite, darunter Karte + vier Kennzahlen in zwei Spalten (schmal, nichts abgeschnitten); Karte behält ihr Seitenverhältnis */
-.tinfo{align-self:flex-start!important;flex-wrap:wrap!important;align-content:flex-start;row-gap:2px!important;padding-top:5px!important;padding-bottom:5px!important}.tinfo .tkopf{flex-basis:100%;padding-left:8px;font-weight:800;font-size:clamp(12px,3vh,17px);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid rgba(255,255,255,.16);padding-bottom:2px}.tinfo canvas{width:min(10.5vw,22vh)!important;height:auto!important;max-width:none!important;aspect-ratio:7/5;align-self:center;object-fit:contain!important}.tinfo .tst{flex:1;row-gap:clamp(1px,.9vh,8px)!important}.tinfo .tst b{max-width:none!important;font-size:clamp(11px,3vh,15px)!important;line-height:1.1}.tinfo .tst small{overflow:visible!important;text-overflow:clip!important;letter-spacing:.08em!important}
+.tinfo{flex-wrap:wrap!important;align-content:flex-start;row-gap:2px!important;padding-top:5px!important;padding-bottom:5px!important}.tinfo .tkopf{flex-basis:100%;padding-left:8px;font-weight:800;font-size:clamp(12px,3vh,17px);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid rgba(255,255,255,.16);padding-bottom:2px}.tinfo canvas{width:min(10.5vw,22vh)!important;height:auto!important;max-width:none!important;aspect-ratio:7/5;align-self:center;object-fit:contain!important}.tinfo .tst{flex:1;row-gap:clamp(1px,.9vh,8px)!important}.tinfo .tst b{max-width:none!important;font-size:clamp(11px,3vh,15px)!important;line-height:1.1}.tinfo .tst small{overflow:visible!important;text-overflow:clip!important;letter-spacing:.08em!important}
 /* Kacheln des Hauptmenüs mit Bild (aus dem Spiel aufgenommen), nach unten abgedunkelt, damit die Schrift lesbar bleibt */
 #qPlay::before{background:linear-gradient(180deg,rgba(12,13,16,.7),rgba(12,13,16,.2) 42%,rgba(12,13,16,.78)),url(textures/menu_quick.jpg) center/cover no-repeat!important}
 #tPlay::before{background:linear-gradient(90deg,rgba(14,15,18,.5),rgba(14,15,18,0) 45%),url(textures/menu_tt.jpg) 78% 50%/cover no-repeat,#0e0f12!important}
@@ -5776,6 +5776,14 @@ const lam = (o) => { const m = new THREE.MeshStandardMaterial({ roughness: .9, m
 const po = n => ({ polygonOffset: true, polygonOffsetFactor: n < 0 ? n * 0.25 : n, polygonOffsetUnits: n < 0 ? n * 4 : n, side: THREE.DoubleSide });
 function texRep(t, rx, ry) { const c = t.clone(); c.needsUpdate = true; c.repeat.set(rx, ry); return c; }
 /* Lichtpfützen der Flutlichter: ein Netz, jeder Eckpunkt auf Fahrbahnhöhe (placeY) – als Instanzen wurden die großen Flächen von applyElevation auf den tiefsten Eckpunkt gesenkt und lagen unter dem Asphalt (unsichtbar, an Mauern abgeschnitten) */
+/* Lichtkegel weich: quer über jede Kegelfläche 0 → 1 → 0 (Kanten des Pyramidenstumpfs verschwinden); längs fällt die Vertexfarbe auf null */
+function beamFadeTex() { const t = canvasTex(128, 4, (g, w, h) => { const gr = g.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, '#000'); gr.addColorStop(.3, '#969696'); gr.addColorStop(.5, '#fff'); gr.addColorStop(.7, '#969696'); gr.addColorStop(1, '#000'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); t.userData.own = true; return t; }
+function beamUV(g) { const n = g.attributes.position.count, uv = new Float32Array(n * 2), C = g.attributes.color; for (let i = 0; i < n; i++) { const q = i % 6; uv[i * 2] = q === 2 || q === 4 || q === 5 ? 1 : 0; uv[i * 2 + 1] = C ? C.getX(i) : 0; } g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); return g; }   /* Reihenfolge je Fläche: T[k], B[k], B[k2], T[k], B[k2], T[k2] */
+/* Schleier um Scheinwerferfelder: weicher Lichthof mit fester Bildschirmgröße – nah klein gegen das Lampenfeld, in der Ferne deutlicher Glanz im Dunst. pts = Weltpositionen [x, y, z, …] */
+function lampHalos(pts, col) { const t = canvasTex(128, 128, (g, w, h) => { const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.18, 'rgba(235,238,255,.55)'); gr.addColorStop(.5, 'rgba(200,210,255,.14)'); gr.addColorStop(1, 'rgba(170,180,230,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); t.userData.own = true;
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  const m = new THREE.Points(g, new THREE.PointsMaterial({ map: t, size: 64, sizeAttenuation: false, color: col, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+  m.userData.fixed = true; m.userData.clipSkip = true; m.frustumCulled = false; m.renderOrder = 3; return m; }
 function poolMesh(list, w, l, mat) { const pos = [], uv = [], NX = 12, NZ = 16;
   /* Höhe: auf der Fahrbahn exakt die Asphalthöhe (Streckenhöhe + Querneigung), daneben das Gelände; nur 1 cm darüber – mit 5 cm und grobem Raster schwebte der Schein sichtbar über dem Asphalt */
   const hY = (x, z) => { if (FLAT) return 0; const [d, j] = nearestDist(x, z); const lat = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j]; return Math.abs(lat) <= HW[j] + 0.3 ? ELEV[j] + bankY(j, lat) : Math.min(placeY(x, z), ELEV[j] + bankY(j, lat) + Math.max(0, d - HW[j]) * 0.3); };
@@ -6748,9 +6756,10 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         /* Lichtkegel je Mast wie in Las Vegas/Lusail: Pyramidenstumpf vom Lampenfeld zur Strecke, Helligkeit fällt per Vertexfarbe auf null – kein Klippen an Mauern */
         const bg = (() => { const T = [[-1.9, 19.4, -1.7], [-0.5, 19.4, -1.7], [-0.5, 20.6, 1.7], [-1.9, 20.6, 1.7]], B = [[-22, 0, -8], [-6, 0, -8], [-6, 0, 8], [-22, 0, 8]], ps = [], cl = [];
           for (let k = 0; k < 4; k++) { const k2 = (k + 1) % 4; for (const [P, c] of [[T[k], 1], [B[k], 0], [B[k2], 0], [T[k], 1], [B[k2], 0], [T[k2], 1]]) { ps.push(...P); cl.push(c, c, c); } }
-          const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(ps, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(cl, 3)); return g; })();
-        const beams = new THREE.InstancedMesh(bg, new THREE.MeshBasicMaterial({ vertexColors: true, color: new THREE.Color(0.075, 0.07, 0.06), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false }), pp.length);
+          const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(ps, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(cl, 3)); return beamUV(g); })();
+        const beams = new THREE.InstancedMesh(bg, new THREE.MeshBasicMaterial({ map: beamFadeTex(), vertexColors: true, color: new THREE.Color(0.1, 0.094, 0.08), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false }), pp.length);
         pp.forEach((p, k) => { qq.setFromAxisAngle(_v2, p[2] + Math.PI / 2); m4.compose(pv.set(p[0], 0, p[1]), qq, one); beams.setMatrixAt(k, m4); }); beams.frustumCulled = false; beams.userData.clipSkip = true; beams.renderOrder = 2; trackGroup.add(beams);
+        trackGroup.add(lampHalos(pp.flatMap(p => { const a = p[2] + Math.PI / 2; return [p[0] - 1.2 * Math.cos(a), (FLAT ? 0 : placeY(p[0], p[1])) + 20, p[1] + 1.2 * Math.sin(a)]; }), new THREE.Color(0.3, 0.28, 0.24)));   /* Lampenkopf: lokal (−1,2 | 20 | 0), um a gedreht */
       }
     }
   }
@@ -8283,6 +8292,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       pp.forEach(([x, z, a], k) => { qq.setFromAxisAngle(_v2, a); m4.compose(pv.set(x, 0, z), qq, one); for (const im of I) im.setMatrixAt(k, m4); });
       I[0].castShadow = I[1].castShadow = true; trackGroup.add(...I);
       for (const [x, z] of pp) excl.push([x, z, 3]);
+      if (night) trackGroup.add(lampHalos(pp.flatMap(([x, z, a]) => [x + 0.35 * Math.sin(a), (FLAT ? 0 : placeY(x, z)) + H + 2.1, z + 0.35 * Math.cos(a)]), new THREE.Color(0.32, 0.29, 0.24)));
       if (night) { // Lichtkegel der Flutlichter auf dem Asphalt: gleichmäßig über die ganze Runde, wechselnd links/rechts
         const lt = canvasTex(128, 128, (g, w, h) => { const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); gr.addColorStop(0, 'rgba(255,240,215,1)'); gr.addColorStop(.45, 'rgba(255,232,200,.55)'); gr.addColorStop(1, 'rgba(255,225,190,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); lt.userData.own = true;
         const ps = []; for (let s = 10, k = 0; s < L; s += 38, k++) ps.push([s, k % 2 ? 1 : -1]);
@@ -12534,7 +12544,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.43'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.44'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
