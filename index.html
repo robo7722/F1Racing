@@ -1160,7 +1160,8 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
 #hub #hub-p-t.on{display:grid;grid-template-columns:minmax(230px,31%) minmax(0,1fr);gap:14px;overflow:hidden;padding:2px 0 0}
 #hub .xaside,#hub .xmain{min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding-right:4px;overscroll-behavior:contain}
 #hub .xaside{display:flex;flex-direction:column;gap:10px}
-#hub #hub-p-n.on,#hub #hub-p-r.on{display:block;column-width:300px;column-gap:10px}
+#hub #hub-p-n.on,#hub #hub-p-r.on{display:block}
+#hub .xcols{column-width:300px;column-gap:10px}
 #hub #hub-p-n .xnw,#hub #hub-p-r .xrs{break-inside:avoid;margin-bottom:10px;display:block}
 #hub .xfoot2{column-span:all;text-align:center;color:var(--mut);font-size:11px;padding:6px 0 2px}
 
@@ -1210,6 +1211,8 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
 
 /* Knöpfe */
 #hub .xchips{display:flex;gap:6px;flex-wrap:wrap}
+#hub .xaside .xchips{flex-wrap:nowrap}
+#hub .xaside .xchip{flex:1 1 0;min-width:0;padding:0 4px;white-space:nowrap;letter-spacing:.06em;font-size:11.5px}
 #hub #hub-p-w .xchips{margin-bottom:10px}
 #hub .xchip,#hub .xch2,#hub .xb{height:34px;padding:0 14px;color:#fff;font-weight:800;font-size:12px;letter-spacing:.1em;text-transform:uppercase;background:linear-gradient(180deg,rgba(74,78,86,.5),rgba(40,42,48,.62));border:1px solid rgba(255,255,255,.16);transition:filter .15s,transform .1s}
 #hub .xchip.on,#hub .xch2.on,#hub .xb.pri{background:linear-gradient(180deg,#e0263a,#a5101f);border-color:rgba(255,255,255,.3)}
@@ -1499,7 +1502,6 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
           <button class="xchip" data-f="F2">Formel 2</button>
         </div>
         <div class="xbtns">
-          <button class="xb" id="hub-past">Vergangene zeigen</button>
           <button class="xb" id="hub-edit">Bearbeiten</button>
         </div>
         <div class="xbtns" id="hub-editbar" style="display:none">
@@ -10071,7 +10073,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.20'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.21'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -10538,7 +10540,7 @@ function openM(e){editId=e?e.id:null;$("mt").textContent=e?"Termin bearbeiten":"
 function closeM(){$("modal").classList.remove("show")}
 function wmRender(){var d=STD[wm],h='<div class="xsub">'+esc(d.s)+'</div><div class="xtable">';d.r.forEach(function(r,i){var c=tcol(wm==="f1t"||wm==="f2t"?r[0]:r[1]);h+='<div class="xrow'+(c?' xtc':'')+'"'+(c?' style="--tc:'+c+'"':'')+'><span class="xpos">'+(i+1)+'</span><div class="xs"><b>'+esc(r[0])+'</b>'+(r[1]?'<i>'+esc(r[1])+'</i>':'')+'</div><div class="xtm"><b>'+r[2]+'</b><span>Pkt</span></div></div>'});$("wmlist").innerHTML=h+'</div>'}
 function newsRender(){var h="";
-  if(NEWSL&&NEWSL.length){h=NEWSL.map(function(n){return '<a class="xnw" href="'+esc(n.u)+'" target="_blank" rel="noopener"><small><span class="xtag '+n.s+'">'+n.s+'</span> '+fNews.format(n.t)+(n.src?' · '+esc(n.src):'')+'</small><h3>'+esc(n.title)+'</h3></a>'}).join('')+'<div class="xfoot2">Schlagzeilen · Stand '+NEWST+'</div>'}
+  if(NEWSL&&NEWSL.length){h='<div class="xcols">'+NEWSL.map(function(n){return '<a class="xnw" href="'+esc(n.u)+'" target="_blank" rel="noopener"><small><span class="xtag '+n.s+'">'+n.s+'</span> '+fNews.format(n.t)+(n.src?' · '+esc(n.src):'')+'</small><h3>'+esc(n.title)+'</h3></a>'}).join('')+'</div><div class="xfoot2">Schlagzeilen · Stand '+NEWST+'</div>'}
   else{h='<div class="xnw"><p>Noch keine News geladen.</p></div>'}
   $("p-n").innerHTML=h}
 function render27(){var el=$("y27");if(!el)return;if(filt==="F2"){el.innerHTML="";return}
@@ -10550,13 +10552,13 @@ function rtbl(t,rows,q,id){if(!rows||!rows.length)return"";var w=rows[0];
   return'<details class="xss" data-id="'+id+'"'+(resOpen[id]?" open":"")+'><summary><b>'+t+'</b>'+sub+'</summary><div class="xtb">'+rows.map(function(e){var c=tcol(e[2]);return'<div class="xtr'+(c?' xtc':'')+'"'+(c?' style="--tc:'+c+'"':'')+'><span class="xp0">'+esc(String(e[0]))+'</span><span class="xn">'+esc(e[1])+'<em>'+esc(e[2])+'</em></span><span class="xt0'+(e[5]?' fl':'')+'">'+esc(String(e[3]))+'</span>'+(q?'':'<span class="xpt">'+esc(String(e[4]))+'</span>')+'</div>'}).join("")+'</div></details>'}
 function resRender(){var el=$("p-r");if(!el)return;
   if(!RES){el.innerHTML='<div class="xnw"><p>Ergebnisse werden geladen …</p></div>';return}
-  var h="";
+  var h='<div class="xcols">';
   RES.forEach(function(x){var id="r"+x.r,w=x.R&&x.R[0],fl=null;(x.R||[]).forEach(function(e){if(e[5])fl=e});
     h+='<details class="xrs" data-id="'+id+'"'+(resOpen[id]?" open":"")+'><summary><div class="xrtop"><div class="xrh"><small>Rennen '+x.r+' · '+fShort.format(Date.parse(x.d))+'</small><b>'+esc(x.n)+'</b></div>'+trkSvg("R|"+x.ci)+'</div>';
     if(w)h+='<div class="xrk"><span><i>Sieger</i>'+esc(w[1])+' <em>'+esc(w[2])+'</em></span>'+(fl?'<span><i>Schnellste Runde</i>'+esc(fl[1])+' <em>'+esc(fl[5])+'</em></span>':'')+'</div>';
     else if(x.Q&&x.Q[0])h+='<div class="xrk"><span><i>Pole Position</i>'+esc(x.Q[0][1])+' <em>'+esc(x.Q[0][2])+'</em></span></div>';
     h+='</summary><div class="xrb">'+rtbl("Sprint-Qualifikation",x.SQ,1,id+"sq")+rtbl("Sprint",x.S,0,id+"s")+rtbl("Qualifikation",x.Q,1,id+"q")+rtbl("Rennen",x.R,0,id+"r")+'</div></details>'});
-  el.innerHTML=h+'<div class="xfoot2">Formel 1 · Quelle: Jolpica F1 · Stand '+fNews.format(RESAT)+'<br>Sprint-Qualifying liefert die Datenquelle nicht.</div>'}
+  el.innerHTML=h+'</div><div class="xfoot2">Formel 1 · Quelle: Jolpica F1 · Stand '+fNews.format(RESAT)+'<br>Sprint-Qualifying liefert die Datenquelle nicht.</div>'}
 var WXL={};
 var COORD={"🇺🇸 USA (Austin)":[30.1328,-97.6411],"🇲🇽 Mexiko-Stadt":[19.4042,-99.0907],"🇧🇷 São Paulo":[-23.7036,-46.6997],"🇺🇸 Las Vegas":[36.1147,-115.1728],"🇶🇦 Katar":[25.49,51.4542],"🇦🇪 Abu Dhabi":[24.4672,54.6031]};
 function wIcon(c){return c===0?"☀️":c<=2?"⛅":c===3?"☁️":c<=48?"🌫️":c<=67?"🌧️":c<=77?"❄️":c<=82?"🌦️":"⛈️"}
@@ -10724,7 +10726,6 @@ function loadLive(){lastLive=Date.now();
   loadTracks().then(function(){stat("s",1)},function(e){stat("s",0,e)})}
 var tH=0,tR=0,tL=0,inited=false;
 $$(".xchip").forEach(function(c){c.onclick=function(){filt=c.dataset.f;$$(".xchip").forEach(function(x){x.classList.toggle("on",x===c)});render()}});
-$("past").onclick=function(){showPast=!showPast;this.textContent=showPast?"Vergangene ausblenden":"Vergangene zeigen";render()};
 $("edit").onclick=function(){editing=!editing;this.textContent=editing?"Fertig":"Bearbeiten";$("editbar").style.display=editing?"flex":"none";render()};
 $("add").onclick=function(){openM(null)};
 $("cancel").onclick=closeM;
