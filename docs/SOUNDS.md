@@ -179,3 +179,18 @@ Stand: 15.11.2026. Konto jetzt im Starter-Tarif (~30.000 Credits/Monat).
 - Neue Signale aus der Fahrphysik: `c.latUse` (Ausnutzung der Quer-Haftung), `pl.wallT` (Bandenkontakt), `pl.rubT` (Autokontakt).
 - Alte Crash-Dateien (`crash_*.wav`) entfernt.
 - **Diagnose:** `__snd()` zeigt zusätzlich `surf` und aktive Fahr-Geräusche (`fx`). Testschalter `window.__surfTest = 'gravel'` erzwingt einen Untergrund.
+
+## v2.01 – Rückmeldung: MX-5 unrealistisch, Crashs übertrieben, Quietschen im Pulk, „Wellen“ bei hohem Tempo
+Stand: 15.11.2026.
+
+- **Schwere Crashs entfernt** (`cf_schwer`, `stahl_schwer`, `reifenstapel`): starke Treffer nutzen dieselbe Aufnahme wie normale (Auto/Leitplanke/Mauer), nur länger. Höchstlautstärke starker Treffer gesenkt (0,35 + 0,45 · Stärke statt 0,65).
+- **MX-5 neu:** 20 neue Aufnahmen (je 4 Varianten, Prompt „In-car onboard audio … club race car on a race track …“, ~250 Credits). Befund: Die KI trifft die verlangte Drehzahl nicht (fast alles 160–280 Hz) und dreht im Clip leicht hoch/runter (bis ±7 %). Das alte Set (7 Stufen aus verschiedenen Clips, bis ±12 HT verschoben) klang deshalb wie mehrere Autos.
+  - Jetzt nur 4 Loops eines Stils: `mx5n_leer` (Leerlauf), `mx5n_tief2` (116 Hz ≈ 3.500 U/min, −7 HT), `mx5n_tief` (174 Hz ≈ 5.200), `mx5n_hoch` (228 Hz ≈ 6.850, −3 HT), dazu `mx5n_schub`.
+  - **Tonhöhe geglättet** (`tools/sounds/glaetten.py`): Tonhöhe alle 32 ms messen und die Aufnahme mit veränderlichem Tempo so abspielen, dass sie konstant ist (Schwankung vorher 4–7 %, nachher < 1 %). Sonst springt die Tonhöhe an der Loop-Naht zurück (künstliches Auf und Ab alle 2–3 s).
+  - Hörprobe alt/neu (Leerlauf → Start → Hochschalten → Gas weg) wird mit einem Skript gerechnet, das die Überblendung des Spiels nachbildet.
+- **Quietschen neben anderen Autos:** Der Loop „Reiben Auto an Auto“ (`schaben_auto`) bestand fast nur aus Reifenquietschen und lief bei jeder leichten Berührung im Pulk → entfernt. Reifenquietschen nur noch an der Haftgrenze (> 90 %), nicht mehr nach Kontakten.
+- **„Wellen“ bei hohem Tempo** – drei Ursachen behoben:
+  1. Motor-Überblendung: zwei Aufnahmen gleicher Tonhöhe dauerhaft gemischt (z. B. F1 bei 10.000–11.000 U/min) schweben gegeneinander. Jetzt wird nur im mittleren Viertel des Abstands zweier Stufen überblendet, sonst läuft genau eine.
+  2. Gegner: die 4 nächsten Autos spielten dieselbe Aufnahme fast gleich hoch (Flanger-Effekt). Jetzt abwechselnd zwei verschiedene Aufnahmen, Lautstärke 0,2 statt 0,3.
+  3. Fahr-Geräusch-Loops schwollen an und ab (Rasen bis 12-fach, Quietschen/Kies 2,5-fach). `tools/sounds/pegel.py` gleicht den Pegel aus (zyklischer gleitender RMS 300 ms, Teilen durch Hüllkurve^0,9) → langsame Schwankung ≤ 2,2-fach. Wind zusätzlich leiser (0,12 statt 0,3).
+- Reihenfolge der Skripte: `erzeugen.py` → `aufbereiten_v2.py` → `pegel.py`.

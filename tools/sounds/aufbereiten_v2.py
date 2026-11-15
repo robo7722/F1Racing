@@ -15,20 +15,19 @@ from varianten import load, save, pitch, SR, SND
 
 ROH = os.path.join(SND, 'roh', 'v2')
 ENGINE = []   # Motor-Loops werden fest gewählt (MX5 unten): die KI trifft die verlangte Drehzahl nicht, die echte Tonhöhe wurde gemessen
-# MX5-Roadster (Vierzylinder: Zündfrequenz = U/min ÷ 30). Ziel: (Rohdatei, Abschnitt s oder None, Halbtöne, gemessener Grundton nach Verschiebung)
+# MX5-Roadster (Vierzylinder: Zündfrequenz = U/min ÷ 30), v2.01. Die KI trifft verlangte Drehzahlen nicht (fast alles landet bei 160–280 Hz)
+# und dreht innerhalb des Clips leicht hoch/runter. Deshalb: wenige Aufnahmen eines Stils, Tonhöhe geglättet (glaetten.py), kaum verschoben.
+# Ziel: (Rohdatei, Abschnitt s, Tonhöhe ca. (Hz, zum Messen), Halbtöne danach) – Grundton in index.html: leer 28,3 (fest = 850 U/min), sonst gemessen
 MX5 = {
-    'mx5_leer': ('mx5_leer_1.mp3', None, 0, 27.3),        # Pulsieren 27,3 Hz ≈ 820 U/min (Leerlauf)
-    'mx5_v1': ('mx5_leer_1.mp3', None, 8, 43.3),          # ≈ 1.300 U/min
-    'mx5_v2': ('mx5_3000_1.mp3', None, -12, 66.5),        # ≈ 2.000 U/min
-    'mx5_v3': ('mx5_3000_1.mp3', None, -6, 94.0),         # ≈ 2.800 U/min
-    'mx5_3000': ('mx5_3000_1.mp3', None, 0, 133.0),       # „3000“ verlangt, klingt wie ≈ 4.000 U/min
-    'mx5_5000': ('mx5_5000_2.mp3', None, 0, 203.0),       # ≈ 6.100 U/min
-    'mx5_7000': ('mx5_7000_1.mp3', (0.1, 1.8), 0, 273.0), # ≈ 8.200 U/min (danach sinkt die Aufnahme auf 262 Hz)
-    'mx5_schub': ('mx5_schub_2.mp3', None, 0, 137.0),     # Gas weg ≈ 4.100 U/min
+    'mx5n_leer': ('mx5b_leer_1.mp3', (0.2, 3.8), 122, 0),     # Leerlauf, im Spiel nur unter ~1.500 U/min
+    'mx5n_tief': ('mx5b_tief_1.mp3', (0.2, 3.8), 170, 0),     # 173 Hz ≈ 5.200 U/min
+    'mx5n_tief2': ('mx5b_tief_1.mp3', (0.2, 3.8), 170, -7),   # 116 Hz ≈ 3.500 U/min
+    'mx5n_hoch': ('mx5b_hoch_1.mp3', (0.2, 3.8), 268, -3),    # 271 -> 228 Hz ≈ 6.850 U/min
+    'mx5n_schub': ('mx5b_schub_3.mp3', (0.2, 2.8), 255, 0),   # Gas weg, 253 Hz
 }
-LOOPS = ['schaben_metall', 'schaben_beton', 'schaben_auto', 'kies', 'rasen', 'kerb', 'quietschen_slick', 'quietschen_strasse', 'wind']
-HITS = {'cf_leicht': 0.35, 'cf_auto': 0.9, 'cf_armco': 1.2, 'cf_beton': 1.1, 'reifenstapel': 0.9, 'cf_schwer': 2.2, 'stahl_leicht': 0.4,
-        'stahl_auto': 0.9, 'stahl_wand': 1.2, 'stahl_schwer': 2.2, 'kart_kart': 0.5, 'kart_wand': 0.7, 'kies_einschlag': 1.0}   # Höchstlänge ab Einsatz (s)
+LOOPS = ['schaben_metall', 'schaben_beton', 'kies', 'rasen', 'kerb', 'quietschen_slick', 'quietschen_strasse', 'wind']
+HITS = {'cf_leicht': 0.35, 'cf_auto': 0.9, 'cf_armco': 1.2, 'cf_beton': 1.1, 'stahl_leicht': 0.4,
+        'stahl_auto': 0.9, 'stahl_wand': 1.2, 'kart_kart': 0.5, 'kart_wand': 0.7, 'kies_einschlag': 1.0}   # Höchstlänge ab Einsatz (s)
 
 
 def env(x, win=0.02):
@@ -75,13 +74,14 @@ def variants(name): return sorted(f for f in os.listdir(ROH) if f.startswith(nam
 
 if __name__ == '__main__':
     info = {}
-    from varianten import shift
-    for name, (src, cut, st, base) in MX5.items():
-        x = load(os.path.join(ROH, src))
-        x = x[int(cut[0] * SR):int(cut[1] * SR)] if cut else x[int(0.15 * SR):len(x) - int(0.15 * SR)]
-        if st: x = shift(x, st)
-        y = norm_rms(loopify(x, int(0.2 * SR))); save(os.path.join(SND, name + '.wav'), y)
-        info[name] = {'quelle': src, 'halbtoene': st, 'grundton': base, 'laenge': round(len(y) / SR, 2)}; print(name, info[name], flush=True)
+    from varianten import shift, seam
+    from glaetten import flatten, track
+    for name, (src, cut, p0, st) in MX5.items():
+        x = load(os.path.join(ROH, src))[int(cut[0] * SR):int(cut[1] * SR)]
+        y, ref, _ = flatten(x, p0); y = norm_rms(loopify(y, int(0.25 * SR)))
+        if st: n = len(y); y = norm_rms(seam(shift(np.concatenate([y, y, y]), st), n, int(0.12 * SR)))
+        _, p = track(y, ref * 2 ** (st / 12)); save(os.path.join(SND, name + '.wav'), y)
+        info[name] = {'quelle': src, 'halbtoene': st, 'grundton': round(float(np.median(p)), 1), 'laenge': round(len(y) / SR, 2)}; print(name, info[name], flush=True)
     for name in ENGINE + LOOPS:
         best = None
         for f in variants(name):
