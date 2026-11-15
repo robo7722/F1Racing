@@ -252,7 +252,7 @@ function wallLineCheck() { const N = A.N, DS = A.DS, out = [];
 /* Streckenäste dicht nebeneinander: Mittellinienabstand kleiner als die Summe der Halbbreiten = Fahrbahnen überlappen */
 function strandCheck() { const N = A.N, DS = A.DS, ar = Math.round(250 / DS), out = [];
   for (let i = 0; i < N; i += 2) { let dm = 1e18, jm = 0; for (let j = 0; j < N; j++) { const g = Math.min(Math.abs(i - j), N - Math.abs(i - j)); if (g < ar) continue; const dx = A.PX[i] - A.PX[j], dz = A.PZ[i] - A.PZ[j], d2 = dx * dx + dz * dz; if (d2 < dm) { dm = d2; jm = j; } }
-    const d = Math.sqrt(dm), hw = A.HW[i] + A.HW[jm]; if (d < hw - 0.3) out.push({ s: i * DS, s2: jm * DS, d: +d.toFixed(1), hw: +hw.toFixed(1) }); }
+    const d = Math.sqrt(dm), hw = A.HW[i] + A.HW[jm]; if (!A.FLAT && Math.abs(A.ELEV[i] - A.ELEV[jm]) > 4) continue;   /* Kreuzung mit Brücke (Suzuka): Äste liegen übereinander, nicht nebeneinander */ if (d < hw - 0.3) out.push({ s: i * DS, s2: jm * DS, d: +d.toFixed(1), hw: +hw.toFixed(1) }); }
   const g = []; for (const o of out) { const l = g[g.length - 1]; if (l && o.s - l.s1 < 30) { l.s1 = o.s; l.n++; } else g.push({ ...o, s1: o.s, n: 1 }); }
   return { n: g.length, list: g.slice(0, 6) }; }
 /* Schwebende Objekte und Spalten am Hang im ganzen Streckenumfeld (qc/float-scan.js). Gemeldet wird, was man von der Strecke aus sehen kann:
