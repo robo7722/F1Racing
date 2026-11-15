@@ -1598,7 +1598,7 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
   </div>
   <div class="ppane" id="pAudio"></div>
   <div class="ppane" id="pGfx"></div>
-  <div class="ppane" id="pCtl"><button class="big alt" id="calib">◎ Neigung kalibrieren (Handy gerade halten)</button><div class="tog"><span>Horizont waagerecht halten (Neigen)</span><button class="sw" data-tog="level" aria-label="Horizont waagerecht halten"></button></div></div>
+  <div class="ppane" id="pCtl"><div class="tog"><span>Bremsassistent</span><button class="sw" data-tog="assist" aria-label="Bremsassistent"></button></div><div class="tog"><span>Auto-Gas</span><button class="sw" data-tog="autogas" aria-label="Auto-Gas"></button></div><button class="big alt" id="calib">◎ Neigung kalibrieren (Handy gerade halten)</button><div class="tog"><span>Horizont waagerecht halten (Neigen)</span><button class="sw" data-tog="level" aria-label="Horizont waagerecht halten"></button></div></div>
 </div></div>
 
 <div id="congrats" class="overlay hidden"><div id="cgConf"></div><div class="cgcard">
@@ -5805,7 +5805,7 @@ function lampHalos(pts, col) { const t = canvasTex(128, 128, (g, w, h) => { cons
 function poolMesh(list, w, l, mat) { const pos = [], uv = [], NX = 12, NZ = 16;
   /* Höhe: auf der Fahrbahn exakt die Asphalthöhe (Streckenhöhe + Querneigung), daneben das Gelände; nur 1 cm darüber – mit 5 cm und grobem Raster schwebte der Schein sichtbar über dem Asphalt */
   const hY = (x, z) => { if (FLAT) return 0; const [d, j] = nearestDist(x, z); const lat = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j]; return Math.abs(lat) <= HW[j] + 0.3 ? ELEV[j] + bankY(j, lat) : Math.min(placeY(x, z), ELEV[j] + bankY(j, Math.sign(lat) * HW[j]) - 0.02); };   /* neben der Fahrbahn (Randstein, Auslauf liegen tiefer): auf Auslaufhöhe – vorher schwebte der Schein dort bis 12 cm */
-  for (const [x0, z0, ang] of list) { const c = Math.cos(ang), sn = Math.sin(ang), V = (i, j) => { const lx = (i / NX - 0.5) * w, lz = (j / NZ - 0.5) * l, x = x0 + lx * c + lz * sn, z = z0 - lx * sn + lz * c; return [x, hY(x, z) + 0.03, z, i / NX, j / NZ]; };
+  for (const [x0, z0, ang] of list) { const c = Math.cos(ang), sn = Math.sin(ang), V = (i, j) => { const lx = (i / NX - 0.5) * w, lz = (j / NZ - 0.5) * l, x = x0 + lx * c + lz * sn, z = z0 - lx * sn + lz * c; return [x, hY(x, z) + 0.06, z, i / NX, j / NZ]; };
     for (let i = 0; i < NX; i++) for (let j = 0; j < NZ; j++) for (const q of [[i, j], [i + 1, j + 1], [i + 1, j], [i, j], [i, j + 1], [i + 1, j + 1]]) { const v = V(q[0], q[1]); pos.push(v[0], v[1], v[2]); uv.push(v[3], v[4]); } }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); const m = new THREE.Mesh(g, mat); m.userData.fixed = true; m.userData.clipSkip = true; m.renderOrder = 1; m.frustumCulled = false; return m; }
 
@@ -10325,13 +10325,13 @@ const GP = { on: false, steer: 0, thr: 0, brk: 0, boost: false, prev: [], t: 0 }
 addEventListener('gamepadconnected', e => { GP.on = true; document.body.classList.add('gamepad'); showMsg('Controller verbunden', 1.6); });
 addEventListener('gamepaddisconnected', () => { GP.on = [...(navigator.getGamepads ? navigator.getGamepads() : [])].some(Boolean); document.body.classList.toggle('gamepad', GP.on); GP.thr = GP.brk = GP.steer = 0; GP.boost = false; });
 function pollPad(dt) {
-  if (!navigator.getGamepads) return; const pads = navigator.getGamepads(); let p = null; for (const q of pads) if (q && q.connected) { p = q; break; }
+  if (!navigator.getGamepads) return; const pads = navigator.getGamepads(); let p = null; for (const q of pads) if (q && q.connected && q.mapping === 'standard') { p = q; break; }   /* nur Standard-Controller: manche Handys melden eingebaute Geräte als Gamepad mit Phantom-Tastenwerten (bremste/gab Gas von allein) */
   if (!p) { GP.thr = GP.brk = GP.steer = 0; GP.boost = false; return; }
   if (!GP.on) { GP.on = true; document.body.classList.add('gamepad'); }
   const b = k => p.buttons[k] ? (p.buttons[k].value || (p.buttons[k].pressed ? 1 : 0)) : 0, edge = k => b(k) > .5 && !(GP.prev[k] > .5);
   let x = p.axes[0] || 0; x = Math.abs(x) < 0.09 ? 0 : Math.sign(x) * Math.pow((Math.abs(x) - 0.09) / 0.91, 1.4);
   if (b(14) > .5) x = -1; if (b(15) > .5) x = 1;
-  GP.steer = x; GP.thr = Math.max(b(7), b(0)); GP.brk = Math.max(b(6), b(2)); GP.boost = b(5) > .5 || b(4) > .5;
+  GP.steer = x; GP.thr = Math.max(b(7), b(0)); GP.brk = Math.max(b(6), b(2)); if (GP.brk < 0.08) GP.brk = 0; if (GP.thr < 0.08) GP.thr = 0; GP.boost = b(5) > .5 || b(4) > .5;
   // rechter Stick: Kamera drehen (X) und heben/senken (Y)
   { const dz = v => Math.abs(v) < 0.14 ? 0 : Math.sign(v) * (Math.abs(v) - 0.14) / 0.86; GP.rx = dz(p.axes[2] || 0); GP.ry = dz(p.axes[3] || 0); }
   if (running && !resultsShown && !paused) {
@@ -11381,7 +11381,8 @@ function updateMeshes(dt) {
     if (m.tp) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z, d2 = dx * dx + dz * dz; const LD = window.__carLod || CAR_LOD, cur = m.lf ? m.lf.to : m.lod, b0 = LD[0] + (cur >= 1 ? -LOD_HYS : LOD_HYS), b1 = LD[1] + (cur >= 2 ? -LOD_HYS : LOD_HYS);
       if (c === pl) { const w = window.__plLod ?? (!running || S.cam === 2 || S.cam === 3 ? 0 : 1);   /* eigenes Auto: volle Stufe (~112.000 Dreiecke) nur im Cockpit/TV-Kamera und im Stand; in den Verfolgerkameras die mittlere (~37.000) – im Bild nicht zu unterscheiden */
         const ml = running && (S.cam === 2 || S.cam === 3); if (m.matteLo !== ml) { m.matteLo = ml; setLod(m, w, true); }
-        if (m.lod !== w || m.lf) setLod(m, w, true); if (m.g.visible === !!window.__hideOwn) m.g.visible = !window.__hideOwn; }
+        if (m.lod !== w || m.lf) setLod(m, w, true); if (m.g.visible === !!window.__hideOwn) m.g.visible = !window.__hideOwn;
+        { const W0 = m.tp.M.W[0]; if (m.wrl.geometry !== W0.RL[m.comp]) { m.wrl.geometry = W0.RL[m.comp]; m.wrr.geometry = W0.RR[m.comp]; } } }   /* eigenes Auto: Hinterräder immer in voller Detailstufe – in den Außenansichten sieht man sie groß im Bild */
       else { const hd = window.__carHide || CAR_HIDE, vis = d2 < (m.g.visible ? hd + 25 : hd) ** 2; if (m.g.visible !== vis) { m.g.visible = vis; EVT.car++; }
         if (vis) { lodStep(m, d2 < b0 * b0 ? 0 : d2 < b1 * b1 ? 1 : 2, dt);
           if (m.far && m.tp.far3) { const f3 = window.__noFar3 ? m.tp.far : d2 > (m.far.geometry === m.tp.far3 ? CAR_FAR3 - 5 : CAR_FAR3 + 5) ** 2 ? m.tp.far3 : m.tp.far; if (m.far.geometry !== f3) { m.far.geometry = f3; EVT.car++; } } } }  /* volle Modellstufe (50.000 Dreiecke) nur für den Spieler und Autos unter 13 m */   /* Detailstufen früher: weniger Dreiecke bei vollem Starterfeld */ }
@@ -12545,7 +12546,7 @@ $$('[data-step]').forEach(b => b.addEventListener('click', () => {
 $$('.seg button').forEach(b => b.addEventListener('click', () => { const k = b.parentElement.dataset.key; S[k] = b.dataset.v; save();
   if (k === 'line') applyLine();
   if (k === 'ctrl' && running) { effCtrl = isTouch ? S.ctrl : 'touch'; if (effCtrl === 'tilt') { enableMotion(); tiltZero = tiltAngle; } layoutControls(); } if (k === 'gfx') { const was = running; REBUILD = true; loading(true); setTimeout(() => { try { applyGfx(); if (TRK) { buildTrack(S.track); if (!was) placeOnGrid(); } } finally { loading(false); REBUILD = false; last = performance.now(); pauseDrawn = 0; } }, 30); } renderMenu(); }));   /* im Rennen: Strecke neu aufbauen, Autos und Rennstand bleiben (nur die Bildschleife steht kurz) */
-$$('.sw').forEach(b => b.addEventListener('click', () => { S[b.dataset.tog] = !S[b.dataset.tog]; save(); if (b.dataset.tog === 'nos') renderTracks(); renderMenu(); }));
+$$('.sw').forEach(b => b.addEventListener('click', () => { S[b.dataset.tog] = !S[b.dataset.tog]; save(); if (b.dataset.tog === 'nos') renderTracks(); renderMenu(); $$('.sw').forEach(x => x.classList.toggle('on', !!S[x.dataset.tog])); if (b.dataset.tog === 'autogas') try { layoutControls(); } catch (e) {} }));   /* auch im Pausenmenü: alle Schalter gleichen Namens nachziehen, Gas-Taste ein-/ausblenden */
 // Vollbild + Querformat schon beim ersten Antippen im Menü – nicht erst beim Rennstart (die Größenänderung legte alle Render-Ziele neu an: Hänger beim Start)
 addEventListener('pointerup', function fsOnce() { if (!isTouch || standalone || document.fullscreenElement) { removeEventListener('pointerup', fsOnce, true); return; } try { const el = document.documentElement; if (el.requestFullscreen) el.requestFullscreen({ navigationUI: 'hide' }).then(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {}); } catch (e) {} removeEventListener('pointerup', fsOnce, true); }, true);
 $('#go').addEventListener('click', () => {
@@ -12569,7 +12570,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.51'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.52'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
