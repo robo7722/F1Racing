@@ -1159,10 +1159,11 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
 #hub .xp.on{display:block}
 #hub #hub-p-t.on{display:grid;grid-template-columns:minmax(230px,31%) minmax(0,1fr);gap:14px;overflow:hidden;padding:2px 0 0}
 #hub .xaside,#hub .xmain{min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding-right:4px;overscroll-behavior:contain}
-#hub .xaside{display:flex;flex-direction:column;gap:10px}
+#hub .xaside{display:flex;flex-direction:column;gap:10px;scrollbar-width:none}
+#hub .xaside::-webkit-scrollbar{display:none}
 #hub #hub-p-n.on,#hub #hub-p-r.on{display:block}
-#hub .xcols{column-width:300px;column-gap:10px}
-#hub #hub-p-n .xnw,#hub #hub-p-r .xrs{break-inside:avoid;margin-bottom:10px;display:block}
+#hub .xcols{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;align-items:start}
+#hub #hub-p-n .xnw,#hub #hub-p-r .xrs{display:block;margin:0}
 #hub .xfoot2{column-span:all;text-align:center;color:var(--mut);font-size:11px;padding:6px 0 2px}
 
 /* gemeinsame Karten: Graphitglas, 9-px-Ecken */
@@ -1223,9 +1224,8 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
 #hub .xsub{font-size:12px;color:var(--mut);margin:0 0 8px}
 
 /* WM-Tabellen: zwei Spalten im Querformat */
-#hub .xtable{column-width:330px;column-gap:0;padding:0;overflow:hidden}
-#hub .xtable .xrow{break-inside:avoid}
-#hub .xtable .xrow:first-child{border-top:0}
+#hub .xtable{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));padding:0;overflow:hidden}
+#hub .xtable .xrow:nth-child(-n+2){border-top:0}
 
 /* Ergebnisse */
 #hub .xrs{border-left:3px solid var(--f1r);overflow:hidden}
@@ -1280,7 +1280,8 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
   #hub #hub-p-t.on{display:block;overflow-y:auto}
   #hub .xaside,#hub .xmain{overflow:visible}
   #hub .xaside{margin-bottom:12px}
-  #hub .xtable{column-width:auto}
+  #hub .xtable{grid-template-columns:1fr}
+  #hub .xtable .xrow:nth-child(2){border-top:1px solid rgba(255,255,255,.09)}
   #hub .xform{grid-template-columns:1fr}
 }
 @media (max-height:430px){
@@ -10066,7 +10067,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.22'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.23'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
