@@ -2102,7 +2102,7 @@ const THEMES = {
     look: { sh: [0.92, 0.98, 1.08], hi: [1.05, 1.02, 0.95], sat: .96, con: 1.07, vig: .3, tint: [.98, 1.0, 1.03], lift: [.002, .004, .008], bloom: .34, thr: .94, rad: .42, warm: -.06, fade: [.004, .006, .012], grain: .013 } },
   /*}@zan:theme*/
   /*@mad:theme{*/
-  mad: { elevScale: 0.55, asph: 'mad', phys: { turb: 2.3, ray: 1.02, mie: .0034, g: .8, gain: .56 }, sky: [0x1d60c0, 0x72acea, 0xd2e0ee], fog: 0xccd5dd, fogNear: 520, fogFar: 5600, camFar: 9000, sunDir: [-0.32, 0.72, 0.5], sunCol: 0xfff0d6, sunI: 3.6, clouds: [0.24, 0.5, 0.8, 0], cloudCol: 0xfbfbfa,
+  mad: { elevScale: 0.4, runoffCol: 0xc41f1a, asph: 'mad', phys: { turb: 2.3, ray: 1.02, mie: .0034, g: .8, gain: .56 }, sky: [0x1d60c0, 0x72acea, 0xd2e0ee], fog: 0xccd5dd, fogNear: 520, fogFar: 5600, camFar: 9000, sunDir: [-0.32, 0.72, 0.5], sunCol: 0xfff0d6, sunI: 3.6, clouds: [0.24, 0.5, 0.8, 0], cloudCol: 0xfbfbfa,
     hemi: [0xd2e2f6, 0x84714a, 0.42], flood: 0, exposure: 0.98, ground: 'grass', groundTint: 0xe8c47c, dryGrass: true, wall: 9, runoff: 10, wallH: 1.1, wallKind: 'concrete', runoffKind: 'paved',
     ads: ['MADRID', 'MADRING', 'GRAN PREMIO DE ESPAÑA', 'IFEMA', 'VALDEBEBAS', 'LA MONUMENTAL', 'CASTILLA', 'ESPAÑA'], adCols: ['#c8102e', '#f2c200', '#ffffff', '#0b2f6b', '#111111', '#e8590c'],
     trees: 'forest', conifer: .5, treeMul: .28, treeMinD: 14, treeBand: 150, treeExt: 800, city: true, kerb: [0xd42a1e, 0xf4f4f4], belt: ['#c8102e', '#f2c200'], flare: .85,
@@ -5017,8 +5017,12 @@ function osmExtrude(ring, h, mat, roofMat, y0 = 0, bay = 4, flo = 3.6) {
     for (const [x, z] of ring) { gx += x; gz += z; } gx /= ring.length; gz /= ring.length; hint = true; }
   let A = 0; for (let i = 0; i < ring.length; i++) { const [x1, z1] = ring[i], [x2, z2] = ring[(i + 1) % ring.length]; A += x1 * z2 - x2 * z1; }
   const R = A > 0 ? ring : [...ring].reverse(), pos = [], uv = [], fu = []; let acc = 0;   // Umlaufsinn so, dass die Wände nach außen zeigen
-  for (let i = 0; i < R.length; i++) { const [x1, z1] = R[i], [x2, z2] = R[(i + 1) % R.length], l = Math.hypot(x2 - x1, z2 - z1), u0 = acc / bay, u1 = (acc + l) / bay, v1 = h / flo; acc += l;
-    const a0 = acc - l; pos.push(x1, y0, z1, x2, y0 + h, z2, x2, y0, z2, x1, y0, z1, x1, y0 + h, z1, x2, y0 + h, z2); uv.push(u0, 0, u1, v1, u1, 0, u0, 0, u0, v1, u1, v1); fu.push(a0, 0, 7, acc, h, 7, acc, 0, 7, a0, 0, 7, a0, h, 7, acc, h, 7); }
+  const bayM = (mat && mat.userData && mat.userData.bay) || bay, floM = (mat && mat.userData && mat.userData.flo) || flo, nf = Math.max(1, Math.round(h / floM)), sy = nf * floM / h;
+  for (let i = 0; i < R.length; i++) { const [x1, z1] = R[i], [x2, z2] = R[(i + 1) % R.length], l = Math.hypot(x2 - x1, z2 - z1);
+    /* jede Wand beginnt an einer Fensterachse und enthält ganze Achsen und ganze Geschosse (leicht gedehnt) – keine halb abgeschnittenen Fenster an Ecken und Dachkante */
+    const nb = Math.max(1, Math.round(l / bayM)), sx = nb * bayM / l, u0 = 0, u1 = nb, v1 = nf, a0 = 0, acc2 = l * sx, hh = h * sy;
+    pos.push(x1, y0, z1, x2, y0 + h, z2, x2, y0, z2, x1, y0, z1, x1, y0 + h, z1, x2, y0 + h, z2); uv.push(u0, 0, u1, v1, u1, 0, u0, 0, u0, v1, u1, v1); fu.push(a0, 0, 7, acc2, hh, 7, acc2, 0, 7, a0, 0, 7, a0, hh, 7, acc2, hh, 7); }
+  if (mat && mat.side !== THREE.DoubleSide) mat.side = THREE.DoubleSide;   /* Wände von beiden Seiten sichtbar: bei falsch gewickelten Grundrissen fehlten sonst Seiten (Häuser wirkten 2D) */
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setAttribute('facUV', new THREE.Float32BufferAttribute(fu, 3)); g.computeVertexNormals();   // Fassaden-Shader: Fenster entlang der abgewickelten Wand (schräge/gebogene Wände unverzerrt)
   const cap = new THREE.ShapeGeometry(new THREE.Shape(R.map(([x, z]) => new THREE.Vector2(x, -z)))).rotateX(-Math.PI / 2).translate(0, y0 + h, 0);
   const grp = new THREE.Group(); grp.add(new THREE.Mesh(g, mat), new THREE.Mesh(cap, roofMat)); if (hint) { grp.userData.gx = gx; grp.userData.gz = gz; } return grp; }
@@ -5634,7 +5638,7 @@ function applyElevation() {
     if (ch.userData.ground || ch.userData.perVertex) {
       const p = ch.geometry.attributes.position, ox = ch.position.x, oz = ch.position.z, oy = ch.position.y;
       for (let k = 0; k < p.count; k++) { const x = p.getX(k) + ox, z = p.getZ(k) + oz; let y = groundY(x, z);
-        if (ch.userData.ground && !(MC_SEA && MC_SEA(x, z))) { const [d, j] = nearestDist(x, z); if (d < Math.max(WL[j], WR[j]) + 1) y = Math.min(y, ELEV[j] - 0.05 - oy); }   /* Bodenpunkt innerhalb der Absperrung nie über der Strecke: das grobe Raster stach sonst durch Kerbs und Auslauf (Nordschleife) */
+        if (ch.userData.ground && !(MC_SEA && MC_SEA(x, z))) { const [d, j] = nearestDist(x, z); if (d < Math.max(WL[j], WR[j]) + 1) y = Math.min(y, ELEV[j] - 0.05 - oy - (BANKG ? Math.max(0, -Math.min(bankY(j, -WL[j]), bankY(j, WR[j]))) : 0)); }   /* Steilkurve: Boden unter die abgesenkte Fahrbahnseite – sonst deckt Gras die Fahrbahn (Auto fährt durch den Boden) */   /* Bodenpunkt innerhalb der Absperrung nie über der Strecke: das grobe Raster stach sonst durch Kerbs und Auslauf (Nordschleife) */
         p.setY(k, p.getY(k) + y); }
       if (ch.userData.ground && ch.geometry.index && !TRK.mc) {   // Dreiecke des groben Bodens, die Fläche innerhalb der Absperrung überdecken: alle drei Ecken unter die Strecke (sonst sticht die schräge Fläche durch Kerb/Auslauf)
         const I = ch.geometry.index.array, near = new Uint8Array(p.count), mw = Math.max(...WL, ...WR); let cell = 0; { const a = I[0], b = I[1]; cell = Math.hypot(p.getX(a) - p.getX(b), p.getZ(a) - p.getZ(b)); }
@@ -5642,7 +5646,7 @@ function applyElevation() {
         const lim = new Float32Array(p.count).fill(1e9);
         for (let t = 0; t < I.length; t += 3) { const a = I[t], b = I[t + 1], c = I[t + 2]; if (!near[a] && !near[b] && !near[c]) continue; let em = 1e9;
           for (const [u, v] of [[1, 0], [0, 1], [0, 0], [.5, .5], [.5, 0], [0, .5], [1 / 3, 1 / 3], [.75, .125], [.125, .75], [.125, .125]]) { const w = 1 - u - v, x = p.getX(a) * u + p.getX(b) * v + p.getX(c) * w + ox, z = p.getZ(a) * u + p.getZ(b) * v + p.getZ(c) * w + oz, [d, j] = nearestDist(x, z);
-            if (d < Math.max(WL[j], WR[j]) + 0.5 && ELEV[j] < em) em = ELEV[j]; }
+            if (d < Math.max(WL[j], WR[j]) + 0.5 && ELEV[j] - (BANKG ? Math.max(0, -Math.min(bankY(j, -WL[j]), bankY(j, WR[j]))) : 0) < em) em = ELEV[j] - (BANKG ? Math.max(0, -Math.min(bankY(j, -WL[j]), bankY(j, WR[j]))) : 0); }
           if (em < 1e9) for (const q of [a, b, c]) lim[q] = Math.min(lim[q], em - 0.05 - oy); }
         for (let k = 0; k < p.count; k++) if (lim[k] < p.getY(k)) p.setY(k, lim[k]); }
       p.needsUpdate = true; ch.geometry.computeVertexNormals(); ch.geometry.computeBoundingSphere(); if (TRK.mc && ch.userData.ground) mcGroundTint(ch); continue;
@@ -5658,6 +5662,12 @@ function applyElevation() {
       if (!ch.geometry.boundingSphere) ch.geometry.computeBoundingSphere();
       if (ch.geometry.boundingSphere.radius > 30) { const p = ch.geometry.attributes.position; for (let k = 0; k < p.count; k++) p.setY(k, p.getY(k) + placeY(p.getX(k), p.getZ(k))); p.needsUpdate = true; ch.geometry.computeBoundingSphere(); continue; }
     }
+    if (ch.isGroup && ch.userData.gx === undefined && ch.position.lengthSq() < 1 && ch.children.length && ch.children.every(c => c.isMesh && !c.isInstancedMesh && c.geometry && c.position.lengthSq() < 1) && ['chn', 'bhr', 'jed', 'mia', 'bcn', 'hun', 'zan', 'mad', 'baku', 'cota', 'mex', 'bra', 'qat', 'suz'].some(k => TRK === TRACKS[k])) {
+      /* Gruppe am Ursprung mit Weltgeometrie (asMerge): wurde komplett um placeY(0,0) = Höhe von Start/Ziel gehoben – Dächer, Tribünen und Gebäude schwebten oder versanken an Hängen. Jetzt je Netz: große Netze Punkt für Punkt auf das Gelände, kleine auf ihren tiefsten Eckpunkt */
+      for (const c of ch.children) { if (c.userData.fixed) continue; const g = c.geometry; if (!g.boundingSphere) g.computeBoundingSphere(); if (!g.boundingBox) g.computeBoundingBox(); const bs = g.boundingSphere;
+        if (bs.radius > 30) { const p = g.attributes.position; for (let k = 0; k < p.count; k++) p.setY(k, p.getY(k) + placeY(p.getX(k), p.getZ(k))); p.needsUpdate = true; g.computeBoundingSphere(); g.computeBoundingBox(); }
+        else { const bb = g.boundingBox; let y = placeY((bb.min.x + bb.max.x) / 2, (bb.min.z + bb.max.z) / 2); for (const [px, pz] of [[bb.min.x, bb.min.z], [bb.max.x, bb.min.z], [bb.max.x, bb.max.z], [bb.min.x, bb.max.z]]) y = Math.min(y, placeY(px, pz)); c.position.y += y; } }
+      continue; }
     const hx = ch.userData.gx ?? ch.position.x, hz = ch.userData.gz ?? ch.position.z;   /* OSM-Häuser: Schwerpunkt statt Ursprung */
     let y = placeY(hx, hz);
     if ((ch.isGroup || ch.children.length) && !ch.userData.span && (() => { const [d, j] = nearestDist(hx, hz); return d > Math.max(WL[j], WR[j]) + 6; })()) { const bx = new THREE.Box3().setFromObject(ch); if (bx.max.x - bx.min.x > 6 && bx.max.z - bx.min.z > 6 && bx.max.x - bx.min.x < 300) for (const [px, pz] of [[bx.min.x, bx.min.z], [bx.max.x, bx.min.z], [bx.max.x, bx.max.z], [bx.min.x, bx.max.z]]) y = Math.min(y, placeY(px, pz) - 0.3); }   /* lange Bauten am Hang nicht schweben lassen */
@@ -5714,13 +5724,21 @@ function hStrip(o1, o2, Y1, Y2, mat, opt = {}) {
 }
 function vStrip(off, y0, y1, mat, opt = {}) {
   const f = typeof off === 'function' ? off : () => off; const pos = [], uv = [], vs = opt.vScale || 4;
+  let uA = null, uB = null;
+  if (opt.runAlign) {   /* Bandenwerbung: jede zusammenhängende Strecke beginnt und endet an einer Tafelgrenze (ganze Tafeln, leicht gedehnt) – keine abgeschnittenen Schriften und keine Kurzstücke an den Übergängen zur Mauer */
+    uA = new Float32Array(N); uB = new Float32Array(N); const mk = i => !opt.mask || opt.mask(i), pw = vs / 8; let k0 = -1;
+    for (let i = 0; i < N; i++) if (!mk(i)) { k0 = i; break; }
+    if (k0 < 0) { for (let i = 0; i < N; i++) { uA[i] = i * DS / vs; uB[i] = (i + 1) * DS / vs; } }
+    else { let rc = 0, t = 1; while (t <= N) { if (!mk((k0 + t) % N)) { t++; continue; } const t0 = t; while (t <= N && mk((k0 + t) % N)) t++; const len = t - t0, n = Math.max(1, Math.round(len * DS / pw)), off = (rc * 3) % 8;
+        for (let q = 0; q < len; q++) { const idx = (k0 + t0 + q) % N; uA[idx] = (off + q / len * n) / 8; uB[idx] = (off + (q + 1) / len * n) / 8; } rc++; } }
+  }
   for (let i = 0; i < N; i++) {
     if (opt.mask && !opt.mask(i)) continue;
     const j = (i + 1) % N, a = f(i), b = f(j);
     const ax = PX[i] + RX[i] * a, az = PZ[i] + RZ[i] * a, bx = PX[j] + RX[j] * b, bz = PZ[j] + RZ[j] * b;
     const ei = ELEV[i] + bankY(i, a), ej = ELEV[j] + bankY(j, b);
     pos.push(ax, y0 + ei, az, bx, y0 + ej, bz, ax, y1 + ei, az, ax, y1 + ei, az, bx, y0 + ej, bz, bx, y1 + ej, bz);
-    const fl = opt.flip ? -1 : 1, ua = fl * i * DS / vs, ub = fl * (i + 1) * DS / vs; uv.push(ua, 0, ub, 0, ua, 1, ua, 1, ub, 0, ub, 1);
+    const fl = opt.flip ? -1 : 1, ua = uA ? fl * uA[i] : fl * i * DS / vs, ub = uB ? fl * uB[i] : fl * (i + 1) * DS / vs; uv.push(ua, 0, ub, 0, ua, 1, ua, 1, ub, 0, ub, 1);
   }
   if (!pos.length) return null;
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.computeVertexNormals();
@@ -5734,6 +5752,11 @@ const lam = (o) => { const m = new THREE.MeshStandardMaterial({ roughness: .9, m
 // verschwanden exakt auf Fahrbahnhöhe liegende Markierungen (Startplätze); der feste Anteil (units) gleicht den Rest aus.
 const po = n => ({ polygonOffset: true, polygonOffsetFactor: n < 0 ? n * 0.25 : n, polygonOffsetUnits: n < 0 ? n * 4 : n, side: THREE.DoubleSide });
 function texRep(t, rx, ry) { const c = t.clone(); c.needsUpdate = true; c.repeat.set(rx, ry); return c; }
+/* Lichtpfützen der Flutlichter: ein Netz, jeder Eckpunkt auf Fahrbahnhöhe (placeY) – als Instanzen wurden die großen Flächen von applyElevation auf den tiefsten Eckpunkt gesenkt und lagen unter dem Asphalt (unsichtbar, an Mauern abgeschnitten) */
+function poolMesh(list, w, l, mat) { const pos = [], uv = [], NX = 6, NZ = 8;
+  for (const [x0, z0, ang] of list) { const c = Math.cos(ang), sn = Math.sin(ang), V = (i, j) => { const lx = (i / NX - 0.5) * w, lz = (j / NZ - 0.5) * l, x = x0 + lx * c + lz * sn, z = z0 - lx * sn + lz * c; return [x, (FLAT ? 0 : placeY(x, z)) + 0.05, z, i / NX, j / NZ]; };
+    for (let i = 0; i < NX; i++) for (let j = 0; j < NZ; j++) for (const q of [[i, j], [i + 1, j + 1], [i + 1, j], [i, j], [i, j + 1], [i + 1, j + 1]]) { const v = V(q[0], q[1]); pos.push(v[0], v[1], v[2]); uv.push(v[3], v[4]); } }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); const m = new THREE.Mesh(g, mat); m.userData.fixed = true; m.userData.clipSkip = true; m.renderOrder = 1; m.frustumCulled = false; return m; }
 
 // Auslaufzonen (Spa): Höhenfeld vorbelegen und glätten – eigene Funktionen, damit der JIT sie optimiert
 function zoneSeed(Y, FX, SEG, near, x0, z0, bw, bh) { const G1 = SEG + 1, px = PX, pz = PZ, hw = HW, el = ELEV;
@@ -5825,6 +5848,7 @@ function buildTrack(key) { BID++;
       const at = s2 => { for (let k = 1; k < K.length; k++) if (s2 <= K[k][0]) { const [a0, e0] = K[k - 1], [a1, e1] = K[k], t = (s2 - a0) / Math.max(1, a1 - a0), u = t * t * (3 - 2 * t); return e0 + (e1 - e0) * u; } return K[K.length - 1][1]; };
       for (let i = 0; i < N; i++) ELEV[i] = at(i * DS); ELEV = filt(filt(ELEV, 8, 'avg'), 8, 'avg'); FLAT = false; }
     if (TH.elevScale) for (let i = 0; i < N; i++) ELEV[i] *= TH.elevScale;   // Höhenunterschiede abmildern (flachere, gleichmäßige Hänge)
+    if (TRK === TRACKS.mad && !FLAT) ELEV = filt(filt(ELEV, 20, 'avg'), 20, 'avg');   /* Madring: Höhenprofil großräumig glätten – keine Wellen an falschen Stellen, nur die langen Anstiege/Gefälle */
     SLOPE = new Float32Array(N); ELMEAN = 0; for (let i = 0; i < N; i++) { SLOPE[i] = (ELEV[(i + 2) % N] - ELEV[(i - 2 + N) % N]) / (4 * DS); ELMEAN += ELEV[i] / N; }
   }
   for (let i = 0; i < N; i++) { const a = (i - 1 + N) % N, b = (i + 1) % N, tx = PX[b] - PX[a], tz = PZ[b] - PZ[a], n = Math.hypot(tx, tz) || 1; TX[i] = tx / n; TZ[i] = tz / n; RX[i] = -TZ[i]; RZ[i] = TX[i]; }
@@ -6014,10 +6038,15 @@ function buildTrack(key) { BID++;
   /*@mex:edge{*/
   if (TRK === TRACKS.mex) { // Foro Sol: im Stadion stehen die Betonmauern dicht an der Fahrbahn, direkt vor den Rängen (wenig Auslauf)
     for (let s2 = 3540; s2 <= 3800; s2 += DS) { const i = Math.floor(modL(s2) / DS) % N, f = clamp(Math.min(s2 - 3540, 3800 - s2) / 30, 0, 1); for (const W of [WL, WR]) W[i] = Math.min(W[i], lerp(W[i], HW[i] + 2.4, f)); } }
-  if (['chn', 'bhr', 'jed', 'mia', 'bcn', 'hun', 'mad', 'baku', 'cota', 'mex', 'bra', 'qat'].some(k => TRK === TRACKS[k])) { /* Kurveninnenseite: Absperrung nie weiter als 72 % des Kurvenradius von der Mittellinie (Bodenstreifen enden dort, sonst schaut Rasen durch den Asphaltauslauf) */
-    for (let i = 0; i < N; i++) { let kk = 0; for (let d = -8; d <= 8; d++) { const k2 = KS[(i + d + N) % N]; if (Math.abs(k2) > Math.abs(kk)) kk = k2; } if (Math.abs(kk) < 1 / 150) continue; const lim = Math.max(HW[i] + 2.4, 0.5 / Math.abs(kk));   /* 50 % des Radius: die Innenwand schließt sich in Haarnadeln nicht mehr zur Schleife */ if (kk > 0) WR[i] = Math.min(WR[i], lim); else WL[i] = Math.min(WL[i], lim); } }
-  if (['chn', 'bhr', 'jed', 'mia', 'bcn', 'hun', 'mad', 'baku', 'cota', 'mex', 'bra', 'qat'].some(k => TRK === TRACKS[k])) {   /* Wandlinie glätten: die Auslaufbreite sprang Index für Index (Zickzack-Zäune, Wände, die ruckartig vor- und zurückspringen) – erst Minimum (Wand wandert nie nach außen), dann Mittelwert */
-    for (const W of [WL, WR]) { const o = Float32Array.from(W), sm = filt(filt(o, 3, 'min'), 4, 'avg'); for (let i = 0; i < N; i++) { if (i * DS < 420 || i * DS > L - 420) continue;   /* Start-Ziel mit Boxengasse und Pitgebäuden bleibt unverändert */ W[i] = Math.max(Math.min(HW[i] + 1.2, o[i]), Math.min(o[i], sm[i])); } } }
+  if (!(TRK.nos || TRK.mc || TRK.refFull || TRK.kartOnly)) { /* Kurveninnenseite: Absperrung nie weiter als 72 % des Kurvenradius von der Mittellinie (Bodenstreifen enden dort, sonst schaut Rasen durch den Asphaltauslauf) */
+    for (let i = 0; i < N; i++) { let kk = 0; for (let d = -10; d <= 10; d++) { const k2 = KS[(i + d + N) % N]; if (Math.abs(k2) > Math.abs(kk)) kk = k2; } const ak = Math.abs(kk); if (ak < 1 / 160) continue;
+      /* enge Kurven: die Innenplanke folgt dem Randstein (konstanter Abstand, linear zur Kurve) statt einer Linse/Schleife im Innenfeld; Übergang weich über die Krümmung */
+      const f = clamp((ak - 1 / 160) / (1 / 55 - 1 / 160), 0, 1), fs = f * f * (3 - 2 * f), cur = kk > 0 ? WR[i] : WL[i], lim = Math.min(Math.max(HW[i] + 2.2, 0.5 / ak), lerp(cur, HW[i] + 2.2, fs));
+      if (kk > 0) WR[i] = Math.min(WR[i], lim); else WL[i] = Math.min(WL[i], lim); } }
+  if (!(TRK.nos || TRK.mc || TRK.refFull || TRK.kartOnly)) {   /* Wandlinie glätten: die Auslaufbreite sprang Index für Index (Zickzack-Zäune, Wände, die ruckartig vor- und zurückspringen) – erst Minimum (Wand wandert nie nach außen), dann Mittelwert */
+    /* Absperrung läuft geradlinig: Abstandsänderung höchstens 0,16 m je Meter (≈ 9°) – kein Abknicken quer ins Innenfeld vor Haarnadeln, die Planke nähert sich der Kurve über eine lange, gerade Strecke */
+    for (const W of [WL, WR]) for (let pass = 0; pass < 2; pass++) { for (let i = 0; i < N; i++) { const j = (i + 1) % N; W[j] = Math.min(W[j], W[i] + 0.32); } for (let i = N - 1; i >= 0; i--) { const j = (i - 1 + N) % N; W[j] = Math.min(W[j], W[i] + 0.32); } }
+    for (const W of [WL, WR]) { const o = Float32Array.from(W), sm = filt(filt(o, 3, 'min'), 4, 'avg'); for (let i = 0; i < N; i++) { W[i] = Math.max(Math.min(HW[i] + 1.2, o[i]), Math.min(o[i], sm[i])); } } }
   /*}@mex:edge*/
   /*@bra:edge{*/
   if (TRK === TRACKS.bra) { /* Boxeneinfahrt (s −330 … −230): Absperrung links dicht an der Fahrbahn, damit die Boxengasse neben dem Infield-Streckenast Platz hat */
@@ -6279,7 +6308,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     const WT = s < 0 ? WTL : WTR;
     vStrip(i => s * W[i], 0, wH, wallMat, { mask: i => !adMask[i] && !(NOWALL[i] & nb) && !(WT && WT[i] === 2), vScale: 4, cast: true });
     if (WT) vStrip(i => s * W[i], 0, 1.15, tricolM, { mask: i => !(NOWALL[i] & nb) && WT[i] === 2, vScale: 12, cast: true, flip: s > 0 });
-    vStrip(i => s * W[i], 0, wH, adMat, { mask: i => adMask[i] && !(NOWALL[i] & nb) && !(WT && WT[i] === 2), vScale: 64, cast: true, flip: s > 0 });
+    vStrip(i => s * W[i], 0, wH, adMat, { mask: i => adMask[i] && !(NOWALL[i] & nb) && !(WT && WT[i] === 2), vScale: 64, cast: true, flip: s > 0, runAlign: true });
     vStrip(i => s * W[i], TH.bandStone ? -14 : -3.6, 0, skirtM, { mask: i => !(NOWALL[i] & nb), vScale: TH.bandStone ? 6 : undefined });   /* endet genau an der Unterkante von Mauer/Bande: 2 cm Überlappung in derselben Ebene flimmerten (Z-Fighting) – die Fuge liegt unter den Bodenstreifen */
     if (hi) { const fm = i => !(NOWALL[i] & nb) && fenceAt(i, s);
       const mesh = vStrip(i => s * W[i], wH, wH + 3.2, lam({ map: TEX.fence, transparent: true, depthWrite: false, alphaTest: 0.02, side: THREE.DoubleSide, metalness: .5, roughness: .5, color: 0xd8dde2 }), { mask: fm, vScale: 1 }); if (mesh) { mesh.renderOrder = 1; mesh.receiveShadow = false; }   // Geflecht: weich überblendet (kein Flimmern in der Ferne)
@@ -6427,6 +6456,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   const standBackM = (() => { const ft = canvasTex(128, 128, (g, w, h) => { g.fillStyle = '#a39b8d'; g.fillRect(0, 0, w, h); g.fillStyle = '#bdb5a6'; for (let x = 0; x < w; x += 32) g.fillRect(x, 0, 5, h); g.fillStyle = '#7a7266'; g.fillRect(0, h - 5, w, 5); g.fillRect(0, 0, w, 3); g.fillStyle = '#403b35'; for (let x = 0; x < w; x += 32) g.fillRect(x + 9, 40, 16, 30); });
     ft.userData.own = true; ft.wrapS = ft.wrapT = THREE.RepeatWrapping; return lam({ map: ft, side: THREE.DoubleSide }); })();
   const buildStand = (grp, len, dep, hgt) => {
+    grp.userData.stand = [len, dep]; (window.__standGroups = window.__standGroups || []).push(grp);   /* für die QC-Prüfung 'schwebende Tribünen' */
     const rows = Math.max(4, Math.round(dep * 0.8 / 1.7)), rd = dep * 0.8 / rows, rh = Math.min(1.25, (hgt * 0.62) / rows), x0 = 0.6, parts = [];
     parts.push([box(dep + 0.6, 6, len + 0.6, dep / 2, -3, 0), col(0x7d848c)]);
     for (let k = 0; k < rows; k++) parts.push([box(rd, rh * (k + 1), len, x0 + rd * (k + 0.5), rh * (k + 1) / 2, 0), k % 2 ? seatC[0] : seatC[1]]);
@@ -6499,7 +6529,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       let span = Math.max(br.l, 30) + 6; for (let t = 0; t < 30 && !legOk(span, true); t++) span += 2; if (!legOk(span, true)) { span = Math.max(br.l, 30) + 6; for (let t = 0; t < 30 && !legOk(span, false); t++) span += 2; } const grp = new THREE.Group(); grp.position.set(br.c[0], 0, br.c[1]); grp.rotation.y = -br.a; grp.userData.merge = true; grp.userData.span = true; trackGroup.add(grp);
       const steel = new THREE.MeshStandardMaterial({ color: 0x5b6470, roughness: .45, metalness: .7 }), yb = 6.4;
       const deck = new THREE.Mesh(new THREE.BoxGeometry(span, 0.5, 3.4), steel); deck.position.y = yb; deck.castShadow = true; grp.add(deck);
-      const t2 = brAd.clone(); t2.needsUpdate = true; t2.repeat.set(span / 60, 1); t2.userData.own = true;
+      const t2 = brAd.clone(); t2.needsUpdate = true; t2.repeat.set(Math.max(1, Math.round(span / 8)) / 8, 1); t2.userData.own = true;
       for (const sz of [-1.75, 1.75]) { const ad = new THREE.Mesh(new THREE.PlaneGeometry(span, 1.6), lam({ map: t2, side: THREE.DoubleSide })); ad.position.set(0, yb + 1.05, sz); grp.add(ad); }
       const roofB = new THREE.Mesh(new THREE.BoxGeometry(span, 0.25, 3.8), steel); roofB.position.y = yb + 2.9; grp.add(roofB);
       for (const sx of [-span / 2 + 1, span / 2 - 1]) for (const sz of [-1.5, 1.5]) { const p2 = new THREE.Mesh(new THREE.BoxGeometry(0.5, yb + 2.9, 0.5), steel); p2.position.set(sx, (yb + 2.9) / 2, sz); p2.castShadow = true; grp.add(p2); }
@@ -6684,14 +6714,17 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       for (let s = 20, k = 0; s < L; s += 46, k++) { const side = k % 2 ? 1 : -1, p = trackAt(s, 0), w = wallAt(p.i, side), q = trackAt(s, side * (w + 3.5)); if (trackFree(q.x, q.z, 1.5)) pp.push([q.x, q.z, q.h + (side > 0 ? Math.PI : 0)]); }
       const pole = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.18, 0.28, 20, 6).translate(0, 10, 0), new THREE.MeshStandardMaterial({ color: 0x8a9098, roughness: .5, metalness: .7 }), pp.length);
       const head = new THREE.InstancedMesh(new THREE.BoxGeometry(1.4, 1.1, 3.4).translate(-1.2, 20, 0), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff3d6).multiplyScalar(1.25) }), pp.length);   // so groß wie echte Paneele: bleibt auch in der Ferne sichtbar statt zu flimmern
-      pp.forEach((p, k) => { qq.setFromAxisAngle(_v2, p[2] + Math.PI / 2); m4.compose(pv.set(p[0], FLAT ? 0 : groundY(p[0], p[1]) - 0.2, p[1]), qq, one); pole.setMatrixAt(k, m4); head.setMatrixAt(k, m4); });
+      pp.forEach((p, k) => { qq.setFromAxisAngle(_v2, p[2] + Math.PI / 2); m4.compose(pv.set(p[0], 0, p[1]), qq, one); pole.setMatrixAt(k, m4); head.setMatrixAt(k, m4); });
       trackGroup.add(pole, head);
       if (TH.night) { // Lichtkegel der Flutlichter auf dem Asphalt (weicher, warm-weißer Schein)
         const lt = canvasTex(128, 128, (g, w, h) => { const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); gr.addColorStop(0, 'rgba(255,244,225,1)'); gr.addColorStop(.45, 'rgba(255,238,210,.55)'); gr.addColorStop(1, 'rgba(255,230,200,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); lt.userData.own = true;
-        const pool = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: lt, color: new THREE.Color(0.17, 0.16, 0.15), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -5, polygonOffsetUnits: -12 }), pp.length);
-        const sc2 = new THREE.Vector3(40, 1, 52);
-        pp.forEach((p, k) => { const [, j] = nearestDist(p[0], p[1]); qq.setFromAxisAngle(_v2, Math.atan2(TX[j], TZ[j])); m4.compose(pv.set(lerp(p[0], PX[j], 0.75), (FLAT ? 0 : placeY(lerp(p[0], PX[j], 0.75), lerp(p[1], PZ[j], 0.75))) + 0.04, lerp(p[1], PZ[j], 0.75)), qq, sc2); pool.setMatrixAt(k, m4); });
-        pool.renderOrder = 1; trackGroup.add(pool);
+        const poolM = new THREE.MeshBasicMaterial({ map: lt, color: new THREE.Color(0.3, 0.28, 0.25), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -5, polygonOffsetUnits: -12 }); trackGroup.add(poolMesh(pp.map(p => { const [, j] = nearestDist(p[0], p[1]); return [lerp(p[0], PX[j], 0.75), lerp(p[1], PZ[j], 0.75), Math.atan2(TX[j], TZ[j])]; }), 26, 34, poolM));
+        /* Lichtkegel je Mast wie in Las Vegas/Lusail: Pyramidenstumpf vom Lampenfeld zur Strecke, Helligkeit fällt per Vertexfarbe auf null – kein Klippen an Mauern */
+        const bg = (() => { const T = [[-1.9, 19.4, -1.7], [-0.5, 19.4, -1.7], [-0.5, 20.6, 1.7], [-1.9, 20.6, 1.7]], B = [[-22, 0, -8], [-6, 0, -8], [-6, 0, 8], [-22, 0, 8]], ps = [], cl = [];
+          for (let k = 0; k < 4; k++) { const k2 = (k + 1) % 4; for (const [P, c] of [[T[k], 1], [B[k], 0], [B[k2], 0], [T[k], 1], [B[k2], 0], [T[k2], 1]]) { ps.push(...P); cl.push(c, c, c); } }
+          const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(ps, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(cl, 3)); return g; })();
+        const beams = new THREE.InstancedMesh(bg, new THREE.MeshBasicMaterial({ vertexColors: true, color: new THREE.Color(0.075, 0.07, 0.06), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false }), pp.length);
+        pp.forEach((p, k) => { qq.setFromAxisAngle(_v2, p[2] + Math.PI / 2); m4.compose(pv.set(p[0], 0, p[1]), qq, one); beams.setMatrixAt(k, m4); }); beams.frustumCulled = false; beams.userData.clipSkip = true; beams.renderOrder = 2; trackGroup.add(beams);
       }
     }
   }
@@ -8018,6 +8051,8 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     // ---------- OSM-Gebäude (Fahrerlager, Teamgebäude, Westkurs, Fabriken, Wohnhäuser) – hier statt im allgemeinen OSM-Pfad, der Bauten am Hang auf die Höhe von Start/Ziel stellt ----------
     { const roofM = lam({ color: 0x9a9890 }), mats = {}; window.__osmSkip = window.__osmSkip || [];
       for (const b of O.b) { const R = b.r; if (R.some(([x, z]) => !trackFree(x, z, 2) || inMarina(x, z))) { window.__osmSkip.push(b.n); continue; }
+        { const [ax, az] = cen(R), [dd, jj] = nearestDist(ax, az), sj = jj * DS; let ar = 0; for (let q = 0; q < R.length; q++) { const [x1, z1] = R[q], [x2, z2] = R[(q + 1) % R.length]; ar += x1 * z2 - x2 * z1; } ar = Math.abs(ar) / 2;
+          if (dd < 300 && sj > 450 && sj < L - 450 && (b.s === 'arena' || ar > 350)) { window.__osmSkip.push('Halle ' + (b.n || '')); continue; } }   /* große Hallen/Langbauten (Fabriken, Logistik) entlang der Strecke abseits von Fahrerlager und Zielgeraden weglassen: an den S-Kurven steht in Wirklichkeit nur Wald und Wiese; Streckenposten-Häuschen bleiben */   /* große Hallen (Fabriken, Logistikzentren) nahe der Strecke weglassen: an den S-Kurven steht in Wirklichkeit nur Wald und Wiese */
         const [cx, cz] = cen(R), m = mats[b.s] || (mats[b.s] = osmMat(b.s)), grp = extr(R, b.h, m, roofM); grp.userData.merge = true; trackGroup.add(grp); excl.push([cx, cz, Math.max(...R.map(p => Math.hypot(p[0] - cx, p[1] - cz))) + 2]); } }
     // ---------- Riesenrad „Circuit Wheel“ im Freizeitpark (Motopia) hinter der Haupttribüne: OSM way 184107083, Ebene entlang der Längsachse der Grundfläche ----------
     if (O.wheel) { const W0 = O.wheel, [wx, wz] = cen(W0); let sxx = 0, sxz = 0, szz = 0; for (const [x, z] of W0) { sxx += (x - wx) ** 2; sxz += (x - wx) * (z - wz); szz += (z - wz) ** 2; }
@@ -8225,9 +8260,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       if (night) { // Lichtkegel der Flutlichter auf dem Asphalt: gleichmäßig über die ganze Runde, wechselnd links/rechts
         const lt = canvasTex(128, 128, (g, w, h) => { const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); gr.addColorStop(0, 'rgba(255,240,215,1)'); gr.addColorStop(.45, 'rgba(255,232,200,.55)'); gr.addColorStop(1, 'rgba(255,225,190,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); lt.userData.own = true;
         const ps = []; for (let s = 10, k = 0; s < L; s += 38, k++) ps.push([s, k % 2 ? 1 : -1]);
-        const pool = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: lt, color: new THREE.Color(0.19, 0.16, 0.12), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -5, polygonOffsetUnits: -12 }), ps.length), sc2 = new THREE.Vector3(42, 1, 50);
-        ps.forEach(([s, sd], k) => { const p = trackAt(s, sd * HW[Math.floor(s / DS) % N] * 0.45); qq.setFromAxisAngle(_v2, p.h); m4.compose(pv.set(p.x, (FLAT ? 0 : placeY(p.x, p.z)) + 0.04, p.z), qq, sc2); pool.setMatrixAt(k, m4); });
-        pool.renderOrder = 1; trackGroup.add(pool); } }
+        const poolM = new THREE.MeshBasicMaterial({ map: lt, color: new THREE.Color(0.3, 0.25, 0.18), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -5, polygonOffsetUnits: -12 }); trackGroup.add(poolMesh(ps.map(([s, sd]) => { const p = trackAt(s, sd * HW[Math.floor(s / DS) % N] * 0.45); return [p.x, p.z, p.h]; }), 30, 40, poolM)); } }
 
     // ---------- Rasen und Gärten (Turm, Paddock, Kurve 1): flache Grünflächen nach OSM, nur dort, wo keine Strecke ist ----------
     { const pos = [], uv = [];
@@ -8531,6 +8564,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       const GY = (x, z, h) => h < 0.3 ? groundY(x, z) + 0.1 : Math.max(groundY(x, z), placeY(x, z)) + h;   /* Höhe über Gelände (ebenerdig) bzw. über der Strecke (Brücke) */
       const quad = (A, B, a, b) => { A.push(...a[0], ...b[1], ...b[0], ...a[0], ...a[1], ...b[1]); B.push(0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1); };
       for (const T of M.tp) { const P = []; for (let k = 0; k < T.p.length; k += 3) P.push([T.p[k], T.p[k + 1], T.p[k + 2]]); const hw2 = T.k ? 4.2 : 7.6;
+        if (P.some(([x, z, h]) => h > 1 && !trackFree(x, z, 10))) continue;   /* Rampen, die über der Strecke oder nahe an ihr verlaufen, ganz weglassen (clippten mit den Tribünen) */
         for (let k = 0; k < P.length - 1; k++) { const [x1, z1, h1] = P[k], [x2, z2, h2] = P[k + 1], l = Math.hypot(x2 - x1, z2 - z1); if (l < 0.5) continue; const nx = -(z2 - z1) / l, nz = (x2 - x1) / l;
           let bad = false; for (const t of [0, 0.5, 1]) { const x = x1 + (x2 - x1) * t, z = z1 + (z2 - z1) * t, h = h1 + (h2 - h1) * t; for (const o of [-hw2 - 0.6, 0, hw2 + 0.6]) if (h < 6.4 && !trackFree(x + nx * o, z + nz * o, 1)) bad = true; } if (bad) continue;   // ebenerdig nie in der Strecke
           const y1 = GY(x1, z1, h1), y2 = GY(x2, z2, h2), L1 = [x1 - nx * hw2, y1, z1 - nz * hw2], R1 = [x1 + nx * hw2, y1, z1 + nz * hw2], L2 = [x2 - nx * hw2, y2, z2 - nz * hw2], R2 = [x2 + nx * hw2, y2, z2 + nz * hw2];
@@ -8567,7 +8601,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         const lp = [-1, 1].map(e => [gx + RX[i] * e * (span / 2 - 1), gz + RZ[i] * e * (span / 2 - 1)]); if (!lp.every(([x, z]) => trackFree(x, z, 0.6))) continue;
         const grp = new THREE.Group(); grp.position.set(gx, 0, gz); grp.rotation.y = Math.atan2(-RZ[i], RX[i]); grp.userData.merge = true; grp.userData.span = true; trackGroup.add(grp);
         const deck = new THREE.Mesh(new THREE.BoxGeometry(span, 0.5, 3.6), steel); deck.position.y = yb; deck.castShadow = true; grp.add(deck);
-        const t2 = brAd.clone(); t2.needsUpdate = true; t2.repeat.set(span / 60, 1); t2.userData.own = true; const adM = lam({ map: t2 });
+        const t2 = brAd.clone(); t2.needsUpdate = true; t2.repeat.set(Math.max(1, Math.round(span / 8)) / 8, 1); t2.userData.own = true; const adM = lam({ map: t2 });
         for (const sz of [-1.85, 1.85]) { const ad = new THREE.Mesh(new THREE.BoxGeometry(span, 1.7, 0.12), adM); ad.position.set(0, yb + 1.1, sz); grp.add(ad); }
         const roof = new THREE.Mesh(new THREE.BoxGeometry(span, 0.3, 4.2), steel); roof.position.y = yb + 3.0; grp.add(roof);
         for (const sx of [-span / 2 + 1, span / 2 - 1]) { for (const sz of [-1.6, 1.6]) { const p2 = new THREE.Mesh(new THREE.BoxGeometry(0.45, yb + 3, 0.45), steel); p2.position.set(sx, (yb + 3) / 2, sz); p2.castShadow = true; grp.add(p2); }
@@ -8759,17 +8793,19 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       for (const [s0, s1, io] of SL) { const q0 = trackAt((s0 + s1) / 2, 40), sd = (inL(q0.x, q0.z) ? 1 : -1) * -io;   // Seite: außen bzw. innen
         let prev = null; for (let s = s0; s <= s1; s += 8) { const p = trackAt(s, 0), w = wallAt(p.i, sd), d0 = w + 7, d1 = w + 42, a = trackAt(s, sd * d0), b = trackAt(s, sd * d1), mid = trackAt(s, sd * (d0 + d1) / 2);
           const ok = trackFree(a.x, a.z, 4) && trackFree(b.x, b.z, 4) && trackFree(mid.x, mid.z, 4) && !excl.some(e => !e.nt && ((mid.x - e[0]) ** 2 + (mid.z - e[1]) ** 2 < e[2] * e[2] || (a.x - e[0]) ** 2 + (a.z - e[1]) ** 2 < e[2] * e[2]));
-          const cur = ok ? [a, b] : null; if (cur) { a.g = FLAT ? 0 : groundY(a.x, a.z); b.g = FLAT ? 0 : groundY(b.x, b.z); }   /* Bodenhöhe an den Hangrändern: die Zuschauerreihen folgen der Hangfläche (linear), nicht dem Gelände dazwischen – sonst schweben sie */
+          const cc2 = trackAt(s, sd * (d1 + 34)), cur = ok ? [a, b, trackFree(cc2.x, cc2.z, 4) ? cc2 : null] : null; if (cur) { a.g = FLAT ? 0 : groundY(a.x, a.z); b.g = FLAT ? 0 : groundY(b.x, b.z); if (cur[2]) cc2.g = 0; }   /* Bodenhöhe an den Hangrändern: die Zuschauerreihen folgen der Hangfläche (linear), nicht dem Gelände dazwischen – sonst schweben sie */
           if (cur && prev) { const [A0, B0] = prev, [A1, B1] = cur, hA = 0.2, hB = 12; const P = [[A0.x, hA, A0.z], [B0.x, hB, B0.z], [A1.x, hA, A1.z], [B1.x, hB, B1.z]];
             const tri = sd > 0 ? [[0, 2, 1], [1, 2, 3]] : [[0, 1, 2], [1, 3, 2]]; for (const t3 of tri) put(pos, uv, ...t3.map(k => [...P[k], P[k][0] / 6, P[k][2] / 6]));
-            for (let r = 0.12; r < 0.8; r += 0.09) { const L0 = [A0.x + (B0.x - A0.x) * r, hA + (hB - hA) * r + A0.g + (B0.g - A0.g) * r, A0.z + (B0.z - A0.z) * r], L1 = [A1.x + (B1.x - A1.x) * r, hA + (hB - hA) * r + A1.g + (B1.g - A1.g) * r, A1.z + (B1.z - A1.z) * r], u1 = 8 / 9, v0 = ((r * 31) % 3 | 0) / 3;
+            if (prev[2] && cur[2]) { const C0 = prev[2], C1 = cur[2], P2 = [[B0.x, hB, B0.z], [C0.x, 0, C0.z], [B1.x, hB, B1.z], [C1.x, 0, C1.z]], tri2 = sd > 0 ? [[0, 1, 2], [1, 3, 2]] : [[0, 2, 1], [1, 2, 3]];   /* Rückhang: der Hügel fällt hinter dem Kamm wieder auf den Boden ab (vorher offene Fläche = schwebende Hänge) */
+              for (const t3 of tri2) put(pos, uv, ...t3.map(k => [...P2[k], P2[k][0] / 6, P2[k][2] / 6])); }
+            for (let r = 0.12; r < 0 /* Zuschauerreihen auf den Naturhängen entfernt (Wunsch des Nutzers: keine schwebenden Zuschauer) */; r += 0.09) { const L0 = [A0.x + (B0.x - A0.x) * r, hA + (hB - hA) * r + A0.g + (B0.g - A0.g) * r, A0.z + (B0.z - A0.z) * r], L1 = [A1.x + (B1.x - A1.x) * r, hA + (hB - hA) * r + A1.g + (B1.g - A1.g) * r, A1.z + (B1.z - A1.z) * r], u1 = 8 / 9, v0 = ((r * 31) % 3 | 0) / 3;
               cpos.push(L0[0], L0[1] - 0.1, L0[2], L1[0], L1[1] - 0.1, L1[2], L0[0], L0[1] + 1.1, L0[2], L0[0], L0[1] + 1.1, L0[2], L1[0], L1[1] - 0.1, L1[2], L1[0], L1[1] + 1.1, L1[2]); cuv.push(0, v0, u1, v0, 0, v0 + 0.34, 0, v0 + 0.34, u1, v0, u1, v0 + 0.34); }
             const e2 = [mid.x, mid.z, 26]; e2.nt = true; excl.push(e2); }
           prev = cur; } }
       if (pos.length) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.computeVertexNormals();
         const m = new THREE.Mesh(g, lam({ map: TEX.grassP, color: TH.groundTint ?? 0xffffff, roughness: .95 })); m.userData.perVertex = true; m.receiveShadow = true; trackGroup.add(m);
         const cg = new THREE.BufferGeometry(); cg.setAttribute('position', new THREE.Float32BufferAttribute(cpos, 3)); cg.setAttribute('uv', new THREE.Float32BufferAttribute(cuv, 2)); cg.computeVertexNormals();
-        const cm = new THREE.Mesh(cg, crowdM2); cm.userData.fixed = true; trackGroup.add(cm); } }
+        if (cpos.length) { const cm = new THREE.Mesh(cg, crowdM2); cm.userData.fixed = true; trackGroup.add(cm); } } }
     // --- Mogyoród und Häuser ringsum (OSM-Rechtecke): helle Putzfassaden, rote Ziegeldächer; Gewerbehallen flach ---
     { const tileT = canvasTex(128, 128, (g, W, H2) => { g.fillStyle = '#a8553a'; g.fillRect(0, 0, W, H2); for (let y = 0; y < H2; y += 8) { g.fillStyle = 'rgba(60,20,10,.35)'; g.fillRect(0, y, W, 2); for (let x = (y / 8 % 2) * 6; x < W; x += 12) { g.fillStyle = `rgba(${150 + Math.random() * 60},${70 + Math.random() * 30},${40 + Math.random() * 20},.5)`; g.fillRect(x, y + 2, 10, 6); } } }); tileT.userData.own = true;
       const rg = new THREE.BufferGeometry(); rg.setAttribute('position', new THREE.Float32BufferAttribute([-.5, 0, -.5, .5, 0, -.5, .5, 1, 0, -.5, 0, -.5, .5, 1, 0, -.5, 1, 0, -.5, 0, .5, -.5, 1, 0, .5, 1, 0, -.5, 0, .5, .5, 1, 0, .5, 0, .5, -.5, 0, -.5, -.5, 1, 0, -.5, 0, .5, .5, 0, -.5, .5, 0, .5, .5, 1, 0], 3));
@@ -9154,7 +9190,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         if (![-1, 1].every(e => trackFree(gx + RX[i] * e * (span / 2 - 1), gz + RZ[i] * e * (span / 2 - 1), 0.6))) continue;
         const grp = new THREE.Group(); grp.position.set(gx, 0, gz); grp.rotation.y = Math.atan2(-RZ[i], RX[i]); grp.userData.merge = true; grp.userData.span = true; trackGroup.add(grp);
         const deck = new THREE.Mesh(new THREE.BoxGeometry(span, 0.6, 4), steel); deck.position.y = yb; deck.castShadow = true; grp.add(deck);
-        const t2 = brAd.clone(); t2.needsUpdate = true; t2.repeat.set(span / 60, 1); t2.userData.own = true; const adM = lam({ map: t2 });
+        const t2 = brAd.clone(); t2.needsUpdate = true; t2.repeat.set(Math.max(1, Math.round(span / 8)) / 8, 1); t2.userData.own = true; const adM = lam({ map: t2 });
         for (const sz of [-2.05, 2.05]) { const ad = new THREE.Mesh(new THREE.BoxGeometry(span, 1.8, 0.12), adM); ad.position.set(0, yb + 1.2, sz); grp.add(ad); }
         const arch = []; for (const sz of [-2, 2]) for (let k = 0; k < 12; k++) { const t0 = k / 12, t1 = (k + 1) / 12, f = t => [(t - 0.5) * span, yb + 2.2 + Math.sin(t * Math.PI) * 3.2, sz]; arch.push([rod(f(t0), f(t1), 0.22, 6), null]); }
         grp.add(new THREE.Mesh(mergeParts(arch), red));
@@ -9389,7 +9425,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       const wm = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0x2b3a31, roughness: .16, metalness: .12, envMapIntensity: .45, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 })); wm.receiveShadow = true; wm.userData.fixed = true; trackGroup.add(wm); excl.push([L0.reduce((a, p) => a + p[0], 0) / L0.length, L0.reduce((a, p) => a + p[1], 0) / L0.length, 90]); }
 
     // ---------- Senna S: weißes Wellendach (Membran) über den Tribünen der Kurven 1/2 ----------
-    { const pos = [], sd0 = window.__stands || []; for (const [s0, sd, ok] of sd0) { if (!ok || s0 < 240 || s0 > 480) continue; const wA = wallAt(trackAt(s0, 0).i, sd), lat0 = wA + 3.2, lat1 = wA + 25.5, nU = 4;
+    { const pos = [], sd0 = window.__stands || []; for (const [s0, sd, ok] of sd0) { if (true || !ok || s0 < 240 || s0 > 480) continue;   /* Wellendach entfernt: schwebte als weißes Band über den Bäumen (Nutzerwunsch) */ const wA = wallAt(trackAt(s0, 0).i, sd), lat0 = wA + 3.2, lat1 = wA + 25.5, nU = 4;
         for (let s2 = s0; s2 < s0 + 44; s2 += 4) for (let u = 0; u < nU; u++) { const P = (ss, uu) => { const l = lat0 + (lat1 - lat0) * uu / nU, q = trackAt(ss, sd * l); return [q.x, 10.2 + 5.6 * uu / nU + 1.1 * Math.sin(ss * 0.32) * (0.4 + uu / nU) - 0.8 * Math.cos(uu / nU * Math.PI), q.z]; }; const a = P(s2, u), b = P(s2 + 4, u), c2 = P(s2 + 4, u + 1), d = P(s2, u + 1); pos.push(...a, ...b, ...c2, ...a, ...c2, ...d); } }
       if (pos.length) { const rm = new THREE.Mesh(geoOf(pos), lam({ color: 0xf2f3f1, roughness: .6, side: DSD })); rm.castShadow = true; rm.userData.merge = true; trackGroup.add(asMerge(rm)); } }
 
@@ -9527,23 +9563,21 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       const panG = new THREE.PlaneGeometry(9.4, 5).rotateX(-0.45).translate(0, H + 2.3, 0.4);
       const poleM = new THREE.MeshStandardMaterial({ color: 0xb4bac2, roughness: .45, metalness: .7 }), panM = new THREE.MeshBasicMaterial({ map: lampT, color: new THREE.Color(1, 1, 1).multiplyScalar(night ? 2.8 : 0.8), side: THREE.DoubleSide });
       const I = [new THREE.InstancedMesh(poleG, poleM, pp.length), new THREE.InstancedMesh(frameG, poleM, pp.length), new THREE.InstancedMesh(panG, panM, pp.length)];
-      pp.forEach(([x, z, a, sc], k) => { qq.setFromAxisAngle(upv, a); sv.set(sc, sc, sc); m4.compose(pv.set(x, FLAT ? 0 : groundY(x, z) - 0.3, z), qq, sv); for (const im of I) im.setMatrixAt(k, m4); });
+      pp.forEach(([x, z, a, sc], k) => { qq.setFromAxisAngle(upv, a); sv.set(sc, sc, sc); m4.compose(pv.set(x, 0, z), qq, sv); for (const im of I) im.setMatrixAt(k, m4); });
       I[0].castShadow = I[1].castShadow = true; trackGroup.add(...I);
       if (night) { /* Lichtkegel der Flutlichter (wie im Fernsehbild): weicher, schräg zur Strecke geneigter Strahl je zweiter Mast, additiv, ohne Tiefenschreiben */
-        const bm = pp.filter((_, k) => k % 3 === 0);
+        const bm = pp;
         /* Strahl = Pyramidenstumpf: oben so groß wie das Lampenfeld, unten breit auf dem Asphalt; Helligkeit (Vertexfarbe) fällt von oben nach unten auf null – keine harte Kante am Boden */
         const beamG = (() => { const yT = H + 2.3, T = [[-4.7, yT - 2.1, 0.7], [4.7, yT - 2.1, 0.7], [4.7, yT + 2.1, 0.2], [-4.7, yT + 2.1, 0.2]], Bm = [[-11, 0, 10], [11, 0, 10], [11, 0, 32], [-11, 0, 32]], pos = [], col = [];
           for (let k = 0; k < 4; k++) { const k2 = (k + 1) % 4; for (const [P, c] of [[T[k], 1], [Bm[k], 0], [Bm[k2], 0], [T[k], 1], [Bm[k2], 0], [T[k2], 1]]) { pos.push(...P); col.push(c, c, c); } }
           const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); return g; })();
-        const beams = new THREE.InstancedMesh(beamG, new THREE.MeshBasicMaterial({ vertexColors: true, color: new THREE.Color(0.055, 0.065, 0.095), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false }), bm.length);
-        bm.forEach(([x, z, a, sc], k) => { qq.setFromAxisAngle(upv, a); sv.set(sc, sc, sc); m4.compose(pv.set(x, FLAT ? 0 : groundY(x, z) - 0.3, z), qq, sv); beams.setMatrixAt(k, m4); }); beams.frustumCulled = false; beams.renderOrder = 2; trackGroup.add(beams); }
+        const beams = new THREE.InstancedMesh(beamG, new THREE.MeshBasicMaterial({ vertexColors: true, color: new THREE.Color(0.04, 0.047, 0.07), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false }), bm.length);
+        bm.forEach(([x, z, a, sc], k) => { qq.setFromAxisAngle(upv, a); sv.set(sc, sc, sc); m4.compose(pv.set(x, 0, z), qq, sv); beams.setMatrixAt(k, m4); }); beams.frustumCulled = false; beams.userData.clipSkip = true; beams.renderOrder = 2; trackGroup.add(beams); }
       for (const [x, z] of pp) excl.push([x, z, 3]);
       if (night) { // Lichtkegel auf dem Asphalt: dicht über die ganze Runde, wechselnd links/rechts
         const lt = canvasTex(128, 128, (g, w, h) => { const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); gr.addColorStop(0, 'rgba(235,242,255,1)'); gr.addColorStop(.45, 'rgba(225,235,255,.55)'); gr.addColorStop(1, 'rgba(215,228,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); lt.userData.own = true;
         const ps = []; for (let s = 6, k = 0; s < L; s += 24, k++) ps.push([s, k % 2 ? 1 : -1]);
-        const pool = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: lt, color: new THREE.Color(0.2, 0.21, 0.24), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), ps.length);
-        ps.forEach(([s, sd], k) => { const p = trackAt(s, sd * HW[Math.floor(s / DS) % N] * 0.4); qq.setFromAxisAngle(upv, p.h); sv.set(26, 1, 30); m4.compose(pv.set(p.x, placeY(p.x, p.z) + 0.04, p.z), qq, sv); pool.setMatrixAt(k, m4); });
-        pool.renderOrder = 1; trackGroup.add(pool); } }
+        const poolM = new THREE.MeshBasicMaterial({ map: lt, color: new THREE.Color(0.42, 0.45, 0.55), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }); trackGroup.add(poolMesh(ps.map(([s, sd]) => { const p = trackAt(s, sd * HW[Math.floor(s / DS) % N] * 0.4); return [p.x, p.z, p.h]; }), 24, 28, poolM)); } }
 
     // ---------- Horizont nach Geokoordinaten: flache Wüste ringsum; Skyline von Lusail im Südosten (Lusail Plaza, Marina mit Katara Towers) und das Lusail-Stadion ----------
     desertHorizon({ col: [0x6a645a, 0x75705f], low: 0.12, far: 0x0a0e13, glow: 0xdfe8ff, towns: [[...llx(25.505, 51.40), 2500, 60, 0.3], [...llx(25.56, 51.46), 3500, 90, 0.3], [...llx(25.46, 51.395), 1800, 40, 0.3]] });   /* Umm Salal / Al Daayen im Westen und Norden (Lichterhaufen) */
@@ -9766,7 +9800,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     const place = [];
     let tries = 0;
     const newT = ['chn', 'bhr', 'jed', 'mia', 'bcn', 'hun', 'zan', 'mad', 'baku', 'cota', 'mex', 'bra', 'qat'].some(k => TRK === TRACKS[k]), FPT = newT ? builtFootprints(trackGroup) : [];
-    const inBld = (x, z) => newT && FPT.some(F => Math.hypot(F.cx - x, F.cz - z) < F.r + 6 && polyHit(F.H, [[x - 4, z - 4], [x + 4, z - 4], [x + 4, z + 4], [x - 4, z + 4]], 0));   /* nie ein Baum in einem Haus (Wahrzeichen, OSM-Häuser) */
+    const inBld = (x, z) => newT && FPT.some(F => Math.hypot(F.cx - x, F.cz - z) < F.r + 11 && polyHit(F.H, [[x - 7, z - 7], [x + 7, z - 7], [x + 7, z + 7], [x - 7, z + 7]], 0));   /* nie ein Baum in einem Haus (Wahrzeichen, OSM-Häuser) */
     if (TRK.refFull || TRK.refTrees) for (const [x, z, h] of TRK.ref.trees) {
       const [d, j] = nearestDist(x, z); if (d < Math.max(WL[j], WR[j]) + 4) continue;
       if (excl.some(e => (x - e[0]) ** 2 + (z - e[1]) ** 2 < e[2] * e[2]) || inMarina(x, z) || inBld(x, z)) continue;
