@@ -7823,7 +7823,7 @@ function granTick(M, G, rpm, t, amp, idx) {
   if (S.next < t) S.next = t + 0.005;   // nach einer Pause (Tab im Hintergrund)
   while (S.next < t + 0.07) {
     const T0 = S.next, r = clamp(rpm, RR[0], RR[last]); let k = 0; while (k < last - 1 && RR[k + 1] < r) k++;
-    const f = (r - RR[k]) / Math.max(1, RR[k + 1] - RR[k]), p = TT[k] + clamp(f, 0, 1) * (TT[k + 1] - TT[k]), rate = clamp(rpm / r, 0.6, 1.3), per = 120 / r;   // v2.10: ein ganzer Arbeitszyklus (4 Zündungen = 2 Umdrehungen) – mit nur einer Zündung begannen überlappende Körner bei verschiedenen Zylindern („klingt doppelt“)
+    const f = (r - RR[k]) / Math.max(1, RR[k + 1] - RR[k]), p = TT[k] + clamp(f, 0, 1) * (TT[k + 1] - TT[k]), rate = clamp(rpm / r, 0.6, 1.04), per = 120 / r;   // v2.11: über dem Ende der Aufnahme (6.115 U/min) höchstens 4 % höher – stärker hochgestimmt klang es „viel zu hoch“ · v2.10: ein ganzer Arbeitszyklus (4 Zündungen = 2 Umdrehungen) – mit nur einer Zündung begannen überlappende Körner bei verschiedenen Zylindern („klingt doppelt“)
     const cont = S.s + (T0 - S.T) * S.rate; let s0 = cont + Math.round((p - cont) / per) * per;
     if (!(Math.abs(s0 - p) < 0.06) || s0 < 0) s0 = p;
     s0 = clamp(s0, 0, buf.duration - GR_LEN * rate - 0.005);
@@ -7881,7 +7881,7 @@ function updateAudio(thr) {
   const kart = !!(pl.mesh && pl.mesh.kart), f2 = SER === 'f2' && !road && !kart;   // Kart: hoher Einzylinder-Zweitakter (direkt, ohne Getriebe) · F2: rauer V6-Turbo bis ~10.500 U/min, kein ERS
   const rev = pl.rev || 0, lim = rev > 0.93 ? (Math.random() - .5) * 700 : 0;   // Begrenzer flattert oben
   const kfr = clamp(pl.v / (VTOP * SERPH.top), 0, 1.1);
-  let target0 = raceState === 'lights' ? (road ? 950 + rev * 6400 + lim : 4200 + rev * 8000 + lim) : road ? (pl.street ? gi.rpm : 1100 + (gi.rpm / 12000) * 6200) : gi.rpm;
+  let target0 = raceState === 'lights' ? (road ? 950 + rev * 5400 + lim : 4200 + rev * 8000 + lim) : road ? (pl.street ? gi.rpm : 1000 + (gi.rpm / 12000) * 5400) : gi.rpm;
   // Kart (v1.99): Direktantrieb, Drehzahl proportional zur Geschwindigkeit (14.000 bei Höchstgeschw.), Begrenzer ~15.500. Darunter hält die Fliehkraftkupplung
   // die Drehzahl: Leerlauf ~2.800, mit Gas schleifend ~5.000. Am Start nur Gasstöße unterhalb der Kupplung (darüber würde das Kart losfahren).
   // F2 (v1.99): eigenes 6-Gang-Getriebe (gearP), Drehzahl direkt, Begrenzer 8.750.
@@ -7919,7 +7919,7 @@ function updateAudio(thr) {
     if (!c || !on || nd > 140) { O.fg.gain.setTargetAtTime(0, t, 0.1); return; }
     const dx = c.x - pl.x, dz = c.z - pl.z, dl = nd || 1, vr = ((Math.sin(c.h) * c.v - Math.sin(pl.h) * pl.v) * dx + (Math.cos(c.h) * c.v - Math.cos(pl.h) * pl.v) * dz) / dl;
     const oc = carCls(c) === 'kart' ? 'kart' : carCls(c) === 'stahl' ? 'road' : f2 ? 'f2' : 'f1';   // Art des Gegners (v2.00: auch Roadster)
-    const oRpm = oc === 'kart' ? Math.max(5000, Math.min(15500, 14000 * c.v / (VTOP * SERPH.top))) : oc === 'road' ? 1100 + gearInfo(c.v * 3.6, false).rpm / 12000 * 6200 : gearInfo(c.v * 3.6, f2).rpm;   // wie beim eigenen Auto
+    const oRpm = oc === 'kart' ? Math.max(5000, Math.min(15500, 14000 * c.v / (VTOP * SERPH.top))) : oc === 'road' ? 1000 + gearInfo(c.v * 3.6, false).rpm / 12000 * 5400 : gearInfo(c.v * 3.6, f2).rpm;   // wie beim eigenen Auto
     const fn = oRpm / 60 * SND_ENG[oc].cyl * clamp(340 / (340 + vr), 0.65, 1.5);
     // v1.99: Aufnahme (eine Stufe aus der Mitte des Drehzahlbands, Doppler über das Tempo) statt Sägezahn – synthetisch nur, solange sie nicht geladen ist
     const LS = SND_ENG[oc].loops, L = k % 2 && SND_ENG[oc].alt ? SND_ENG[oc].alt : LS[k % 2 ? (SND_FERN[oc] + 1 < LS.length ? SND_FERN[oc] + 1 : SND_FERN[oc] - 1) : SND_FERN[oc]], ob2 = sndBuf(L[0]);   // v2.01: Nachbar-Stimmen abwechselnd aus zwei Aufnahmen (gleiche Aufnahme mehrfach = Flanger-„Wellen“)
@@ -8769,7 +8769,7 @@ function roadDashTick(dt) {
   const D = ROAD_DASH; if (!D) return;
   D.t += dt; if (D.t < 1 / 30) return; D.t = 0; D.flip = !D.flip;
   const gi = gearP(pl.v * 3.6), lights = raceState === 'lights';
-  const tr = lights ? 950 + (pl.rev || 0) * 6400 + ((pl.rev || 0) > 0.93 ? (Math.random() - .5) * 700 : 0) : (pl.street ? gi.rpm : 1100 + (gi.rpm / 12000) * 6200) - (ENG ? ENG.cut * 9000 : 0);
+  const tr = lights ? 950 + (pl.rev || 0) * 5400 + ((pl.rev || 0) > 0.93 ? (Math.random() - .5) * 700 : 0) : (pl.street ? gi.rpm : 1000 + (gi.rpm / 12000) * 5400) - (ENG ? ENG.cut * 9000 : 0);
   D.rpm = (D.rpm ?? 900) + (tr - (D.rpm ?? 900)) * 0.45; D.kmh = (D.kmh ?? 0) + (pl.v * 3.6 - (D.kmh ?? 0)) * 0.6; D.temp = Math.min(92, D.temp + 0.03);
   if (D.flip) {   // Instrumente
     const c = D.gcv.getContext('2d'); c.drawImage(D.gbg, 0, 0);
@@ -8779,7 +8779,7 @@ function roadDashTick(dt) {
     nd(200, 200, 130, (D.temp - 40) / 120, '#ff3b2f'); nd(512, 180, 170, D.rpm / 8000, '#ff3b2f'); nd(824, 200, 130, D.kmh / 360, '#ff3b2f');
     c.fillStyle = '#f2f4f8'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = '800 44px system-ui,sans-serif'; c.fillText(lights ? 'N' : String(gi.g), 512, 285);
     c.font = '700 26px system-ui,sans-serif'; c.fillText(Math.round(D.kmh) + ' km/h', 824, 335);
-    if (D.rpm > 6900) { c.fillStyle = '#ff2a20'; c.beginPath(); c.arc(512, 335, 9, 0, 7); c.fill(); }
+    if (D.rpm > 6000) { c.fillStyle = '#ff2a20'; c.beginPath(); c.arc(512, 335, 9, 0, 7); c.fill(); }
     D.gt.needsUpdate = true; return;
   }
   // Navigation: Karte in Fahrtrichtung, perspektivisch geneigt
@@ -9830,7 +9830,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.10'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.11'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

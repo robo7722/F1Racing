@@ -37,6 +37,20 @@ def norm(x): return x * 0.14 / (np.sqrt(np.mean(x ** 2)) + 1e-9)
 BLIPS = {'mx5e_blip1': (19.95, 0.75), 'mx5e_blip2': (25.55, 1.15), 'mx5e_blip3': (28.35, 1.30)}
 
 
+def abfall_strecken(seg, faktor=1.8, laenge=1.0):
+    """v2.10: Der echte Abfall nach dem Gasstoß (5.000 → Leerlauf in ~0,5 s, leichte Schwungmasse) wirkte im Spiel zu hart.
+    Ab kurz nach der Spitze wird 1 s Abfall per Rubberband zeitlich gestreckt (Tonhöhe bleibt) – die Drehzahl sinkt echt klingend, nur langsamer."""
+    h = int(0.02 * SR); env = np.array([np.sqrt(np.mean(seg[i:i + h] ** 2)) for i in range(0, len(seg) - h, h)])
+    a = (int(np.argmax(env)) + 4) * h; b = min(len(seg), a + int(laenge * SR))
+    tmp = os.path.join(SND, '_tmp_abfall.wav'); save(tmp, seg[a:b])
+    try: st = load(tmp, f'rubberband=tempo={1 / faktor:.4f}:pitchq=quality:transients=smooth')
+    finally: os.remove(tmp)
+    xf = int(0.02 * SR); t = np.linspace(0, 1, xf)
+    head = seg[:a + xf].copy(); head[-xf:] = seg[a:a + xf] * np.cos(t * np.pi / 2) + st[:xf] * np.sin(t * np.pi / 2)
+    tail = seg[b:]; mid = st[xf:]; m2 = mid.copy(); m2[-xf:] = mid[-xf:] * np.cos(t * np.pi / 2) + tail[:xf] * np.sin(t * np.pi / 2) if len(tail) >= xf else mid[-xf:]
+    return np.concatenate([head, m2, tail[xf:]])
+
+
 def blip_angleichen(seg, k=0.55):
     """Echte Dynamik: Spitze ~26× lauter als der Leerlauf. Im Spiel liegt die Leerlauf-Schleife auf normaler Lautstärke – ohne Anpassung
     fiel der Pegel beim Wechsel Schleife → Gasstoß auf ein Zehntel und sprang danach wieder hoch („abgehackt“).
@@ -78,7 +92,7 @@ if __name__ == '__main__':
         for name, (a, d) in BLIPS.items(): save(os.path.join(ROH, name.replace('mx5e_', 'mx5_') + '.wav'), x[int((a - 0.12) * SR):int((a + d + 1.4) * SR)] / (np.abs(x).max() + 1e-9))
     for name in BLIPS:
         seg = load(os.path.join(ROH, name.replace('mx5e_', 'mx5_') + '.wav')); fo = int(0.25 * SR); fi = int(0.01 * SR)
-        seg[-fo:] *= np.linspace(1, 0, fo) ** 2; seg[:fi] *= np.linspace(0, 1, fi); y = blip_angleichen(seg); save(os.path.join(SND, name + '.wav'), y)
+        seg = abfall_strecken(seg); seg[-fo:] *= np.linspace(1, 0, fo) ** 2; seg[:fi] *= np.linspace(0, 1, fi); y = blip_angleichen(seg); save(os.path.join(SND, name + '.wav'), y)
         h = int(0.05 * SR); e = np.array([np.sqrt(np.mean(y[i:i + h] ** 2)) for i in range(0, len(y) - h, h)])
         print(f'{name}: {len(y) / SR:.2f} s, Leerlauf-Pegel {e[:2].mean():.3f}, Spitze {e.max():.3f} (×{e.max() / e[:2].mean():.1f}), Ende {e[-6:-4].mean():.3f}')
     if len(sys.argv) > 1:

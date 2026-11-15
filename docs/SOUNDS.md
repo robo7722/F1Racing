@@ -257,3 +257,10 @@ Stand: 15.11.2026. Ohne Credits.
 - Granular-Körner beginnen jetzt im Abstand eines ganzen **Arbeitszyklus** (4 Zündungen = 2 Umdrehungen, `per = 120 / U/min`) statt einer Zündung. Jeder Zylinder klingt etwas anders; überlappende Körner, die bei verschiedenen Zylindern begannen, klangen wie zwei Motoren.
 - Übergabe Durchzug A → B nur noch ±120 U/min um 3.900 (vorher ±250 – dort liefen beide Aufnahmen gleichzeitig).
 - Drehzahl fällt beim Roadster im Stand bzw. unter 2.500 U/min mit 0,045 je Bild statt 0,35 (≈ 1 s von 5.000 auf Leerlauf statt Bruchteilen einer Sekunde).
+
+## v2.11 – MX-5: Abfall nach Gasstoß zu hart, hohe Drehzahl „viel zu hoch“
+- Gasstöße: Der echte Abfall (5.000 → Leerlauf in ~0,5 s, leichte Schwungmasse) wirkte zu hart. `abfall_strecken`: ab kurz nach der Spitze 1 s Abfall per Rubberband 1,8× gestreckt (Tonhöhe bleibt) – Gasstöße jetzt 3,05/3,45/3,60 s.
+- Hohe Drehzahl: Die Aufnahme reicht bis 6.115 U/min, im F1-Modus drehte der Roadster (8-Gang-F1-Getriebe) fast immer 5.900–7.100 → bis 1,16-fach hochgestimmt („Spielzeug“). Jetzt:
+  - Granular-Tempo über dem Ende der Aufnahme höchstens 1,04.
+  - Roadster-Drehzahl im F1-Modus `1000 + gi.rpm / 12000 · 5400` (vorher `1100 + … · 6200`): schaltet bei ~6.200, fällt auf ~5.100 (passt zum NA 1,6 l der Aufnahme). Gasstoß im Stand bis ~6.350 statt 7.350. Schaltwarnung im Roadster-Cockpit ab 6.000 (vorher 6.900).
+- Straßen-Modus (`streetGear`, 6 Gänge bis 7.300) unverändert; dort wird über 6.300 nur minimal höher gestimmt.
