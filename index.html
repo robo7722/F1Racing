@@ -1498,17 +1498,10 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
         <div id="hub-hero"></div>
         <div class="xchips">
           <button class="xchip on" data-f="ALL">Alle</button>
-          <button class="xchip" data-f="F1">Formel 1</button>
-          <button class="xchip" data-f="F2">Formel 2</button>
+          <button class="xchip" data-f="F1">F1</button>
+          <button class="xchip" data-f="F2">F2</button>
         </div>
-        <div class="xbtns">
-          <button class="xb" id="hub-edit">Bearbeiten</button>
-        </div>
-        <div class="xbtns" id="hub-editbar" style="display:none">
-          <button class="xb pri" id="hub-add">+ Termin</button>
-          <button class="xb" id="hub-reset">Zurücksetzen</button>
-        </div>
-        <p class="xnote">Änderungen werden nur auf diesem Gerät gespeichert. Zeiten ohne Gewähr – bei Änderungen der Veranstalter bitte anpassen.</p>
+        <p class="xnote">Zeiten ohne Gewähr – Änderungen der Veranstalter sind möglich.</p>
         <div class="xst" id="hub-st"></div>
         <button class="xb" id="hub-rl">Daten neu laden</button>
       </aside>
@@ -10073,7 +10066,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.21'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.22'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -10726,14 +10719,11 @@ function loadLive(){lastLive=Date.now();
   loadTracks().then(function(){stat("s",1)},function(e){stat("s",0,e)})}
 var tH=0,tR=0,tL=0,inited=false;
 $$(".xchip").forEach(function(c){c.onclick=function(){filt=c.dataset.f;$$(".xchip").forEach(function(x){x.classList.toggle("on",x===c)});render()}});
-$("edit").onclick=function(){editing=!editing;this.textContent=editing?"Fertig":"Bearbeiten";$("editbar").style.display=editing?"flex":"none";render()};
-$("add").onclick=function(){openM(null)};
 $("cancel").onclick=closeM;
 $("save").onclick=function(){var t=fromInput($("fd").value),g=$("fg").value.trim(),n=$("fn").value.trim();if(isNaN(t)||!g||!n){alert("Bitte alle Felder ausfüllen.");return}
   var o={s:$("fs").value,g:g,n:n,t:t,p:0};
   if(editId){var u=user.filter(function(x){return x.id===editId})[0];if(u){u.s=o.s;u.g=o.g;u.n=o.n;u.t=o.t}else{hide[editId]=1;o.id="u"+Date.now();user.push(o)}}else{o.id="u"+Date.now();user.push(o)}
   store();closeM();render()};
-$("reset").onclick=function(){if(confirm("Alle eigenen Änderungen verwerfen?")){user=[];hide={};store();render()}};
 $("list").onclick=function(e){var b=e.target.closest("button");if(!b)return;
   if(b.dataset.e){openM(ev.filter(function(x){return x.id===b.dataset.e})[0])}
   if(b.dataset.x&&confirm("Termin löschen?")){var id=b.dataset.x;if(id.charAt(0)==="u"){user=user.filter(function(x){return x.id!==id})}else{hide[id]=1}store();render()}};
