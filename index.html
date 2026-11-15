@@ -2060,15 +2060,15 @@ const THEMES = {
     look: { sh: [0.94, 1.0, 1.05], hi: [1.05, 1.0, 0.97], sat: 1.03, con: 1.05, vig: .31, tint: [0.99, 1.01, 1.02], lift: [.008, .011, .015], bloom: .31, thr: .95, rad: .42, warm: .05, fade: [.01, .013, .019], grain: .013 } },
   /*}@suz:theme*/
   /*@bhr:theme{*/
-  bhr: { asph: 'bhr', fireworks: true, phys: { turb: 5, ray: 1.6, mie: .004, g: .8, gain: .045 }, sky: [0x04071a, 0x16204a, 0x6a4a52], fog: 0x2a2432, fogNear: 420, fogFar: 3400, sunDir: [-0.85, 0.04, 0.15], sunCol: 0xffb070, sunI: 0.35, clouds: [0.15, .6, 1, 0], cloudCol: 0x3a2a3a,   /* Sakhir zum Rennstart: blaue Stunde, im Westen glimmt noch der Abendhimmel über der Wüste, warmes Flutlicht */
-    hemi: [0x9088a8, 0x4a3a2a, 0.7], flood: 4.4, exposure: 1.08, ground: 'sand', groundTint: 0x4e463e, sandBands: true, wall: 9, runoff: 14, wallH: 1.1, wallKind: 'concrete', runoffKind: 'asphalt', noBlue: true, night: true, tents: true,
+  bhr: { asph: 'bhr', fireworks: true, phys: { turb: 5, ray: 1.6, mie: .004, g: .8, gain: .2 }, sky: [0x203a78, 0x7a5a92, 0xf29a5c], fog: 0x8a6a72, fogNear: 600, fogFar: 4200, sunDir: [-0.85, 0.07, 0.15], sunCol: 0xffa860, sunI: 1.1, clouds: [0.15, .6, 1, 0], cloudCol: 0x3a2a3a,   /* Sakhir zum Rennstart: blaue Stunde, im Westen glimmt noch der Abendhimmel über der Wüste, warmes Flutlicht */
+    hemi: [0xb09ab8, 0x5a4636, 1.05], flood: 4.4, exposure: 1.3, ground: 'sand', groundTint: 0x4e463e, sandBands: true, wall: 9, runoff: 14, wallH: 1.1, wallKind: 'concrete', runoffKind: 'asphalt', noBlue: true, night: true, tents: true,
     ads: ['SAKHIR', 'BAHRAIN GP', 'KINGDOM OF BAHRAIN', 'DESERT NIGHT', 'MANAMA', 'AWALI', 'BIC'], adCols: ['#ce1126', '#ffffff', '#111111', '#d4af37', '#7a1020', '#1d1d24'],
     trees: 'oasis', kerb: [0xd42a1e, 0xf4f4f4], belt: ['#ce1126', '#f2f2f2'],
     flare: 0, look: { sh: [0.9, 0.92, 1.1], hi: [1.14, 1.0, 0.84], sat: 1.12, con: 1.15, vig: .36, tint: [1.05, .99, .93], lift: [.008, .004, .006], bloom: .4, thr: 1.02, rad: .45, warm: .28, fade: [.01, .004, .012], grain: .015 } },
   /*}@bhr:theme*/
   /*@jed:theme{*/
-  jed: { asph: 'jed', fireworks: true, phys: { turb: 2.2, ray: 0.5, mie: .003, g: .7, gain: .028 }, sky: [0x03050e, 0x0d1430, 0x2c2238], fog: 0x1c1a2a, fogNear: 380, fogFar: 3200, sunDir: [0.3, 0.6, 0.35], sunCol: 0xa8b4ff, sunI: 0.3, clouds: [0.15, .6, 1, 0], cloudCol: 0x2c2a3a,
-    hemi: [0x8c90b4, 0x3c3428, 0.7], flood: 4.5, exposure: 1.1, ground: 'city', groundTint: 0x8a8378, cityLit: .4, wall: 8, runoff: 8, wallH: 1.2, wallKind: 'concrete', runoffKind: 'asphalt', noBlue: true, night: true,
+  jed: { asph: 'jed', fireworks: true, phys: { turb: 2.2, ray: 0.5, mie: .003, g: .7, gain: .09 }, sky: [0x060b22, 0x16224c, 0x5a4660], fog: 0x30304a, fogNear: 420, fogFar: 3600, sunDir: [0.3, 0.6, 0.35], sunCol: 0xa8b4ff, sunI: 0.3, clouds: [0.15, .6, 1, 0], cloudCol: 0x2c2a3a,
+    hemi: [0xa0a6d0, 0x4c4234, 1.0], flood: 4.5, exposure: 1.3, ground: 'city', groundTint: 0x8a8378, cityLit: .4, wall: 8, runoff: 8, wallH: 1.2, wallKind: 'concrete', runoffKind: 'asphalt', noBlue: true, night: true,
     ads: ['JEDDAH', 'CORNICHE', 'RED SEA', 'SAUDI ARABIAN GP', 'NIGHT RACE', 'AL HAMRA', 'OBHUR'], adCols: ['#006c35', '#ffffff', '#111111', '#c8a24a', '#7a2bd6', '#1d1d24'],
     trees: 'palms', kerb: [0xd42a1e, 0xf4f4f4], belt: ['#006c35', '#f2f2f2'], poles: true,
     flare: 0, look: { sh: [0.82, 0.96, 1.16], hi: [1.16, 1.0, 0.8], sat: 1.18, con: 1.2, vig: .4, tint: [1.035, 0.99, 0.965], lift: [.006, .002, .012], bloom: .46, thr: 1.0, rad: .5, warm: .16, fade: [.008, .003, .02], grain: .018 } },
@@ -2102,7 +2102,7 @@ const THEMES = {
     look: { sh: [0.92, 0.98, 1.08], hi: [1.05, 1.02, 0.95], sat: .96, con: 1.07, vig: .3, tint: [.98, 1.0, 1.03], lift: [.002, .004, .008], bloom: .34, thr: .94, rad: .42, warm: -.06, fade: [.004, .006, .012], grain: .013 } },
   /*}@zan:theme*/
   /*@mad:theme{*/
-  mad: { asph: 'mad', phys: { turb: 2.3, ray: 1.02, mie: .0034, g: .8, gain: .56 }, sky: [0x1d60c0, 0x72acea, 0xd2e0ee], fog: 0xccd5dd, fogNear: 520, fogFar: 5600, camFar: 9000, sunDir: [-0.32, 0.72, 0.5], sunCol: 0xfff0d6, sunI: 3.6, clouds: [0.24, 0.5, 0.8, 0], cloudCol: 0xfbfbfa,
+  mad: { elevScale: 0.55, asph: 'mad', phys: { turb: 2.3, ray: 1.02, mie: .0034, g: .8, gain: .56 }, sky: [0x1d60c0, 0x72acea, 0xd2e0ee], fog: 0xccd5dd, fogNear: 520, fogFar: 5600, camFar: 9000, sunDir: [-0.32, 0.72, 0.5], sunCol: 0xfff0d6, sunI: 3.6, clouds: [0.24, 0.5, 0.8, 0], cloudCol: 0xfbfbfa,
     hemi: [0xd2e2f6, 0x84714a, 0.42], flood: 0, exposure: 0.98, ground: 'grass', groundTint: 0xe8c47c, dryGrass: true, wall: 9, runoff: 10, wallH: 1.1, wallKind: 'concrete', runoffKind: 'paved',
     ads: ['MADRID', 'MADRING', 'GRAN PREMIO DE ESPAÑA', 'IFEMA', 'VALDEBEBAS', 'LA MONUMENTAL', 'CASTILLA', 'ESPAÑA'], adCols: ['#c8102e', '#f2c200', '#ffffff', '#0b2f6b', '#111111', '#e8590c'],
     trees: 'forest', conifer: .5, treeMul: .28, treeMinD: 14, treeBand: 150, treeExt: 800, city: true, kerb: [0xd42a1e, 0xf4f4f4], belt: ['#c8102e', '#f2c200'], flare: .85,
@@ -2137,7 +2137,7 @@ const THEMES = {
     look: { sh: [0.94, 0.97, 1.07], hi: [1.09, 1.03, 0.9], sat: 1.04, con: 1.07, vig: .34, tint: [1.02, 1.0, .95], lift: [.009, .008, .006], bloom: .3, thr: .95, rad: .42, warm: .17, fade: [.012, .01, .006], grain: .015 } },
   /*}@bra:theme*/
   /*@qat:theme{*/
-  qat: { asph: 'qat', fireworks: true, phys: { turb: 3.5, ray: 0.7, mie: .006, g: .75, gain: .03 }, sky: [0x010208, 0x040a1a, 0x101a2a], fog: 0x0a1018, fogNear: 520, fogFar: 4200, sunDir: [0.5, 0.04, -0.4], sunCol: 0xb4c8ff, sunI: 0.2, floodCol: 0xf2f7ff, clouds: [0, .6, 1, 0], cloudCol: 0x1a2430,   /* Lusail: tiefschwarze Wüstennacht, kaltweißes LED-Flutlicht, leichter Staubdunst über der Anlage */
+  qat: { asph: 'qat', fireworks: true, phys: { turb: 3.5, ray: 0.7, mie: .006, g: .75, gain: .03 }, sky: [0x01030a, 0x050c1c, 0x0e1626], fog: 0x0a1018, fogNear: 520, fogFar: 4200, sunDir: [0.5, -0.35, -0.4], sunCol: 0xb4c8ff, sunI: 0.12, floodCol: 0xf2f7ff, clouds: [0, .6, 1, 0], cloudCol: 0x1a2430,   /* Lusail: tiefschwarze Wüstennacht, kaltweißes LED-Flutlicht, leichter Staubdunst über der Anlage */
     hemi: [0x7a8cb0, 0x383630, 0.62], flood: 5.4, exposure: 1.1, ground: 'sand', groundTint: 0x6c6e74, sandBands: true, wall: 8, runoff: 9, wallH: 1.0, wallKind: 'concrete', runoffKind: 'asphalt', noBlue: true, night: true,
     ads: ['LUSAIL', 'QATAR GP', 'STATE OF QATAR', 'DOHA', 'AL KHOR', 'MARINA', 'QIA'], adCols: ['#8a1538', '#ffffff', '#111111', '#4a5560', '#b8b8c0', '#1d1d24'],
     trees: 'oasis', kerb: [0xc8102e, 0xf4f4f4], belt: ['#8a1538', '#f2f2f2'],
@@ -4926,7 +4926,7 @@ rubberLine = function (mesh) { rubberLine0x(mesh); if (!mesh || !RL || !TRK || !
   for (let k = 0; k < P.count; k++) { const x = P.getX(k), z = P.getZ(k); if (!xcOn(x, z)) continue; const j = xcNear3(x, P.getY(k), z).j; A.array[k * 2] = (RL[j] + HW[j]) / (2 * HW[j]); A.array[k * 2 + 1] = HW[j]; } A.needsUpdate = true; };
 /*}@suz:x2*/
 let POCK = null, POCKETS = [];   // asphaltierte Notausgänge (Schikanen): Seiten-Bits je Streckenpunkt + Flächen zum Füllen
-let ROAD_WAIT = null, HOLES = 0, MC_CHIC = null, MC_DEM = null, MC_TERR = [], MC_PADS = null, BANDW = null, HORIZ = null, BANDS = [], MC_SEA = null, MC_ISL = null, MJ = null, SPI = null, PAVEZ = null, KERBL = null, KERBR = null, REFNW = null, WTL = null, WTR = null, GOL = null, GOR = null, HILLW = null, RISE = null, ELEV, SLOPE, FLAT = true, ELMEAN = 0, HG = null, HW, NOWALL, TRK, TH, N, L, DS, PX, PZ, TX, TZ, RX, RZ, KS, KP, KR, RL, profBot = null, WL, WR, GRL, GRR, PVBL = null, PVBR = null, KERB, profP, profAI, inSign = 1, poleSide = 1, hotelRoof = null;
+let LOWER = 4, ROAD_WAIT = null, HOLES = 0, MC_CHIC = null, MC_DEM = null, MC_TERR = [], MC_PADS = null, BANDW = null, HORIZ = null, BANDS = [], MC_SEA = null, MC_ISL = null, MJ = null, SPI = null, PAVEZ = null, KERBL = null, KERBR = null, REFNW = null, WTL = null, WTR = null, GOL = null, GOR = null, HILLW = null, RISE = null, ELEV, SLOPE, FLAT = true, ELMEAN = 0, HG = null, HW, NOWALL, TRK, TH, N, L, DS, PX, PZ, TX, TZ, RX, RZ, KS, KP, KR, RL, profBot = null, WL, WR, GRL, GRR, PVBL = null, PVBR = null, KERB, profP, profAI, inSign = 1, poleSide = 1, hotelRoof = null;
 const trackGroup = new THREE.Group(); scene.add(trackGroup);
 const wrapL = x => x - L * Math.round(x / L);
 const modL = x => ((x % L) + L) % L;
@@ -5010,15 +5010,18 @@ const OSM_STYLE = { gulf: ['#eef0ee', '#3d6a8e', '#a9c6dc', 0.42], tower: ['#e8e
 function osmMat(st) { const [wall, g0, g1, gw] = OSM_STYLE[st] || OSM_STYLE.tower;
   const t = canvasTex(128, 128, (g, w, h) => { g.fillStyle = wall; g.fillRect(0, 0, w, h); if (!gw) { g.fillStyle = 'rgba(255,255,255,.18)'; for (let x = 0; x < w; x += 16) g.fillRect(x, 0, 2, h); g.fillStyle = 'rgba(0,0,0,.12)'; g.fillRect(0, h - 10, w, 10); return; }
     const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, g1); gr.addColorStop(1, g0); g.fillStyle = gr; const ww = w * gw; g.fillRect((w - ww) / 2, h * 0.2, ww, h * 0.62); g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(0, h - 6, w, 6); });
-  t.userData.own = true; return new THREE.MeshStandardMaterial({ map: t, roughness: st === 'glass' ? .15 : .6, metalness: st === 'glass' || st === 'arena' ? .55 : .05, envMapIntensity: st === 'glass' ? 1.3 : .8 }); }
+  t.userData.own = true; return new THREE.MeshStandardMaterial({ map: t, roughness: st === 'glass' ? .15 : .6, metalness: st === 'glass' || st === 'arena' ? .55 : .05, envMapIntensity: st === 'glass' ? 1.3 : .8, side: THREE.DoubleSide }); }
 function osmExtrude(ring, h, mat, roofMat, y0 = 0, bay = 4, flo = 3.6) {
+  let gx = 0, gz = 0, hint = false;   /* neue Strecken 2026: Schwerpunkt als Hinweis für die Höhenanpassung (userData.gx/gz) – die Geometrie bleibt in Weltkoordinaten (Gruppe bei 0/0, sonst gehen Verschmelzen und QC-Prüfungen schief); applyElevation hob sonst jedes Haus auf die Höhe der Start-Ziel-Linie */
+  if (arguments.length < 5 && typeof TRK !== 'undefined' && TRK && ['chn', 'bhr', 'jed', 'mia', 'bcn', 'hun', 'zan', 'mad', 'baku', 'cota', 'mex', 'bra', 'qat'].some(k => TRK === TRACKS[k])) {
+    for (const [x, z] of ring) { gx += x; gz += z; } gx /= ring.length; gz /= ring.length; hint = true; }
   let A = 0; for (let i = 0; i < ring.length; i++) { const [x1, z1] = ring[i], [x2, z2] = ring[(i + 1) % ring.length]; A += x1 * z2 - x2 * z1; }
   const R = A > 0 ? ring : [...ring].reverse(), pos = [], uv = [], fu = []; let acc = 0;   // Umlaufsinn so, dass die Wände nach außen zeigen
   for (let i = 0; i < R.length; i++) { const [x1, z1] = R[i], [x2, z2] = R[(i + 1) % R.length], l = Math.hypot(x2 - x1, z2 - z1), u0 = acc / bay, u1 = (acc + l) / bay, v1 = h / flo; acc += l;
     const a0 = acc - l; pos.push(x1, y0, z1, x2, y0 + h, z2, x2, y0, z2, x1, y0, z1, x1, y0 + h, z1, x2, y0 + h, z2); uv.push(u0, 0, u1, v1, u1, 0, u0, 0, u0, v1, u1, v1); fu.push(a0, 0, 7, acc, h, 7, acc, 0, 7, a0, 0, 7, a0, h, 7, acc, h, 7); }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setAttribute('facUV', new THREE.Float32BufferAttribute(fu, 3)); g.computeVertexNormals();   // Fassaden-Shader: Fenster entlang der abgewickelten Wand (schräge/gebogene Wände unverzerrt)
   const cap = new THREE.ShapeGeometry(new THREE.Shape(R.map(([x, z]) => new THREE.Vector2(x, -z)))).rotateX(-Math.PI / 2).translate(0, y0 + h, 0);
-  const grp = new THREE.Group(); grp.add(new THREE.Mesh(g, mat), new THREE.Mesh(cap, roofMat)); return grp; }
+  const grp = new THREE.Group(); grp.add(new THREE.Mesh(g, mat), new THREE.Mesh(cap, roofMat)); if (hint) { grp.userData.gx = gx; grp.userData.gz = gz; } return grp; }
 function yachtModel() {
   const atlas = canvasTex(512, 128, (g, w, h) => {
     g.fillStyle = '#e6e9ec'; g.fillRect(0, 0, 128, h); g.fillStyle = 'rgba(120,130,140,.22)'; for (let y = 16; y < h; y += 32) g.fillRect(0, y, 128, 1);   // Lack mit feinen Fugen
@@ -5214,7 +5217,7 @@ function padH(x, z, h) { for (const P of MC_PADS) { const dx = x - P.x, dz = z -
 // sie rechnet ihre Höhe nur aus der Steigung am Auto. Untergrenze = Fahrbahn (mit Querneigung) bzw. Gelände an der Kameraposition + 0,6 m.
 function camFloor(m = 0.6) { if (FLAT || !N) return; const c = camera.position, [d, j] = nearestDist(c.x, c.z), lat = (c.x - PX[j]) * RX[j] + (c.z - PZ[j]) * RZ[j];
   let y = groundY(c.x, c.z); if (Math.abs(lat) < Math.max(WL[j], WR[j]) + 3) y = Math.max(y, ELEV[j] + bankY(j, lat)); if (c.y < y + m) c.y = y + m; }
-function groundY(x, z) { const px = PX, pz = PZ, rx = RX, rz = RZ, wl = WL, wr = WR; if (FLAT) return 0; if (MC_SEA && MC_SEA(x, z)) return -3;   /* Meeresboden unter dem Hafen */ const t = terr(x, z), j = t.j, latS = (x - px[j]) * rx[j] + (z - pz[j]) * rz[j], W = latS < 0 ? wl[j] : wr[j], bw = BANDW ? BANDW[latS < 0 ? 0 : 1][j] : BAND, f = clamp((t.d - (W + Math.min(BAND, bw + 4) - 32)) / 30, 0, 1);   /* nur absenken, wo ein Geländeband darüber liegt – sonst schweben Kies und Bäume über einer Senke */ let y = surfH(x, z, t) - 4 * (1 - f * f * (3 - 2 * f)); if (TRK.mc && t.d < W + 30) { let g = clamp((t.d - W - 4) / 26, 0, 1); g = g * g * (3 - 2 * g); y = lerp(Math.min(y, mcLow(x, z) - 3), y, g); } return y; }   /* nur direkt hinter den Mauern absenken, weich auslaufend – sonst Falten im Boden zwischen den Streckenteilen */
+function groundY(x, z) { const px = PX, pz = PZ, rx = RX, rz = RZ, wl = WL, wr = WR; if (FLAT) return 0; if (MC_SEA && MC_SEA(x, z)) return -3;   /* Meeresboden unter dem Hafen */ const t = terr(x, z), j = t.j, latS = (x - px[j]) * rx[j] + (z - pz[j]) * rz[j], W = latS < 0 ? wl[j] : wr[j], bw = BANDW ? BANDW[latS < 0 ? 0 : 1][j] : BAND, f = clamp((t.d - (W + Math.min(BAND, bw + 4) - 32)) / 30, 0, 1);   /* nur absenken, wo ein Geländeband darüber liegt – sonst schweben Kies und Bäume über einer Senke */ let y = surfH(x, z, t) - LOWER * (1 - f * f * (3 - 2 * f)); if (TRK.mc && t.d < W + 30) { let g = clamp((t.d - W - 4) / 26, 0, 1); g = g * g * (3 - 2 * g); y = lerp(Math.min(y, mcLow(x, z) - 3), y, g); } return y; }   /* nur direkt hinter den Mauern absenken, weich auslaufend – sonst Falten im Boden zwischen den Streckenteilen */
 // Monaco: Stützmauer an der Außenkante der Geländebänder – nur wo das Gelände dahinter wirklich tiefer liegt und nie am/im Wasser (Hafen, Meer)
 function mcTerraceWalls(inMarina) {
   const pos = [], uv = [];
@@ -5655,8 +5658,9 @@ function applyElevation() {
       if (!ch.geometry.boundingSphere) ch.geometry.computeBoundingSphere();
       if (ch.geometry.boundingSphere.radius > 30) { const p = ch.geometry.attributes.position; for (let k = 0; k < p.count; k++) p.setY(k, p.getY(k) + placeY(p.getX(k), p.getZ(k))); p.needsUpdate = true; ch.geometry.computeBoundingSphere(); continue; }
     }
-    let y = placeY(ch.position.x, ch.position.z);
-    if ((ch.isGroup || ch.children.length) && !ch.userData.span && (() => { const [d, j] = nearestDist(ch.position.x, ch.position.z); return d > Math.max(WL[j], WR[j]) + 6; })()) { const bx = new THREE.Box3().setFromObject(ch); if (bx.max.x - bx.min.x > 6 && bx.max.z - bx.min.z > 6 && bx.max.x - bx.min.x < 300) for (const [px, pz] of [[bx.min.x, bx.min.z], [bx.max.x, bx.min.z], [bx.max.x, bx.max.z], [bx.min.x, bx.max.z]]) y = Math.min(y, placeY(px, pz) - 0.3); }   /* lange Bauten am Hang nicht schweben lassen */
+    const hx = ch.userData.gx ?? ch.position.x, hz = ch.userData.gz ?? ch.position.z;   /* OSM-Häuser: Schwerpunkt statt Ursprung */
+    let y = placeY(hx, hz);
+    if ((ch.isGroup || ch.children.length) && !ch.userData.span && (() => { const [d, j] = nearestDist(hx, hz); return d > Math.max(WL[j], WR[j]) + 6; })()) { const bx = new THREE.Box3().setFromObject(ch); if (bx.max.x - bx.min.x > 6 && bx.max.z - bx.min.z > 6 && bx.max.x - bx.min.x < 300) for (const [px, pz] of [[bx.min.x, bx.min.z], [bx.max.x, bx.min.z], [bx.max.x, bx.max.z], [bx.min.x, bx.max.z]]) y = Math.min(y, placeY(px, pz) - 0.3); }   /* lange Bauten am Hang nicht schweben lassen */
     ch.position.y += y;
   }
 }
@@ -5790,7 +5794,7 @@ function ropeLine(lat, LIM) {
 // Bereich der Boxengasse (wird in buildTrack ab Mauer +0,2 m bis +11 m gebaut, s = −300 … +160): dort keine Geländebänder, Büsche o. Ä.
 function pitZone(i, side) { if (TRK.noPit || side !== (TRK.pitOut ? -inSign : inSign)) return false; return i >= Math.round(modL(-310) / DS) || i <= Math.round(170 / DS); }
 function buildTrack(key) { BID++;
-  const _bt0 = performance.now(); TRK = TRACKS[key]; TH = THEMES[TRK.theme];
+  const _bt0 = performance.now(); TRK = TRACKS[key]; TH = THEMES[TRK.theme]; LOWER = ['chn', 'bhr', 'jed', 'mia', 'bcn', 'hun', 'zan', 'mad', 'baku', 'cota', 'mex', 'bra', 'qat'].includes(key) ? 1.2 : 4;   /* neue Strecken: Gelände hinter der Wand nur 1,2 m statt 4 m absenken – wo das Geländeband fehlt, schwebten sonst Bäume über einer 4-m-Senke */
   trackGroup.traverse(o => {
     if (o.geometry) o.geometry.dispose();
     if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (m.map && m.map.userData.own) m.map.dispose(); m.dispose(); });
@@ -5998,14 +6002,22 @@ function buildTrack(key) { BID++;
   }
   /*}@mad:edge*/
   /*@baku:edge{*/
+  if (['chn', 'bhr', 'jed', 'mia', 'bcn', 'hun', 'mad', 'baku', 'cota', 'mex', 'bra', 'qat'].some(k => TRK === TRACKS[k])) {   /* Streckenäste dicht nebeneinander (Baku: 9–11 m Mittellinienabstand bei 12 m Breite): Fahrbahn schmaler, Wand genau dazwischen (Rücken an Rücken) – vorher überlappten die Äste ohne Wand */
+    const ar = Math.round(250 / DS), dmA = new Float32Array(N);
+    for (let i = 0; i < N; i++) { let dm = 1e18; for (let j = 0; j < N; j++) { const g = Math.min(Math.abs(i - j), N - Math.abs(i - j)); if (g < ar) continue; const dx = PX[i] - PX[j], dz = PZ[i] - PZ[j], d2 = dx * dx + dz * dz; if (d2 < dm) dm = d2; } dmA[i] = Math.sqrt(dm); }
+    const dmS = filt(dmA, 4, 'min');
+    for (let i = 0; i < N; i++) { const dm = dmS[i]; if (dm < 2 * HW[i] + 3.2) { HW[i] = Math.max(3.2, Math.min(HW[i], dm / 2 - 1.1)); if (dm < 2 * HW[i] + 4.6) NOWALL[i] &= ~3; }   /* Wand zwischen den Ästen wieder bauen (war wegen der Überlappung abgeschaltet) */
+      if (dm / 2 - 0.3 < Math.max(WL[i], WR[i])) { const lim = Math.max(HW[i] + 0.5, dm / 2 - 0.3); WL[i] = Math.min(WL[i], lim); WR[i] = Math.min(WR[i], lim); } } }
   /*}@baku:edge*/
   /*@cota:edge{*/
   /*}@cota:edge*/
   /*@mex:edge{*/
   if (TRK === TRACKS.mex) { // Foro Sol: im Stadion stehen die Betonmauern dicht an der Fahrbahn, direkt vor den Rängen (wenig Auslauf)
     for (let s2 = 3540; s2 <= 3800; s2 += DS) { const i = Math.floor(modL(s2) / DS) % N, f = clamp(Math.min(s2 - 3540, 3800 - s2) / 30, 0, 1); for (const W of [WL, WR]) W[i] = Math.min(W[i], lerp(W[i], HW[i] + 2.4, f)); } }
-  if (TRK === TRACKS.mex) { /* Kurveninnenseite: Absperrung nie weiter als 72 % des Kurvenradius von der Mittellinie (Bodenstreifen enden dort, sonst schaut Rasen durch den Asphaltauslauf) */
-    for (let i = 0; i < N; i++) { let kk = 0; for (let d = -3; d <= 3; d++) { const k2 = KS[(i + d + N) % N]; if (Math.abs(k2) > Math.abs(kk)) kk = k2; } if (Math.abs(kk) < 1 / 150) continue; const lim = Math.max(HW[i] + 2.4, 0.72 / Math.abs(kk)); if (kk > 0) WR[i] = Math.min(WR[i], lim); else WL[i] = Math.min(WL[i], lim); } }
+  if (['chn', 'bhr', 'jed', 'mia', 'bcn', 'hun', 'mad', 'baku', 'cota', 'mex', 'bra', 'qat'].some(k => TRK === TRACKS[k])) { /* Kurveninnenseite: Absperrung nie weiter als 72 % des Kurvenradius von der Mittellinie (Bodenstreifen enden dort, sonst schaut Rasen durch den Asphaltauslauf) */
+    for (let i = 0; i < N; i++) { let kk = 0; for (let d = -8; d <= 8; d++) { const k2 = KS[(i + d + N) % N]; if (Math.abs(k2) > Math.abs(kk)) kk = k2; } if (Math.abs(kk) < 1 / 150) continue; const lim = Math.max(HW[i] + 2.4, 0.5 / Math.abs(kk));   /* 50 % des Radius: die Innenwand schließt sich in Haarnadeln nicht mehr zur Schleife */ if (kk > 0) WR[i] = Math.min(WR[i], lim); else WL[i] = Math.min(WL[i], lim); } }
+  if (['chn', 'bhr', 'jed', 'mia', 'bcn', 'hun', 'mad', 'baku', 'cota', 'mex', 'bra', 'qat'].some(k => TRK === TRACKS[k])) {   /* Wandlinie glätten: die Auslaufbreite sprang Index für Index (Zickzack-Zäune, Wände, die ruckartig vor- und zurückspringen) – erst Minimum (Wand wandert nie nach außen), dann Mittelwert */
+    for (const W of [WL, WR]) { const o = Float32Array.from(W), sm = filt(filt(o, 3, 'min'), 4, 'avg'); for (let i = 0; i < N; i++) { if (i * DS < 420 || i * DS > L - 420) continue;   /* Start-Ziel mit Boxengasse und Pitgebäuden bleibt unverändert */ W[i] = Math.max(Math.min(HW[i] + 1.2, o[i]), Math.min(o[i], sm[i])); } } }
   /*}@mex:edge*/
   /*@bra:edge{*/
   if (TRK === TRACKS.bra) { /* Boxeneinfahrt (s −330 … −230): Absperrung links dicht an der Fahrbahn, damit die Boxengasse neben dem Infield-Streckenast Platz hat */
@@ -6280,6 +6292,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     // 3D-Reifenstapel (Monza) bzw. Tecpro-Blöcke (Abu Dhabi) vor den Mauern in den Auslaufzonen
     const spots = [];
     for (const [W, s, big] of [[WL, -1, mL], [WR, 1, mR]]) for (let i = 0; i < N; i++) if (big[i] > 8 && W[i] > HW[i] + 6 && !(NOWALL[i] & (s < 0 ? 1 : 2))) for (const f of [0, 0.34, 0.67]) { const p = trackAt((i + f) * DS, s * (W[i] - 0.45)); spots.push([p.x, p.z, p.h, s]); }
+    { const kept = [], last = {}; for (const sp of spots) { const l = last[sp[3]]; if (l && Math.hypot(sp[0] - l[0], sp[1] - l[1]) < 0.7) continue; last[sp[3]] = sp; kept.push(sp); } spots.length = 0; spots.push(...kept); }   /* Reifen/Poller in engen Innenkurven nicht ineinander stapeln (Abstand mind. 0,7 m) */
     if (spots.length) {
       const tyres = TH.wallKind === 'armco';
       const geo = tyres ? mergeParts([0.13, 0.39, 0.65].map(y => [new THREE.CylinderGeometry(0.33, 0.33, 0.25, 10).translate(0, y, 0), col(0x141414)])) : mergeParts([[new THREE.CylinderGeometry(0.34, 0.34, 0.95, 16).translate(0, 0.475, 0), col(0xffffff)], [new THREE.CylinderGeometry(0.345, 0.345, 0.12, 16).translate(0, 0.85, 0), col(0x222222)]]);
@@ -6404,7 +6417,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     }
   }
   // Tribünen – werden nur gebaut, wenn die komplette Grundfläche hinter den Mauern frei ist
-  const crowdM = lam({ map: TEX.crowd }), crowdM2 = lam({ map: TEX.crowd, side: THREE.DoubleSide, roughness: 1, alphaTest: 0.5 }), roofM = new THREE.MeshStandardMaterial({ color: 0x6c747c, roughness: .6, metalness: .2 }), concM = lam({ color: 0x9aa1a8 });
+  const crowdM = lam({ map: TEX.crowd }), crowdM2 = lam({ map: TEX.crowd, side: THREE.DoubleSide, roughness: 1, alphaTest: 0.5 }), roofM = new THREE.MeshStandardMaterial({ color: 0xa4abb2, roughness: .85, metalness: 0, emissive: 0x3a3f45, emissiveIntensity: .7 }), concM = lam({ color: 0x9aa1a8 });
   const seatC = [col(0x8e969f), col(0x6f7781)], stepC = col(0xa9b0b8), standSolidM = new THREE.MeshLambertMaterial({ vertexColors: true });
 /*@zan:x5{*/
   if (TRK.seatCol) { seatC[0] = col(TRK.seatCol[0]); seatC[1] = col(TRK.seatCol[1]); } if (TRK.crowdTint) crowdM2.color.setHex(TRK.crowdTint);   /* eigene Sitzfarben / Zuschauer-Tönung (Zandvoort: orange) */
@@ -6666,13 +6679,13 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       for (let s = 20, k = 0; s < L; s += 46, k++) { const side = k % 2 ? 1 : -1, p = trackAt(s, 0), w = wallAt(p.i, side), q = trackAt(s, side * (w + 3.5)); if (trackFree(q.x, q.z, 1.5)) pp.push([q.x, q.z, q.h + (side > 0 ? Math.PI : 0)]); }
       const pole = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.18, 0.28, 20, 6).translate(0, 10, 0), new THREE.MeshStandardMaterial({ color: 0x8a9098, roughness: .5, metalness: .7 }), pp.length);
       const head = new THREE.InstancedMesh(new THREE.BoxGeometry(1.4, 1.1, 3.4).translate(-1.2, 20, 0), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff3d6).multiplyScalar(1.25) }), pp.length);   // so groß wie echte Paneele: bleibt auch in der Ferne sichtbar statt zu flimmern
-      pp.forEach((p, k) => { qq.setFromAxisAngle(_v2, p[2] + Math.PI / 2); m4.compose(pv.set(p[0], 0, p[1]), qq, one); pole.setMatrixAt(k, m4); head.setMatrixAt(k, m4); });
+      pp.forEach((p, k) => { qq.setFromAxisAngle(_v2, p[2] + Math.PI / 2); m4.compose(pv.set(p[0], FLAT ? 0 : groundY(p[0], p[1]) - 0.2, p[1]), qq, one); pole.setMatrixAt(k, m4); head.setMatrixAt(k, m4); });
       trackGroup.add(pole, head);
       if (TH.night) { // Lichtkegel der Flutlichter auf dem Asphalt (weicher, warm-weißer Schein)
         const lt = canvasTex(128, 128, (g, w, h) => { const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); gr.addColorStop(0, 'rgba(255,244,225,1)'); gr.addColorStop(.45, 'rgba(255,238,210,.55)'); gr.addColorStop(1, 'rgba(255,230,200,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); lt.userData.own = true;
         const pool = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: lt, color: new THREE.Color(0.17, 0.16, 0.15), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -5, polygonOffsetUnits: -12 }), pp.length);
         const sc2 = new THREE.Vector3(40, 1, 52);
-        pp.forEach((p, k) => { const [, j] = nearestDist(p[0], p[1]); qq.setFromAxisAngle(_v2, Math.atan2(TX[j], TZ[j])); m4.compose(pv.set(lerp(p[0], PX[j], 0.75), 0.028, lerp(p[1], PZ[j], 0.75)), qq, sc2); pool.setMatrixAt(k, m4); });
+        pp.forEach((p, k) => { const [, j] = nearestDist(p[0], p[1]); qq.setFromAxisAngle(_v2, Math.atan2(TX[j], TZ[j])); m4.compose(pv.set(lerp(p[0], PX[j], 0.75), (FLAT ? 0 : placeY(lerp(p[0], PX[j], 0.75), lerp(p[1], PZ[j], 0.75))) + 0.04, lerp(p[1], PZ[j], 0.75)), qq, sc2); pool.setMatrixAt(k, m4); });
         pool.renderOrder = 1; trackGroup.add(pool);
       }
     }
@@ -8208,7 +8221,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         const lt = canvasTex(128, 128, (g, w, h) => { const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); gr.addColorStop(0, 'rgba(255,240,215,1)'); gr.addColorStop(.45, 'rgba(255,232,200,.55)'); gr.addColorStop(1, 'rgba(255,225,190,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); lt.userData.own = true;
         const ps = []; for (let s = 10, k = 0; s < L; s += 38, k++) ps.push([s, k % 2 ? 1 : -1]);
         const pool = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: lt, color: new THREE.Color(0.19, 0.16, 0.12), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -5, polygonOffsetUnits: -12 }), ps.length), sc2 = new THREE.Vector3(42, 1, 50);
-        ps.forEach(([s, sd], k) => { const p = trackAt(s, sd * HW[Math.floor(s / DS) % N] * 0.45); qq.setFromAxisAngle(_v2, p.h); m4.compose(pv.set(p.x, 0.028, p.z), qq, sc2); pool.setMatrixAt(k, m4); });
+        ps.forEach(([s, sd], k) => { const p = trackAt(s, sd * HW[Math.floor(s / DS) % N] * 0.45); qq.setFromAxisAngle(_v2, p.h); m4.compose(pv.set(p.x, (FLAT ? 0 : placeY(p.x, p.z)) + 0.04, p.z), qq, sc2); pool.setMatrixAt(k, m4); });
         pool.renderOrder = 1; trackGroup.add(pool); } }
 
     // ---------- Rasen und Gärten (Turm, Paddock, Kurve 1): flache Grünflächen nach OSM, nur dort, wo keine Strecke ist ----------
@@ -8545,7 +8558,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         const g = osmExtrude(R, Math.max(4, b.h), mats[b.s] || (mats[b.s] = osmMat(b.s)), roofM); g.userData.merge = true; trackGroup.add(g); excl.push([cx, cz, Math.max(...R.map(p => Math.hypot(p[0] - cx, p[1] - cz))) + 4]); } }
     // ---------- Fußgängerbrücken über die Strecke (Werbung an den Seiten) ----------
     { const brAd = adsTex(TH); brAd.userData.own = true; brAd.wrapS = THREE.RepeatWrapping; const steel = new THREE.MeshStandardMaterial({ color: 0xe9edf0, roughness: .45, metalness: .5 }), yb = 6.6;
-      for (const s of [2280, 4080]) { const i = Math.floor(modL(s) / DS) % N, p = trackAt(s, 0), wl = WL[i] + 5, wr = WR[i] + 5, span = wl + wr, ox = (wr - wl) / 2, gx = p.x + RX[i] * ox, gz = p.z + RZ[i] * ox;
+      for (const s of []) { const i = Math.floor(modL(s) / DS) % N, p = trackAt(s, 0), wl = WL[i] + 5, wr = WR[i] + 5, span = wl + wr, ox = (wr - wl) / 2, gx = p.x + RX[i] * ox, gz = p.z + RZ[i] * ox;
         const lp = [-1, 1].map(e => [gx + RX[i] * e * (span / 2 - 1), gz + RZ[i] * e * (span / 2 - 1)]); if (!lp.every(([x, z]) => trackFree(x, z, 0.6))) continue;
         const grp = new THREE.Group(); grp.position.set(gx, 0, gz); grp.rotation.y = Math.atan2(-RZ[i], RX[i]); grp.userData.merge = true; grp.userData.span = true; trackGroup.add(grp);
         const deck = new THREE.Mesh(new THREE.BoxGeometry(span, 0.5, 3.6), steel); deck.position.y = yb; deck.castShadow = true; grp.add(deck);
@@ -8741,17 +8754,17 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       for (const [s0, s1, io] of SL) { const q0 = trackAt((s0 + s1) / 2, 40), sd = (inL(q0.x, q0.z) ? 1 : -1) * -io;   // Seite: außen bzw. innen
         let prev = null; for (let s = s0; s <= s1; s += 8) { const p = trackAt(s, 0), w = wallAt(p.i, sd), d0 = w + 7, d1 = w + 42, a = trackAt(s, sd * d0), b = trackAt(s, sd * d1), mid = trackAt(s, sd * (d0 + d1) / 2);
           const ok = trackFree(a.x, a.z, 4) && trackFree(b.x, b.z, 4) && trackFree(mid.x, mid.z, 4) && !excl.some(e => !e.nt && ((mid.x - e[0]) ** 2 + (mid.z - e[1]) ** 2 < e[2] * e[2] || (a.x - e[0]) ** 2 + (a.z - e[1]) ** 2 < e[2] * e[2]));
-          const cur = ok ? [a, b] : null;
+          const cur = ok ? [a, b] : null; if (cur) { a.g = FLAT ? 0 : groundY(a.x, a.z); b.g = FLAT ? 0 : groundY(b.x, b.z); }   /* Bodenhöhe an den Hangrändern: die Zuschauerreihen folgen der Hangfläche (linear), nicht dem Gelände dazwischen – sonst schweben sie */
           if (cur && prev) { const [A0, B0] = prev, [A1, B1] = cur, hA = 0.2, hB = 12; const P = [[A0.x, hA, A0.z], [B0.x, hB, B0.z], [A1.x, hA, A1.z], [B1.x, hB, B1.z]];
             const tri = sd > 0 ? [[0, 2, 1], [1, 2, 3]] : [[0, 1, 2], [1, 3, 2]]; for (const t3 of tri) put(pos, uv, ...t3.map(k => [...P[k], P[k][0] / 6, P[k][2] / 6]));
-            for (let r = 0.12; r < 0.8; r += 0.09) { const L0 = [A0.x + (B0.x - A0.x) * r, hA + (hB - hA) * r, A0.z + (B0.z - A0.z) * r], L1 = [A1.x + (B1.x - A1.x) * r, hA + (hB - hA) * r, A1.z + (B1.z - A1.z) * r], u1 = 8 / 9, v0 = ((r * 31) % 3 | 0) / 3;
+            for (let r = 0.12; r < 0.8; r += 0.09) { const L0 = [A0.x + (B0.x - A0.x) * r, hA + (hB - hA) * r + A0.g + (B0.g - A0.g) * r, A0.z + (B0.z - A0.z) * r], L1 = [A1.x + (B1.x - A1.x) * r, hA + (hB - hA) * r + A1.g + (B1.g - A1.g) * r, A1.z + (B1.z - A1.z) * r], u1 = 8 / 9, v0 = ((r * 31) % 3 | 0) / 3;
               cpos.push(L0[0], L0[1] - 0.1, L0[2], L1[0], L1[1] - 0.1, L1[2], L0[0], L0[1] + 1.1, L0[2], L0[0], L0[1] + 1.1, L0[2], L1[0], L1[1] - 0.1, L1[2], L1[0], L1[1] + 1.1, L1[2]); cuv.push(0, v0, u1, v0, 0, v0 + 0.34, 0, v0 + 0.34, u1, v0, u1, v0 + 0.34); }
             const e2 = [mid.x, mid.z, 26]; e2.nt = true; excl.push(e2); }
           prev = cur; } }
       if (pos.length) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.computeVertexNormals();
         const m = new THREE.Mesh(g, lam({ map: TEX.grassP, color: TH.groundTint ?? 0xffffff, roughness: .95 })); m.userData.perVertex = true; m.receiveShadow = true; trackGroup.add(m);
         const cg = new THREE.BufferGeometry(); cg.setAttribute('position', new THREE.Float32BufferAttribute(cpos, 3)); cg.setAttribute('uv', new THREE.Float32BufferAttribute(cuv, 2)); cg.computeVertexNormals();
-        const cm = new THREE.Mesh(cg, crowdM2); cm.userData.perVertex = true; trackGroup.add(cm); } }
+        const cm = new THREE.Mesh(cg, crowdM2); cm.userData.fixed = true; trackGroup.add(cm); } }
     // --- Mogyoród und Häuser ringsum (OSM-Rechtecke): helle Putzfassaden, rote Ziegeldächer; Gewerbehallen flach ---
     { const tileT = canvasTex(128, 128, (g, W, H2) => { g.fillStyle = '#a8553a'; g.fillRect(0, 0, W, H2); for (let y = 0; y < H2; y += 8) { g.fillStyle = 'rgba(60,20,10,.35)'; g.fillRect(0, y, W, 2); for (let x = (y / 8 % 2) * 6; x < W; x += 12) { g.fillStyle = `rgba(${150 + Math.random() * 60},${70 + Math.random() * 30},${40 + Math.random() * 20},.5)`; g.fillRect(x, y + 2, 10, 6); } } }); tileT.userData.own = true;
       const rg = new THREE.BufferGeometry(); rg.setAttribute('position', new THREE.Float32BufferAttribute([-.5, 0, -.5, .5, 0, -.5, .5, 1, 0, -.5, 0, -.5, .5, 1, 0, -.5, 1, 0, -.5, 0, .5, -.5, 1, 0, .5, 1, 0, -.5, 0, .5, .5, 1, 0, .5, 0, .5, -.5, 0, -.5, -.5, 1, 0, -.5, 0, .5, .5, 0, -.5, .5, 0, .5, .5, 1, 0], 3));
@@ -8896,8 +8909,8 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
           for (const [e0, e1, s] of [[a, d, -1], [b, c, 1]]) { const up = 1.0, p0 = [e0[0], e0[1] + up, e0[2]], p1 = [e1[0], e1[1] + up, e1[2]]; for (const q of [e0, e1, p1, e0, p1, p0]) rpos.push(...q); } }
         for (let k = 0; k < n; k += 1) { if (k % 2) continue; const y = Y(k), g0 = placeY(P[k][0], P[k][1]); if (y - g0 < 3) continue; for (const o of [-w * 0.3, w * 0.3]) { const v = V(k, o, y); if (!trackFree(v[0], v[2], 2.5)) continue;
             const x0 = v[0] - 0.9, x1 = v[0] + 0.9, z0 = v[2] - 0.9, z1 = v[2] + 0.9, yb = g0 - 0.5, yt = y - 1.5, F = [[x0, z0, x1, z0], [x1, z0, x1, z1], [x1, z1, x0, z1], [x0, z1, x0, z0]]; for (const [xa, za, xb, zb] of F) for (const q of [[xa, yb, za], [xb, yb, zb], [xb, yt, zb], [xa, yb, za], [xb, yt, zb], [xa, yt, za]]) pos.push(...q); } } };
-      deck(ramp, 24, [-175, -802], 7.4, 120); deck(link, 11, [-178, -822], 7.4, 70);
-      for (const [p, m] of [[pos, concM], [rpos, railM]]) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); g.computeVertexNormals(); const ms = new THREE.Mesh(g, m); ms.userData.fixed = true; ms.castShadow = ms.receiveShadow = true; trackGroup.add(ms); } }
+      /* Hochstraße entfernt (clippte mit Tribünen): deck(ramp, 24, [-175, -802], 7.4, 120); deck(link, 11, [-178, -822], 7.4, 70); */
+      for (const [p, m] of [[pos, concM], [rpos, railM]]) { if (!p.length) continue; const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); g.computeVertexNormals(); const ms = new THREE.Mesh(g, m); ms.userData.fixed = true; ms.castShadow = ms.receiveShadow = true; trackGroup.add(ms); } }
     /* Cuatro Torres (Torre PwC, Emperador, Moeve/Cepsa, Cristal) und Torre Caleido am Horizont (≈ 6 km westlich): wie die ferne Stadt ohne Nebel, Farben zum Dunst hin abgesetzt */
     { const hz = new THREE.Color(TH.fog), mk = (hex, f) => new THREE.Color(hex).lerp(hz, f), glT = canvasTex(64, 128, (g, w, h) => { g.fillStyle = '#ffffff'; g.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 5) { g.fillStyle = '#5d7388'; g.fillRect(2, y + 1, w - 4, 3); } g.fillStyle = '#e8eef2'; for (let x = 0; x < w; x += 8) g.fillRect(x, 0, 1, h); });
       glT.userData.own = true; glT.wrapS = glT.wrapT = THREE.RepeatWrapping; const emin = Math.min(...ELEV) - 14;
@@ -9172,15 +9185,15 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
             const u0 = acc / 9, u1 = (acc + sl) / 9, v = (r % 3) / 3; crowd.push(ax - nr[k][0] * 0.05, yl, az - nr[k][1] * 0.05, bx - nr[k + 1][0] * 0.05, yl, bz - nr[k + 1][1] * 0.05, bx - nr[k + 1][0] * 0.05, y + 0.55, bz - nr[k + 1][1] * 0.05, ax - nr[k][0] * 0.05, yl, az - nr[k][1] * 0.05, bx - nr[k + 1][0] * 0.05, y + 0.55, bz - nr[k + 1][1] * 0.05, ax - nr[k][0] * 0.05, y + 0.55, az - nr[k][1] * 0.05);
             cuv.push(u0, v, u1, v, u1, v + 0.34, u0, v, u1, v + 0.34, u0, v + 0.34); }
           const [ax, az] = P(k, 0), [bx, bz] = P(k + 1, 0), [fx1, fz1] = P(k, D), [fx2, fz2] = P(k + 1, D);
-          quad(back, bcol, [ax, 0, az], [bx, 0, bz], [bx, H + 1.2, bz], [ax, H + 1.2, az], wallC);   /* Rückwand bis über die oberste Reihe */
-          quad(back, bcol, [fx1, 0, fz1], [fx2, 0, fz2], [fx2, y0, fz2], [fx1, y0, fz1], frontC);   /* Brüstung zum Spielfeld */
+          quad(back, bcol, [ax, -8, az], [bx, -8, bz], [bx, H + 1.2, bz], [ax, H + 1.2, az], wallC);   /* Rückwand bis über die oberste Reihe */
+          quad(back, bcol, [fx1, -8, fz1], [fx2, -8, fz2], [fx2, y0, fz2], [fx1, y0, fz1], frontC);   /* Brüstung zum Spielfeld */
           // Faltdach: Grate quer zum Rang, außen 7 m über der obersten Reihe, nach innen leicht fallend, Vorderkante 4 m vor dem Spielfeldrand
           const f1 = k % 2 ? 1.1 : -1.1, f2 = (k + 1) % 2 ? 1.1 : -1.1, ti = D - 4, [qx1, qz1] = P(k, -1.5), [qx2, qz2] = P(k + 1, -1.5), [ix1, iz1] = P(k, ti), [ix2, iz2] = P(k + 1, ti);
           quad(roof, null, [qx1, H + 7 + f1, qz1], [qx2, H + 7 + f2, qz2], [ix2, H + 4.5 + f2 * 0.5, iz2], [ix1, H + 4.5 + f1 * 0.5, iz1]);
           if (k % 4 === 0) posts.push([rod([P(k, -0.6)[0], 0, P(k, -0.6)[1]], [P(k, -0.6)[0], H + 7 + f1, P(k, -0.6)[1]], 0.45, 6), null], [rod([P(k, -0.6)[0], H + 7.2 + f1, P(k, -0.6)[1]], [P(k, ti * 0.55)[0], H + 6.2, P(k, ti * 0.55)[1]], 0.3, 5), null]);
           acc += sl; }
         // Stirnseiten schließen (Profil der Ränge)
-        for (const k of [0, n - 1]) { if (!ok[k]) continue; const [ax, az] = P(k, 0), [fx2, fz2] = P(k, D); quad(back, bcol, [ax, 0, az], [fx2, 0, fz2], [fx2, y0, fz2], [ax, H + 1.2, az], wallC); }
+        for (const k of [0, n - 1]) { if (!ok[k]) continue; const [ax, az] = P(k, 0), [fx2, fz2] = P(k, D); quad(back, bcol, [ax, -8, az], [fx2, -8, fz2], [fx2, y0, fz2], [ax, H + 1.2, az], wallC); }
         exM(O0, 6); };
       wing(M.foroN.slice(0, 10), 35, 19);   // Nordrang: Rückseite entlang der Boxengassen-Einfahrt, Westarm bis zur Durchfahrt
       wing(M.foroS.slice(0, 10), 33, 18);   // Südrang
@@ -9340,7 +9353,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         const q = trackAt(s, pitSide * (w + 18)); if (!footprintFree(q.x, q.z, q.h, -7, 7, 30, 0.5)) continue;
         const wA = wallAt(Math.floor(modL(s - 15) / DS) % N, pitSide), wB = wallAt(Math.floor(modL(s + 15) / DS) % N, pitSide);
         for (const [pp, mat] of [[trackPrism(s - 15, s + 15, pitSide, wA + 10.6, wA + 24, wB + 10.6, wB + 24, 12.2, 9), glassM], [trackPrism(s - 15, s + 15, pitSide, wA + 9.4, wA + 25.8, wB + 9.4, wB + 25.8, 12.9, 12.2), roofM3], [trackPrism(s - 15, s + 15, pitSide, wA + 10.2, wA + 24.4, wB + 10.2, wB + 24.4, 9.5, 9), wallM]]) { const r = new THREE.Mesh(pp.g, mat); r.position.set(pp.cx, 0, pp.cz); r.castShadow = true; trackGroup.add(asMerge(r)); }
-        { const f = trackAt(s, pitSide * (w + 10.5)), fg = new THREE.PlaneGeometry(30.2, 3.0), fp = new THREE.Mesh(fg, facM); fp.userData.clipSkip = true; fp.position.set(f.x, 10.5, f.z); fp.rotation.y = f.h + pitSide * Math.PI / 2; trackGroup.add(asMerge(fp)); } } }
+        { const f = trackAt(s, pitSide * (w + 9.8)), fg = new THREE.PlaneGeometry(30.2, 3.0), fp = new THREE.Mesh(fg, facM); fp.userData.clipSkip = true; fp.position.set(f.x, 10.5, f.z); fp.rotation.y = f.h + pitSide * Math.PI / 2; trackGroup.add(asMerge(fp)); } } }
 
     // ---------- Kontrollturm (Race Control) hinter dem Boxengebäude an der Ziellinie ----------
     { const w = wallAt(trackAt(30, 0).i, pitSide), q = trackAt(30, pitSide * (w + 30)); if (footprintFree(q.x, q.z, q.h, -6, 6, 12, 0.5)) { const gT = new THREE.Group(), wl = lam({ color: 0xdfe2e4, roughness: .6 }), gl = lam({ color: 0x2c4658, roughness: .7 });
@@ -9491,7 +9504,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
 
     // ---------- Flutlichtmasten ringsum: sehr hohe schlanke Masten mit Lampenfeld (LED, kaltweiß); innere Reihe dicht, äußere Reihe noch höher ----------
     { const pp = [], rowAt = (s, sd, off, sc) => { const i = Math.floor(modL(s) / DS) % N, p = trackAt(s, sd * (wallAt(i, sd) + off)); if (!trackFree(p.x, p.z, 2.5) || excl.some(e => !e.st && (p.x - e[0]) ** 2 + (p.z - e[1]) ** 2 < (e[2] * 0.7) ** 2)) return; pp.push([p.x, p.z, Math.atan2(PX[i] - p.x, PZ[i] - p.z), sc]); };
-      for (let s = 7, k = 0; s < L; s += 33, k++) { rowAt(s, k % 2 ? 1 : -1, 6.5, k % 3 === 0 ? 1.2 : 1); rowAt(s + 16, k % 2 ? -1 : 1, 7.5, 1); }
+      for (let s = 7, k = 0; s < L; s += 50, k++) { rowAt(s, k % 2 ? 1 : -1, 6.5, k % 3 === 0 ? 1.2 : 1); rowAt(s + 16, k % 2 ? -1 : 1, 7.5, 1); }
       for (let s = 20, k = 0; s < L; s += 66, k++) rowAt(s, k % 2 ? 1 : -1, 34, 1.45);
       const H = 38, lampT = canvasTex(256, 128, (g, w, h) => { g.fillStyle = '#1c2026'; g.fillRect(0, 0, w, h); for (let r = 0; r < 4; r++) for (let c = 0; c < 8; c++) { const x = 16 + c * 31, y = 16 + r * 31, gr = g.createRadialGradient(x, y, 1, x, y, 13); gr.addColorStop(0, '#ffffff'); gr.addColorStop(.5, '#eaf2ff'); gr.addColorStop(1, '#5a6a80'); g.fillStyle = gr; g.beginPath(); g.arc(x, y, 13, 0, 7); g.fill(); } }); lampT.userData.own = true;
       const poleG = new THREE.CylinderGeometry(0.28, 0.55, H, 8).translate(0, H / 2, 0);
@@ -9499,14 +9512,22 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       const panG = new THREE.PlaneGeometry(9.4, 5).rotateX(-0.45).translate(0, H + 2.3, 0.4);
       const poleM = new THREE.MeshStandardMaterial({ color: 0xb4bac2, roughness: .45, metalness: .7 }), panM = new THREE.MeshBasicMaterial({ map: lampT, color: new THREE.Color(1, 1, 1).multiplyScalar(night ? 2.8 : 0.8), side: THREE.DoubleSide });
       const I = [new THREE.InstancedMesh(poleG, poleM, pp.length), new THREE.InstancedMesh(frameG, poleM, pp.length), new THREE.InstancedMesh(panG, panM, pp.length)];
-      pp.forEach(([x, z, a, sc], k) => { qq.setFromAxisAngle(upv, a); sv.set(sc, sc, sc); m4.compose(pv.set(x, 0, z), qq, sv); for (const im of I) im.setMatrixAt(k, m4); });
+      pp.forEach(([x, z, a, sc], k) => { qq.setFromAxisAngle(upv, a); sv.set(sc, sc, sc); m4.compose(pv.set(x, FLAT ? 0 : groundY(x, z) - 0.3, z), qq, sv); for (const im of I) im.setMatrixAt(k, m4); });
       I[0].castShadow = I[1].castShadow = true; trackGroup.add(...I);
+      if (night) { /* Lichtkegel der Flutlichter (wie im Fernsehbild): weicher, schräg zur Strecke geneigter Strahl je zweiter Mast, additiv, ohne Tiefenschreiben */
+        const bm = pp.filter((_, k) => k % 3 === 0);
+        /* Strahl = Pyramidenstumpf: oben so groß wie das Lampenfeld, unten breit auf dem Asphalt; Helligkeit (Vertexfarbe) fällt von oben nach unten auf null – keine harte Kante am Boden */
+        const beamG = (() => { const yT = H + 2.3, T = [[-4.7, yT - 2.1, 0.7], [4.7, yT - 2.1, 0.7], [4.7, yT + 2.1, 0.2], [-4.7, yT + 2.1, 0.2]], Bm = [[-11, 0, 10], [11, 0, 10], [11, 0, 32], [-11, 0, 32]], pos = [], col = [];
+          for (let k = 0; k < 4; k++) { const k2 = (k + 1) % 4; for (const [P, c] of [[T[k], 1], [Bm[k], 0], [Bm[k2], 0], [T[k], 1], [Bm[k2], 0], [T[k2], 1]]) { pos.push(...P); col.push(c, c, c); } }
+          const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); return g; })();
+        const beams = new THREE.InstancedMesh(beamG, new THREE.MeshBasicMaterial({ vertexColors: true, color: new THREE.Color(0.055, 0.065, 0.095), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false }), bm.length);
+        bm.forEach(([x, z, a, sc], k) => { qq.setFromAxisAngle(upv, a); sv.set(sc, sc, sc); m4.compose(pv.set(x, FLAT ? 0 : groundY(x, z) - 0.3, z), qq, sv); beams.setMatrixAt(k, m4); }); beams.frustumCulled = false; beams.renderOrder = 2; trackGroup.add(beams); }
       for (const [x, z] of pp) excl.push([x, z, 3]);
       if (night) { // Lichtkegel auf dem Asphalt: dicht über die ganze Runde, wechselnd links/rechts
         const lt = canvasTex(128, 128, (g, w, h) => { const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); gr.addColorStop(0, 'rgba(235,242,255,1)'); gr.addColorStop(.45, 'rgba(225,235,255,.55)'); gr.addColorStop(1, 'rgba(215,228,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); lt.userData.own = true;
         const ps = []; for (let s = 6, k = 0; s < L; s += 24, k++) ps.push([s, k % 2 ? 1 : -1]);
         const pool = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: lt, color: new THREE.Color(0.2, 0.21, 0.24), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), ps.length);
-        ps.forEach(([s, sd], k) => { const p = trackAt(s, sd * HW[Math.floor(s / DS) % N] * 0.4); qq.setFromAxisAngle(upv, p.h); sv.set(26, 1, 30); m4.compose(pv.set(p.x, 0.028, p.z), qq, sv); pool.setMatrixAt(k, m4); });
+        ps.forEach(([s, sd], k) => { const p = trackAt(s, sd * HW[Math.floor(s / DS) % N] * 0.4); qq.setFromAxisAngle(upv, p.h); sv.set(26, 1, 30); m4.compose(pv.set(p.x, placeY(p.x, p.z) + 0.04, p.z), qq, sv); pool.setMatrixAt(k, m4); });
         pool.renderOrder = 1; trackGroup.add(pool); } }
 
     // ---------- Horizont nach Geokoordinaten: flache Wüste ringsum; Skyline von Lusail im Südosten (Lusail Plaza, Marina mit Katara Towers) und das Lusail-Stadion ----------
@@ -9640,19 +9661,19 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       const lo = mergeParts([[new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0), null]]); lo.setAttribute('aRoof', new THREE.BufferAttribute(new Float32Array(lo.attributes.position.count), 1));
       g.userData.lod = [[lo, 150]];   // weiter weg: schlichter Quader (12 statt 168 Dreiecke) – Pfeiler und Gesimse sind dort kleiner als ein Pixel
       return g; })();
-    for (const [L2, M2, C2] of [[lo, resiM, cols], [hiB, TRK.resiTall ? resiM : towM, gcols]]) { if (!L2.length) continue; const bay = M2.userData.bay || 4, flo = M2.userData.flo || 3.5; for (const b of L2) { b[2] = Math.max(bay * 2, Math.floor(b[2] / bay) * bay); b[4] = Math.max(bay * 2, Math.floor(b[4] / bay) * bay); b[3] = Math.max(flo * 2, Math.round(b[3] / flo) * flo + 0.6); }   /* ganze Fensterachsen und Geschosse */
+    for (const [L2, M2, C2] of [[lo, resiM, cols], [hiB, TRK.resiTall ? resiM : towM, gcols]]) { if (!L2.length) continue; const bay = M2.userData.bay || 4, flo = M2.userData.flo || 3.5; for (const b of L2) { b[2] = Math.max(bay * 2, Math.floor(b[2] / bay) * bay); b[4] = Math.max(bay * 2, Math.floor(b[4] / bay) * bay); b[3] = Math.max(flo * 2, Math.round(b[3] / flo) * flo + 0.6) + (b[7] || 0); }   /* ganze Fensterachsen und Geschosse */
       const ib = new THREE.InstancedMesh(L2 === lo && !rivi ? kit : box1, M2, L2.length);   /* Monaco: einfacher Quader (Detail steckt in der Fassadentextur) – kein Wechsel der Detailstufe, kein Pop-up */
-      L2.forEach(([x, z, w, h2, l, r], k) => { qq.setFromAxisAngle(_v2, r); m4.compose(pv.set(x, 0, z), qq, sc.set(w, h2, l)); ib.setMatrixAt(k, m4); ib.setColorAt(k, cc.setHex(C2[k % C2.length])); }); trackGroup.add(ib); }
+      L2.forEach(([x, z, w, h2, l, r, y0], k) => { qq.setFromAxisAngle(_v2, r); m4.compose(pv.set(x, y0 || 0, z), qq, sc.set(w, h2, l)); ib.setMatrixAt(k, m4); ib.setColorAt(k, cc.setHex(C2[k % C2.length])); }); trackGroup.add(ib); }
     // flache Häuser: umlaufende Dachbrüstung (Attika) und dunkler abgesetztes Erdgeschoss mit Schaufenstern – keine glatten Kisten mehr
-    if (lo.length) { const base = new THREE.InstancedMesh(box1, new THREE.MeshStandardMaterial({ color: 0x2a3038, roughness: .25, metalness: .5, emissive: new THREE.Color(TH.night ? 0.9 : 0.25, TH.night ? 0.7 : 0.18, TH.night ? 0.45 : 0.1) }), lo.length);
-      lo.forEach(([x, z, w, h2, l, r], k) => { qq.setFromAxisAngle(_v2, r); m4.compose(pv.set(x, 0, z), qq, sc.set(w + 0.12, Math.min(4, h2 * 0.3), l + 0.12)); base.setMatrixAt(k, m4); });
+    if (lo.length && !['chn', 'bhr', 'jed', 'mia', 'bcn', 'hun', 'zan', 'mad', 'baku', 'cota', 'mex', 'bra', 'qat'].some(k => TRK === TRACKS[k])) { const base = new THREE.InstancedMesh(box1, new THREE.MeshStandardMaterial({ color: 0x2a3038, roughness: .25, metalness: .5, emissive: new THREE.Color(TH.night ? 0.9 : 0.25, TH.night ? 0.7 : 0.18, TH.night ? 0.45 : 0.1) }), lo.length);
+      lo.forEach(([x, z, w, h2, l, r, y0], k) => { qq.setFromAxisAngle(_v2, r); m4.compose(pv.set(x, (y0 || 0) + (lo[k][7] || 0), z), qq, sc.set(w + 0.12, Math.min(4, h2 * 0.3), l + 0.12)); base.setMatrixAt(k, m4); });
       trackGroup.add(base); }
     if (roofU.length) { const ru = new THREE.InstancedMesh(box1, lam({ color: TH.night ? 0x6a6c70 : 0xb8b4ac }), roofU.length);
       roofU.forEach(([x, z, w, y, h2, l, r], k) => { qq.setFromAxisAngle(_v2, r); m4.compose(pv.set(x, y, z), qq, sc.set(w, h2, l)); ru.setMatrixAt(k, m4); }); trackGroup.add(ru); }
     if (gulf && lo.length) {   // gepflegte Rasenflächen und Palmen zwischen den Häusern statt nackter Wüste
       const lawn = new THREE.InstancedMesh(new THREE.CircleGeometry(1, 20).rotateX(-Math.PI / 2), lam({ map: texRep(TEX.grassP, 6, 6), normalMap: texRep(TEX.grassN, 6, 6), color: 0xcfe0a8, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }), lo.length);
       const PP = palmParts(), pl = []; let n = 0;
-      lo.forEach(([x, z, w, h2, l, r], k) => { const R = Math.max(w, l) * 0.9 + 6; m4.compose(pv.set(x, 0.05, z), qq.identity(), sc.set(R, 1, R)); lawn.setMatrixAt(k, m4);
+      lo.forEach(([x, z, w, h2, l, r, y0], k) => { const R = Math.max(w, l) * 0.9 + 6; m4.compose(pv.set(x, (y0 || 0) + (lo[k][7] || 0) + 0.05, z), qq.identity(), sc.set(R, 1, R)); lawn.setMatrixAt(k, m4);
         for (let j = 0; j < 3; j++) { const a = Math.random() * 6.28, rr = Math.max(w, l) * 0.62 + 2 + Math.random() * 4; pl.push([x + Math.cos(a) * rr, z + Math.sin(a) * rr]); } });
       const it = new THREE.InstancedMesh(PP.trunk, PP.trunkM, pl.length), ic = new THREE.InstancedMesh(PP.crown, PP.crownM, pl.length);
       pl.forEach(([x, z], k) => { const s2 = 0.55 + Math.random() * 0.35; qq.setFromAxisAngle(_v2, Math.random() * 6.28); m4.compose(pv.set(x, 0, z), qq, sc.set(s2, s2, s2)); it.setMatrixAt(k, m4); ic.setMatrixAt(k, m4); });
@@ -9680,7 +9701,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       window.__mcHang = [hs.length, Math.round(performance.now() - tH0)]; }
     const crowns = blds.filter(b => b[3] > 60);   // beleuchtete Dachkronen der Hochhäuser
     const ic = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 1.9, 1.4).multiplyScalar(TH.night ? 1 : 0.55) }), crowns.length);
-    crowns.forEach(([x, z, w, h2, l, r], k) => { qq.setFromAxisAngle(_v2, r); m4.compose(pv.set(x, h2 + 1.5, z), qq, sc.set(w * 0.7, 3, l * 0.7)); ic.setMatrixAt(k, m4); });
+    crowns.forEach(([x, z, w, h2, l, r, y0], k) => { qq.setFromAxisAngle(_v2, r); m4.compose(pv.set(x, (y0 || 0) + h2 + 1.5, z), qq, sc.set(w * 0.7, 3, l * 0.7)); ic.setMatrixAt(k, m4); });
     trackGroup.add(ic);
   }
 
@@ -9729,9 +9750,11 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     const m4 = new THREE.Matrix4(), qq = new THREE.Quaternion(), sc = new THREE.Vector3(), pv = new THREE.Vector3(), cc = new THREE.Color();
     const place = [];
     let tries = 0;
+    const newT = ['chn', 'bhr', 'jed', 'mia', 'bcn', 'hun', 'zan', 'mad', 'baku', 'cota', 'mex', 'bra', 'qat'].some(k => TRK === TRACKS[k]), FPT = newT ? builtFootprints(trackGroup) : [];
+    const inBld = (x, z) => newT && FPT.some(F => Math.hypot(F.cx - x, F.cz - z) < F.r + 6 && polyHit(F.H, [[x - 4, z - 4], [x + 4, z - 4], [x + 4, z + 4], [x - 4, z + 4]], 0));   /* nie ein Baum in einem Haus (Wahrzeichen, OSM-Häuser) */
     if (TRK.refFull || TRK.refTrees) for (const [x, z, h] of TRK.ref.trees) {
       const [d, j] = nearestDist(x, z); if (d < Math.max(WL[j], WR[j]) + 4) continue;
-      if (excl.some(e => (x - e[0]) ** 2 + (z - e[1]) ** 2 < e[2] * e[2]) || inMarina(x, z)) continue;
+      if (excl.some(e => (x - e[0]) ** 2 + (z - e[1]) ** 2 < e[2] * e[2]) || inMarina(x, z) || inBld(x, z)) continue;
       place.push([x, z, clamp(h / 12.5, 0.9, 2.3)]);
     }
     while (!TRK.refFull && !TRK.refTrees && place.length < nT && tries < nT * 12) {
@@ -9745,6 +9768,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       if (inMarina(x, z) || ovalPts.some(o => (x - o[0]) ** 2 + (z - o[1]) ** 2 < 20 * 20)) continue;
       if (excl.some(e => (x - e[0]) ** 2 + (z - e[1]) ** 2 < e[2] * e[2])) continue;
       if (nearAfterTun(x, z)) continue;   /* Monaco: am Hang rechts nach dem Tunnel keine Bäume/Palmen */
+      if (inBld(x, z)) continue;
       place.push([x, z]);
     }
     const palmPl = [];
@@ -10494,10 +10518,10 @@ function fxTick(t, on, cls) {
   pl.wallT = Math.max(0, (pl.wallT || 0) - dt); pl.rubT = Math.max(0, (pl.rubT || 0) - dt);
   // Lautstärken v2.06 etwa halbiert (Kies lag über dem Motor); Gesamtpegel über den Regler „Effekte“
   // Untergrund: Kies (Prasseln, Steine am Unterboden), Rasen (Rauschen, Holpern), Randsteine (Rattern, schneller mit dem Tempo)
-  fxLoop('kies', on && sf === 'gravel' ? 0.42 * Math.max(0.2, sp(25)) * (v > 1 ? 1 : 0) : 0, 0.85 + 0.3 * sp(40), t);
+  fxLoop('kies', on && sf === 'gravel' ? 0.19 * Math.max(0.2, sp(25))   /* Kies leiser (vorher 0,42) */ * (v > 1 ? 1 : 0) : 0, 0.85 + 0.3 * sp(40), t);
   fxLoop('rasen', on && sf === 'grass' ? 0.36 * Math.max(0.15, sp(25)) : 0, 0.9 + 0.2 * sp(40), t);
   fxLoop('kerb', on && sf === 'kerb' && v > 4 ? (cls === 'kart' ? 0.4 : 0.6) * Math.max(0.35, sp(18)) : 0,   /* v2.26: Randstein deutlich lauter (über dem Motor) und schon bei niedrigem Tempo gut hörbar */ clamp(0.55 + v / 55, 0.55, 1.9), t);
-  if (on && (sf === 'gravel' || sf === 'grass') && FXS.surf !== 'gravel' && FXS.surf !== 'grass' && v > 12) fxShot('kiesEin', (sf === 'gravel' ? 0.4 : 0.22) * sp(40), t);   // Abflug ins Kiesbett
+  if (on && (sf === 'gravel' || sf === 'grass') && FXS.surf !== 'gravel' && FXS.surf !== 'grass' && v > 12) fxShot('kiesEin', (sf === 'gravel' ? 0.2 : 0.18) * sp(40), t);   // Abflug ins Kiesbett
   FXS.surf = sf;
   // v2.04: Reifenquietschen entfernt (klang falsch)
   // Schaben an der Bande (Leitplanke: Metall, Mauer: Beton) und Reiben Auto an Auto
