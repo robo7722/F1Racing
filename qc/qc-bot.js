@@ -212,6 +212,9 @@ async function staticChecks(R) {
   if (window.__onRoad) await run('onRoad', () => { const r = window.__onRoad(); return { n: r.length, list: r.slice(0, 8) }; });
   if (window.__bldOverlap) await run('bldOverlap', () => window.__bldOverlap());
   if (window.__clipCheck) await run('facadeClip', () => window.__clipCheck());
+  await run('wallLine', wallLineCheck);
+  await run('strands', strandCheck);
+  await run('floating', floatCheck);
   st.ms = Math.round(performance.now() - t0);
   // Befunde mit Bild
   const I = st.integrity || {};
@@ -229,9 +232,35 @@ async function staticChecks(R) {
   for (const e of (orr.list || []).filter(e => !(e.geo === 'PlaneGeometry' && Math.abs(e.dy) < 0.25)).slice(0, 3)) issue(R, 'info', 'Clipping', 'Objekt auf der Fahrbahn (' + e.type + ' ' + e.geo + (e.col ? ' #' + e.col : '') + ', ' + e.dy + ' m über Asphalt)', e.s, e.ud || '', viewAt(e.x, e.z));
   const bo = st.bldOverlap || {};
   for (const e of (bo.ex || []).slice(0, 3)) issue(R, 'info', 'Clipping', 'Gebäude überschneiden sich (' + e[0] + ' / ' + e[1] + ')', e[2], '', viewAt((e[3] + e[5]) / 2, (e[4] + e[6]) / 2, 40));
+  const wl = st.wallLine || {};
+  for (const e of (wl.list || []).slice(0, 4)) issue(R, 'mittel', 'Zaun / Wand', 'Absperrung springt (Zickzack): ' + e.n + ' Knicke bis ' + e.mx.toFixed(1) + ' m, ' + e.side + ', bis ' + at(e.s1), e.s, '', null);
+  const sd = st.strands || {};
+  for (const e of (sd.list || []).slice(0, 4)) issue(R, 'hoch', 'Clipping', 'Zwei Streckenäste überlappen (Mittellinien ' + e.d + ' m, Summe der Halbbreiten ' + e.hw + ' m) bei ' + at(e.s) + ' und ' + at(e.s2), e.s, '', null);
+  const fl = st.floating || {};
+  for (const e of (fl.list || []).slice(0, 5)) issue(R, 'mittel', 'Schwebt', 'Objekt schwebt ' + e.gap + ' m über dem Boden (' + e.kind + ', ' + e.d + ' m neben der Strecke)', e.s, 'x ' + e.x + ' · z ' + e.z, viewAt(e.x, e.z, 22));
   const fc = st.facadeClip || {};
   if (fc.clipping) issue(R, 'mittel', 'Clipping', fc.clipping + ' Fassaden stehen auf der Strecke', null, '');
 }
+/* Absperrung: Zickzack (zweite Differenz der Wandlinie), außer in den ersten/letzten 420 m (Boxengasse) */
+function wallLineCheck() { const N = A.N, DS = A.DS, out = [];
+  for (const [nm, Wr] of [['links', A.WL], ['rechts', A.WR]]) for (let i = 0; i < N; i++) { const s = i * DS; if (s < 420 || s > A.L - 420) continue; const d2 = Wr[(i + 1) % N] - 2 * Wr[i] + Wr[(i - 1 + N) % N]; if (Math.abs(d2) > 1.5) out.push([Math.round(s), nm, Math.abs(d2)]); }
+  const g = []; for (const o of out) { const l = g[g.length - 1]; if (l && o[0] - l.s1 < 40 && l.side === o[1]) { l.s1 = o[0]; l.n++; l.mx = Math.max(l.mx, o[2]); } else g.push({ s: o[0], s1: o[0], side: o[1], n: 1, mx: o[2] }); }
+  return { n: g.length, list: g.sort((a, b) => b.mx - a.mx).slice(0, 8) }; }
+/* Streckenäste dicht nebeneinander: Mittellinienabstand kleiner als die Summe der Halbbreiten = Fahrbahnen überlappen */
+function strandCheck() { const N = A.N, DS = A.DS, ar = Math.round(250 / DS), out = [];
+  for (let i = 0; i < N; i += 2) { let dm = 1e18, jm = 0; for (let j = 0; j < N; j++) { const g = Math.min(Math.abs(i - j), N - Math.abs(i - j)); if (g < ar) continue; const dx = A.PX[i] - A.PX[j], dz = A.PZ[i] - A.PZ[j], d2 = dx * dx + dz * dz; if (d2 < dm) { dm = d2; jm = j; } }
+    const d = Math.sqrt(dm), hw = A.HW[i] + A.HW[jm]; if (d < hw - 0.3) out.push({ s: i * DS, s2: jm * DS, d: +d.toFixed(1), hw: +hw.toFixed(1) }); }
+  const g = []; for (const o of out) { const l = g[g.length - 1]; if (l && o.s - l.s1 < 30) { l.s1 = o.s; l.n++; } else g.push({ ...o, s1: o.s, n: 1 }); }
+  return { n: g.length, list: g.slice(0, 6) }; }
+/* Schwebende Objekte: Fußpunkt von Instanzen (Bäume, Häuser, Pfosten) gegen die sichtbare Bodenfläche (Strahl von oben auf Kachel-/Band-/Bodennetze) */
+async function floatCheck() { const rc = new T.Raycaster(), m = new T.Matrix4(), gnd = [], out = []; let n = 0;
+  A.trackGroup.traverse(o => { if (o.isMesh && !o.isInstancedMesh && (o.userData.tile || o.userData.strip || o.userData.ground)) gnd.push(o); });
+  const ray = (x, z, y) => { rc.set(new T.Vector3(x, y + 2, z), new T.Vector3(0, -1, 0)); rc.far = 200; const h = rc.intersectObjects(gnd, false); return h.length ? h[0].point.y : null; };
+  const ims = []; A.trackGroup.traverse(ch => { if (ch.isInstancedMesh && ch.count >= 10 && ch.count <= 20000) { if (!ch.geometry.boundingBox) ch.geometry.computeBoundingBox(); const bb = ch.geometry.boundingBox; if (bb.min.y <= 0.3 && bb.max.y >= 3 && bb.max.y <= 60) ims.push(ch); } });
+  let k0 = 0; for (const ch of ims) { const step = Math.max(1, Math.floor(ch.count / 80));
+    for (let k = 0; k < ch.count; k += step) { ch.getMatrixAt(k, m); const e = m.elements; const g = ray(e[12], e[14], e[13]); if (g === null) continue; n++; const gap = e[13] - g; if (gap > 1.2) { const [d, j] = A.nearestDist(e[12], e[14]); out.push({ x: Math.round(e[12]), z: Math.round(e[14]), s: Math.round(j * A.DS), d: Math.round(d), gap: +gap.toFixed(1), kind: 'Instanz ' + (ch.geometry.type || '') }); } }
+    if (++k0 % 6 === 0) await W8(20); }
+  out.sort((a, b) => b.gap - a.gap); return { n, bad: out.length, list: out.slice(0, 8) }; }
 function viewAt(x, z, back = 14) { const [, j] = A.nearestDist(x, z), e = A.FLAT ? 0 : A.ELEV[j]; const cam = new T.PerspectiveCamera(60, TW / TH2, 0.3, 4000); cam.position.set(x - A.TX[j] * back, e + back * 0.5, z - A.TZ[j] * back); cam.lookAt(x, e, z); cam.updateMatrixWorld(); renderTo(rtA, cam, bufA); return rtJpeg(bufA, [[TW / 2, TH2 / 2, 22, '#ff3b30']]); }
 
 function issue(R, sev, cat, msg, s, det, jpeg) { const it = { sev, cat, msg, s: s == null ? null : Math.round(s), det: det || '' }; R.issues.push(it); if (jpeg) imgLater(jpeg, cat.replace(/\W+/g, ''), p => it.img = p); return it; }
@@ -505,5 +534,5 @@ async function main() {
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' })); a.download = 'strecken-qc-' + CFG.run + '.html'; document.body.appendChild(a); a.click();
   log('Fertig – Bericht wurde heruntergeladen');
 }
-window.__qcBot = { selfTest, topVoids, gravelHoles, groundZFight, groundMeshes, cutHole, probe, integrity };
+window.__qcBot = { selfTest, topVoids, gravelHoles, groundZFight, groundMeshes, cutHole, probe, integrity, wallLineCheck, strandCheck, floatCheck };
 main().catch(e => log('Abbruch: ' + (e && e.stack || e)));
