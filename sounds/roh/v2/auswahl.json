@@ -1,9 +1,9 @@
 {
  "mx5n_leer": {
-  "quelle": "mx5b_leer_1.mp3",
+  "quelle": "mx5_leer_1.mp3",
   "halbtoene": 0,
-  "grundton": 123.3,
-  "laenge": 3.35
+  "grundton": 27.1,
+  "laenge": 2.75
  },
  "mx5n_tief": {
   "quelle": "mx5b_tief_1.mp3",
@@ -15,6 +15,12 @@
   "quelle": "mx5b_tief_1.mp3",
   "halbtoene": -7,
   "grundton": 116.2,
+  "laenge": 3.35
+ },
+ "mx5n_tief3": {
+  "quelle": "mx5b_tief_1.mp3",
+  "halbtoene": -19,
+  "grundton": 59.7,
   "laenge": 3.35
  },
  "mx5n_hoch": {
@@ -39,11 +45,6 @@
   "laenge": 2.5,
   "wert": 0.503
  },
- "schaben_auto": {
-  "quelle": "schaben_auto_1.mp3",
-  "laenge": 2.5,
-  "wert": 0.204
- },
  "kies": {
   "quelle": "kies_1.mp3",
   "laenge": 3.0,
@@ -58,16 +59,6 @@
   "quelle": "kerb_1.mp3",
   "laenge": 2.5,
   "wert": 0.082
- },
- "quietschen_slick": {
-  "quelle": "quietschen_slick_1.mp3",
-  "laenge": 2.5,
-  "wert": 0.62
- },
- "quietschen_strasse": {
-  "quelle": "quietschen_strasse_1.mp3",
-  "laenge": 2.5,
-  "wert": 0.253
  },
  "wind": {
   "quelle": "wind_1.mp3",
