@@ -25,7 +25,7 @@ MX5 = {
     'mx5n_hoch': ('mx5b_hoch_1.mp3', (0.2, 3.8), 268, -3),    # 271 -> 228 Hz ≈ 6.850 U/min
     'mx5n_schub': ('mx5b_schub_3.mp3', (0.2, 2.8), 255, 0),   # Gas weg, 253 Hz
 }
-LOOPS = ['schaben_metall', 'schaben_beton', 'kies', 'rasen', 'kerb', 'wind']
+LOOPS = ['schaben_metall', 'schaben_beton', 'kies', 'rasen', 'kerb']   # wind: seit v2.05 aus tools/sounds/wind.py
 HITS = {'cf_leicht': 0.35, 'cf_auto': 0.9, 'cf_armco': 1.2, 'cf_beton': 1.1, 'stahl_leicht': 0.4,
         'stahl_auto': 0.9, 'stahl_wand': 1.2, 'kart_kart': 0.5, 'kart_wand': 0.7, 'kies_einschlag': 1.0}   # Höchstlänge ab Einsatz (s)
 

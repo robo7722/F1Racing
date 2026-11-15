@@ -7914,7 +7914,7 @@ function fxTick(t, on, cls) {
   // v2.01: Reiben Auto an Auto entfernt – die Aufnahme quietschte und lief schon bei leichtester Berührung im Pulk
   // Fahrtwind: offenes Cockpit bzw. offener Roadster, wächst mit dem Quadrat des Tempos
   const wf = Math.pow(clamp(v / (cls === 'stahl' ? 60 : cls === 'kart' ? 45 : 85), 0, 1.1), 2);
-  fxLoop('wind', on ? 0.12 * wf : 0, 0.9 + 0.15 * clamp(wf, 0, 1), t);   // v2.01: leiser und ruhiger (pulsierte bei hohem Tempo)
+  fxLoop('wind', on ? 0.12 * wf : 0, 0.9 + 0.15 * clamp(wf, 0, 1), t);   // v2.05: gleichmäßiges berechnetes Rauschen (tools/sounds/wind.py) – die Aufnahme pulsierte („wellig“)
 }
 // Startampel-Töne
 function lightBeep(final) {
@@ -9785,7 +9785,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.04'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.05'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

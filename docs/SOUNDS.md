@@ -213,3 +213,10 @@ Stand: 15.11.2026. Ohne neue Credits (nur vorhandene Aufnahmen).
   2. Zwischen Leerlauf (850) und der nächsten Stufe (3.500 U/min) lag eine riesige Lücke – Gasstöße im Stand spielten den Leerlauf 2-fach und die Fahr-Aufnahme 0,4-fach. Neue Zwischenstufe `mx5n_tief3` (Fahr-Aufnahme −19 HT, 59,7 Hz ≈ 1.800 U/min).
 - Stufen jetzt: `mx5n_leer` 27,1 · `mx5n_tief3` 59,7 · `mx5n_tief2` 116,2 · `mx5n_hoch` 228,2 (+ `mx5n_schub` 253,3).
 - Nach `aufbereiten_v2.py` immer `pegel.py` laufen lassen (sonst sind die Fahr-Geräusch-Loops wieder ungeglättet).
+
+## v2.05 – Fahrtwind ohne „Wellen“
+Stand: 15.11.2026. Ohne Credits.
+- MX-5-Leerlauf: Variante **B** bestätigt (bleibt wie in v2.04).
+- Das wellige Geräusch bei hohem Tempo war der Fahrtwind: Die ElevenLabs-Aufnahme pulsierte 7–8-mal je Sekunde (Böen am Helm). `pegel.py` glättete nur langsame Schwankungen (300-ms-Fenster), dieses schnelle Pulsieren blieb.
+- Jetzt `tools/sounds/wind.py`: Rauschen direkt im Frequenzbereich geformt (tiefes Rauschen ab 350 Hz abfallend + leichtes Zischen um 2,2 kHz, zufällige Phasen). Das Signal ist dadurch exakt periodisch (4 s, keine Naht) und hat keine Pegelschwankung außer dem normalen Rauschen (50-ms-Pegel 0,126–0,161).
+- `wind` ist aus `aufbereiten_v2.py` und `pegel.py` herausgenommen (würde sonst die alte Aufnahme zurückholen).
