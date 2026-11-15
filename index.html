@@ -3377,39 +3377,6 @@ function setLod(m, l, force) {
   m.body.geometry = L.gloss; m.matte.geometry = matteGeo(m, l); m.wfl.geometry = W.R[m.comp]; m.wfr.geometry = W.L[m.comp]; m.wrl.geometry = W.RL[m.comp]; m.wrr.geometry = W.RR[m.comp];
   if (m.far) { const f = l === 2 && !window.__noFar; m.far.visible = f; for (const o of m.detail) o.visible = !f; }
 }
-// Sichtbereich-Beschnitt (eigenes Auto in Helm-/TV-Kamera): die Dreiecke eines Netzes werden einmalig nach ihrem Winkel zur Kamera (Abweichung von der Fahrtrichtung, 1°-Stufen)
-// sortiert – ein Netz mit gleichen Eckdaten, aber eigener Indexreihenfolge. Gezeichnet wird nur der vordere Teil (drawRange) bis zum größten möglichen Blickwinkel; was dahinter
-// liegt (Heck), wird weder verarbeitet noch gezeichnet. Große Dreiecke nahe der Kamera (Winkelspanne > 30°) kommen immer mit.
-const VCUT = new WeakMap(), VCUT_R = 0.42;
-function viewCutBuild(base, cx, cz) {
-  if (!base || !base.attributes.position || (base.groups && base.groups.length)) return null;
-  const pos = base.attributes.position, idx = base.index, nT = Math.floor((idx ? idx.count : pos.count) / 3), az = new Float32Array(pos.count);
-  for (let v = 0; v < pos.count; v++) az[v] = Math.atan2(pos.getX(v) - cx, pos.getZ(v) - cz) * 57.2958;
-  const key = new Uint8Array(nT), cnt = new Uint32Array(182), dd = (a, b) => { const d = Math.abs(a - b); return d > 180 ? 360 - d : d; };
-  for (let t = 0; t < nT; t++) { const i0 = idx ? idx.getX(3 * t) : 3 * t, i1 = idx ? idx.getX(3 * t + 1) : 3 * t + 1, i2 = idx ? idx.getX(3 * t + 2) : 3 * t + 2, a = az[i0], b = az[i1], c = az[i2];
-    const k = Math.max(dd(a, b), dd(b, c), dd(a, c)) > 30 ? 0 : Math.min(180, Math.floor(Math.min(Math.abs(a), Math.abs(b), Math.abs(c)))); key[t] = k; cnt[k + 1]++; }
-  for (let k = 1; k < 182; k++) cnt[k] += cnt[k - 1];   // cnt[k+1] = Dreiecke mit Schlüssel <= k
-  const cum = cnt.slice(1), at = cnt.slice(0, 181), out = new Uint32Array(nT * 3);
-  for (let t = 0; t < nT; t++) { const o = 3 * at[key[t]]++; out[o] = idx ? idx.getX(3 * t) : 3 * t; out[o + 1] = idx ? idx.getX(3 * t + 1) : 3 * t + 1; out[o + 2] = idx ? idx.getX(3 * t + 2) : 3 * t + 2; }
-  const g = new THREE.BufferGeometry(); for (const k in base.attributes) g.setAttribute(k, base.attributes[k]); g.setIndex(new THREE.BufferAttribute(out, 1));
-  if (!base.boundingSphere) base.computeBoundingSphere(); g.boundingSphere = base.boundingSphere.clone(); if (base.boundingBox) g.boundingBox = base.boundingBox.clone(); g.userData.cum = cum; return g;
-}
-function viewCutGet(base, mode, cp) { let c = VCUT.get(base); if (!c) VCUT.set(base, c = {}); if (c[mode] === undefined) c[mode] = viewCutBuild(base, cp[0], cp[2]); return c[mode]; }
-const VQ = [];   // Vorberechnung: ein Netz pro Bild im Hintergrund, damit der erste Wechsel in Helm-/TV-Kamera nicht ruckelt
-function viewCutQueue(m) { if (m.vq || !m.tp) return; m.vq = 1; for (const mode of ['cam', 'tv']) for (const l of [0, 1]) { const L = m.tp.lods[l]; if (!m[mode]) continue; VQ.push([L.gloss, mode, m[mode]]); VQ.push([l === 0 && m.matteLo ? m.tp.lods[1].matte : L.matte, mode, m[mode]]); if (l === 0) VQ.push([L.matte, mode, m[mode]]); } }
-function viewCutStep() { const t = VQ.shift(); if (t) try { viewCutGet(t[0], t[1], t[2]); } catch (e) {} }
-function viewCut(m, mode, w) {
-  if (!m.tp || m.lod === 2) return; const cp = m[mode], L = m.tp.lods[m.lod];
-  for (const [mesh, base] of [[m.body, L.gloss], [m.matte, matteGeo(m, m.lod)]]) { let c = VCUT.get(base); if (!c) VCUT.set(base, c = {}); const g = viewCutGet(base, mode, cp); if (!g) continue;
-    mesh.geometry = g; g.setDrawRange(0, g.userData.cum[Math.min(180, Math.ceil(w))] * 3); }
-  const W = m.tp.M.W[m.lod], rw = m.tp.M.C.rw;   // Räder: nur zeichnen, wenn sie (mit Radius) im möglichen Blickfeld liegen
-  for (const [wh, x, z] of [[m.wfl, m.fl.position.x, m.fl.position.z], [m.wfr, m.fr.position.x, m.fr.position.z], [m.wrl, -rw[0], rw[2]], [m.wrr, rw[0], rw[2]]]) { const dx = x - cp[0], dz = z - cp[2], d = Math.hypot(dx, dz) || 0.01; wh.visible = Math.abs(Math.atan2(dx, dz)) * 57.2958 - Math.asin(Math.min(1, VCUT_R / d)) * 57.2958 <= w; }
-  m.vcut = mode;
-}
-function viewCutOff(m) {
-  if (!m.vcut) return; m.vcut = 0; for (const wh of [m.wfl, m.wfr, m.wrl, m.wrr]) wh.visible = true;
-  if (m.tp && m.lod !== 2) { m.body.geometry = m.tp.lods[m.lod].gloss; m.matte.geometry = matteGeo(m, m.lod); }
-}
 // Fernmodell eines Teams: einfachste Karosserie + Carbon + Räder + Helm in einem Netz; Klasse 4 = feste Farbe (keine Lackierung)
 function farCarGeo(tp, T) {
   const MD = tp.M, L = tp.lods[2], W = MD.W[2], fw = MD.C.fw, rw = MD.C.rw, P = [], Nn = [], C = [], K = [], I = []; let base = 0;
@@ -9069,7 +9036,6 @@ function updateCamera(dt) {
     if (S.cam === 3) camera.fov = fov;   // Sichtfeld weitet sich bis zur Höchstgeschwindigkeit (vorher ab 57 m/s gedeckelt), Boost zusätzlich
     camera.fov += (fov - camera.fov) * Math.min(1, dt * 2.5); camera.updateProjectionMatrix();
     for (const c of ais) { const d2 = (c.x - camera.position.x) ** 2 + (c.z - camera.position.z) ** 2; c.mesh.label.visible = d2 > 14 * 14 && d2 < 160 * 160; }
-    if (pl.mesh.tp) { viewCutQueue(pl.mesh); viewCutStep(); if (S.cam === 2 || S.cam === 3) { const hh = Math.atan(Math.tan(camera.fov * Math.PI / 360) * camera.aspect) * 57.2958, lk = S.cam === 2 ? (Math.abs(camOrb) + Math.abs(HEAD.look || 0)) * 57.2958 : 0; viewCut(pl.mesh, S.cam === 3 ? 'tv' : 'cam', lk + hh + 10); } else viewCutOff(pl.mesh); }   // Helm-/TV-Kamera: nur den Teil des eigenen Autos zeichnen, der im möglichen Blickfeld liegt (Helm: ±80° Umschauen + Bildwinkel, TV: fest)
     pl.mesh.helm.visible = S.cam !== 2; if (pl.mesh.halo) pl.mesh.halo.visible = S.cam !== 2 || !!pl.mesh.tp;
     { const flat = S.cam === 3; if (flat !== haloFlatOn) { haloFlatOn = flat; for (const c of ALL) { const m = c.mesh; if (m && m.tp && m.tp.haloFlat && m.halo) { m.halo.geometry = flat ? m.tp.haloFlat : m.tp.halo; m.halo.material = flat ? m.tp.haloMat : m.tp.glossMat; } } } }   // TV-Kamera: Halo einfarbig in Fahrzeugfarbe, ohne Verlauf
     if (pl.mesh.tp && pl.mesh.halo) { const m = pl.mesh, tp = m.tp, gh = S.cam === 2;   // Cockpit (Test): Halo bleibt sichtbar, aber als „Geister-Halo“ – halbtransparent, auf Blickhöhe fast durchsichtig, nach oben und unten zunehmend deckend
