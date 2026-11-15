@@ -309,3 +309,9 @@ Stand: 15.11.2026. Ohne Credits.
 - **Richtiger Motor:** Grundfrequenz `U/min ÷ 60 × 2` (Vierzylinder, 2 Zündungen je Umdrehung) statt × 3 (vor v2.00 wie ein Reihensechszylinder → 1,5-fach zu hoch). Oszillator-Verhältnisse unverändert: f (2. Motorordnung), 1,5·f (3.), 0,5·f (Kurbelwelle), 0,25·f (Arbeitsspiel).
 - Geprüft im echten Mitschnitt (Zeitfahren): Leerlauf 31 Hz ≈ 950 U/min, bei 6.300 U/min stärkster Ton 211 Hz ≈ U/min ÷ 30.
 - Unverändert aus v2.15/v2.16: Ampel hält ~4.550 U/min, Start mit schleifender Kupplung. Die Aufnahme-Konfiguration `SND_ENG.road` und die Dateien bleiben im Projekt (abgeschaltet) – Rückkehr: `road ? 'road'` in `updateAudio`.
+
+## v2.26 – Effekte lauter (Randstein hörbar neben Musik und Motor)
+- Der Nutzer hörte den Randstein bei laufender Musik gar nicht; Effekte sollen lauter als der Motor sein, mindestens aber hörbar.
+- Alle Aufnahmen sind auf RMS -17,1 dB normiert – die Lautstärke bestimmt allein der Code. Vorher: Randstein 0,3 × Effekte-Bus 0,72 ≈ 0,22 am Ausgang, Motor (F1) 0,55 × (0,5–1) × 1,02 ≈ 0,3–0,56.
+- Effekte-Bus: Faktor 1,2 → **2** (`applyVolumes`, `fxBus`; bei Standard-Regler 60 % ≈ 1,2). Randstein 0,3/Kart 0,2 → **0,6/0,4**, mit Mindestanteil 0,35 (vorher null bei Schritttempo), Kies 0,42, Rasen 0,36, Schaben 0,5/Kart 0,3. Einschläge laufen über denselben Bus (Spitze 0,68 × 1,2 ≈ 0,8, kein Übersteuern).
+- Gespeicherte Regler-Stände des Nutzers bleiben; wer „Effekte“ schon niedriger gestellt hat, muss nachregeln.
