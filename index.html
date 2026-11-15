@@ -7894,7 +7894,16 @@ function gpLayer() { for (const id of ['congrats', 'results', 'hub', 'settings',
 function gpItems(L) { return [...L.querySelectorAll('button, input[type=range], select')].filter(e => !e.disabled && e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden' && !e.closest('.hidden') && e.id !== 'go'); }
 const gpKey = e => e.id ? '#' + e.id : (e.tagName + '|' + JSON.stringify({ ...e.dataset }) + '|' + (e.dataset && Object.keys(e.dataset).length ? '' : e.textContent.trim().slice(0, 30)));
 function gpCur(L) { let e = GP.focus; if (e && (!document.contains(e) || !L.contains(e) || !e.getClientRects().length)) { const k = GP.fKey; e = gpItems(L).find(x => gpKey(x) === k) || null; } return e; }
-function gpSet(e) { $$('.gpf').forEach(x => x.classList.remove('gpf')); GP.focus = e; GP.fKey = e ? gpKey(e) : null; if (e) { e.classList.add('gpf'); e.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } }
+/* Fokus sichtbar machen: nur echte Scroll-Container (overflow auto/scroll) bewegen – scrollIntoView verschob sonst auch Kopfzeile, Infotafel und Fußleiste des Menüs seitlich */
+function gpReveal(e) {
+  for (let p = e.parentElement; p && p !== document.body && p !== document.documentElement; p = p.parentElement) {
+    const cs = getComputedStyle(p), ox = /(auto|scroll)/.test(cs.overflowX) && p.scrollWidth > p.clientWidth, oy = /(auto|scroll)/.test(cs.overflowY) && p.scrollHeight > p.clientHeight; if (!ox && !oy) continue;
+    const r = e.getBoundingClientRect(), pr = p.getBoundingClientRect();
+    if (ox) { if (r.left < pr.left) p.scrollLeft -= pr.left - r.left; else if (r.right > pr.right) p.scrollLeft += r.right - pr.right; }
+    if (oy) { if (r.top < pr.top) p.scrollTop -= pr.top - r.top; else if (r.bottom > pr.bottom) p.scrollTop += r.bottom - pr.bottom; }
+  }
+}
+function gpSet(e) { $$('.gpf').forEach(x => x.classList.remove('gpf')); GP.focus = e; GP.fKey = e ? gpKey(e) : null; if (e) { e.classList.add('gpf'); gpReveal(e); } }
 function gpDefault(L) { const it = gpItems(L); return it.find(e => e.id === 'resume' || e.id === 'again' || e.id === 'cgOk') || it.find(e => e.classList.contains('on') && !e.closest('.seg')) || it.find(e => e.id === 'qPlay' || e.id === 'mNext') || it[0] || null; }
 function gpMove([dx, dy]) {
   const L = gpLayer(); if (!L) return; let cur = gpCur(L);
@@ -10069,7 +10078,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.24'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.25'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
