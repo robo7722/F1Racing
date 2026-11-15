@@ -3158,6 +3158,9 @@ function decalUniforms(tk) { if (DECAL_TEX[tk]) return DECAL_TEX[tk];
   if (DECALS[tk]) ld('logos/' + DECALS[tk].file + '.png', U.uDecal, U.uDecalOn); if (SHEETS[tk]) ld('liveries/' + tk + '.png', U.uSheet, U.uSheetOn);
   return U; }
 const hasDecal = tk => !!(DECALS[tk] || SHEETS[tk] || NUMS[tk]);
+// Alle Aufkleber (Bögen und Teamlogos) werden beim ersten Start auf dem Ladebildschirm geladen (preloadDecals, siehe Spielstart) – danach muss in Menü und Fahrzeugauswahl nichts mehr nachladen.
+const preloadDecals = () => new Promise(res => { const us = Object.keys(LIVMAN).filter(k => DECALS[k] || SHEETS[k]).map(k => decalUniforms(k)), t0 = performance.now();
+  const chk = () => { if (us.every(u => (!u.uDecal.value || u.uDecalOn.value) && (!u.uSheet.value || u.uSheetOn.value)) || performance.now() - t0 > 12000) res(); else setTimeout(chk, 60); }; chk(); });   // höchstens 12 s warten (fehlende Datei: bleibt ohne Aufkleber)
 function decalGLSL(tk) { const f = v => (+v).toFixed(4), B = SHEETS[tk]; let g = '\n { vec3 dN = normalize(vLN); vec2 dUV; vec4 dT;';
   if (B) g += '\n  if (uSheetOn > 0.5 && dN.x * sign(vLP.x) > 0.45) { dUV = vec2((vLP.z - ' + f(B.z0) + ') / ' + f(B.z1 - B.z0) + ', (vLP.y - ' + f(B.y0) + ') / ' + f(B.y1 - B.y0) + '); if (vLP.x > 0.0) dUV.x = 1.0 - dUV.x; float dIn = (dUV.x > 0.0 && dUV.x < 1.0 && dUV.y > 0.0 && dUV.y < 1.0) ? 1.0 : 0.0; ' + (B.zones || []).map(q => 'if (vLP.z > ' + f(q[0]) + ' && vLP.z < ' + f(q[1]) + ' && (abs(vLP.x) < ' + f(q[2]) + ' || abs(vLP.x) > ' + f(q[3]) + ')) dIn = 0.0; ').join('') + 'dUV.y = clamp(dUV.y, 0.004, 0.996) * 0.5 + (vLP.x > 0.0 ? 0.5 : 0.0); dT = texture2D(uSheet, dUV) * dIn; diffuseColor.rgb = mix(diffuseColor.rgb, dT.rgb, dT.a); }';
   const spot = (d, smp, on, asp) => (d.v === 'top'
@@ -10093,6 +10096,7 @@ if (!(TRACKS[S.track] && (!TRACKS[S.track].extra || S.nos) && !TRACKS[S.track].k
 /* Die zuletzt gefahrene Strecke wird NICHT mehr beim Spielstart gebaut (das war der größte Teil der ersten Ladezeit). Sie entsteht erst, wenn nach der
    Streckenwahl ein Rennen beginnt (TRK !== TRACKS[S.track] -> buildTrack). Bis dahin ist TRK leer; tick() zeichnet dann nur Menü und Showroom. */
 buildMenu(); renderMenu();
+{ const lt = document.querySelector('#loading .ldTxt'); if (lt) lt.textContent = 'Aufkleber werden geladen'; try { await preloadDecals(); if (renderer.initTexture) for (const u of Object.values(DECAL_TEX)) for (const tx of [u.uDecal.value, u.uSheet.value]) if (tx && tx.image) renderer.initTexture(tx); } catch (e) {}   /* auch gleich zur Grafikkarte hochladen */ if (lt) lt.textContent = 'Strecke wird geladen'; }
 loading(false); $('#menu').classList.remove('hidden'); showScreen('title');
 window.__scene = () => scene; window.__cam = () => camera; window.__perf = (k = 20) => { const was = paused; paused = false; renderer.info.autoReset = false; renderer.info.reset(); let t = performance.now(); const t0 = t; for (let i = 0; i < k; i++) tick(t += 40, true); last = performance.now(); const gl = renderer.getContext(); gl.finish(); const ms = (performance.now() - t0) / k, r = renderer.info.render; const o = { calls: Math.round(r.calls / k), tris: Math.round(r.triangles / k), ms: +ms.toFixed(2), pr: renderer.getPixelRatio() }; renderer.info.autoReset = true; paused = was; return o; };   /* Test: Zeichenaufrufe/Bild und Zeit pro Bild (CPU+GPU, mit gl.finish) */
 // Testhilfen: Menü per Code bedienen (Strecke bauen, Rennen starten, feste Kamera)
