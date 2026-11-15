@@ -3050,7 +3050,7 @@ function palmParts() {
     for (let v = 0; v < fp.count; v++) { const y = fp.getY(v); fp.setZ(v, -0.12 * y * y); if (!FOL.frond) fp.setX(v, fp.getX(v) * (1 - y / 5.4)); }
     g.rotateX(-0.8 - (k % 3) * 0.28).rotateY(k * Math.PI * 2 / 7).translate(0.66, 11, 0); frL.push([g, col(FOL.frond ? (k % 2 ? 0xe6f0d8 : 0xffffff) : (k % 2 ? 0x3d6e2a : 0x4c7d31))]); }
   const crownLo = mergeParts(frL, true), trunkLo = new THREE.CylinderGeometry(0.26, 0.42, 11, 5, 2, true).translate(0, 5.5, 0), tl = trunkLo.attributes.position; for (let k = 0; k < tl.count; k++) { const y = tl.getY(k); tl.setX(k, tl.getX(k) + 0.012 * y * y); }
-  crown.userData.lod = [[crownLo, 120], [null, 1100]]; crownLo.userData.lod = [[null, 1100]]; trunk.userData.lod = [[trunkLo, 110], [null, 1100]];
+  crown.userData.lod = [[crownLo, 120], [null, 1100]]; crownLo.userData.lod = [[null, 1100]]; trunk.userData.lod = [[trunkLo, 110], [null, 1100]]; crown.userData.tree = trunk.userData.tree = true;
   return { trunk, crown, trunkM: lam({ map: FOL.palmBark, color: 0xffffff }), crownM: FOL.frond ? lam({ map: FOL.frond, vertexColors: true, alphaTest: 0.45, side: THREE.DoubleSide, roughness: .75 }) : lam({ vertexColors: true, side: THREE.DoubleSide }) };
 }
 // Materialfarbe, die die Foto-Textur im Mittel auf den Ziel-Farbton (sRGB 0–255) bringt
@@ -5533,12 +5533,12 @@ function desertHorizon(o) {
     const m = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide, fog: false })); m.userData.fixed = true; m.receiveShadow = false; trackGroup.add(m); }
   // echte Ortschaften (o.towns = [[x, z, Radius, Anzahl, Höhe]]): Lichterhaufen an ihrer wirklichen Lage statt Zufallsstädten
   const LT = []; for (const [tx, tz, tr, n, th] of o.towns || []) for (let k = 0; k < n; k++) { const a = Math.random() * 6.283, d = tr * Math.sqrt(Math.random()); LT.push([tx + Math.cos(a) * d, tz + Math.sin(a) * d * 0.8, Math.random(), th || 1]); }
-  if (LT.length) { const im = new THREE.InstancedMesh(new THREE.BoxGeometry(30, 14, 30), new THREE.MeshBasicMaterial({ color: new THREE.Color(o.glow || 0xffc890).multiplyScalar(1.1), fog: false }), LT.length), m4 = new THREE.Matrix4();
-    LT.forEach(([x, z, f, th], k) => { m4.makeTranslation(x, emin + 7 + f * f * 16 * th, z); im.setMatrixAt(k, m4); im.setColorAt(k, cc.setRGB(0.6 + f * 0.4, 0.55 + f * 0.35, 0.45 + f * 0.4)); });
+  if (LT.length) { const im = new THREE.InstancedMesh(new THREE.BoxGeometry(30, 1, 30).translate(0, 0.5, 0), new THREE.MeshBasicMaterial({ color: new THREE.Color(o.glow || 0xffc890).multiplyScalar(1.1), fog: false }), LT.length), m4 = new THREE.Matrix4();
+    LT.forEach(([x, z, f, th], k) => { m4.makeScale(1, 16.5 + f * f * 16 * th, 1).setPosition(x, emin - 2.5, z);   /* vom Boden (Ring bei emin − 2,2) bis zur bisherigen Oberkante – vorher schwebten die Blöcke bis 16 m darüber */ im.setMatrixAt(k, m4); im.setColorAt(k, cc.setRGB(0.6 + f * 0.4, 0.55 + f * 0.35, 0.45 + f * 0.4)); });
     im.userData.fixed = true; im.userData.noChunk = true; im.computeBoundingSphere(); trackGroup.add(im); }
   const L = []; for (const [a0, a1, d, n] of o.lights || []) for (let k = 0; k < n; k++) { const t = a0 + (a1 - a0) * Math.random(), r = d * (0.85 + Math.random() * 0.3); L.push([cx + Math.cos(t) * r, cz + Math.sin(t) * r, Math.random()]); }
-  if (L.length) { const im = new THREE.InstancedMesh(new THREE.BoxGeometry(7, 5, 7), new THREE.MeshBasicMaterial({ color: new THREE.Color(o.glow || 0xffc890).multiplyScalar(1.1), fog: false }), L.length), m4 = new THREE.Matrix4();
-    L.forEach(([x, z, f], k) => { m4.makeTranslation(x, emin + 4 + f * f * 30, z); im.setMatrixAt(k, m4); im.setColorAt(k, cc.setRGB(0.7 + f * 0.3, 0.6 + f * 0.3, 0.5 + f * 0.4)); });
+  if (L.length) { const im = new THREE.InstancedMesh(new THREE.BoxGeometry(7, 1, 7).translate(0, 0.5, 0), new THREE.MeshBasicMaterial({ color: new THREE.Color(o.glow || 0xffc890).multiplyScalar(1.1), fog: false }), L.length), m4 = new THREE.Matrix4();
+    L.forEach(([x, z, f], k) => { m4.makeScale(1, 9 + f * f * 30, 1).setPosition(x, emin - 2.5, z);   /* steht auf dem Boden statt zu schweben */ im.setMatrixAt(k, m4); im.setColorAt(k, cc.setRGB(0.7 + f * 0.3, 0.6 + f * 0.3, 0.5 + f * 0.4)); });
     im.userData.fixed = true; im.userData.noChunk = true; im.computeBoundingSphere(); trackGroup.add(im); }
 }
 /*}@bhr:top*/
@@ -5606,7 +5606,7 @@ ROADTEX.mex = 'asphalt_track';
 /*}@mex:top*/
 /*@bra:top{*/
 // São Paulo (Interlagos): Tipuana, Eukalyptus und Palmen im Innenfeld – breite, dichte Kronen, nur wenige Nadelbäume
-TREE_STYLE.bra = { leaf: { lobes: [[0, 6.4, 0, 3.0], [2.0, 7.1, 0.9, 2.4], [-1.8, 6.9, -1.1, 2.5], [0.3, 8.4, -0.4, 2.2], [-0.6, 6.6, 2.0, 2.0]], cards: 64, sz: 3.0, lo: [4.0, 0.8], hsl: [0.26, .42, .42] },   /* runder, dichter belaubt wie die Eichen am Hungaroring, heller und satter grün (vorher grobe, dunkle Klumpen) */ con: { kind: 'pine', y0: 6, y1: 12, r: 3.4, tiers: 3, per: 6, droop: .3, hsl: [0.33, .3, .34] }, trunkH: 5.5 };
+TREE_STYLE.bra = { leaf: { lobes: [[0, 6.4, 0, 3.0], [2.0, 7.1, 0.9, 2.4], [-1.8, 6.9, -1.1, 2.5], [0.3, 8.4, -0.4, 2.2], [-0.6, 6.6, 2.0, 2.0]], cards: 64, sz: 3.0, lo: [4.0, 0.8], hsl: [0.26, .42, .42] },   /* runder, dichter belaubt wie die Eichen am Hungaroring, heller und satter grün (vorher grobe, dunkle Klumpen) */ con: { kind: 'pine', y0: 4.5, y1: 9.5, r: 3.4, tiers: 3, per: 6, droop: .3, hsl: [0.33, .3, .34] }, trunkH: 7.0 };   /* Schirmkiefer: Krone (Mitte (y0+y1)/2) muss auf dem Stamm sitzen – vorher Mitte 9,2 m über 5,5 m Stamm, die Krone schwebte bis 6 m */
 ROADTEX.bra = 'asphalt_03';
 /*}@bra:top*/
 /*@qat:top{*/
@@ -5633,6 +5633,24 @@ function chunkInstances(root, cell = 260, minCount = 120) {
   }
 }
 function elevAt(c) { if (FLAT) return 0; const s2 = modL(c.d), f = s2 / DS, i0 = Math.floor(f) % N, i1 = (i0 + 1) % N, t = f - Math.floor(f); return ELEV[i0] + (ELEV[i1] - ELEV[i0]) * t; }
+/* Bäume abseits der Geländebänder auf die wirklich gezeichnete Bodenfläche setzen: der grobe Boden ist ein Dreiecksnetz mit Höhen nur an den Gitterpunkten
+   (20–30 m Abstand), placeY rechnet die exakte Geländeformel – im welligen Wald (Spa, Spielberg, Nordschleife) schwebten Stämme dadurch bis 1 m über dem Boden. */
+function snapTreesToGround() {
+  if (FLAT) return; const gm = trackGroup.children.find(c => c.userData.ground && c.geometry && c.geometry.type === 'PlaneGeometry' && c.geometry.parameters.widthSegments > 50); if (!gm) return;
+  const gp = gm.geometry.parameters, W = gp.width, H = gp.height, nx = gp.widthSegments, nz = gp.heightSegments, P = gm.geometry.attributes.position, ox = gm.position.x, oy = gm.position.y, oz = gm.position.z;
+  const lin = (x, z) => { const fx = (x - ox + W / 2) / W * nx, fz = (z - oz + H / 2) / H * nz, ix = Math.floor(fx), iz = Math.floor(fz); if (ix < 0 || iz < 0 || ix >= nx || iz >= nz) return null; const u = fx - ix, w = fz - iz, g = nx + 1;
+    const ya = P.getY(ix + g * iz), yb = P.getY(ix + g * (iz + 1)), yc = P.getY(ix + 1 + g * (iz + 1)), yd = P.getY(ix + 1 + g * iz);   /* Dreiecke (a,b,d) und (b,c,d) wie in PlaneGeometry */
+    return oy + (u + w <= 1 ? ya + (yd - ya) * u + (yb - ya) * w : yc + (yb - yc) * (1 - u) + (yd - yc) * (1 - w)); };
+  const m4 = new THREE.Matrix4(), memo = new Map(), key = e => Math.round(e[12] * 10) + ',' + Math.round(e[14] * 10);
+  trackGroup.traverse(ch => { if (!ch.isInstancedMesh || !ch.geometry.userData.tree || ch.userData.fixed) return;   // 1. Verschiebung je Baum (Ursprung) aus den Baum-Netzen bestimmen
+    for (let k = 0; k < ch.count; k++) { ch.getMatrixAt(k, m4); const e = m4.elements; if (Math.abs(m4.determinant()) < 1e-9) continue; const kk = key(e); if (memo.has(kk)) continue; let d = 0; const x = e[12], z = e[14];
+      const base = e[13] + (ch.geometry.userData.treeBase || 0) * e[5];   /* Aufstandspunkt (Büsche: Mitte liegt 0,5·Größe über dem Boden) */
+      if (Math.abs(groundY(x, z) - placeY(x, z)) < 0.02) { const g = lin(x, z); if (g !== null && Math.abs(base - g) > 0.05 && Math.abs(base - g) < 40) d = g - 0.04 - base; } memo.set(kk, [d, e[13]]); } });
+  trackGroup.traverse(ch => { if (!ch.isInstancedMesh || ch.userData.fixed) return; let n = 0;   // 2. auf ALLE Teile mit demselben Ursprung anwenden (Krone, Stamm, Detailstufen, Bildtafeln) – sonst klaffen Krone und Stamm auseinander
+    for (let k = 0; k < ch.count; k++) { ch.getMatrixAt(k, m4); const e = m4.elements, q = memo.get(key(e)); if (!q || !q[0] || Math.abs(e[13] - q[1]) > 0.01) continue; e[13] += q[0]; ch.setMatrixAt(k, m4); n++; }
+    if (n) { ch.instanceMatrix.needsUpdate = true; ch.computeBoundingSphere(); } });
+  if (TREESPR) for (const kind of Object.keys(TREESPR.lists)) for (const it of TREESPR.lists[kind]) { const e = it[0].elements, q = memo.get(key(e)); if (q && q[0]) e[13] += q[0]; }   /* Bildtafeln ferner Bäume ebenso (werden später mit placeY gesetzt) */
+}
 function applyElevation() {
   if (FLAT) return;
   const m4 = new THREE.Matrix4(), v = new THREE.Vector3();
@@ -6369,6 +6387,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
     if (TH.trees === 'forest') {
       const bu = []; for (const [W, s] of [[WL, -1], [WR, 1]]) for (let i = 0; i < N; i += 2) { if (Math.random() < 0.5 || (NOWALL[i] & (s < 0 ? 1 : 2)) || pitZone(i, s)) continue; const p = trackAt(i * DS, s * (W[i] + 3.6 + Math.random() * 4));   /* nicht auf die Boxengasse */ if ([[0, 0], [2, 0], [-2, 0], [0, 2], [0, -2]].every(([u, v]) => trackFree(p.x + u, p.z + v, 1)) && !(TH.openInfield && Math.random() < .8)) bu.push([p.x, p.z]); }
       const bg = new THREE.IcosahedronGeometry(1, 2); { const p = bg.attributes.position; for (let k = 0; k < p.count; k++) { const x = p.getX(k), y = p.getY(k), z = p.getZ(k), f = 1 + 0.13 * Math.sin(x * 3.1 + 1) * Math.sin(y * 3.7) * Math.sin(z * 2.9 + 2); p.setXYZ(k, x * f, y * f, z * f); } bg.computeVertexNormals(); }
+      bg.userData.tree = true; bg.userData.treeBase = -0.5;   /* snapTreesToGround: Büsche auf die gezeichnete Bodenfläche (Zandvoort: Wiese neben Start/Ziel liegt 3,6 m tiefer – Büsche schwebten) */
       const ib2 = new THREE.InstancedMesh(bg, lam({ map: TEX.leaf, normalMap: TEX.leafN, normalScale: new THREE.Vector2(2, 2), roughness: .85 }), bu.length);
       bu.forEach(([x, z], k) => { const s3 = 0.6 + Math.random() * 0.7; m4.compose(pv.set(x, s3 * 0.5, z), qq.setFromAxisAngle(_v2, Math.random() * 6), sc.set(s3 * 1.3, s3, s3 * 1.3)); ib2.setMatrixAt(k, m4); ib2.setColorAt(k, cc.setHSL(0.26 + Math.random() * .06, .5, .2 + Math.random() * .1)); }); sc.set(1, 1, 1);
       trackGroup.add(ib2);
@@ -8044,7 +8063,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       const fp = [[-0.5, -len / 2], [dep + 0.5, -len / 2], [dep + 0.5, len / 2], [-0.5, len / 2]].map(([lx, lz]) => [fx + lx * Math.cos(rot) + lz * Math.sin(rot), fz - lx * Math.sin(rot) + lz * Math.cos(rot)]); if (standP.some(P => polyHit(P, fp))) continue; standP.push(fp);
       const grp = new THREE.Group(); grp.position.set(fx, 0, fz); grp.rotation.y = rot; trackGroup.add(grp); buildStand(grp, len, dep, hgt); seat(grp, fp);
       if (st.n) { const nt = canvasTex(128, 64, (c, w, h) => { c.fillStyle = '#1b1f2a'; c.fillRect(0, 0, w, h); c.fillStyle = '#ffffff'; c.font = '900 46px system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(st.n.replace(/[１～]/g, ''), w / 2, h / 2 + 2); }); nt.userData.own = true;
-        const sg2 = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 2.1), lam({ map: nt })); sg2.position.set(dep + 0.75, Math.min(hgt, 8) + 3.2, len / 2 - 3); sg2.rotation.y = Math.PI / 2; grp.add(sg2); }
+        const sg2 = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 2.1), lam({ map: nt })); const rows2 = Math.max(4, Math.round(dep * 0.8 / 1.7)), wallH = Math.min(1.25, (hgt * 0.62) / rows2) * rows2 + 1.4; sg2.position.set(0.6 + dep * 0.8 + 0.7, Math.max(1.1, wallH - 1.3), len / 2 - 3); sg2.rotation.y = Math.PI / 2; grp.add(sg2); }   /* Schild an der Rückwand (wie buildStand) – vorher schwebte es 0,2·Tiefe dahinter und über der Wand */
       if (isV) { // Haupttribüne: weit auskragendes Dach mit Fachwerkbindern, getragen von Stützen hinter der letzten Reihe
         const rM = new THREE.MeshStandardMaterial({ color: 0xe8ebee, roughness: .45, metalness: .5, side: THREE.DoubleSide }), P2 = [];
         P2.push([box(dep + 9, 0.6, len + 2, dep / 2 - 3.5, hgt + 6.2, 0, 0, 0, -0.1), null]);
@@ -8103,7 +8122,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       const cg = mergeParts(crown, true), tg = new THREE.CylinderGeometry(0.16, 0.28, 3.4, 6).translate(0, 1.7, 0), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), pv = new THREE.Vector3();
       const cm = lam({ map: TEX.leaf, color: 0xf6c9d8, alphaTest: 0.4 }), tm = lam({ color: 0x4a3a32 }), ci = new THREE.InstancedMesh(cg, cm, pts.length), ti = new THREE.InstancedMesh(tg, tm, pts.length);
       pts.forEach(([x, z, s2, r], k) => { q.setFromAxisAngle(_v2, r); m4.compose(pv.set(x, 0, z), q, sc.set(s2, s2, s2)); ci.setMatrixAt(k, m4); ti.setMatrixAt(k, m4); excl.push([x, z, 3.5 * s2]); });
-      ci.castShadow = ti.castShadow = true; if (pts.length) trackGroup.add(ci, ti); }
+      ci.castShadow = ti.castShadow = true; cg.userData.tree = tg.userData.tree = true; if (pts.length) trackGroup.add(ci, ti); }   /* tree: snapTreesToGround setzt sie auf die gezeichnete Bodenfläche */
     // ---------- Horizont: Suzuka-Gebirge im Westen/Nordwesten (Gozaisho 1212 m, Kamagatake, Nyudogatake – Profil aus SRTM, echte Peilung und Höhenwinkel), Ise-Bucht im Osten, Schornsteine von Yokkaichi im Nordosten ----------
     { let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (let i = 0; i < N; i += 4) { x0 = Math.min(x0, PX[i]); x1 = Math.max(x1, PX[i]); z0 = Math.min(z0, PZ[i]); z1 = Math.max(z1, PZ[i]); } const hcx = (x0 + x1) / 2, hcz = (z0 + z1) / 2, fc = new THREE.Color(TH.fog);
       if (O.hz) for (const hm of horizonRing(hcx, hcz, TH.fog, O.hz, null, { R: 11800, rock: 0x1a2c3a })) { hm.position.y = 55; trackGroup.add(hm); }   /* Höhenwinkel aus SRTM mit Augenhöhe 60 m ü. NN gerechnet */
@@ -8867,12 +8886,14 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       im.count = k; im.userData.fixed = true; im.geometry = marG.clone(); im.geometry.userData.lod = [[null, 160]]; trackGroup.add(im); }
     /* Dünen im Hinterland: flache Sandhügel mit Gras und Strandhafer rings um die Strecke (nicht im Ort) */
     { const mound = new THREE.SphereGeometry(1, 14, 6, 0, Math.PI * 2, 0, Math.PI / 2).translate(0, -0.25, 0), mm = lam({ map: texRep(TEX.grassP, 3, 3), normalMap: TEX.grassN, color: 0xeadcaa });
-      const n = hi ? 260 : 120, im = new THREE.InstancedMesh(mound, mm, n), im2 = new THREE.InstancedMesh(marG.clone(), marM, n * 6), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), pv = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0); let k = 0, k2 = 0;
+      const n = hi ? 260 : 120, im = new THREE.InstancedMesh(mound, mm, n), im2 = new THREE.InstancedMesh(marG.clone(), marM, n * 6), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), pv = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0); let k = 0, k2 = 0; const own = [];
       for (let t = 0; t < n * 12 && k < n; t++) { const i = Math.floor(Math.random() * N), sg = Math.random() < 0.5 ? -1 : 1, r = 10 + Math.random() * 22, o = (sg < 0 ? WL[i] : WR[i]) + r + 8 + Math.random() * 260, x = PX[i] + RX[i] * o * sg, z = PZ[i] + RZ[i] * o * sg;
         if (z > 900 || x - coastX(z) < 150 || !trackFree(x, z, r + 6) || excl.some(e => (x - e[0]) ** 2 + (z - e[1]) ** 2 < (e[2] + r) ** 2)) continue;
-        const hh = 2.5 + Math.random() * 6; q.setFromAxisAngle(up, Math.random() * 3); m4.compose(pv.set(x, 0, z), q, sc.set(r, hh, r * (0.6 + Math.random() * 0.4))); im.setMatrixAt(k++, m4); excl.push([x, z, r * 0.8]);
-        for (let u = 0; u < 6 && k2 < n * 6; u++) { const a = Math.random() * 6.28, f = Math.sqrt(Math.random()) * 0.75, lx = Math.cos(a) * f * r * 0.8, lz = Math.sin(a) * f * r * 0.6, ly = hh * Math.sqrt(Math.max(0, 1 - f * f)) - 0.6; m4.compose(pv.set(x + lx, ly, z + lz), q, sc.set(1.2, 1.2, 1.2)); im2.setMatrixAt(k2++, m4); } }
-      im.count = k; im2.count = k2; im.receiveShadow = true; im.userData.noChunk = true; im2.geometry.userData.lod = [[null, 150]]; trackGroup.add(im, im2); }
+        const hh = 2.5 + Math.random() * 6, zf = 0.6 + Math.random() * 0.4; q.setFromAxisAngle(up, Math.random() * 3); m4.compose(pv.set(x, 0, z), q, sc.set(r, hh, r * zf)); im.setMatrixAt(k++, m4); excl.push([x, z, r * 0.8]);
+        for (let u = 0; u < 6 && k2 < n * 6; u++) { const a = Math.random() * 6.28, f = Math.sqrt(Math.random()) * 0.75, off = pv.set(Math.cos(a) * f * r, 0, Math.sin(a) * f * r * zf).applyQuaternion(q), lx = off.x, lz = off.z, ly = hh * (Math.sqrt(Math.max(0, 1 - f * f)) - 0.25) - 0.2; m4.compose(pv.set(x + lx, ly, z + lz), q, sc.set(1.2, 1.2, 1.2)); own.push(k - 1); im2.setMatrixAt(k2++, m4); } }   /* Halme im gedrehten, gestreckten Hügel (Kugel um 0,25 abgesenkt) – vorher schwebten sie neben dem Hügel */
+      im.count = k; im2.count = k2; im.receiveShadow = true; im.userData.noChunk = true; im2.geometry.userData.lod = [[null, 150]];
+      im2.userData.fixed = true; im2.userData.afterElev = () => { const a = new THREE.Matrix4(), b = new THREE.Matrix4(); for (let u = 0; u < k2; u++) { im.getMatrixAt(own[u], a); im2.getMatrixAt(u, b); b.elements[13] += a.elements[13]; im2.setMatrixAt(u, b); } im2.instanceMatrix.needsUpdate = true; im2.computeBoundingSphere(); };   /* Halme mit ihrem Hügel heben (nicht je Halm aufs Gelände – am Hang schwebten sie sonst) */
+      trackGroup.add(im, im2); }
     /* Strandpavillons: Holzbauten am Strand */
     { const n = 26, bx = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0), im = new THREE.InstancedMesh(bx, lam({ color: 0xffffff }), n * 2), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), pv = new THREE.Vector3(), cc = new THREE.Color(), up = new THREE.Vector3(0, 1, 0), cols = [0xd9c7a4, 0xf2f2ee, 0x7da0b8, 0xc8a070, 0xe8e0d0];
       for (let k = 0; k < n; k++) { const z = -250 + k * 68, x = coastX(z) + 34, a = Math.atan2(coastX(z + 20) - coastX(z - 20), 40); q.setFromAxisAngle(up, a);
@@ -9354,7 +9375,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         const R2 = Math.hypot(w, l) / 2; if (LMP.some(F => Math.hypot(F.cx - x, F.cz - z) < F.r + R2 && polyHit(F.H, cs.slice(0, 4), 0))) continue;
         const A = w * l, h = lv ? lv * 3.1 + 0.6 : A > 2500 ? 9 + rnd() * 5 : A > 600 ? 7 + rnd() * 7 : 5.6 + Math.floor(rnd() * 3) * 3.1;
         H.push([x, z, w, h, l, r]); for (let a = Math.floor((x - R2) / 24); a <= Math.floor((x + R2) / 24); a++) for (let b = Math.floor((z - R2) / 24); b <= Math.floor((z + R2) / 24); b++) { const kk = a * 65536 + b; let L4 = grid.get(kk); if (!L4) grid.set(kk, L4 = []); L4.push([x, z, w / 2 + 1.5, l / 2 + 1.5, c, s]); }
-        if (A < 900 && rnd() < 0.8) for (let t = 0; t < (A > 200 ? 2 : 1); t++) T.push([x + (rnd() - .5) * w * 0.6 * c + (rnd() - .5) * l * 0.6 * s, h, z - (rnd() - .5) * w * 0.6 * s + (rnd() - .5) * l * 0.6 * c]); }
+        if (A < 900 && rnd() < 0.8) for (let t = 0; t < (A > 200 ? 2 : 1); t++) T.push([x + (rnd() - .5) * w * 0.6 * c + (rnd() - .5) * l * 0.6 * s, h, z - (rnd() - .5) * w * 0.6 * s + (rnd() - .5) * l * 0.6 * c, H.length - 1]); }
       // Ferne Stadt bis an den Dunst: lockeres Raster niedriger Häuserblöcke außerhalb der OSM-Fläche, vereinzelt höhere Bauten
       const c0x = (minX + maxX) / 2, c0z = (minZ + maxZ) / 2;
       for (let k = 0; k < (hi ? 5200 : 2600); k++) { const a = rnd() * Math.PI * 2, rr = 1500 + Math.pow(rnd(), 0.8) * 2900, x = c0x + Math.cos(a) * rr, z = c0z + Math.sin(a) * rr, [d] = nearestDist(x, z); if (d < 1300) continue;
@@ -9365,7 +9386,9 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       H.forEach(([x, z, w, h, l, r], k) => { qq.setFromAxisAngle(_v2, r); m4.compose(pv.set(x, 0, z), qq, sc.set(w, h, l)); ib.setMatrixAt(k, m4); ib.setColorAt(k, cc.setHex(cols2[(k * 7 + (k >> 3)) % cols2.length])); });
       ib.castShadow = true; ib.receiveShadow = true; trackGroup.add(ib);
       if (T.length) { const tg = new THREE.CylinderGeometry(0.62, 0.62, 1.3, 6).translate(0, 0.65, 0), it = new THREE.InstancedMesh(tg, lam({ color: 0x1c1d20, roughness: .6 }), T.length);
-        T.forEach(([x, y, z], k) => { m4.compose(pv.set(x, y, z), qq.identity(), sc.set(1, 1, 1)); it.setMatrixAt(k, m4); }); trackGroup.add(it); }   /* in Kacheln geteilt (chunkInstances): nur Sichtbares wird gezeichnet */
+        T.forEach(([x, y, z], k) => { m4.compose(pv.set(x, y, z), qq.identity(), sc.set(1, 1, 1)); it.setMatrixAt(k, m4); });
+        it.userData.fixed = true; it.userData.afterBld = () => { const a = new THREE.Matrix4(), b = new THREE.Matrix4(); T.forEach(([, , , hk], k) => { ib.getMatrixAt(hk, a); it.getMatrixAt(k, b); if (Math.abs(a.determinant()) < 1e-6) b.makeScale(0, 0, 0); else b.elements[13] = a.elements[13] + a.elements[5]; it.setMatrixAt(k, b); }); it.instanceMatrix.needsUpdate = true; it.computeBoundingSphere(); };   /* Tank sitzt auf SEINEM Dach: Höhe nach dem Geländeausgleich des Hauses, weg mit dem Haus (bldOverlap) – vorher schwebten Tanks bis 12 m über entfernten oder am Hang tiefer gesetzten Häusern */
+        trackGroup.add(it); }   /* in Kacheln geteilt (chunkInstances): nur Sichtbares wird gezeichnet */
       // Straßen und Plätze der Stadt: grauer Belag außerhalb des Sportparks (sonst Rasen zwischen den Häusern), Raster folgt dem Gelände
       { const PK = M.park, pos = [], C = 60, R = 4700; for (let x = c0x - R; x < c0x + R; x += C) for (let z = c0z - R; z < c0z + R; z += C) { const xm = x + C / 2, zm = z + C / 2; if (Math.hypot(xm - c0x, zm - c0z) > R) continue;
           if ([[x, z], [x + C, z], [x + C, z + C], [x, z + C]].some(([a, b]) => pipM(PK, a, b) || !trackFree(a, b, 4))) continue; pos.push(x, 0.25, z, x, 0.25, z + C, x + C, 0.25, z + C, x, 0.25, z, x + C, 0.25, z + C, x + C, 0.25, z); }
@@ -9928,12 +9951,12 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   flood.intensity = TH.flood;
   sun.castShadow = TH.flood === 0; flood.castShadow = TH.flood > 0; flood.visible = TH.flood > 0;   /* Licht mit Stärke 0 nicht mitrechnen (sonst wertet jeder Pixel ein zweites Sonnenlicht aus) */
   renderer.toneMappingExposure = TH.exposure;
-  applyElevation();
+  applyElevation(); for (const c of trackGroup.children) if (c.userData.afterElev) c.userData.afterElev(); try { snapTreesToGround(); } catch (e) { console.warn('snapTreesToGround', e); }
   try { HOLES = fillGroundHoles(); } catch (e) { console.warn('fillGroundHoles', e); }
   tileGround(trackGroup);
   mergeGroups(trackGroup);
   chunkStrips(trackGroup);
-  try { bldOverlap(80, true); } catch (e) { console.warn('bldOverlap', e); }   // Füll-Gebäude, die in ein gestaltetes Gebäude ragen, entfernen (Monaco hatte 12 solche Stellen)
+  try { bldOverlap(80, true); } catch (e) { console.warn('bldOverlap', e); } for (const c of trackGroup.children) if (c.userData.afterBld) c.userData.afterBld();   // Füll-Gebäude, die in ein gestaltetes Gebäude ragen, entfernen (Monaco hatte 12 solche Stellen)
   chunkInstances(trackGroup, TRK.nos ? 480 : 360);   /* größere Kacheln: weniger Zeichenaufrufe */
   try { grassTufts(); } catch (e) { console.warn('grassTufts', e); }
   if (TRK.nos) for (const ch of trackGroup.children) if (ch.userData.part && ch.geometry.boundingSphere) { ch.boundingSphere = ch.geometry.boundingSphere; ch.userData.lodHi = ch.geometry; ch.userData.lodSteps = [[null, 1800]]; LODS.push(ch); }   // lange Strecke: weit entfernte Streckenteile (hinter Wald und Hügeln) nicht zeichnen
@@ -12747,7 +12770,7 @@ window.__go = async (name, ser) => { if (running) { location.reload(); return; }
   for (let k = 0; k < 6 && !(q('#qPlay') && q('#qPlay').offsetParent); k++) { const b = vb().find(b => b.textContent.trim() === '‹'); if (b) b.click(); await W8(500); }
   q('#qPlay').click(); await W8(600); const sc = ser && q('#serCards [data-ser="' + ser + '"]'); if (sc) { sc.click(); await W8(200); }
   for (let k = 0; k < 6 && q('#menu').dataset.scr !== 'track'; k++) { q('#mNext').click(); await W8(600); }   // Klasse -> Team -> Fahrer -> Strecke
-  const t = [...document.querySelectorAll('#tracks .tcard')].find(e => new RegExp(name, 'i').test(e.textContent)); if (t) { t.click(); await W8(200); } q('#mNext').click();
+  const cards = [...document.querySelectorAll('#tracks .tcard')], t = cards.find(e => e.querySelector('.tn') && new RegExp('^' + name + '$', 'i').test(e.querySelector('.tn').textContent.trim())) || cards.find(e => new RegExp(name, 'i').test(e.textContent));   /* zuerst genau nach dem Kartentitel – „Spa“ traf sonst „Spanien“ auf der Barcelona-Karte */ if (t) { t.click(); await W8(200); } q('#mNext').click();
   for (let k = 0; k < 180 && q('#menu').dataset.scr !== 'race'; k++) await W8(500); };   // wartet, bis die Strecke gebaut ist
 window.__race = async (name, ser) => { await window.__go(name, ser); for (let k = 0; k < 12 && !running; k++) { document.querySelector('#mNext').click(); await W8(700); } return running; };
 window.__build = k => { buildTrack(k); return TRK.name; };
@@ -12852,7 +12875,7 @@ window.__S = () => S; window.__mesh = () => ({ ALL, pl, MODELS, camera });   /* 
 window.__laps = () => ais.map(a => a.code + ':' + (a.lapTimes || []).map(t => t.toFixed(1)).join('/'));
 window.__dbg = () => ({ L, N, raceState, running, paused, lightsT, raceTime, plD: pl.d, plV: pl.v, plLat: pl.lat, order: order.map(c => c.code), best: pl.best, fastest, resultsShown, aiBest: ais.slice(0, 5).map(a => a.code + ':' + (a.best || 0).toFixed(1)) });
 // QC-Bot (qc/qc-bot.js, Start mit ?qc): Zugriff auf den Spielzustand, ohne das Spiel selbst zu verändern
-window.__qcApi = { THREE, renderer, camera, scene, trackGroup, sky, skyBox, S, TRACKS, SERIES, GP, tick: (t, f) => tick(t, f), renderNow: () => composer ? composer.render(0) : renderPlain(), renderCam: cam => renderLikeGame(cam), surface: (i, l) => surface(i, l), nearestDist: (x, z) => nearestDist(x, z), wallAt: (j, sd) => wallAt(j, sd), groundY: (x, z) => groundY(x, z),
+window.__qcApi = { THREE, renderer, camera, scene, trackGroup, sky, skyBox, S, TRACKS, SERIES, GP, tick: (t, f) => tick(t, f), renderNow: () => composer ? composer.render(0) : renderPlain(), renderCam: cam => renderLikeGame(cam), surface: (i, l) => surface(i, l), nearestDist: (x, z) => nearestDist(x, z), wallAt: (j, sd) => wallAt(j, sd), groundY: (x, z) => groundY(x, z), placeY: (x, z) => placeY(x, z),
   get pl() { return pl; }, get ais() { return ais; }, get running() { return running; }, get paused() { return paused; }, get raceState() { return raceState; }, get raceTime() { return raceTime; }, get SER() { return SER; },
   get TRK() { return TRK; }, get TH() { return TH; }, get N() { return N; }, get L() { return L; }, get DS() { return DS; }, get PX() { return PX; }, get PZ() { return PZ; }, get RX() { return RX; }, get RZ() { return RZ; }, get TX() { return TX; }, get TZ() { return TZ; },
   get PAVEZ() { return PAVEZ; }, get POCK() { return POCK; }, get PVBL() { return PVBL; }, get PVBR() { return PVBR; }, get KERBL() { return KERBL; }, get KERBR() { return KERBR; }, get NOWALL() { return NOWALL; }, get GRL() { return GRL; }, get GRR() { return GRR; }, get MC_CHIC() { return MC_CHIC; },

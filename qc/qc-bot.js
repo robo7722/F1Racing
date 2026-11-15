@@ -3,6 +3,7 @@
 // Start: index.html?qc=all (oder ?qc=monza,spa). Mit qc/run.py werden Bilder und Bericht in qc-reports/ gespeichert,
 // ohne Server (z. B. am Handy) lädt der Browser am Ende einen eigenständigen HTML-Bericht herunter.
 // URL-Parameter: qc=all|liste  mode=full|quick  laps=n  ser=f1|f2|kart  gfx=low|high|ultra  static=0  shot=m  srv=1  run=id  i=n
+import { floatScan } from './float-scan.js';
 const A = window.__qcApi, T = A.THREE, P = new URLSearchParams(location.search);
 const W8 = ms => new Promise(r => setTimeout(r, ms));
 const CFG = {
@@ -233,11 +234,13 @@ async function staticChecks(R) {
   const bo = st.bldOverlap || {};
   for (const e of (bo.ex || []).slice(0, 3)) issue(R, 'info', 'Clipping', 'Gebäude überschneiden sich (' + e[0] + ' / ' + e[1] + ')', e[2], '', viewAt((e[3] + e[5]) / 2, (e[4] + e[6]) / 2, 40));
   const wl = st.wallLine || {};
-  for (const e of (wl.list || []).slice(0, 4)) issue(R, 'mittel', 'Zaun / Wand', 'Absperrung springt (Zickzack): ' + e.n + ' Knicke bis ' + e.mx.toFixed(1) + ' m, ' + e.side + ', bis ' + at(e.s1), e.s, '', null);
+  const refW = !!(A.TRK && A.TRK.refFull);   /* Strecken mit vermessenen Original-Absperrungen (Leitplanken/Mauern aus Kartendaten): Versätze sind echt und werden als Info geführt */
+  for (const e of (wl.list || []).slice(0, 4)) issue(R, refW ? 'info' : 'mittel', 'Zaun / Wand', 'Absperrung springt (Zickzack): ' + e.n + ' Knicke bis ' + e.mx.toFixed(1) + ' m, ' + e.side + ', bis ' + at(e.s1) + (refW ? ' – Versatz aus den vermessenen Absperrungen' : ''), e.s, '', viewWall(e));
   const sd = st.strands || {};
   for (const e of (sd.list || []).slice(0, 4)) issue(R, 'hoch', 'Clipping', 'Zwei Streckenäste überlappen (Mittellinien ' + e.d + ' m, Summe der Halbbreiten ' + e.hw + ' m) bei ' + at(e.s) + ' und ' + at(e.s2), e.s, '', null);
   const fl = st.floating || {};
-  for (const e of (fl.list || []).slice(0, 5)) issue(R, 'mittel', 'Schwebt', 'Objekt schwebt ' + e.gap + ' m über dem Boden (' + e.kind + ', ' + e.d + ' m neben der Strecke)', e.s, 'x ' + e.x + ' · z ' + e.z, viewAt(e.x, e.z, 22));
+  for (const e of (fl.list || []).slice(0, 6)) issue(R, 'mittel', 'Schwebt', (e.kind === 'schwebt' ? 'Objekt schwebt ' + e.gap + ' m über dem Boden' : 'Spalt unter Objekt am Hang (bis ' + e.gap + ' m)') + ' – ' + e.d + ' m neben der Strecke', e.s, e.tag + ' · ' + e.H + ' m hoch · x ' + e.x + ' · z ' + e.z, viewObj(e));
+  if ((fl.bad || 0) > (fl.list || []).length) issue(R, 'info', 'Schwebt', 'Weitere ' + (fl.bad - fl.list.length) + ' Stellen derselben Arten', null, '');
   const fc = st.facadeClip || {};
   if (fc.clipping) issue(R, 'mittel', 'Clipping', fc.clipping + ' Fassaden stehen auf der Strecke', null, '');
 }
@@ -252,15 +255,14 @@ function strandCheck() { const N = A.N, DS = A.DS, ar = Math.round(250 / DS), ou
     const d = Math.sqrt(dm), hw = A.HW[i] + A.HW[jm]; if (d < hw - 0.3) out.push({ s: i * DS, s2: jm * DS, d: +d.toFixed(1), hw: +hw.toFixed(1) }); }
   const g = []; for (const o of out) { const l = g[g.length - 1]; if (l && o.s - l.s1 < 30) { l.s1 = o.s; l.n++; } else g.push({ ...o, s1: o.s, n: 1 }); }
   return { n: g.length, list: g.slice(0, 6) }; }
-/* Schwebende Objekte: Fußpunkt von Instanzen (Bäume, Häuser, Pfosten) gegen die sichtbare Bodenfläche (Strahl von oben auf Kachel-/Band-/Bodennetze) */
-async function floatCheck() { const rc = new T.Raycaster(), m = new T.Matrix4(), gnd = [], out = []; let n = 0;
-  A.trackGroup.traverse(o => { if (o.isMesh && !o.isInstancedMesh && (o.userData.tile || o.userData.strip || o.userData.ground)) gnd.push(o); });
-  const ray = (x, z, y) => { rc.set(new T.Vector3(x, y + 2, z), new T.Vector3(0, -1, 0)); rc.far = 200; const h = rc.intersectObjects(gnd, false); return h.length ? h[0].point.y : null; };
-  const ims = []; A.trackGroup.traverse(ch => { if (ch.isInstancedMesh && ch.count >= 10 && ch.count <= 20000) { if (!ch.geometry.boundingBox) ch.geometry.computeBoundingBox(); const bb = ch.geometry.boundingBox; if (bb.min.y <= 0.3 && bb.max.y >= 3 && bb.max.y <= 60) ims.push(ch); } });
-  let k0 = 0; for (const ch of ims) { const step = Math.max(1, Math.floor(ch.count / 80));
-    for (let k = 0; k < ch.count; k += step) { ch.getMatrixAt(k, m); const e = m.elements; const g = ray(e[12], e[14], e[13]); if (g === null) continue; n++; const gap = e[13] - g; if (gap > 1.2) { const [d, j] = A.nearestDist(e[12], e[14]); out.push({ x: Math.round(e[12]), z: Math.round(e[14]), s: Math.round(j * A.DS), d: Math.round(d), gap: +gap.toFixed(1), kind: 'Instanz ' + (ch.geometry.type || '') }); } }
-    if (++k0 % 6 === 0) await W8(20); }
-  out.sort((a, b) => b.gap - a.gap); return { n, bad: out.length, list: out.slice(0, 8) }; }
+/* Schwebende Objekte und Spalten am Hang im ganzen Streckenumfeld (qc/float-scan.js). Gemeldet wird, was man von der Strecke aus sehen kann:
+   schwebend bis 3 km Entfernung, Spalt unter einem Objekt am Hang ab 2,5 m bis 600 m Entfernung. Je Objektart höchstens zwei Stellen. */
+async function floatCheck() { const r = await floatScan(A); const cnt = new Map(), list = [];
+  const vis = r.filter(e => e.kind === 'schwebt' ? e.d < 3000 : e.gapMax > 2.5 && e.d < 600).sort((a, b) => (b.kind === 'schwebt' ? b.gapMin : b.gapMax) - (a.kind === 'schwebt' ? a.gapMin : a.gapMax));
+  for (const e of vis) { const k = e.kind + e.tag; const n = cnt.get(k) || 0; cnt.set(k, n + 1); if (n < 2) list.push({ x: e.x, z: e.z, s: e.s, d: e.d, gap: e.kind === 'schwebt' ? e.gapMin : e.gapMax, kind: e.kind, tag: e.tag, H: e.H, y: +((e.bb[1] + e.bb[4]) / 2).toFixed(1) }); }
+  return { n: r.length, bad: vis.length, kinds: cnt.size, list: list.slice(0, 10) }; }
+function viewObj(e) { const [, j] = A.nearestDist(e.x, e.z), ey = A.FLAT ? 0 : A.ELEV[j], dx = e.x - A.PX[j], dz = e.z - A.PZ[j], L = Math.hypot(dx, dz) || 1, back = Math.min(L * 0.7, 25 + (e.H || 2)); const cam = new T.PerspectiveCamera(50, TW / TH2, 0.3, 6000); cam.position.set(e.x - dx / L * back, Math.max(ey + 2.5, e.y + 1), e.z - dz / L * back); cam.lookAt(e.x, e.y, e.z); cam.updateMatrixWorld(); renderTo(rtA, cam, bufA); return rtJpeg(bufA, [[TW / 2, TH2 / 2, 26, '#ff00ff']]); }
+function viewWall(e) { const j = Math.round(e.s / A.DS) % A.N, sd = e.side === 'links' ? -1 : 1, w = (sd < 0 ? A.WL : A.WR)[j], x = A.PX[j] + A.RX[j] * w * sd, z = A.PZ[j] + A.RZ[j] * w * sd; return viewAt(x, z, 20); }
 function viewAt(x, z, back = 14) { const [, j] = A.nearestDist(x, z), e = A.FLAT ? 0 : A.ELEV[j]; const cam = new T.PerspectiveCamera(60, TW / TH2, 0.3, 4000); cam.position.set(x - A.TX[j] * back, e + back * 0.5, z - A.TZ[j] * back); cam.lookAt(x, e, z); cam.updateMatrixWorld(); renderTo(rtA, cam, bufA); return rtJpeg(bufA, [[TW / 2, TH2 / 2, 22, '#ff3b30']]); }
 
 function issue(R, sev, cat, msg, s, det, jpeg) { const it = { sev, cat, msg, s: s == null ? null : Math.round(s), det: det || '' }; R.issues.push(it); if (jpeg) imgLater(jpeg, cat.replace(/\W+/g, ''), p => it.img = p); return it; }
@@ -534,5 +536,5 @@ async function main() {
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' })); a.download = 'strecken-qc-' + CFG.run + '.html'; document.body.appendChild(a); a.click();
   log('Fertig – Bericht wurde heruntergeladen');
 }
-window.__qcBot = { selfTest, topVoids, gravelHoles, groundZFight, groundMeshes, cutHole, probe, integrity, wallLineCheck, strandCheck, floatCheck };
+window.__qcBot = { floatScan: o => floatScan(A, o), selfTest, topVoids, gravelHoles, groundZFight, groundMeshes, cutHole, probe, integrity, wallLineCheck, strandCheck, floatCheck };
 main().catch(e => log('Abbruch: ' + (e && e.stack || e)));
