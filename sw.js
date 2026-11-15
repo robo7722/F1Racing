@@ -1,7 +1,8 @@
 // Service Worker: macht das Spiel offline-fähig und installierbar
-const CACHE = 'f1-rennen-1.99';
+const CACHE = 'f1-rennen-2.01';
 const APP = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './car.bin', './f2car.bin', './kart.bin', './textures/kart_body.jpg', './textures/kart_body_n.jpg', './textures/kart_wheel.jpg', './kartfahrer.bin', './f1fahrer.bin', './textures/kart_fahrer.jpg', './textures/kart_stoff.jpg', './textures/f1_arm_stoff.jpg', './roadcar.bin', './menu.mp3',
-  ...['f1_mittel', 'f1_hoch', 'f2_mittel', 'f2_hoch', 'kart_mittel', 'kart_hoch'].map(n => './sounds/' + n + '.wav'), ...['leicht', 'auto', 'wand', 'schwer', 'kart'].map(n => './sounds/crash_' + n + '.wav'),   // Motor-/Crash-Aufnahmen (ElevenLabs)
+  ...['f1_mittel', 'f1_v2', 'f1_v3', 'f1_v4', 'f2_mittel', 'f2_v2', 'f2_v3', 'kart_v0', 'kart_v1', 'kart_mittel', 'kart_v3', 'v6_schub', 'kart_schub'].map(n => './sounds/' + n + '.wav'), ...['mx5_leer', 'mx5_v1', 'mx5_v2', 'mx5_v3', 'mx5_3000', 'mx5_5000', 'mx5_7000', 'mx5_schub', 'cf_leicht', 'cf_auto', 'cf_armco', 'cf_beton', 'cf_schwer', 'stahl_leicht', 'stahl_auto', 'stahl_wand', 'stahl_schwer', 'kart_kart', 'kart_wand', 'reifenstapel',
+    'kies', 'rasen', 'kerb', 'kies_einschlag', 'quietschen_slick', 'quietschen_strasse', 'schaben_metall', 'schaben_beton', 'schaben_auto', 'wind'].map(n => './sounds/' + n + '.wav'),   // v2.00: Roadster, Einschläge, Fahr-Geräusche   // Motor-/Crash-Aufnahmen (ElevenLabs)
   ...['asphalt_track', 'asphalt_pit_lane', 'sand_01', 'gravel_floor'].flatMap(t => ['diff', 'nor_gl'].map(m => './textures/' + t + '_' + m + '_1k.jpg')),
   ...['Grass004_Color', 'Grass004_NormalGL', 'LeafSet004_Color', 'LeafSet004_Opacity', 'LeafSet019_Color', 'LeafSet019_Opacity', 'Foliage001_Color', 'Foliage001_Opacity'].map(f => './textures/acg_' + f + '.jpg')];
 const MBUSY = new Set();

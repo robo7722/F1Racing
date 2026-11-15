@@ -102,3 +102,80 @@ Arbeitsfläche: „F1Racing – Motor- und Crash-Sounds“ (https://elevenlabs.i
 - Fremde Autos ebenfalls mit Aufnahmen (mit Doppler über `playbackRate`).
 - Eigene Aufnahmen für Gas weg / Schub (Knallen, Blubbern) und Leerlauf in der Box.
 - Kart hoch ist kaum höher als Kart mittel. Bei Bedarf neu erzeugen („very high-pitched“).
+- Realismus-Vergleich mit echter F1/F2/Kart (u. a. F2-Stimmungsfehler im hohen Loop): siehe [[SOUNDS-REALISMUS]].
+
+## v1.99 – Motoren in echter Tonhöhe (Umsetzung von [[SOUNDS-REALISMUS]])
+Stand: 15.11.2026.
+
+**Ausgangslage:** F1/F2 klangen 0,6 × echt (≈ 9 Halbtöne zu tief), der hohe F2-Loop war eine Oktave falsch eingetragen (280 statt ~560 Hz), Gegner klangen höher als das eigene Auto, F2 nutzte das F1-Getriebe, die Kart-Drehzahl hing nicht proportional an der Geschwindigkeit.
+
+**Credits:** ElevenLabs (kostenloser Tarif) hatte nur noch 39 Credits. Zwei neue Aufnahmen à 17 Credits (Schätzung sagte 100), Rest ~5. Neue Drehzahlstufen deshalb **offline** erzeugt.
+
+**Neue Dateien:**
+- `tools/sounds/varianten.py`: Tonhöhen-Varianten mit Rubberband (`ffmpeg -af rubberband=…:formant=preserved`), Formanten bleiben → kein „Spielzeugmotor“. Naht: Loop 3× hintereinander, mittleres Drittel, 0,12 s überblendet.
+- Rohaufnahmen „Gas weg“: `sounds/roh/kart_schub.mp3` (1 s, Zweitakt-Brabbeln), `sounds/roh/v6_schub.mp3` (3 s, V6 Knallen/Blubbern, Drehzahl fällt; verwendet 0–1,3 s, +8 Halbtöne).
+
+| Klasse | Loops (Grundton ≈ U/min) | Schub |
+|---|---|---|
+| F1 | f1_mittel 230 (4.600) · f1_v2 344 (6.900) · f1_v3 438 (8.750) · f1_v4 552 (11.000) | v6_schub 390, leise (2026: Ernten beim Lupfen) |
+| F2 | f2_mittel 255 (5.100) · f2_v2 342 (6.850) · f2_v3 444 (8.900) | v6_schub 390, laut |
+| Kart | kart_v0 78 (4.700) · kart_v1 104 (6.250) · kart_mittel 156 (9.350) · kart_v3 224 (13.400) | kart_schub 152 |
+
+`f1_hoch`, `f2_hoch`, `kart_hoch` sind nur noch Quellen für die Varianten (nicht mehr im Spiel/Service-Worker).
+
+**Einbau (`index.html`):**
+- `SND_ENG[klasse] = { cyl, vol, cut: [Dauer, Pegel], loops: [[Datei, Grundton], …], schub: [Datei, Grundton, Lautstärke] }`. `tp` entfällt: Zielton = **echte Zündfrequenz** (V6 U/min ÷ 20, Kart U/min ÷ 60).
+- Überblendung zwischen den zwei Stufen, die den Zielton einschließen (logarithmisch, Kosinus/Sinus). Tempo je Stufe ~0,8–1,25.
+- Motor-Aufnahmen starten erst, wenn **alle** Stufen einer Klasse geladen sind (sonst bleibt der Synthesizer).
+- **Gas weg:** Anteil = `(0,45 − Gas)/0,35` × Drehzahl über Schwelle (F1 6.500, F2 5.500, Kart 7.000). Beim Lupfen an zufälliger Stelle neu gestartet. Läuft am Tiefpass vorbei, Hauptmotor dabei −35 %.
+- **Schalten:** F1 25 ms auf 65 % (nahtlos), F2 60 ms auf 35 % (Zündunterbrechung), Runterschalten 60 % davon.
+- **F2-Getriebe:** `RATIO_F2 = [245, 195, 160, 134, 113, 96]`, Hochschalten bei 8.600, Begrenzer 8.750. `gearInfo(kmh, f2)` liefert jetzt auch `n` (Ganganzahl); die Halo-Anzeige zeigt N–6 bei F2.
+- **Kart:** Drehzahl = 14.000 × v/v_max (max. 15.500), darunter Fliehkraftkupplung (Leerlauf 2.800, mit Gas ~5.000). Am Start nur Gasstöße bis ~4.500.
+- **Gegner:** Aufnahme statt Sägezahn (F1 f1_v3, F2 f2_v2, Kart kart_mittel), Doppler über `playbackRate`, gleiche Drehzahl-Logik wie das eigene Auto, weiter weg dumpfer. Synthetisch nur noch als Rückfall.
+- **F1 MGU-K:** leises Heulen auch beim normalen Beschleunigen (Gas > 50 %), beim Boost wie bisher kräftig.
+- **Diagnose:** `__snd()` zeigt zusätzlich km/h, Gang, Phase, Schub-Anteil und das Tempo der Gegner-Aufnahmen.
+
+## v2.00 – Roadster, neue Einschläge, Fahr-Geräusche (alles ElevenLabs)
+Stand: 15.11.2026. Konto jetzt im Starter-Tarif (~30.000 Credits/Monat).
+
+**Erzeugung:** neu direkt über die API (`tools/sounds/erzeugen.py`, `POST /v1/sound-generation`, Schlüssel kommt über den Proxy) statt über die Arbeitsfläche – dort bremste das Gleichzeitigkeits-Limit, und das Herunterladen ließ sich nicht skripten. 27 Sounds × 2 Varianten, ~330 Credits (Schätzung der Arbeitsfläche: 984). Rohdateien in `sounds/roh/v2/`. Ein Lauf über die Arbeitsfläche (gleiche Prompts, ~330 Credits) ist ungenutzt.
+**Auswahl/Aufbereitung:** `tools/sounds/aufbereiten_v2.py` wählt je Paar automatisch: Loops nach gleichmäßigster Lautheit, Einschläge nach „genau ein Hauptschlag, steiler Einsatz“. Gewählte Varianten stehen in `sounds/roh/v2/auswahl.json`.
+
+### Roadster (MX-5 ND2, 2,0-l-Vierzylinder, Sportauspuff)
+- Vorher synthetisch und fälschlich als Reihensechszylinder (3 Zündungen je Umdrehung). Jetzt **2 Zündungen je Umdrehung** (U/min ÷ 30), Begrenzer ~7.500.
+- Die KI trifft die verlangte Drehzahl nicht – deshalb Tonhöhe gemessen und Lücken mit Rubberband-Varianten gefüllt:
+
+| Datei | Quelle | Grundton | ≈ U/min |
+|---|---|---|---|
+| mx5_leer | „850 rpm“ (Variante 1, Pulsieren 27,3 Hz) | 27,3 | 820 |
+| mx5_v1 | Leerlauf +8 HT | 43,3 | 1.300 |
+| mx5_v2 | „3000 rpm“ −12 HT | 66,5 | 2.000 |
+| mx5_v3 | „3000 rpm“ −6 HT | 94 | 2.800 |
+| mx5_3000 | „3000 rpm“ (klingt wie 4.000) | 133 | 4.000 |
+| mx5_5000 | „5000 rpm“ Variante 2 | 203 | 6.100 |
+| mx5_7000 | „7000 rpm“ Variante 1, 0,1–1,8 s | 273 | 8.200 |
+| mx5_schub | Gas weg, Blubbern/Knallen | 137 | 4.100 |
+
+- Schalten: Handschaltung mit Kupplung → Lücke 0,16 s auf 30 %.
+- Gegner-Roadster nutzen `mx5_5000` (Doppler).
+
+### Einschläge (`SND_CRASH[art][ziel]`)
+- Art: `cf` (F1/F2, Carbon), `stahl` (Roadster), `kart`. Ziel: `leicht` (< 0,45), `auto`, `armco` (Leitplanke), `beton` (Mauer, nach `TH.wallKind`), `schwer` (> 0,9 bzw. Wand > 0,85).
+- Kart: Rempler `kart_kart`, Bande `kart_wand`, schwer `reifenstapel`.
+- **Unfälle anderer** in bis zu 80 m Entfernung sind jetzt hörbar (leiser nach Abstand, höchstens alle 0,6 s).
+
+### Fahr-Geräusche (`SND_FX`, `fxTick`)
+| Geräusch | wann | Lautstärke / Tempo |
+|---|---|---|
+| kies | Untergrund Kies | mit Tempo (bis 25 m/s), Tempo 0,85–1,15 |
+| rasen | Untergrund Rasen | mit Tempo |
+| kerb | auf Randsteinen | Rattern wird mit dem Tempo schneller (0,55–1,9) |
+| kies_einschlag | Wechsel von Asphalt auf Kies/Rasen > 12 m/s | einmalig |
+| quietschen_slick / _strasse | Quer-Haftung > 88 % ausgenutzt oder Rutschen nach Kontakt, nur auf Asphalt | F1/F2 0,35, Kart 0,3, Roadster (Straßenreifen) 0,45 |
+| schaben_metall / _beton | Kontakt mit Leitplanke bzw. Mauer | mit Tempo |
+| schaben_auto | Autos berühren sich | mit Tempo |
+| wind | immer | ∝ Tempo², offenes Cockpit |
+
+- Neue Signale aus der Fahrphysik: `c.latUse` (Ausnutzung der Quer-Haftung), `pl.wallT` (Bandenkontakt), `pl.rubT` (Autokontakt).
+- Alte Crash-Dateien (`crash_*.wav`) entfernt.
+- **Diagnose:** `__snd()` zeigt zusätzlich `surf` und aktive Fahr-Geräusche (`fx`). Testschalter `window.__surfTest = 'gravel'` erzwingt einen Untergrund.

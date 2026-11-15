@@ -645,7 +645,7 @@ Die Bäume der `trees: 'forest'`-Strecken bestehen nicht mehr aus Kugeln und Keg
 
 ---
 
-## Nachtrag: Version 1.99 – Spa, Kiesflächen der Schikanen (Bus-Stop, Les Combes)
+## Nachtrag: Version 1.99 (mit main zusammengeführt als 2.01) – Spa, Kiesflächen der Schikanen (Bus-Stop, Les Combes)
 Rückmeldung (Handy, Spa, letzte Kurve, Auto im Kies): „clippt noch alles“ – Werbetafeln (EAU ROUGE, FRANCORCHAMPS) halb im Kies, Tribünensockel im Kies.
 Die Korrektur aus v1.57 (Kies außen auf Streckenhöhe, keine Stufe zum Gras) war noch drin – das hier waren andere Ursachen.
 
