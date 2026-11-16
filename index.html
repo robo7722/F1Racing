@@ -1042,7 +1042,7 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 #qPlay::before{background:linear-gradient(180deg,rgba(12,13,16,.7),rgba(12,13,16,.2) 42%,rgba(12,13,16,.78)),url(textures/menu_quick.jpg) center/cover no-repeat!important}
 #tPlay::before{background:linear-gradient(90deg,rgba(14,15,18,.5),rgba(14,15,18,0) 45%),url(textures/menu_tt.jpg) 78% 50%/cover no-repeat,#0e0f12!important}
 #tHub::before{background:linear-gradient(90deg,rgba(14,15,18,.55),rgba(14,15,18,0) 50%),url(textures/menu_hub.jpg) 100% 50%/cover no-repeat,#0e0f12!important}
-#tSettings::before{background:linear-gradient(90deg,rgba(18,19,22,.82),rgba(18,19,22,.35) 60%,rgba(18,19,22,.6)),url(textures/menu_set.jpg) center/cover no-repeat!important}
+#tSettings::before{background:linear-gradient(90deg,rgba(18,19,22,.82),rgba(18,19,22,.35) 60%,rgba(18,19,22,.6)),url(textures/menu_set.jpg?v=262) center/cover no-repeat!important}
 #qPlay b,#tPlay b,#tSettings b,#tHub b{color:#fff!important;text-shadow:0 2px 10px rgba(0,0,0,.8)}
 #qPlay small,#tPlay small,#tSettings small,#tHub small{color:rgba(255,255,255,.85)!important;text-shadow:0 1px 6px rgba(0,0,0,.9)}
 .hbody{background:linear-gradient(90deg,rgba(0,0,0,.5),rgba(0,0,0,0) 48%)!important}
@@ -4846,7 +4846,7 @@ for (const l of [sun, flood]) { const um = l.shadow.updateMatrices; l.shadow.upd
 scene.onAfterRender = () => shadowSwap(false);
 
 /* ======================= Strecke bauen ======================= */
-let ZONEH = [], ZWALL = [], CHIC_HULL = null;   // ZWALL: Linienzüge [[x, z], …] der Leitplanke um die Kies-Zonen (v1.99)
+let ZONEH = [], ZWALL = [], CHIC_HULL = null, CUTZ = [];   // CUTZ: Schikanen [von, bis] (Streckenindex), deren Abkürzen 5 s Strafe kostet   // ZWALL: Linienzüge [[x, z], …] der Leitplanke um die Kies-Zonen (v1.99)
 function zoneH(x, z) { for (const Z of ZONEH) { const fx = (x - Z.x0) / Z.bw * Z.SEG, fz = (z - Z.z0) / Z.bh * Z.SEG; if (fx < 0 || fz < 0 || fx >= Z.SEG || fz >= Z.SEG) continue;
   const ix = Math.floor(fx), iz = Math.floor(fz), u = fx - ix, v = fz - iz, G1 = Z.SEG + 1, k = iz * G1 + ix, Y = Z.Y; return (Y[k] * (1 - u) + Y[k + 1] * u) * (1 - v) + (Y[k + G1] * (1 - u) + Y[k + G1 + 1] * u) * v; } return null; }
 let BANK = null, KSD = 1;
@@ -6118,13 +6118,13 @@ function buildTrack(key) { BID++;
   /*@qat:edge{*/
   /*}@qat:edge*/
   // Monaco, Nouvelle Chicane (Referenzfoto): außen kein Fangzaun, sondern eine weite Asphaltfläche bis an die Häuser (Le Portobello)
-  MC_CHIC = null;
+  MC_CHIC = null; CUTZ = [];
   if (TRK.mc && TRK.mc.tun) { const s0 = TRK.mc.tun[1] * L + 100; let a = -1, b = -1;
     for (let s2 = s0; s2 < s0 + 300; s2 += DS) { const i = Math.floor(modL(s2) / DS) % N; if (Math.abs(KS[i]) > 1 / 45) { if (a < 0) a = i; b = i; } else if (a >= 0 && ((i - b + N) % N) * DS > 20) break; }
     if (a >= 0) { const A = (a - Math.round(14 / DS) + N) % N, B = (b + Math.round(8 / DS)) % N, n = (B - A + N) % N, tgt = new Float32Array(n + 1);
       for (let k = 0; k <= n; k++) { const i = (A + k) % N; let o = WR[i]; for (let t = WR[i]; t <= HW[i] + 13; t += 0.5) { const x = PX[i] + RX[i] * t, z = PZ[i] + RZ[i] * t, [d2, j] = spiNear(x, z); let dj = Math.abs(j - i); dj = Math.min(dj, N - dj); if (dj * DS > 4 && Math.sqrt(d2) < HW[j] + 3) break; o = t; } tgt[k] = o; }   /* nie bis an einen anderen Teil der Schikane */
       for (let k = 0; k <= n; k++) { const i = (A + k) % N, f = clamp(Math.min(k, n - k) * DS / 10, 0, 1); let m = 1e9; for (let d = -3; d <= 3; d++) m = Math.min(m, tgt[clamp(k + d, 0, n)]); WR[i] = Math.max(WR[i], lerp(WR[i], m, f)); }
-      MC_CHIC = [A, B]; } }
+      MC_CHIC = [A, B]; CUTZ.push([(a - Math.round(4 / DS) + N) % N, (b + Math.round(4 / DS)) % N]); } }
   // Red Bull Ring: Mitte der Runde links keine Mauer, sondern ein Grashügel
   HILLW = null;
   if (TH.hill) {
@@ -6370,7 +6370,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       P.sort((p, q) => p[0] - q[0] || p[1] - q[1]); const cr = (o, a2, b2) => (a2[0] - o[0]) * (b2[1] - o[1]) - (a2[1] - o[1]) * (b2[0] - o[0]), lo = [], up = [];
       for (const q of P) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
       for (let k = P.length - 1; k >= 0; k--) { const q = P[k]; while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
-      const H = lo.slice(0, -1).concat(up.slice(0, -1)); CHIC_HULL = H;
+      const H = lo.slice(0, -1).concat(up.slice(0, -1)); CHIC_HULL = H; CUTZ.push([a0, a1]);
       const crossT = (A, B) => { const l = Math.hypot(B[0] - A[0], B[1] - A[1]), st = Math.max(2, Math.ceil(l / 2)); for (let t = 0; t <= st; t++) { const x = A[0] + (B[0] - A[0]) * t / st, z = A[1] + (B[1] - A[1]) * t / st, [dd, jj] = nearestDist(x, z); if (dd < HW[jj] + 2.5) return true; } for (let i = a0 - 30; i < a1 + 30; i++) { const C = [PX[i], PZ[i]], D = [PX[i + 1], PZ[i + 1]]; if (cr(A, B, C) * cr(A, B, D) < 0 && cr(C, D, A) * cr(C, D, B) < 0) return true; } return false; };
       let run = [], start = H.findIndex((q, k) => crossT(H[k], H[(k + 1) % H.length])); if (start < 0) start = 0;
       for (let n = 1; n <= H.length; n++) { const k = (start + n) % H.length, A = H[k], B = H[(k + 1) % H.length];
@@ -10963,7 +10963,7 @@ function placeOnGrid() {
   (TT ? [DRIVERS.find(d => d[0] === pl.code)] : gridOrder()).forEach((d, j) => {
     const c = byCode(d[0]), s = QL ? -220 : slotS(j), p = trackAt(s, slotLat(j));
     Object.assign(c, { isPlayer: c === pl, d: s, v: 0, startD: s, gridLat: slotLat(j), yawKick: 0, sx: 0, sz: 0, lat: slotLat(j), latT: slotLat(j), latV: 0, home: (Math.random() - .5) * 3, laneT: 0,
-      lapsDone: -1, lapStart: 0, last: 0, best: 0, lapTimes: [], finished: false, finishTime: 0, finishLaps: 0, grid: j + 1,
+      lapsDone: -1, lapStart: 0, last: 0, best: 0, lapTimes: [], finished: false, finishTime: 0, finishLaps: 0, grid: j + 1, pen: 0, cutD: 0, cutZ: -1,
       react: 0.05 + Math.random() * 0.15, form: Math.random() * 0.006, phase: Math.random() * 6.28, thrS: 0, brkS: 0, slip: 0, slipS: 0, blkPrev: null, ovr: null, lineK: 0.85 + Math.random() * 0.15, idx: p.i, x: p.x, z: p.z, h: p.h, steer: 0, brk: 0, sPrev: modL(s), wallCd: 0, stuckT: 0, wrongT: 0, thr: 0, spin: 0 });
     const comp = c === pl ? 1 : Math.floor(Math.random() * 3);
     if (c.mesh.road || c.mesh.kart) { } else if (c.mesh.tp) { c.mesh.comp = comp; setLod(c.mesh, 0, true); c.mesh.halo.visible = true; } else { c.mesh.wfl.geometry = WHEEL.f[comp]; c.mesh.wfr.geometry = WHEEL.f[comp]; c.mesh.rr.geometry = WHEEL.r[comp]; }
@@ -11121,6 +11121,16 @@ function layoutControls() {
   applyLayout();
 }
 
+/* Schikane abgekürzt (Monza erste Schikane, Monaco Nouvelle Chicane): in der Zone die Strecke messen, die neben der Fahrbahn (mehr als 1,2 m über den Rand) zurückgelegt wird;
+   beim Verlassen der Zone mehr als 10 m → 5 s Zeitstrafe (auf die Zielzeit), Einblendung */
+function cutCheck(c, dt) {
+  if (!CUTZ.length || raceState !== 'race' || c.finished) { c.cutZ = -1; c.cutD = 0; return; }
+  const i = c.idx, inZ = z => { const [A, B] = CUTZ[z]; return A <= B ? i >= A && i <= B : i >= A || i <= B; };
+  let z = -1; for (let k = 0; k < CUTZ.length; k++) if (inZ(k)) { z = k; break; }
+  if (z >= 0) { if (c.cutZ !== z) { c.cutZ = z; c.cutD = 0; } if (Math.abs(c.lat) > HW[i] + 1.2) c.cutD += c.v * dt; return; }
+  if (c.cutZ >= 0 && c.cutD > 10) { c.pen = (c.pen || 0) + 5; if (c === pl) showMsg('5 s ZEITSTRAFE – SCHIKANE ABGEKÜRZT', 3.5); }
+  c.cutZ = -1; c.cutD = 0;
+}
 // Windschatten: 0..1, wenn ein Auto 6–45 m voraus in derselben Spur fährt (nur auf Geraden)
 // Windschatten: hinter einem vorausfahrenden Auto (bis 70 m, schmaler Kegel) weniger Luftwiderstand -> mehr Beschleunigung und höhere Endgeschwindigkeit
 function slipstream(c) {
@@ -11253,6 +11263,7 @@ function updatePlayer(dt) {
   let limit = S.assist && canDrive && !p.finished ? profP[p.idx] : undefined;
   if (p.finished) limit = Math.max(40, p.v - 8 * dt);
   carStep(p, thr, brk, dt, limit);
+  cutCheck(p, dt);
   if (!canDrive) p.brk = 0;
   stuckCheck(p, dt);
 }
@@ -11387,7 +11398,7 @@ function lapCheck(c) {
     }
     c.lapStart = raceTime; c.lapsDone = nl;
     if (!c.finished && raceState === 'race' && nl >= 1 && (nl >= S.laps || leaderFinished)) {
-      c.finished = true; c.finishTime = raceTime; c.finishLaps = nl; leaderFinished = true;
+      c.finished = true; c.finishTime = raceTime + (c.pen || 0); c.finishLaps = nl; leaderFinished = true;   /* Zeitstrafen (Schikane abgekürzt) auf die Zielzeit */
       if (c === pl) { sortOrder(); showMsg(cars.length === 1 ? 'ZIEL!' : 'ZIEL! P' + (order.indexOf(pl) + 1), 3.5); resultsAt = raceTime + 3.5; }
     }
   }   // rückwärts über die Linie zählt nicht zurück: sonst ergäbe das erneute Überfahren eine 3-Sekunden-"Runde" (falsche Bestzeit)
@@ -12625,7 +12636,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.62'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.63'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -12976,6 +12987,7 @@ window.__ks = s2 => KS[Math.floor(modL(s2) / DS) % N]; window.__head = () => HEA
 window.__plRef = () => pl;
 window.__S = () => S; window.__mesh = () => ({ ALL, pl, MODELS, camera });   /* Test: Einstellungen und Fahrzeuge lesen/setzen */
 window.__laps = () => ais.map(a => a.code + ':' + (a.lapTimes || []).map(t => t.toFixed(1)).join('/'));
+window.__cutz = () => CUTZ; window.__cut = (c, dt) => cutCheck(c, dt);   /* Test: Schikanen-Zonen und Strafprüfung */
 window.__dbg = () => ({ L, N, raceState, running, paused, lightsT, raceTime, plD: pl.d, plV: pl.v, plLat: pl.lat, order: order.map(c => c.code), best: pl.best, fastest, resultsShown, aiBest: ais.slice(0, 5).map(a => a.code + ':' + (a.best || 0).toFixed(1)) });
 // QC-Bot (qc/qc-bot.js, Start mit ?qc): Zugriff auf den Spielzustand, ohne das Spiel selbst zu verändern
 window.__qcApi = { THREE, renderer, camera, scene, trackGroup, sky, skyBox, S, TRACKS, SERIES, GP, tick: (t, f) => tick(t, f), renderNow: () => composer ? composer.render(0) : renderPlain(), renderCam: cam => renderLikeGame(cam), surface: (i, l) => surface(i, l), nearestDist: (x, z) => nearestDist(x, z), wallAt: (j, sd) => wallAt(j, sd), groundY: (x, z) => groundY(x, z), placeY: (x, z) => placeY(x, z),
