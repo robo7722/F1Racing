@@ -5778,11 +5778,11 @@ function texRep(t, rx, ry) { const c = t.clone(); c.needsUpdate = true; c.repeat
 /* Lichtpfützen der Flutlichter: ein Netz, jeder Eckpunkt auf Fahrbahnhöhe (placeY) – als Instanzen wurden die großen Flächen von applyElevation auf den tiefsten Eckpunkt gesenkt und lagen unter dem Asphalt (unsichtbar, an Mauern abgeschnitten) */
 /* Lichtkegel als EIN weicher Strahl: Helligkeit nach Blickwinkel auf die Fläche (frontal hell, streifend dunkel) – die Kanten des Pyramidenstumpfs verschwinden,
    statt zwei getrennter Streifen (je Fläche ausgeblendet) sieht man einen breiten Kegel; längs fällt die Vertexfarbe wie bisher auf null */
-function beamUV(g) {   /* runder Strahl: aus dem bisherigen vierkantigen Kegel (Lampenfeld oben, Fläche unten) einen elliptischen Kegel mit 24 Segmenten und runden Normalen machen –
+function beamUV(g, kTop = 1.12, kBot = 1.12) {   /* runder Strahl: aus dem bisherigen vierkantigen Kegel (Lampenfeld oben, Fläche unten) einen elliptischen Kegel mit 24 Segmenten und runden Normalen machen –
      am Rand steht die Fläche dann genau streifend zum Blick und blendet ganz aus (keine harte Kante, kein Streifen je Fläche) */
   const P = g.attributes.position, C = g.attributes.color, n = P.count, E = [[1e9, -1e9, 0, 1e9, -1e9, 0], [1e9, -1e9, 0, 1e9, -1e9, 0]], cnt = [0, 0];
   for (let i = 0; i < n; i++) { const e = E[C.getX(i) > 0.5 ? 0 : 1], x = P.getX(i), y = P.getY(i), z = P.getZ(i); e[0] = Math.min(e[0], x); e[1] = Math.max(e[1], x); e[2] += y; e[3] = Math.min(e[3], z); e[4] = Math.max(e[4], z); cnt[C.getX(i) > 0.5 ? 0 : 1]++; }
-  const R = E.map((e, k) => ({ x: (e[0] + e[1]) / 2, y: e[2] / (cnt[k] || 1), z: (e[3] + e[4]) / 2, rx: (e[1] - e[0]) / 2 * 1.12, rz: (e[4] - e[3]) / 2 * 1.12 })), [Tt, Bb] = R, S = 24, pos = [], col = [], nor = [];
+  const R = E.map((e, k) => ({ x: (e[0] + e[1]) / 2, y: e[2] / (cnt[k] || 1), z: (e[3] + e[4]) / 2, rx: (e[1] - e[0]) / 2 * (k ? kBot : kTop), rz: (e[4] - e[3]) / 2 * (k ? kBot : kTop) })), [Tt, Bb] = R, S = 24, pos = [], col = [], nor = [];
   const ax = [Bb.x - Tt.x, Bb.y - Tt.y, Bb.z - Tt.z], al = Math.hypot(...ax); for (let k = 0; k < 3; k++) ax[k] /= al;
   const V = (r, a) => [r.x + Math.cos(a) * r.rx, r.y, r.z + Math.sin(a) * r.rz], Nr = (p, r) => { const v = [p[0] - Tt.x, p[1] - Tt.y, p[2] - Tt.z], d = v[0] * ax[0] + v[1] * ax[1] + v[2] * ax[2], q = [v[0] - ax[0] * d, v[1] - ax[1] * d, v[2] - ax[2] * d], l = Math.hypot(...q) || 1; return [q[0] / l, q[1] / l, q[2] / l]; };
   for (let k = 0; k < S; k++) { const a0 = k / S * Math.PI * 2, a1 = (k + 1) / S * Math.PI * 2, t0 = V(Tt, a0), t1 = V(Tt, a1), b0 = V(Bb, a0), b1 = V(Bb, a1);
@@ -6777,7 +6777,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         /* Lichtkegel je Mast wie in Las Vegas/Lusail: Pyramidenstumpf vom Lampenfeld zur Strecke, Helligkeit fällt per Vertexfarbe auf null – kein Klippen an Mauern */
         const bg = (() => { const T = [[-1.9, 19.4, -1.7], [-0.5, 19.4, -1.7], [-0.5, 20.6, 1.7], [-1.9, 20.6, 1.7]], B = [[-22, 0, -8], [-6, 0, -8], [-6, 0, 8], [-22, 0, 8]], ps = [], cl = [];
           for (let k = 0; k < 4; k++) { const k2 = (k + 1) % 4; for (const [P, c] of [[T[k], 1], [B[k], 0], [B[k2], 0], [T[k], 1], [B[k2], 0], [T[k2], 1]]) { ps.push(...P); cl.push(c, c, c); } }
-          const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(ps, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(cl, 3)); return beamUV(g); })();
+          const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(ps, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(cl, 3)); return beamUV(g, 2.0, 1.25); })();   /* oben doppelt so breit: der Strahl geht vom ganzen Lampenkopf aus (wirkte durch das Ausblenden zum Rand schmaler als die Lampe) */
         const beams = new THREE.InstancedMesh(bg, softBeamMat(new THREE.Color(0.11, 0.103, 0.088)), pp.length);
         pp.forEach((p, k) => { qq.setFromAxisAngle(_v2, p[2] + Math.PI / 2); m4.compose(pv.set(p[0], 0, p[1]), qq, one); beams.setMatrixAt(k, m4); }); beams.frustumCulled = false; beams.userData.clipSkip = true; beams.renderOrder = 2; trackGroup.add(beams);
         trackGroup.add(lampHalos(pp.flatMap(p => { const a = p[2] + Math.PI / 2; return [p[0] - 1.2 * Math.cos(a), (FLAT ? 0 : placeY(p[0], p[1])) + 20, p[1] + 1.2 * Math.sin(a)]; }), new THREE.Color(0.3, 0.28, 0.24)));   /* Lampenkopf: lokal (−1,2 | 20 | 0), um a gedreht */
@@ -12570,7 +12570,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.53'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.54'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
