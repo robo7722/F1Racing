@@ -6777,7 +6777,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         /* Lichtkegel je Mast wie in Las Vegas/Lusail: Pyramidenstumpf vom Lampenfeld zur Strecke, Helligkeit fällt per Vertexfarbe auf null – kein Klippen an Mauern */
         const bg = (() => { const T = [[-1.9, 19.4, -1.7], [-0.5, 19.4, -1.7], [-0.5, 20.6, 1.7], [-1.9, 20.6, 1.7]], B = [[-22, 0, -8], [-6, 0, -8], [-6, 0, 8], [-22, 0, 8]], ps = [], cl = [];
           for (let k = 0; k < 4; k++) { const k2 = (k + 1) % 4; for (const [P, c] of [[T[k], 1], [B[k], 0], [B[k2], 0], [T[k], 1], [B[k2], 0], [T[k2], 1]]) { ps.push(...P); cl.push(c, c, c); } }
-          const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(ps, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(cl, 3)); return beamUV(g, 2.0, 1.25); })();   /* oben doppelt so breit: der Strahl geht vom ganzen Lampenkopf aus (wirkte durch das Ausblenden zum Rand schmaler als die Lampe) */
+          const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(ps, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(cl, 3)); return beamUV(g, 3.2, 1.4); })();   /* oben doppelt so breit: der Strahl geht vom ganzen Lampenkopf aus (wirkte durch das Ausblenden zum Rand schmaler als die Lampe) */
         const beams = new THREE.InstancedMesh(bg, softBeamMat(new THREE.Color(0.11, 0.103, 0.088)), pp.length);
         pp.forEach((p, k) => { qq.setFromAxisAngle(_v2, p[2] + Math.PI / 2); m4.compose(pv.set(p[0], 0, p[1]), qq, one); beams.setMatrixAt(k, m4); }); beams.frustumCulled = false; beams.userData.clipSkip = true; beams.renderOrder = 2; trackGroup.add(beams);
         trackGroup.add(lampHalos(pp.flatMap(p => { const a = p[2] + Math.PI / 2; return [p[0] - 1.2 * Math.cos(a), (FLAT ? 0 : placeY(p[0], p[1])) + 20, p[1] + 1.2 * Math.sin(a)]; }), new THREE.Color(0.3, 0.28, 0.24)));   /* Lampenkopf: lokal (−1,2 | 20 | 0), um a gedreht */
@@ -12570,7 +12570,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.54'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.55'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
