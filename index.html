@@ -2638,13 +2638,13 @@ for (let i = 0; i < STREAKS; i++) { const d = {}; respawnStreak(d); d.z = -2 - M
 const WAKE = (() => {
   /* Windschatten: feine, dichte Luftschlieren (viele dünne Striche), fünf gekreuzte Flächen; in Kameranähe ausgeblendet – das eigene Auto bleibt davor im Vordergrund */
   const t = canvasTex(256, 512, (g, w, h) => { g.clearRect(0, 0, w, h);
-    for (let k = 0; k < 190; k++) { const x = w / 2 + (Math.random() - .5) * w * (0.2 + Math.random() * 0.65), y = Math.random() * h, l = 30 + Math.random() * 140, a = .05 + Math.random() * .16;
-      const gr = g.createLinearGradient(0, y, 0, y + l); gr.addColorStop(0, 'rgba(215,236,255,0)'); gr.addColorStop(.5, `rgba(215,236,255,${a})`); gr.addColorStop(1, 'rgba(215,236,255,0)'); g.fillStyle = gr; g.fillRect(x, y, 0.7 + Math.random() * 1.3, l); }
+    for (let k = 0; k < 190; k++) { const x = w / 2 + (Math.random() - .5) * w * (0.2 + Math.random() * 0.65), y = Math.random() * h, l = 30 + Math.random() * 140, a = .08 + Math.random() * .22;
+      const gr = g.createLinearGradient(0, y, 0, y + l); gr.addColorStop(0, 'rgba(215,236,255,0)'); gr.addColorStop(.5, `rgba(215,236,255,${a})`); gr.addColorStop(1, 'rgba(215,236,255,0)'); g.fillStyle = gr; g.fillRect(x, y, 1.0 + Math.random() * 1.6, l); }
     const fx = g.createLinearGradient(0, 0, w, 0); fx.addColorStop(0, 'rgba(0,0,0,1)'); fx.addColorStop(.3, 'rgba(0,0,0,0)'); fx.addColorStop(.7, 'rgba(0,0,0,0)'); fx.addColorStop(1, 'rgba(0,0,0,1)'); g.globalCompositeOperation = 'destination-out'; g.fillStyle = fx; g.fillRect(0, 0, w, h); });
   t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 2); t.anisotropy = 4;
-  const mat = new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, fog: false, vertexColors: true, color: new THREE.Color(1.5, 1.6, 1.7) });
+  const mat = new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, fog: false, vertexColors: true, color: new THREE.Color(1.6, 1.7, 1.8) });
   mat.onBeforeCompile = sh => { sh.vertexShader = 'varying float vWd;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWd = -mvPosition.z;');
-    sh.fragmentShader = 'varying float vWd;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n diffuseColor.a *= smoothstep( 6.0, 11.0, vWd );'); };
+    sh.fragmentShader = 'varying float vWd;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n diffuseColor.a *= smoothstep( 2.5, 5.0, vWd );'); };
   mat.customProgramCacheKey = () => 'wakeNear';
   // Kegel aus fünf gekreuzten Flächen: schmal am Heck, breiter nach hinten (22 m)
   const geo = new THREE.BufferGeometry(), P = [], U = [], I = [], C = []; const Lw = 22, NP = 5;
@@ -2661,7 +2661,7 @@ function wakeTick(dt) {
   const want = live && !WAKE.pend && (src || ss > 0.03) ? clamp(0.12 + ss * 1.7, 0, 1) : 0;
   WAKE.a += (want - WAKE.a) * Math.min(1, dt * (want > WAKE.a ? 1.5 : 2.2));
   if (WAKE.pend && WAKE.a < 0.03) { WAKE.host = WAKE.pend; WAKE.pend = null; WAKE.host.add(WAKE.m); }
-  WAKE.mat.opacity = WAKE.a * WAKE.a * 0.55; WAKE.m.visible = WAKE.a > 0.004;   /* quadratisch: erst nur ein Hauch, dann wachsend */
+  WAKE.mat.opacity = WAKE.a * WAKE.a * 0.7; WAKE.m.visible = WAKE.a > 0.004;   /* quadratisch: erst nur ein Hauch, dann wachsend */
   WAKE.t.offset.y -= dt * (1.2 + pl.v * 0.03);
 }
 const STK = { f: 0 };
@@ -4846,7 +4846,7 @@ for (const l of [sun, flood]) { const um = l.shadow.updateMatrices; l.shadow.upd
 scene.onAfterRender = () => shadowSwap(false);
 
 /* ======================= Strecke bauen ======================= */
-let ZONEH = [], ZWALL = [];   // ZWALL: Linienzüge [[x, z], …] der Leitplanke um die Kies-Zonen (v1.99)
+let ZONEH = [], ZWALL = [], CHIC_HULL = null;   // ZWALL: Linienzüge [[x, z], …] der Leitplanke um die Kies-Zonen (v1.99)
 function zoneH(x, z) { for (const Z of ZONEH) { const fx = (x - Z.x0) / Z.bw * Z.SEG, fz = (z - Z.z0) / Z.bh * Z.SEG; if (fx < 0 || fz < 0 || fx >= Z.SEG || fz >= Z.SEG) continue;
   const ix = Math.floor(fx), iz = Math.floor(fz), u = fx - ix, v = fz - iz, G1 = Z.SEG + 1, k = iz * G1 + ix, Y = Z.Y; return (Y[k] * (1 - u) + Y[k + 1] * u) * (1 - v) + (Y[k + G1] * (1 - u) + Y[k + G1 + 1] * u) * v; } return null; }
 let BANK = null, KSD = 1;
@@ -5641,7 +5641,14 @@ function chunkInstances(root, cell = 260, minCount = 120) {
 function elevAt(c) { if (FLAT) return 0; const s2 = modL(c.d), f = s2 / DS, i0 = Math.floor(f) % N, i1 = (i0 + 1) % N, t = f - Math.floor(f); return ELEV[i0] + (ELEV[i1] - ELEV[i0]) * t; }
 /* Bäume abseits der Geländebänder auf die wirklich gezeichnete Bodenfläche setzen: der grobe Boden ist ein Dreiecksnetz mit Höhen nur an den Gitterpunkten
    (20–30 m Abstand), placeY rechnet die exakte Geländeformel – im welligen Wald (Spa, Spielberg, Nordschleife) schwebten Stämme dadurch bis 1 m über dem Boden. */
+function chicClear() {   /* Monza-Schikane: Bäume/Büsche innerhalb der Leitplanken-Hülle entfernen (auch auf flachen Strecken) */
+  const m4 = new THREE.Matrix4();
+  if (CHIC_HULL) { const H = CHIC_HULL, inH = (x, z) => { let c = false; for (let i = 0, j = H.length - 1; i < H.length; j = i++) { const [xi, zi] = H[i], [xj, zj] = H[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };   /* keine Bäume/Büsche in der Schikane */
+    trackGroup.traverse(ch => { if (!ch.isInstancedMesh || !(ch.geometry.userData.tree || ch.userData.chunk || ch.userData.lodHi)) return; let n = 0; for (let k = 0; k < ch.count; k++) { ch.getMatrixAt(k, m4); const e = m4.elements; if (inH(e[12], e[14])) { m4.makeScale(0, 0, 0); ch.setMatrixAt(k, m4); n++; } } if (n) ch.instanceMatrix.needsUpdate = true; });
+    if (TREESPR) for (const kind of Object.keys(TREESPR.lists)) TREESPR.lists[kind] = TREESPR.lists[kind].filter(it => !inH(it[0].elements[12], it[0].elements[14])); }
+}
 function snapTreesToGround() {
+  chicClear();
   if (FLAT) return; const gm = trackGroup.children.find(c => c.userData.ground && c.geometry && c.geometry.type === 'PlaneGeometry' && c.geometry.parameters.widthSegments > 50); if (!gm) return;
   const gp = gm.geometry.parameters, W = gp.width, H = gp.height, nx = gp.widthSegments, nz = gp.heightSegments, P = gm.geometry.attributes.position, ox = gm.position.x, oy = gm.position.y, oz = gm.position.z;
   const lin = (x, z) => { const fx = (x - ox + W / 2) / W * nx, fz = (z - oz + H / 2) / H * nz, ix = Math.floor(fx), iz = Math.floor(fz); if (ix < 0 || iz < 0 || ix >= nx || iz >= nz) return null; const u = fx - ix, w = fz - iz, g = nx + 1;
@@ -5655,7 +5662,8 @@ function snapTreesToGround() {
   trackGroup.traverse(ch => { if (!ch.isInstancedMesh || ch.userData.fixed) return; let n = 0;   // 2. auf ALLE Teile mit demselben Ursprung anwenden (Krone, Stamm, Detailstufen, Bildtafeln) – sonst klaffen Krone und Stamm auseinander
     for (let k = 0; k < ch.count; k++) { ch.getMatrixAt(k, m4); const e = m4.elements, q = memo.get(key(e)); if (!q || !q[0] || Math.abs(e[13] - q[1]) > 0.01) continue; e[13] += q[0]; ch.setMatrixAt(k, m4); n++; }
     if (n) { ch.instanceMatrix.needsUpdate = true; ch.computeBoundingSphere(); } });
-  if (TREESPR) for (const kind of Object.keys(TREESPR.lists)) for (const it of TREESPR.lists[kind]) { const e = it[0].elements, q = memo.get(key(e)); if (q && q[0]) e[13] += q[0]; }   /* Bildtafeln ferner Bäume ebenso (werden später mit placeY gesetzt) */
+  if (TREESPR) for (const kind of Object.keys(TREESPR.lists)) for (const it of TREESPR.lists[kind]) { const e = it[0].elements, q = memo.get(key(e)); if (q && q[0]) e[13] += q[0]; }
+   /* Bildtafeln ferner Bäume ebenso (werden später mit placeY gesetzt) */
 }
 function applyElevation() {
   if (FLAT) return;
@@ -6353,6 +6361,33 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       g.fillStyle = 'rgba(40,36,30,.25)'; g.fillRect(0, h * .86, w, h * .14); g.fillStyle = 'rgba(0,0,0,.35)'; for (let k = 0; k <= 8; k++) g.fillRect(k * w / 8 - 1, 0, 2, h); });
     tt.userData.own = true; tricolM = lam({ map: tt, roughness: .85, side: THREE.DoubleSide });   /* glatt, ohne Relief */
   }
+  /* Monza, erste Schikane (Variante del Rettifilo): dort ist die normale Absperrung abgeschaltet (NOWALL) – sie lief sonst quer durch die Schikane.
+     Stattdessen eine Leitplanke auf der konvexen Hülle um die Schikane: geht nirgends durch die Fahrbahn; innerhalb keine Bäume (CHIC_HULL) */
+  CHIC_HULL = null;
+  if (TRK === TRACKS.monza) { let a0 = -1, a1 = -1; for (let i = 0; i < Math.round(1200 / DS); i++) if (NOWALL[i] === 3) { if (a0 < 0) a0 = i; a1 = i; }
+    if (a0 > 0) { const P = []; for (let i = a0 - 6; i <= a1 + 6; i += 2) for (const sd of [-1, 1]) { const off = HW[i] + 7.5; P.push([PX[i] + RX[i] * sd * off, PZ[i] + RZ[i] * sd * off]); }
+      P.sort((p, q) => p[0] - q[0] || p[1] - q[1]); const cr = (o, a2, b2) => (a2[0] - o[0]) * (b2[1] - o[1]) - (a2[1] - o[1]) * (b2[0] - o[0]), lo = [], up = [];
+      for (const q of P) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
+      for (let k = P.length - 1; k >= 0; k--) { const q = P[k]; while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
+      const H = lo.slice(0, -1).concat(up.slice(0, -1)); CHIC_HULL = H;
+      const crossT = (A, B) => { for (let i = a0 - 30; i < a1 + 30; i++) { const C = [PX[i], PZ[i]], D = [PX[i + 1], PZ[i + 1]]; if (cr(A, B, C) * cr(A, B, D) < 0 && cr(C, D, A) * cr(C, D, B) < 0) return true; } return false; };
+      let run = [], start = H.findIndex((q, k) => crossT(H[k], H[(k + 1) % H.length])); if (start < 0) start = 0;
+      for (let n = 1; n <= H.length; n++) { const k = (start + n) % H.length, A = H[k], B = H[(k + 1) % H.length];
+        if (crossT(A, B)) { if (run.length > 1) ZWALL.push(run); run = []; continue; }
+        const l = Math.hypot(B[0] - A[0], B[1] - A[1]), st = Math.max(1, Math.ceil(l / 4)); if (!run.length) run.push(A); for (let t = 1; t <= st; t++) run.push([A[0] + (B[0] - A[0]) * t / st, A[1] + (B[1] - A[1]) * t / st]); }
+      if (run.length > 1) ZWALL.push(run);
+      /* Notausfahrt wie im Original: gerade Asphaltspur in Verlängerung der Anfahrt (Tangente am Schikanen-Eingang), so weit sie frei von der Fahrbahn bleibt; am Ende rot-weiße Barrikaden */
+      { const i0 = Math.max(0, a0 - 4), tx = TX[i0], tz = TZ[i0], A = [PX[i0], PZ[i0]], pos = [], uv = [], hw = 4; let len = 0;
+        for (let d = 12; d < 140; d += 2) { const x = A[0] + tx * d, z = A[1] + tz * d, [dd, j] = nearestDist(x, z); if (Math.abs(j - i0) > 3 && dd < HW[j] + hw + 1.5) break; len = d; }
+        if (len > 25) { const yAt = (x, z) => (FLAT ? 0 : Math.max(placeY(x, z), groundY(x, z))) + 0.03, nx = -tz * hw, nz = tx * hw, NS = Math.ceil(len / 4);
+          for (let k = 0; k < NS; k++) { const d0 = len * k / NS, d1 = len * (k + 1) / NS, P0 = [A[0] + tx * d0, A[1] + tz * d0], P1 = [A[0] + tx * d1, A[1] + tz * d1];
+            const L0 = [P0[0] - nx, P0[1] - nz], R0 = [P0[0] + nx, P0[1] + nz], L1 = [P1[0] - nx, P1[1] - nz], R1 = [P1[0] + nx, P1[1] + nz];
+            pos.push(L0[0], yAt(...L0), L0[1], L1[0], yAt(...L1), L1[1], R1[0], yAt(...R1), R1[1], L0[0], yAt(...L0), L0[1], R1[0], yAt(...R1), R1[1], R0[0], yAt(...R0), R0[1]); uv.push(0, d0 / 8, 0, d1 / 8, 1, d1 / 8, 0, d0 / 8, 1, d1 / 8, 1, d0 / 8); }
+          const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.computeVertexNormals();
+          const am = new THREE.Mesh(g, lam({ map: texRep(TEX.runoff, 1, 1), color: 0x8a8c90, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); am.receiveShadow = true; am.userData.strip = true; am.userData.flat = true; am.userData.fixed = true; trackGroup.add(am);
+          const bg = new THREE.BoxGeometry(1.0, 0.9, 1.6).translate(0, 0.45, 0), bi = new THREE.InstancedMesh(bg, lam({ color: 0xffffff, roughness: .7 }), 16), m4 = new THREE.Matrix4(), q4 = new THREE.Quaternion().setFromAxisAngle(_v2, Math.atan2(tx, tz) + Math.PI / 2), cc = new THREE.Color();   /* zwei Reihen: an der Einfahrt in die Abkürzung und an ihrem Ende */
+          for (let k = 0; k < 16; k++) { const dE = k < 8 ? 15 : len - 2, E = [A[0] + tx * dE, A[1] + tz * dE], o = (k % 8 - 3.5) / 3.5 * 3.3, x = E[0] - tz * o, z = E[1] + tx * o; m4.compose(new THREE.Vector3(x, yAt(x, z) - 0.03, z), q4, new THREE.Vector3(1, 1, 1)); bi.setMatrixAt(k, m4); bi.setColorAt(k, cc.setHex(k % 2 ? 0xffffff : 0xd8261c)); }
+          bi.userData.fixed = true; bi.castShadow = true; trackGroup.add(bi); } } } }
   if (ZWALL.length) {   /* Leitplanke um die Kies-Zonen (ZWALL): steht auf dem Kies (Fuß = Kieshöhe, die bis 2 m von der Streckenhöhe abweicht), Schürze darunter */
     const wp = [], wu = [], sp = [], su = [];
     for (const run of ZWALL) { let u = 0; const Y = run.map(([x, z]) => { const h = zoneH(x, z); return (h === null ? placeY(x, z) : h) - 0.02; });
@@ -12584,7 +12619,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.57'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.58'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
