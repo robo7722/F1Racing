@@ -2636,16 +2636,20 @@ const streaks = new THREE.LineSegments(stGeo, stMat); streaks.frustumCulled = fa
 const respawnStreak = d => { d.a = Math.random() * Math.PI * 2; d.r = 3.0 + Math.random() * 2.8;   /* weiter außen: die Streifen laufen am Bildrand, nicht durch die Bildmitte */ d.z = -40 - Math.random() * 30; };
 for (let i = 0; i < STREAKS; i++) { const d = {}; respawnStreak(d); d.z = -2 - Math.random() * 50; stData.push(d); }
 const WAKE = (() => {
-  const t = canvasTex(128, 256, (g, w, h) => { g.clearRect(0, 0, w, h);
-    for (let k = 0; k < 70; k++) { const x = w / 2 + (Math.random() - .5) * w * (0.25 + Math.random() * 0.6), y = Math.random() * h, l = 20 + Math.random() * 70, a = .08 + Math.random() * .22;
-      const gr = g.createLinearGradient(0, y, 0, y + l); gr.addColorStop(0, 'rgba(210,235,255,0)'); gr.addColorStop(.5, `rgba(210,235,255,${a})`); gr.addColorStop(1, 'rgba(210,235,255,0)'); g.fillStyle = gr; g.fillRect(x, y, 1.5 + Math.random() * 2.5, l); }
-    const fx = g.createLinearGradient(0, 0, w, 0); fx.addColorStop(0, 'rgba(0,0,0,1)'); fx.addColorStop(.25, 'rgba(0,0,0,0)'); fx.addColorStop(.75, 'rgba(0,0,0,0)'); fx.addColorStop(1, 'rgba(0,0,0,1)'); g.globalCompositeOperation = 'destination-out'; g.fillStyle = fx; g.fillRect(0, 0, w, h); });
-  t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 2);
-  const mat = new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, fog: false, vertexColors: true, color: new THREE.Color(1.6, 1.7, 1.8) });
-  // Kegel aus drei gekreuzten Flächen: schmal am Heck, breiter nach hinten (22 m)
-  const geo = new THREE.BufferGeometry(), P = [], U = [], I = [], C = []; const Lw = 22;
-  for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI, ca = Math.cos(a), sa = Math.sin(a), b = P.length / 3;
-    for (const [z, wd, al, v] of [[0, 0.45, 0, 0], [-3.5, 0.85, 1, 0.16], [-11, 1.35, 0.75, 0.5], [-Lw, 1.9, 0, 1]]) for (const s2 of [-1, 1]) { P.push(ca * wd * s2, 0.55 + sa * wd * s2 * 0.45, z - 2.4); U.push(s2 < 0 ? 0 : 1, v); C.push(1, 1, 1, al); }   /* vier Ringe: unsichtbar am Heck, voll nach 3,5 m, ausklingend bis 22 m */
+  /* Windschatten: feine, dichte Luftschlieren (viele dünne Striche), fünf gekreuzte Flächen; in Kameranähe ausgeblendet – das eigene Auto bleibt davor im Vordergrund */
+  const t = canvasTex(256, 512, (g, w, h) => { g.clearRect(0, 0, w, h);
+    for (let k = 0; k < 190; k++) { const x = w / 2 + (Math.random() - .5) * w * (0.2 + Math.random() * 0.65), y = Math.random() * h, l = 30 + Math.random() * 140, a = .05 + Math.random() * .16;
+      const gr = g.createLinearGradient(0, y, 0, y + l); gr.addColorStop(0, 'rgba(215,236,255,0)'); gr.addColorStop(.5, `rgba(215,236,255,${a})`); gr.addColorStop(1, 'rgba(215,236,255,0)'); g.fillStyle = gr; g.fillRect(x, y, 0.7 + Math.random() * 1.3, l); }
+    const fx = g.createLinearGradient(0, 0, w, 0); fx.addColorStop(0, 'rgba(0,0,0,1)'); fx.addColorStop(.3, 'rgba(0,0,0,0)'); fx.addColorStop(.7, 'rgba(0,0,0,0)'); fx.addColorStop(1, 'rgba(0,0,0,1)'); g.globalCompositeOperation = 'destination-out'; g.fillStyle = fx; g.fillRect(0, 0, w, h); });
+  t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 2); t.anisotropy = 4;
+  const mat = new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, fog: false, vertexColors: true, color: new THREE.Color(1.5, 1.6, 1.7) });
+  mat.onBeforeCompile = sh => { sh.vertexShader = 'varying float vWd;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWd = -mvPosition.z;');
+    sh.fragmentShader = 'varying float vWd;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n diffuseColor.a *= smoothstep( 6.0, 11.0, vWd );'); };
+  mat.customProgramCacheKey = () => 'wakeNear';
+  // Kegel aus fünf gekreuzten Flächen: schmal am Heck, breiter nach hinten (22 m)
+  const geo = new THREE.BufferGeometry(), P = [], U = [], I = [], C = []; const Lw = 22, NP = 5;
+  for (let k = 0; k < NP; k++) { const a = k / NP * Math.PI, ca = Math.cos(a), sa = Math.sin(a), b = P.length / 3;
+    for (const [z, wd, al, v] of [[0, 0.4, 0, 0], [-3.5, 0.75, 0.8, 0.16], [-11, 1.2, 0.6, 0.5], [-Lw, 1.7, 0, 1]]) for (const s2 of [-1, 1]) { P.push(ca * wd * s2, 0.55 + sa * wd * s2 * 0.45, z - 2.4); U.push(s2 < 0 ? 0 : 1, v + k * 0.21); C.push(1, 1, 1, al); }   /* vier Ringe: unsichtbar am Heck, voll nach 3,5 m, ausklingend bis 22 m; jede Fläche mit versetztem Muster */
     for (let r = 0; r < 3; r++) { const q = b + r * 2; I.push(q, q + 1, q + 2, q + 1, q + 3, q + 2); } }
   geo.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); geo.setAttribute('color', new THREE.Float32BufferAttribute(C, 4)); geo.setIndex(I);
   const m = new THREE.Mesh(geo, mat); m.frustumCulled = false; m.renderOrder = 5; m.visible = false; m.layers.set(1); camera.layers.enable(1); return { m, mat, t, host: null, a: 0 };
@@ -2657,7 +2661,7 @@ function wakeTick(dt) {
   const want = live && !WAKE.pend && (src || ss > 0.03) ? clamp(0.12 + ss * 1.7, 0, 1) : 0;
   WAKE.a += (want - WAKE.a) * Math.min(1, dt * (want > WAKE.a ? 1.5 : 2.2));
   if (WAKE.pend && WAKE.a < 0.03) { WAKE.host = WAKE.pend; WAKE.pend = null; WAKE.host.add(WAKE.m); }
-  WAKE.mat.opacity = WAKE.a * WAKE.a * 0.7; WAKE.m.visible = WAKE.a > 0.004;   /* quadratisch: erst nur ein Hauch, dann wachsend */
+  WAKE.mat.opacity = WAKE.a * WAKE.a * 0.55; WAKE.m.visible = WAKE.a > 0.004;   /* quadratisch: erst nur ein Hauch, dann wachsend */
   WAKE.t.offset.y -= dt * (1.2 + pl.v * 0.03);
 }
 const STK = { f: 0 };
@@ -11048,6 +11052,9 @@ function applyLayout() {
     if (p) { const r = el.getBoundingClientRect(); Object.assign(el.style, { position: 'fixed', left: (p[0] * innerWidth - (r.width || 90) / 2) + 'px', top: (p[1] * innerHeight - (r.height || 90) / 2) + 'px', right: 'auto', bottom: 'auto' }); }
     else Object.assign(el.style, { position: '', left: '', top: '', right: '', bottom: '' });
   }
+  /* ERS-Taste genau über der Links-Taste und genauso groß (solange sie nicht selbst verschoben wurde und die Lenktasten sichtbar sind) */
+  { const ers = $('#bBoost'), lt = $('#bL'); if (ers && lt && !L.bBoost) { for (const k of ['position', 'left', 'top', 'width', 'height', 'right', 'bottom']) ers.style.removeProperty(k); const r = lt.getBoundingClientRect();   /* CSS setzt Lage/Größe mit !important – daher hier ebenfalls mit Vorrang */
+      if (r.width > 0 && !lt.classList.contains('hidden')) { const st = (k, v) => ers.style.setProperty(k, v, 'important'); st('position', 'fixed'); st('left', r.left + 'px'); st('top', (r.top - r.height - 12) + 'px'); st('width', r.width + 'px'); st('height', r.height + 'px'); st('right', 'auto'); st('bottom', 'auto'); } } }
 }
 let editFrom = null;
 function startEdit(from) {
@@ -12577,7 +12584,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.56'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.57'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
