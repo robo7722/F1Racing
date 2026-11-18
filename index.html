@@ -10096,7 +10096,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   applyElevation(); for (const c of trackGroup.children) if (c.userData.afterElev) c.userData.afterElev(); try { snapTreesToGround(); } catch (e) { console.warn('snapTreesToGround', e); }
   try { HOLES = fillGroundHoles(); } catch (e) { console.warn('fillGroundHoles', e); }
   tileGround(trackGroup);
-  mergeGroups(trackGroup);
+  mergeGroups(trackGroup, TRK.nos ? 1000 : 350);   /* Nordschleife (v2.64): größere Kacheln – an der schwersten Stelle lagen ~20–29 Kleinteil-Netze je Material im Bild */
   chunkStrips(trackGroup, TRK.nos ? 1800 : 900);   /* Nordschleife: Streifen in 1800-m-Stücken – halb so viele Zeichenaufrufe (an der schwersten Stelle ~110 weniger) */
   try { bldOverlap(80, true); } catch (e) { console.warn('bldOverlap', e); } for (const c of trackGroup.children) if (c.userData.afterBld) c.userData.afterBld();   // Füll-Gebäude, die in ein gestaltetes Gebäude ragen, entfernen (Monaco hatte 12 solche Stellen)
   chunkInstances(trackGroup, TRK.nos ? 480 : 360);   /* größere Kacheln: weniger Zeichenaufrufe */
@@ -12690,7 +12690,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.63'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.64'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

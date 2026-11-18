@@ -119,7 +119,46 @@ Liegt `p90` weit über `med` (z. B. 27 ms gegen 3 ms), passiert etwas regelmäß
 parallelen Edge-Läufen) – nur für Vorher/Nachher auf derselben Maschine im selben Lauf verwenden. Nach dem Versetzen der Kamera (`__tp`)
 mindestens 0,35 s (`__frame(12)`) warten, sonst laufen noch Detailstufen-Überblendungen und Gegner zählen doppelt.
 
-## 8. Checkliste vor dem Einchecken
+## 8. Messstand 2.64 (Vergleichswerte)
+
+Gemessen mit `perf-cam.js` (10 Stellen je Strecke, Nordschleife 40; Qualität „Schön“, volles Feld, Fenster 1280×720). Aufrufe Mittel/Spitze je
+Kamera, Dreiecke = Spitze über alle Kameras. Eigenes Auto in Cockpit/TV: 14 Aufrufe / 105 Tsd. Dreiecke (bis 2.63: 26 / 190 Tsd.; Kart 9 / 33 Tsd.).
+Auf allen Strecken ist das Bild in Cockpit und TV pixelgleich zum alten Zeichenweg (Abweichung ≤ 0,02 % der Pixel, nur Kanten).
+
+| Strecke | Verfolger | Cockpit | TV | Dreiecke max |
+|---|---|---|---|---|
+| Monza | 150/207 | 152/196 | 165/262 | 0,91 Mio. |
+| Spa | 189/246 | 193/255 | 201/280 | 0,91 Mio. |
+| Silverstone | 160/193 | 166/231 | 186/302 | 1,17 Mio. |
+| Red Bull Ring | 139/209 | 177/307 | 193/260 | 1,00 Mio. |
+| Montréal | 148/179 | 151/177 | 170/257 | 0,87 Mio. |
+| Monaco | 131/219 | 166/270 | 178/294 | 0,69 Mio. (bis 2.63 Spitze 466 Aufrufe) |
+| Melbourne | 211/276 | 214/279 | 239/374 | 0,94 Mio. |
+| Abu Dhabi | 213/309 | 227/306 | 246/305 | 0,59 Mio. |
+| Las Vegas | 241/326 | 241/319 | 315/424 | 1,02 Mio. |
+| Singapur | 245/322 | 273/404 | 270/327 | 1,16 Mio. |
+| Nordschleife | 197/345 | 247/354 | 264/367 | 1,01 Mio. (bis 2.63 Spitze 514; Streifen 1800 m, Kleinteil-Kacheln 1000 m) |
+| Shanghai | 207/262 | 238/302 | 240/327 | 0,75 Mio. |
+| Suzuka | 198/313 | 212/285 | 224/270 | 1,09 Mio. |
+| Bahrain | 200/266 | 208/269 | 222/250 | 0,71 Mio. |
+| Jeddah | 211/288 | 232/285 | 243/343 | 1,05 Mio. |
+| Miami | 225/316 | 230/348 | 248/392 | 1,27 Mio. |
+| Barcelona | 214/290 | 216/277 | 230/285 | 0,89 Mio. |
+| Hungaroring | 191/250 | 201/242 | 201/247 | 0,78 Mio. |
+| Zandvoort | 211/323 | 236/334 | 225/294 | 1,11 Mio. |
+| Madrid | 170/186 | 186/269 | 201/276 | 0,96 Mio. |
+| Baku | 195/306 | 224/281 | 245/293 | 1,02 Mio. |
+| Austin | 154/189 | 172/235 | 201/338 | 1,29 Mio. |
+| Mexiko-Stadt | 221/276 | 221/279 | 245/304 | 1,06 Mio. |
+| São Paulo | 217/266 | 228/264 | 241/264 | 0,99 Mio. |
+| Lusail | 204/238 | 202/243 | 217/254 | 0,77 Mio. |
+| Genk (Kart) | 167/285 | 203/336 | 263/359 | **1,76 Mio.** |
+| Wackersdorf (Kart) | 198/336 | 201/314 | 211/297 | **1,56 Mio.** |
+
+Offen: Genk und Wackersdorf liegen bei den Dreiecken über 1,2 Mio. (Baumkacheln + Kart-Startaufstellung), Miami und Austin knapp darüber
+(einzelne Stellen mit vollem Feld). Nur mit sichtbaren Änderungen (weniger/einfachere Bäume) oder einer allgemeinen Detailstufen-Änderung lösbar.
+
+## 9. Checkliste vor dem Einchecken
 
 - [ ] `perf-cam.js`: alle drei Kameras unter 450 Aufrufen / 1,2 Mio. Dreiecken an der schwersten Stelle (vorher/nachher notieren)
 - [ ] `perf-scan.js`: keine neuen Einträge unter `drawnTwice`, `sameLookDiffMat`, `smallInstances` durch die eigene Änderung
