@@ -428,6 +428,12 @@ Für einen vollständigen Überschneidungstest vor dem Bau `window.__noMerge = t
    - Vergleichsstrecken: Monza ist die leichteste, Abu Dhabi und Las Vegas die schwersten normalen, die Nordschleife der härteste Fall (Stand 1.86: 452 Aufrufe in der Spitze).
 
 
+**Seit 2.64 je Kamera messen** (Cockpit und TV-Kamera ruckelten auf schwächeren Handys am stärksten): `python qc/probe.py KEY --race --script qc/perf-cam.js`
+zeigt für Verfolger (0), Cockpit (2) und TV (3) Mittel und Spitze der Aufrufe, getrennt nach Welt, eigenem Auto (`car`, zweiter Durchgang), Schattenkarte und Nachbearbeitung.
+`qc/perf-scan.js` listet an der schwersten Stelle die Verursacher (Objekte mit Weltlage `@x,z`). Was dort unter `drawnTwice` steht, ist durchsichtig **und** beidseitig:
+Three.js zeichnet solche Flächen zweimal (Rück-, dann Vorderseite). Ausstanz-Texturen (`alphaTest`) und deckende Flächen bekommen in `precompile()` automatisch
+`forceSinglePass`; echt halbdurchsichtige, beidseitige Flächen möglichst vermeiden.
+
 ### 7.4 Tempo und KI prüfen
 
 Die KI braucht keine Abstimmung je Strecke: `trackPace()` berechnet aus dem Tempoprofil der Ideallinie (`buildProfile` mit `KR`, Rundenzeit über `lapEst` mit Beschleunigungsgrenze) den Faktor `PACE`. Er skaliert das KI-Tempo mit `PACE` und Grip/Bremse mit `PACE²`, begrenzt auf 0,97–1,09. Ziel: Die geschätzte Profi-Runde liegt je nach Streckencharakter bei 83,5–90,5 % der Idealrunde. `PACE` wird in `seriesProfiles()` beim Rennstart gesetzt (mit `window.__paceX` zum Testen überschreibbar).

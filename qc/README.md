@@ -37,6 +37,8 @@ Am Ende öffnet sich der Bericht `qc-reports/<Datum_Uhrzeit>/report.html`.
 | `python qc/run.py mc --at 2900-3100` | nur diesen Abschnitt (Streckenmeter) prüfen – dort alle 25 m mit Rundumblick |
 | `python qc/run.py KEY --port 8900` | eigener Port (und eigenes Edge-Profil `f1qc-<port>-`): mehrere Läufe gleichzeitig möglich |
 | `python qc/probe.py KEY --view … --eval …` | Strecke bauen, Bilder aufnehmen, Konsolenwerte lesen (siehe Strecken-Anleitung, Nachtrag 2.27) |
+| `python qc/probe.py KEY --race --script qc/perf-cam.js` | Leistung je Kamera (Verfolger, Cockpit, TV): Zeichenaufrufe/Dreiecke Mittel und Spitze, aufgeteilt in Welt, eigenes Auto, Schattenkarte, Nachbearbeitung; schwerste Stellen |
+| `python qc/probe.py KEY --race --script qc/perf-scan.js` | wer an der schwersten Stelle die Aufrufe verursacht: größte Objekte mit Weltlage, doppelt gezeichnete Flächen, kleine Instanz-Kacheln, gleiche Optik mit getrennten Materialien |
 | `python qc/run.py --accept` | aktuellen Stand als geprüft merken, ohne zu fahren (z. B. nach einer Prüfung von Hand) |
 
 Braucht nur Python und Edge (oder Chrome, `--browser <Pfad>`). Neue Strecken werden automatisch erkannt.
