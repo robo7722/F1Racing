@@ -1,35 +1,519 @@
 {
  "kind": "f1",
  "photo": "https://media.formula1.com/image/upload/v1740000001/common/f1/2026/mercedes/2026mercedescarright.png",
- "rear": [523, 563],
- "front": [3104, 563],
- "stickers": [
-  {"name": "streifen_l", "box": [1080, 360, 1296, 545], "kind": "key", "key": "#8a8a8a", "tol": 70, "color": "#a4aab0"},
-  {"name": "streifen_r", "box": [1296, 360, 1975, 480], "kind": "key", "key": "#8a8a8a", "tol": 70, "color": "#a4aab0"},
-  {"name": "schwung", "box": [960, 372, 2160, 582], "kind": "key", "key": "#32c2b8", "color": "#19b8ab"},
-  {"kind": "key", "key": "#b0b0b0", "tol": 110, "color": "#c3c8cd", "name": "chassis_silber_a", "box": [2365, 335, 2890, 450]},
-  {"kind": "key", "key": "#b0b0b0", "tol": 110, "color": "#c3c8cd", "name": "chassis_silber_b", "box": [2365, 450, 2470, 500]},
-  {"kind": "key", "key": "#b0b0b0", "tol": 110, "color": "#c3c8cd", "name": "chassis_silber_c", "box": [2470, 450, 2890, 500], "side": "R"},
-  {"name": "chassis_tuerkis", "box": [2385, 350, 2890, 432], "kind": "key", "key": "#57cec4", "color": "#19b8ab"},
-  {"name": "snapdragon", "box": [40, 157, 436, 253], "kind": "w", "at": [-2.06, 0.86], "w": 0.42},
-  {"name": "crowdstrike", "box": [88, 289, 379, 336], "kind": "w", "at": [-2.06, 0.71], "w": 0.32},
-  {"name": "microsoft", "box": [1447, 99, 1751, 176], "kind": "c", "at": [-0.36, 0.9], "w": 0.36},
-  {"name": "solera", "box": [1342, 192, 1569, 237], "kind": "w", "at": [-0.67, 0.8], "w": 0.22},
-  {"name": "teamviewer", "box": [1457, 283, 1866, 360], "kind": "w", "at": [-0.26, 0.805], "w": 0.38},
-  {"name": "petronas", "box": [1294, 483, 1991, 579], "kind": "w"},
-  {"name": "signify", "box": [2205, 573, 2490, 662], "kind": "w", "at": [0.83, 0.28], "w": 0.36},
-  {"name": "amg", "box": [2477, 456, 2727, 488], "kind": "d", "color": "#c3c8cd", "side": "L"},
-  {"name": "iwc", "box": [3398, 563, 3546, 633], "kind": "w", "at": [2.46, 0.26], "w": 0.14},
-  {"name": "microsoft2", "box": [3510, 633, 3763, 704], "kind": "c", "at": [2.7, 0.21], "w": 0.24}
+ "rear": [
+  523,
+  563
  ],
- "zones": [[0.98, 1.36, 0, 0.4]],
+ "front": [
+  3104,
+  563
+ ],
+ "stickers": [
+  {
+   "name": "streifen_l",
+   "box": [
+    1080,
+    360,
+    1296,
+    545
+   ],
+   "kind": "key",
+   "key": "#8a8a8a",
+   "tol": 70,
+   "color": "#a4aab0"
+  },
+  {
+   "name": "streifen_r",
+   "box": [
+    1296,
+    360,
+    1975,
+    480
+   ],
+   "kind": "key",
+   "key": "#8a8a8a",
+   "tol": 70,
+   "color": "#a4aab0"
+  },
+  {
+   "name": "schwung",
+   "box": [
+    960,
+    372,
+    2160,
+    582
+   ],
+   "kind": "key",
+   "key": "#32c2b8",
+   "color": "#19b8ab"
+  },
+  {
+   "kind": "key",
+   "key": "#b0b0b0",
+   "tol": 110,
+   "color": "#c3c8cd",
+   "name": "chassis_silber_a",
+   "box": [
+    2365,
+    335,
+    2890,
+    450
+   ]
+  },
+  {
+   "kind": "key",
+   "key": "#b0b0b0",
+   "tol": 110,
+   "color": "#c3c8cd",
+   "name": "chassis_silber_b",
+   "box": [
+    2365,
+    450,
+    2470,
+    500
+   ]
+  },
+  {
+   "kind": "key",
+   "key": "#b0b0b0",
+   "tol": 110,
+   "color": "#c3c8cd",
+   "name": "chassis_silber_c",
+   "box": [
+    2470,
+    450,
+    2890,
+    500
+   ],
+   "side": "R"
+  },
+  {
+   "name": "chassis_tuerkis",
+   "box": [
+    2385,
+    350,
+    2890,
+    432
+   ],
+   "kind": "key",
+   "key": "#57cec4",
+   "color": "#19b8ab"
+  },
+  {
+   "name": "snapdragon",
+   "box": [
+    40,
+    157,
+    436,
+    253
+   ],
+   "kind": "w",
+   "at": [
+    -2.06,
+    0.86
+   ],
+   "w": 0.42
+  },
+  {
+   "name": "crowdstrike",
+   "box": [
+    88,
+    289,
+    379,
+    336
+   ],
+   "kind": "w",
+   "at": [
+    -2.06,
+    0.71
+   ],
+   "w": 0.32
+  },
+  {
+   "name": "microsoft",
+   "box": [
+    1447,
+    99,
+    1751,
+    176
+   ],
+   "kind": "c",
+   "at": [
+    -0.36,
+    0.9
+   ],
+   "w": 0.36
+  },
+  {
+   "name": "solera",
+   "box": [
+    1342,
+    192,
+    1569,
+    237
+   ],
+   "kind": "w",
+   "at": [
+    -0.67,
+    0.8
+   ],
+   "w": 0.22
+  },
+  {
+   "name": "teamviewer",
+   "box": [
+    1457,
+    283,
+    1866,
+    360
+   ],
+   "kind": "w",
+   "at": [
+    -0.26,
+    0.805
+   ],
+   "w": 0.38
+  },
+  {
+   "name": "petronas",
+   "box": [
+    1294,
+    483,
+    1991,
+    579
+   ],
+   "kind": "w"
+  },
+  {
+   "name": "signify",
+   "box": [
+    2205,
+    573,
+    2490,
+    662
+   ],
+   "kind": "w",
+   "at": [
+    0.83,
+    0.28
+   ],
+   "w": 0.36
+  },
+  {
+   "name": "amg",
+   "box": [
+    2477,
+    456,
+    2727,
+    488
+   ],
+   "kind": "d",
+   "color": "#c3c8cd",
+   "side": "L"
+  },
+  {
+   "name": "iwc",
+   "box": [
+    3398,
+    563,
+    3546,
+    633
+   ],
+   "kind": "w",
+   "at": [
+    2.46,
+    0.26
+   ],
+   "w": 0.14
+  },
+  {
+   "name": "microsoft2",
+   "box": [
+    3510,
+    633,
+    3763,
+    704
+   ],
+   "kind": "c",
+   "at": [
+    2.7,
+    0.21
+   ],
+   "w": 0.24
+  }
+ ],
+ "zones": [
+  [
+   0.98,
+   1.36,
+   0,
+   0.4
+  ]
+ ],
  "logoFile": "MER",
- "logos": [{"v": "top", "x": 0, "z": 1.5, "s": 0.2}],
- "number": {"color": "#00d2be", "spots": [{"v": "side", "z": -1.31, "y": 0.73, "s": 0.085}, {"v": "top", "x": 0, "z": 2.0, "s": 0.13}]},
+ "logos": [
+  {
+   "v": "top",
+   "x": 0,
+   "z": 1.5,
+   "s": 0.2
+  }
+ ],
+ "number": {
+  "color": "#00d2be",
+  "spots": [
+   {
+    "v": "side",
+    "z": -1.31,
+    "y": 0.73,
+    "s": 0.085
+   },
+   {
+    "v": "top",
+    "x": 0,
+    "z": 2.0,
+    "s": 0.13
+   }
+  ]
+ },
  "glsl": [
   "vec3 K = #0d0f12, T = #00a19c;",
   "vec3 col = K;",
   "if (c > 0.5 && c < 1.5) col = mix(K, T, band(p.y, 0.98, 1.02));",
   "return col;"
- ]
+ ],
+ "top": {
+  "photo": "tools/sticker/.cache/oben/MER_3.jpg",
+  "src": "https://media.formula1.com/image/upload/fom-website/2026/Mercedes/Mercedes-AMG%20F1%20W17%20E%20PERFORMANCE%20-%20KA%2012.jpg",
+  "rear": [
+   2400,
+   862
+  ],
+  "front": [
+   760,
+   850
+  ],
+  "stickers": [
+   {
+    "name": "silber_nase",
+    "poly": [
+     [
+      316,
+      22
+     ],
+     [
+      374,
+      22
+     ],
+     [
+      392,
+      330
+     ],
+     [
+      396,
+      655
+     ],
+     [
+      294,
+      655
+     ],
+     [
+      298,
+      330
+     ]
+    ],
+    "kind": "key",
+    "key": "#c8c3bf",
+    "tol": 95,
+    "smooth": 5,
+    "holes": false
+   },
+   {
+    "name": "silber_pods",
+    "poly": [
+     [
+      108,
+      650
+     ],
+     [
+      582,
+      650
+     ],
+     [
+      582,
+      1250
+     ],
+     [
+      108,
+      1250
+     ]
+    ],
+    "kind": "key",
+    "key": "#c8c3bf",
+    "tol": 95,
+    "smooth": 5,
+    "holes": false
+   },
+   {
+    "name": "tuerkis",
+    "box": [
+     100,
+     20,
+     600,
+     1665
+    ],
+    "kind": "key",
+    "key": "#1bc2ba",
+    "smooth": 3,
+    "holes": false
+   },
+   {
+    "name": "teamviewer_l",
+    "box": [
+     170,
+     48,
+     302,
+     97
+    ],
+    "kind": "w"
+   },
+   {
+    "name": "teamviewer_r",
+    "box": [
+     368,
+     48,
+     505,
+     110
+    ],
+    "kind": "w"
+   },
+   {
+    "name": "syntium_fl_l",
+    "box": [
+     168,
+     130,
+     252,
+     188
+    ],
+    "kind": "w"
+   },
+   {
+    "name": "syntium_fl_r",
+    "box": [
+     418,
+     132,
+     505,
+     192
+    ],
+    "kind": "w"
+   },
+   {
+    "name": "stern",
+    "box": [
+     316,
+     38,
+     374,
+     72
+    ],
+    "kind": "d",
+    "color": "#3a3d42"
+   },
+   {
+    "name": "nase_sponsoren",
+    "box": [
+     314,
+     78,
+     370,
+     210
+    ],
+    "kind": "d"
+   },
+   {
+    "name": "nase_logo",
+    "box": [
+     325,
+     285,
+     372,
+     332
+    ],
+    "kind": "c"
+   },
+   {
+    "name": "syntium_nase",
+    "box": [
+     298,
+     540,
+     392,
+     590
+    ],
+    "kind": "d"
+   },
+   {
+    "name": "teamviewer_pod",
+    "box": [
+     222,
+     888,
+     265,
+     1000
+    ],
+    "kind": "w"
+   },
+   {
+    "name": "petronas_pod_l",
+    "box": [
+     128,
+     968,
+     172,
+     1112
+    ],
+    "kind": "w"
+   },
+   {
+    "name": "petronas_pod_r",
+    "box": [
+     508,
+     1008,
+     562,
+     1112
+    ],
+    "kind": "w"
+   },
+   {
+    "name": "microsoft_l",
+    "box": [
+     288,
+     985,
+     350,
+     1160
+    ],
+    "kind": "c"
+   },
+   {
+    "name": "microsoft_r",
+    "box": [
+     365,
+     1000,
+     412,
+     1145
+    ],
+    "kind": "c"
+   },
+   {
+    "name": "petronas_heck",
+    "box": [
+     224,
+     1626,
+     496,
+     1664
+    ],
+    "kind": "w",
+    "at": [
+     0,
+     -2.08
+    ],
+    "w": 0.8
+   }
+  ]
+ }
 }

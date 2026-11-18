@@ -46,7 +46,7 @@ Die **Startnummer** gehört nicht in die Textur – sie bleibt eine Einblendung 
 In `tools/sticker/<Kürzel>.json` ein Eintrag `top` (Beschreibung im Kopf von `build.py`): Foto von oben, Achsmitten (`rear`/`front`) oder
 4+ Passpunkte (`pts`, für schräge Fotos), Aufkleber wie bei der Seite. `build.py` richtet das Foto aus (`.cache/<Kürzel>_oben_ganz.png`,
 300 Pixel je Meter, Nase oben, Raster zum Ausmessen in `_oben_raster.png`) und baut `.cache/<Kürzel>_oben_bogen.png`.
-`backen.js` legt den Bogen auf alle Lackflächen, deren Normale nach oben zeigt (weich ab 0,25), und nur dort, wo die Fläche von oben zu sehen ist
+`backen.js` legt den Bogen auf alle Lackflächen, deren Normale nach oben zeigt (weich zwischen 0,5 und 0,72 – darunter gilt die Seite, sonst stehen Schriftzüge an Schultern doppelt), und nur dort, wo die Fläche von oben zu sehen ist
 (Höhenkarte aus Stufe 0, 4 cm Spielraum). Im Spiel kostet das nichts zusätzlich. Ablauf: `build.py <Kürzel>` → `backen.js <Kürzel>` → `shot.js … top,f34`.
 
 ## Vergleich und Prüfen
@@ -59,3 +59,20 @@ In `tools/sticker/<Kürzel>.json` ein Eintrag `top` (Beschreibung im Kopf von `b
 2. Textur direkt in einem Malprogramm nachbearbeiten (dafür eine Vorlage mit den Umrissen der Stücke erzeugen).
 3. ~~F2~~ erledigt in v2.75 (`uv.py f2`: 1809 × 1809, 300 Bildpunkte je Meter). Alle F2-Lackierungen haben ein Lack-Programm und laufen deshalb
    über `liveryMat` wie F1 (der F2-Zweig in `teamTemplate` wird davon überschrieben). Teams ohne Lack-Programm (RONE) überspringt `backen.js`.
+
+## Rezept: ein Team von oben bemalen (am Mercedes erprobt, 18.11.2026)
+Fotos von oben: `tools/sticker/.cache/oben/<Kürzel>_<n>.*` (nicht im Repo; Quellen stehen in `tools/sticker/<Kürzel>.json` unter `top.src`).
+1. Achsen im Originalfoto bestimmen (Mitte zwischen den beiden Vorderrädern bzw. Hinterrädern, auf der Wagenmitte), als `top.rear`/`top.front`
+   eintragen, `top.photo` = Pfad, `top.src` = Quelle, `stickers: []`. `python3 tools/sticker/build.py <K>` → `.cache/<K>_oben_raster.png` ansehen:
+   Vorderräder müssen bei z ≈ 1,8, Hinterräder bei z ≈ −1,6 liegen, Nase oben. Schräges Foto: statt rear/front `pts` mit 4+ Punkten [px, py, x, z].
+2. Ausmessen im ausgerichteten Bild `.cache/<K>_oben_ganz.png` (300 px/m; Pixel-Raster: x_px = (1,15 − x)·300, y_px = (3,15 − z)·300 für F1,
+   (3,0 − z)·300 für F2). Vergrößerte Ausschnitte mit Pixel-Skala anlegen und genau ablesen.
+3. Aufkleber in dieser Reihenfolge: große Farbflächen (`key`, `smooth` 3–6, `holes: false` wenn Streifen/Schrift der Grundfarbe durchscheinen sollen,
+   bei Grau/Silber `tol` 80–100 und mit `poly` auf die Lackflächen begrenzen, sonst greift der graue Boden mit), danach Schriftzüge (`w` hell auf dunkel,
+   `d` dunkel auf hell, `c` mehrfarbig). Halo, Reifen, Spiegel und Carbon-Teile weglassen; die Startnummer auf der Nase NICHT ausschneiden.
+4. Lackierte Oberseiten am F1-Modell: Nase z 1,0 … 3,06 (bei z = 2 nur ±0,17 breit), Seitenkästen z −1,32 … 1,16 bis |x| 0,88,
+   Heckflügel z −2,32 … −1,76, |x| ≤ 0,57, Höhe 0,76 … 0,91 (Fotos zeigen ihn oft weiter hinten → mit `at` [x, z] und `w` setzen).
+   F2: Nase z 1,02 … 2,79, Seitenkästen z −1,41 … 0,66 bis |x| 0,78, Heckflügel z −2,34 … −1,96.
+   Der Frontflügel ist am Modell überwiegend Carbon (bekommt keine Aufkleber).
+5. `python3 tools/sticker/build.py <K>` → `node tools/textur/backen.js <K>` → `node tools/sticker/shot.js <K> <Vorsilbe> top,f34,f34n,hk` ansehen,
+   höchstens 3–4 Runden. Die Ansicht von oben greift nur auf Flächen, deren Normale deutlich nach oben zeigt (ab 0,5); seitliche Flächen bleiben beim Seitenbogen.

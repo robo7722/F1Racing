@@ -33,7 +33,7 @@ const SS = 2;
         const oc = new THREE.OrthographicCamera(-XW, XW, Z1, Z0, 0.1, 20); oc.position.set(0, 10, 0); oc.up.set(0, 0, 1); oc.lookAt(0, 0, 0); oc.updateMatrixWorld();
         R.setRenderTarget(hRT); R.setClearColor(0x000000, 1); R.clear(); R.render(hs, oc); R.setRenderTarget(null); hm.dispose(); }
       const TOPG = '\\n if (vCls < 2.5 && uTopOn > 0.5) { vec3 bn = normalize(vBN); vec2 tuv = vec2((' + XW.toFixed(3) + ' - vLP.x) / ' + (2 * XW).toFixed(3) + ', (vLP.z - (' + Z0.toFixed(3) + ')) / ' + (Z1 - Z0).toFixed(3) + ');'
-        + ' if (bn.y > 0.25 && tuv.x > 0.0 && tuv.x < 1.0 && tuv.y > 0.0 && tuv.y < 1.0 && vLP.y > texture2D(uTopH, tuv).r - 0.04) { vec4 t = texture2D(uTop, tuv); diffuseColor.rgb = mix(diffuseColor.rgb, t.rgb, t.a * smoothstep(0.25, 0.5, bn.y)); } }\\n';
+        + ' if (bn.y > 0.5 && tuv.x > 0.0 && tuv.x < 1.0 && tuv.y > 0.0 && tuv.y < 1.0 && vLP.y > texture2D(uTopH, tuv).r - 0.04) { vec4 t = texture2D(uTop, tuv); diffuseColor.rgb = mix(diffuseColor.rgb, t.rgb, t.a * smoothstep(0.5, 0.72, bn.y)); } }\\n';
       mat.onBeforeCompile = (sh, r) => { if (hook) hook(sh, r);
         const v = sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\\n gl_Position = vec4(uvB * 2.0 - 1.0, 0.0, 1.0); vBN = normal;'), f = sh.fragmentShader.replace('#include <opaque_fragment>', 'gl_FragColor = sRGBTransferOETF(vec4(diffuseColor.rgb, 1.0)); return;').replace('#include <alphamap_fragment>', TOPG + '#include <alphamap_fragment>');
         if (v === sh.vertexShader || !f.includes('uTopH, tuv') || !f.includes('sRGBTransferOETF(vec4(diffuseColor')) throw new Error('Einhängepunkt im Shader fehlt');
