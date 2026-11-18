@@ -16,8 +16,8 @@ Zum Vergleich: das F1-Auto im Spiel (`car.bin`) hat 110 000 / 34 000 / 12 000 Dr
   auf der Radachse liegt – zum Drehen nur `rotation.x` ändern. Radmitte, Radius und Breite stehen in `extras.wheels`.
 - Kameras in `extras.cams` im Format von `MODELS.cam`/`.tv` im Spiel: `cockpit` und `tv` = [x, y, z, Absenkung des Blickziels in 30 m]
   (Cockpit blickt wie im Spiel zusätzlich 0,45 m tiefer; TV mit 78° Sichtfeld). z bezieht sich auf die Mitte zwischen den Achsen.
-  Lotus: Cockpit [0, 0.90, 0.02, 0.3], TV [0, 1.10, -0.40, 1.8] · McLaren: [0, 0.88, -0.05, 0.15], [0, 1.02, -0.18, 1.8] ·
-  Ferrari: [0, 0.80, 0.05, 0.3], [0, 1.16, -0.10, 2.0]. Ein Fahrer ist in den Modellen nicht enthalten (im Spiel kommt die Fahrerfigur dazu).
+  Lotus: Cockpit [0, 0.90, 0.02, 0.3], TV [0, 1.14, -0.75, 1.9, 52] · McLaren: [0, 0.88, -0.05, 0.15], [0, 1.08, -0.35, 1.6, 52] ·
+  Ferrari: [0, 0.80, 0.05, 0.3], [0, 1.18, -0.40, 1.6, 52]. Der 5. TV-Wert ist das Sichtfeld (52° statt der 78° im Spiel – bei 78° kippten die Räder durch die Weitwinkelverzerrung sichtbar schräg; das Spiel muss diesen Wert dafür lesen). Ein Fahrer ist in den Modellen nicht enthalten (im Spiel kommt die Fahrerfigur dazu).
 - Lackierung, Sponsoren und Reifenflanke bleiben als Textur (Lack/Sponsoren 1024 px, sonst 512 px), alles andere ist als
   Vertex-Farbe eingebacken; Normal-Maps entfallen. Positionen/Normalen quantisiert (`KHR_mesh_quantization`, lädt der
   GLTFLoader von three.js ohne Zusatz).

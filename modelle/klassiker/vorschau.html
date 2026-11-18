@@ -60,7 +60,7 @@ async function load() {
 }
 const v = new THREE.Vector3();
 // Kameras wie im Spiel (Auto-Koordinaten, +z vorne): [x, y, z, Absenkung des Blickziels in 30 m]. Cockpit blickt zusätzlich 0,45 m tiefer, Sichtfeld 62°; TV Sichtfeld 78°.
-const CAMS_DEF = {'lotus49c': {'cockpit': [0, 0.9, 0.02, 0.3], 'tv': [0, 1.1, -0.4, 1.8]}, 'mclaren_mp44': {'cockpit': [0, 0.88, -0.05, 0.15], 'tv': [0, 1.02, -0.18, 1.8]}, 'ferrari_f2004': {'cockpit': [0, 0.8, 0.05, 0.3], 'tv': [0, 1.16, -0.1, 2.0]}};
+const CAMS_DEF = {'lotus49c': {'cockpit': [0, 0.9, 0.02, 0.3], 'tv': [0, 1.14, -0.75, 1.9, 52]}, 'mclaren_mp44': {'cockpit': [0, 0.88, -0.05, 0.15], 'tv': [0, 1.08, -0.35, 1.6, 52]}, 'ferrari_f2004': {'cockpit': [0, 0.8, 0.05, 0.3], 'tv': [0, 1.18, -0.4, 1.6, 52]}};
 let view = q.get('view') || 'aussen';
 window.__camsOverride = {};
 function carCams() { const root = car && car.children[0]; return Object.assign({}, CAMS_DEF[carKey] || {}, (root && root.userData.cams) || {}, window.__camsOverride[carKey] || {}); }
@@ -71,7 +71,7 @@ function frame() {
     if (spin) root.children[L].children.forEach(c => { if (c.name.startsWith('wheel_')) c.rotation.x += 0.08; });
     r.info.reset(); }
   if (view !== 'aussen' && car && !car.userData.noLod) { const cp = carCams()[view];
-    if (cp) { cam.fov = view === 'tv' ? 78 : 62; cam.position.set(cp[0], cp[1], cp[2]); cam.lookAt(cp[0], cp[1] - (cp[3] ?? 0.4) - (view === 'cockpit' ? 0.45 : 0), 30); cam.updateProjectionMatrix(); r.render(s, cam); }
+    if (cp) { cam.fov = view === 'tv' ? (cp[4] || 78) : 62; cam.position.set(cp[0], cp[1], cp[2]); cam.lookAt(cp[0], cp[1] - (cp[3] ?? 0.4) - (view === 'cockpit' ? 0.45 : 0), 30); cam.updateProjectionMatrix(); r.render(s, cam); }
   } else { if (cam.fov !== 32) { cam.fov = 32; cam.updateProjectionMatrix(); } ctl.update(); r.render(s, cam); }
   st.textContent = info + `\nAktuell: ${r.info.render.triangles} Dreiecke, ${r.info.render.calls} Zeichenaufrufe (inkl. Boden)`;
 }

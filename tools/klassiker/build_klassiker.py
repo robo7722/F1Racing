@@ -32,7 +32,7 @@ CARS = {
 }
 LOD_TRIS = [80000, 26000, 9000]
 # Kameras wie MODELS.cam/.tv im Spiel (Auto-Koordinaten, +z vorne, z = 0 Mitte zwischen den Achsen): [x, y, z, Absenkung des Blickziels in 30 m]
-CAMS = {"lotus49c": {"cockpit": [0, 0.9, 0.02, 0.3], "tv": [0, 1.1, -0.4, 1.8]}, "mclaren_mp44": {"cockpit": [0, 0.88, -0.05, 0.15], "tv": [0, 1.02, -0.18, 1.8]}, "ferrari_f2004": {"cockpit": [0, 0.8, 0.05, 0.3], "tv": [0, 1.16, -0.1, 2.0]}}
+CAMS = {"lotus49c": {"cockpit": [0, 0.9, 0.02, 0.3], "tv": [0, 1.14, -0.75, 1.9, 52]}, "mclaren_mp44": {"cockpit": [0, 0.88, -0.05, 0.15], "tv": [0, 1.08, -0.35, 1.6, 52]}, "ferrari_f2004": {"cockpit": [0, 0.8, 0.05, 0.3], "tv": [0, 1.18, -0.4, 1.6, 52]}}
 CREASE = np.cos(np.radians(40))
 
 
