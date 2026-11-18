@@ -33,7 +33,7 @@ Die elf echten Teams liegen als 512 × 512 px, transparenter Hintergrund, helle 
 `RON.png` ist ein eigener Entwurf im gleichen Stil: weißer, schräg gestellter Schriftzug „RONE“ mit drei Tempo-Balken, 512 × 512 px, transparent.
 
 ### Klassiker (v2.68)
-`H_LOT.png` Lotus 1970 · `H_MCL.png` McLaren 1988 · `H_FER.png` Ferrari 2004 – eigene Entwürfe in Creme/Gold (keine echten Markenzeichen): runde Plakette „49C · LOTUS · 1970“, schräger Schriftzug „McLAREN“ mit Tempo-Balken und „MP4/4 · 1988“, schlichtes Wappenschild mit Trikolore-Streifen und „F2004“. 512 × 512 px, transparent, neu erzeugen mit `python tools/klassiker/logos.py`.
+`H_LOT.png` Lotus 1970 · `H_MCL.png` McLaren 1988 · `H_FER.png` Ferrari 2004 – Logos aus der jeweiligen Zeit (v2.69): Lotus-Plakette mit grünem Dreieck (umgefärbte Wikipedia-Vektorgrafik), „McLaren INTERNATIONAL“ und das gelbe Scuderia-Ferrari-Schild aus den Texturen der Modelle. 512 × 512 px, transparent, neu erzeugen mit `python tools/klassiker/logos.py` (Details: docs/KLASSIKER.md).
 
 ## Formel 2 und Kart
 Kürzel mit Vorsatz `F2_` bzw. `K_`, z. B. `F2_INV.png` (Invicta), `F2_HIT.png` (Hitech). Die vollständige Liste steht in `index.html` bei `F2_TEAMS` und `KART_TEAMS`.

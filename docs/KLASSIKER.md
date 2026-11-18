@@ -67,7 +67,13 @@ Teamleiste: die Klassiker stehen abgetrennt am Ende (Knöpfe dafür etwas kleine
 Teaminfo: Schild „Historisch“, Modell, Fahrer und eine Technikzeile. Zeitfahren-Bestzeiten werden je Klassiker getrennt gespeichert (`|H_LOT` usw.).
 
 ## Logos
-`logos/H_LOT.png`, `H_MCL.png`, `H_FER.png` – eigene Entwürfe in Creme/Gold (keine echten Markenzeichen), Skript `tools/klassiker/logos.py`.
+Seit v2.69 die **Logos aus der jeweiligen Zeit** (Wunsch), erzeugt mit `tools/klassiker/logos.py` (braucht cairosvg):
+- `H_LOT.png` – Lotus-Plakette wie auf der Nase des 49C: gelber Kreis, Dreieck in British Racing Green, „LOTUS“, ACBC-Monogramm. Vorlage ist die
+  Vektorgrafik von Wikipedia (`tools/klassiker/quellen/lotus_cars_logo.svg`, heutige Fassung in Schwarz), das Schwarz wird auf das klassische Grün umgefärbt.
+- `H_MCL.png` – Schriftzug „McLaren INTERNATIONAL“ (Teamlogo der 80er), aus der Sponsoren-Textur des MP4/4-Modells, weiß auf transparent.
+- `H_FER.png` – gelbes Scuderia-Ferrari-Schild (Pferd, S F, Trikolore), aus der Sponsoren-Textur des F2004-Modells, Hintergrund freigestellt.
+Wikimedia lieferte die Originaldateien wegen Drosselung (Fehler 429) nicht; die Texturen der Modelle zeigen die Logos so, wie sie auf den Autos waren.
+v2.68 hatte eigene Entwürfe in Creme/Gold. Die Logo-Knöpfe der Klassiker haben keinen Sepia-Filter mehr (Originalfarben).
 
 ## Offen / Ideen
 - **Motorklang**: die Klassiker nutzen die vorhandenen F1-Aufnahmen mit eigenem Getriebe (Lotus bis 10.200, McLaren bis 12.100, Ferrari bis 12.900 U/min

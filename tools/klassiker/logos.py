@@ -1,53 +1,58 @@
-"""Eigene Team-Logos der Klassiker (v2.68): logos/H_LOT.png, H_MCL.png, H_FER.png – 512 × 512 px, transparent.
+"""Team-Logos der Klassiker aus der jeweiligen Zeit: logos/H_LOT.png, H_MCL.png, H_FER.png (512 × 512 px, transparent).
 
-Stil wie die übrigen Logos (helles Emblem für den dunklen Menü-Hintergrund), aber in Creme/Gold als Zeichen für „historisch“.
-Eigene Entwürfe, keine Nachbildung der echten Markenzeichen: Lotus = runde Plakette mit „49C“, McLaren = schräger Schriftzug mit
-Tempo-Winkel, Ferrari = schlichtes Wappenschild mit Trikolore-Streifen und „F2004“.
-Aufruf: python tools/klassiker/logos.py   (braucht pillow)
+- H_LOT (1970): Lotus-Plakette – gelber Kreis, Dreieck in British Racing Green, „LOTUS“ und ACBC-Monogramm (Colin Chapman).
+  Vorlage: Vektorgrafik der Lotus-Plakette von Wikipedia (tools/klassiker/quellen/lotus_cars_logo.svg, heutige Fassung in Schwarz);
+  das Schwarz wird auf das Grün der klassischen Plakette (1970) umgefärbt – Aufbau und Farben wie auf der Nase des 49C.
+- H_MCL (1988): Schriftzug „McLaren INTERNATIONAL“ (Teamlogo 1981–1990er), ausgeschnitten aus der Sponsoren-Textur des Modells
+  (modelle/klassiker/mclaren_mp44.glb), Buchstaben weiß auf transparent wie die übrigen Logos im Menü.
+- H_FER (2004): Scuderia-Ferrari-Schild (gelb, schwarzes Pferd, S F, Trikolore), ausgeschnitten aus der Sponsoren-Textur des F2004-Modells.
+
+Aufruf: python tools/klassiker/logos.py   (braucht numpy, scipy, pillow, cairosvg)
 """
-import os
-from PIL import Image, ImageDraw, ImageFont
+import io, os, sys
+import numpy as np
+from PIL import Image
+from scipy import ndimage
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-S = 2048                      # erst groß zeichnen, dann verkleinern (glatte Kanten)
-CREAM, GOLD = (246, 236, 210, 255), (217, 180, 90, 255)
-FS = '/usr/share/fonts/truetype/freefont/'
-def font(name, size):
-    for p in (FS + name, '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'):
-        if os.path.exists(p): return ImageFont.truetype(p, size)
-    return ImageFont.load_default()
-def text_c(d, xy, t, f, fill, anchor='mm'): d.text(xy, t, font=f, fill=fill, anchor=anchor)
-def save(im, key):
-    bb = im.getbbox(); im = im.crop(bb); w, h = im.size; n = max(w, h); sq = Image.new('RGBA', (n, n), (0, 0, 0, 0)); sq.paste(im, ((n - w) // 2, (n - h) // 2))
-    sq = sq.resize((470, 470), Image.LANCZOS); out = Image.new('RGBA', (512, 512), (0, 0, 0, 0)); out.paste(sq, (21, 21)); out.save(os.path.join(ROOT, 'logos', key + '.png')); print('logos/' + key + '.png')
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from glbio import read_glb, image_bytes   # noqa: E402
 
-# Lotus 1970: runde Plakette, Doppelring, „49C“ in Serifenschrift, Band mit „LOTUS“, unten „1970“
-im = Image.new('RGBA', (S, S)); d = ImageDraw.Draw(im); c = S // 2
-d.ellipse([c - 980, c - 980, c + 980, c + 980], outline=GOLD, width=46)
-d.ellipse([c - 900, c - 900, c + 900, c + 900], outline=CREAM, width=70)
-d.rectangle([c - 905, c - 150, c + 905, c + 150], fill=CREAM)
-text_c(d, (c, c + 8), 'LOTUS', font('FreeSansBold.ttf', 300), (0, 0, 0, 0))
-text_c(d, (c, c - 450), '49C', font('FreeSerifBoldItalic.ttf', 420), CREAM)
-text_c(d, (c, c + 470), '1970', font('FreeSansBold.ttf', 230), GOLD)
-for sx in (-1, 1): d.polygon([(c + sx * 560, c + 470), (c + sx * 700, c + 430), (c + sx * 700, c + 510)], fill=GOLD)
-save(im, 'H_LOT')
 
-# McLaren 1988: schräger, kräftiger Schriftzug mit zwei Tempo-Balken (eigener Entwurf), darunter „MP4/4 · 1988“
-im = Image.new('RGBA', (S, S)); d = ImageDraw.Draw(im); c = S // 2
-txt = Image.new('RGBA', (S, S)); t = ImageDraw.Draw(txt)
-text_c(t, (c + 60, c - 120), 'McLAREN', font('FreeSansBoldOblique.ttf', 380), CREAM)
-im.alpha_composite(txt)
-for k, (y, w) in enumerate([(c + 150, 70), (c + 260, 46)]):
-    d.polygon([(c - 900 + k * 120, y + w), (c - 840 + k * 120, y), (c + 980, y), (c + 920, y + w)], fill=GOLD if k else CREAM)
-text_c(d, (c + 40, c + 520), 'MP4/4 · 1988', font('FreeSansBoldOblique.ttf', 220), GOLD)
-save(im, 'H_MCL')
+def tex(key, name):
+    js, bn = read_glb(os.path.join(ROOT, 'modelle', 'klassiker', key + '.glb'))
+    i = next(k for k, im in enumerate(js['images']) if im.get('name', '').startswith(name))
+    return Image.open(io.BytesIO(image_bytes(js, bn, i))).convert('RGB')
 
-# Ferrari 2004: Wappenschild (schlicht), oben drei Streifen, „F2004“, unten „2004“
-im = Image.new('RGBA', (S, S)); d = ImageDraw.Draw(im); c = S // 2
-shield = [(c - 640, c - 860), (c + 640, c - 860), (c + 640, c + 120), (c + 560, c + 470), (c + 300, c + 760), (c, c + 900), (c - 300, c + 760), (c - 560, c + 470), (c - 640, c + 120)]
-d.polygon(shield, outline=CREAM, width=60)
-for k, colr in enumerate([(22, 140, 70, 255), CREAM, (206, 30, 40, 255)]): d.rectangle([c - 520 + k * 347, c - 760, c - 520 + (k + 1) * 347 - 20, c - 630], fill=colr)
-text_c(d, (c, c - 120), 'F2004', font('FreeSansBoldOblique.ttf', 380), CREAM)
-d.line([(c - 420, c + 180), (c + 420, c + 180)], fill=GOLD, width=26)
-text_c(d, (c, c + 430), '2004', font('FreeSansBold.ttf', 230), GOLD)
-save(im, 'H_FER')
+
+def save(im, key, size=470):
+    bb = im.getbbox(); im = im.crop(bb); w, h = im.size; s = size / max(w, h)
+    im = im.resize((max(1, round(w * s)), max(1, round(h * s))), Image.LANCZOS)
+    out = Image.new('RGBA', (512, 512), (0, 0, 0, 0)); out.alpha_composite(im, ((512 - im.width) // 2, (512 - im.height) // 2))
+    out.save(os.path.join(ROOT, 'logos', key + '.png')); print('logos/' + key + '.png', im.size)
+
+
+# Lotus 1970: Plakette mit grünem Dreieck
+import cairosvg   # noqa: E402
+svg = open(os.path.join(ROOT, 'tools', 'klassiker', 'quellen', 'lotus_cars_logo.svg'), encoding='utf-8').read().replace('fill="black"', 'fill="#0b5a36"')
+save(Image.open(io.BytesIO(cairosvg.svg2png(bytestring=svg.encode(), output_width=1024, output_height=1024))).convert('RGBA'), 'H_LOT')
+
+# McLaren 1988: Schriftzug „McLaren INTERNATIONAL“ (schwarz auf weißem Schild in der Textur) -> weiße Schrift, 8-fach hochgerechnet und weich freigestellt
+src = tex('mclaren_mp44', 'Material__1').crop((104, 425, 215, 450))   # nur die Innenfläche des Schildes (ohne Rahmenlinien)
+up = src.resize((src.width * 8, src.height * 8), Image.BICUBIC).filter(__import__('PIL.ImageFilter', fromlist=['x']).GaussianBlur(2.2))
+L = np.asarray(up.convert('L')).astype(np.float32)
+a = np.clip((150 - L) / 60, 0, 1)   # dunkle Buchstaben -> deckend, weiche Kante statt Pixeltreppe
+im = np.zeros(L.shape + (4,), np.uint8); im[..., :3] = 246; im[..., 3] = (a * 255).astype(np.uint8)
+save(Image.fromarray(im, 'RGBA'), 'H_MCL', size=490)
+
+# Ferrari 2004: Schild aus der Textur (schwarzer Hintergrund -> transparent, das danebenliegende Vodafone-Logo bleibt draußen)
+src = tex('ferrari_f2004', 'EXT_Sponsors').crop((800, 0, 1020, 290)); up = src.resize((src.width * 3, src.height * 3), Image.LANCZOS)
+A = np.asarray(up).astype(np.float32); lum = A.max(2)
+lab, n = ndimage.label(lum > 45); h, w = lum.shape
+yel = (A[..., 0] > 140) & (A[..., 1] > 120) & (A[..., 2] < 90)   # gelbe Schildfläche
+keep = (set(np.unique(lab[yel])) | {lab[int(h * 0.12), w // 2]}) - {0}   # Schildfläche und Trikolore oben
+m = ndimage.binary_fill_holes(np.isin(lab, list(keep)))
+m = ndimage.binary_dilation(m, iterations=4)   # schwarzen Rand des Schildes mitnehmen
+alpha = ndimage.gaussian_filter(m.astype(np.float32), 1.2)
+im = np.dstack([A.clip(0, 255).astype(np.uint8), (alpha * 255).astype(np.uint8)])
+save(Image.fromarray(im, 'RGBA'), 'H_FER')
