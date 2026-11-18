@@ -4096,14 +4096,14 @@ function roadCabin() {
       if (maj && (big || k % 4 === 0)) { g2.fillStyle = '#f2f4f8'; g2.font = `700 ${Math.round(r * 0.17)}px system-ui,sans-serif`; g2.textAlign = 'center'; g2.textBaseline = 'middle'; g2.fillText(String(Math.round(min + (max - min) * k / (n * 2))), x + Math.cos(a) * r * 0.55, y + Math.sin(a) * r * 0.55); } } };
   // Instrumente: statischer Hintergrund + live gezeichnete Zeiger (Wassertemperatur, Drehzahl, Tempo)
   const gbg = document.createElement('canvas'); gbg.width = 1024; gbg.height = 360;
-  { const c = gbg.getContext('2d'); c.fillStyle = '#000'; c.fillRect(0, 0, 1024, 360); dial(200, 200, 130, c, 160, false, false, 40); dial(512, 180, 170, c, 8, true, true); dial(824, 200, 130, c, 360, false, false);
+  { const c = gbg.getContext('2d', { willReadFrequently: true });   /* alle Instrumenten-Leinwände auf der CPU: werden im Spiel laufend hochgeladen (siehe Lenkrad-Display SW) */ c.fillStyle = '#000'; c.fillRect(0, 0, 1024, 360); dial(200, 200, 130, c, 160, false, false, 40); dial(512, 180, 170, c, 8, true, true); dial(824, 200, 130, c, 360, false, false);
     c.fillStyle = '#9aa3ad'; c.font = '600 20px system-ui,sans-serif'; c.textAlign = 'center'; c.fillText('°C', 200, 300); c.fillText('x1000 r/min', 512, 120); c.fillText('km/h', 824, 300); }
-  const gcv = document.createElement('canvas'); gcv.width = 1024; gcv.height = 360; gcv.getContext('2d').drawImage(gbg, 0, 0);
+  const gcv = document.createElement('canvas'); gcv.width = 1024; gcv.height = 360; gcv.getContext('2d', { willReadFrequently: true }).drawImage(gbg, 0, 0);
   const gt = new THREE.CanvasTexture(gcv); gt.colorSpace = THREE.SRGBColorSpace;
   const gm = new THREE.MeshBasicMaterial({ map: gt, color: new THREE.Color(1.15, 1.15, 1.15) });
   const gp = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.127), gm); gp.position.set(0.425, 0.935, 0.07); gp.rotation.set(-0.18, Math.PI, 0); g.add(gp);
   // Mittel-Display: Live-Navigationskarte (wird im Spiel gezeichnet, siehe roadDashTick)
-  const ncv = document.createElement('canvas'); ncv.width = 512; ncv.height = 288; { const c = ncv.getContext('2d'); c.fillStyle = '#05080d'; c.fillRect(0, 0, 512, 288); }
+  const ncv = document.createElement('canvas'); ncv.width = 512; ncv.height = 288; { const c = ncv.getContext('2d', { willReadFrequently: true }); c.fillStyle = '#05080d'; c.fillRect(0, 0, 512, 288); }
   const st = new THREE.CanvasTexture(ncv); st.colorSpace = THREE.SRGBColorSpace; st.anisotropy = 4;
   const sp = new THREE.Mesh(new THREE.PlaneGeometry(0.235, 0.132), new THREE.MeshBasicMaterial({ map: st, color: new THREE.Color(1.1, 1.1, 1.1) })); sp.position.set(0.0, 1.11, 0.215); sp.rotation.set(0.22, Math.PI, 0); g.add(sp);
   const back = new THREE.Mesh(new THREE.BoxGeometry(0.255, 0.152, 0.018), new THREE.MeshStandardMaterial({ color: 0x0a0a0b, roughness: .35, metalness: .2 })); back.position.set(0.0, 1.11, 0.228); back.rotation.x = 0.22; g.add(back);
@@ -4647,7 +4647,7 @@ function makeKart(d, T) {
     kf.onBeforeRender = () => { const sp = swSpin.rotation.z; if (sp !== last) { kartArmsIK(bones, sp); last = sp; } const mt = kf.material; mt.userData.U.uBone.value = bones; mt.uniformsNeedUpdate = true; };
   }
   // Anzeige (wie ein Rennkart-Display): Halterung am Lenkrohr hinter dem Lenkrad, Gehäuse über dem Kranz, Bildschirm zeigt Tempo und Drehzahl (nur der Spieler-Kart wird neu gezeichnet)
-  const dcv = document.createElement('canvas'); dcv.width = 288; dcv.height = 144; const dtex = new THREE.CanvasTexture(dcv); dtex.colorSpace = THREE.SRGBColorSpace; dtex.anisotropy = 4; kartDispDraw(dcv, 0, 0, true); dtex.needsUpdate = true;
+  const dcv = document.createElement('canvas'); dcv.width = 288; dcv.height = 144; dcv.getContext('2d', { willReadFrequently: true });   /* CPU-Leinwand: wird ~14× je Sekunde hochgeladen (siehe Lenkrad-Display SW) */ const dtex = new THREE.CanvasTexture(dcv); dtex.colorSpace = THREE.SRGBColorSpace; dtex.anisotropy = 4; kartDispDraw(dcv, 0, 0, true); dtex.needsUpdate = true;
   // Sitzt wie beim echten Rennkart HINTER dem Lenkrad auf der Lenksäule (feststehend) und ist durch das obere Feld zwischen Nabe und Kranz zu lesen.
   // Vorher lag sie in derselben Ebene wie Kranz und Speichen: beim Lenken drehten die Speichen durch das Display, oben stieß es an den Kranz.
   const stalk = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.1, 0.014), new THREE.MeshStandardMaterial({ color: 0x8f969e, metalness: .85, roughness: .35 })); stalk.position.set(0, 0.06, -0.08);   /* Halter hinter dem Gehäuse (verdeckte sonst die Ziffern) */
@@ -11580,7 +11580,7 @@ const SW = (() => {
     for (const g of L) { Pp.set(g.attributes.position.array, o * 3); Nn.set(g.attributes.normal.array, o * 3); Uu.set(g.attributes.uv.array, o * 2); o += g.attributes.position.count; }
     const mg = new THREE.BufferGeometry(); mg.setAttribute('position', new THREE.BufferAttribute(Pp, 3)); mg.setAttribute('normal', new THREE.BufferAttribute(Nn, 3)); mg.setAttribute('uv', new THREE.BufferAttribute(Uu, 2));
     mk(mg, bodyMat, 60); }   // Mittelteil und Griffe: ein Netz, ein Carbon-Material
-  const sc = document.createElement('canvas'); sc.width = 640; sc.height = 320; const tex = new THREE.CanvasTexture(sc); tex.colorSpace = THREE.SRGBColorSpace; tex.generateMipmaps = false; tex.minFilter = THREE.LinearFilter;   /* keine Mipmaps: sie wurden bei jeder Aktualisierung des Displays neu berechnet */
+  const sc = document.createElement('canvas'); sc.width = 640; sc.height = 320; sc.getContext('2d', { willReadFrequently: true });   /* Leistung (v2.64): CPU-Leinwand. Eine GPU-Leinwand musste der Browser bei jedem Hochladen in WebGL erst von der Grafikkarte zurücklesen und darauf warten – im Cockpit und in der TV-Kamera ~25 ms Hänger alle 0,1 s (gemessen), das Ruckeln dort */ const tex = new THREE.CanvasTexture(sc); tex.colorSpace = THREE.SRGBColorSpace; tex.generateMipmaps = false; tex.minFilter = THREE.LinearFilter;   /* keine Mipmaps: sie wurden bei jeder Aktualisierung des Displays neu berechnet */
   { const dm = new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }), band = 40 / 320;   // Canvas: oben die Schaltlichter (bis y 40), darunter das Display
     const pl = (w, h, y, v0, v1) => { const g = new THREE.PlaneGeometry(w, h).translate(0, y, 0.0378), uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setY(i, v0 + (v1 - v0) * uv.getY(i)); return g; };
     mk(pl(0.152, 0.0745, 0.0335, 0, 1 - band), dm, 63); mk(pl(0.142, 0.0085, 0.0885, 1 - band, 1), dm, 63); }
