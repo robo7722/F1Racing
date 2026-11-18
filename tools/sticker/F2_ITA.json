@@ -25,7 +25,7 @@
  "glsl": [
   "vec3 R = #e01010; vec3 W = #f2f2f2; vec3 G = #0a9a3c; vec3 col = R; float sd = aaS(abs(p.x) - 0.15);",
   "float yu = 0.655 - 0.146 * clamp(-0.6 - p.z, 0.0, 1.0); float yl = max(0.385, 0.555 + 0.19 * p.z);",
-  "col = mix(col, W, sd * band(p.z, -1.45, 0.35) * band(p.y, yl, yu));",
+  "float yg = 0.71 - 0.08 * clamp((-0.45 - p.z) / 0.65, 0.0, 1.0); float yt = mix(yu, yg + 0.03, 1.0 - aaS(p.z + 0.47));   // hinter z -0,47 reicht das Weiß bis an das Grün der Motorabdeckung (Foto; vorher blieb ein roter Streifen)", "col = mix(col, W, sd * band(p.z, -1.45, 0.35) * band(p.y, yl, yt));",
   "col = mix(col, G, sd * (1.0 - aaS(p.z + 0.78 + 0.42 * (0.41 - p.y))) * (1.0 - aaS(p.y - yl + 0.01)) * aaS(p.z + 1.5));",
   "col = mix(col, G, band(p.z, -1.7, -0.47) * aaS(p.y - 0.71 + 0.08 * clamp((-0.45 - p.z) / 0.65, 0.0, 1.0)));",
   "return col;"
