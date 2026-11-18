@@ -34,10 +34,10 @@
   "stickers": [
    {"name": "nase_schwarz", "poly": [[292, 488], [350, 478], [398, 488], [404, 660], [284, 660]], "fill": true, "color": "#16181b"},
    {"name": "chevron", "box": [280, 455, 410, 520], "kind": "key", "key": "#e5161a", "color": "#e5161a", "smooth": 2},
-   {"name": "gr_schwarz", "box": [292, 1080, 396, 1405], "kind": "key", "key": "#151515", "color": "#16181b", "tol": 90, "smooth": 3},
-   {"name": "gr_rot", "box": [292, 1080, 396, 1405], "kind": "key", "key": "#e5161a", "color": "#e5161a", "smooth": 2},
+   {"name": "gr_schwarz", "box": [292, 1080, 396, 1405], "kind": "key", "key": "#151515", "color": "#16181b", "tol": 90, "smooth": 7},
+   {"name": "gr_rot", "box": [292, 1080, 396, 1405], "kind": "key", "key": "#e5161a", "color": "#e5161a", "smooth": 6},
    {"name": "heck_rot", "poly": [[165, 1518], [522, 1518], [522, 1675], [165, 1675]], "fill": true, "color": "#e5161a", "at": [0, -2.04], "w": 1.14, "h": 0.56},
-   {"name": "heck_haas", "box": [195, 1560, 485, 1672], "kind": "w", "thr": [0.5, 0.62], "color": "#f2f3f5", "at": [0, -2.11], "w": 0.926, "h": 0.4},
+   {"name": "heck_haas", "box": [195, 1560, 485, 1672], "kind": "w", "thr": [0.5, 0.62], "color": "#f2f3f5", "at": [0, -1.99], "w": 0.78, "h": 0.2},
    {"name": "nase_spitze", "box": [313, 40, 372, 152], "kind": "c"},
    {"name": "zoomex", "box": [314, 158, 370, 175], "kind": "d"},
    {"name": "xtb", "box": [310, 180, 372, 214], "kind": "d"},

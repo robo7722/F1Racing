@@ -132,5 +132,13 @@
     "s": 0.12
    }
   ]
+ },
+ "top": {
+  "photo": "tools/sticker/.cache/oben/F2_PINK_ART_top1.jpg",
+  "src": "https://res.cloudinary.com/prod-f2f3/image/upload/v1770000000/f2/global/articles/2026/11_November/GettyImages-2293517891.webp",
+  "pts": [[420, 183, -0.78, -1.712], [615, 145, 0.78, -1.712], [532, 325, -0.78, 1.4335], [760, 280, 0.78, 1.4335]],
+  "stickers": [
+   {"name": "kuehler_carbon", "poly": [[237, 801], [186, 780], [150, 810], [138, 900], [144, 1035], [171, 1134], [204, 1164], [234, 1140], [246, 990]], "fill": true, "color": "#2c2e33"}
+  ]
  }
 }

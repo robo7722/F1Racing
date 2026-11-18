@@ -35,9 +35,11 @@ const SS = 2;
       const TOPG = '\\n if (vCls < 2.5 && uTopOn > 0.5) { vec3 bn = normalize(vBN); vec2 tuv = vec2((' + XW.toFixed(3) + ' - vLP.x) / ' + (2 * XW).toFixed(3) + ', (vLP.z - (' + Z0.toFixed(3) + ')) / ' + (Z1 - Z0).toFixed(3) + ');'
         + ' if (bn.y > 0.5 && tuv.x > 0.0 && tuv.x < 1.0 && tuv.y > 0.0 && tuv.y < 1.0 && vLP.y > texture2D(uTopH, tuv).r - 0.04) { vec4 t = texture2D(uTop, tuv); diffuseColor.rgb = mix(diffuseColor.rgb, t.rgb, t.a * smoothstep(0.5, 0.72, bn.y)); } }\\n';
       mat.onBeforeCompile = (sh, r) => { if (hook) hook(sh, r);
-        const v = sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\\n gl_Position = vec4(uvB * 2.0 - 1.0, 0.0, 1.0); vBN = normal;'), f = sh.fragmentShader.replace('#include <opaque_fragment>', 'gl_FragColor = sRGBTransferOETF(vec4(diffuseColor.rgb, 1.0)); return;').replace('#include <alphamap_fragment>', TOPG + '#include <alphamap_fragment>');
-        if (v === sh.vertexShader || !f.includes('uTopH, tuv') || !f.includes('sRGBTransferOETF(vec4(diffuseColor')) throw new Error('Einhängepunkt im Shader fehlt');
-        sh.vertexShader = 'attribute vec2 uvB; varying vec3 vBN;\\n' + v; sh.fragmentShader = 'uniform sampler2D uTop, uTopH; uniform float uTopOn; varying vec3 vBN;\\n' + f;
+        const v = sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\\n gl_Position = vec4(uvB * 2.0 - 1.0, 0.0, 1.0); vBN = normal;'), f = sh.fragmentShader.replace('#include <opaque_fragment>', 'gl_FragColor = sRGBTransferOETF(vec4(diffuseColor.rgb, 1.0)); return;');
+        const DK = '\\n { vec3 dN = normalize(vLN);';   // Draufsicht VOR den Seitenaufklebern auftragen: wo beide greifen (geneigte Schultern), gewinnt der Seitenbogen
+        const f2 = f.includes(DK) ? f.replace(DK, TOPG + DK) : f.replace('#include <alphamap_fragment>', TOPG + '#include <alphamap_fragment>');
+        if (v === sh.vertexShader || !f2.includes('uTopH, tuv') || !f2.includes('sRGBTransferOETF(vec4(diffuseColor')) throw new Error('Einhängepunkt im Shader fehlt');
+        sh.vertexShader = 'attribute vec2 uvB; varying vec3 vBN;\\n' + v; sh.fragmentShader = 'uniform sampler2D uTop, uTopH; uniform float uTopOn; varying vec3 vBN;\\n' + f2;
         sh.uniforms.uTop = { value: topTex }; sh.uniforms.uTopH = { value: hRT ? hRT.texture : null }; sh.uniforms.uTopOn = { value: topTex ? 1 : 0 }; };
       mat.customProgramCacheKey = () => 'bake-' + tk; mat.side = THREE.DoubleSide;
       const sc = new THREE.Scene(); for (const L of tp.lods) { const m = new THREE.Mesh(L.gloss, mat); m.frustumCulled = false; sc.add(m); }

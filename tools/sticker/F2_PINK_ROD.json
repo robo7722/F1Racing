@@ -73,5 +73,13 @@
     "s": 0.12
    }
   ]
+ },
+ "top": {
+  "photo": "tools/sticker/.cache/oben/F2_PINK_ROD_top1.jpg",
+  "src": "https://res.cloudinary.com/prod-f2f3/image/upload/v1770000000/f2/global/articles/2026/09_September/GettyImages-2297202221_1.webp",
+  "pts": [[640, 205, -0.78, -1.712], [828, 205, 0.78, -1.712], [605, 520, -0.78, 1.4335], [855, 520, 0.78, 1.4335]],
+  "stickers": [
+   {"name": "kuehler_carbon", "poly": [[237, 801], [186, 780], [150, 810], [138, 900], [144, 1035], [171, 1134], [204, 1164], [234, 1140], [246, 990]], "fill": true, "color": "#2c2e33"}
+  ]
  }
 }

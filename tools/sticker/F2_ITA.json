@@ -279,5 +279,14 @@
     "s": 0.13
    }
   ]
+ },
+ "top": {
+  "photo": "tools/sticker/.cache/oben/F2_ITA_top1.jpg",
+  "src": "https://res.cloudinary.com/prod-f2f3/image/upload/v1770000000/f2/global/articles/2026/09_September/GettyImages-2293517886.webp",
+  "pts": [[392, 218, -0.78, -1.712], [604, 178, 0.78, -1.712], [543, 388, -0.78, 1.4335], [791, 348, 0.78, 1.4335]],
+  "stickers": [
+   {"name": "weiss_chassis", "poly": [[270, 690], [270, 519], [288, 501], [402, 501], [420, 519], [420, 690]], "fill": true, "color": "#f2f2f2"},
+   {"name": "weiss_pods", "poly": [[300, 795], [69, 795], [69, 1320], [255, 1320], [255, 1041], [300, 1041]], "fill": true, "color": "#f2f2f2"}
+  ]
  }
 }
