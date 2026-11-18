@@ -333,6 +333,8 @@ Die Art gilt für die ganze Strecke. Eine Einstellung „je Kurve“ gibt es im 
 
 ## 6. Performance-Regeln
 
+> Übergreifende Leistungsregeln für Strecken, Autos, Effekte und HUD (inkl. der Ruckel-Ursachen aus 2.64): **`docs/LEISTUNG-ANLEITUNG.md`**.
+
 Ziel bei Qualität „Schön“ (`S.gfx === 'high'`) **an jeder Stelle der Runde: unter 450 Zeichenaufrufe pro Bild** (mit vollem Starterfeld) und unter ca. 1,2 Mio. Dreiecke.
 Der Wert ist auf einem Handy gemessen (Adreno 840, Version 1.83/1.84): ab etwa 500 Aufrufen pro Bild reichte die Rechenzeit nicht mehr für gleichmäßige 60 Bilder,
 bei rund 470 lief es noch sauber. Entscheidend ist die **schwerste Stelle**, nicht der Durchschnitt und nicht die Startaufstellung – der QC-Bot meldet sie (Abschnitt 7).
