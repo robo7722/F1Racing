@@ -65,8 +65,8 @@
    {"name": "zyn_nase", "box": [302, 420, 386, 468], "kind": "w"},
    {"name": "peroni_l", "box": [294, 628, 337, 660], "kind": "d"},
    {"name": "peroni_r", "box": [349, 628, 390, 660], "kind": "d"},
-   {"name": "hp_fluegel_l", "box": [208, 1580, 258, 1621], "kind": "c"},
-   {"name": "hp_fluegel_r", "box": [423, 1580, 473, 1621], "kind": "c"}
+   {"name": "hp_fluegel_l", "box": [208, 1580, 258, 1621], "kind": "c", "at": [0.33, -2.04], "w": 0.17},
+   {"name": "hp_fluegel_r", "box": [423, 1580, 473, 1621], "kind": "c", "at": [-0.33, -2.04], "w": 0.17}
   ]
  }
 }
