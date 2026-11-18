@@ -152,11 +152,12 @@ Auf allen Strecken ist das Bild in Cockpit und TV pixelgleich zum alten Zeichenw
 | Mexiko-Stadt | 221/276 | 221/279 | 245/304 | 1,06 Mio. |
 | São Paulo | 217/266 | 228/264 | 241/264 | 0,99 Mio. |
 | Lusail | 204/238 | 202/243 | 217/254 | 0,77 Mio. |
-| Genk (Kart) | 167/285 | 203/336 | 263/359 | **1,76 Mio.** |
-| Wackersdorf (Kart) | 198/336 | 201/314 | 211/297 | **1,56 Mio.** |
+| Genk (Kart) | 166/302 | 170/319 | 185/275 | 1,28 Mio. (2.65: Bäume treeMul .8 → .45; vorher 1,76 Mio.) |
+| Wackersdorf (Kart) | 190/313 | 187/311 | 189/268 | 1,36 Mio. (2.65: Bäume treeMul 1,0 → .55; vorher 1,56 Mio.) |
 
-Offen: Genk und Wackersdorf liegen bei den Dreiecken über 1,2 Mio. (Baumkacheln + Kart-Startaufstellung), Miami und Austin knapp darüber
-(einzelne Stellen mit vollem Feld). Nur mit sichtbaren Änderungen (weniger/einfachere Bäume) oder einer allgemeinen Detailstufen-Änderung lösbar.
+Offen: Genk und Wackersdorf liegen nach der Baum-Reduzierung (2.65) nur noch an der Startaufstellung über 1,2 Mio. Dreiecken – Ursache: **Karts haben
+keine Detailstufen** (jedes Kart ~45 Tsd. Dreiecke in jeder Entfernung, 20 Karts = 700–900 Tsd.). Miami und Austin liegen nur in der TV-Kamera direkt an der
+Startaufstellung (Meter ~270, volles Feld im Bild) bei ~1,28 Mio. – nicht wegen Bäumen. Lösung für beides: Detailstufen bzw. Fernmodell für Karts.
 
 ## 9. Checkliste vor dem Einchecken
 

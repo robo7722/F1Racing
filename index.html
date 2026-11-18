@@ -2147,8 +2147,8 @@ const THEMES = {
   /*}@qat:theme*/
 };
 Object.assign(THEMES, {   // Kartbahnen: wie Silverstone-Look, aber enge Auslaufzonen, kleine Bande, Wald am Rand
-  genk: { ...THEMES.sil, wall: 10, runoff: 6, wallH: .8, runoffKind: 'asphalt', groundTint: 0xdbe6c8, ads: ['GENK', 'KARTING', 'PRO CIRCUIT', 'BELGIEN', 'LIMBURG', 'RACING'], adCols: ['#111111', '#fdda24', '#ef3340', '#ffffff', '#0b3a8a'], treeMul: .8, treeMinD: 14, treeBand: 120, treeExt: 500, fogNear: 300, fogFar: 3200, camFar: 6000 },
-  wack: { ...THEMES.sil, wall: 10, runoff: 6, wallH: .8, runoffKind: 'asphalt', groundTint: 0xd6e0c0, ads: ['WACKERSDORF', 'PROKART', 'RACELAND', 'BAYERN', 'OBERPFALZ', 'RACING'], adCols: ['#111111', '#dd0000', '#ffce00', '#ffffff', '#0b3a8a'], conifer: .55, treeMul: 1.0, treeMinD: 14, treeBand: 130, treeExt: 500, fogNear: 300, fogFar: 3200, camFar: 6000 },
+  genk: { ...THEMES.sil, wall: 10, runoff: 6, wallH: .8, runoffKind: 'asphalt', groundTint: 0xdbe6c8, ads: ['GENK', 'KARTING', 'PRO CIRCUIT', 'BELGIEN', 'LIMBURG', 'RACING'], adCols: ['#111111', '#fdda24', '#ef3340', '#ffffff', '#0b3a8a'], treeMul: .45, /* v2.65: weniger Bäume (Leistung) */ treeMinD: 14, treeBand: 120, treeExt: 500, fogNear: 300, fogFar: 3200, camFar: 6000 },
+  wack: { ...THEMES.sil, wall: 10, runoff: 6, wallH: .8, runoffKind: 'asphalt', groundTint: 0xd6e0c0, ads: ['WACKERSDORF', 'PROKART', 'RACELAND', 'BAYERN', 'OBERPFALZ', 'RACING'], adCols: ['#111111', '#dd0000', '#ffce00', '#ffffff', '#0b3a8a'], conifer: .55, treeMul: .55, /* v2.65: weniger Bäume (Leistung) */ treeMinD: 14, treeBand: 130, treeExt: 500, fogNear: 300, fogFar: 3200, camFar: 6000 },
 });
 // Kartbahnen: eigene Farbstimmung statt der geerbten kühlen Silverstone-Stimmung
 THEMES.genk.look = { sh: [0.95, 1.0, 1.05], hi: [1.06, 1.03, 0.94], sat: 1.06, con: 1.05, vig: .28, tint: [1.02, 1.01, .97], lift: [.004, .005, .004], bloom: .32, thr: .95, rad: .4, warm: .16, fade: [.006, .006, .004], grain: .012 };   // Genk: milder Sommernachmittag, weich und leicht warm
@@ -12690,7 +12690,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.64'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.65'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
