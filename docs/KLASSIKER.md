@@ -134,3 +134,25 @@ Dateien `sounds/hist_*.wav`, werden nur geladen, wenn mit dem Klassiker gefahren
   Ferrari: Lenkrad-Display 7,9 × 5,5 cm (dreht mit). EINE CPU-Leinwand je Auto, 15× je Sekunde, nur in Helm-/TV-Kamera.
 - **Schikanen-Strafe** (alle Autos): zählt nur noch Strecke auf der Kurveninnenseite (`sign(lat) = sign(KS)`, |KS| > 1/400) – wer außen herum fährt, wird nicht
   bestraft. Geprüft an der Monza-Schikane: Innenseite an 15 von 16 Messpunkten richtig (der eine liegt am Übergang zwischen den beiden Kurven).
+
+## v2.72 – Sitzposition wie im Original, Querlenker biegen sich, McLaren-Armaturen, Ferrari-Innenflanke
+- **Sitzposition**, gemessen an Überrollbügel/Kopfstütze im Modell (Höchstpunkt der Mittellinie je 5-cm-Scheibe) und den Fotos (maßstabsgleiche
+  Seitenansicht ohne Perspektive neben die Fotos gelegt):
+  - Lotus: Bügel oben 0,91 m bei z −0,45; auf dem Foto liegt die Helmoberkante knapp unter dem Bügel, der Kopf ~27 cm davor → `seat` [−0,155, −0,08]
+    (Helmmitte 0,77 m / z −0,18; vorher ragte der Helm 16 cm über den Bügel).
+  - McLaren: Kopfstütze/Bügel 0,90 m bei z −0,05…−0,10 – der Helm (z −0,17) steckte darin. Jetzt davor und tief liegend: `seat` [−0,145, +0,33]
+    (Helmmitte 0,76 m / z +0,16). Hinweis: Das Foto zeigt den MP4/5B (1990) mit höherer Airbox; Lage zur Kopfstütze und zum Cockpitausschnitt passt.
+  - Ferrari: `seat` [−0,04, +0,12] (Helmmitte 0,79 m / z +0,05).
+  - **Kein Eindringen** („Helm darf nicht klippen“): Karosseriepunkte (Stufe 0 samt Lenkrad/Radteilen) im Helm-Ellipsoid (94 % der Helmhülle) gezählt –
+    McLaren +0,24: 646, +0,27: 401, +0,30: 147, **+0,33: 0** · Ferrari 0: 582, +0,04: 192, +0,08: 126, **+0,12: 0** · Lotus: 0.
+  - Körper hängt jetzt am Auto statt an der vollen Detailstufe (vorher verschwand er ab 18 m, der Helm schwebte allein – „vom Anzug getrennt“).
+  - Helmkamera folgt dem Kopf: Lotus [0,033, 0,745, 0,04, 2,6], McLaren [0,007, 0,735, 0,28, 1,2], Ferrari [0, 0,765, 0,17, 0,3]; TV McLaren 1,06 m.
+  - Sichtbarkeit neu gemessen: Rumpf sichtbar Lotus 7.977, McLaren 9.050, Ferrari 7.216 von 13.939 Dreiecken.
+- **Querlenker/Spurstangen biegen sich** beim Lenken (`histSplitWheels` → `parts.link`, `histLinkMat`): Teile bis 45 cm innen vom Rad, die nicht mit der
+  Karosserie verbunden sind (kein gemeinsamer Punkt mit einem Dreieck, das aus der Zone hinausragt), bekommen je Eckpunkt ein Gewicht 0 (inneres Ende) … 1 (am Rad,
+  geglättet). Der Vertex-Shader dreht jeden Punkt um die senkrechte Achse durch die Radmitte um Lenkwinkel × Gewicht (Uniform `m.linkU`, ein Programm für alle
+  Kopien). Kein Abschneiden, keine Lücke, keine Rechenlast auf der CPU.
+- **McLaren-Armaturen** (Foto des echten MP4/4): ganze Tafel 18 × 8,5 cm hinter dem Lenkrad (Ebene durch zwei Messpunkte der gewölbten Tafel, 1,5 cm davor) –
+  gebogene Leuchtpunkt-Skala mit 9 0 1 2 3 4 5 6 (40 Punkte, leuchten mit der Drehzahl, oben rot), Lampen rot · FUEL · grün · rot, grüne Gang-Ziffer,
+  runde Seitenlampen (Bremse/Schaltblitz), GCU, Tempo.
+- **Ferrari**: Innenflanken der Reifen (zum Auto hin) einfarbig dunkel – die gespiegelte Schrift störte im Cockpit.
