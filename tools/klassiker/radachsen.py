@@ -21,7 +21,7 @@ def axis_of(P, c, R):
     return best
 
 out = {}
-for k in ['lotus49c', 'mclaren_mp44', 'ferrari_f2004']:
+for k in ['lotus49c', 'mclaren_mp44', 'ferrari_f2004', 'mclaren_mp413', 'redbull_rb8', 'ferrari_312']:
     js, bn = read_glb(os.path.join(ROOT, 'modelle', 'klassiker', k + '.glb')); N = js['nodes']; res = {}; UD = [n for n in N if n.get('extras', {}).get('wheels')][0]['extras']['wheels']
     def walk(i, M, path):
         n = N[i]; W = M @ node_matrix(n); p = path + [n.get('name', '')]

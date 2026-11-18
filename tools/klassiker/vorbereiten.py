@@ -2,8 +2,8 @@
 """Original-GLBs der Klassiker vor dem Verkleinern reparieren (Fehler der Vorlagen, 18.11.2026).
 
 Aufruf:  python3 tools/klassiker/vorbereiten.py <schluessel> <original.glb> <texturordner> <ausgabe.glb>
-  redbull_rb8:  Karosserie (wccarbody.001) hatte nur eine Glanzkarte als Farbe und 20-fach gestreckte UVs ->
-                UVs / 20, Lackierung textures/car_chassis.png (2048², senkrecht gespiegelt) als Farbe.
+  redbull_rb8:  Karosserie (wccarbody.001) hatte nur eine Glanzkarte als Farbe und 20-fach gestreckte und um 19 verschobene UVs (v −38,98…−19,02) ->
+                v' = (v + 39) / 20, u' = u / 20 (nur / 20 versetzte alles um 5 % – gelbe Flecken auf der Karosserie), Lackierung textures/car_chassis.png (2048², senkrecht gespiegelt) als Farbe.
   ferrari_312:  Karosserie (car_chassis.001) hatte nur einen 16×16-Platzhalter (rot, völlig durchsichtig -> schwarz) ->
                 textures/car_chassis.png (1024², senkrecht gespiegelt, „AMON 20“).
   mclaren_mp413: nichts zu tun (Original kann direkt verkleinert werden).
@@ -13,16 +13,16 @@ import sys, os, json, struct, shutil, subprocess
 key, src, texdir, out = sys.argv[1:5]
 HERE = os.path.dirname(os.path.abspath(__file__)); shutil.copy(src, out)
 
-def scale_uv(path, mat_index, f):
+def scale_uv(path, mat_index, f, ov=0.0):
     b = bytearray(open(path, 'rb').read()); L = struct.unpack('<I', b[12:16])[0]; J = json.loads(b[20:20 + L]); off = 20 + L + 8
     acc = {p['attributes']['TEXCOORD_0'] for me in J['meshes'] for p in me['primitives'] if p.get('material') == mat_index}
     for ai in acc:
         A = J['accessors'][ai]; bv = J['bufferViews'][A['bufferView']]; assert A['componentType'] == 5126
         o = off + bv.get('byteOffset', 0) + A.get('byteOffset', 0); st = bv.get('byteStride', 8)
         for i in range(A['count']):
-            u, v = struct.unpack_from('<ff', b, o + i * st); struct.pack_into('<ff', b, o + i * st, u * f, v * f)
+            u, v = struct.unpack_from('<ff', b, o + i * st); struct.pack_into('<ff', b, o + i * st, u * f, v * f + ov)
         for k in ('min', 'max'):
-            if k in A: A[k] = [x * f for x in A[k]]
+            if k in A: A[k] = [A[k][0] * f, A[k][1] * f + ov]
     js = json.dumps(J, separators=(',', ':')).encode(); js += b' ' * (-len(js) % 4); rest = bytes(b[20 + L:])
     open(path, 'wb').write(struct.pack('<III', 0x46546C67, 2, 12 + 8 + len(js) + len(rest)) + struct.pack('<II', len(js), 0x4E4F534A) + js + rest)
 
@@ -35,7 +35,7 @@ def tex(path, name, img, mx):
     os.remove(path + '.vor_ersetzen')
 
 if key == 'redbull_rb8':
-    scale_uv(out, mat_index(out, 'wccarbody.001'), 1 / 20); tex(out, 'wccarbody.001', os.path.join(texdir, 'car_chassis.png'), 2048)
+    scale_uv(out, mat_index(out, 'wccarbody.001'), 1 / 20, 1.95); tex(out, 'wccarbody.001', os.path.join(texdir, 'car_chassis.png'), 2048)
 elif key == 'ferrari_312':
     tex(out, 'car_chassis.001', os.path.join(texdir, 'car_chassis.png'), 1024)
 print('vorbereitet:', out)

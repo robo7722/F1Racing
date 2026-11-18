@@ -5,6 +5,9 @@
 | `lotus49c.glb` | Lotus 49C (1970) | 60 MB, 300 000 Dreiecke, 533 Teile | 4,1 MB | 80 000 / 26 000 / 9 000 | 15 / 11 / 7 |
 | `mclaren_mp44.glb` | McLaren MP4/4 (1988) | 75 MB, 1,7 Mio. Dreiecke, 118 Materialien | 3,8 MB | 80 000 / 26 000 / 9 000 | 14 / 11 / 7 |
 | `ferrari_f2004.glb` | Ferrari F2004 (2004) | 16 MB, 236 000 Dreiecke, 323 Teile | 3,2 MB | 80 000 / 26 000 / 9 000 | 16 / 16 / 15 |
+| `ferrari_312.glb` | Ferrari 312 (1967), „AMON 20“ | (Original nur beim Nutzer) | 2,3 MB | 72 000 / 26 000 / 9 000 | 14 / 11 / 7 |
+| `mclaren_mp413.glb` | McLaren MP4/13 (1998), West #8 | (Original nur beim Nutzer) | 3,2 MB | 80 000 / 26 000 / 9 000 | 21 / 17 / 12 |
+| `redbull_rb8.glb` | Red Bull RB8 (2012), #1 | (Original nur beim Nutzer) | 2,9 MB | 66 000 / 26 000 / 9 000 | 15 / 12 / 8 |
 
 Zum Vergleich: das F1-Auto im Spiel (`car.bin`) hat 110 000 / 34 000 / 12 000 Dreiecke.
 
@@ -24,10 +27,12 @@ Zum Vergleich: das F1-Auto im Spiel (`car.bin`) hat 110 000 / 34 000 / 12 000 Dr
 
 ## Ansehen / neu bauen
 - Vorschau: `modelle/klassiker/vorschau.html` über den lokalen Server öffnen (Auto, Detailstufe, Räder drehen).
-- Neu bauen: `python tools/klassiker/build_klassiker.py <quelle.glb> <lotus49c|ferrari_f2004|mclaren_mp44> modelle/klassiker`
+- Neu bauen: `python tools/klassiker/build_klassiker.py <quelle.glb> <lotus49c|ferrari_f2004|mclaren_mp44|ferrari_312|mclaren_mp413|redbull_rb8> modelle/klassiker`
+  (Reparaturen am Original vorher mit `tools/klassiker/vorbereiten.py`). Die Kameras in `extras.cams` der drei neuen Modelle sind nur Platzhalter
+  ([0, 0.85, 0, 0.3]) – im Spiel gelten `HIST_CAR.ck`/`tvY`, die Helmmitte richtet sich nach dem Platzhalter-Augenpunkt + `seat`.
   (braucht numpy, scipy, pillow, pymeshlab; auf diesem Rechner das x64-Python 3.14).
 
 ## Im Spiel (v2.68)
-Eingebaut als Teams `H_LOT`, `H_MCL`, `H_FER` unter F1 (nur Schnelles Spiel und Zeitfahren). Das Lenkrad wird beim Laden aus der Karosserie
+Eingebaut als Teams `H_LOT`, `H_MCL`, `H_FER` (dazu später `H_F67`, `H_MCL98`, `H_RBR`) unter F1 (nur Schnelles Spiel und Zeitfahren). Das Lenkrad wird beim Laden aus der Karosserie
 der vollen Stufe herausgelöst und gedreht, Hände greifen am Kranz; Helmkamera (Lotus, McLaren) und TV-Höhe im Spiel leicht angepasst.
 Alles Weitere: `docs/KLASSIKER.md`.
