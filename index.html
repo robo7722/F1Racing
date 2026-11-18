@@ -4309,7 +4309,7 @@ function histRel(o, root, dst) { _hInv.copy(root.matrixWorld).invert(); _hRel.mu
 function histLoad(team) {
   const H = HIST_CAR[team]; if (!H) return Promise.resolve(null); if (HIST.tpl[team]) return Promise.resolve(HIST.tpl[team]);
   HIST.sichtP ||= fetch('modelle/klassiker/fahrer_sicht.json?v=4').then(r => r.ok ? r.json() : null).catch(() => null).then(j => { HIST.sicht = j; });
-  return HIST.wait[team] ||= HIST.sichtP.then(() => import('three/addons/loaders/GLTFLoader.js')).then(({ GLTFLoader }) => new GLTFLoader().loadAsync('modelle/klassiker/' + H.file + '.glb?v=' + ({ mclaren_mp44: 2 }[H.file] || 1)))   /* v2: McLaren-Aufkleberbogen mit durchsichtigem Hintergrund (tools/klassiker/aufkleber_alpha.py) */
+  return HIST.wait[team] ||= HIST.sichtP.then(() => import('three/addons/loaders/GLTFLoader.js')).then(({ GLTFLoader }) => new GLTFLoader().loadAsync('modelle/klassiker/' + H.file + '.glb?v=' + ({ mclaren_mp44: 3 }[H.file] || 1)))   /* v3: McLaren-Aufkleberbogen = Original des Nutzers (1024², echte Deckkraft, tools/klassiker/textur_ersetzen.py) */
     .then(gl => { const T = histPrep(gl.scene, H); HIST.tpl[team] = T; histDone(team); return T; })
     .catch(e => { console.warn('Klassiker ' + team, e); delete HIST.wait[team]; return null; });
 }
@@ -13172,7 +13172,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.78'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.79'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
