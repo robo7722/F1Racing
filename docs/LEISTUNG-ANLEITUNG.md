@@ -86,6 +86,10 @@ schlimmer an als eine etwas niedrigere, aber gleichmäßige Bildrate).
   nur in „Schön“/„Ultra“ (`S.gfx !== 'low'`).
 - **Durchsicht** sparsam und **nie über das Cockpit**: Effekte schreiben keine Tiefe, testen sie aber (`depthTest` bleibt an) – dann verdeckt das Cockpit sie richtig.
 - **Echtzeitschatten** werfen nur die Autos; neue Objekte bekommen gebackene Schatten (`bakeShadows`), kein `castShadow`.
+- **Gegner-Schatten** (seit 2.67): Gegnerautos werfen ihren Schatten über eine Schattenfigur (`m.shp`, Fernmodell `tp.far3`, Ebene `SHP_L` = 8), ihre
+  echten Teile nicht (`userData.cs0` merkt den ursprünglichen Wert, das eigene Auto bekommt ihn zurück). Die Ebene 8 schaltet ein Haken an
+  `renderer.shadowMap.render` nur während des Schattendurchgangs an der Kamera ein. Neue Autoteile werfen bei Gegnern also automatisch keinen Schatten.
+  Startaufstellung Miami: Schattenkarte 73 → 21 Aufrufe, 223 → 88 Tsd. Dreiecke. Testschalter `window.__noShp`.
 
 ## 6. HUD und Oberfläche
 
@@ -146,21 +150,20 @@ Auf allen Strecken ist das Bild in Cockpit und TV pixelgleich zum alten Zeichenw
 | Suzuka | 198/313 | 212/285 | 224/270 | 1,09 Mio. |
 | Bahrain | 200/266 | 208/269 | 222/250 | 0,71 Mio. |
 | Jeddah | 211/288 | 232/285 | 243/343 | 1,05 Mio. |
-| Miami | 225/316 | 230/348 | 248/392 | 1,27 Mio. |
+| Miami | 212/291 | 216/277 | 234/308 | 0,95 Mio. (vorher 1,27 Mio.; 2.67 Schattenfiguren) |
 | Barcelona | 214/290 | 216/277 | 230/285 | 0,89 Mio. |
 | Hungaroring | 191/250 | 201/242 | 201/247 | 0,78 Mio. |
 | Zandvoort | 211/323 | 236/334 | 225/294 | 1,11 Mio. |
 | Madrid | 170/186 | 186/269 | 201/276 | 0,96 Mio. |
 | Baku | 195/306 | 224/281 | 245/293 | 1,02 Mio. |
-| Austin | 154/189 | 172/235 | 201/338 | 1,29 Mio. |
+| Austin | 150/216 | 171/232 | 189/240 | 0,74 Mio. (vorher 1,29 Mio.; 2.67 Schattenfiguren) |
 | Mexiko-Stadt | 221/276 | 221/279 | 245/304 | 1,06 Mio. |
 | São Paulo | 217/266 | 228/264 | 241/264 | 0,99 Mio. |
 | Lusail | 204/238 | 202/243 | 217/254 | 0,77 Mio. |
 | Genk (Kart) | 166/299 | 170/316 | 185/274 | 0,95 Mio. (vorher 1,76 Mio.; 2.65 Bäume treeMul .8 → .45, 2.66 Kart-Fernstufe) |
 | Wackersdorf (Kart) | 190/313 | 188/307 | 191/271 | 0,92 Mio. (vorher 1,56 Mio.; 2.65 Bäume treeMul 1,0 → .55, 2.66 Kart-Fernstufe) |
 
-Offen: Miami und Austin liegen nur in der TV-Kamera direkt an der Startaufstellung (Meter ~270, volles Feld im Bild) bei ~1,28 Mio. Dreiecken –
-im Rennen höchstens ~0,96 Mio. Genk und Wackersdorf sind seit 2.66 unter 1,2 Mio. (weniger Bäume + Kart-Fernstufe).
+Seit 2.67 liegen alle Strecken an allen gemessenen Stellen unter 450 Aufrufen und 1,2 Mio. Dreiecken.
 
 ## 9. Checkliste vor dem Einchecken
 

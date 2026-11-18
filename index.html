@@ -2298,6 +2298,11 @@ function syncAoCam() { aoCam.position.copy(camera.position); aoCam.quaternion.co
 const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffffff, 2); scene.add(sun, sun.target);
 const flood = new THREE.DirectionalLight(0xfff4e6, 0); scene.add(flood, flood.target);
+// Schattenfiguren (v2.67): Gegnerautos werfen ihren Schatten über EIN Netz aus dem Fernmodell (~2.500 Dreiecke) auf Ebene 8, die nur die Schattenkameras sehen –
+// vorher je Auto 8 Teile mit bis zu 45.000 Dreiecken (Startaufstellung: 73 Aufrufe / 223.000 Dreiecke nur für die Schattenkarte). Gegner empfangen keine Schatten,
+// also gibt es keine Selbstschatten-Flecken; am Boden ist der Unterschied bei ~6 cm Schattenauflösung nicht zu sehen. Testschalter window.__noShp.
+const SHP_L = 8, SHPMAT = new THREE.MeshBasicMaterial({ colorWrite: false });
+{ const smr = renderer.shadowMap.render; renderer.shadowMap.render = function (lights, sc, cam) { const mk = cam.layers.mask; cam.layers.enable(SHP_L); try { smr.call(this, lights, sc, cam); } finally { cam.layers.mask = mk; } }; }   /* Three.js prüft im Schattendurchgang die Ebenen der Hauptkamera: Ebene 8 nur dort einschalten (die Bildliste steht da schon fest) */
 for (const l of [sun, flood]) {
   l.shadow.mapSize.set(1024, 1024);
   const c = l.shadow.camera; c.left = -30; c.right = 30; c.top = 30; c.bottom = -30; c.near = 10; c.far = 400;
@@ -4835,7 +4840,8 @@ function makeCar0(d) {
     // Fernmodell: ab 120 m ist das ganze Auto EIN Netz mit EINEM Zeichenaufruf (statt Karosserie, Carbon, Halo, Helm, Spiegel und vier Rädern einzeln)
     const far = new THREE.Mesh(tp.far || (tp.far = farCarGeo(tp, T)), tp.glossMat); far.visible = false; g.add(far);
     if (!tp.far3) { try { tp.far3 = clusterGeo(tp.far); } catch (e) { console.warn('far3', e); tp.far3 = tp.far; } }   // ab CAR_FAR3: ~3.000 statt ~13.600 Dreiecke
-    const r = { g, fl, fr, wfl, wfr, rr, wrl, wrr, label, helm: hm, rl, body, matte, halo, tp, lod: 0, comp: 1, cam: MD.cam, tv: MD.tv, far, detail: [body, matte, halo, hm, fl, fr, rr].concat(mir ? [mir] : []), oldDrv, mkF1: F1F ? () => f1Driver(d, T, MD, g) : null };
+    const shp = new THREE.Mesh(tp.far3, SHPMAT); shp.layers.set(SHP_L); shp.castShadow = true; g.add(shp); g.traverse(o => { if (o.isMesh && o !== shp) o.userData.cs0 = o.castShadow; });   /* Schattenfigur (siehe SHP_L) */
+    const r = { g, fl, fr, wfl, wfr, rr, wrl, wrr, label, helm: hm, rl, body, matte, halo, tp, lod: 0, comp: 1, cam: MD.cam, tv: MD.tv, far, shp, detail: [body, matte, halo, hm, fl, fr, rr].concat(mir ? [mir] : []), oldDrv, mkF1: F1F ? () => f1Driver(d, T, MD, g) : null };
     lodFadePrep(r); return r;
   }
   const body = new THREE.Mesh(tp.gloss, tp.glossMat), matte = new THREE.Mesh(tp.matte, MATTE);
@@ -11526,6 +11532,7 @@ function updateMeshes(dt) {
     m.wfl.rotation.x = m.wfr.rotation.x = m.rr.rotation.x = c.spin;
     if (m.sw) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z; m.sw.visible = c === pl || dx * dx + dz * dz < 625; }   /* Kart: Lenkrad (viele kleine Teile) nur aus der Nähe zeichnen */
     if (m.kart) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z, R = m.klOn ? KART_FAR - 2 : KART_FAR + 2; kartLod(m, !window.__noKartLod && c !== pl && dx * dx + dz * dz > R * R); }   /* Kart-Fernstufe (Spieler-Kart immer voll); Testschalter __noKartLod */
+    if (m.shp) { const own = c === pl || !!window.__noShp; if (m.shpOwn !== own) { m.shpOwn = own; m.shp.visible = !own; m.g.traverse(o => { if (o.isMesh && o.userData.cs0 !== undefined) o.castShadow = own ? o.userData.cs0 : false; }); } }   /* eigenes Auto: echter Schatten, Gegner: Schattenfigur */
     if (m.tp) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z, d2 = dx * dx + dz * dz; const LD = window.__carLod || CAR_LOD, cur = m.lf ? m.lf.to : m.lod, b0 = LD[0] + (cur >= 1 ? -LOD_HYS : LOD_HYS), b1 = LD[1] + (cur >= 2 ? -LOD_HYS : LOD_HYS);
       if (c === pl) { const w = window.__plLod ?? (!running || S.cam === 2 || S.cam === 3 ? 0 : 1);   /* eigenes Auto: volle Stufe (~112.000 Dreiecke) nur im Cockpit/TV-Kamera und im Stand; in den Verfolgerkameras die mittlere (~37.000) – im Bild nicht zu unterscheiden */
         const ml = running && (S.cam === 2 || S.cam === 3); if (m.matteLo !== ml) { m.matteLo = ml; setLod(m, w, true); }
@@ -12718,7 +12725,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.66'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.67'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
