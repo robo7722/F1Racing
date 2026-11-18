@@ -156,3 +156,10 @@ Dateien `sounds/hist_*.wav`, werden nur geladen, wenn mit dem Klassiker gefahren
   gebogene Leuchtpunkt-Skala mit 9 0 1 2 3 4 5 6 (40 Punkte, leuchten mit der Drehzahl, oben rot), Lampen rot · FUEL · grün · rot, grüne Gang-Ziffer,
   runde Seitenlampen (Bremse/Schaltblitz), GCU, Tempo.
 - **Ferrari**: Innenflanken der Reifen (zum Auto hin) einfarbig dunkel – die gespiegelte Schrift störte im Cockpit.
+
+## v2.78 – McLaren: schwarze Kästen um die Logos (Rückmeldung 18.11.2026)
+Die Logos des MP4/4 (Shell, Honda, Goodyear, 12, TAG Heuer, Barcode-Streifen) sind eigene Flächen über der Karosserie (691 Dreiecke, Material `Material_#1.005`).
+Ihr Bogen ist im verkleinerten Modell ein JPEG mit schwarzem Hintergrund und das Material undurchsichtig → schwarze Kästen. Das 75-MB-Original liegt nur auf
+dem Rechner des Nutzers. Behoben ohne Original: `tools/klassiker/aufkleber_alpha.py` macht das reine Schwarz (Wert 0), das mit dem Hintergrund zusammenhängt,
+durchsichtig (die dunklen Logos haben Wert 24 und bleiben), speichert den Bogen als PNG und stellt das Material auf `MASK`. Laden mit `?v=2`.
+Beim nächsten Neubau aus dem Original (`build_klassiker.py`) muss das wiederholt werden, falls das Original den Bogen ebenso ohne Deckkraft liefert.
