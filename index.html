@@ -13209,11 +13209,30 @@ function initShowroom() {
 }
 // Rückwand des Showrooms: dunkles Graphit, schräge Farbflächen in der Teamfarbe, feine Linien und der Teamname als große Konturschrift
 function showroomWall(team, text) { const W = SHOW.wall; if (!W || !TEAMS[team]) return; const T = TEAMS[team], nm = String(text || T.short || T.name).toUpperCase(), c1 = hex(uiCol(T)), c2 = hex(T.acc ?? uiCol(T));
-  if (W.name !== nm || W.c1 !== c1) { W.t0 = SHOW.t || 0; W.pat = ((W.pat || 0) + 1) % 3; W.tp0 = SHOW.t || 0; } W.name = nm; W.c1 = c1; W.c2 = c2; W.key = team + '|' + nm; }
+  if (W.name !== nm || W.c1 !== c1) { W.t0 = SHOW.t || 0; W.pat = ((W.pat || 0) + 1) % 3; W.tp0 = SHOW.t || 0; } W.name = nm; W.c1 = c1; W.c2 = c2; W.key = team + '|' + nm; W.team = team; }
 // LED-Wand zeichnen (etwa 15× pro Sekunde): Farbstreifen wechseln alle paar Sekunden ihre Anordnung und schieben sich dabei über die Wand; der Name wird Zeichen für Zeichen
 // „eingetippt“ (mit Zufallszeichen davor) und zuckt ab und zu mit Farbversatz und verschobenen Zeilen (Glitch).
 const WALL_PAT = [[[.36, .56, 0, 1, 0, 1], [.575, .59, 0, 1, 1, .55], [.2, .33, .78, 1, 0, .9], [.62, .9, .62, .7, 0, .35]], [[.1, .24, 0, 1, 0, .9], [.26, .28, 0, 1, 1, .6], [.6, .86, .1, .2, 0, .4], [.5, .94, .8, 1, 0, .85]], [[.52, .78, 0, 1, 0, 1], [.44, .5, 0, 1, 1, .7], [.05, .3, .5, .58, 0, .4], [.08, .22, .86, 1, 1, .8]]];
-function wallDraw(now) { const W = SHOW.wall; if (!W || !W.c1) return; const g = W.cv.getContext('2d'), w = W.cv.width, h = W.cv.height, sk = h * 0.42, E = x => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); }, F = '"Titillium Web",system-ui,sans-serif';
+// v2.91 Legenden-Wand „Archiv“ (Entwurf 1, Go des Nutzers 18.11.2026): warmes Sepia, Teamfarben-Streifen ins Sepia gezogen, Jahr als große goldene Konturzahl,
+// links das Auto, rechts der Fahrer (unterstrichen), Filmstreifen mit Lochung und flackerndes Filmkorn. Sichtbarer Wandausschnitt in der Teamwahl (Raycast gemessen):
+// Leinwand x ≈ 450…880, y ≈ 225…320 von 1024×320, Bildmitte x ≈ 630 – dort steht alles Lesbare. Fahrerwahl (zweite Wand, frontal): Bildmitte x ≈ 465. Das Jahr blendet beim Wechsel weich ein.
+function wallDrawLegend(now, W, H) { const g = W.cv.getContext('2d'), w = W.cv.width, h = W.cv.height, F = '"Titillium Web",system-ui,sans-serif', T = TEAMS[W.team], d = ALL.find(c => c.team === W.team);
+  const nm = d ? d.name.split(' ') : [], dn = (nm.length > 1 ? nm[0][0] + '. ' + nm.slice(1).join(' ') : (d ? d.name : '')).toUpperCase(), yr = String(H.year), car = H.title.toUpperCase(), c1 = W.c1, c2 = W.c2, cx = MENU.scr === 'driver' ? 465 : 630, fi = clamp((now - (W.t0 || 0)) / 0.7, 0, 1);
+  g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.textBaseline = 'alphabetic'; g.textAlign = 'left';
+  { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#0b0805'); gr.addColorStop(.6, '#1d150c'); gr.addColorStop(1, '#2a1e10'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }
+  const sk = h * .42, sh = Math.sin(now * 0.15) * 18; for (const [a, b, al, col] of [[.30, .50, .55, c1], [.515, .53, .7, '#d9b45a'], [.64, .86, .22, c2]]) { g.globalAlpha = al; g.fillStyle = col; g.beginPath(); g.moveTo(a * w + sk + sh, 0); g.lineTo(b * w + sk + sh, 0); g.lineTo(b * w + sh, h); g.lineTo(a * w + sh, h); g.fill(); }
+  g.globalCompositeOperation = 'color'; g.globalAlpha = .55; g.fillStyle = '#b08a4a'; g.fillRect(0, 0, w, h); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;   // Farben in Richtung Sepia
+  { const gr = g.createLinearGradient(0, 0, 0, h * .5); gr.addColorStop(0, 'rgba(8,6,4,.95)'); gr.addColorStop(1, 'rgba(8,6,4,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h * .5); }
+  g.globalAlpha = fi; let fs = 64; g.font = '900 ' + fs + 'px ' + F; const yw = g.measureText(yr).width; g.lineWidth = 2; g.lineJoin = 'round'; g.strokeStyle = 'rgba(236,211,148,.95)'; g.fillStyle = 'rgba(236,211,148,.2)'; g.fillText(yr, cx - yw / 2, 306); g.strokeText(yr, cx - yw / 2, 306);
+  fs = 13; g.font = '800 ' + fs + 'px ' + F; g.fillStyle = '#ecd394'; const cw = g.measureText(car).width, dw = g.measureText(dn).width, xl = cx - yw / 2 - 14 - cw, xr = cx + yw / 2 + 14;
+  g.fillText(car, xl, 300); g.fillText(dn, xr, 300); g.fillStyle = 'rgba(236,211,148,.6)'; g.fillRect(xl, 304, cw, 1.5); g.fillRect(xr, 304, dw, 1.5); g.globalAlpha = 1;
+  g.fillStyle = '#050403'; g.fillRect(0, 226, w, 12); g.fillStyle = 'rgba(236,211,148,.4)'; const off = (now * 40) % 10; for (let x = 4 - off; x < w; x += 10) g.fillRect(x, 229, 5, 6);   // Filmstreifen läuft langsam
+  if (!W.grain) { const n = W.grain = document.createElement('canvas'); n.width = 256; n.height = 96; const q = n.getContext('2d'), im = q.createImageData(256, 96); for (let i = 0; i < im.data.length; i += 4) { const v = Math.random() * 255; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; } q.putImageData(im, 0, 0); }
+  g.globalCompositeOperation = 'overlay'; g.globalAlpha = .18; const ox = Math.floor(Math.random() * 256), oy = Math.floor(Math.random() * 96); for (let x = -ox; x < w; x += 256) for (let y = -oy; y < h; y += 96) g.drawImage(W.grain, x, y);   // Filmkorn (vorberechnet, je Bild verschoben)
+  g.globalCompositeOperation = 'source-over'; g.globalAlpha = .04 + Math.random() * .05; g.fillStyle = '#000'; g.fillRect(0, 0, w, h); g.globalAlpha = 1;   // leichtes Projektorflackern
+  { const gr = g.createLinearGradient(0, h * .8, 0, h); gr.addColorStop(0, 'rgba(5,7,11,0)'); gr.addColorStop(1, 'rgba(5,7,11,.5)'); g.fillStyle = gr; g.fillRect(0, h * .8, w, h * .2); }
+  W.tx.needsUpdate = true; }
+function wallDraw(now) { const W = SHOW.wall; if (!W || !W.c1) return; if (W.team && HIST_CAR[W.team] && TEAMS[W.team]) return wallDrawLegend(now, W, HIST_CAR[W.team]); const g = W.cv.getContext('2d'), w = W.cv.width, h = W.cv.height, sk = h * 0.42, E = x => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); }, F = '"Titillium Web",system-ui,sans-serif';
   if (now - (W.tp0 || 0) > 7) { W.tp0 = now; W.pat = ((W.pat || 0) + 1) % 3; }
   g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#07090d'); gr.addColorStop(0.55, '#12151b'); gr.addColorStop(1, '#1b1f27'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }
   const A = WALL_PAT[((W.pat || 0) + 2) % 3], B = WALL_PAT[W.pat || 0], f = E((now - (W.tp0 || 0)) / 0.9);
@@ -13329,7 +13348,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.90'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.91'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

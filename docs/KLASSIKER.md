@@ -437,3 +437,12 @@ Wunsch: „mit dem UI-Smartphone-Skill prüfen“. Einen solchen Skill gibt es n
 - **Safe-Areas und Kopf:** Seitenabstand mit `env(safe-area-inset-*)`. Kopf-Unterzeile 11,5 px, die Technikzeile fällt bei Höhe unter 380 px weg.
 
 **Kompromiss:** Auf dem SE passen nicht mehr alle 11 Teams bzw. 6 Legenden ins Bild, der Rest wird gewischt.
+
+## v2.91 – LED-Wand „Archiv“ für Legenden eingebaut (Go: „Led Entwurf 1 nehmen“)
+- `wallDrawLegend(now, W, H)` zeichnet die Wand, sobald das Team der Wand (`W.team`, gesetzt in showroomWall) eine Legende ist. Die übrigen Teams behalten die bisherige Wand.
+- **Inhalt:** Sepia-Hintergrund, Teamfarben-Streifen (pendeln langsam), Jahr als goldene Konturzahl (blendet in 0,7 s ein), links das Auto, rechts der Fahrer.
+- **Effekte:** Ein Filmstreifen mit laufender Lochung, Filmkorn aus einer vorberechneten 256×96-Fläche (je Bild verschoben, ohne getImageData) und leichtes Projektorflackern.
+- **Lage:** Die Inhalte sitzen im gemessenen sichtbaren Ausschnitt. In der Teamwahl liegt die Mitte bei Leinwand-x 630, in der Fahrerwahl auf der zweiten Wand bei x 465.
+- **Getestet:** Teamwahl (McLaren, Lotus), Fahrerwahl (Lotus) und Rückwechsel zu Mercedes (alte Wand). Keine Seitenfehler.
+- **Bild:** `docs/bilder/ledwand_legenden.jpg`.
+- **Offen:** Der Handy-Entwurf der Teamleiste (siehe oben) wartet noch auf ein eigenes Go.
