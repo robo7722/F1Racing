@@ -2465,16 +2465,45 @@ let OWNH = null;
 function withWorldNear(fn, cam = camera) { const n = cam.near; cam.near = n * (WORLD_NEAR / 0.07);   /* verhältnisgleich (0,07 -> 0,8 m), damit Prüfungen mit veränderter Nahgrenze weiter greifen */ cam.updateProjectionMatrix();
   const g = pl && pl.mesh && pl.mesh.g; if (g && g.visible && !window.__ownTwice) { OWNH = g; g.visible = false; }
   try { fn(); } finally { if (OWNH) { OWNH.visible = true; OWNH = null; } cam.near = n; cam.updateProjectionMatrix(); } }
+// Leistung (v2.64): Auto ZUERST, dann die Welt. Im Cockpit verdeckt das eigene Auto (Wanne, Lenkrad, Arme, Nase) rund die Hälfte des Bildes, in der TV-Kamera
+// ein Drittel – bisher wurde die Welt dort erst voll schattiert (Boden, Gras, Bäume) und dann vom Auto übermalt. Jetzt schreibt das Auto seine Tiefe in den
+// vordersten Bereich des Tiefenpuffers (gl.depthRange 0 … CAR_DR), die Welt nutzt den Rest (CAR_DR … 1): hinter dem Auto scheitert jedes Weltpixel schon am
+// Tiefentest, bevor es schattiert wird. Das Bild bleibt gleich (das Auto lag vorher ohnehin über allem). Halbdurchsichtige Autoteile (Geister-Halo) kommen
+// nach der Welt, damit sie sich mit ihr mischen: deckende Teile auf Ebene 6, durchsichtige auf Ebene 7. Testschalter window.__oldCar = alter Weg.
+const SEE_L = 7, CAR_DR = 0.02;
+const seeThru = mt => !!mt && (mt.depthWrite === false || mt.colorWrite === false || mt.opacity < 1 || mt.blending !== THREE.NormalBlending);
+let _seeN = 0;
+function carPass(cam, part) {
+  const g = pl.mesh.g, gl = renderer.getContext();
+  if (part === 1) { _seeN = 0; g.traverse(o => { const m = o.material; if (!m) { o.layers.enable(SPLIT_L); return; } if (Array.isArray(m)) m.forEach(fspMat); else fspMat(m);
+    if (seeThru(Array.isArray(m) ? m[0] : m)) { o.layers.disable(SPLIT_L); o.layers.enable(SEE_L); if (o.visible) _seeN++; } else { o.layers.enable(SPLIT_L); o.layers.disable(SEE_L); } }); }
+  else if (!_seeN) return;
+  const bg = scene.background, sa = renderer.shadowMap.autoUpdate, ac = renderer.autoClear, mask = cam.layers.mask, mu = scene.matrixWorldAutoUpdate;
+  let top = g; while (top.parent && top.parent !== scene) top = top.parent;
+  if (part === 1) { top.updateMatrixWorld(); cam.updateMatrixWorld(); }   /* läuft vor dem Welt-Durchgang: Auto und Kamera für dieses Bild auf Stand bringen */
+  for (const o of scene.children) if (o !== top && o.visible && !o.isLight) { o.visible = false; _hid.push(o); }
+  renderer.autoClear = false; renderer.shadowMap.autoUpdate = false; scene.background = null; cam.layers.set(part === 1 ? SPLIT_L : SEE_L); scene.matrixWorldAutoUpdate = false; renderer.setTransparentSort(carSort);
+  gl.depthRange(0, CAR_DR);
+  try { renderer.render(scene, cam); }
+  finally { gl.depthRange(0, 1); for (const o of _hid) o.visible = true; _hid.length = 0; renderer.setTransparentSort(null); scene.matrixWorldAutoUpdate = mu;
+    cam.layers.mask = mask; scene.background = bg; renderer.shadowMap.autoUpdate = sa; renderer.autoClear = ac; }
+}
+// world(): zeichnet die Welt ins schon gelöschte Ziel (ohne selbst zu löschen)
+function carFirst(cam, world) { const gl = renderer.getContext(); carPass(cam, 1); gl.depthRange(CAR_DR, 1); try { withWorldNear(world, cam); } finally { gl.depthRange(0, 1); } carPass(cam, 2); }
 // QC-Bot: eine beliebige Kamera so zeichnen wie das Spiel (Cockpit-Nahgrenze -> zwei Durchgänge) in das gerade gesetzte Ziel
-function renderLikeGame(cam) { if (!(cam.near < 0.2 && pl && pl.mesh && pl.mesh.g)) return renderer.render(scene, cam); withWorldNear(() => renderer.render(scene, cam), cam); drawOwnCar(cam); }
+function renderLikeGame(cam) { if (!(cam.near < 0.2 && pl && pl.mesh && pl.mesh.g)) return renderer.render(scene, cam);
+  if (window.__oldCar) { withWorldNear(() => renderer.render(scene, cam), cam); drawOwnCar(cam); return; }
+  const ac = renderer.autoClear; if (ac) renderer.clear(renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil); renderer.autoClear = false;
+  try { carFirst(cam, () => renderer.render(scene, cam)); } finally { renderer.autoClear = ac; } }
 class SplitRenderPass extends RenderPass {
   render(r, wb, rb, dt, mask) {
     if (!splitOn()) return super.render(r, wb, rb, dt, mask);
-    withWorldNear(() => super.render(r, wb, rb, dt, mask));
-    r.setRenderTarget(this.renderToScreen ? null : rb); drawOwnCar();
+    if (window.__oldCar) { withWorldNear(() => super.render(r, wb, rb, dt, mask)); r.setRenderTarget(this.renderToScreen ? null : rb); drawOwnCar(); return; }
+    const oR = r.render; r.render = function (sc, cm) { r.render = oR; carFirst(cm, () => oR.call(r, sc, cm)); };   /* RenderPass löscht das Ziel und ruft dann render(): genau dort Auto, Welt, Durchsicht */
+    try { super.render(r, wb, rb, dt, mask); } finally { r.render = oR; }
   }
 }
-function renderPlain() { if (!splitOn()) return renderer.render(scene, camera); renderer.setRenderTarget(null); withWorldNear(() => renderer.render(scene, camera)); drawOwnCar(); }
+function renderPlain() { if (!splitOn()) return renderer.render(scene, camera); renderer.setRenderTarget(null); renderLikeGame(camera); }
 let composer = null, bloomPass = null, finishPass = null, raysPass = null;
 function buildComposer() {
   if (composer) { composer.renderTarget1.dispose(); composer.renderTarget2.dispose(); composer = null; }
