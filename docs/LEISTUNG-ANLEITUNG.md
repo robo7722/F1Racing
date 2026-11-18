@@ -71,6 +71,10 @@ schlimmer an als eine etwas niedrigere, aber gleichmäßige Bildrate).
     **nach** der Welt (Ebene 7) – so wie den Geister-Halo. Keine eigenen Ebenen-/Reihenfolge-Tricks am Auto ohne diesen Weg zu verstehen.
   - Kein Teil darf `depthTest: false` bekommen (es läge sonst über allem).
   - Das eigene Auto wird im Cockpit/TV nur von der Umgebungsspiegelung beleuchtet (Sonne/Himmelslicht wirken dort nicht – bewusst so, spart Rechenzeit).
+- **Karts** (seit 2.66): Fernstufe ab `KART_FAR` = 22 m – `kartLod()` tauscht Karosserie, Fahrer, Helm und Räder gegen vereinfachte Geometrie
+  (`kartLoGeo`: Eckpunkt-Raster, ~12 % der Dreiecke, gleiche Materialien und Attribute, kein neuer Shader), berechnet einmal in `precompile()`.
+  Ein neues Kartteil mit ≥ 600 Dreiecken bekommt das automatisch; kleinere Teile möglichst ins Lenkrad (`m.sw`, ab 25 m ausgeblendet) hängen.
+  Testschalter `window.__noKartLod`.
 - **Anzeigen am Auto** (Lenkrad-Display, Tacho, Navi): siehe Fehler 1 – CPU-Leinwand, selten aktualisieren, keine Mipmaps.
 - Prüfen: `perf-cam.js` → `car`-Werte in Cockpit (2) und TV (3) vorher/nachher vergleichen; Bildvergleich mit `window.__oldCar = true/false`.
 
@@ -152,12 +156,11 @@ Auf allen Strecken ist das Bild in Cockpit und TV pixelgleich zum alten Zeichenw
 | Mexiko-Stadt | 221/276 | 221/279 | 245/304 | 1,06 Mio. |
 | São Paulo | 217/266 | 228/264 | 241/264 | 0,99 Mio. |
 | Lusail | 204/238 | 202/243 | 217/254 | 0,77 Mio. |
-| Genk (Kart) | 166/302 | 170/319 | 185/275 | 1,28 Mio. (2.65: Bäume treeMul .8 → .45; vorher 1,76 Mio.) |
-| Wackersdorf (Kart) | 190/313 | 187/311 | 189/268 | 1,36 Mio. (2.65: Bäume treeMul 1,0 → .55; vorher 1,56 Mio.) |
+| Genk (Kart) | 166/299 | 170/316 | 185/274 | 0,95 Mio. (vorher 1,76 Mio.; 2.65 Bäume treeMul .8 → .45, 2.66 Kart-Fernstufe) |
+| Wackersdorf (Kart) | 190/313 | 188/307 | 191/271 | 0,92 Mio. (vorher 1,56 Mio.; 2.65 Bäume treeMul 1,0 → .55, 2.66 Kart-Fernstufe) |
 
-Offen: Genk und Wackersdorf liegen nach der Baum-Reduzierung (2.65) nur noch an der Startaufstellung über 1,2 Mio. Dreiecken – Ursache: **Karts haben
-keine Detailstufen** (jedes Kart ~45 Tsd. Dreiecke in jeder Entfernung, 20 Karts = 700–900 Tsd.). Miami und Austin liegen nur in der TV-Kamera direkt an der
-Startaufstellung (Meter ~270, volles Feld im Bild) bei ~1,28 Mio. – nicht wegen Bäumen. Lösung für beides: Detailstufen bzw. Fernmodell für Karts.
+Offen: Miami und Austin liegen nur in der TV-Kamera direkt an der Startaufstellung (Meter ~270, volles Feld im Bild) bei ~1,28 Mio. Dreiecken –
+im Rennen höchstens ~0,96 Mio. Genk und Wackersdorf sind seit 2.66 unter 1,2 Mio. (weniger Bäume + Kart-Fernstufe).
 
 ## 9. Checkliste vor dem Einchecken
 

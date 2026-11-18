@@ -4626,6 +4626,32 @@ function kartSteeringWheel(T) {   // Kart-Lenkrad: Kranz mit Markierung und Grif
   const m = new THREE.Mesh(mergeParts(parts), KDRV.wheel); m.castShadow = true; g.add(m);
   return g;
 }
+// Kart-Fernstufe (v2.66): Karts hatten keine Detailstufen – jedes kostete in jeder Entfernung ~45.000 Dreiecke (20 Karts an der Startaufstellung 700–900 Tsd.).
+// Ab KART_FAR Metern tauschen Karosserie, Fahrer, Helm und Räder ihre Geometrie gegen eine vereinfachte (Eckpunkt-Raster, ~12 %): gleiche Materialien,
+// Texturen und Attribute (jeder Rasterpunkt übernimmt alle Werte eines echten Eckpunkts – auch die Arm-Gewichte des Fahrers), also kein neuer Shader.
+const KART_FAR = 22, _kLo = new Map();
+function kartLoGeo(g0, maxT) {
+  const P = g0.attributes.position, Nn = g0.attributes.normal, n = P.count;
+  if (!g0.boundingBox) g0.computeBoundingBox(); const bb = g0.boundingBox, I = g0.index ? g0.index.array : null, nt = I ? I.length / 3 : n / 3;
+  const dir = v => v > 0.5 ? 1 : v < -0.5 ? 2 : 0;
+  for (let cell = 0.008; cell < 0.5; cell *= 1.25) {
+    const map = new Map(), rep = new Int32Array(n), reps = [];
+    for (let i = 0; i < n; i++) { const kx = Math.floor((P.getX(i) - bb.min.x) / cell), ky = Math.floor((P.getY(i) - bb.min.y) / cell), kz = Math.floor((P.getZ(i) - bb.min.z) / cell);
+      const nk = Nn ? dir(Nn.getX(i)) + 3 * dir(Nn.getY(i)) + 9 * dir(Nn.getZ(i)) : 0, key = ((kx * 1024 + ky) * 1024 + kz) * 27 + nk;   /* Hauptrichtung der Normale: Kanten bleiben scharf */
+      let r = map.get(key); if (r === undefined) { r = reps.length; reps.push(i); map.set(key, r); } rep[i] = r; }
+    const tri = [], seen = new Set(), R = reps.length; for (let t = 0; t < nt; t++) { const a = rep[I ? I[t * 3] : t * 3], b = rep[I ? I[t * 3 + 1] : t * 3 + 1], c = rep[I ? I[t * 3 + 2] : t * 3 + 2]; if (a === b || b === c || a === c) continue; const lo = Math.min(a, b, c), hi = Math.max(a, b, c), mi = a + b + c - lo - hi, key = (lo * R + mi) * R + hi; if (seen.has(key)) continue; seen.add(key); tri.push(a, b, c); }   /* gleiche Dreiecke (Rohre fallen auf dieselben Punkte) nur einmal */
+    if (tri.length / 3 > maxT) continue;
+    const out = new THREE.BufferGeometry();
+    for (const k in g0.attributes) { const A = g0.attributes[k], sz = A.itemSize;
+      if (A.isInterleavedBufferAttribute) { const arr = new Float32Array(reps.length * sz), G = [A.getX, A.getY, A.getZ, A.getW]; for (let j = 0; j < reps.length; j++) for (let q = 0; q < sz; q++) arr[j * sz + q] = G[q].call(A, reps[j]); out.setAttribute(k, new THREE.BufferAttribute(arr, sz)); continue; }   /* verschachtelte Puffer (aus den .bin-Modellen): Werte einzeln lesen */
+      const arr = new A.array.constructor(reps.length * sz); for (let j = 0; j < reps.length; j++) for (let q = 0; q < sz; q++) arr[j * sz + q] = A.array[reps[j] * sz + q]; out.setAttribute(k, new THREE.BufferAttribute(arr, sz, A.normalized)); }
+    out.setIndex(tri); if (!g0.boundingSphere) g0.computeBoundingSphere(); out.boundingSphere = g0.boundingSphere.clone(); out.boundingBox = bb.clone(); return out; }
+  return null; }
+window.__kartLoGeo = kartLoGeo;   /* Testzugang */
+function kartLod(m, far) {
+  if (!m.kl) { m.kl = []; m.klOn = false; m.g.traverse(o => { if (!o.isMesh || o.isSprite || Array.isArray(o.material)) return; const g = o.geometry, nt = (g.index ? g.index.count : g.attributes.position.count) / 3; if (nt < 600) return;
+    let lo = _kLo.get(g); if (lo === undefined) { lo = kartLoGeo(g, Math.max(160, Math.round(nt * 0.12))); _kLo.set(g, lo); } if (lo) m.kl.push([o, g, lo]); }); }
+  if (far === m.klOn) return; m.klOn = far; for (const [o, hi, lo] of m.kl) o.geometry = far ? lo : hi; EVT.car++; }
 function makeKart(d, T) {
   const K = KART, tk = d.team, g = new THREE.Group(); g.rotation.order = 'YXZ'; kartTex();
   const mat = kartNumMat(kartMat(tk, T), d.num), mm = (n, mt) => { const m = new THREE.Mesh(K.parts[n], mt); m.castShadow = true; m.receiveShadow = true; return m; };
@@ -11049,6 +11075,7 @@ function precompile() { const hid = [];
   // Leistung (v2.64): beidseitige Flächen mit Durchsicht zeichnet Three.js zweimal (Rück-, dann Vorderseite). Bei Ausstanz-Texturen (Zaungitter, alphaTest) und
   // voll deckenden, tiefeschreibenden Flächen ändert die Reihenfolge nichts am Bild – ein Durchgang genügt (halbiert z. B. die Fangzaun-Aufrufe). Kein neuer Shader.
   trackGroup.traverse(o => { if (o.isMesh && o.material) for (const mt of [].concat(o.material)) if (mt.transparent && mt.side === THREE.DoubleSide && !mt.forceSinglePass && (mt.alphaTest > 0 || (mt.depthWrite && mt.opacity >= 1) || o.userData.flat)) mt.forceSinglePass = true; });   /* flat: flache Bodenstreifen (Gummispuren u. ä.) – von oben zeigt der Rückseiten-Durchgang nichts */
+  for (const c of cars) if (c !== pl && c.mesh && c.mesh.kart) kartLod(c.mesh, false);   /* Kart-Fernstufe schon beim Laden berechnen (~45 ms einmalig), nicht im Rennen */
   const wk = WAKE.m, wkP = wk.parent, wkV = wk.visible; if (!wkP) scene.add(wk); wk.visible = true;   /* Windschatten-Kegel: hing bisher an keinem Auto und war unsichtbar -> seine Shader, Textur und Geometrie entstanden erst beim ersten Windschatten (Ruckler kurz nach dem Start) */ for (const c of cars) { const m = c.mesh; if (!m || !m.g) continue; m.g.traverse(o => { if ((o.isMesh || o.isGroup) && !o.visible && !o.isSprite) { o.visible = true; hid.push(o); } }); }   /* ALLE Teile jedes Autos (Fernmodell, Überblend-Geister, Nahteile wie Helm und Räder ferner Autos) sind teils unsichtbar: Shader trotzdem jetzt übersetzen und – im winzigen Vorwärm-Bild unten – ihre Texturen hochladen. Sonst kamen sie erst, wenn ein Gegner zum ersten Mal ganz nah war (erste Kurve) */
   try { const prev = renderer.getRenderTarget(); if (composer) renderer.setRenderTarget(composer.renderTarget1); renderer.compile(scene, camera); renderer.setRenderTarget(prev); } catch (e) { console.warn('precompile', e); } finally { for (const o of hid) o.visible = false; }
   // (Der frühere Zusatzschritt, der Cockpit- und TV-Kamera-Materialien in einer eigenen Hilfsszene übersetzte, ist entfallen: seine 9 Shader wurden im Rennen nie
@@ -11498,6 +11525,7 @@ function updateMeshes(dt) {
     else m.rl.visible = running && c.v > 25 && ((c.thr || 0) < 0.6 || c.brk > 0.1) && ((performance.now() / 110) | 0) % 2 === 0;
     m.wfl.rotation.x = m.wfr.rotation.x = m.rr.rotation.x = c.spin;
     if (m.sw) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z; m.sw.visible = c === pl || dx * dx + dz * dz < 625; }   /* Kart: Lenkrad (viele kleine Teile) nur aus der Nähe zeichnen */
+    if (m.kart) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z, R = m.klOn ? KART_FAR - 2 : KART_FAR + 2; kartLod(m, !window.__noKartLod && c !== pl && dx * dx + dz * dz > R * R); }   /* Kart-Fernstufe (Spieler-Kart immer voll); Testschalter __noKartLod */
     if (m.tp) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z, d2 = dx * dx + dz * dz; const LD = window.__carLod || CAR_LOD, cur = m.lf ? m.lf.to : m.lod, b0 = LD[0] + (cur >= 1 ? -LOD_HYS : LOD_HYS), b1 = LD[1] + (cur >= 2 ? -LOD_HYS : LOD_HYS);
       if (c === pl) { const w = window.__plLod ?? (!running || S.cam === 2 || S.cam === 3 ? 0 : 1);   /* eigenes Auto: volle Stufe (~112.000 Dreiecke) nur im Cockpit/TV-Kamera und im Stand; in den Verfolgerkameras die mittlere (~37.000) – im Bild nicht zu unterscheiden */
         const ml = running && (S.cam === 2 || S.cam === 3); if (m.matteLo !== ml) { m.matteLo = ml; setLod(m, w, true); }
@@ -12690,7 +12718,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.65'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.66'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
