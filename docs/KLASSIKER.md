@@ -283,3 +283,16 @@ Skripte (Arbeitskopien, nicht im Repo): Python-Renderer für die Lenkrad-/Sitz-/
 
 ![[bilder/klassiker_neu_cockpit.jpg]]
 (Helmkamera geradeaus und mit Einschlag: 312 mit Live-Rundinstrumenten, MP4/13 und RB8 mit Lenkrad-Display)
+
+### v2.87: Helmkamera Ferrari 312 und Red Bull RB8 höher (Wunsch 18.11.2026)
+Vorher sah man fast nur Cockpit bzw. Lenkrad, kaum Horizont und Straße. `HIST_CAR.ck` = [x, Augenhöhe, z, Absenkung des Blickziels auf 30 m]:
+- Ferrari 312: [0, 0,715, −0,08, 2,6] → **[0, 0,80, −0,08, 1,3]**
+- Red Bull RB8: [0, 0,665, 0,39, 1,6] → **[0, 0,74, 0,39, 0,8]**
+Geprüft wurde jeweils der alte Wert gegen zwei neue Varianten (Bilder `bilder/helmkamera_312.jpg`, `bilder/helmkamera_rb8.jpg`: alt | a | b). Übernommen ist Variante a: Instrumente bzw. Lenkrad-Display bleiben im Bild.
+Werkzeug: Kopie von `rennen.js` mit Feld `ck` je Aufnahme, das `pl.mesh.cam` im laufenden Rennen überschreibt.
+
+### McLaren MP4/13: Maßstab geprüft (Frage 18.11.2026, „Helm zu klein?“)
+- Modell: Radstand 3,02 m, Raddurchmesser 0,65 m, Spur vorn 1,56 m und hinten 1,33 m (jeweils Radmitte).
+- Echt ([F1Technical](https://f1technical.net/f1db/cars/810/mclaren-mp4-13), [Ultimatecarpage](https://www.ultimatecarpage.com/spec/356/McLaren-MP4-13-Mercedes.html)): Radstand 2.985–3.060 mm, Länge ≈ 4.550 mm, Spur vorn 1.410–1.492 mm und hinten 1.397–1.412 mm. Die Spurwerte sind vermutlich von Radmitte zu Radmitte gemessen.
+- Länge und Radstand stimmen. Die Spur ist vorn etwa 6 cm zu breit und hinten etwa 7 cm zu schmal. Die Fahrzeuggröße wirkt sich darauf nicht aus.
+- Helm im Verhältnis zum Radstand: im Spiel 0,12, auf dem Referenzfoto (`quellen/sitz/mclaren_mp413_haekkinen.png`) etwa 0,09. Der Helm ist also eher etwas zu groß als zu klein, deshalb wurde nichts geändert.
