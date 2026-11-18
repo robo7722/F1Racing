@@ -5,3 +5,4 @@ tools/textur/.cache/
 *.vor_alpha
 *.vor_ersetzen
 tools/klassiker/quellen/sitz/
+*.vor_reifen

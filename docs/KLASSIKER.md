@@ -296,3 +296,67 @@ Werkzeug: Kopie von `rennen.js` mit Feld `ck` je Aufnahme, das `pl.mesh.cam` im 
 - Echt ([F1Technical](https://f1technical.net/f1db/cars/810/mclaren-mp4-13), [Ultimatecarpage](https://www.ultimatecarpage.com/spec/356/McLaren-MP4-13-Mercedes.html)): Radstand 2.985–3.060 mm, Länge ≈ 4.550 mm, Spur vorn 1.410–1.492 mm und hinten 1.397–1.412 mm. Die Spurwerte sind vermutlich von Radmitte zu Radmitte gemessen.
 - Länge und Radstand stimmen. Die Spur ist vorn etwa 6 cm zu breit und hinten etwa 7 cm zu schmal. Die Fahrzeuggröße wirkt sich darauf nicht aus.
 - Helm im Verhältnis zum Radstand: im Spiel 0,12, auf dem Referenzfoto (`quellen/sitz/mclaren_mp413_haekkinen.png`) etwa 0,09. Der Helm ist also eher etwas zu groß als zu klein, deshalb wurde nichts geändert.
+
+## v2.88: „Legenden“, synthetische Motoren, Reifen, Fahrer-Durchdringung, Showroom (Rückmeldungen 18.11.2026)
+
+### Legenden in der Teamleiste
+- „Historisch“ heißt jetzt **„Legenden“** (Trenner, Schild in der Teaminfo, Tooltip).
+- Die aktuellen Teams füllen die sichtbare Leiste (`.tmnow`, min-width 100 %, mittig). Die Legenden liegen rechts **außerhalb des Bildes**. Man erreicht sie durch Wischen, mit dem Mausrad oder über den Knopf „Legenden ›“ am rechten Rand.
+- Der Knopf erscheint nur, solange die Legenden außerhalb des Bildes liegen (`teamsHint`).
+- Ist eine Legende gewählt, scrollt die Leiste beim Aufbau zu ihr.
+- Knopfbreite `(100vw − 190px)/13`, weil nur noch die aktuellen Teams in die Breite passen müssen.
+- Bild: `bilder/teamleiste_legenden.png` (1280 und 844 px, jeweils vor und nach dem Klick auf „Legenden ›“).
+
+### Motorklang: synthetisch, für alle sechs Legenden
+Wunsch: synthetische, passende Klänge. Außerdem hieß es: „RB8 klingt falsch bei hohem Tempo“ und „alle Autos klingen bei max. Drehzahl falsch“.
+- **Neu:** `tools/sounds/synth_klassiker.py` berechnet je Motor 5–7 nahtlose Schleifen konstanter Drehzahl (2 s, 32 kHz). Die oberste Stufe liegt genau auf der Höchstdrehzahl. Dazu kommt eine Schleife für „Gas weg“.
+- **Modell:**
+  - Auspuffstoß je Zündung an seiner Stelle im Arbeitsspiel, mit fester Streuung je Zylinder (ergibt Unterordnungen und das „Raue“).
+  - Resonanzen auf der Zündfrequenz und ihren Vielfachen, dazu feste Rohr-Resonanzen in Hz.
+  - Rauschen im Zündtakt.
+  - Honda-Turbo zusätzlich gedämpft, mit Laderpfeifen und Zischen.
+  - Schub: Aussetzer und Knallen.
+- **Motoren:** Ferrari V12 (6 Zündungen/U), Cosworth DFV V8 (4), Honda V6 Turbo (3), Ferrari V10 (5), Mercedes V10 (5), Renault V8 (4).
+- **Geprüft (gerechnet im Testbrowser, `snd2.js`):** Zwischen 4.000/min und Höchstdrehzahl wird jede Stufe nur 0,86–1,17-fach nachgestimmt. Alle Dateien laden.
+  - Vorher wurde der RB8 aus V10-Aufnahmen mit 0,7-fach verlangsamter oberster Stufe gespielt. Der MP4/13 nutzte die Ferrari-Aufnahmen.
+- **Begrenzer (alle Autos, auch F1/F2):** Vorher lief die Drehzahl im Windschatten über Vmax bis zu 1.200/min über die Höchstdrehzahl (F1 bis 13.200), die Aufnahmen wurden entsprechend hochgestimmt.
+  - Jetzt endet `gearInfo`/`histGear` bei der Höchstdrehzahl (`over: true`), und die Drehzahl sägt knapp darunter (13 Hz, 220–280/min).
+  - Das Hochdrehen am Start folgt bei den Legenden ihrer eigenen Höchstdrehzahl.
+- **Alte Aufnahmen:** Die ElevenLabs-Aufnahmen `hist_*_mittel/hoch.wav` bleiben im Ordner, werden aber nicht mehr geladen. `hist_lot/mcl/fer_schub.wav` sind durch die synthetischen ersetzt.
+- **Nicht geprüft:** Ein echter Mitschnitt im Rennen. Der Testbrowser blieb beim zweiten Rennstart hängen, deshalb wurden nur Stufen, Tempo und Dateien rechnerisch geprüft. Gehört habe ich die Klänge nicht.
+- Weitere Klangstufen und Hörproben: `python tools/sounds/synth_klassiker.py [kürzel …] --probe` schreibt `tools/sounds/.probe/<kürzel>_stufen.wav`.
+
+### McLaren MP4/4: Reifen „eiern“
+- **Ursache:** Die UVs der Flanke waren gekachelt und schief (u 0…2, v −1…0). Der Schriftzug lief beim Drehen nicht rund um die Achse.
+- **Lösung:** `tools/klassiker/reifen_planar.py <glb> "<Material>"`.
+  - Ebene Abbildung exakt um die Radachse.
+  - Linke Räder sind gespiegelt, damit die Schrift auf **beiden** Wagenseiten außen lesbar ist.
+  - Neues zentriertes Flankenbild in 1024 px, radial aus dem Original umgelegt. Der Innenkreis wird gemessen, der Felgenrand (0,554 R) aus dem Modell.
+  - Die Lauffläche ist einfarbig, der Sampler klemmt am Rand.
+- Gilt für Stufe 0 und 1. Modell-Version `mclaren_mp44: 4`. Bild: `bilder/mp44_reifen.jpg`, Flankenbild `tools/klassiker/quellen/mclaren/flanke_zentriert.png`.
+
+### Fahrerfigur ragt unten aus dem Auto (Ferrari 312, Lotus, McLaren, alle)
+- `tools/klassiker/fahrer_clip_export.js` exportiert Auto- und Fahrerdreiecke. Danach prüft `tools/klassiker/fahrer_clip.py` jedes sichtbare Rumpf-Dreieck: Ein Voxelgitter der Karosserie (1 cm) und 33 Strahlen in die untere Halbkugel zeigen, ob das Dreieck nach unten frei liegt. Wenn ja, ragt es aus dem Boden und fällt weg.
+- Das gilt nur unterhalb 0,3 m. Darüber ragen beim Lotus die Schultern seitlich aus dem engen Cockpit; würden sie entfernt, entstünden Löcher.
+- **Entfernt:**
+
+| Auto | Dreiecke |
+|---|---|
+| Ferrari 312 | 1.146 |
+| Red Bull RB8 | 721 |
+| McLaren MP4/13 | 410 |
+| Lotus | 387 |
+| McLaren MP4/4 | 186 |
+| Ferrari F2004 | 98 |
+
+- `fahrer_sicht.json?v=6`. Bild von unten und von der Seite: `bilder/fahrer_unten.jpg`.
+
+### Showroom: Wechsel ohne Hakler
+- `showroomPreload()` läuft nach dem Start im Leerlauf. Es lädt alle Legenden-Modelle, baut je Team einmal ein Showroom-Auto und übersetzt die Shader vorab (`renderer.compileAsync`).
+- Vorher wurde ein Klassiker erst beim Anklicken geladen: zuerst ein Platzhalter, danach wurde der Showroom neu gebaut.
+- Messung im Testbrowser (Software-Rendering, daher nur die Zahl neuer Shader aussagekräftig): Nach dem Vorladen entstehen beim Durchklicken aller 17 Teams 0–1 neue Programme je Team. Vorher waren es bis zu 6, und die Legenden mussten erst laden.
+- Abschalten zum Testen: `window.__noPre = true`.
+
+### Weitere Korrekturen
+- **Unschärfe blieb stehen:** Wurde während des Kamera-Schwenks beim Teamwechsel schon ein Auto/Fahrer gewählt, blieb die Bewegungsunschärfe auf dem Bild. Jetzt wird der Schwenk beim Verlassen der Teamwahl beendet und der Filter zurückgesetzt, auch beim Rennstart.
+- **Musikregler:** Die Lautstärke folgt jetzt sofort (`musSnap`). Vorher blendete die Menümusik ~1 s und die Rennmusik bis zu 3 s nach, deshalb ging die Musik beim Herunterziehen nur verspätet aus.

@@ -968,12 +968,17 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 /* ===== Teamwahl (Vorlage): Teamname oben links, große Konturschrift hinter den Autos, Teamleiste mit Wappen unten ===== */
 #scrTeam .teamwrap{width:100%!important;height:auto!important;flex:1;min-height:0;position:static}
 #scrTeam .teams{margin-top:auto;display:flex!important;gap:6px!important;overflow-x:auto;padding:2px!important;justify-content:safe center;flex:none}
-#scrTeam .tm{flex:none;width:clamp(30px,min(13.5vh,calc((100vw - 190px) / 17)),62px);height:clamp(30px,min(13.5vh,calc((100vw - 190px) / 17)),62px);padding:0!important;display:grid!important;place-items:center;transform:none!important}
+#scrTeam .tm{flex:none;width:clamp(30px,min(13.5vh,calc((100vw - 190px) / 13)),62px);height:clamp(30px,min(13.5vh,calc((100vw - 190px) / 13)),62px);padding:0!important;display:grid!important;place-items:center;transform:none!important}
 #scrTeam .tm>span{display:none}
 #scrTeam .tm svg{width:70%!important;height:70%!important}
 #scrTeam .tm::after{display:none}
 #scrTeam .tm.on{outline:2px solid #fff!important;outline-offset:-2px;background:linear-gradient(180deg,rgba(110,114,124,.95),rgba(58,60,68,.95))!important;box-shadow:inset 0 -3px 0 var(--c1)!important}
 #scrTeam .tmsep{flex:none;align-self:stretch;display:grid;place-items:center;writing-mode:vertical-rl;transform:rotate(180deg);font:900 9px/1 system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#d9b45a;font-style:normal;padding:0 3px;margin:0 4px;border-right:1px solid rgba(217,180,90,.55)}
+#scrTeam .tmnow{flex:none;min-width:100%;box-sizing:border-box;display:flex;gap:6px;justify-content:center}#scrTeam .hasLeg .tmnow{padding:0 100px}   /* v2.88: aktuelle Teams füllen die sichtbare Leiste, Legenden liegen rechts daneben (scrollen) */
+#scrTeam .teams.hasLeg{justify-content:flex-start;scroll-behavior:smooth;scrollbar-width:none}#scrTeam .teams.hasLeg::-webkit-scrollbar{display:none}
+#scrTeam .leghint{display:none;position:sticky;right:0;flex:none;margin-left:-200px;align-self:center;gap:6px;align-items:center;padding:6px 10px 6px 12px;border-radius:10px;border:1px solid rgba(217,180,90,.6);background:linear-gradient(180deg,rgba(92,74,44,.92),rgba(38,30,20,.95));color:#ecd394;font:900 10px/1 system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;z-index:2}
+#scrTeam .leghint.on{display:flex}#scrTeam .leghint b{font-size:17px;line-height:.7;animation:legNudge 1.4s ease-in-out infinite}
+@keyframes legNudge{50%{transform:translateX(3px)}}
 #scrTeam .tm.hist{background:linear-gradient(180deg,rgba(92,74,44,.78),rgba(38,30,20,.85))!important;border-color:rgba(217,180,90,.45)!important}
 #scrTeam .tm .hy{position:absolute;right:2px;bottom:1px;font:800 6.5px/1 system-ui,sans-serif;letter-spacing:.04em;color:#ecd394;font-style:normal;opacity:.85;pointer-events:none}
 #scrTeam .tm.hist svg{width:62%!important;height:62%!important}
@@ -4336,11 +4341,11 @@ const HIST_CAR = {
     ph: { top: 1.0, grip: 0.94, brk: 0.95, acc: 0.97 }, info: 'Ferrari V10 · 865 PS · 605 kg · 7 Gänge' },
   // Drei weitere Klassiker (docs/KLASSIKER.md, Abschnitt „Drei weitere Klassiker“): Lenkrad, Sitz und Achsen wie oben am Modell gemessen.
   // gauge: Tacho-Stil (histGauge/histDashDraw) – 1 Rundinstrumente (Lotus, 312), 2 McLaren 1988, 3 Lenkrad-Display (F2004, MP4/13, RB8); unabhängig vom Bildfilter fx
-  // fx 4 = HD-Fernsehen 2012, fx 5 = Schwarz-Weiß-Film 1967 · Klang: vorhandene Aufnahmen, eigene Zündfolge (hist_f67 V12, hist_rbr V8; MP4/13 V10 = hist_fer)
+  // fx 4 = HD-Fernsehen 2012, fx 5 = Schwarz-Weiß-Film 1967 · Klang: synthetische Motoren je Auto (v2.88, tools/sounds/synth_klassiker.py)
   H_F67: { file: 'ferrari_312', title: 'Ferrari 312', year: 1967, snd: 'hist_f67', fx: 5, gauge: 1, swRot: 1.2, mass: 550, gears: 5, rpm: [10500, 11000], seat: [-0.135, -0.08], ck: [0, 0.80, -0.08, 1.3], tvY: 1.3,
     sw: { c: [0, 0.544, 0.427], a: [0, -0.126, 0.992], r: 0.175, t: 0.03, rh: 0.05, th: 0.08, h: 9, g: 0.14, e: [0.31, -0.32, 0.3] },
     ph: { top: 0.79, grip: 0.55, brk: 0.52, acc: 0.64 }, info: 'Ferrari V12 · ca. 390 PS · 550 kg · 5 Gänge' },
-  H_MCL98: { file: 'mclaren_mp413', title: 'McLaren MP4/13', year: 1998, snd: 'hist_fer', rl: [0.25, 0.6], fx: 3, gauge: 3, swRot: 0.95, mass: 600, gears: 6, rpm: [16800, 17500], seat: [-0.115, 0.30], ck: [0, 0.735, 0.30, 3.0], tvY: 1.22,
+  H_MCL98: { file: 'mclaren_mp413', title: 'McLaren MP4/13', year: 1998, snd: 'hist_mcl98', rl: [0.25, 0.6], fx: 3, gauge: 3, swRot: 0.95, mass: 600, gears: 6, rpm: [16800, 17500], seat: [-0.115, 0.30], ck: [0, 0.735, 0.30, 3.0], tvY: 1.22,
     sw: { c: [0, 0.577, 0.585], a: [0, -0.012, 1], r: 0.16, t: 0.03, rh: 0.05, th: 0.06, h: 9, g: 0.13, e: [0.22, -0.24, 0.36] },
     ph: { top: 0.97, grip: 0.86, brk: 0.88, acc: 0.94 }, info: 'Mercedes-Benz V10 · ca. 780 PS · 600 kg · 6 Gänge' },
   H_RBR: { file: 'redbull_rb8', title: 'Red Bull RB8', year: 2012, snd: 'hist_rbr', rl: [0.25, 0.6], fx: 4, gauge: 3, swRot: 0.95, mass: 640, gears: 7, rpm: [17500, 18000], seat: [-0.185, 0.39], ck: [0, 0.74, 0.39, 0.8], tvY: 1.2, ax: { FL: [0, 0.63], FR: [0, -0.63] },
@@ -4353,8 +4358,8 @@ const _hInv = new THREE.Matrix4(), _hRel = new THREE.Matrix4();
 function histRel(o, root, dst) { _hInv.copy(root.matrixWorld).invert(); _hRel.multiplyMatrices(_hInv, o.matrixWorld); _hRel.decompose(dst.position, dst.quaternion, dst.scale); return dst; }
 function histLoad(team) {
   const H = HIST_CAR[team]; if (!H) return Promise.resolve(null); if (HIST.tpl[team]) return Promise.resolve(HIST.tpl[team]);
-  HIST.sichtP ||= fetch('modelle/klassiker/fahrer_sicht.json?v=5').then(r => r.ok ? r.json() : null).catch(() => null).then(j => { HIST.sicht = j; });
-  return HIST.wait[team] ||= HIST.sichtP.then(() => import('three/addons/loaders/GLTFLoader.js')).then(({ GLTFLoader }) => new GLTFLoader().loadAsync('modelle/klassiker/' + H.file + '.glb?v=' + ({ mclaren_mp44: 3, ferrari_f2004: 2 }[H.file] || 1)))   /* McLaren v3 / Ferrari v2: Aufkleber/Sponsoren = Originale des Nutzers mit echter Deckkraft (tools/klassiker/textur_ersetzen.py) */
+  HIST.sichtP ||= fetch('modelle/klassiker/fahrer_sicht.json?v=6').then(r => r.ok ? r.json() : null).catch(() => null).then(j => { HIST.sicht = j; });
+  return HIST.wait[team] ||= HIST.sichtP.then(() => import('three/addons/loaders/GLTFLoader.js')).then(({ GLTFLoader }) => new GLTFLoader().loadAsync('modelle/klassiker/' + H.file + '.glb?v=' + ({ mclaren_mp44: 4, ferrari_f2004: 2 }[H.file] || 1)))   /* McLaren v3 / Ferrari v2: Aufkleber/Sponsoren = Originale des Nutzers mit echter Deckkraft (tools/klassiker/textur_ersetzen.py) */
     .then(gl => { const T = histPrep(gl.scene, H); HIST.tpl[team] = T; histDone(team); return T; })
     .catch(e => { console.warn('Klassiker ' + team, e); delete HIST.wait[team]; return null; });
 }
@@ -4627,7 +4632,7 @@ function histDone(team) {
 }
 // Getriebe der Klassiker: n Gänge, gestuft bis zur Höchstgeschwindigkeit des Autos (Drehzahl für Anzeige und Motorklang)
 function histGear(kmh, H) { const v = kmh / 3.6, n = H.gears, up = H.rpm[0], top = H.rpm[1], Rn = top / (VTOP * H.ph.top * 1.02), q = Math.pow(2.5, 1 / (n - 1)), R = k => Rn * Math.pow(q, n - k);
-  let g = 1; while (g < n && v * R(g) > up) g++; const rpm = clamp(v * R(g), 4000, top + 1200); return { g, n, f: clamp((rpm - 4000) / (top - 4000), 0, 1), rpm }; }
+  let g = 1; while (g < n && v * R(g) > up) g++; const r0 = v * R(g), rpm = clamp(r0, 4000, top); return { g, n, f: clamp((rpm - 4000) / (top - 4000), 0, 1), rpm, over: r0 > top }; }
 /* ======================= GoKart: Modell, Material, Fahrer ======================= */
 const KARTBIN = await fetch('./kart.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null);
 const KART = (() => {
@@ -11104,16 +11109,15 @@ const SND_ENG = {   // cyl: Zündungen je Umdrehung · loops: [Datei, Grundton, 
   kart: { cyl: 1, vol: 0.5, cut: [0, 1], loops: [['sounds/kart_v0.wav', 78], ['sounds/kart_v1.wav', 104], ['sounds/kart_mittel.wav', 156], ['sounds/kart_v3.wav', 224]], schub: ['sounds/kart_schub.wav', 152, 0.8] } };   // Grundton gemessen mit tools/sounds/varianten.py
 SND_ENG.road = { cyl: 2, vol: 0.6, cut: [0.16, 0.3], loops: [['sounds/mx5e_leer.wav', 28.4, [0.4, 0.4]], ['sounds/mx5e_5200.wav', 172.8, [0.2, 0.06]], ['sounds/mx5e_6900.wav', 230.5]], schub: ['sounds/mx5n_schub.wav', 253.3, 0.3], blips: ['sounds/mx5e_blip1.wav', 'sounds/mx5e_blip2.wav', 'sounds/mx5e_blip3.wav'],
   gran: { von: 950, bis: 1500, aus: [3900, 4000], quellen: [{ file: 'sounds/mx5e_durchzug.wav', tab: [[0.032,1207],[0.132,1279],[0.232,1399],[0.332,1497],[0.432,1540],[0.532,1652],[0.632,1801],[0.732,1931],[0.832,2055],[0.932,2176],[1.032,2291],[1.132,2399],[1.232,2526],[1.332,2651],[1.432,2823],[1.532,2953],[1.632,3076],[1.732,3232],[1.832,3380],[1.932,3542],[2.032,3678],[2.132,3809],[2.232,3950],[2.332,4120],[2.432,4285],[2.532,4485],[2.632,4660],[2.732,4923],[2.832,5052],[2.932,5079],[3.032,5245],[3.132,5485],[3.232,5614],[3.332,5714],[3.432,5853],[3.532,6037],[3.632,6114]] }] } };   // v2.16: Übergänge schmal und außerhalb des Fahrbereichs (5.200→6.900 bei 5.500–5.600, Durchzug→Schleife bei 3.900–4.000) – vorher liefen bei ~6.100–6.250 und ~4.250 U/min dauerhaft zwei Fassungen derselben Aufnahme gemischt („unsauber, doppelt“) · v2.14 = Stand v2.07d (vom Nutzer gewählt) bis auf das Anfahren: 1.000–4.400 U/min granular aus einem echten Durchzug (wie v2.08, „Anfahren klingt richtig“), darüber die echten Stufen 5.200/6.900 aus v2.07d; Leerlauf und echte Gasstöße wie v2.07d. MX-5-Aufnahme: Wikimedia Commons, Ride in Japan, CC BY 3.0
-// Klassiker (v2.69): eigene Aufnahmen (ElevenLabs-Arbeitsfläche, aufbereitet mit tools/sounds/klassiker.py; Grundton = Zündfrequenz bei Tempo 1).
-// lazy: nicht beim Spielstart laden, nur wenn mit dem Auto gefahren wird (histSnd). cyl: V8 4, V6 3, V10 5 Zündungen je Umdrehung.
-SND_ENG.hist_lot = { cyl: 4, vol: 0.62, lazy: true, cut: [0.09, 0.3], loops: [['sounds/hist_lot_mittel.wav', 512, [0.25, 0.5]], ['sounds/hist_lot_hoch.wav', 576.6]], schub: ['sounds/hist_lot_schub.wav', 496.2, 0.85] };   // Cosworth DFV: rau, H-Schaltung (lange Lücke)
-SND_ENG.hist_mcl = { cyl: 3, vol: 0.6, lazy: true, cut: [0.08, 0.35], loops: [['sounds/hist_mcl_mittel.wav', 563.9, [0.2, 0.5]], ['sounds/hist_mcl_hoch.wav', 561.4]], schub: ['sounds/hist_mcl_schub.wav', 284.4, 0.8] };   // Honda V6 Turbo
-SND_ENG.hist_fer = { cyl: 5, vol: 0.55, lazy: true, cut: [0.03, 0.6], loops: [['sounds/hist_fer_mittel.wav', 1098.7, [0.2, 0.5]], ['sounds/hist_fer_hoch.wav', 1625.4]], schub: ['sounds/hist_fer_schub.wav', 1296.2, 0.7] };   // Ferrari V10 bis 18.300 U/min, Schaltwippen (kurze Lücke)
-// Ohne neue Aufnahmen (ElevenLabs kostet Geld): dieselben V10-Aufnahmen mit anderer Zündfolge – die Tonhöhe folgt Drehzahl × Zündungen je Umdrehung.
-// McLaren MP4/13 (Mercedes V10, bis 17.500) nutzt hist_fer direkt. RB8 (Renault V8, 18.000): 4 Zündungen -> bei gleicher Drehzahl 20 % tiefer als der V10.
-// Ferrari 312 (V12, 11.000): 6 Zündungen -> bei 11.000/min derselbe Ton wie der V10 bei 13.200/min; H-Schaltung mit langer Lücke wie beim Lotus.
-SND_ENG.hist_rbr = { ...SND_ENG.hist_fer, cyl: 4, vol: 0.58 };
-SND_ENG.hist_f67 = { ...SND_ENG.hist_fer, cyl: 6, vol: 0.6, cut: [0.09, 0.3] };
+// Legenden (v2.88): SYNTHETISCHE Motoren (tools/sounds/synth_klassiker.py, Wunsch 18.11.2026) – je Drehzahlstufe neu berechnet aus Zylinderzahl,
+// Zündfolge und Drehzahl; die oberste Stufe liegt genau auf der Höchstdrehzahl (vorher wurden Aufnahmen bis zum Begrenzer stark nachgestimmt – „klingt falsch bei Vollgas“).
+// Grundton = Zündfrequenz der Stufe (U/min ÷ 60 × Zündungen je Umdrehung). lazy: erst laden, wenn mit dem Auto gefahren wird (histSnd). cyl: V12 6, V10 5, V8 4, V6 3.
+SND_ENG.hist_f67 = { cyl: 6, vol: 0.6, lazy: true, cut: [0.09, 0.3], loops: [['sounds/hist_f67_s0.wav', 450.0], ['sounds/hist_f67_s1.wav', 564.0], ['sounds/hist_f67_s2.wav', 702.0], ['sounds/hist_f67_s3.wav', 882.0], ['sounds/hist_f67_s4.wav', 1098.0]], schub: ['sounds/hist_f67_schub.wav', 882.0, 0.85] };   // Ferrari 312 V12 1967, H-Schaltung (lange Lücke)
+SND_ENG.hist_lot = { cyl: 4, vol: 0.62, lazy: true, cut: [0.09, 0.3], loops: [['sounds/hist_lot_s0.wav', 300.0], ['sounds/hist_lot_s1.wav', 368.0], ['sounds/hist_lot_s2.wav', 452.0], ['sounds/hist_lot_s3.wav', 556.0], ['sounds/hist_lot_s4.wav', 680.0]], schub: ['sounds/hist_lot_schub.wav', 556.0, 0.85] };   // Cosworth DFV V8, rau
+SND_ENG.hist_mcl = { cyl: 3, vol: 0.6, lazy: true, cut: [0.08, 0.35], loops: [['sounds/hist_mcl_s0.wav', 225.0], ['sounds/hist_mcl_s1.wav', 291.0], ['sounds/hist_mcl_s2.wav', 375.0], ['sounds/hist_mcl_s3.wav', 483.0], ['sounds/hist_mcl_s4.wav', 624.0]], schub: ['sounds/hist_mcl_schub.wav', 483.0, 0.8] };   // Honda V6 Turbo, gedämpft mit Laderpfeifen
+SND_ENG.hist_fer = { cyl: 5, vol: 0.55, lazy: true, cut: [0.03, 0.6], loops: [['sounds/hist_fer_s0.wav', 375.0], ['sounds/hist_fer_s1.wav', 475.0], ['sounds/hist_fer_s2.wav', 600.0], ['sounds/hist_fer_s3.wav', 755.0], ['sounds/hist_fer_s4.wav', 955.0], ['sounds/hist_fer_s5.wav', 1205.0], ['sounds/hist_fer_s6.wav', 1525.0]], schub: ['sounds/hist_fer_schub.wav', 1205.0, 0.7] };   // Ferrari V10 bis 18.300 U/min, Schaltwippen (kurze Lücke)
+SND_ENG.hist_mcl98 = { cyl: 5, vol: 0.55, lazy: true, cut: [0.035, 0.55], loops: [['sounds/hist_mcl98_s0.wav', 375.0], ['sounds/hist_mcl98_s1.wav', 470.0], ['sounds/hist_mcl98_s2.wav', 590.0], ['sounds/hist_mcl98_s3.wav', 740.0], ['sounds/hist_mcl98_s4.wav', 925.0], ['sounds/hist_mcl98_s5.wav', 1165.0], ['sounds/hist_mcl98_s6.wav', 1460.0]], schub: ['sounds/hist_mcl98_schub.wav', 1165.0, 0.7] };   // Mercedes V10 bis 17.500 U/min
+SND_ENG.hist_rbr = { cyl: 4, vol: 0.58, lazy: true, cut: [0.03, 0.6], loops: [['sounds/hist_rbr_s0.wav', 300.0], ['sounds/hist_rbr_s1.wav', 376.0], ['sounds/hist_rbr_s2.wav', 476.0], ['sounds/hist_rbr_s3.wav', 600.0], ['sounds/hist_rbr_s4.wav', 756.0], ['sounds/hist_rbr_s5.wav', 952.0], ['sounds/hist_rbr_s6.wav', 1200.0]], schub: ['sounds/hist_rbr_schub.wav', 952.0, 0.75] };   // Renault V8 bis 18.000 U/min
 function histSnd(cls) { const D = SND_ENG[cls]; if (!D) return; for (const l of D.loops) sndLoad(l[0]); sndLoad(D.schub[0]); }
 const SND_FERN = { f1: 2, f2: 1, kart: 2, road: 1 };   // Gegner (Doppler) nutzen eine Stufe aus der Mitte des Renn-Drehzahlbereichs
 // v2.00: Einschläge je Fahrzeugart (cf = F1/F2-Carbon, stahl = Roadster, kart) und Ziel (Auto / Leitplanke / Betonmauer), nach Stärke abgestuft
@@ -11236,7 +11240,7 @@ function initAudio() {
 // F2 (v1.99): Mecachrome V634T, 6 Gänge (Hewland), Begrenzer 8.750 U/min, geschaltet bei ~8.600 – vorher nutzte F2 das F1-Getriebe und drehte bis ~9.450
 const RATIO = [0, 420, 332, 272, 226, 190, 162, 140, 118], RATIO_F2 = [0, 245, 195, 160, 134, 113, 96];
 function gearInfo(kmh, f2 = SER === 'f2') { const v = kmh / 3.6, R = f2 ? RATIO_F2 : RATIO, n = R.length - 1, up = f2 ? 8600 : 11600, top = f2 ? 8750 : 12000;
-  let g = 1; while (g < n && v * R[g] > up) g++; const rpm = clamp(v * R[g], 4000, top + 1200); return { g, n, f: clamp((rpm - 4000) / (top - 4000), 0, 1), rpm }; }
+  let g = 1; while (g < n && v * R[g] > up) g++; const r0 = v * R[g], rpm = clamp(r0, 4000, top); return { g, n, f: clamp((rpm - 4000) / (top - 4000), 0, 1), rpm, over: r0 > top }; }   // v2.88: nie über den Begrenzer (vorher bis +1.200 U/min – klang bei Vollgas falsch)
 function updateAudio(thr) {
   if (!ac || !ENG || (typeof OfflineAudioContext !== 'undefined' && ac instanceof OfflineAudioContext)) return;   // __bumpTest rendert gerade offline
   const E = ENG, on = S.sound && running && !paused && !resultsShown, t = ac.currentTime, gi = gearP(pl.v * 3.6);
@@ -11244,13 +11248,14 @@ function updateAudio(thr) {
   const kart = !!(pl.mesh && pl.mesh.kart), f2 = SER === 'f2' && !road && !kart;   // Kart: hoher Einzylinder-Zweitakter (direkt, ohne Getriebe) · F2: rauer V6-Turbo bis ~10.500 U/min, kein ERS
   const rev = pl.rev || 0, lim = rev > 0.93 ? (Math.random() - .5) * 700 : 0;   // Begrenzer flattert oben
   const kfr = clamp(pl.v / (VTOP * SERPH.top), 0, 1.1);
-  let target0 = preGo() ? (road ? 950 + rev * 3600 : 4200 + rev * 8000 + lim) : road ? (pl.street ? gi.rpm : 1100 + (gi.rpm / 12000) * 6200) : gi.rpm;
+  const HH = pl.mesh && pl.mesh.H, rTop = HH ? HH.rpm[1] : 12000;   // Legenden: eigene Höchstdrehzahl
+  let target0 = preGo() ? (road ? 950 + rev * 3600 : Math.min(rTop, 4200 + rev * (rTop - 4200) + lim)) : road ? (pl.street ? gi.rpm : 1100 + (gi.rpm / 12000) * 6200) : gi.over ? gi.rpm - ((t * 13) % 1) * 280 : gi.rpm;   // gi.over: am Begrenzer (Windschatten über Vmax) – Drehzahl sägt knapp darunter
   // Kart (v1.99): Direktantrieb, Drehzahl proportional zur Geschwindigkeit (14.000 bei Höchstgeschw.), Begrenzer ~15.500. Darunter hält die Fliehkraftkupplung
   // die Drehzahl: Leerlauf ~2.800, mit Gas schleifend ~5.000. Am Start nur Gasstöße unterhalb der Kupplung (darüber würde das Kart losfahren).
   // F2 (v1.99): eigenes 6-Gang-Getriebe (gearP), Drehzahl direkt, Begrenzer 8.750.
   if (road && raceState === 'race' && pl.v < 12 && thr > 0.3) target0 = Math.max(target0, 4300 - pl.v * 50);   // v2.15 Roadster-Start: Kupplung schleift, Drehzahl bleibt ~4.000–4.300 (vorher fiel sie von 7.350 auf 3.170)
   const target = kart ? (preGo() ? 2800 + rev * 1700 + lim * 0.3 : Math.min(15500, Math.max(14000 * kfr, thr > 0.1 ? 4600 + thr * 600 : 2800)) + (kfr > 1.08 ? lim * 0.5 : 0))
-    : f2 ? (preGo() ? 4000 + rev * 4750 + (rev > 0.93 ? (Math.random() - .5) * 500 : 0) : gi.rpm) : target0;
+    : f2 ? (preGo() ? 4000 + rev * 4750 + (rev > 0.93 ? (Math.random() - .5) * 500 : 0) : gi.over ? gi.rpm - ((t * 13) % 1) * 220 : gi.rpm) : target0;
   if (kart) E.gear = gi.g; else if (gi.g !== E.gear) { const C = SND_ENG[pl.mesh && pl.mesh.H ? pl.mesh.H.snd : road ? 'road' : f2 ? 'f2' : 'f1'].cut; E.cut = gi.g > E.gear ? C[0] : C[0] * 0.6; E.gear = gi.g; }   // Kart: kein Getriebe · F1: nahtlos (kurz), F2: Zündunterbrechung
   E.cut = Math.max(0, E.cut - 1 / 60);
   E.rpm += (target - E.rpm) * 0.35; const jit = 1 + (Math.random() - .5) * 0.006;
@@ -11437,7 +11442,7 @@ const TITLE = new Audio('./menu.mp3'); TITLE.loop = true; TITLE.preload = 'auto'
 function musRoute(el) { if (el._g || !ac || (typeof OfflineAudioContext !== 'undefined' && ac instanceof OfflineAudioContext)) return; try { const src = ac.createMediaElementSource(el), g = ac.createGain(); g.gain.value = el.volume; src.connect(g); g.connect(ac.destination); el._g = g; el.volume = 1; } catch (e) { el._g = null; } }
 window.__mus = () => [TITLE, ...RP].map((a, n) => ({ n: n ? 'Rennen' + n : 'Menü', pausiert: a.paused, volume: a.volume, knoten: a._g ? +a._g.gain.value.toFixed(3) : null }));   // Test/Diagnose
 function musVol(el, v) { if (ac && !el._g) musRoute(el); if (el._g && el._g.context !== ac && !(ac instanceof AudioContext)) return; if (el._g) { el._g.gain.value = v; if (el.volume !== 1) el.volume = 1; } else el.volume = v; }
-let titleT = performance.now();
+let titleT = performance.now(), musSnap = false;   // musSnap: Musikregler wurde bewegt → nächster Takt ohne Blende
 const rpVol = [0, 0];   // Lautstärke der beiden Renn-Musik-Player
 let hadRace = false;    // ab dem ersten Rennen läuft die Renn-Musik auch nach dem Rennen und in den Menüs weiter
 function titleTick() {
@@ -11446,6 +11451,7 @@ function titleTick() {
   const menuMus = !running && !hadRace;   // nach einem Rennen läuft die Renn-Musik in Ergebnis-/Folgemenüs weiter, bis man im Hauptmenü ist
   const want = S.music && menuMus && !document.hidden && rpVol[0] + rpVol[1] < 0.15 ? 0.75 * (S.volMusic ?? 0.7) : 0;
   titleVol += (want - titleVol) * Math.min(1, dt * (want > titleVol ? 1.2 : 3)); if (Math.abs(want - titleVol) < 0.003) titleVol = want;
+  if (musSnap) titleVol = want;   // Regler bewegt: Lautstärke sofort übernehmen (vorher ~1 s Nachblenden, wirkte verspätet)
   musVol(TITLE, clamp(titleVol, 0, 1));
   if (titleVol > 0.001 && TITLE.paused && TITLE.dataset.ok) TITLE.play().catch(() => {});
   if (titleVol <= 0.001 && !TITLE.paused) TITLE.pause();
@@ -11508,6 +11514,7 @@ function raceMusicTick(dt) {
     const a = RP[n], want = n === rpCur ? base : 0, full = Math.max(0.05, 0.8 * (S.volMusic ?? 0.7));
     // einblenden in ~1,5 s, ausblenden in ~3 s (linear, gut hörbar)
     rpVol[n] = clamp(rpVol[n] + clamp(want - rpVol[n], -dt * full / 3, dt * full / 1.5), 0, 1);
+    if (musSnap && (n === rpCur || want === 0)) rpVol[n] = want;   // Regler bewegt: sofort (vorher 3 s Ausblenden – Musik ging beim Herunterziehen nur verspätet aus)
     musVol(a, rpVol[n]);
     if (want > 0 && a.paused && a.src) a.play().catch(() => {});
     if (rpVol[n] <= 0.0005 && want === 0 && !a.paused) a.pause();
@@ -11517,6 +11524,7 @@ let raceMT = performance.now();
 function musicTick() {
   titleTick();
   { const nw = performance.now(); raceMusicTick(Math.min(0.5, (nw - raceMT) / 1000)); raceMT = nw; }
+  musSnap = false;
   return;   // live erzeugte Musik ist abgelöst durch die echten Songs
   if (!ac || !MUS.bus) return;
   const want = S.music && !document.hidden && !paused && running ? 0.42 * S.volMusic * 1.4 : 0;
@@ -11666,6 +11674,7 @@ function trackPace() {
   return clamp(pro / (rho * ideal), 0.97, 1.09);
 }
 function startRace() {
+  renderer.domElement.style.filter = ''; renderer.domElement.style.transform = ''; if (SHOW.orbT !== undefined) SHOW.orbT = 1;   // Showroom-Schwenk-Unschärfe nie ins Rennen mitnehmen
   camAcc = 0; camK = 0; if (pl) pl.vPrevCam = 0;   // Kamera-Zustand vom letzten Rennen verwerfen (sonst kurzer Ruck am Start)
   if (S.cam === 3 && !(pl && pl.mesh && pl.mesh.tv)) S.cam = 2;
   { const hd = byCode(S.driver); document.body.classList.toggle('noBoost', !!SERIES[SER].noBoost || !!(hd && HIST_CAR[hd.team])); }   // Klassiker: kein ERS – Boost-Taste und Batterie weg
@@ -12554,7 +12563,7 @@ function openSettings(from) { settingsFrom = from; mountSettings('settings'); $(
 function closeSettings() { $('#settings').classList.add('hidden'); if (settingsFrom) $('#' + settingsFrom).classList.remove('hidden'); }
 $('#closeSettings').addEventListener('click', closeSettings); $('#settingsDone').addEventListener('click', closeSettings);
 for (const k of ['volMusic', 'volCar', 'volFx']) $('#' + k).addEventListener('input', e => {
-  S[k] = +e.target.value / 100; if (k === 'volCar') S.sound = S.volCar > 0; else if (k === 'volMusic') S.music = S.volMusic > 0;
+  S[k] = +e.target.value / 100; if (k === 'volCar') S.sound = S.volCar > 0; else if (k === 'volMusic') { S.music = S.volMusic > 0; musSnap = true; musicTick(); }
   $('#' + k + 'V').textContent = e.target.value + ' %'; e.target.style.setProperty('--p', e.target.value + '%'); save(); initAudio(); initMusic(); applyVolumes();
 });
 $('#resetMix').addEventListener('click', () => { S.volMusic = 0.7; S.volCar = 0.85; S.music = true; S.sound = true;   // Standard-Tonmischung (wie beim ersten Start)
@@ -13030,12 +13039,38 @@ function renderTeams() {
   if (!shown((byCode(S.driver) || ALL[0]).team)) { S.driver = 'RUS'; save(); placeOnGrid(); }
   if (MENU.team && TEAMS[MENU.team] && !shown(MENU.team)) MENU.team = 'MER';
   const btn = k => { const T = TEAMS[k], ds = ALL.filter(c => c.team === k), H = HIST_CAR[k];
-    return '<button class="tm' + (H ? ' hist' : '') + '" data-team="' + k + '" title="' + T.name + (H ? ' · ' + H.title + ' (historisch)' : '') + '" style="--c1:' + hex(uiCol(T)) + '">' + teamBadge(k) + '<span><b>' + T.name + '</b><small>' + ds.map(c => c.code).join(' · ') + '</small></span>' + (H ? '<em class="hy">' + H.year + '</em>' : '') + '</button>'; };
+    return '<button class="tm' + (H ? ' hist' : '') + '" data-team="' + k + '" title="' + T.name + (H ? ' · ' + H.title + ' (Legende)' : '') + '" style="--c1:' + hex(uiCol(T)) + '">' + teamBadge(k) + '<span><b>' + T.name + '</b><small>' + ds.map(c => c.code).join(' · ') + '</small></span>' + (H ? '<em class="hy">' + H.year + '</em>' : '') + '</button>'; };
   const keys = Object.keys(TEAMS).filter(shown), now = keys.filter(k => !TEAMS[k].hist), old = keys.filter(k => TEAMS[k].hist).sort((a, b) => (HIST_CAR[a] ? HIST_CAR[a].year : 0) - (HIST_CAR[b] ? HIST_CAR[b].year : 0));   // Klassiker nach Jahr
-  $('#teams').innerHTML = now.map(btn).join('') + (old.length ? '<i class="tmsep" aria-hidden="true">Historisch</i>' + old.map(btn).join('') : '');   // Klassiker abgetrennt am Ende der Leiste
+  const tw = $('#teams'), sl = tw.scrollLeft;
+  tw.innerHTML = '<span class="tmnow">' + now.map(btn).join('') + '</span>' + (old.length ? '<i class="tmsep" aria-hidden="true">Legenden</i>' + old.map(btn).join('') + '<button id="legHint" class="leghint" type="button" aria-label="Zu den Legenden scrollen">Legenden<b>›</b></button>' : '');   // v2.88: Legenden (Klassiker) beginnen rechts außerhalb des Bildes – die aktuellen Teams füllen die Leiste (.tmnow min-width 100 %), zu den Legenden wird gescrollt
+  tw.classList.toggle('hasLeg', old.length > 0); tw.scrollLeft = sl; if (TEAMS[MENU.team] && TEAMS[MENU.team].hist) requestAnimationFrame(() => teamsScrollTo(tw.querySelector('[data-team="' + MENU.team + '"]'))); requestAnimationFrame(teamsHint);
   $$('.tm').forEach(b => { const k = b.dataset.team, open = teamOpen(k); b.classList.toggle('locked', !open); if (!open) b.querySelector('small').textContent = lockMsg(k);
     b.addEventListener('click', () => { if (!teamOpen(k)) { toast(f1Rank() ? 'Dieses Team war im Vorjahr mehr als 1 Platz besser als dein Team' : 'Dafür brauchst du in der F2 mindestens Platz ' + f1Need(k)); return; } MENU.team = k; showroomTeam(MENU.team); renderMenu(); }); });
+  { const h = $('#legHint'); if (h) h.addEventListener('click', e => { e.stopPropagation(); teamsScrollTo(tw.querySelector('.tmsep'), true); }); }
+  if (!tw.dataset.wh) { tw.dataset.wh = 1; tw.addEventListener('scroll', teamsHint, { passive: true }); addEventListener('resize', teamsHint);
+    tw.addEventListener('wheel', e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && tw.scrollWidth > tw.clientWidth) { tw.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false }); }   // Mausrad: waagrecht durch die Leiste
   MENU.roneShown = !!S.rone; MENU.histShown = histOk;
+}
+// Teamleiste: Hinweis „Legenden ›“ rechts, solange die Legenden außerhalb des Bildes liegen; Mausrad scrollt waagrecht
+function teamsHint() { const tw = $('#teams'), h = $('#legHint'); if (!tw || !h) return; const sep = tw.querySelector('.tmsep'); h.classList.toggle('on', !!sep && sep.getBoundingClientRect().left > tw.getBoundingClientRect().right - 8); }
+function teamsScrollTo(el, smooth) { const tw = $('#teams'); if (!tw || !el) return; const r = el.getBoundingClientRect(), R = tw.getBoundingClientRect(); if (r.left < R.left || r.right > R.right) tw.scrollTo({ left: tw.scrollLeft + r.left - R.left - (R.width - r.width) / 2, behavior: smooth ? 'smooth' : 'auto' }); }
+// v2.88 (Wunsch 18.11.2026: „Fahrzeugwechsel flüssig, ohne Hakler – alles vorab laden“): im Leerlauf nach dem Start alle Legenden-Modelle laden
+// und für jedes Team einmal ein Showroom-Auto bauen und seine Shader vorab übersetzen (compileAsync, blockiert nicht). Vorher wurde ein Klassiker
+// erst beim Anklicken geladen (Platzhalter, danach Neubau des Showrooms) und neue Lackierungen übersetzten ihre Shader im ersten Bild.
+async function showroomPreload() {
+  if (window.__noPre) return;
+  const idle = () => new Promise(r => (window.requestIdleCallback || (f => setTimeout(f, 50)))(() => r(), { timeout: 700 }));
+  await new Promise(r => setTimeout(r, 2000)); if (typeof initShowroom === 'function') initShowroom();
+  const PRE = window.__preLog = [];
+  for (const k of Object.keys(TEAMS)) {
+    if (running) return; const t0 = performance.now();
+    if (HIST_CAR[k]) { if (MENU.mode === 'career') continue; try { await histLoad(k); } catch (e) {} }
+    await idle(); if (running) return;
+    const d = ALL.find(c => c.team === k); if (!d || !SHOW.scene) continue; let m = null;
+    try { m = makeCar(d); scene.remove(m.g); m.label.visible = false; showroomMirror(m); if (renderer.compileAsync) await renderer.compileAsync(m.g, SHOW.cam, SHOW.scene); else renderer.compile(m.g, SHOW.cam, SHOW.scene); }
+    catch (e) {} finally { if (m) m.g.traverse(o => { if (o.isSprite && o.material.map) o.material.map.dispose(); }); }
+    PRE.push(k + ' ' + Math.round(performance.now() - t0) + ' ms');
+  }
 }
 function buildMenu() { renderTracks(); buildMenu2(); }
 function trkMap(cv, t, col2, lw = 3) { const g = cv.getContext('2d'), W2 = cv.width, H2 = cv.height; g.clearRect(0, 0, W2, H2); let a = 1e9, bb = -1e9, c = 1e9, d = -1e9; for (const p of t.pts) { a = Math.min(a, p[0]); bb = Math.max(bb, p[0]); c = Math.min(c, p[1]); d = Math.max(d, p[1]); }
@@ -13091,7 +13126,7 @@ function renderMenu() {
   if (!MENU.team) MENU.team = d.team;
   $$('.tcard').forEach(b => b.classList.toggle('on', b.dataset.trk === S.track)); renderTrackInfo();
   $$('.tm').forEach(b => b.classList.toggle('on', b.dataset.team === MENU.team));
-  { const T = TEAMS[MENU.team], ds = ALL.filter(c => c.team === MENU.team); const H = HIST_CAR[MENU.team]; $('#teamInfo').innerHTML = teamBadge(MENU.team) + '<h3>' + T.name + '</h3><p>' + (H ? '<i class="histTag">Historisch</i>' + H.title + ' · ' : '') + ds.map(c => c.name).join(' · ') + '</p>' + (H ? '<p class="histInfo">' + H.info + '</p>' : ''); $('#teamBig').textContent = T.short || T.name; }
+  { const T = TEAMS[MENU.team], ds = ALL.filter(c => c.team === MENU.team); const H = HIST_CAR[MENU.team]; $('#teamInfo').innerHTML = teamBadge(MENU.team) + '<h3>' + T.name + '</h3><p>' + (H ? '<i class="histTag">Legende</i>' + H.title + ' · ' : '') + ds.map(c => c.name).join(' · ') + '</p>' + (H ? '<p class="histInfo">' + H.info + '</p>' : ''); $('#teamBig').textContent = T.short || T.name; }
   if (MENU.scr === 'driver') renderDrivers();
   const T = TEAMS[d.team], tr = TRACKS[S.track], sel = [];
   if (MENU.mode !== 'career' && SCR.indexOf(MENU.scr) >= 2) sel.push('<span>' + SERIES[SER].name + '</span>');
@@ -13235,7 +13270,9 @@ function showroomFrame(dt) {
   _sp.x += Math.sin(t * 0.27) * 0.5; _sp.y += Math.sin(t * 0.19) * 0.1; _sp.z += Math.cos(t * 0.23) * 0.4;   // leichtes Schweben – nie ganz statisch
   if (!SHOW.cp) { SHOW.cp = _sp.clone(); SHOW.ct = _st.clone(); SHOW.ox = ox; SHOW.oy = oy; }
   const k = 1 - Math.exp(-dt * (scr === 'title' ? 6 : 2.1)); SHOW.cp.lerp(_sp, k); SHOW.ct.lerp(_st, k); cam.position.copy(SHOW.cp);
-  _st.copy(SHOW.ct); if (SHOW.old && scr !== 'team') { showroomSwap(false); SHOW.orbT = 1; renderer.domElement.style.filter = ''; renderer.domElement.style.transform = ''; }
+  _st.copy(SHOW.ct); if (SHOW.old && scr !== 'team') showroomSwap(false);
+  if (scr !== 'team' && SHOW.orbT !== undefined && SHOW.orbT < 1) SHOW.orbT = 1;   // Schwenk abbrechen, wenn der Teambildschirm verlassen wird (auch nach der Mitte des Schwenks, wenn SHOW.old schon leer ist)
+  if (!(scr === 'team' && SHOW.orbT < 1) && (renderer.domElement.style.filter || renderer.domElement.style.transform)) { renderer.domElement.style.filter = ''; renderer.domElement.style.transform = ''; }   // v2.88: Bewegungsunschärfe blieb stehen, wenn während des Schwenks ein Auto/Fahrer gewählt wurde
   if (scr === 'team' && SHOW.orbT !== undefined && SHOW.orbT < 1) { const o0 = SHOW.orbT; SHOW.orbT = Math.min(1, o0 + dt / 0.75); if (o0 < 0.5 && SHOW.orbT >= 0.5) showroomSwap(true);
     { const q2 = SHOW.orbT, cs = renderer.domElement.style, on = q2 < 1;   /* Bewegungsunschärfe wie bei offenem Kameraverschluss: nur in Schwenkrichtung (waagrecht) verwischt, Stärke = Schwenkgeschwindigkeit (halbe Bildzeit belichtet) – am Anfang und Ende scharf, in der Mitte lang gezogen */
       if (!SHOW.mb) { const d = document.createElement('div'); d.innerHTML = '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="mbx" x="-15%" width="130%" y="0" height="100%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter></svg>'; document.body.appendChild(d.firstChild); SHOW.mb = document.querySelector('#mbx feGaussianBlur'); }
@@ -13280,7 +13317,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.87'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.88'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -13521,6 +13558,7 @@ if (!(TRACKS[S.track] && (!TRACKS[S.track].extra || S.nos) && !TRACKS[S.track].k
 buildMenu(); renderMenu();
 { const lt = document.querySelector('#loading .ldTxt'); if (lt) lt.textContent = 'Aufkleber werden geladen'; try { await preloadDecals(); if (renderer.initTexture) for (const u of Object.values(DECAL_TEX)) for (const tx of [u.uDecal.value, u.uSheet.value]) if (tx && tx.image) renderer.initTexture(tx); } catch (e) {}   /* auch gleich zur Grafikkarte hochladen */ if (lt) lt.textContent = 'Strecke wird geladen'; }
 loading(false); $('#menu').classList.remove('hidden'); showScreen('title');
+showroomPreload();   // Showroom-Autos im Hintergrund vorbereiten
 window.__scene = () => scene; window.__cam = () => camera; window.__perf = (k = 20) => { const was = paused; paused = false; renderer.info.autoReset = false; renderer.info.reset(); let t = performance.now(); const t0 = t; for (let i = 0; i < k; i++) tick(t += 40, true); last = performance.now(); const gl = renderer.getContext(); gl.finish(); const ms = (performance.now() - t0) / k, r = renderer.info.render; const o = { calls: Math.round(r.calls / k), tris: Math.round(r.triangles / k), ms: +ms.toFixed(2), pr: renderer.getPixelRatio() }; renderer.info.autoReset = true; paused = was; return o; };   /* Test: Zeichenaufrufe/Bild und Zeit pro Bild (CPU+GPU, mit gl.finish) */
 // Testhilfen: Menü per Code bedienen (Strecke bauen, Rennen starten, feste Kamera)
 window.vb = () => [...document.querySelectorAll('button,.btn,[role=button],.card,.trk,div[onclick]')].filter(b => b.offsetParent !== null); window.W8 = ms => new Promise(r => setTimeout(r, ms));
