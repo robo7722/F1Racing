@@ -1,6 +1,6 @@
 # Klassiker-Autos im Spiel (v2.68)
 
-Stand: 18.11.2026. Drei historische F1-Autos mit ihrem bekanntesten Fahrer, auswählbar unter **F1** im **Schnellen Spiel** und im **Zeitfahren**.
+Stand: 18.11.2026. Drei historische F1-Autos (seit dem Abschnitt „Drei weitere Klassiker“ am Ende: sechs – Ferrari 312, McLaren MP4/13, Red Bull RB8) mit ihrem bekanntesten Fahrer, auswählbar unter **F1** im **Schnellen Spiel** und im **Zeitfahren**.
 In der **Karriere kommen sie nicht vor** (wie RONE Racing nur vom Spieler gefahren, nie als Gegner).
 Modelle und Neubau: `modelle/klassiker/LIESMICH.md` · Fahrer und Technik: `modelle/klassiker/FAHRER.md`.
 
@@ -179,3 +179,107 @@ das Material aber `OPAQUE` → `build_klassiker.py` speicherte JPEG ohne Deckkra
 `textur_ersetzen.py … --mask`, gleiche Ausrichtung, nicht spiegeln). Laden mit `?v=2`. Sichtbar vor allem an der Nase (Vodafone, Olympus).
 **Bau-Skript-Lehre:** `build_klassiker.py` sollte Deckkraft behalten, wenn das BILD durchsichtige Pixel hat – auch wenn das Material `OPAQUE` ist.
 Die Bremssattel-/Detail-Logos (`EXT_Decal.png`) wurden beim Bau zu Eckpunktfarben und fehlen weiter.
+
+## Drei weitere Klassiker: Ferrari 312 (1967), McLaren MP4/13 (1998), Red Bull RB8 (2012)
+Wunsch des Nutzers (18.11.2026): „Genau so wie bei den anderen historischen Autos … nach den gleichen Regeln umgebaut.“ Modelle schon verkleinert
+(`build_klassiker.py`, Reparaturen `vorbereiten.py`, siehe `modelle/klassiker/LIESMICH.md`), Fahrer und Daten in `modelle/klassiker/FAHRER.md`.
+
+| Team (Schlüssel) | Auto | Fahrer | Bildfilter (`fx`) | Tacho (`gauge`) | Fahrleistung (Topspeed / Grip / Bremse / Beschl.) | Klang |
+|---|---|---|---|---|---|---|
+| Ferrari 1967 (`H_F67`) | Ferrari 312 | Chris Amon, #20 | 5 – Schwarz-Weiß-Film | 1 Rundinstrumente | 0,79 / 0,55 / 0,52 / 0,64 · 5 Gänge · 550 kg · 10.500/11.000 | `hist_f67` |
+| McLaren 1998 (`H_MCL98`) | McLaren MP4/13 | Mika Häkkinen, #8 | 3 – SD-Fernsehbild | 3 Lenkrad-Display | 0,97 / 0,86 / 0,88 / 0,94 · 6 Gänge · 600 kg · 16.800/17.500 | `hist_fer` |
+| Red Bull 2012 (`H_RBR`) | Red Bull RB8 | Sebastian Vettel, #1 | 4 – HD-Fernsehen | 3 Lenkrad-Display | 0,99 / 0,95 / 0,95 / 0,96 · 7 Gänge · 640 kg · 17.500/18.000 | `hist_rbr` |
+
+Staffelung: RB8 knapp unter/gleichauf mit dem F2004 (1,00 / 0,94 / 0,95 / 0,97), MP4/13 darunter (Rillenreifen 1998: weniger Grip), 312 deutlich
+unter dem Lotus 1970 (0,82 / 0,62 / 0,60 / 0,72: weniger PS je kg, schmale Reifen, keine Flügel). KERS des RB8 ist nicht nachgebildet (alle Klassiker ohne Boost).
+Teamleiste: „Historisch“-Bereich jetzt nach Jahr sortiert (1967, 1970, 1988, 1998, 2004, 2012); Knopfbreite aus der Bildbreite gerechnet
+(`(100vw − 190px) / 17`, 30–62 px), damit alle 17 Teams in eine Zeile passen.
+
+### Gemessene Werte (`HIST_CAR`)
+- **Lenkrad (`sw`)**: wie oben – Kasten um das Lenkrad, Auswahl grün eingefärbt, aus Cockpit, Seite und schräg oben angesehen (eigener kleiner
+  Software-Renderer in Python statt Prüfseite), dann `inSw` genau wie `histPrep` angewendet und die Kranzpunkte als Ebene angepasst
+  (312: zusätzlich Kreis im Raum, iterativ: R = 0,14 m, Rest 6 mm).
+
+| Auto | Mitte c | Lenkachse a | r / ±t | rh / th | g | herausgelöst |
+|---|---|---|---|---|---|---|
+| 312 | 0 / 0,544 / 0,427 | 0 / −0,126 / 0,992 | 0,175 / 0,03 | 0,05 / 0,08 | 0,14 | 3.139 Dreiecke (rundes Holzlenkrad, 3 Speichen) |
+| MP4/13 | 0 / 0,577 / 0,585 | 0 / −0,012 / 1 | 0,16 / 0,03 | 0,05 / 0,06 | 0,13 | 2.671 Dreiecke (Schmetterling, Kasten in der Mitte) |
+| RB8 | 0 / 0,557 / 0,733 | 0 / −0,012 / 1 | 0,15 / 0,03 | 0,05 / 0,06 | 0,12 | 5.146 Dreiecke (Griffe, Tasten, Anzeigefeld oben) |
+
+  Beim RB8 erfasst ein größerer Radius die Seitenwände des Cockpits (bei ±0,17 m) – deshalb r = 0,15. `swRot`: 312 1,2, MP4/13 und RB8 0,95.
+- **Radachsen (`ax`)** mit `tools/klassiker/radachsen.py` (jetzt für alle sechs Modelle; die alten drei Werte unverändert): RB8 vorn 0,63° Spur
+  (eingetragen), sonst alles unter 0,3° (nicht eingetragen). 312 vorn: Restabweichung 23 mm (gewölbte Lauffläche der Firestone-Reifen, keine Schieflage).
+- **Sitz (`seat`)** nach den Fotos und der Eindring-Messung (Karosseriepunkte der Stufe 0 samt Lenkrad und Radteilen im Helm-Ellipsoid, 94 % der Helmhülle):
+  - MP4/13: Foto = Helm direkt vor der Kopfstütze, Oberkante etwa auf Höhe der unteren Airbox-Kante, Helm knapp über dem Cockpitrand.
+    z +0,28: 26 Punkte (Kopfstütze), +0,29: 0, **+0,30: 0** (1 cm Luft) → `seat` [−0,115, +0,30], Helmmitte 0,76 m / z +0,18.
+  - RB8: Foto = Helm tief, nur die obere Hälfte schaut heraus. [−0,165, +0,39]: 3 Punkte (Kopfstützen-Polster bei z +0,10), [−0,185, +0,37]: 26,
+    [−0,185, +0,38]: 13, **[−0,185, +0,39]: 0** → Helmmitte 0,69 m / z +0,27 (Cockpitrand dort 0,69–0,75 m).
+  - 312: Foto = aufrecht, Helmoberkante etwa auf Höhe des Überrollbügels (0,857 m bei z −0,40), Kopf knapp davor. **`seat` [−0,135, −0,08]**:
+    Helmmitte 0,74 m / z −0,20, Oberkante ~3 cm über dem Bügel, 0 Punkte im Helm (auch bei −0,12 und −0,115 frei).
+    Schultern sind anders als auf dem Foto kaum zu sehen: der F1-Fahrer (`f1fahrer.bin`) liegt halb, und der Cockpitrand des Modells liegt am Fahrer bei 0,66 m.
+  - Helmkamera folgt dem Kopf (Augen = Helmmitte −2,5 cm, +12 cm vor): 312 [0, 0,715, −0,08, 2,6], MP4/13 [0, 0,735, 0,30, 3,0], RB8 [0, 0,665, 0,39, 1,6]
+    (4. Wert = Absenkung des Blickziels in 30 m; MP4/13 mit 1,6 lag das Lenkrad-Display am unteren Bildrand).
+    TV-Höhe (`tvY`): 312 1,3 m, MP4/13 1,22 m (bei 1,1 m stand die Kamera in der Airbox, Oberkante 1,116 m), RB8 1,2 m (Bügel 1,09 m verdeckte das Bild).
+  - Die Kameras in `extras.cams` der neuen Modelle sind Platzhalter [0, 0,85, 0, 0,3] – die Helmmitte rechnet vom Platzhalter-Augenpunkt aus.
+- **Live-Instrumente (`HIST_DASH`)**: 312 drei Rundinstrumente im Armaturenbrett (Mitte Drehzahl Ø 8,2 cm, links Öl, rechts Wasser – gleiche Leinwand
+  wie beim Lotus), Mitte/Normale aus den Ringpunkten der Instrumente; 1,6–1,8 cm davor, weil die modellierten Skalen-Zacken herausragen.
+  MP4/13: Anzeige im Kasten der Lenkradmitte (7 × 4,8 cm, z 0,565). RB8: Anzeigefeld oben am Lenkrad (7,5 × 5,2 cm, z 0,73). Beide drehen mit dem Lenkrad.
+- **Tacho entkoppelt**: `histGauge`/`histDashDraw` richten sich nach `HIST_CAR.gauge` (1 Rundinstrumente, 2 McLaren 1988, 3 Lenkrad-Display), nicht mehr nach `fx`.
+- **Logos** (`tools/klassiker/logos.py`, jetzt einzeln aufrufbar: `python tools/klassiker/logos.py H_F67 H_MCL98 H_RBR`; nur `H_LOT` braucht cairosvg):
+  `H_F67` Scuderia-Schild (aus der F2004-Textur, das 312-Modell hat kein Schild) in wärmerem, matterem Gelb; `H_MCL98` Mercedes-Stern aus der
+  MP4/13-Textur über „McLaren“ mit rotem Speedmark-Bogen (gezeichnet, Schrift Inter/FreeSans – nachempfunden, kein Original-Logo);
+  `H_RBR` Stiere mit Sonne und Schriftzug „Red Bull“ aus der RB8-Textur (Lack freigestellt).
+- `fahrer_sicht.json` neu gemessen (jetzt sechs Autos, `?v=5`), siehe unten. GLB-Dateien laden mit `?v=1` (neu).
+
+### Bildfilter (Finish-Shader, neue `uEra`-Stufen, kein eigener Durchgang)
+4. **HD-Fernsehen 2012**: 720p-Eindruck – vier Abtastungen leicht weich, Helligkeit danach kräftig nachgeschärft (feine Säume wie bei Sendern),
+   Farbe etwas weicher als Helligkeit; helle Flächen glühen (vier weitere Abtastungen im Abstand 0,6 % der Bildhöhe, nur über 0,75); Sendefarben
+   kräftig und leicht übersättigt (1,22), Kontrast 1,07, kühler Weißabgleich (R 0,965, B 1,05). Nur bei Tempo sehr dezente 16×16-Blöcke
+   (Stufen und Rauschen je Block, Stärke nach `uSpeed`). Keine Halbbilder (progressiv).
+5. **Schwarz-Weiß-Film 1967**: Bildstand wackelt und leicht weich wie der Lotus-Film (gleiche Zweige), dann echtes Schwarzweiß ohne Sepia,
+   Kontrast 1,15, flackernde Belichtung (±4 %), grobes Korn, Kratzer hell oder dunkel, Staub hell und dunkel, dunkle Ecken (bis −60 %).
+Kosten: HD 8 zusätzliche Texturabfragen, S/W 4 (wie Film 1970) – nur wenn der Klassiker gefahren wird.
+
+### Klang (keine neuen Aufnahmen – ElevenLabs kostet Geld)
+- MP4/13 (Mercedes V10) nutzt `hist_fer` (Ferrari-V10-Aufnahmen) mit eigener Drehzahl (Schalten 16.800, höchstens 17.500).
+- RB8 (Renault V8): `hist_rbr` = dieselben Aufnahmen mit 4 statt 5 Zündungen je Umdrehung → bei gleicher Drehzahl 20 % tiefer (V8-Lage).
+- 312 (V12): `hist_f67` = dieselben Aufnahmen mit 6 Zündungen → bei 11.000/min derselbe Ton wie der V10 bei 13.200/min; Schaltlücke wie Lotus (H-Schaltung).
+- Eigene Aufnahmen (Ferrari-V12 der 60er, Renault-V8 2012, Mercedes-V10 1998) wären möglich – vorher Kosten prüfen und fragen (CLAUDE.md).
+
+### Sichtbarkeit des Fahrers (`fahrer_sicht.json`, neu gemessen)
+Rumpf sichtbar (von 13.939 Dreiecken): 312 7.563 · MP4/13 6.934 · RB8 5.744 (tief im Cockpit). Lotus/McLaren 1988/F2004 unverändert (7.977 / 9.050 / 7.216).
+Der Testbrowser durfte hier keinen lokalen Server starten – gemessen mit derselben Logik über die Datei-Umleitung von `tools/textur/spiel.js`
+(`page.route`, Dateien direkt aus dem Projektordner); Ergebnis für die alten drei Autos bitgleich.
+
+### Leistung (gemessen, `qc/perf-cam.js` mit 4 Stellen je Kamera, Monza, volles Feld, Software-Rendering im Testbrowser)
+| | Gesamt Mittel / Spitze (Verfolger · Cockpit · TV) | eigenes Auto Cockpit / TV | Schattenkarte |
+|---|---|---|---|
+| Amon, 312 | 173 / 228 · 159 / 199 · 153 / 196 | 20 Aufrufe 59 Tsd. / 16 Aufrufe 45 Tsd. | 7–8 Aufrufe, 9–13 Tsd. |
+| Vettel, RB8 | 183 / 238 · 172 / 218 · 169 / 211 | 28 Aufrufe 68 Tsd. / 29 Aufrufe 71 Tsd. | 8–9 Aufrufe, 9–13 Tsd. |
+| Häkkinen, MP4/13 | 195 / 249 · 181 / 226 · 176 / 218 | 34 Aufrufe 77 Tsd. / 34 Aufrufe 81 Tsd. | 12–13 Aufrufe, 9–13 Tsd. |
+312 und RB8 wurden vor der neuen Sichtbarkeitsliste gemessen (Fahrer noch vollständig, ~14.000 Dreiecke) – im Spiel jetzt etwas weniger Dreiecke.
+Mehr Aufrufe als beim F2004 (22/23) beim RB8: Stufe 0 hat 15 Materialien, dazu Lenkrad, Display, Fahrer, Helm und je Rad die zerlegten Teile.
+Shader-Programme nach allen Kamerawechseln: 312 124, RB8 119 (ein Vorher-/Nachher-Vergleich je Kamerawechsel wurde nicht gemessen – QC „Nachladen“ steht noch aus).
+Das MP4/13 ist das schwerste Klassiker-Modell (Stufe 0: 21 Zeichenaufrufe, Stufe 2 für den Schatten 12) – alle Werte bleiben weit unter den
+Grenzen (450 Aufrufe, 1,2 Mio. Dreiecke). Verbesserung beim nächsten Neubau: Materialien in `build_klassiker.py` zusammenfassen.
+
+### Geprüft (Testbrowser, Monza)
+Showroom (schräg vorn, Seite), Verfolger-, Helm- und TV-Kamera, Lenkung voll links/rechts: Lenkrad dreht mit, Hände am Kranz, Display bzw.
+Rundinstrumente laufen mit. Sitz verglichen mit den Fotos (`tools/klassiker/quellen/sitz/`): MP4/13 Helm vor der Kopfstütze, knapp über dem Rand;
+RB8 tief, obere Helmhälfte sichtbar; 312 Helm ganz über dem Rand, Oberkante ~ Bügelhöhe.
+Skripte (Arbeitskopien, nicht im Repo): Python-Renderer für die Lenkrad-/Sitz-/Armaturenbilder, Eindring-Messung und Rennaufnahmen über `tools/textur/spiel.js`.
+
+### Offen
+- Amon fuhr 1967 einen **offenen Helm mit Brille** – das Spiel hat nur geschlossene Helme (eigene Helmform wäre nötig). Helmfarbe unsicher (siehe FAHRER.md).
+- 312: Auf dem Foto sind Schultern und Oberkörper zu sehen; mit dem halb liegenden F1-Fahrer und dem Cockpitrand des Modells (0,66 m) nur Helm und Arme.
+  Höher setzen würde den Helm über den Bügel heben (Foto: Oberkante etwa auf Bügelhöhe) – bewusst so gelassen. Eine aufrechte Sitzhaltung wäre ein eigener Fahrer.
+- RB8: KERS (+80 PS) nicht nachgebildet. Vettels Helm 2012 nur als Mittelwert der wechselnden Designs.
+- `H_MCL98`-Logo ist nachempfunden (Stern aus der Textur, Schrift/Speedmark gezeichnet) – das Original-Teamlogo 1998 liegt nicht als Datei vor.
+- Eigene Motoraufnahmen (V12 1967, V10 1998, V8 2012) wären möglich (Kosten vorher prüfen).
+
+### Bilder (Testbrowser)
+![[bilder/klassiker_neu_filter.jpg]]
+(oben Verfolgerkamera: 312 mit Schwarz-Weiß-Film, MP4/13 mit SD-Bild, RB8 mit HD-Bild; unten Showroom)
+
+![[bilder/klassiker_neu_cockpit.jpg]]
+(Helmkamera geradeaus und mit Einschlag: 312 mit Live-Rundinstrumenten, MP4/13 und RB8 mit Lenkrad-Display)
