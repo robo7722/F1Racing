@@ -450,16 +450,6 @@
     "kind": "d"
    },
    {
-    "name": "teamviewer_pod",
-    "box": [
-     222,
-     888,
-     265,
-     1000
-    ],
-    "kind": "w"
-   },
-   {
     "name": "petronas_pod_l",
     "box": [
      128,
@@ -478,26 +468,6 @@
      1112
     ],
     "kind": "w"
-   },
-   {
-    "name": "microsoft_l",
-    "box": [
-     288,
-     985,
-     350,
-     1160
-    ],
-    "kind": "c"
-   },
-   {
-    "name": "microsoft_r",
-    "box": [
-     365,
-     1000,
-     412,
-     1145
-    ],
-    "kind": "c"
    },
    {
     "name": "petronas_heck",
