@@ -1301,7 +1301,7 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
 }
 #hub .xhero{clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%)}
 #hub .xchip,#hub .xch2,#hub .xb{clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%)}
-/* v2.80 Start-Minispiel: Kupplung halten bis die Ampel ausgeht */
+/* v2.81 Start-Minispiel: Kupplung halten bis die Ampel ausgeht */
 #controls .pad.clutch{width:calc(min(16vw,104px) * 2 + 10px)!important;background:linear-gradient(180deg,rgba(255,200,0,.35),rgba(150,110,0,.4))!important}
 #controls .pad.clutch::after{background:#ffc800}
 #controls .pad.clutch.on{background:linear-gradient(180deg,rgba(255,210,40,.75),rgba(190,140,0,.65))!important}
@@ -10893,7 +10893,7 @@ addEventListener('keydown', e => {
 });
 addEventListener('keyup', e => { if (KEYMAP[e.code]) { inp[KEYMAP[e.code]] = false; if (KEYMAP[e.code] === 'kD') inp.clutchUpT = performance.now(); } });
 
-/* ---- v2.80 Start-Minispiel (Wunsch) ----
+/* ---- v2.81 Start-Minispiel (Wunsch) ----
    Vor dem Start Kupplung + Gas gedrückt halten – erst dann läuft die Ampel an. Kupplung = Touch: große gelbe Taste links (statt der Pfeile),
    Controller: Bremse (L2/LT oder X/□), Tastatur: S/↓/Leertaste. Gas = Gas-Taste/R2/W/↑ (mit Auto-Gas entfällt das Gas).
    Geht die Ampel aus, läuft die Uhr, bis die Kupplung losgelassen wird: das ist die Reaktionszeit (klein oben in der Rundenzeit-Box).
@@ -12000,7 +12000,7 @@ function step(dt) {
       if (tiltCheckT > 1.5 && !tiltSeen) { effCtrl = 'touch'; layoutControls(); showMsg('Neigung nicht verfügbar – Touch aktiv', 3); }
       else if (tiltSeen && lightsT < 4.5) tiltZero = tiltAngle;
     }
-    if (lightsT >= lightsOut) { raceState = 'race'; step.lit = 0; lightBeep(true); /* kein „LOS!“-Text mehr (Wunsch v2.80) */ setTimeout(() => $('#lights').classList.add('hidden'), 700); SG.outT = performance.now(); if (SG.armed && !SG.jump && SG.on) sgHint(''); }
+    if (lightsT >= lightsOut) { raceState = 'race'; step.lit = 0; lightBeep(true); /* kein „LOS!“-Text mehr (Wunsch v2.81) */ setTimeout(() => $('#lights').classList.add('hidden'), 700); SG.outT = performance.now(); if (SG.armed && !SG.jump && SG.on) sgHint(''); }
   } else { raceTime += dt; sgRace(); }
   updatePlayer(dt);
   for (const c of ais) updateAI(c, dt);
@@ -13228,7 +13228,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.80'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.81'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

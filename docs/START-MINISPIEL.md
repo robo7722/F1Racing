@@ -1,4 +1,4 @@
-# Start-Minispiel (Kupplungsstart) – ab v2.80
+# Start-Minispiel (Kupplungsstart) – ab v2.81
 
 Wunsch vom 18.11.2026: Beim Rennstart muss man die Kupplung halten, bis die Ampel ausgeht. Die Reaktionszeit wird gemessen.
 
