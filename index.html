@@ -3738,7 +3738,8 @@ function cockNew(tp, k, bodyCol) {
   grp.traverse(x => { if (x.isMesh) { x.frustumCulled = false; x.castShadow = false; } }); return grp; }
 
 const inCkBox = (c, x, y, z) => Math.abs(x) < c.x && z > c.z0 && z < c.z1 && y < c.y, inCock = (k, x, y, z) => inCkBox(COCK[k], x, y, z) || (!!COCK[k].b2 && inCkBox(COCK[k].b2, x, y, z));
-const cockGLSL = k => { const c = COCK[k], bx = b => 'abs(vLP.x) < ' + b.x.toFixed(3) + ' && vLP.z > ' + b.z0.toFixed(3) + ' && vLP.z < ' + b.z1.toFixed(3) + ' && vLP.y < ' + b.y.toFixed(3); return '\n if ((' + bx(c) + ')' + (c.b2 ? ' || (' + bx(c.b2) + ')' : '') + ') diffuseColor.rgb = vec3(' + [COCK_COL.r, COCK_COL.g, COCK_COL.b].map(v => v.toFixed(4)).join(',') + ');'; };
+// b2 (v2.84): Karosserie neben der Öffnung (|x| > 0,19, über 0,63 m – Rand 0,615…0,645) ausgenommen – dort sitzen die hinteren Halo-Streben, sie war als schwarzes Rechteck zu sehen (Rückmeldung 18.11.2026).
+const cockGLSL = k => { const c = COCK[k], bx = b => 'abs(vLP.x) < ' + b.x.toFixed(3) + ' && vLP.z > ' + b.z0.toFixed(3) + ' && vLP.z < ' + b.z1.toFixed(3) + ' && vLP.y < ' + b.y.toFixed(3); return '\n if ((' + bx(c) + ')' + (c.b2 ? ' || (' + bx(c.b2) + ' && !(abs(vLP.x) > 0.19 && vLP.y > 0.63))' : '') + ') diffuseColor.rgb = vec3(' + [COCK_COL.r, COCK_COL.g, COCK_COL.b].map(v => v.toFixed(4)).join(',') + ');'; };
 // Aufkleber: Bilder auf dem berechneten Lack. Alle Angaben je Auto stehen in liveries/liveries.json (erzeugt von tools/sticker/build.py aus tools/sticker/<Kürzel>.json):
 //   sheet  = es gibt einen Aufkleberbogen liveries/<Kürzel>.png mit den Sponsoren, von der Seite aufgetragen. Der Bogen zeigt das Auto im Bereich SHEET_BOX (z = Länge, y = Höhe):
 //            obere Bildhälfte = linke Fahrzeugseite (+x, Nase links), untere Hälfte = rechte Seite (Nase rechts)
@@ -13231,7 +13232,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.83'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.84'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

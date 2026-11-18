@@ -134,3 +134,8 @@ korrigieren; Halos in echter Farbe ohne Logos; **Regel: Lackierungen links/recht
 - Startnummern bleiben je Fahrer eine Einblendung über der Textur (beide Autos eines Teams teilen die Textur, jeder hat seine Nummer).
 - Geprüft je F1-Team aus 10 Richtungen (L, R, vorn, hinten, oben, 4× schräg, Heck nah). Rest: AUD-„27“ an der gewölbten Motorabdeckung leicht verbogen
   (Nummer-Einblendung, wie vorher); F2_ITA rote Flecken seitlich an der Motorabdeckung (aus dem Lack-Programm, zu steil für die Draufsicht).
+
+### v2.84: schwarzes Rechteck am Halo-Fuß (18.11.2026)
+Der Cockpit-Kasten `COCK.f1.b2` (Sitzlehne, Kopfstütze, Innenwände dunkel) reichte über die Karosserie neben der Öffnung, auf der die hinteren
+Halo-Streben sitzen → schwarzes Rechteck bei allen F1-Autos. Jetzt ausgenommen: |x| > 0,19 und höher als 0,63 m. Alle Texturen neu gebacken.
+Halo-Farben geprüft: am echten Auto sind die meisten 2026er Halos schwarz; farbig nur Alpine (rosa), Aston Martin (grün), Haas (weiß), Audi (silber).
