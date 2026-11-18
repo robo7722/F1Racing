@@ -31,6 +31,15 @@ Beschreibung (JSON):
   team, driver   nur F2: Team (z. B. "F2_INV") und Fahrerkürzel fürs Testbild; drivers = Fahrerkürzel, die diese Lackierung im Spiel bekommen
   liv       F2-Farben: { "body": "#rrggbb", "acc": ..., "tip": ..., "low": ..., "split": 0.3, "metal": 0.3 }
   glsl      eigenes Lack-Programm (Rumpf von vec3 livery(vec3 p, float c)), Farben als #rrggbb
+  top       Ansicht von oben (nur für die gebackene Textur, tools/textur/backen.js): {
+              photo  Adresse/Pfad des Fotos von oben,
+              rear, front  [x, y] Mitte Hinter-/Vorderachse im Foto (auf der Wagenmitte) – senkrechte Draufsicht; ODER
+              pts    [[px, py, x, z], ...] mind. 4 Passpunkte Foto-Pixel -> Modell (x quer, links positiv; z vorn) für schräge Fotos,
+              stickers  wie oben, aber box/poly in Pixeln des AUSGERICHTETEN Bilds tools/sticker/.cache/<Kürzel>_oben_ganz.png
+                        (TOP_PXM Pixel je Meter, Nase oben, linke Wagenseite links; Raster in <Kürzel>_oben_raster.png);
+                        at [x, z] / w / h / dx / dz wie bei der Seite }
+            -> tools/sticker/.cache/<Kürzel>_oben_bogen.png (gleicher Ausschnitt wie _oben_ganz), backen.js legt ihn auf alle nach oben
+               zeigenden Lackflächen, die von oben zu sehen sind (Höhenkarte).
 """
 import sys, os, json, glob, subprocess
 import numpy as np
@@ -40,6 +49,59 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.pat
 BOX = {'f1': (-2.45, 3.15, 0.0, 1.12), 'f2': (-2.6, 3.0, 0.0, 1.2)}          # muss zu SHEET_BOX in index.html passen
 WHEEL = {'f1': (-1.575, 1.825, 0.3595), 'f2': (-1.712, 1.4335, 0.297)}       # z Hinterachse, z Vorderachse, Höhe der Radmitte im Modell
 W, HH = 2048, 512
+TOP_PXM, TOP_XW = 300, 1.15                                                  # Ansicht von oben: Pixel je Meter, halbe Breite (m); z-Bereich = BOX
+def top_frame(kind):
+    Z0, Z1 = BOX[kind][:2]; return int(round(2 * TOP_XW * TOP_PXM)), int(round((Z1 - Z0) * TOP_PXM)), Z0, Z1
+
+def homography(src, dst):
+    """3x3-Matrix H mit dst ~ H * src (direkte lineare Transformation, mind. 4 Punktpaare)."""
+    A = []
+    for (x, y), (u, v) in zip(src, dst):
+        A.append([-x, -y, -1, 0, 0, 0, u * x, u * y, u]); A.append([0, 0, 0, -x, -y, -1, v * x, v * y, v])
+    _, _, vt = np.linalg.svd(np.array(A, np.float64)); H = vt[-1].reshape(3, 3); return H / H[2, 2]
+
+def top_canon(key, cfg):
+    """Foto von oben auf das feste Raster bringen: Nase oben, linke Wagenseite (+x) links, TOP_PXM Pixel je Meter."""
+    T = cfg['top']; kind = cfg['kind']; Wt, Ht, Z0, Z1 = top_frame(kind)
+    img = photo(key + '_oben', {'photo': T['photo']})
+    m2p = lambda x, z: ((TOP_XW - x) * TOP_PXM, (Z1 - z) * TOP_PXM)            # Modell -> Raster-Pixel
+    if T.get('pts'):
+        src = [m2p(x, z) for px, py, x, z in T['pts']]; dst = [(px, py) for px, py, x, z in T['pts']]
+    else:
+        zr, zf = WHEEL[kind][:2]; (rx, ry), (fx, fy) = T['rear'], T['front']
+        ux, uy = fx - rx, fy - ry; L = np.hypot(ux, uy); sc = L / (zf - zr); ux, uy = ux / L, uy / L; qx, qy = -uy, ux   # q: zur rechten Wagenseite (-x)
+        P = lambda x, z: (rx + ux * (z - zr) * sc - qx * x * sc, ry + uy * (z - zr) * sc - qy * x * sc)
+        pts = [(0.8, -1.5), (-0.8, -1.5), (0.8, 2.5), (-0.8, 2.5)]; src = [m2p(x, z) for x, z in pts]; dst = [P(x, z) for x, z in pts]
+    H = homography(src, dst)                                                   # Raster -> Foto (so will es PIL)
+    can = img.transform((Wt, Ht), Image.PERSPECTIVE, tuple((H.reshape(-1) / H[2, 2])[:8]), Image.BICUBIC)
+    can.save(os.path.join(CACHE, key + '_oben_ganz.png'))
+    from PIL import ImageDraw                                                  # Raster zum Ausmessen: Linien alle 10 cm, beschriftet alle 50 cm
+    g = Image.new('RGB', can.size, (40, 42, 48)); g.paste(can, (0, 0), can); d = ImageDraw.Draw(g)
+    for i in range(int(Z0 * 10), int(Z1 * 10) + 1):
+        y = (Z1 - i / 10) * TOP_PXM; d.line([(0, y), (Wt, y)], fill=(255, 0, 255) if i % 5 == 0 else (90, 90, 120), width=1)
+        if i % 5 == 0: d.text((2, y + 1), 'z%.1f / %d' % (i / 10, y), fill=(255, 255, 0))
+    for i in range(-int(TOP_XW * 10), int(TOP_XW * 10) + 1):
+        x = (TOP_XW - i / 10) * TOP_PXM; d.line([(x, 0), (x, Ht)], fill=(255, 0, 255) if i % 5 == 0 else (90, 90, 120), width=1)
+        if i % 5 == 0: d.text((x + 2, 2), 'x%.1f/%d' % (i / 10, x), fill=(255, 255, 0))
+    g.save(os.path.join(CACHE, key + '_oben_raster.png'))
+    return can
+
+def build_top(key, cfg):
+    T = cfg.get('top')
+    if not T: return
+    kind = cfg['kind']; Wt, Ht, Z0, Z1 = top_frame(kind); can = top_canon(key, cfg)
+    sheet = Image.new('RGBA', (Wt, Ht), (255, 255, 255, 0))
+    for st in T.get('stickers', []):
+        st = boxof(dict(st)); x0, y0, x1, y1 = st['box']; p = cut(can, st)
+        cx, cz = TOP_XW - (x0 + x1) / 2 / TOP_PXM, Z1 - (y0 + y1) / 2 / TOP_PXM
+        if 'at' in st: cx, cz = st['at']
+        cx += st.get('dx', 0); cz += st.get('dz', 0); wm = st.get('w', (x1 - x0) / TOP_PXM); hm = st.get('h', wm * p.height / p.width)
+        w, h = max(1, round(wm * TOP_PXM)), max(1, round(hm * TOP_PXM)); p = p.resize((w, h), Image.LANCZOS)
+        sheet.alpha_composite(p, (max(0, round((TOP_XW - cx) * TOP_PXM - w / 2)), max(0, round((Z1 - cz) * TOP_PXM - h / 2))))
+        print('  oben %-12s x %.2f  z %.2f  Breite %.2f m' % (st.get('name', '?'), cx, cz, wm))
+    sheet = bleed(sheet); sheet.save(os.path.join(CACHE, key + '_oben_bogen.png'))
+    bg = Image.new('RGB', sheet.size, (36, 38, 44)); bg.paste(sheet, (0, 0), sheet); bg.save(os.path.join(CACHE, key + '_oben_vorschau.png'))
+    print('ok oben', key, Wt, 'x', Ht)
 
 def photo(key, cfg):
     os.makedirs(CACHE, exist_ok=True); dst = os.path.join(CACHE, key + '.png'); src = cfg['photo']
@@ -149,6 +211,7 @@ def build(key):
         os.makedirs(os.path.join(ROOT, 'liveries'), exist_ok=True); sheet.save(os.path.join(ROOT, 'liveries', key + '.png'), optimize=True)
         bg = Image.new('RGB', sheet.size, tuple(hexrgb(cfg.get('previewBg', '#24262c')))); bg.paste(sheet, (0, 0), sheet); bg.save(os.path.join(CACHE, key + '_bogen.png'))
     print('ok', key)
+    build_top(key, cfg)
     if os.path.exists(os.path.join(ROOT, 'liveries', 'textur', key + '.webp')):   # das Spiel nimmt die gebackene Textur, nicht den Bogen
         print('   !! Dieses Auto hat eine gebackene Lack-Textur – neu backen, sonst bleibt die alte im Spiel:  node tools/textur/backen.js', key)
 

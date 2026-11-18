@@ -102,3 +102,10 @@ Prototyp mit Mercedes, danach alle F1-Lackierungen gebacken. Werkzeuge und Ablau
 Rückmeldung: in der Nähe, vor allem am eigenen Auto in der Außenansicht, zu unscharf. Ursache: Verfolgerkameras zeigen das eigene Auto in Detailstufe 1
 (Gegner ab 6 m ebenfalls), und Stufe 1 hatte nur 30 % Maßstab in der Textur (~90 statt 300 Bildpunkte je Meter). Jetzt Stufe 0 und 1 gleich (271/m),
 Textur 2037 × 2041 (Grafikspeicher je Team ~22 MB mit Mipmaps statt ~15 MB). Touch-Geräte: eigene Lackierung voll, andere halb.
+
+### v2.75: F2 mit Texturen, Ansicht von oben vorbereitet
+- F2-Modell abgewickelt (1809 × 1809, 300/m), alle 15 F2-Lackierungen gebacken – sehen aus wie vorher.
+- Technik für die Ansicht von oben fertig (build.py `top`, backen.js mit Höhenkarte), mit einem Testgitter geprüft. Die eigentlichen Draufsichten
+  folgen, sobald Referenzbilder gefunden sind (Auftrag des Nutzers 18.11.: „Bilder von oben suchen, Texturen von allen Seiten komplett, auch F2 und Karts“).
+- Leistungsmessung v2.73 (Monza, volles Feld, Software-Rendering): Zeichenaufrufe, Dreiecke, Shader-Programme gebacken = alt; 162 statt 169 Texturen.
+- shot.js zeigte seit v2.72 immer Russells Mercedes (Titelbildschirm zeigt das Auto des gewählten Fahrers) – setzt jetzt einen Fahrer des Teams.

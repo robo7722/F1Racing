@@ -3376,6 +3376,8 @@ function addPlate(M, x0, x1, z0, z1, y, cls = 0) {
   if (!M) return; for (const Lv of M.lods) { const g = Lv.gloss; if (!g) continue; const n = g.attributes.position.count;
     const ap = (name, sz, extra) => { const o = g.attributes[name].array, a = new Float32Array(o.length + extra.length); a.set(o); a.set(extra, o.length); g.setAttribute(name, new THREE.BufferAttribute(a, sz)); };
     ap('position', 3, [x0, y, z0, x1, y, z0, x1, y, z1, x0, y, z1]); ap('normal', 3, [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0]); ap('uv', 2, [x0 * 3, z0 * 3, x1 * 3, z0 * 3, x1 * 3, z1 * 3, x0 * 3, z1 * 3]);
+    if (g.attributes.uvB) { const P = g.attributes.position.array, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2; let bi = 0, bd = 1e9; for (let i = 0; i < n; i++) { const d = (P[i * 3] - cx) ** 2 + (P[i * 3 + 1] - y) ** 2 + (P[i * 3 + 2] - cz) ** 2; if (d < bd) { bd = d; bi = i; } }   // Lack-Textur: Farbe des nächsten Lackpunkts
+      const U = g.attributes.uvB.array, u = U[bi * 2], v = U[bi * 2 + 1]; ap('uvB', 2, [u, v, u, v, u, v, u, v]); }
     const ix = Array.from(g.index.array); ix.push(n, n + 2, n + 1, n, n + 3, n + 2); g.setIndex(ix); const c = new Uint8Array(n + 4); c.set(g.userData.cls); c.fill(cls, n); g.userData.cls = c; g.computeBoundingSphere(); }
 }
 // F2-Modell: die mitgelieferten Normalen zeigen stellenweise nach innen (uneinheitliche Dreiecksrichtung im Quellmodell) – dort spiegelte der Lack den dunklen Boden: fleckig, kontrastreich, zu dunkel.
@@ -13170,7 +13172,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.74'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.75'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

@@ -1,4 +1,4 @@
-# Echte Lack-Texturen für F1 (und später F2)
+# Echte Lack-Texturen für F1 und F2
 
 Stand: 18.11.2026 (v2.73). Hintergrund und Entscheidung: `docs/IDEE-LIVERIES.md`, Abschnitt „Echte Texturen“.
 
@@ -42,6 +42,13 @@ Die **Startnummer** gehört nicht in die Textur – sie bleibt eine Einblendung 
   (auf 256² verkleinert) als Eckpunktfarben – beim Zusammenfassen der Punkte würden die UVs über die Nähte springen.
 - Service Worker: `liveries/textur/` wird wie die Bögen immer zuerst am Server nachgefragt.
 
+## Ansicht von oben (seit v2.75)
+In `tools/sticker/<Kürzel>.json` ein Eintrag `top` (Beschreibung im Kopf von `build.py`): Foto von oben, Achsmitten (`rear`/`front`) oder
+4+ Passpunkte (`pts`, für schräge Fotos), Aufkleber wie bei der Seite. `build.py` richtet das Foto aus (`.cache/<Kürzel>_oben_ganz.png`,
+300 Pixel je Meter, Nase oben, Raster zum Ausmessen in `_oben_raster.png`) und baut `.cache/<Kürzel>_oben_bogen.png`.
+`backen.js` legt den Bogen auf alle Lackflächen, deren Normale nach oben zeigt (weich ab 0,25), und nur dort, wo die Fläche von oben zu sehen ist
+(Höhenkarte aus Stufe 0, 4 cm Spielraum). Im Spiel kostet das nichts zusätzlich. Ablauf: `build.py <Kürzel>` → `backen.js <Kürzel>` → `shot.js … top,f34`.
+
 ## Vergleich und Prüfen
 `shot.js` setzt seit v2.74 auch bei F1 einen Fahrer des Teams (vorher zeigte der Titelbildschirm immer das Auto des gewählten Fahrers, z. B. Russell).
 `SHOT_Q='?nobake' node tools/sticker/shot.js MER <Vorsilbe> L,f34,top` nimmt die alte Fassung auf, ohne `SHOT_Q` die gebackene.
@@ -50,4 +57,5 @@ Die **Startnummer** gehört nicht in die Textur – sie bleibt eine Einblendung 
 1. Oberseite/Front nach Referenzfotos bemalen: in `backen.js` zusätzliche Projektionen (von oben, von vorn, schräg) aus Präsentations- und
    Rennfotos – kostet im Spiel nichts mehr, weil alles in der Textur landet. Referenzen dafür fehlen noch (es gibt nur offizielle Seitenfotos).
 2. Textur direkt in einem Malprogramm nachbearbeiten (dafür eine Vorlage mit den Umrissen der Stücke erzeugen).
-3. F2 (`f2car.bin`) genauso: `uv.py f2`, F2-Zweig in `teamTemplate` (eigener Shader) umstellen.
+3. ~~F2~~ erledigt in v2.75 (`uv.py f2`: 1809 × 1809, 300 Bildpunkte je Meter). Alle F2-Lackierungen haben ein Lack-Programm und laufen deshalb
+   über `liveryMat` wie F1 (der F2-Zweig in `teamTemplate` wird davon überschrieben). Teams ohne Lack-Programm (RONE) überspringt `backen.js`.
