@@ -470,10 +470,14 @@
   ]
  },
  "top": {
+  "sym": "R",
   "photo": "tools/sticker/.cache/oben/F2_INV_top1.jpg",
   "src": "https://res.cloudinary.com/prod-f2f3/image/upload/v1770000000/f2/global/articles/2026/06_June/GettyImages-2281240826.webp",
   "rear": [222, 336],
   "front": [759, 346],
-  "stickers": []
+  "stickers": [
+   {"name": "gitter", "poly": [[417, 884], [490, 900], [482, 1068], [432, 1064]], "fill": true, "color": "#16181b"},
+   {"name": "heck_invicta", "box": [140, 1594, 360, 1660], "kind": "key", "key": "#e8d53a", "color": "#f7de00", "at": [0, -2.15], "w": 0.72, "sym": false, "smooth": 2}
+  ]
  }
 }
