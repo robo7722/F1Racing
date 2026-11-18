@@ -31,6 +31,8 @@ CARS = {
     'mclaren_mp44':  dict(title='McLaren MP4/4 (1988)', front=1,  wheelbase=None,  big=['BODY']),
 }
 LOD_TRIS = [80000, 26000, 9000]
+# Kameras wie MODELS.cam/.tv im Spiel (Auto-Koordinaten, +z vorne, z = 0 Mitte zwischen den Achsen): [x, y, z, Absenkung des Blickziels in 30 m]
+CAMS = {"lotus49c": {"cockpit": [0, 0.9, 0.02, 0.3], "tv": [0, 1.1, -0.4, 1.8]}, "mclaren_mp44": {"cockpit": [0, 0.88, -0.05, 0.15], "tv": [0, 1.02, -0.18, 1.8]}, "ferrari_f2004": {"cockpit": [0, 0.8, 0.05, 0.3], "tv": [0, 1.16, -0.1, 2.0]}}
 CREASE = np.cos(np.radians(40))
 
 
@@ -400,7 +402,7 @@ def write(cfg, key, outdir, lods, mats, wh, uvoff, uvsc, js, bn):
         stats.append(dict(lod=li, tris=tri, draws=draws))
     wheels = {k: dict(x=round(w['cx'], 4), y=round(w['cy'], 4), z=round(w['cz'], 4), r=round(w['R'], 4), width=round(w['outer'] - w['inner'], 4)) for k, w in wh.items()}
     W.node({'name': key, 'children': root_children, 'extras': {'title': cfg['title'], 'wheels': wheels, 'lods': stats,
-                                                              'lodDistances': [0, 18, 45]}})
+                                                              'lodDistances': [0, 18, 45], 'cams': CAMS[key]}})
     os.makedirs(outdir, exist_ok=True); path = os.path.join(outdir, key + '.glb'); W.save(path)
     print('  ->', path, '%.2f MB' % (os.path.getsize(path) / 1e6), 'Materialien', len(W.js.get('materials', [])), 'Texturen', len(W.js.get('images', [])), stats)
 
