@@ -97,3 +97,8 @@ Prototyp mit Mercedes, danach alle F1-Lackierungen gebacken. Werkzeuge und Ablau
 - Der eigentliche Gewinn kommt erst mit dem nächsten Schritt: Oberseite, Nase und Flügel lassen sich jetzt bemalen (Projektionen von oben/vorn beim Backen
   oder Malprogramm) – dafür fehlen noch Referenzfotos von oben/schräg. Die Seitenfotos in `tools/sticker/*.json` sind noch abrufbar.
 - Sichtbarkeits-Messung (nur sichtbare Dreiecke abwickeln) ausprobiert und verworfen: nur 0,2 von 15,6 m² Lackfläche sind unsichtbar.
+
+### v2.74: Texturen im Rennen so scharf wie im Showroom
+Rückmeldung: in der Nähe, vor allem am eigenen Auto in der Außenansicht, zu unscharf. Ursache: Verfolgerkameras zeigen das eigene Auto in Detailstufe 1
+(Gegner ab 6 m ebenfalls), und Stufe 1 hatte nur 30 % Maßstab in der Textur (~90 statt 300 Bildpunkte je Meter). Jetzt Stufe 0 und 1 gleich (271/m),
+Textur 2037 × 2041 (Grafikspeicher je Team ~22 MB mit Mipmaps statt ~15 MB). Touch-Geräte: eigene Lackierung voll, andere halb.

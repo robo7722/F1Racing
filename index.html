@@ -3751,12 +3751,13 @@ const baked = tk => LIVTEX.has(tk) && !!LIVMAN[tk] && !!(MODELS[LIVMAN[tk].kind]
 const DECAL_TEX = {}, DECAL_SMALL = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
 function decalUniforms(tk) { if (DECAL_TEX[tk]) return DECAL_TEX[tk];
   const U = DECAL_TEX[tk] = { uBake: { value: null }, uBakeOn: { value: 0 }, uDecal: { value: null }, uDecalOn: { value: 0 }, uSheet: { value: null }, uSheetOn: { value: 0 }, uNum: { value: null }, uNumOn: { value: 0 }, uNumCol: { value: new THREE.Color(1, 1, 1) } };
-  const ld = (url, tx, on) => { tx.value = new THREE.TextureLoader().load(url, t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
-    if (DECAL_SMALL && t.image && t.image.width > 1024) { const c = document.createElement('canvas'); c.width = t.image.width >> 1; c.height = t.image.height >> 1; c.getContext('2d').drawImage(t.image, 0, 0, c.width, c.height); t.image = c; }   // Handy/Tablet: halbe Auflösung spart drei Viertel des Grafikspeichers (ein Feld hat bis zu 16 Bögen)
+  const ld = (url, tx, on, full) => { tx.value = new THREE.TextureLoader().load(url, t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+    if (DECAL_SMALL && !full && t.image && t.image.width > 1024) { const c = document.createElement('canvas'); c.width = t.image.width >> 1; c.height = t.image.height >> 1; c.getContext('2d').drawImage(t.image, 0, 0, c.width, c.height); t.image = c; }   // Handy/Tablet: halbe Auflösung spart drei Viertel des Grafikspeichers (ein Feld hat bis zu 16 Bögen)
     t.needsUpdate = true; on.value = 1; }, undefined, () => {}); };
-  if (baked(tk)) ld('liveries/textur/' + tk + '.webp', U.uBake, U.uBakeOn);   // Textur enthält Bogen und Logo schon
+  if (baked(tk)) ld('liveries/textur/' + tk + '.webp', U.uBake, U.uBakeOn, ownLiv(tk));   // Textur enthält Bogen und Logo schon; Touch-Geräte: eigenes Team in voller Auflösung (Verfolgerkamera), alle anderen halb
   else { if (DECALS[tk]) ld('logos/' + DECALS[tk].file + '.png', U.uDecal, U.uDecalOn); if (SHEETS[tk]) ld('liveries/' + tk + '.png', U.uSheet, U.uSheetOn); }
   return U; }
+const ownLiv = tk => { const d = [...F1_DRIVERS, ...F2_DRIVERS].filter(x => x[0] === S.driver); return d.some(x => x[3] === tk || 'F2_' + x[5] === tk); };   // Lackierung des gewählten Fahrers
 const hasDecal = tk => !!(DECALS[tk] || SHEETS[tk] || NUMS[tk]);
 // Alle Aufkleber (Bögen und Teamlogos) werden beim ersten Start auf dem Ladebildschirm geladen (preloadDecals, siehe Spielstart) – danach muss in Menü und Fahrzeugauswahl nichts mehr nachladen.
 const preloadDecals = () => new Promise(res => { const us = Object.keys(LIVMAN).filter(k => DECALS[k] || SHEETS[k] || baked(k)).map(k => decalUniforms(k)), t0 = performance.now();
@@ -13169,7 +13170,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.73'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.74'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

@@ -40,7 +40,7 @@ process.on('exit', freeSlot); process.on('SIGTERM', () => process.exit(1)); proc
   });
   await p.goto('http://f1.test/index.html' + (process.env.SHOT_Q || ''), { waitUntil: 'load', timeout: 180000 });   // SHOT_Q z. B. ?nobake (alte Lack-Projektion zum Vergleich)
   const ser = cfg.kind, team = cfg.team || key, drv = cfg.driver || '';
-  const cmd = `setSeries(${JSON.stringify(ser)}, true); S.team = ${JSON.stringify(team)}; ${drv ? 'S.driver = ' + JSON.stringify(drv) + ';' : ''} SHOW.team = null; showroomTeam(${JSON.stringify(team)}); SHOW.cars.map(m => m.code + ':' + m.g.visible).join(',')`;
+  const cmd = `setSeries(${JSON.stringify(ser)}, true); S.team = ${JSON.stringify(team)}; ${drv ? 'S.driver = ' + JSON.stringify(drv) + ';' : 'S.driver = (ALL.find(c => c.team === ' + JSON.stringify(team) + ') || {}).code || S.driver;'} SHOW.team = null; showroomTeam(${JSON.stringify(team)}); SHOW.cars.map(m => m.code + ':' + m.g.visible).join(',')`;
   let ok = null;
   for (let i = 0; i < 90 && ok === null; i++) { await p.waitForTimeout(2000); ok = await p.evaluate(c => { try { return window.__stkEval ? String(window.__stkEval(c)) : null; } catch (e) { return null; } }, cmd); }
   console.log('Showroom:', ok);

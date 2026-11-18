@@ -18,8 +18,10 @@ KIND = sys.argv[1] if len(sys.argv) > 1 else 'f1'
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.normpath(os.path.join(HERE, '..', '..'))
 NAME = 'car.bin' if KIND == 'f1' else 'f2car.bin'
 SRC = os.path.join(HERE, 'quelle', NAME); DST = os.path.join(ROOT, NAME)
-TPU = 300                  # Bildpunkte je Meter in Stufe 0 (heutige Aufkleberbögen: ~370, aber nur von der Seite)
-STUFE = [1.0, 0.30, 0.15]  # Längenmaßstab je Detailstufe in der Textur
+TPU = 300                  # Bildpunkte je Meter, Startwert – wird verkleinert, bis die Textur höchstens MAXPX breit/hoch ist
+MAXPX = 2048
+STUFE = [1.0, 1.0, 0.15]   # Längenmaßstab je Detailstufe in der Textur. Stufe 1 voll: das eigene Auto fährt in den Verfolgerkameras mit Stufe 1, Gegner ab 6 m
+                           # (v2.73 hatte 0,30 -> im Rennen deutlich unschärfer als im Showroom). Stufe 2 erst ab 35 m.
 PAD = 2
 
 if not os.path.exists(SRC):
@@ -42,10 +44,12 @@ for d in chunks:
     _, first, inv = np.unique(np.round(P / 2e-4).astype(np.int64), axis=0, return_index=True, return_inverse=True)
     atlas.add_mesh((P[first] * STUFE[L]).astype(np.float32), inv.reshape(-1)[T].astype(np.uint32))
     parts.append((d, T))
-co = xatlas.ChartOptions(); po = xatlas.PackOptions(); po.padding = PAD; po.bilinear = True; po.texels_per_unit = TPU; po.resolution = 0; po.rotate_charts = True
-atlas.generate(co, po)
-W, Hh = atlas.width, atlas.height
-print(f'Textur {W} × {Hh} ({W * Hh / 1e6:.2f} Mio. Bildpunkte, {atlas.chart_count} Stücke, Auslastung {atlas.utilization:.2f}), {TPU} Bildpunkte je Meter in Stufe 0')
+while True:
+    co = xatlas.ChartOptions(); po = xatlas.PackOptions(); po.padding = PAD; po.bilinear = True; po.texels_per_unit = TPU; po.resolution = 0; po.rotate_charts = True
+    atlas.generate(co, po); W, Hh = atlas.width, atlas.height
+    if max(W, Hh) <= MAXPX: break
+    TPU *= MAXPX / max(W, Hh) * 0.995
+print(f'Textur {W} × {Hh} ({W * Hh / 1e6:.2f} Mio. Bildpunkte, {atlas.chart_count} Stücke, Auslastung {atlas.utilization:.2f}), {TPU:.0f} Bildpunkte je Meter in Stufe 0 und 1')
 
 for k, (d, T) in enumerate(parts):
     vm, ix, uv = atlas[k]; ix = ix.astype(np.int64).reshape(-1, 3)
