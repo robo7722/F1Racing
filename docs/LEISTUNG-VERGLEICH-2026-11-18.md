@@ -42,3 +42,20 @@ je Kamera 6 Stellen der Runde). Renderzeit läuft in SwiftShader (Software) und 
 
 Vergleich wiederholen: alten Stand mit `git worktree add <ordner> <commit>` auschecken, je Stand `python3 -m http.server <port>`, dann
 `node qc/perf-vergleich.js <port> Monza f1`.
+
+## Nachtrag: Vergleich mit gestern (v2.63, 16.11. 01:40 – am 17.11. gab es keine Änderungen)
+
+F1 Monza, Läufe nacheinander (nicht parallel):
+
+| | v2.63 (gestern) | v2.82 (jetzt) | v2.82 ohne Lack-Texturen (`?nobake`) |
+|---|---|---|---|
+| Zeichenaufrufe Verfolger / Cockpit / TV | 198 / 237 / 236 | 186 / 218 / 218 | 188 / 216 / 216 |
+| Dreiecke (Tsd.) | 639 / 667 / 661 | 624 / 629 / 626 | 629 / 621 / 617 |
+| Texturspeicher | 278 MB | 270 MB | 278 MB |
+| Shader | 155 | 147 | 147 |
+| Renderzeit SwiftShader (ms) | 1538 / 1863 / 1516 | 1632–1661 / 1929–1941 / 1542–1570 | 1647 / 1918 / 1543 |
+
+- Gegenüber gestern **weniger** Arbeit für die Grafikkarte: −6 % (Verfolger) bis −8 % (Cockpit/TV) Zeichenaufrufe, −6 % Dreiecke im Cockpit/TV,
+  8 Shader weniger (Leistungsrunde v2.64–v2.67 heute früh).
+- Die Software-Renderzeit liegt ~2–6 % höher. Mit und ohne Lack-Texturen gleich → **nicht** die Texturen. Größenordnung im Rauschen von SwiftShader;
+  auf einem echten Handy nicht überprüft.
