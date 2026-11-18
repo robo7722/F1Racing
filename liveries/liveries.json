@@ -28,6 +28,7 @@
     }
    ]
   },
+  "halo": "#e2529f",
   "glsl": "vec3 B = #2080d0, Pk = #f272b6, K = #101216;\nvec3 col = B;\ncol = mix(col, K, (1.0 - aaS(p.y - 0.45 - 0.2 * clamp(-1.0 - p.z, 0.0, 1.0))) * (1.0 - aaS(p.z + 0.9)));\ncol = mix(col, K, 1.0 - aaS(p.z + 1.22));\nfloat bl = 0.482 + 0.10 * (p.z + 0.88);\ncol = mix(col, Pk, band(p.y + 0.62 * p.z, -0.064, 0.256) * (1.0 - aaS(p.y - 0.80 - 0.356 * (p.z + 0.88))) * aaS(p.y - bl));\ncol = mix(col, K, band(p.z, -0.92, -0.3) * aaS(p.y - 0.37 - 0.19 * (p.z + 0.92)) * (1.0 - aaS(p.y - bl)));\nfloat yl = 0.80 + 0.47 * clamp(p.z + 0.95, -0.25, 0.24) + 0.17 * clamp(p.z + 0.71, 0.0, 0.42);\ncol = mix(col, K, aaS(p.y - yl) * (1.0 - aaS(p.z + 0.28)));\ncol = mix(col, K, (1.0 - aaS(p.y - 0.25)) * (1.0 - aaS(p.z - 1.5)));\nif (p.z < -1.9 && p.y > 0.61) col = Pk;\nif (p.z > 2.42 && p.y < 0.36) col = Pk;\nif (c > 0.5 && c < 1.5) { col = K; if (p.z > 1.9) col = Pk; if (p.z < -1.9) col = Pk; }\nif (c > 1.5 && c < 2.5) col = Pk;\nif (c > 6.5) col = Pk;\nreturn col;"
  },
  "AST": {
@@ -67,6 +68,7 @@
     }
    ]
   },
+  "halo": "#07523b",
   "glsl": "vec3 G = #00594a, K = #0d1110;\nfloat sd = aaS(abs(p.x) - 0.2); float yb = mix(0.31, 0.43 + clamp(0.07 + 0.09 * (p.z + 0.34), 0.0, 0.14) * band(p.z, -0.75, 0.22), band(p.z, -1.6, 0.75) * sd); vec3 col = mix(K, G, aaS(p.y - yb));\ncol = mix(col, K, aaS(p.y - 0.9) * band(p.z, -0.42, 0.05));\nif (p.z > 2.2 && p.y < 0.36) col = K;\nif (p.z < -1.72) col = mix(K, G, aaS(p.y - 0.5));\nreturn col;"
  },
  "AUD": {
@@ -89,6 +91,7 @@
     }
    ]
   },
+  "halo": "#9a9693",
   "glsl": "vec3 Ti = #adb1b6, K = #131417;\nvec3 col = mix(K, Ti, aaS(p.z + 0.19));\nif (c < 6.5 && p.z > 2.05 && abs(p.x) > 0.2 && p.y < 0.35) col = K;\nreturn col;"
  },
  "CAD": {
@@ -120,6 +123,7 @@
     }
    ]
   },
+  "halo": "#141414",
   "glsl": "vec3 K = #0d0e10, W = #e8e8e8, G = #b9bec4;\nvec3 col = K;\nif (c < 6.5 && p.z < -1.74 && p.y > 0.73) col = W;\nif (c < 6.5 && p.z > 2.05 && abs(p.x) > 0.2 && p.y < 0.35) col = G;\nif (c < 6.5 && p.z > 2.55) col = G;\nreturn col;"
  },
  "F2_AIX": {
@@ -152,6 +156,7 @@
    "tip": 3457576,
    "metal": 0.3
   },
+  "halo": "#4cc232",
   "glsl": "vec3 col = #34c228;\nif (p.z < -1.9 && p.y > 0.6 && abs(p.x) < 0.52) col = #15171a;\nif (p.z > -1.95 && p.z < -0.6 && p.y < 0.5 && (p.y - 0.42) < -1.53 * (p.z + 0.90)) col = #15171a;\nreturn col;"
  },
  "F2_BLK": {
@@ -192,6 +197,7 @@
    "tip": 723983,
    "metal": 0.4
   },
+  "halo": "#dcdfe3",
   "glsl": "vec3 col = #0b0c0f;\nif (p.z < -0.12 && p.z > -1.5 && p.y > 0.72 && abs(p.x) < 0.3) col = #e9edf1;\nreturn col;"
  },
  "F2_CAMW": {
@@ -226,6 +232,7 @@
    "split": 0.25,
    "metal": 0.25
   },
+  "halo": "#e8eaed",
   "glsl": "vec3 wht = #f2f3f5; vec3 blk = #0c0d10; vec3 red = #e0121e;\nbool fw = p.z > 2.15 && p.y < 0.36 && abs(p.x) > 0.14; bool rw = p.z < -1.9 && p.y > 0.6;\nif (fw || rw) return blk;\nvec3 col = wht;\nfloat yl = 0.55 - clamp((p.z - 1.08) / 0.65, 0.0, 1.0) * 0.085 - max(p.z - 1.73, 0.0) * 0.35 + 0.045 * clamp((p.z - 1.1) / 0.3, 0.0, 1.0);\nif (p.z > 0.5) { if (p.y < yl) col = blk; else if (p.y < yl + 0.022 && p.z > 1.2) col = red; }\nif (p.z < -1.3 || (p.y < 0.66 && p.z < -1.12 + (0.66 - p.y) * 0.3)) col = blk;\nreturn col;"
  },
  "F2_DAM": {
@@ -260,6 +267,7 @@
    "split": 0.3,
    "metal": 0.3
   },
+  "halo": "#0c2a66",
   "glsl": "vec3 navy = #0c1a52; vec3 lb = #3a9cec; vec3 blk = #0b0d14;\nbool fw = p.z > 2.15 && p.y < 0.36 && abs(p.x) > 0.14; bool rw = p.z < -1.9 && p.y > 0.6;\nif (fw || rw) return blk;\nvec3 col = navy;\nfloat yt = 0.44 - max(p.z - 1.73, 0.0) * 0.33;\nif (p.z > 0.95 && p.z < 2.72 && abs(p.x) < 0.05 + 0.10 * clamp((2.7 - p.z) / 1.7, 0.0, 1.0) && p.y > yt) col = lb;\nif (p.z < -0.57 && p.z > -1.3 && p.y > 0.55) col = lb;\nreturn col;"
  },
  "F2_GREY": {
@@ -300,6 +308,7 @@
    "tip": 1513499,
    "metal": 0.45
   },
+  "halo": "#141414",
   "glsl": "vec3 col = #17181b;\nreturn col;"
  },
  "F2_HIT": {
@@ -332,6 +341,7 @@
    "tip": 790037,
    "metal": 0.6
   },
+  "halo": "#141414",
   "glsl": "vec3 S = #a0a8bc; vec3 K = #0c0e15; vec3 col = S;\nif (p.z > 1.85 && abs(p.x) > 0.17) col = K;\nfloat yb = 0.424 - 0.25 * (p.z - 1.75);\nif (p.z > 1.75 && abs(p.x) < 0.17) col = mix(K, col, aaS(p.y - yb));\nif (p.z > 1.55 && p.z < 2.4 && abs(p.x) < 0.11 && p.y > yb) col = K;\nif (p.z < 0.1 && p.z > -0.8) col = mix(col, K, aaS(p.y - (p.z > -0.18 ? 0.85 : 0.85 + (-0.18 - p.z) * 0.30)));\nif (p.y > 0.72 && p.z > 0.0 && p.z < 0.95) col = K;\nif (p.z < -1.93) col = K;\nreturn col;"
  },
  "F2_INV": {
@@ -365,6 +375,7 @@
    "tip": 1316379,
    "metal": 0.15
   },
+  "halo": "#141414",
   "glsl": "vec3 Y = #f7de00; vec3 K = #14161b; vec3 col = Y;\nif (p.z > 1.85 && abs(p.x) > 0.17) col = K;\nfloat yb = p.z < 1.75 ? 0.534 - 0.167 * (p.z - 1.093) : 0.424 - 0.25 * (p.z - 1.75);\nif (p.z > 1.08 && (p.z < 2.15 || abs(p.x) < 0.17)) col = mix(K, col, aaS(p.y - yb));\nif (p.z < 0.1 && p.z > -0.8) col = mix(col, K, aaS(p.y - (p.z > -0.18 ? 0.85 : 0.85 + (-0.18 - p.z) * 0.30)));\nif (p.y > 0.72 && p.z > 0.0 && p.z < 0.95) col = K;\nif (p.z < -1.93) col = K;\nreturn col;"
  },
  "F2_ITA": {
@@ -398,6 +409,7 @@
    "split": 0.36,
    "metal": 0.25
   },
+  "halo": "#d8102c",
   "glsl": "vec3 R = #e01010; vec3 W = #f2f2f2; vec3 G = #0a9a3c; vec3 col = R; float sd = aaS(abs(p.x) - 0.15);\nfloat yu = 0.655 - 0.146 * clamp(-0.6 - p.z, 0.0, 1.0); float yl = max(0.385, 0.555 + 0.19 * p.z);\ncol = mix(col, W, sd * band(p.z, -1.45, 0.35) * band(p.y, yl, yu));\ncol = mix(col, G, sd * (1.0 - aaS(p.z + 0.78 + 0.42 * (0.41 - p.y))) * (1.0 - aaS(p.y - yl + 0.01)) * aaS(p.z + 1.5));\ncol = mix(col, G, band(p.z, -1.7, -0.47) * aaS(p.y - 0.71 + 0.08 * clamp((-0.45 - p.z) / 0.65, 0.0, 1.0)));\nreturn col;"
  },
  "F2_ITA2": {
@@ -429,6 +441,7 @@
    "tip": 744008,
    "metal": 0.4
   },
+  "halo": "#d8102c",
   "glsl": "vec3 G = #0b5a48; vec3 K = #0a1f1a; vec3 L = #cfe034; vec3 col = G;\nfloat rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.6);\ncol = mix(col, K, rw * aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.57)));\nreturn col;"
  },
  "F2_ORA": {
@@ -469,6 +482,7 @@
    "tip": 1316120,
    "metal": 0.25
   },
+  "halo": "#141414",
   "glsl": "vec3 O = #ff5a08; vec3 K = #141518; vec3 col = O;\ncol = mix(col, K, aaS(p.z - 2.0)); col = mix(col, K, aaS(abs(p.x) - 0.86) * aaS(p.z - 1.6) * (1.0 - aaS(p.y - 0.55)));\ncol = mix(col, K, band(p.z, -1.4, -0.42) * aaS(p.y - 0.925 - 0.25 * (p.z + 0.413)));\nfloat rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.45);\ncol = mix(col, K, rw * (1.0 - aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.57))));\nreturn col;"
  },
  "F2_PINK_ART": {
@@ -500,6 +514,7 @@
    "tip": 15500474,
    "metal": 0.25
   },
+  "halo": "#141414",
   "glsl": "vec3 P = #ec84ba; vec3 R = #d8232a; vec3 col = P;\n// Heckflügel oben rot wie bei den anderen pinken Alpine-Autos (Fotos MP #9 und ART #16, Monza/Baku 2026)\nfloat rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.6);\ncol = mix(col, R, rw * aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.57)));\nreturn col;"
  },
  "F2_PINK_MPM": {
@@ -531,6 +546,7 @@
    "tip": 15899332,
    "metal": 0.25
   },
+  "halo": "#141414",
   "glsl": "vec3 P = #f29ac4; vec3 N = #151c36; vec3 R = #d8232a; vec3 col = P;\nfloat rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.6);\ncol = mix(col, R, rw * aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.57)));\ncol = mix(col, N, aaS(abs(p.x) - 0.86) * aaS(p.z - 1.6) * (1.0 - aaS(p.y - 0.55)));\nreturn col;"
  },
  "F2_PINK_ROD": {
@@ -562,6 +578,7 @@
    "tip": 15500474,
    "metal": 0.25
   },
+  "halo": "#e8eaed",
   "glsl": "vec3 P = #ec84ba; vec3 R = #d8232a; vec3 col = P;\n// Heckflügel oben rot wie bei den anderen pinken Alpine-Autos (Fotos MP #9 und ART #16, Monza/Baku 2026)\nfloat rw = (1.0 - aaS(p.z + 1.9)) * aaS(p.y - 0.6);\ncol = mix(col, R, rw * aaS(p.y - 1.0) * (1.0 - aaS(abs(p.x) - 0.57)));\nreturn col;"
  },
  "F2_TRI": {
@@ -596,6 +613,7 @@
    "tip": 15527666,
    "metal": 0.3
   },
+  "halo": "#1a2050",
   "glsl": "float yr = p.z > 1.2 ? mix(0.535, 0.30, clamp((p.z - 1.2) / 1.4, 0.0, 1.0)) : (p.z > -0.6 ? 0.535 : mix(0.535, 0.33, clamp((-0.6 - p.z) / 0.8, 0.0, 1.0)));\nyr = mix(yr, 0.72, aaS(abs(p.x) - 0.36) * band(p.z, -1.35, 0.75));\nvec3 col = mix(#1512a8, #ee1018, aaS(p.y - yr));\nif (p.z > 0.5 && p.z < 2.6) col = mix(col, #eceef2, band(p.y - yr, -0.011, 0.011));\nif (p.z < -0.2 && p.z > -1.4 && p.y > 0.67) col = #eceef2;\nif (p.z > 2.15 && p.y < 0.36 && abs(p.x) > 0.14) col = #1512a8;\nif (p.z < -1.9 && p.y > 0.6) col = (abs(p.x) > 0.52 && p.y < 0.85) ? #1512a8 : #15171a;\nreturn col;"
  },
  "F2_VAR": {
@@ -628,6 +646,7 @@
    "tip": 1513499,
    "metal": 0.5
   },
+  "halo": "#141414",
   "glsl": "vec3 col = #17181b;\nif (p.z > 0.85 && p.z < 2.45 && abs(p.x) < 0.09 && p.y > 0.25) col = #ff5a00;\nif (p.z < -1.9 && p.y > 0.95 && abs(p.x) < 0.52) col = #ff5a00;\nreturn col;"
  },
  "FER": {
@@ -667,6 +686,7 @@
     }
    ]
   },
+  "halo": "#141414",
   "glsl": "vec3 R = #cf1018, W = #f3f3f1, K = #141416;\nvec3 col = R;\ncol = mix(col, W, aaS(p.y - 0.72) * aaS(p.z + 0.45 + 1.2 * (p.y - 0.6)) * (1.0 - aaS(p.z - 0.30)));\ncol = mix(col, K, (1.0 - aaS(p.y - 0.545)) * band(p.z, 0.80, 1.75));\ncol = mix(col, K, (1.0 - aaS(p.y - 0.43)) * band(p.z, 0.55, 0.81));\nif (p.z < -1.72 && p.y > 0.2) col = K;\nif (p.z > 2.1 && p.y < 0.30) col = K;\nif (c > 0.5 && c < 1.5) col = K;\nif (c > 1.5 && c < 2.5) col = K;\nif (c > 6.5) col = K;\nreturn col;"
  },
  "HAA": {
@@ -689,6 +709,7 @@
     }
    ]
   },
+  "halo": "#e5e5e5",
   "glsl": "vec3 W = #eceef1, Rd = #e5161a;\nvec3 col = W;\nif (c < 6.5) col = mix(col, Rd, aaS(p.y - 0.86) * band(p.z, -0.32, 0.03));\nreturn col;"
  },
  "MCL": {
@@ -711,6 +732,7 @@
     }
    ]
   },
+  "halo": "#141414",
   "glsl": "vec3 P = #ff7a00, A = #0e0f11, T = #0d5f85;\nvec3 col = A;\nfloat og = max(1.0 - aaS(p.z - (-1.30 + (0.86 - p.y))), aaS(p.z - ((p.y < 0.56 && abs(p.x) > 0.3) ? 1.45 : 0.95)));\nog = max(og, aaS(p.y - 0.58) * aaS(p.z - (-0.30 + (0.86 - p.y) * 0.87)));\ncol = mix(col, P, og);\ncol = mix(col, T, aaS(p.y - 0.84) * aaS(p.z - (-0.48 + 0.94 * (0.99 - p.y))) * (1.0 - aaS(p.z - 0.06)));\nif (p.z < -1.9) col = mix(A, P, aaS(p.y - 0.72));\nif (c > 0.5 && c < 1.5) col = p.z > 1.5 ? P : mix(A, P, aaS(p.y - 0.72));\nif (c > 1.5 && c < 2.5) col = P;\nif (c > 6.5) col = A;\nreturn col;"
  },
  "MER": {
@@ -750,6 +772,7 @@
     }
    ]
   },
+  "halo": "#141414",
   "glsl": "vec3 K = #0d0f12, T = #00a19c;\nvec3 col = K;\nif (c > 0.5 && c < 1.5) col = mix(K, T, band(p.y, 0.98, 1.02));\nreturn col;"
  },
  "RB": {
@@ -772,6 +795,7 @@
     }
    ]
   },
+  "halo": "#141414",
   "glsl": "vec3 W = #f2f3f6, Cb = #1b1c20, Y = #f4cf2e, Bm = #1740b8;\nvec3 col = W;\nfloat yl = 0.67 + 0.545 * clamp(p.z + 1.26, -0.3, 0.44) + 0.15 * clamp(p.z + 0.82, 0.0, 0.55);\ncol = mix(col, Cb, aaS(p.y - yl) * (1.0 - aaS(p.z + 0.28)));\ncol = mix(col, Y, aaS(p.y - 0.86) * band(p.z, -0.28, 0.15));\n// Blau wie am echten Auto, als glatte Kurven am Modell: unten entlang, vorn am Seitenkasten hoch, hinten als Keil ueber dem weissen Feld mit dem VISA-Schriftzug\nfloat Lb = 0.232 - 0.053 * clamp((p.z + 0.948) / 0.483, 0.0, 1.0) + 0.106 * clamp((p.z + 0.465) / 0.463, 0.0, 1.0) + 0.105 * clamp((p.z + 0.002) / 0.378, 0.0, 1.0) + 0.189 * clamp((p.z - 0.376) / 0.126, 0.0, 1.0) + 0.063 * clamp((p.z - 0.502) / 0.337, 0.0, 1.0);\nfloat Ub = 0.495 + 0.073 * clamp((-0.549 - p.z) / 0.399, 0.0, 1.0) + 0.106 * clamp((-0.948 - p.z) / 0.368, 0.0, 1.0) + 0.10 * clamp((-1.316 - p.z) / 0.35, 0.0, 1.0);\nfloat yb = 0.20 + 0.07 * clamp((p.z + 1.0) / 0.052, 0.0, 1.0) + 0.151 * clamp((p.z + 0.948) / 0.105, 0.0, 1.0) + 0.074 * clamp((p.z + 0.843) / 0.294, 0.0, 1.0);\nfloat bl = max((1.0 - aaS(p.y - Lb)) * (1.0 - aaS(p.z - 0.9)), (1.0 - aaS(p.y - Ub)) * aaS(p.y - yb) * (1.0 - aaS(p.z + 0.549)));\ncol = mix(col, Bm, bl * aaS(p.z + 1.62));\ncol = mix(col, Cb, band(p.z, 0.6, 1.34) * (1.0 - aaS(p.y - 0.345)));\ncol = mix(col, Cb, aaS(p.y - 0.70) * (1.0 - aaS(p.z + 1.02)));\ncol = mix(col, Cb, 1.0 - aaS(p.z + 1.92));\ncol = mix(col, Cb, 1.0 - aaS(p.y - 0.15));\nreturn col;"
  },
  "RBR": {
@@ -803,6 +827,7 @@
     }
    ]
   },
+  "halo": "#141414",
   "glsl": "vec3 N = #0b1236, B = #101f8c, K = #14151a;\nvec3 col = mix(N, B, max(smoothstep(0.40, 0.56, p.y), aaS(p.z - 1.2)));\ncol = mix(col, #ffc906, band(p.z, -0.28, 0.05) * aaS(p.y - 0.88) * (1.0 - aaS(abs(p.x) - 0.11)));\nif (p.z < -1.9) col = mix(K, B, aaS(p.y - 0.72));\nif (c > 0.5 && c < 1.5) col = p.z > 1.9 ? B : mix(K, B, aaS(p.y - 0.72));\nif (c > 1.5 && c < 2.5) col = B;\nif (c > 6.5) col = K;\nreturn col;"
  },
  "RON": {
@@ -845,6 +870,7 @@
     }
    ]
   },
+  "halo": "#141414",
   "glsl": "vec3 B = #1846d8, W = #f4f6fa, K = #14161c;\nvec3 col = B; float sd = aaS(abs(p.x) - 0.22);\ncol = mix(col, K, (1.0 - aaS(p.y - 0.28)) * sd);\ncol = mix(col, W, band(p.y, 0.30, 0.385) * band(p.z, -0.80, -0.28) * sd);\ncol = mix(col, K, (1.0 - aaS(p.y - 0.56)) * band(p.z, 0.6, 1.55) * aaS(abs(p.x) - 0.1));\ncol = mix(col, K, aaS(p.y - 0.88) * band(p.z, -0.45, 0.0));\nif (p.z < -1.72 && p.y > 0.36) col = mix(W, #0c1e9a, aaS(p.y - 0.78));\nif (p.z > 2.2 && p.y < 0.36) col = K;\nreturn col;"
  },
  "_num": [

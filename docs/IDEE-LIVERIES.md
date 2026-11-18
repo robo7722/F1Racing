@@ -109,3 +109,11 @@ Textur 2037 × 2041 (Grafikspeicher je Team ~22 MB mit Mipmaps statt ~15 MB). To
   folgen, sobald Referenzbilder gefunden sind (Auftrag des Nutzers 18.11.: „Bilder von oben suchen, Texturen von allen Seiten komplett, auch F2 und Karts“).
 - Leistungsmessung v2.73 (Monza, volles Feld, Software-Rendering): Zeichenaufrufe, Dreiecke, Shader-Programme gebacken = alt; 162 statt 169 Texturen.
 - shot.js zeigte seit v2.72 immer Russells Mercedes (Titelbildschirm zeigt das Auto des gewählten Fahrers) – setzt jetzt einen Fahrer des Teams.
+
+### v2.76/v2.77: Überschneidungen und Halos (Rückmeldungen 18.11.2026)
+- Doppelte Sponsoren: was der Seitenbogen schon trägt (Schulter der Motorabdeckung, Seitenkasten-Rand), nicht noch einmal aus der Draufsicht nehmen
+  (Mercedes: Microsoft/Solera/TeamViewer standen doppelt). Seitenbogen läuft jetzt weich aus (Normale 0,3 → 0,55 statt harter Kante bei 0,45),
+  Draufsicht greift erst ab 0,5 (weich bis 0,72).
+- Halo je Lackierung einfarbig in der echten Farbe, ohne Logos: `tools/sticker/halo.json` (am oberen Bügel der Seitenfotos abgelesen) → `halo` in
+  liveries.json → `liveryMat` (Klasse 7) und TV-Halo (`haloFlat`). Bunt: Alpine rosa, Aston Martin grün, Audi grau, Haas weiß; F2: AIX grün,
+  ITA rot, DAMS/Trident dunkelblau, BLK/Campos/Rodin hell; sonst schwarz.

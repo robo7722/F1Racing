@@ -1,0 +1,8 @@
+{
+ "_info": "Farbe des Halos je Lackierung (einfarbig, ohne Logos), abgelesen am oberen Bügel in den offiziellen Seitenfotos 2026 (18.11.2026). build.py schreibt sie als 'halo' in liveries/liveries.json.",
+ "ALP": "#e2529f", "AST": "#07523b", "AUD": "#9a9693", "CAD": "#141414", "FER": "#141414", "HAA": "#e5e5e5",
+ "MCL": "#141414", "MER": "#141414", "RB": "#141414", "RBR": "#141414", "WIL": "#141414",
+ "F2_AIX": "#4cc232", "F2_BLK": "#dcdfe3", "F2_CAMW": "#e8eaed", "F2_DAM": "#0c2a66", "F2_GREY": "#141414", "F2_HIT": "#141414",
+ "F2_INV": "#141414", "F2_ITA": "#d8102c", "F2_ITA2": "#d8102c", "F2_ORA": "#141414", "F2_PINK_ART": "#141414", "F2_PINK_MPM": "#141414",
+ "F2_PINK_ROD": "#e8eaed", "F2_TRI": "#1a2050", "F2_VAR": "#141414"
+}

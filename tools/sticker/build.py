@@ -217,8 +217,11 @@ def build(key):
 
 def manifest():
     out = {}
+    try: HALO = json.load(open(os.path.join(HERE, 'halo.json'), encoding='utf-8'))   # Halo-Farben je Lackierung (eigene Datei)
+    except Exception: HALO = {}
     for f in sorted(glob.glob(os.path.join(HERE, '*.json'))):
         key = os.path.basename(f)[:-5]
+        if key == 'halo': continue
         try: cfg = json.load(open(f, encoding='utf-8'))
         except Exception as e: print('!! übersprungen', key, e); continue
         m = {'kind': cfg['kind']}
@@ -228,6 +231,7 @@ def manifest():
         if cfg.get('number') and cfg['number'].get('spots'): m['num'] = {'color': cfg['number'].get('color', '#ffffff'), 'list': cfg['number']['spots']}
         if cfg.get('drivers'): m['drivers'] = cfg['drivers']
         if cfg.get('liv'): m['liv'] = {k: (int(v.lstrip('#'), 16) if isinstance(v, str) else v) for k, v in cfg['liv'].items()}
+        if HALO.get(key): m['halo'] = HALO[key]
         if cfg.get('glsl'): m['glsl'] = cfg['glsl'] if isinstance(cfg['glsl'], str) else '\n'.join(cfg['glsl'])
         out[key] = m
     out['_num'] = sorted(os.path.basename(f)[:-4] for f in glob.glob(os.path.join(ROOT, 'liveries', 'num', '*.png')))
@@ -237,6 +241,6 @@ def manifest():
 
 if __name__ == '__main__':
     keys = sys.argv[1:]
-    if keys == ['all']: keys = sorted(os.path.basename(f)[:-5] for f in glob.glob(os.path.join(HERE, '*.json')))
+    if keys == ['all']: keys = sorted(os.path.basename(f)[:-5] for f in glob.glob(os.path.join(HERE, '*.json')) if not f.endswith('halo.json'))
     for k in keys: build(k)
     manifest()
