@@ -3297,7 +3297,7 @@ function parseCarBin(CARBIN) {
   if (!CARBIN) return null;
   try {
     const hl = new DataView(CARBIN).getUint32(0, true), hdr = JSON.parse(new TextDecoder().decode(new Uint8Array(CARBIN, 4, hl))), base = 4 + hl;
-    const out = { fw: hdr.fw, rw: hdr.rw, hwf: hdr.hwf, hwr: hdr.hwr, lods: [{}, {}, {}], halo: null };
+    const out = { fw: hdr.fw, rw: hdr.rw, hwf: hdr.hwf, hwr: hdr.hwr, lods: [{}, {}, {}], halo: null, tex: hdr.tex || null };   /* tex: Größe der Lack-Textur, wenn der Lack-Teil abgewickelt ist (tools/textur/uv.py) */
     for (const c of hdr.chunks) {
       const q = new Int16Array(CARBIN, base + c.pos, c.nv * 3), n = new Int8Array(CARBIN, base + c.nrm, c.nv * 4), cl = new Uint8Array(CARBIN, base + c.cls, c.nv);
       const ix = c.i32 ? new Uint32Array(CARBIN, base + c.idx, c.ni) : new Uint16Array(CARBIN, base + c.idx, c.ni);
@@ -3309,6 +3309,7 @@ function parseCarBin(CARBIN) {
       }
       const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(p, 3)); g.setAttribute('normal', new THREE.BufferAttribute(nn, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
       g.setIndex(new THREE.BufferAttribute(ix.slice(), 1)); g.userData.cls = cl.slice(); g.computeBoundingSphere();
+      if (c.uv) { const u = new Uint16Array(CARBIN, base + c.uv, c.nv * 2), f = new Float32Array(c.nv * 2); for (let i = 0; i < f.length; i++) f[i] = u[i] / 65535; g.setAttribute('uvB', new THREE.BufferAttribute(f, 2)); }   // UV in der Lack-Textur (liveries/textur/<Kürzel>.png)
       if (c.name === 'halo') out.halo = g; else out.lods[c.lod][c.name] = g;
     }
     return out;
@@ -3428,7 +3429,7 @@ if (CARM2 && !CARM2.halo) { const h = new THREE.BufferGeometry(); h.setAttribute
 function paintGeo(g, fn) {
   const cl = g.userData.cls, p = g.attributes.position.array, c = new Float32Array(cl.length * 3), t = new THREE.Color();
   for (let i = 0; i < cl.length; i++) { fn(cl[i], p[i * 3], p[i * 3 + 1], p[i * 3 + 2], t); c[i * 3] = t.r; c[i * 3 + 1] = t.g; c[i * 3 + 2] = t.b; }
-  const o = new THREE.BufferGeometry(); for (const k of ['position', 'normal', 'uv']) o.setAttribute(k, g.attributes[k]);
+  const o = new THREE.BufferGeometry(); for (const k of ['position', 'normal', 'uv', 'uvB']) if (g.attributes[k]) o.setAttribute(k, g.attributes[k]);
   o.setIndex(g.index); o.setAttribute('color', new THREE.BufferAttribute(c, 3)); o.setAttribute('aCls', new THREE.BufferAttribute(Float32Array.from(cl), 1)); o.boundingSphere = g.boundingSphere; return o;
 }
 // Beschriftung der Reifenflanke wie am echten Reifen (PIRELLI, P ZERO, zwei Bögen mit Karomuster) in der Farbe der Mischung:
@@ -3742,25 +3743,31 @@ for (const k in LIVMAN) { const m = LIVMAN[k]; if (!m || !SHEET_BOX[m.kind]) con
   if (m.liv && LIVS[k]) Object.assign(LIVS[k], m.liv); else if (m.liv && m.kind === 'f2') LIVS[k] = { kind: 'f2', metal: .25, ...m.liv };   // neue F2-Lackierung nur aus der Datei
   if (m.kind === 'f2') for (const c of m.drivers || []) { const d = F2_DRIVERS.find(x => x[0] === c); if (d && LIVS[k]) d[5] = k.slice(3); }   // drivers = Fahrer, die diese Lackierung fahren
   if (m.glsl) LIVERY[k] = m.glsl.replace(/#([0-9a-f]{6})/gi, (q, h) => lc(parseInt(h, 16))); }
+// Echte Lack-Texturen (seit v2.73): liveries/textur/<Kürzel>.webp, gebacken mit tools/textur/backen.js aus Lack-Programm, Aufkleberbogen und Teamlogo,
+// auf die abgewickelten Lack-Teile des Modells (UV-Attribut uvB, tools/textur/uv.py). Ersetzt Bogen und Logo im Shader; die Startnummer bleibt eine Einblendung je Fahrer.
+// Testschalter: ?nobake in der Adresse = alte Projektion (so backt backen.js).
+const LIVTEX = new Set(/[?&]nobake/.test(location.search) ? [] : LIVMAN._tex || []);
+const baked = tk => LIVTEX.has(tk) && !!LIVMAN[tk] && !!(MODELS[LIVMAN[tk].kind] && MODELS[LIVMAN[tk].kind].C.tex);
 const DECAL_TEX = {}, DECAL_SMALL = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
 function decalUniforms(tk) { if (DECAL_TEX[tk]) return DECAL_TEX[tk];
-  const U = DECAL_TEX[tk] = { uDecal: { value: null }, uDecalOn: { value: 0 }, uSheet: { value: null }, uSheetOn: { value: 0 }, uNum: { value: null }, uNumOn: { value: 0 }, uNumCol: { value: new THREE.Color(1, 1, 1) } };
+  const U = DECAL_TEX[tk] = { uBake: { value: null }, uBakeOn: { value: 0 }, uDecal: { value: null }, uDecalOn: { value: 0 }, uSheet: { value: null }, uSheetOn: { value: 0 }, uNum: { value: null }, uNumOn: { value: 0 }, uNumCol: { value: new THREE.Color(1, 1, 1) } };
   const ld = (url, tx, on) => { tx.value = new THREE.TextureLoader().load(url, t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
     if (DECAL_SMALL && t.image && t.image.width > 1024) { const c = document.createElement('canvas'); c.width = t.image.width >> 1; c.height = t.image.height >> 1; c.getContext('2d').drawImage(t.image, 0, 0, c.width, c.height); t.image = c; }   // Handy/Tablet: halbe Auflösung spart drei Viertel des Grafikspeichers (ein Feld hat bis zu 16 Bögen)
     t.needsUpdate = true; on.value = 1; }, undefined, () => {}); };
-  if (DECALS[tk]) ld('logos/' + DECALS[tk].file + '.png', U.uDecal, U.uDecalOn); if (SHEETS[tk]) ld('liveries/' + tk + '.png', U.uSheet, U.uSheetOn);
+  if (baked(tk)) ld('liveries/textur/' + tk + '.webp', U.uBake, U.uBakeOn);   // Textur enthält Bogen und Logo schon
+  else { if (DECALS[tk]) ld('logos/' + DECALS[tk].file + '.png', U.uDecal, U.uDecalOn); if (SHEETS[tk]) ld('liveries/' + tk + '.png', U.uSheet, U.uSheetOn); }
   return U; }
 const hasDecal = tk => !!(DECALS[tk] || SHEETS[tk] || NUMS[tk]);
 // Alle Aufkleber (Bögen und Teamlogos) werden beim ersten Start auf dem Ladebildschirm geladen (preloadDecals, siehe Spielstart) – danach muss in Menü und Fahrzeugauswahl nichts mehr nachladen.
-const preloadDecals = () => new Promise(res => { const us = Object.keys(LIVMAN).filter(k => DECALS[k] || SHEETS[k]).map(k => decalUniforms(k)), t0 = performance.now();
-  const chk = () => { if (us.every(u => (!u.uDecal.value || u.uDecalOn.value) && (!u.uSheet.value || u.uSheetOn.value)) || performance.now() - t0 > 12000) res(); else setTimeout(chk, 60); }; chk(); });   // höchstens 12 s warten (fehlende Datei: bleibt ohne Aufkleber)
-function decalGLSL(tk) { const f = v => (+v).toFixed(4), B = SHEETS[tk]; let g = '\n { vec3 dN = normalize(vLN); vec2 dUV; vec4 dT;';
+const preloadDecals = () => new Promise(res => { const us = Object.keys(LIVMAN).filter(k => DECALS[k] || SHEETS[k] || baked(k)).map(k => decalUniforms(k)), t0 = performance.now();
+  const chk = () => { if (us.every(u => (!u.uDecal.value || u.uDecalOn.value) && (!u.uSheet.value || u.uSheetOn.value) && (!u.uBake.value || u.uBakeOn.value)) || performance.now() - t0 > 12000) res(); else setTimeout(chk, 60); }; chk(); });   // höchstens 12 s warten (fehlende Datei: bleibt ohne Aufkleber)
+function decalGLSL(tk) { const f = v => (+v).toFixed(4), bk = baked(tk), B = bk ? null : SHEETS[tk]; let g = '\n { vec3 dN = normalize(vLN); vec2 dUV; vec4 dT;';   /* gebackene Textur: nur noch die Nummer */
   if (B) g += '\n  if (uSheetOn > 0.5 && dN.x * sign(vLP.x) > 0.45) { dUV = vec2((vLP.z - ' + f(B.z0) + ') / ' + f(B.z1 - B.z0) + ', (vLP.y - ' + f(B.y0) + ') / ' + f(B.y1 - B.y0) + '); if (vLP.x > 0.0) dUV.x = 1.0 - dUV.x; float dIn = (dUV.x > 0.0 && dUV.x < 1.0 && dUV.y > 0.0 && dUV.y < 1.0) ? 1.0 : 0.0; ' + (B.zones || []).map(q => 'if (vLP.z > ' + f(q[0]) + ' && vLP.z < ' + f(q[1]) + ' && (abs(vLP.x) < ' + f(q[2]) + ' || abs(vLP.x) > ' + f(q[3]) + ')) dIn = 0.0; ').join('') + 'dUV.y = clamp(dUV.y, 0.004, 0.996) * 0.5 + (vLP.x > 0.0 ? 0.5 : 0.0); dT = texture2D(uSheet, dUV) * dIn; diffuseColor.rgb = mix(diffuseColor.rgb, dT.rgb, dT.a); }';
   const spot = (d, smp, on, asp) => (d.v === 'top'
     ? '\n  if (' + on + ' > 0.5 && dN.y > 0.5) { dUV = vec2(0.5 + (vLP.x - ' + f(d.x || 0) + ') / ' + f(d.s * asp) + ', 0.5 - (vLP.z - ' + f(d.z) + ') / ' + f(d.s) + ');'
     : '\n  if (' + on + ' > 0.5 && dN.x * sign(vLP.x) > 0.45 && abs(vLP.x) > ' + f(d.x0 || 0) + ' && abs(vLP.x) < ' + f(d.x1 || 9) + ') { dUV = vec2(0.5 - sign(vLP.x) * (vLP.z - ' + f(d.z) + ') / ' + f(d.s * asp) + ', 0.5 + (vLP.y - ' + f(d.y) + ') / ' + f(d.s) + ');')
     + ' dT = decalTex(' + smp + ', dUV); diffuseColor.rgb = mix(diffuseColor.rgb, ' + (asp > 1 ? (d.color ? lc(parseInt(String(d.color).replace('#', ''), 16)) : 'uNumCol') : 'dT.rgb') + ', dT.a); }';   /* Nummer: eigene Farbe je Stelle möglich (color), sonst die Nummernfarbe des Autos */
-  for (const d of DECALS[tk] || []) g += spot(d, 'uDecal', 'uDecalOn', 1);
+  if (!bk) for (const d of DECALS[tk] || []) g += spot(d, 'uDecal', 'uDecalOn', 1);
   for (const d of (NUMS[tk] || {}).list || []) g += spot(d, 'uNum', 'uNumOn', 2);
   return g + '\n }'; }
 const DECAL_HEAD = 'uniform sampler2D uDecal, uSheet, uNum; uniform float uDecalOn, uSheetOn, uNumOn; uniform vec3 uNumCol; varying vec3 vLN;\nvec4 decalTex(sampler2D sm, vec2 uv) { vec4 t = texture2D(sm, uv); return (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) ? vec4(0.0) : t; }\n';
@@ -3777,13 +3784,13 @@ function numMat(tp, tk, num) { const N = NUMS[tk]; if (!N || num === undefined |
   const base = tp.glossMat, m = base.clone(), tex = numDecalTex(LIVMAN[tk].kind, num), cl = new THREE.Color(N.color || '#ffffff');
   const hook = base.livHook; m.onBeforeCompile = (sh, r) => { hook(sh, r); sh.uniforms.uNum = { value: tex }; sh.uniforms.uNumOn = { value: 1 }; sh.uniforms.uNumCol = { value: cl }; }; m.customProgramCacheKey = base.customProgramCacheKey; return (nm[num] = m); }
 function liveryMat(tk, gloss) { const code = LIVERY[tk]; if (!code) return gloss;
-  const dec = hasDecal(tk) ? decalGLSL(tk) : '';
+  const dec = hasDecal(tk) ? decalGLSL(tk) : '', bk = baked(tk);
   gloss.onBeforeCompile = sh => {
-    sh.vertexShader = 'attribute float aCls; varying float vCls; varying vec3 vLP; varying vec3 vLN;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vLP = position; vCls = aCls; vLN = normal;');
-    sh.fragmentShader = 'uniform vec3 uMir; varying float vCls; varying vec3 vLP;\n' + (dec ? DECAL_HEAD : '') + LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 2.5 || vCls > 6.5) { diffuseColor.rgb = livery(vLP, vCls);' + (dec ? ' if (vCls < 2.5) {' + dec + ' }' : '') + ' }\n vec3 gN = normalize(cross(dFdx(vLP), dFdy(vLP))); float mirF = 0.0;   /* Spiegelglas ist jetzt ein eigenes Teil im Modell (Chunk mirror) */ if (mirF > 0.5) diffuseColor.rgb = vec3(0.0);' /* Spiegelglas (F1): die nach hinten zeigende Fläche der Spiegelgehäuse – im Modell kein eigenes Teil – zeigt die Himmelsfarbe der Strecke */ + cockGLSL('f1')).replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n if (mirF > 0.5) totalEmissiveRadiance = uMir;'); sh.uniforms.uMir = { value: MIRMAT.emissive }; if (dec) Object.assign(sh.uniforms, decalUniforms(tk));
+    sh.vertexShader = 'attribute float aCls; varying float vCls; varying vec3 vLP; varying vec3 vLN;\n' + (bk ? 'attribute vec2 uvB; varying vec2 vBUV;\n' : '') + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vLP = position; vCls = aCls; vLN = normal;' + (bk ? ' vBUV = uvB;' : ''));
+    sh.fragmentShader = 'uniform vec3 uMir; varying float vCls; varying vec3 vLP;\n' + (bk ? 'uniform sampler2D uBake; varying vec2 vBUV;\n' : '') + (dec ? DECAL_HEAD : '') + LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 2.5 || vCls > 6.5) { diffuseColor.rgb = ' + (bk ? 'vCls < 2.5 ? texture2D(uBake, vBUV).rgb : ' : '') + 'livery(vLP, vCls);' + (dec ? ' if (vCls < 2.5) {' + dec + ' }' : '') + ' }\n vec3 gN = normalize(cross(dFdx(vLP), dFdy(vLP))); float mirF = 0.0;   /* Spiegelglas ist jetzt ein eigenes Teil im Modell (Chunk mirror) */ if (mirF > 0.5) diffuseColor.rgb = vec3(0.0);' /* Spiegelglas (F1): die nach hinten zeigende Fläche der Spiegelgehäuse – im Modell kein eigenes Teil – zeigt die Himmelsfarbe der Strecke */ + cockGLSL('f1')).replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n if (mirF > 0.5) totalEmissiveRadiance = uMir;'); sh.uniforms.uMir = { value: MIRMAT.emissive }; if (dec || bk) Object.assign(sh.uniforms, decalUniforms(tk));
   };
   gloss.livHook = gloss.onBeforeCompile;   /* unveränderte Fassung für die Nummern-Materialien (numMat) – andere Stellen hängen sich später an onBeforeCompile an */
-  gloss.customProgramCacheKey = () => 'livery-' + tk + (dec ? '-d' : ''); return gloss; }
+  gloss.customProgramCacheKey = () => 'livery-' + tk + (dec ? '-d' : '') + (bk ? '-t' : ''); return gloss; }
 function teamTemplate(tk) {
   if (TPL[tk]) return TPL[tk];
   const T0 = LIVS[tk] || TEAMS[tk], MD = MODELS[T0.kind === 'f2' ? 'f2' : 'f1'];
@@ -3975,27 +3982,27 @@ function setLod(m, l, force) {
 }
 // Fernmodell eines Teams: einfachste Karosserie + Carbon + Räder + Helm in einem Netz; Klasse 4 = feste Farbe (keine Lackierung)
 function farCarGeo(tp, T) {
-  const MD = tp.M, L = tp.lods[2], W = MD.W[2], fw = MD.C.fw, rw = MD.C.rw, P = [], Nn = [], C = [], K = [], I = []; let base = 0;
-  const add = (g, ox, oy, oz, cls, mul, fix) => { const p = g.attributes.position, n = g.attributes.normal, c = g.attributes.color, k = g.attributes.aCls;
-    for (let i = 0; i < p.count; i++) { P.push(p.getX(i) + ox, p.getY(i) + oy, p.getZ(i) + oz); Nn.push(n.getX(i), n.getY(i), n.getZ(i)); if (fix) C.push(fix.r, fix.g, fix.b); else C.push(c.getX(i) * mul, c.getY(i) * mul, c.getZ(i) * mul); K.push(cls < 0 ? k.getX(i) : cls); }
+  const MD = tp.M, L = tp.lods[2], W = MD.W[2], fw = MD.C.fw, rw = MD.C.rw, P = [], Nn = [], C = [], K = [], I = [], UB = []; let base = 0;
+  const add = (g, ox, oy, oz, cls, mul, fix) => { const p = g.attributes.position, n = g.attributes.normal, c = g.attributes.color, k = g.attributes.aCls, ub = g.attributes.uvB;
+    for (let i = 0; i < p.count; i++) { P.push(p.getX(i) + ox, p.getY(i) + oy, p.getZ(i) + oz); UB.push(ub ? ub.getX(i) : 0, ub ? ub.getY(i) : 0); Nn.push(n.getX(i), n.getY(i), n.getZ(i)); if (fix) C.push(fix.r, fix.g, fix.b); else C.push(c.getX(i) * mul, c.getY(i) * mul, c.getZ(i) * mul); K.push(cls < 0 ? k.getX(i) : cls); }
     if (g.index) for (let i = 0; i < g.index.count; i++) I.push(g.index.getX(i) + base); else for (let i = 0; i < p.count; i++) I.push(i + base); base += p.count; };
   add(L.gloss, 0, 0, 0, -1, 1); add(L.matte, 0, 0, 0, 4, 0.4);
   add(W.R[1], fw[0], fw[1], fw[2], 4, 1); add(W.L[1], -fw[0], fw[1], fw[2], 4, 1); add(W.RL[1], -rw[0], rw[1], rw[2], 4, 1); add(W.RR[1], rw[0], rw[1], rw[2], 4, 1);
   const hg = new THREE.SphereGeometry(0.15, 10, 7).scale(1, 0.97, 1.1).translate(0, MD.helm[0], MD.helm[1]); add(hg, 0, 0, 0, 4, 1, col(T.acc)); hg.dispose();
-  const o = new THREE.BufferGeometry(); o.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); o.setAttribute('normal', new THREE.Float32BufferAttribute(Nn, 3)); o.setAttribute('color', new THREE.Float32BufferAttribute(C, 3)); o.setAttribute('aCls', new THREE.Float32BufferAttribute(K, 1));
+  const o = new THREE.BufferGeometry(); o.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); o.setAttribute('normal', new THREE.Float32BufferAttribute(Nn, 3)); o.setAttribute('color', new THREE.Float32BufferAttribute(C, 3)); o.setAttribute('uvB', new THREE.Float32BufferAttribute(UB, 2)); o.setAttribute('aCls', new THREE.Float32BufferAttribute(K, 1));
   o.setIndex(I); o.computeBoundingSphere(); return o;
 }
 // Fernmodell für große Abstände (ab CAR_FAR3): das Fernmodell wird beim Laden auf höchstens ~3.000 Dreiecke vereinfacht. Eckpunkte, die in dieselbe
 // Rasterzelle fallen (gleiche Lackklasse, gleiche Hauptrichtung der Normale), werden zu einem Punkt gemittelt; zusammengefallene Dreiecke entfallen.
 // Ab 80 m ist ein Auto höchstens ~35 Pixel lang – die Zellen (wenige cm) liegen weit unter einem Pixel.
 function clusterGeo(g, maxTris = 3000) {
-  const P = g.attributes.position, Nn = g.attributes.normal, C = g.attributes.color, K = g.attributes.aCls, I = g.index.array, n = P.count;
+  const P = g.attributes.position, Nn = g.attributes.normal, C = g.attributes.color, K = g.attributes.aCls, UB = g.attributes.uvB, I = g.index.array, n = P.count;
   for (let cell = 0.04; ; cell *= 1.25) {
-    const map = new Map(), rm = new Int32Array(n), acc = [];   // acc: je neuem Punkt 10 Summen (Ort, Normale, Farbe, Anzahl) + Klasse
+    const map = new Map(), rm = new Int32Array(n), acc = [], fu = [];   // acc: je neuem Punkt 10 Summen (Ort, Normale, Farbe, Anzahl) + Klasse
     for (let i = 0; i < n; i++) { const nx = Nn.getX(i), ny = Nn.getY(i), nz = Nn.getZ(i), ax = Math.abs(nx), ay = Math.abs(ny), az = Math.abs(nz);
       const nd = ax >= ay && ax >= az ? (nx < 0 ? 0 : 1) : ay >= az ? (ny < 0 ? 2 : 3) : (nz < 0 ? 4 : 5), cls = Math.round(K.getX(i));
       const key = (((Math.floor(P.getX(i) / cell) + 512) * 1024 + Math.floor(P.getY(i) / cell) + 512) * 1024 + Math.floor(P.getZ(i) / cell) + 512) * 64 + cls * 8 + nd;
-      let j = map.get(key); if (j === undefined) { j = acc.length / 11; map.set(key, j); acc.push(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, cls); }
+      let j = map.get(key); if (j === undefined) { j = acc.length / 11; map.set(key, j); acc.push(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, cls); fu.push(UB ? UB.getX(i) : 0, UB ? UB.getY(i) : 0); }   /* UV: erster Punkt der Zelle, nicht gemittelt (Nähte der Abwicklung) */
       const b = j * 11; acc[b] += P.getX(i); acc[b + 1] += P.getY(i); acc[b + 2] += P.getZ(i); acc[b + 3] += nx; acc[b + 4] += ny; acc[b + 5] += nz; acc[b + 6] += C.getX(i); acc[b + 7] += C.getY(i); acc[b + 8] += C.getZ(i); acc[b + 9]++; rm[i] = j; }
     const idx = [], seen = new Set(), m = acc.length / 11;
     for (let t = 0; t < I.length; t += 3) { const a = rm[I[t]], b = rm[I[t + 1]], c = rm[I[t + 2]]; if (a === b || b === c || a === c) continue;
@@ -4005,10 +4012,19 @@ function clusterGeo(g, maxTris = 3000) {
     for (let j = 0; j < m; j++) { const b = j * 11, w = 1 / acc[b + 9], l = Math.hypot(acc[b + 3], acc[b + 4], acc[b + 5]) || 1;
       p[j * 3] = acc[b] * w; p[j * 3 + 1] = acc[b + 1] * w; p[j * 3 + 2] = acc[b + 2] * w; nn[j * 3] = acc[b + 3] / l; nn[j * 3 + 1] = acc[b + 4] / l; nn[j * 3 + 2] = acc[b + 5] / l;
       cc[j * 3] = acc[b + 6] * w; cc[j * 3 + 1] = acc[b + 7] * w; cc[j * 3 + 2] = acc[b + 8] * w; kk[j] = acc[b + 10]; }
-    const o = new THREE.BufferGeometry(); o.setAttribute('position', new THREE.BufferAttribute(p, 3)); o.setAttribute('normal', new THREE.BufferAttribute(nn, 3)); o.setAttribute('color', new THREE.BufferAttribute(cc, 3)); o.setAttribute('aCls', new THREE.BufferAttribute(kk, 1));
+    const o = new THREE.BufferGeometry(); o.setAttribute('position', new THREE.BufferAttribute(p, 3)); o.setAttribute('normal', new THREE.BufferAttribute(nn, 3)); o.setAttribute('color', new THREE.BufferAttribute(cc, 3)); o.setAttribute('aCls', new THREE.BufferAttribute(kk, 1)); if (UB) o.setAttribute('uvB', new THREE.BufferAttribute(Float32Array.from(fu), 2));
     o.setIndex(idx); o.boundingSphere = g.boundingSphere.clone(); return o;
   }
 }
+// Gröbstes Fernmodell bei gebackener Lack-Textur: beim Zusammenfassen der Punkte (clusterGeo) springen die UVs über die Nähte der Abwicklung –
+// deshalb hier die Farbe aus der Textur (auf 256² verkleinert = über die Fläche gemittelt) als Eckpunktfarbe ablegen, Klasse 4 = feste Farbe.
+// Ist die Textur noch nicht geladen, bleibt es beim UV des ersten Punkts je Zelle (gröber, aber richtig gefärbt in großen Flächen).
+function bakeColors(g, tk) { const U = baked(tk) && DECAL_TEX[tk], im = U && U.uBakeOn.value && U.uBake.value && U.uBake.value.image, UB = g.attributes.uvB; if (!im || !UB) return g;
+  const S = 256, cv = document.createElement('canvas'); cv.width = cv.height = S; const cx = cv.getContext('2d', { willReadFrequently: true }); cx.drawImage(im, 0, 0, S, S); const px = cx.getImageData(0, 0, S, S).data;
+  const o = g.clone(), K = o.attributes.aCls.array.slice(), C = o.attributes.color.array.slice(), t = new THREE.Color();
+  for (let i = 0; i < K.length; i++) { if (K[i] >= 2.5) continue; const x = Math.min(S - 1, Math.max(0, Math.floor(UB.getX(i) * S))), y = Math.min(S - 1, Math.max(0, Math.floor((1 - UB.getY(i)) * S))), q = (y * S + x) * 4;
+    t.setRGB(px[q] / 255, px[q + 1] / 255, px[q + 2] / 255, THREE.SRGBColorSpace); C[i * 3] = t.r; C[i * 3 + 1] = t.g; C[i * 3 + 2] = t.b; K[i] = 4; }
+  o.setAttribute('color', new THREE.BufferAttribute(C, 3)); o.setAttribute('aCls', new THREE.BufferAttribute(K, 1)); o.deleteAttribute('uvB'); return o; }
 let ROAD_DASH = null;
 // RONE Racing: Roadster aus dem hochgeladenen 3D-Modell (vereinfacht auf ~87k Dreiecke), mit eigener Lackierung nach den Fotos.
 // roadcar.bin: Kopf (JSON) + je Teil quantisierte Positionen, Normalen, UVs (nur Lack) und Indizes. Koordinaten wie bei den F1-Autos: z = vorne, y = oben.
@@ -5189,7 +5205,7 @@ function makeCar0(d) {
     const label = carLabel(d, T); g.add(label); scene.add(g);
     // Fernmodell: ab 120 m ist das ganze Auto EIN Netz mit EINEM Zeichenaufruf (statt Karosserie, Carbon, Halo, Helm, Spiegel und vier Rädern einzeln)
     const far = new THREE.Mesh(tp.far || (tp.far = farCarGeo(tp, T)), tp.glossMat); far.visible = false; g.add(far);
-    if (!tp.far3) { try { tp.far3 = clusterGeo(tp.far); } catch (e) { console.warn('far3', e); tp.far3 = tp.far; } }   // ab CAR_FAR3: ~3.000 statt ~13.600 Dreiecke
+    if (!tp.far3) { try { tp.far3 = clusterGeo(bakeColors(tp.far, d.liv || d.team)); } catch (e) { console.warn('far3', e); tp.far3 = tp.far; } }   // ab CAR_FAR3: ~3.000 statt ~13.600 Dreiecke
     const shp = new THREE.Mesh(tp.far3, SHPMAT); shp.layers.set(SHP_L); shp.castShadow = true; g.add(shp); g.traverse(o => { if (o.isMesh && o !== shp) o.userData.cs0 = o.castShadow; });   /* Schattenfigur (siehe SHP_L) */
     const r = { g, fl, fr, wfl, wfr, rr, wrl, wrr, label, helm: hm, rl, body, matte, halo, tp, lod: 0, comp: 1, cam: MD.cam, tv: MD.tv, far, shp, detail: [body, matte, halo, hm, fl, fr, rr].concat(mir ? [mir] : []), oldDrv, mkF1: F1F ? () => f1Driver(d, T, MD, g) : null };
     lodFadePrep(r); return r;
@@ -13153,7 +13169,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.72'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.73'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

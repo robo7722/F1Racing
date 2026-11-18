@@ -1,5 +1,5 @@
 // Service Worker: macht das Spiel offline-fähig und installierbar
-const CACHE = 'f1-rennen-2.72';
+const CACHE = 'f1-rennen-2.73';
 const APP = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './textures/f1hub_logo.png', './car.bin', './f2car.bin', './kart.bin', './textures/kart_body.jpg', './textures/kart_body_n.jpg', './textures/kart_wheel.jpg', './kartfahrer.bin', './f1fahrer.bin', './textures/kart_fahrer.jpg', './textures/kart_stoff.jpg', './textures/f1_arm_stoff.jpg', './roadcar.bin', './menu.mp3',
   ...['f1_mittel', 'f1_v2', 'f1_v3', 'f1_v4', 'f2_mittel', 'f2_v3', 'f2_v4', 'kart_v0', 'kart_v1', 'kart_mittel', 'kart_v3', 'v6_schub', 'kart_schub'].map(n => './sounds/' + n + '.wav'), ...['mx5e_leer', 'mx5e_durchzug', 'mx5e_5200', 'mx5e_6900', 'mx5e_blip1', 'mx5e_blip2', 'mx5e_blip3', 'mx5n_schub', 'cf_leicht', 'cf_auto', 'cf_armco', 'cf_beton', 'stahl_leicht', 'stahl_auto', 'stahl_wand', 'kart_kart', 'kart_wand',
     'kies', 'rasen', 'kerb', 'kies_einschlag', 'schaben_metall', 'schaben_beton', 'wind'].map(n => './sounds/' + n + '.wav'),   // v2.00: Roadster, Einschläge, Fahr-Geräusche   // Motor-/Crash-Aufnahmen (ElevenLabs)
@@ -39,7 +39,7 @@ self.addEventListener('fetch', e => {
       .catch(() => caches.match('./index.html')));
     return;
   }
-  if (/\/liveries\/(num\/)?[^/]+\.(png|json)$/i.test(new URL(req.url).pathname)) {   // Aufkleber (Ordner liveries/): immer zuerst am Server nachfragen – Bogen, Nummern und liveries.json gehören zusammen und müssen zum geladenen Spiel passen (ein alter Bogen zur neuen Grundfarbe zeigt ein Auto ohne Farbflächen); ohne Netz der letzte Stand
+  if (/\/liveries\/(num\/|textur\/)?[^/]+\.(png|webp|json)$/i.test(new URL(req.url).pathname)) {   // Aufkleber (Ordner liveries/): immer zuerst am Server nachfragen – Bogen, Nummern und liveries.json gehören zusammen und müssen zum geladenen Spiel passen (ein alter Bogen zur neuen Grundfarbe zeigt ein Auto ohne Farbflächen); ohne Netz der letzte Stand
     const key = req.url.split('?')[0];
     e.respondWith(fetch(key, { cache: 'no-cache' }).then(r => { if (r.ok) { const cp = r.clone(); caches.open('fr-logos').then(c => c.put(key, cp)); } return r; }).catch(() => caches.open('fr-logos').then(c => c.match(key)).then(h => h || Response.error())));
     return;

@@ -87,3 +87,13 @@ Frage des Nutzers: Lassen sich aus den Aufklebern „richtige“ Texturen machen
 - Es gibt **nur Seitenansichten**. Für Oberseite/Front fehlen Vorlagen – müssten aus Launch- und Rennfotos (schräg/oben) nachgezeichnet werden.
 
 **Vorschlag:** Prototyp mit einem Team (Mercedes), im Showroom vergleichen, dann entscheiden.
+
+## Echte Texturen F1 – umgesetzt in v2.73 (18.11.2026)
+Prototyp mit Mercedes, danach alle F1-Lackierungen gebacken. Werkzeuge und Ablauf: `tools/textur/ANLEITUNG.md`.
+- `car.bin` hat jetzt eine UV-Abwicklung des Lack-Teils (alle drei Detailstufen in einer Textur 1708 × 1710, 300 Bildpunkte je Meter in Stufe 0;
+  die alten Bögen hatten ~370/m, aber nur von der Seite). Unveränderte Vorlage: `tools/textur/quelle/car.bin`.
+- Je Team `liveries/textur/<Kürzel>.webp` (verlustfrei, zusammen 4,7 MB für 12 Lackierungen; die alten F1-Bögen waren 2,7 MB und werden für gebackene Teams nicht mehr geladen), gebacken aus dem bisherigen Lack-Programm + Bogen + Logo. Sieht im Showroom gleich aus wie
+  vorher (Schrift minimal weicher), keine sichtbaren Nähte. Startnummer bleibt Einblendung.
+- Der eigentliche Gewinn kommt erst mit dem nächsten Schritt: Oberseite, Nase und Flügel lassen sich jetzt bemalen (Projektionen von oben/vorn beim Backen
+  oder Malprogramm) – dafür fehlen noch Referenzfotos von oben/schräg. Die Seitenfotos in `tools/sticker/*.json` sind noch abrufbar.
+- Sichtbarkeits-Messung (nur sichtbare Dreiecke abwickeln) ausprobiert und verworfen: nur 0,2 von 15,6 m² Lackfläche sind unsichtbar.

@@ -38,7 +38,7 @@ process.on('exit', freeSlot); process.on('SIGTERM', () => process.exit(1)); proc
         .replace(c, 'window.__stkEval = q => eval(q); ' + c); body = s; }
     await r.fulfill({ body, contentType: MIME[f.split('.').pop()] || 'application/octet-stream' });
   });
-  await p.goto('http://f1.test/index.html', { waitUntil: 'load', timeout: 180000 });
+  await p.goto('http://f1.test/index.html' + (process.env.SHOT_Q || ''), { waitUntil: 'load', timeout: 180000 });   // SHOT_Q z. B. ?nobake (alte Lack-Projektion zum Vergleich)
   const ser = cfg.kind, team = cfg.team || key, drv = cfg.driver || '';
   const cmd = `setSeries(${JSON.stringify(ser)}, true); S.team = ${JSON.stringify(team)}; ${drv ? 'S.driver = ' + JSON.stringify(drv) + ';' : ''} SHOW.team = null; showroomTeam(${JSON.stringify(team)}); SHOW.cars.map(m => m.code + ':' + m.g.visible).join(',')`;
   let ok = null;

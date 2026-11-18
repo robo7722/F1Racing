@@ -149,6 +149,8 @@ def build(key):
         os.makedirs(os.path.join(ROOT, 'liveries'), exist_ok=True); sheet.save(os.path.join(ROOT, 'liveries', key + '.png'), optimize=True)
         bg = Image.new('RGB', sheet.size, tuple(hexrgb(cfg.get('previewBg', '#24262c')))); bg.paste(sheet, (0, 0), sheet); bg.save(os.path.join(CACHE, key + '_bogen.png'))
     print('ok', key)
+    if os.path.exists(os.path.join(ROOT, 'liveries', 'textur', key + '.webp')):   # das Spiel nimmt die gebackene Textur, nicht den Bogen
+        print('   !! Dieses Auto hat eine gebackene Lack-Textur – neu backen, sonst bleibt die alte im Spiel:  node tools/textur/backen.js', key)
 
 def manifest():
     out = {}
@@ -166,6 +168,7 @@ def manifest():
         if cfg.get('glsl'): m['glsl'] = cfg['glsl'] if isinstance(cfg['glsl'], str) else '\n'.join(cfg['glsl'])
         out[key] = m
     out['_num'] = sorted(os.path.basename(f)[:-4] for f in glob.glob(os.path.join(ROOT, 'liveries', 'num', '*.png')))
+    out['_tex'] = sorted(os.path.basename(f)[:-5] for f in glob.glob(os.path.join(ROOT, 'liveries', 'textur', '*.webp')))   # gebackene Lack-Texturen (tools/textur/backen.js)
     dst = os.path.join(ROOT, 'liveries', 'liveries.json'); tmp = dst + '.%d.tmp' % os.getpid()
     json.dump(out, open(tmp, 'w', encoding='utf-8'), ensure_ascii=False, indent=1); os.replace(tmp, dst)
 
