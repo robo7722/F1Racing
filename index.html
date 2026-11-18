@@ -973,14 +973,22 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 #scrTeam .tm svg{width:70%!important;height:70%!important}
 #scrTeam .tm::after{display:none}
 #scrTeam .tm.on{outline:2px solid #fff!important;outline-offset:-2px;background:linear-gradient(180deg,rgba(110,114,124,.95),rgba(58,60,68,.95))!important;box-shadow:inset 0 -3px 0 var(--c1)!important}
-#scrTeam .tmsep{flex:none;align-self:stretch;display:grid;place-items:center;writing-mode:vertical-rl;transform:rotate(180deg);font:900 9px/1 system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#d9b45a;font-style:normal;padding:0 3px;margin:0 4px;border-right:1px solid rgba(217,180,90,.55)}
 #scrTeam{--tw:clamp(30px,min(13.5vh,calc((100vw - 190px) / 13)),62px)}
-#scrTeam .tmnow{flex:none;min-width:calc(100% - var(--tw) - 40px);box-sizing:border-box;display:flex;gap:6px;justify-content:center}   /* v2.89: aktuelle Teams mittig, rechts schaut genau eine Legende (Trenner + erstes Auto) ins Bild – die übrigen durch Wischen (Wunsch: kein Knopf, nichts verdecken) */   /* v2.88: aktuelle Teams füllen die sichtbare Leiste, Legenden liegen rechts daneben (scrollen) */
-#scrTeam .teams.hasLeg{justify-content:flex-start;scroll-behavior:smooth;scrollbar-width:none}#scrTeam .teams.hasLeg::-webkit-scrollbar{display:none}
-#scrTeam .tm.hist{background:linear-gradient(180deg,rgba(92,74,44,.78),rgba(38,30,20,.85))!important;border-color:rgba(217,180,90,.45)!important}
-#scrTeam .tm .hy{position:absolute;right:2px;bottom:1px;font:800 6.5px/1 system-ui,sans-serif;letter-spacing:.04em;color:#ecd394;font-style:normal;opacity:.85;pointer-events:none}
-#scrTeam .tm.hist svg{width:62%!important;height:62%!important}
-#scrTeam .tm.hist.on{outline-color:#ecd394!important}
+/* v2.90 Entwurf C (Abnahme 18.11.2026): links in der Leiste ein Umschalter „Saison / ★ Legenden“ im Stil der oberen Schrittleiste; „Legenden“ tauscht die Teamkacheln gegen Goldkarten (Jahr, Auto, Fahrer) */
+#scrTeam .tmtabs{flex:none;display:flex;flex-direction:column;height:var(--tw);box-sizing:border-box;border-radius:8px;overflow:hidden;background:rgba(14,16,22,.78);border:1px solid rgba(255,255,255,.14);margin-right:8px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+#scrTeam .tmtabs button{flex:1;display:flex;align-items:center;gap:6px;padding:0 12px 0 10px;border:0;background:none;font:800 clamp(8px,1.8vh,10.5px)/1 system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.45);position:relative;white-space:nowrap;cursor:pointer;transition:color .2s,background .2s}
+#scrTeam .tmtabs button+button{border-top:1px solid rgba(255,255,255,.1)}
+#scrTeam .tmtabs button i{font-style:normal;color:#e10600;opacity:.6;font-weight:900}
+#scrTeam .tmtabs button:hover{color:rgba(255,255,255,.8)}
+#scrTeam .tmtabs button.on{color:#fff;background:linear-gradient(90deg,rgba(225,6,0,.22),rgba(225,6,0,0))}
+#scrTeam .tmtabs button.on::before{content:'';position:absolute;left:0;top:18%;bottom:18%;width:3px;background:#e10600;border-radius:2px}
+#scrTeam .tmtabs button.on i{opacity:1}
+#scrTeam .tm.lcard{width:min(calc(var(--tw)*2.55),calc((100vw - 180px) / 6 - 6px));display:block!important;padding:clamp(5px,1.4vh,9px) 8px 0 9px!important;text-align:left;border-radius:10px;background:linear-gradient(180deg,rgba(92,74,44,.80),rgba(30,24,15,.9))!important;border:1px solid rgba(217,180,90,.45)!important;box-sizing:border-box}
+#scrTeam .tm.lcard svg{position:absolute;right:5px;top:5px;width:calc(var(--tw)*.36)!important;height:calc(var(--tw)*.36)!important}
+#scrTeam .tm.lcard .ly{display:block;font:900 clamp(13px,3.1vh,20px)/1 system-ui,sans-serif;color:#ecd394;letter-spacing:.02em}
+#scrTeam .tm.lcard .ln{display:block;font:800 clamp(8px,1.9vh,11px)/1.15 system-ui,sans-serif;color:rgba(255,255,255,.82);text-transform:uppercase;letter-spacing:.06em;margin-top:3px;white-space:nowrap;overflow:hidden}
+#scrTeam .tm.lcard .ld{display:block;font:600 clamp(7.5px,1.7vh,10px)/1.15 system-ui,sans-serif;color:#ecd394;margin-top:2px;white-space:nowrap;overflow:hidden;text-transform:uppercase;letter-spacing:.06em}
+#scrTeam .tm.lcard.on{outline:2px solid #ecd394!important;outline-offset:-2px;box-shadow:inset 0 -3px 0 #ecd394!important;background:linear-gradient(180deg,rgba(120,96,56,.9),rgba(40,32,20,.92))!important}
 .histTag{display:inline-block;font-style:normal;font-size:9.5px;font-weight:900;letter-spacing:.14em;color:#1a1408;background:#d9b45a;border-radius:3px;padding:1px 5px 0;margin-right:6px;vertical-align:1px}
 .teaminfo .histInfo{grid-column:2;color:rgba(236,211,148,.85)!important}
 #scrTeam .teaminfo{position:absolute!important;left:max(22px,env(safe-area-inset-left));right:auto!important;top:calc(54px + env(safe-area-inset-top) + clamp(34px,9vh,48px))!important;text-align:left!important;display:grid;grid-template-columns:auto 1fr;column-gap:10px;align-items:center}
@@ -13037,13 +13045,21 @@ function renderTeams() {
   if (!shown((byCode(S.driver) || ALL[0]).team)) { S.driver = 'RUS'; save(); placeOnGrid(); }
   if (MENU.team && TEAMS[MENU.team] && !shown(MENU.team)) MENU.team = 'MER';
   const btn = k => { const T = TEAMS[k], ds = ALL.filter(c => c.team === k), H = HIST_CAR[k];
-    return '<button class="tm' + (H ? ' hist' : '') + '" data-team="' + k + '" title="' + T.name + (H ? ' · ' + H.title + ' (Legende)' : '') + '" style="--c1:' + hex(uiCol(T)) + '">' + teamBadge(k) + '<span><b>' + T.name + '</b><small>' + ds.map(c => c.code).join(' · ') + '</small></span>' + (H ? '<em class="hy">' + H.year + '</em>' : '') + '</button>'; };
-  const keys = Object.keys(TEAMS).filter(shown), now = keys.filter(k => !TEAMS[k].hist), old = keys.filter(k => TEAMS[k].hist).sort((a, b) => (HIST_CAR[a] ? HIST_CAR[a].year : 0) - (HIST_CAR[b] ? HIST_CAR[b].year : 0));   // Klassiker nach Jahr
-  const tw = $('#teams'), sl = tw.scrollLeft;
-  tw.innerHTML = '<span class="tmnow">' + now.map(btn).join('') + '</span>' + (old.length ? '<i class="tmsep" aria-hidden="true">Legenden</i>' + old.map(btn).join('') : '');   // v2.88: Legenden (Klassiker) beginnen rechts außerhalb des Bildes – die aktuellen Teams füllen die Leiste (.tmnow min-width 100 %), zu den Legenden wird gescrollt
-  tw.classList.toggle('hasLeg', old.length > 0); tw.scrollLeft = sl; if (TEAMS[MENU.team] && TEAMS[MENU.team].hist) requestAnimationFrame(() => teamsScrollTo(tw.querySelector('[data-team="' + MENU.team + '"]')));
-  $$('.tm').forEach(b => { const k = b.dataset.team, open = teamOpen(k); b.classList.toggle('locked', !open); if (!open) b.querySelector('small').textContent = lockMsg(k);
-    b.addEventListener('click', () => { if (!teamOpen(k)) { toast(f1Rank() ? 'Dieses Team war im Vorjahr mehr als 1 Platz besser als dein Team' : 'Dafür brauchst du in der F2 mindestens Platz ' + f1Need(k)); return; } MENU.team = k; showroomTeam(MENU.team); renderMenu(); }); });
+    return '<button class="tm' + (H ? ' hist' : '') + '" data-team="' + k + '" title="' + T.name + (H ? ' · ' + H.title + ' (Legende)' : '') + '" style="--c1:' + hex(uiCol(T)) + '">' + teamBadge(k) + '<span><b>' + T.name + '</b><small>' + ds.map(c => c.code).join(' · ') + '</small></span></button>'; };
+  // Legenden-Karte: Jahr groß, darunter Auto und Fahrer („A. Senna“), Logo klein oben rechts
+  const card = k => { const T = TEAMS[k], H = HIST_CAR[k], d = ALL.find(c => c.team === k), nm = d ? d.name.split(' ') : [], dn = nm.length > 1 ? nm[0][0] + '. ' + nm.slice(1).join(' ') : (d ? d.name : '');
+    return '<button class="tm hist lcard" data-team="' + k + '" title="' + H.title + ' (' + H.year + ') · ' + (d ? d.name : '') + '" style="--c1:' + hex(uiCol(T)) + '">' + teamBadge(k) + '<b class="ly">' + H.year + '</b><b class="ln">' + H.title + '</b><b class="ld">' + dn + '</b><span><b>' + T.name + '</b><small></small></span></button>'; };
+  const keys = Object.keys(TEAMS).filter(shown), now = keys.filter(k => !TEAMS[k].hist), old = keys.filter(k => TEAMS[k].hist && HIST_CAR[k]).sort((a, b) => HIST_CAR[a].year - HIST_CAR[b].year);   // Klassiker nach Jahr
+  if (!old.length) MENU.leg = false; else if (MENU.leg === undefined || (TEAMS[MENU.team] && !!TEAMS[MENU.team].hist) !== !!MENU.leg) MENU.leg = !!(TEAMS[MENU.team] && TEAMS[MENU.team].hist);   // Ansicht folgt dem gewählten Auto
+  const tw = $('#teams'), leg = !!MENU.leg;
+  tw.innerHTML = (old.length ? '<div class="tmtabs" role="tablist"><button data-leg="0" class="' + (leg ? '' : 'on') + '" role="tab"><i>' + new Date().getFullYear() + '</i>Saison</button><button data-leg="1" class="' + (leg ? 'on' : '') + '" role="tab"><i>★</i>Legenden</button></div>' : '')
+    + (leg ? old.map(card) : now.map(btn)).join('');   // v2.90 Entwurf C: Umschalter links, Legenden ersetzen die Teamkacheln (kein Scrollen mehr)
+  tw.classList.toggle('leg', leg);
+  $$('#teams .tmtabs button').forEach(b => b.addEventListener('click', () => { const L = b.dataset.leg === '1'; if (L === !!MENU.leg) return;
+    const k = L ? (MENU.lastLeg && old.includes(MENU.lastLeg) ? MENU.lastLeg : old[0]) : (MENU.lastNow && now.includes(MENU.lastNow) && teamOpen(MENU.lastNow) ? MENU.lastNow : now.find(teamOpen) || now[0]);   // Umschalten wählt gleich das zuletzt gewählte Auto der Gruppe
+    MENU.leg = L; if (k) { MENU.team = k; showroomTeam(k); } renderTeams(); renderMenu(); }));
+  $$('#teams .tm').forEach(b => { const k = b.dataset.team, open = teamOpen(k); b.classList.toggle('locked', !open); if (!open) b.querySelector('small').textContent = lockMsg(k);
+    b.addEventListener('click', () => { if (!teamOpen(k)) { toast(f1Rank() ? 'Dieses Team war im Vorjahr mehr als 1 Platz besser als dein Team' : 'Dafür brauchst du in der F2 mindestens Platz ' + f1Need(k)); return; } MENU.team = k; if (TEAMS[k].hist) MENU.lastLeg = k; else MENU.lastNow = k; showroomTeam(MENU.team); renderMenu(); }); });
   if (!tw.dataset.wh) { tw.dataset.wh = 1; tw.addEventListener('wheel', e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && tw.scrollWidth > tw.clientWidth) { tw.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false }); }   // Mausrad: waagrecht durch die Leiste
   MENU.roneShown = !!S.rone; MENU.histShown = histOk;
 }
