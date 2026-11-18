@@ -92,7 +92,29 @@ def build_top(key, cfg):
     if not T: return
     kind = cfg['kind']; Wt, Ht, Z0, Z1 = top_frame(kind); can = top_canon(key, cfg)
     sheet = Image.new('RGBA', (Wt, Ht), (255, 255, 255, 0))
+    # REGEL (Nutzer, 18.11.2026): Lackierungen sind links/rechts spiegelgleich.
+    #  - Farbflächen (key, poly+fill) werden von einer Wagenhälfte auf die andere gespiegelt: top.sym "L" (Standard, +x = im Bild links) oder "R",
+    #    je Aufkleber mit "sym" überschreibbar; "sym": false nur mit gutem Grund.
+    #  - Schrift/Logos außerhalb der Mitte (|x| > 0,08 m) bekommen eine Kopie an der gespiegelten Stelle (Schrift selbst nicht gespiegelt),
+    #    wenn dort noch keiner steht; "single": true schaltet das ab.
+    sym0 = T.get('sym', 'L'); placed = []
+    def centre(st):
+        b = boxof(dict(st))['box']; cx, cz = TOP_XW - (b[0] + b[2]) / 2 / TOP_PXM, Z1 - (b[1] + b[3]) / 2 / TOP_PXM
+        if 'at' in st: cx, cz = st['at']
+        return cx + st.get('dx', 0), cz + st.get('dz', 0)
+    todo = []
     for st in T.get('stickers', []):
+        area = st.get('kind') == 'key' or (st.get('poly') and st.get('fill'))
+        st = dict(st)
+        if area and 'sym' not in st: st['sym'] = sym0
+        todo.append(st)
+        if not area and not st.get('single'):
+            cx, cz = centre(st)
+            if abs(cx) > 0.08 and not any(abs(-cx - ox) < 0.08 and abs(cz - oz) < 0.12 for ox, oz in [centre(o) for o in T.get('stickers', []) if o is not st]):
+                m = dict(st); m['at'] = [-cx, cz]; m.pop('dx', None); m.pop('dz', None); m['name'] = st.get('name', '?') + '_spiegel'
+                if 'w' not in m: b = boxof(dict(st))['box']; m['w'] = (b[2] - b[0]) / TOP_PXM
+                todo.append(m)
+    for st in todo:
         st = boxof(dict(st)); x0, y0, x1, y1 = st['box']; p = cut(can, st)
         cx, cz = TOP_XW - (x0 + x1) / 2 / TOP_PXM, Z1 - (y0 + y1) / 2 / TOP_PXM
         if 'at' in st: cx, cz = st['at']

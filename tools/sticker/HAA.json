@@ -26,7 +26,7 @@
   {"name": "fix", "box": [2095, 365, 2200, 462], "kind": "d"},
   {"name": "orion", "box": [2343, 395, 2568, 460], "kind": "c"}
  ],
- "top": {
+ "top": {"sym": "R", 
   "photo": "tools/sticker/.cache/oben/HAA_4.jpg",
   "src": "https://media.formula1.com/image/upload/fom-website/2026/Haas/10-Photos-16x9-EO.0018.jpg",
   "rear": [2884, 1090],
