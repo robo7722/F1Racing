@@ -75,6 +75,9 @@ schlimmer an als eine etwas niedrigere, aber gleichmäßige Bildrate).
   (`kartLoGeo`: Eckpunkt-Raster, ~12 % der Dreiecke, gleiche Materialien und Attribute, kein neuer Shader), berechnet einmal in `precompile()`.
   Ein neues Kartteil mit ≥ 600 Dreiecken bekommt das automatisch; kleinere Teile möglichst ins Lenkrad (`m.sw`, ab 25 m ausgeblendet) hängen.
   Testschalter `window.__noKartLod`.
+- **Klassiker** (seit 2.68, `docs/KLASSIKER.md`): GLB-Modelle mit eigenen Detailstufen, erst bei Bedarf geladen. Schatten nur aus der einfachsten Stufe
+  (Abbild auf `SHP_L` mit `userData.shpOnly`, sichtbare Stufen `castShadow = false`): Schattenkarte Ferrari 26–28 → 8–10 Aufrufe, ~105 → 9–13 Tsd. Dreiecke.
+  Vorbild für weitere Autos aus GLB-Dateien.
 - **Anzeigen am Auto** (Lenkrad-Display, Tacho, Navi): siehe Fehler 1 – CPU-Leinwand, selten aktualisieren, keine Mipmaps.
 - Prüfen: `perf-cam.js` → `car`-Werte in Cockpit (2) und TV (3) vorher/nachher vergleichen; Bildvergleich mit `window.__oldCar = true/false`.
 

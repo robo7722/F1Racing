@@ -26,3 +26,8 @@ Zum Vergleich: das F1-Auto im Spiel (`car.bin`) hat 110 000 / 34 000 / 12 000 Dr
 - Vorschau: `modelle/klassiker/vorschau.html` über den lokalen Server öffnen (Auto, Detailstufe, Räder drehen).
 - Neu bauen: `python tools/klassiker/build_klassiker.py <quelle.glb> <lotus49c|ferrari_f2004|mclaren_mp44> modelle/klassiker`
   (braucht numpy, scipy, pillow, pymeshlab; auf diesem Rechner das x64-Python 3.14).
+
+## Im Spiel (v2.68)
+Eingebaut als Teams `H_LOT`, `H_MCL`, `H_FER` unter F1 (nur Schnelles Spiel und Zeitfahren). Das Lenkrad wird beim Laden aus der Karosserie
+der vollen Stufe herausgelöst und gedreht, Hände greifen am Kranz; Helmkamera (Lotus, McLaren) und TV-Höhe im Spiel leicht angepasst.
+Alles Weitere: `docs/KLASSIKER.md`.

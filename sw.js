@@ -1,5 +1,5 @@
 // Service Worker: macht das Spiel offline-fähig und installierbar
-const CACHE = 'f1-rennen-2.67';
+const CACHE = 'f1-rennen-2.68';
 const APP = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './textures/f1hub_logo.png', './car.bin', './f2car.bin', './kart.bin', './textures/kart_body.jpg', './textures/kart_body_n.jpg', './textures/kart_wheel.jpg', './kartfahrer.bin', './f1fahrer.bin', './textures/kart_fahrer.jpg', './textures/kart_stoff.jpg', './textures/f1_arm_stoff.jpg', './roadcar.bin', './menu.mp3',
   ...['f1_mittel', 'f1_v2', 'f1_v3', 'f1_v4', 'f2_mittel', 'f2_v3', 'f2_v4', 'kart_v0', 'kart_v1', 'kart_mittel', 'kart_v3', 'v6_schub', 'kart_schub'].map(n => './sounds/' + n + '.wav'), ...['mx5e_leer', 'mx5e_durchzug', 'mx5e_5200', 'mx5e_6900', 'mx5e_blip1', 'mx5e_blip2', 'mx5e_blip3', 'mx5n_schub', 'cf_leicht', 'cf_auto', 'cf_armco', 'cf_beton', 'stahl_leicht', 'stahl_auto', 'stahl_wand', 'kart_kart', 'kart_wand',
     'kies', 'rasen', 'kerb', 'kies_einschlag', 'schaben_metall', 'schaben_beton', 'wind'].map(n => './sounds/' + n + '.wav'),   // v2.00: Roadster, Einschläge, Fahr-Geräusche   // Motor-/Crash-Aufnahmen (ElevenLabs)
@@ -11,13 +11,14 @@ const LIBS = ['build/three.module.js', 'examples/jsm/postprocessing/EffectCompos
   'examples/jsm/postprocessing/UnrealBloomPass.js', 'examples/jsm/postprocessing/ShaderPass.js', 'examples/jsm/postprocessing/OutputPass.js',
   'examples/jsm/postprocessing/Pass.js', 'examples/jsm/postprocessing/MaskPass.js', 'examples/jsm/shaders/CopyShader.js',
   'examples/jsm/shaders/LuminosityHighPassShader.js', 'examples/jsm/shaders/OutputShader.js', 'examples/jsm/objects/Sky.js',
-  'examples/jsm/postprocessing/GTAOPass.js', 'examples/jsm/shaders/GTAOShader.js', 'examples/jsm/shaders/PoissonDenoiseShader.js', 'examples/jsm/math/SimplexNoise.js'].map(p => CDN + p);
+  'examples/jsm/postprocessing/GTAOPass.js', 'examples/jsm/shaders/GTAOShader.js', 'examples/jsm/shaders/PoissonDenoiseShader.js', 'examples/jsm/math/SimplexNoise.js',
+  'examples/jsm/loaders/GLTFLoader.js', 'examples/jsm/utils/BufferGeometryUtils.js'].map(p => CDN + p);   // v2.68: GLTF-Lader für die Klassiker-Autos
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(APP.map(u => new Request(u, { cache: 'reload' }))).then(() => Promise.all(LIBS.map(u => c.add(u).catch(() => {}))))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE && k !== 'fr-music' && k !== 'fr-logos').map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE && k !== 'fr-music' && k !== 'fr-logos' && k !== 'fr-models').map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 // Audio aus dem Cache: Safari/iOS fragt mit "Range" an und erwartet eine Teilantwort (206) – eine volle 200-Antwort spielt dort nicht
 async function ranged(req, hit) {
@@ -51,6 +52,10 @@ self.addEventListener('fetch', e => {
       if (hit) { e.waitUntil(net.catch(() => {})); return hit; }
       return net;
     })));
+    return;
+  }
+  if (/\/modelle\/klassiker\/[^/]+\.glb$/i.test(new URL(req.url).pathname)) {   // v2.68: Klassiker-Modelle (3–4 MB je Auto) erst bei Bedarf laden, dann dauerhaft im eigenen Cache (neue Fassung: ?v= im Spiel erhöhen)
+    e.respondWith(caches.open('fr-models').then(c => c.match(req.url).then(hit => hit || fetch(req).then(r => { if (r.ok) c.put(req.url, r.clone()); return r; }))));
     return;
   }
   if (/\/music\/[^/]+\.(mp3|ogg|m4a|aac|wav|opus)$|\/max\.mp3$/i.test(new URL(req.url).pathname)) { // Rennmusik (Ordner music/): eigener, dauerhafter Cache (bei Bedarf geladen)
