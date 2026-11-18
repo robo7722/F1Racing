@@ -7086,7 +7086,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         if (trackFree(x, z, need + r) && !inMarina(x, z)) { excl.push([x, z, r + 8]); return [x, z]; } } return null; };
     // Casino de Monte-Carlo (nach Foto der Platzseite): cremefarbener Belle-Époque-Bau – Mittelrisalit mit Vordach und Uhrengiebel, flankiert von zwei schlanken Türmen mit offener Laterne und Kuppelhaube,
     // dahinter die große kupfergrüne Kuppel auf quadratischem Grundriss, grünblaue Mansarddächer, Mosaikfries unter dem Gesims, hohe Bogenfenster im Hauptgeschoss, niedrigere Seitenflügel mit Eckpavillons
-    const pCas = place(M.casino, 38); if (pCas) { const [x, z] = pCas, g0 = new THREE.Group(), g = new THREE.Group(); g0.position.set(x, 0, z); g0.rotation.y = 0.35; g0.add(g); trackGroup.add(g0);
+    const pCas = place(M.casino, 38); if (pCas) { const [x, z] = pCas, g0 = new THREE.Group(), g = new THREE.Group(); g0.position.set(x, 0, z); g0.rotation.y = 0.35; g0.add(g); g0.userData.merge = true; trackGroup.add(g0);   /* Casino: 82 Einzelteile -> mergeGroups (vorher 82 Zeichenaufrufe) */
       const bay = (emi) => { const t = canvasTex(256, 512, (c, w, h) => {
           const Y = f => h * (1 - f);   // f = Höhe 0 (Boden) … 1 (Gesims)
           if (emi) { c.fillStyle = '#000'; c.fillRect(0, 0, w, h); } else { c.fillStyle = '#e9dcc0'; c.fillRect(0, 0, w, h);
@@ -7142,7 +7142,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         top = Math.max(top, ELEV[nearestDist(x, z)[1]] || 0);   /* mindestens Streckenniveau: der Casino-Platz liegt auf Höhe der Fahrbahn */
         g.position.y = Math.min(18, top - y0) + 0.2; add(new THREE.BoxGeometry(72, 20, 40).translate(0, -10.05, 3), stoneM); } }
     // Hôtel de Paris: langer Bau mit Mansarddach
-    const pHdp = place(M.hdp, 48); if (pHdp) { const [x, z] = pHdp, g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = 0.35; trackGroup.add(g);
+    const pHdp = place(M.hdp, 48); if (pHdp) { const [x, z] = pHdp, g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = 0.35; g.userData.merge = true; trackGroup.add(g);
       g.add(new THREE.Mesh(new THREE.BoxGeometry(90, 24, 28).translate(0, 12, 0), facadeMat({ wall: '#f2ead6', frame: '#fffaf0', balcony: '#ffffff', glass: '#3c3a36', glassTop: '#a8a090', litP: .45, emiI: 1, roof: '#4e5662', seed: 23, bays: 18, floors: 7, bayM: 5, floorM: 3.6 })));
       g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.01, 1, 1, 4, 1).rotateY(Math.PI / 4).scale(64, 8, 20).translate(0, 28, 0), lam({ color: 0x4e5662 }))); }
     // Fairmont-Haarnadel (nach Fotos): kleine runde, erhöhte Pflanzeninsel im Kurveninneren mit rot-weißem Rand und Palmen
@@ -7251,7 +7251,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       const fA = facadeMat({ shutter: ['#6f8466', '#8a6a4a', '#5b7288', '#9a8a68', '#7a4f3a'], wall: '#efe2c8', frame: '#fbf5ea', balcony: '#fff9f0', glass: '#4c5966', glassTop: '#b0bfcc', litP: .14, emiI: .55, roof: '#a3705c', seed: 53, bays: 10, floors: 14, bayM: 4.2, floorM: 3.2, relief: 4 });
       const fB = facadeMat({ shutter: ['#6f8466', '#8a6a4a', '#5b7288', '#9a8a68', '#7a4f3a'], wall: '#f1d7c0', frame: '#fbf3ea', balcony: '#ffffff', glass: '#4f5a64', glassTop: '#b4c2ce', litP: .14, emiI: .55, roof: '#a3705c', seed: 57, bays: 10, floors: 14, bayM: 4.2, floorM: 3.2, relief: 4 }), roofB = lam({ color: 0xbdb4a6 });
       let nb = 0; const occ = [];   /* [s, lat] aller OSM-Ecken: dahinter/daneben füllen die Blöcke */
-      const addB = (R, y0, top) => { const g = osmExtrude(R, top - y0, nb++ % 2 ? fB : fA, roofB, y0, 4.2, 3.2); g.userData.fixed = true; trackGroup.add(g); const cx = R.reduce((a2, q) => a2 + q[0], 0) / R.length, cz = R.reduce((a2, q) => a2 + q[1], 0) / R.length; excl.push([cx, cz, Math.max(...R.map(q => Math.hypot(q[0] - cx, q[1] - cz))) + 2, R]); };   /* Grundriss mitgeben: die Hangbebauung prüft genau statt mit dem Kreis */
+      const addB = (R, y0, top) => { const g = osmExtrude(R, top - y0, nb++ % 2 ? fB : fA, roofB, y0, 4.2, 3.2); g.userData.fixed = true; g.userData.merge = true; trackGroup.add(g); const cx = R.reduce((a2, q) => a2 + q[0], 0) / R.length, cz = R.reduce((a2, q) => a2 + q[1], 0) / R.length; excl.push([cx, cz, Math.max(...R.map(q => Math.hypot(q[0] - cx, q[1] - cz))) + 2, R]); };   /* Grundriss mitgeben: die Hangbebauung prüft genau statt mit dem Kreis */
       const jit = k => (Math.sin(k * 12.9898) * 43758.5453 % 1 + 1) % 1;
       for (const b of MC_OSM.b) { const R = pushOut(b.r, 1.6), cx = R.reduce((a2, q) => a2 + q[0], 0) / R.length, cz = R.reduce((a2, q) => a2 + q[1], 0) / R.length, c = nearLow(cx, cz); if (c.lat * sd < 0) continue;
         if (spiNear(cx, cz)[1] * DS < 450) continue;   /* die zwei schmalen OSM-Bauten an Sainte-Dévote gehören nicht zum Boulevard: dort standen sie als 6 m flache Fassadenscheibe (wirkte wie ein 2D-Bild) */
@@ -7271,11 +7271,11 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       for (const [pa, pb, front, terr] of [[sW0 + 1, sW1, 1.15, true], [cB + 8, sTab - 12, 7, false]]) for (let s2 = pa; s2 < pb - 2; s2 += 8.4) { const s3 = Math.min(pb, s2 + 8.4), i2 = Math.floor(modL(s2) / DS) % N, i3 = Math.floor(modL(s3) / DS) % N, ua = upper(s2), ub = upper(s3);
         const fa = wallAt(i2, sd) + front, fb = wallAt(i3, sd) + front, ba = ua.t - 2.5, bb = ub.t - 2.5; if (ba - fa < 3 || bb - fb < 3) continue;
         const P = [trackAt(s2, sd * fa), trackAt(s3, sd * fb), trackAt(s3, sd * bb), trackAt(s2, sd * ba)].map(q => [q.x, q.z]); if (!convexPoly(P)) continue;
-        const e = Math.min(ELEV[i2], ELEV[i3]), y0 = e - 4, top = Math.max(Math.min(ua.e, ub.e) - 1.5, e + (terr ? HM + 4 : 12)), g = osmExtrude(P, top - y0, podM, podR, y0, 4.2, 3.2); g.userData.fixed = true; trackGroup.add(g); }
+        const e = Math.min(ELEV[i2], ELEV[i3]), y0 = e - 4, top = Math.max(Math.min(ua.e, ub.e) - 1.5, e + (terr ? HM + 4 : 12)), g = osmExtrude(P, top - y0, podM, podR, y0, 4.2, 3.2); g.userData.fixed = true; g.userData.merge = true; trackGroup.add(g); }
       // Yacht Club de Monaco (OSM, Fotos): vier Decks wie ein Schiff, hellgraue waagrechte Lamellen vor dunklem Glas, weiße Deckskanten, Masten auf dem Dach
       if (YC) { let e0 = 1e9; for (const [x, z] of YC) { const [, j] = spiNear(x, z); e0 = Math.min(e0, ELEV[j]); }
         const lamT = canvasTex(64, 64, (g, w, h) => { g.fillStyle = '#3b4650'; g.fillRect(0, 0, w, h); g.fillStyle = '#d9dcdf'; for (let y = 8; y < h - 4; y += 7) g.fillRect(0, y, w, 4); g.fillStyle = 'rgba(0,0,0,.25)'; for (let x = 0; x < w; x += 32) g.fillRect(x, 0, 2, h); }); lamT.userData.own = true; lamT.wrapS = lamT.wrapT = THREE.RepeatWrapping;
-        const FL = 3.8, y0 = e0 - 1.5, wm = lam({ color: 0xf5f5f2 }), grp = new THREE.Group(); grp.userData.fixed = true;
+        const FL = 3.8, y0 = e0 - 1.5, wm = lam({ color: 0xf5f5f2 }), grp = new THREE.Group(); grp.userData.fixed = true; grp.userData.merge = true;
         grp.add(osmExtrude(YC, 4 * FL + 1.5, lam({ map: lamT, roughness: .45, metalness: .2 }), wm, y0, 4, FL));
         const ed = offsetPoly(YC, 0.9); for (let f = 1; f <= 4; f++) grp.add(osmExtrude(ed, 0.4, wm, wm, y0 + 1.5 + f * FL - 0.4, 4, 1));
         let wi = 0; for (let k = 1; k < YC.length; k++) if (YC[k][0] < YC[wi][0]) wi = k; const cx = YC.reduce((a2, q) => a2 + q[0], 0) / YC.length, cz = YC.reduce((a2, q) => a2 + q[1], 0) / YC.length;
