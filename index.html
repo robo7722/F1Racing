@@ -4322,7 +4322,7 @@ function histRel(o, root, dst) { _hInv.copy(root.matrixWorld).invert(); _hRel.mu
 function histLoad(team) {
   const H = HIST_CAR[team]; if (!H) return Promise.resolve(null); if (HIST.tpl[team]) return Promise.resolve(HIST.tpl[team]);
   HIST.sichtP ||= fetch('modelle/klassiker/fahrer_sicht.json?v=4').then(r => r.ok ? r.json() : null).catch(() => null).then(j => { HIST.sicht = j; });
-  return HIST.wait[team] ||= HIST.sichtP.then(() => import('three/addons/loaders/GLTFLoader.js')).then(({ GLTFLoader }) => new GLTFLoader().loadAsync('modelle/klassiker/' + H.file + '.glb?v=' + ({ mclaren_mp44: 3 }[H.file] || 1)))   /* v3: McLaren-Aufkleberbogen = Original des Nutzers (1024², echte Deckkraft, tools/klassiker/textur_ersetzen.py) */
+  return HIST.wait[team] ||= HIST.sichtP.then(() => import('three/addons/loaders/GLTFLoader.js')).then(({ GLTFLoader }) => new GLTFLoader().loadAsync('modelle/klassiker/' + H.file + '.glb?v=' + ({ mclaren_mp44: 3, ferrari_f2004: 2 }[H.file] || 1)))   /* McLaren v3 / Ferrari v2: Aufkleber/Sponsoren = Originale des Nutzers mit echter Deckkraft (tools/klassiker/textur_ersetzen.py) */
     .then(gl => { const T = histPrep(gl.scene, H); HIST.tpl[team] = T; histDone(team); return T; })
     .catch(e => { console.warn('Klassiker ' + team, e); delete HIST.wait[team]; return null; });
 }
