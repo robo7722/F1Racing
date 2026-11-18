@@ -315,3 +315,13 @@ Stand: 15.11.2026. Ohne Credits.
 - Alle Aufnahmen sind auf RMS -17,1 dB normiert – die Lautstärke bestimmt allein der Code. Vorher: Randstein 0,3 × Effekte-Bus 0,72 ≈ 0,22 am Ausgang, Motor (F1) 0,55 × (0,5–1) × 1,02 ≈ 0,3–0,56.
 - Effekte-Bus: Faktor 1,2 → **2** (`applyVolumes`, `fxBus`; bei Standard-Regler 60 % ≈ 1,2). Randstein 0,3/Kart 0,2 → **0,6/0,4**, mit Mindestanteil 0,35 (vorher null bei Schritttempo), Kies 0,42, Rasen 0,36, Schaben 0,5/Kart 0,3. Einschläge laufen über denselben Bus (Spitze 0,68 × 1,2 ≈ 0,8, kein Übersteuern).
 - Gespeicherte Regler-Stände des Nutzers bleiben; wer „Effekte“ schon niedriger gestellt hat, muss nachregeln.
+
+## v2.70 – Motorklänge der Klassiker (ElevenLabs-Arbeitsfläche)
+Stand: 18.11.2026. Erlaubnis des Nutzers, vorher gefragt (Schätzung über 200).
+- Kontostand vorher: 25.528 von 30.005 verbraucht. Schätzung der Arbeitsfläche (`estimate_only`): **720 Credits** für 9 Knoten × 2 Varianten.
+- **Gemessen: 234 Credits** (danach 25.762) = 18 Aufnahmen à 13,3 Credits (4-s-Loop). Die Schätzung lag wieder ~3× zu hoch.
+- 9 Knoten im Flow „F1Racing – Motor- und Crash-Sounds“ (Bezeichnung „Klassiker …“): Lotus V8, McLaren V6 Turbo, Ferrari V10 je „mittel“, „hoch“, „Schub“;
+  `eleven_text_to_sound_v2`, 4 s, `loop: true`, Prompt-Treue 0,85, Prompts mit „sustained constant steady unchanging engine drone, no revving …“.
+- Rohdateien `sounds/roh/klassiker/`, Auswahl und Messwerte `sounds/roh/klassiker/auswahl.json`, Aufbereitung `tools/sounds/klassiker.py`
+  (beste Variante nach Lautheit/Tonhöhe, 3,2-s-Loop, Grundton auf die Oktave der verlangten Zündfrequenz gelegt).
+- Im Spiel: `SND_ENG.hist_lot/hist_mcl/hist_fer` (siehe docs/KLASSIKER.md).

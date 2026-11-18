@@ -88,3 +88,32 @@ v2.68 hatte eigene Entwürfe in Creme/Gold. Die Logo-Knöpfe der Klassiker haben
 
 ![[bilder/klassiker_v268_cockpit.jpg]]
 (Helmkamera geradeaus und bei vollem Einschlag: Lotus, McLaren, Ferrari – Lenkrad dreht, Hände greifen mit)
+
+## v2.70 – Fahrer im Auto, Räder, Tachos, Klänge (Rückmeldungen vom 18.11.2026)
+- **Fahrer aus dem Modell** (`histDriver`): derselbe Rennfahrer wie im modernen F1 (`f1fahrer.bin`: Anzug, Handschuhe, Arme per IK), statt der
+  Grundform-Arme. Helm an der Helmmitte des Klassikers, Fäuste am Kranz: `kartArmsIK` hat dafür einen neuen Parameter `Q` (Lage des Ziel-Lenkrads
+  gegenüber dem Bau-Lenkrad `_swQ`), Griffradius auf `sw.g` skaliert. Helmkamera: nur Unterarme und Hände (`uCut` wie beim F1).
+- **Unsichtbare Teile entfernt**: `tools/klassiker/fahrer_sicht.js` rendert Auto (schwarz) und Fahrer (Dreiecks-Nummern als Farbe) aus 1.210 Blickwinkeln
+  (rundherum in 5 Abständen × 7 Höhen × 32 Richtungen, dazu Helm- und TV-Kamera mit Kopfbewegung) und schreibt `modelle/klassiker/fahrer_sicht.json`.
+  Rumpf-Dreiecke, die nie zu sehen sind, fallen weg; Arme/Hände bleiben immer. Ergebnis (von 13.939): Lotus 10.993 sichtbar (offenes Cockpit, Fahrer
+  schaut weit heraus), McLaren 8.555, Ferrari 7.844. Testschalter `window.__histFull = true` (vor dem Laden): ganzer Fahrer.
+- **Räder** (`histSplitWheels`): Teile im Radzylinder werden in zusammenhängende Stücke zerlegt; rundum geschlossene (Reifen, Felge, Scheibe) drehen,
+  die übrigen lenken vorn nur mit bzw. stehen hinten. Lotus: Innenseite der Vorderräder gehörte zur Karosserie (lenkte nicht mit), am Hinterrad drehten
+  Halter mit. Achsmitte aus dem Reifenring gemessen: Ferrari vorn lag 8,5 mm, hinten 3 mm daneben (Räder eierten); Lotus/McLaren < 1 mm.
+- **Bremslicht** (Regenlicht) bei McLaren und Ferrari am hintersten Punkt der Wagenmitte (automatisch aus dem Modell), blinkt beim Bremsen.
+- **Kein Boost**: Boost-Taste und ERS-Anzeige sind bei den Klassikern ausgeblendet (`noBoost`).
+- **Tacho je Epoche** (`histGauge`, statt der Halo-Grafik): Lotus Armaturenbrett mit Drehzahlmesser (rot ab 10.000), Öl und Wasser, Tempo im Zählwerk;
+  McLaren Drehzahlmesser bis 14.000 mit orangem Zeiger, Ladedruck, bernsteinfarbene Sieben-Segment-Anzeige; Ferrari Lenkrad-Display mit 15 Schaltlampen,
+  graugrünem LCD (großer Gang, Tempo, Platz, Runde, Zeit) und Tasten.
+- **Filter**: Sepia nur noch leicht weich (Mischung 0,3 statt 0,7, Bildstand-Wackeln ein Drittel, feineres Korn). SD 2004 ohne Verpixeln: leicht weich,
+  Farbe weicher als Helligkeit, feine Kantenanhebung, kräftige Sendefarben.
+- **Menü**: Jahreszahl klein in der Ecke, Logo bleibt mittig. Ferrari-Logo in sattem Gelb (`logos.py`). Fahrerwahl: einzelnes Auto mittig.
+- **Motorklang**: eigene Aufnahmen, siehe unten und `docs/SOUNDS.md` (v2.70).
+
+### Klänge
+| Klasse | Loops (Grundton) | Gas weg | Zündungen/Umdr. | Drehzahl (Schalten/Höchst) |
+|---|---|---|---|---|
+| `hist_lot` (Cosworth V8) | mittel 512 Hz, hoch 577 Hz | 496 Hz | 4 | 9.600 / 10.200 |
+| `hist_mcl` (Honda V6 Turbo) | mittel 564 Hz, hoch 561 Hz | 284 Hz | 3 | 11.800 / 12.500 |
+| `hist_fer` (Ferrari V10) | mittel 1.099 Hz, hoch 1.625 Hz | 1.296 Hz | 5 | 17.600 / 18.300 |
+Dateien `sounds/hist_*.wav`, werden nur geladen, wenn mit dem Klassiker gefahren wird (`lazy`, `histSnd`).

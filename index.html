@@ -975,7 +975,8 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 #scrTeam .tm.on{outline:2px solid #fff!important;outline-offset:-2px;background:linear-gradient(180deg,rgba(110,114,124,.95),rgba(58,60,68,.95))!important;box-shadow:inset 0 -3px 0 var(--c1)!important}
 #scrTeam .tmsep{flex:none;align-self:stretch;display:grid;place-items:center;writing-mode:vertical-rl;transform:rotate(180deg);font:900 9px/1 system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#d9b45a;font-style:normal;padding:0 3px;margin:0 4px;border-right:1px solid rgba(217,180,90,.55)}
 #scrTeam .tm.hist{background:linear-gradient(180deg,rgba(92,74,44,.78),rgba(38,30,20,.85))!important;border-color:rgba(217,180,90,.45)!important}
-#scrTeam .tm .hy{position:absolute;left:0;right:0;bottom:2px;font:900 8.5px/1 system-ui,sans-serif;letter-spacing:.08em;color:#ecd394;text-align:center;font-style:normal}
+#scrTeam .tm .hy{position:absolute;right:2px;bottom:1px;font:800 6.5px/1 system-ui,sans-serif;letter-spacing:.04em;color:#ecd394;font-style:normal;opacity:.85;pointer-events:none}
+#scrTeam .tm.hist svg{width:62%!important;height:62%!important}
 #scrTeam .tm.hist.on{outline-color:#ecd394!important}
 .histTag{display:inline-block;font-style:normal;font-size:9.5px;font-weight:900;letter-spacing:.14em;color:#1a1408;background:#d9b45a;border-radius:3px;padding:1px 5px 0;margin-right:6px;vertical-align:1px}
 .teaminfo .histInfo{grid-column:2;color:rgba(236,211,148,.85)!important}
@@ -2340,10 +2341,9 @@ const FinishShader = {
       // Klassiker (v2.68): Bild wie die Fernsehübertragung der Zeit – 1 Film 1970, 2 VHS 1988, 3 SD-Digital-TV 2004 (nur Uniform-Verzweigung, kein eigener Durchgang)
       float fr = floor(uTime * 24.0), bnd = 0.0;
       if (uEra > 0.5) {
-        if (uEra < 1.5) uv += vec2(hash12(vec2(fr, 3.1)) - 0.5, hash12(vec2(fr, 7.7)) - 0.5) * vec2(0.0012, 0.0022);   // Bildstand wackelt (Filmtransport)
+        if (uEra < 1.5) uv += vec2(hash12(vec2(fr, 3.1)) - 0.5, hash12(vec2(fr, 7.7)) - 0.5) * vec2(0.0004, 0.0008);   // Bildstand wackelt (Filmtransport)
         else if (uEra < 2.5) { float ln = floor(vUv.y * 288.0); bnd = 1.0 - smoothstep(0.0, 0.03, abs(vUv.y - (1.15 - fract(uTime * 0.06) * 1.3)));   // Zeilen zittern, ein Störstreifen wandert durchs Bild
           uv.x += (hash12(vec2(ln, floor(uTime * 25.0))) - 0.5) * (0.0010 + bnd * 0.010) + (1.0 - smoothstep(0.0, 0.05, vUv.y)) * 0.004 * sin(uTime * 9.0 + vUv.y * 90.0); }   // unten: Kopfumschaltung
-        else { vec2 sd = vec2(576.0 * uAspect, 576.0); uv = (floor(uv * sd) + 0.5) / sd; }   // 576 Zeilen
       }
       vec2 c = uv - 0.5; float r = length(c);
       float top = smoothstep(0.9, 1.5, sp); float amt = (sp * 0.085 + top * top * 0.07) * smoothstep(0.12, 0.7, r) * mix(0.2 + top * 0.15, 1.0, smoothstep(0.42, 0.75, uv.y)) + uBoost * 0.075 * smoothstep(0.08, 0.6, r);   // nahe Höchstgeschwindigkeit und bei Boost deutlich mehr Radialunschärfe   // Fahrbahn, Linien und Curbs (untere Bildhälfte) bleiben scharf
@@ -2359,12 +2359,14 @@ const FinishShader = {
       float ca = (0.0004 + sp * 0.0018 + uBoost * 0.002) * smoothstep(0.35, 0.75, r);   // nur ganz am Rand, damit Curbs und Linien nicht farbig verschmieren
       if (ca > 0.00005) { col.r = mix(col.r, texture2D(tDiffuse, uv + c * ca).r, 0.85); col.b = mix(col.b, texture2D(tDiffuse, uv - c * ca).b, 0.85); }
       if (uEra > 0.5) {
-        if (uEra < 1.5) { vec2 o = vec2(0.0011, 0.0016);   // Film: weicher (Objektiv, Kopie der Kopie)
-          vec3 b = texture2D(tDiffuse, uv + o).rgb + texture2D(tDiffuse, uv - o).rgb + texture2D(tDiffuse, uv + vec2(o.x, -o.y)).rgb + texture2D(tDiffuse, uv - vec2(o.x, -o.y)).rgb; col = mix(col, b * 0.25, 0.7); }
+        if (uEra < 1.5) { vec2 o = vec2(0.0005, 0.0008);   // Film: nur ein Hauch weicher (v2.69: vorher viel zu unscharf)
+          vec3 b = texture2D(tDiffuse, uv + o).rgb + texture2D(tDiffuse, uv - o).rgb + texture2D(tDiffuse, uv + vec2(o.x, -o.y)).rgb + texture2D(tDiffuse, uv - vec2(o.x, -o.y)).rgb; col = mix(col, b * 0.25, 0.3); }
         else if (uEra < 2.5) { vec3 s1 = texture2D(tDiffuse, uv - vec2(0.002, 0.0)).rgb, s2 = texture2D(tDiffuse, uv - vec2(0.004, 0.0)).rgb, s3 = texture2D(tDiffuse, uv - vec2(0.006, 0.0)).rgb, s4 = texture2D(tDiffuse, uv + vec2(0.0012, 0.0)).rgb;   // VHS: Farbe läuft nach rechts aus, Helligkeit leicht unscharf
           float Y = dot(col * 0.5 + s4 * 0.3 + s1 * 0.2, vec3(0.299, 0.587, 0.114)); vec3 ch = (col + s1 + s2 + s3) * 0.25; col = max(vec3(Y) + (ch - vec3(dot(ch, vec3(0.299, 0.587, 0.114)))) * 1.1, 0.0); }
-        else { vec2 sd2 = vec2(288.0 * uAspect, 288.0); vec3 ch = texture2D(tDiffuse, (floor(uv * sd2) + 0.5) / sd2).rgb;   // SD: Farbe nur in halber Auflösung (4:2:0)
-          col = max(vec3(dot(col, vec3(0.299, 0.587, 0.114))) + (ch - vec3(dot(ch, vec3(0.299, 0.587, 0.114)))), 0.0); }
+        else { vec2 o = vec2(0.0016 / uAspect, 0.0016);   // SD 2004 (v2.69, ohne Verpixeln): leicht weich wie 576 Zeilen, Farbe weicher als Helligkeit (4:2:0), dazu eine feine Kantenanhebung wie bei Sendern
+          vec3 b = texture2D(tDiffuse, uv + o).rgb + texture2D(tDiffuse, uv - o).rgb + texture2D(tDiffuse, uv + vec2(o.x, -o.y)).rgb + texture2D(tDiffuse, uv - vec2(o.x, -o.y)).rgb; b *= 0.25;
+          float Y = dot(col, vec3(0.299, 0.587, 0.114)), Yb = dot(b, vec3(0.299, 0.587, 0.114)); Y = mix(Y, Yb, 0.35); Y += (Y - Yb) * 0.6;
+          col = max(vec3(Y) + (b - vec3(Yb)), 0.0); }
       }
       if (uBloom > 0.0) col += texture2D(tBloom, uv).rgb * uBloom;   // Leuchten (in Viertelauflösung berechnet)
       if (uRays > 0.001) col += texture2D(tRays, uv).rgb * uRays;   // Lichtstrahlen der tiefen Sonne
@@ -2398,7 +2400,7 @@ const FinishShader = {
       if (uEra > 0.5) { vec3 c2 = gl_FragColor.rgb; float L = dot(c2, vec3(0.299, 0.587, 0.114));
         if (uEra < 1.5) {   // Film 1970: Sepia, flackernde Belichtung, grobes Korn, Kratzer, Staub, dunkle Ecken
           c2 = mix(c2, vec3(L) * vec3(1.08, 0.94, 0.74) + vec3(0.03, 0.02, 0.0), 0.82); c2 = (c2 - 0.5) * 1.08 + 0.5;
-          c2 *= 1.0 + (hash12(vec2(fr, 1.3)) - 0.5) * 0.07; c2 += (hash12(floor(gl_FragCoord.xy * 0.5) + fr * 17.0) - 0.5) * 0.09;
+          c2 *= 1.0 + (hash12(vec2(fr, 1.3)) - 0.5) * 0.06; c2 += (hash12(gl_FragCoord.xy + fr * 17.0) - 0.5) * 0.06;
           if (hash12(vec2(fr, 9.0)) > 0.6) c2 *= 1.0 - 0.3 * (1.0 - smoothstep(0.0, 0.0012, abs(vUv.x - hash12(vec2(fr, 5.0))))) * step(0.3, hash12(vec2(floor(vUv.y * 30.0), fr)));
           vec2 dp = vUv * vec2(uAspect, 1.0) * 60.0; if (hash12(floor(dp) + fr * 3.7) > 0.9975) c2 = mix(c2, vec3(0.08, 0.06, 0.04), (1.0 - smoothstep(0.1, 0.32, length(fract(dp) - 0.5))) * 0.8);
           c2 *= 1.0 - smoothstep(0.35, 0.8, length((vUv - 0.5) * vec2(1.0, 0.85))) * 0.55; }
@@ -2408,7 +2410,7 @@ const FinishShader = {
           float ln = floor(vUv.y * 288.0); if (hash12(vec2(floor(vUv.x * 160.0 + hash12(vec2(ln, fr)) * 40.0), ln + fr)) > 1.0 - bnd * 0.25) c2 = mix(c2, vec3(0.92), 0.6);
           c2 = mix(c2, c2 * vec3(0.8, 0.88, 1.0) + 0.05, 1.0 - smoothstep(0.0, 0.05, vUv.y)); }
         else {   // SD 2004: kräftige Sendefarben, leichte 8×8-Blöcke (MPEG-2), Halbbilder
-          c2 = mix(vec3(L), c2, 1.12); c2 = (c2 - 0.5) * 1.06 + 0.5; c2 += (hash12(floor(gl_FragCoord.xy / 8.0) + fr) - 0.5) * 0.014; c2 *= 0.985 + 0.015 * step(1.0, mod(gl_FragCoord.y, 2.0)); }
+          c2 = mix(vec3(L), c2, 1.15) * vec3(0.99, 1.0, 1.03); c2 = (c2 - 0.5) * 1.05 + 0.5; c2 += (hash12(floor(gl_FragCoord.xy / 8.0) + fr) - 0.5) * 0.006; c2 *= 0.985 + 0.015 * step(1.0, mod(gl_FragCoord.y, 2.0)); }
         gl_FragColor.rgb = c2; }
       gl_FragColor.rgb += (hash12(gl_FragCoord.xy + fract(uTime * 7.31) * 113.0) - 0.5) * uGrain;   // feines Filmkorn (gegen Farbstufen im Himmel)
     }`,
@@ -4267,13 +4269,13 @@ function makeRoadster(d, T) {
 // ck/tvY: Helmkamera bzw. Höhe der TV-Kamera abweichend vom Modell (extras.cams wurden ohne Fahrer bestimmt): Lotus-Lenkrad lag aus Augenhöhe unter dem
 //     Bildrand (Augenpunkt 10 cm zurück, 3 cm tiefer, Blick etwas tiefer), in der TV-Kamera füllte der Helm das halbe Bild (Kamera höher, Helm nur noch unten im Bild)
 const HIST_CAR = {
-  H_LOT: { file: 'lotus49c', title: 'Lotus 49C', year: 1970, fx: 1, swRot: 1.1, mass: 500, gears: 5, rpm: [9600, 10200], ck: [0, 0.87, -0.08, 4.2], tvY: 1.35,
+  H_LOT: { file: 'lotus49c', title: 'Lotus 49C', year: 1970, snd: 'hist_lot', fx: 1, swRot: 1.1, mass: 500, gears: 5, rpm: [9600, 10200], ck: [0, 0.87, -0.08, 4.2], tvY: 1.35,
     sw: { c: [0.033, 0.52, 0.463], a: [-0.008, -0.38, 0.925], r: 0.165, t: 0.03, rh: 0.05, th: 0.09, h: 9, g: 0.134, e: [0.31, -0.32, 0.3] },
     ph: { top: 0.82, grip: 0.62, brk: 0.6, acc: 0.72 }, info: 'Cosworth DFV V8 · ca. 430 PS · 500 kg · 5 Gänge' },
-  H_MCL: { file: 'mclaren_mp44', title: 'McLaren MP4/4', year: 1988, fx: 2, swRot: 1.2, mass: 540, gears: 6, rpm: [11600, 12100], ck: [0, 0.88, -0.05, 1.4], tvY: 1.12,
+  H_MCL: { file: 'mclaren_mp44', title: 'McLaren MP4/4', year: 1988, snd: 'hist_mcl', rl: [0.25, 0.6], fx: 2, swRot: 1.2, mass: 540, gears: 6, rpm: [11800, 12500], ck: [0, 0.88, -0.05, 1.4], tvY: 1.12,
     sw: { c: [0.007, 0.48, 0.722], a: [-0.005, -0.2, 0.98], r: 0.17, t: 0.025, rh: 0.05, th: 0.08, h: 9, g: 0.129, e: [0.24, -0.24, 0.36] },
     ph: { top: 0.93, grip: 0.78, brk: 0.75, acc: 0.95 }, info: 'Honda V6 Turbo · ca. 680 PS · 540 kg · 6 Gänge' },
-  H_FER: { file: 'ferrari_f2004', title: 'Ferrari F2004', year: 2004, fx: 3, swRot: 0.95, mass: 605, gears: 7, rpm: [12400, 12900],
+  H_FER: { file: 'ferrari_f2004', title: 'Ferrari F2004', year: 2004, snd: 'hist_fer', rl: [0.25, 0.6], fx: 3, swRot: 0.95, mass: 605, gears: 7, rpm: [17600, 18300],
     sw: { c: [0, 0.519, 0.517], a: [0, -0.118, 0.993], r: 0.175, t: 0.04, rh: 0.04, th: 0.06, h: 0.125, g: 0.118, e: [0.22, -0.24, 0.36] },
     ph: { top: 1.0, grip: 0.94, brk: 0.95, acc: 0.97 }, info: 'Ferrari V10 · 865 PS · 605 kg · 7 Gänge' },
 };
@@ -4283,9 +4285,41 @@ const _hInv = new THREE.Matrix4(), _hRel = new THREE.Matrix4();
 function histRel(o, root, dst) { _hInv.copy(root.matrixWorld).invert(); _hRel.multiplyMatrices(_hInv, o.matrixWorld); _hRel.decompose(dst.position, dst.quaternion, dst.scale); return dst; }
 function histLoad(team) {
   const H = HIST_CAR[team]; if (!H) return Promise.resolve(null); if (HIST.tpl[team]) return Promise.resolve(HIST.tpl[team]);
-  return HIST.wait[team] ||= import('three/addons/loaders/GLTFLoader.js').then(({ GLTFLoader }) => new GLTFLoader().loadAsync('modelle/klassiker/' + H.file + '.glb?v=1'))
+  HIST.sichtP ||= fetch('modelle/klassiker/fahrer_sicht.json?v=1').then(r => r.ok ? r.json() : null).catch(() => null).then(j => { HIST.sicht = j; });
+  return HIST.wait[team] ||= HIST.sichtP.then(() => import('three/addons/loaders/GLTFLoader.js')).then(({ GLTFLoader }) => new GLTFLoader().loadAsync('modelle/klassiker/' + H.file + '.glb?v=1'))
     .then(gl => { const T = histPrep(gl.scene, H); HIST.tpl[team] = T; histDone(team); return T; })
     .catch(e => { console.warn('Klassiker ' + team, e); delete HIST.wait[team]; return null; });
+}
+// Räder sauber trennen (v2.69): Im Modell gehören Teile des Rads zur Karosserie (Lotus: Innenseite der Vorderräder lenkte nicht mit) und nicht-runde Teile
+// (Radträger, Halter) zum Radknoten (drehten mit). Je Rad: alle Dreiecke im Radzylinder (Mitte/Radius/Breite aus extras.wheels) in zusammenhängende Teile zerlegen;
+// ein Teil, das rundum geschlossen ist (Winkel um die Achse in ≥ 14 von 16 Abschnitten belegt: Reifen, Felge, Bremsscheibe), dreht sich mit (spin),
+// die übrigen lenken vorn nur mit (steer) bzw. bleiben hinten stehen. Geometrie wird nicht kopiert, nur neu indiziert.
+function histSplitWheels(T, root, W) {
+  const inv = new THREE.Matrix4().copy(root.matrixWorld).invert(), v = new THREE.Vector3();
+  for (const e of T.L) { e.wp = {};
+    for (const k of ['FL', 'FR', 'RL', 'RR']) { const w = W[k]; if (!w) continue;
+      const cx = w.x, cy = w.y, cz = w.z, R = w.r * 1.04, hw = w.width / 2 + 0.03, front = k[0] === 'F', parts = { spin: [], steer: [] };
+      const handle = (o, fromBody) => { const G = o.geometry; if (!G.index) return; const M = new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld), P = G.attributes.position, I = G.index.array, nt = I.length / 3;
+        const wp = new Map(), at = q => { let p = wp.get(q); if (!p) { v.fromBufferAttribute(P, q).applyMatrix4(M); p = [v.x, v.y, v.z]; wp.set(q, p); } return p; };
+        const cand = []; for (let t = 0; t < nt; t++) { let ok = true; if (fromBody) for (let j = 0; j < 3 && ok; j++) { const p = at(I[t * 3 + j]); ok = Math.abs(p[0] - cx) <= hw && Math.hypot(p[1] - cy, p[2] - cz) <= R; } if (ok) cand.push(t); }
+        if (!cand.length) return;
+        const key = new Map(), par = new Map(), find = i => { let r = i; while (par.get(r) !== r) r = par.get(r); while (par.get(i) !== r) { const n2 = par.get(i); par.set(i, r); i = n2; } return r; };
+        const wid = q => { const p = at(q), s2 = Math.round(p[0] * 2000) + ',' + Math.round(p[1] * 2000) + ',' + Math.round(p[2] * 2000); let r = key.get(s2); if (r === undefined) { key.set(s2, q); par.set(q, q); r = q; } return r; };
+        for (const t of cand) { const a = find(wid(I[t * 3])), b = find(wid(I[t * 3 + 1])), c = find(wid(I[t * 3 + 2])); par.set(b, a); par.set(find(c), find(a)); }
+        const bins = new Map(); for (const t of cand) for (let j = 0; j < 3; j++) { const q = I[t * 3 + j], r0 = find(wid(q)), p = at(q), b = Math.floor((Math.atan2(p[1] - cy, p[2] - cz) + Math.PI) / (Math.PI * 2) * 16) & 15; bins.set(r0, (bins.get(r0) || 0) | (1 << b)); }
+        const ringC = new Map(), ring = r0 => { if (!ringC.has(r0)) { let m2 = bins.get(r0), n = 0; while (m2) { n += m2 & 1; m2 >>>= 1; } ringC.set(r0, n >= 14); } return ringC.get(r0); };
+        const sp = [], st = [], gone = new Set();
+        for (const t of cand) { const isR = ring(find(wid(I[t * 3]))), tri = [I[t * 3], I[t * 3 + 1], I[t * 3 + 2]];
+          if (isR) { sp.push(...tri); gone.add(t); } else if (!fromBody || front) { st.push(...tri); gone.add(t); } }   // Karosserie hinten: nicht-runde Teile bleiben einfach in der Karosserie
+        const mkG = idx => { const g2 = new THREE.BufferGeometry(); for (const kk in G.attributes) g2.setAttribute(kk, G.attributes[kk]); g2.setIndex(idx); g2.computeBoundingSphere(); return g2; };
+        if (sp.length) parts.spin.push({ g: mkG(sp), m: o.material, M }); if (st.length) parts.steer.push({ g: mkG(st), m: o.material, M });
+        if (fromBody && gone.size) { const keep = []; for (let t = 0; t < nt; t++) if (!gone.has(t)) keep.push(I[t * 3], I[t * 3 + 1], I[t * 3 + 2]); G.setIndex(keep); G.computeBoundingSphere(); } };
+      if (e.w[k]) e.w[k].traverse(o => { if (o.isMesh) handle(o, false); });
+      e.body.traverse(o => { if (o.isMesh) handle(o, true); });
+      e.wp[k] = parts;
+      if (e === T.L[0] && parts.spin.length) {   // Achsmitte aus dem Reifen selbst (Mitte des runden Rings): extras.wheels lag beim F2004 vorn daneben -> Räder eierten
+        const bb = new THREE.Box3(); for (const pt of parts.spin) { const P = pt.g.attributes.position, I = pt.g.index.array; for (let i = 0; i < I.length; i++) bb.expandByPoint(v.fromBufferAttribute(P, I[i]).applyMatrix4(pt.M)); }
+        const c = bb.getCenter(new THREE.Vector3()); (T.wc ||= {})[k] = { x: cx, y: c.y, z: c.z, dy: c.y - cy, dz: c.z - cz }; } } }
 }
 // Vorlage je Auto (einmal): Detailstufen, Räder und das herausgelöste Lenkrad. Alle Autos dieses Typs teilen Geometrie und Materialien.
 function histPrep(sc, H) {
@@ -4295,6 +4329,9 @@ function histPrep(sc, H) {
     const by = re => L.children.find(o => re.test(o.name)), e = { body: by(/^body/), w: {} };
     for (const k of ['FL', 'FR', 'RL', 'RR']) e.w[k] = by(new RegExp('^wheel_' + k + '(?!_mesh)'));
     if (e.body) T.L.push(e); }
+  T.shp = T.L[T.L.length - 1] && { body: T.L[T.L.length - 1].body.clone(), w: Object.fromEntries(Object.entries(T.L[T.L.length - 1].w).map(([k, n]) => [k, n && n.clone()])) };   // Schattenstufe vor dem Aufteilen sichern (Geometrie geteilt: Body-Index wird gleich verändert -> eigene Kopie)
+  if (T.shp) T.shp.body.traverse(o => { if (o.isMesh) { o.geometry = o.geometry.clone(); } });
+  histSplitWheels(T, root, ud.wheels || {});
   for (const e of T.L) e.body.traverse(o => { if (!o.isMesh) return; const m = o.material; if (m.map) m.map.anisotropy = 4; m.userData.env = true; o.castShadow = true; o.receiveShadow = true; });
   // Lenkrad aus der vollen Stufe lösen: Dreiecke, deren drei Ecken im Lenkrad-Bereich liegen, wandern in eine eigene Geometrie (gleiche, geteilte Attribute – nur ein neuer Index)
   const S0 = H.sw, c = new THREE.Vector3(...S0.c), a = new THREE.Vector3(...S0.a).normalize(), v = new THREE.Vector3(), d = new THREE.Vector3();
@@ -4311,6 +4348,10 @@ function histPrep(sc, H) {
     const loc = new THREE.Object3D(); new THREE.Matrix4().multiplyMatrices(pivInv, M).decompose(loc.position, loc.quaternion, loc.scale);
     T.st.push({ g: g2, m: o.material, loc }); });
   T.stTris = T.st.reduce((n, x) => n + x.g.index.count / 3, 0);
+  // Heckleuchte (Regen-/Bremslicht, ab den 80ern Pflicht): hinterster Punkt der Karosserie in Wagenmitte, 25–70 cm hoch
+  if (H.rl && T.L[0]) { let zr = 1e9, yr = 0.4; T.L[0].body.traverse(o => { if (!o.isMesh) return; const M = new THREE.Matrix4().multiplyMatrices(_hInv.copy(root.matrixWorld).invert(), o.matrixWorld), P = o.geometry.attributes.position;
+      for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i).applyMatrix4(M); if (Math.abs(v.x) < 0.05 && v.y > H.rl[0] && v.y < H.rl[1] && v.z < zr) { zr = v.z; yr = v.y; } } });
+    T.rlPos = [0, yr, zr - 0.008]; }
   return T;
 }
 // Auto (leere Hülle). Inhalt kommt aus der Vorlage, sobald sie geladen ist.
@@ -4328,14 +4369,15 @@ function histFill(m) {
   const ud = T.ud, W = ud.wheels || {}, cams = ud.cams || {};
   if (cams.cockpit) m.cam = cams.cockpit.slice(); if (cams.tv) m.tv = cams.tv.slice(); m.lodD = ud.lodDistances || [0, 18, 45];
   const eye = m.cam.slice(); if (H.ck) m.cam = H.ck.slice(); if (H.tvY) m.tv[1] = H.tvY;
-  const wc = k => W[k] ? new THREE.Vector3(W[k].x, W[k].y, W[k].z) : new THREE.Vector3(), cFL = wc('FL'), cFR = wc('FR'), cRL = wc('RL'), cRR = wc('RR');
+  const wc = k => T.wc && T.wc[k] ? new THREE.Vector3(T.wc[k].x, T.wc[k].y, T.wc[k].z) : W[k] ? new THREE.Vector3(W[k].x, W[k].y, W[k].z) : new THREE.Vector3(), cFL = wc('FL'), cFR = wc('FR'), cRL = wc('RL'), cRR = wc('RR');   // wc: gemessene Achsmitte (histSplitWheels)
   m.fl.position.copy(cFL); m.fr.position.copy(cFR); m.rr.position.set(0, (cRL.y + cRR.y) / 2, (cRL.z + cRR.z) / 2); m.wr = (W.RL && W.RL.r) || 0.33;
   T.L.forEach((e, l) => { const G = new THREE.Group(); G.visible = l === 0; m.g.add(G); m.lodG[l] = G;
     const root = e.body.parent.parent; root.updateMatrixWorld(true);
     const b = e.body.clone(); histRel(e.body, root, b); G.add(b);
-    for (const [k, grp, ctr] of [['FL', m.wfl, cFL], ['FR', m.wfr, cFR], ['RL', m.rr, null], ['RR', m.rr, null]]) { const n0 = e.w[k]; if (!n0) continue; const n = n0.clone(); histRel(n0, root, n);
-      if (ctr) n.position.sub(ctr); else n.position.sub(m.rr.position);
-      n.visible = l === 0; n.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.material.userData.env = true; } }); grp.add(n); m.lw[l].push(n); } });
+    const put = (pt, grp, ctr) => { const o = new THREE.Mesh(pt.g, pt.m); pt.M.decompose(o.position, o.quaternion, o.scale); o.position.sub(ctr); o.receiveShadow = true; pt.m.userData.env = true; o.visible = l === 0; grp.add(o); m.lw[l].push(o); };
+    for (const [k, spinG, steerG, ctr] of [['FL', m.wfl, m.fl, cFL], ['FR', m.wfr, m.fr, cFR], ['RL', m.rr, G, m.rr.position], ['RR', m.rr, G, m.rr.position]]) { const P = e.wp && e.wp[k]; if (!P) continue;
+      for (const pt of P.spin) put(pt, spinG, ctr);                                            // dreht (und lenkt vorn)
+      for (const pt of P.steer) put(pt, steerG, steerG === G ? new THREE.Vector3() : ctr); } });   // vorn: lenkt nur mit · hinten: steht fest (in der Stufe)
   // Lenkrad (nur volle Stufe): dreht um die Lenkachse, die Hände greifen am Kranz (histArms)
   const piv = new THREE.Group(), spin = new THREE.Group(); piv.position.copy(T.piv.position); piv.quaternion.copy(T.piv.quaternion); piv.add(spin);
   for (const s of T.st) { const o = new THREE.Mesh(s.g, s.m); o.position.copy(s.loc.position); o.quaternion.copy(s.loc.quaternion); o.scale.copy(s.loc.scale); o.castShadow = true; spin.add(o); }
@@ -4343,15 +4385,44 @@ function histFill(m) {
   // Fahrer: Helm (Design je Fahrer) und Oberkörper aus Grundformen; die Arme kommen aus makeArms (am Lenkrad, mit den Händen am Kranz)
   const d = m.d, Tm = m.T, hp = [eye[0], eye[1] + 0.025, eye[2] - 0.12];   // Helmmitte relativ zum Augenpunkt des Modells wie beim F1-Modell (helm vs. cam)
   const hAcc = helmAcc(d.helmet, Tm.acc), hsh = new THREE.Mesh(F1FAHRER ? helmGeoKart() : helmGeoNew(), helmMat(d, hAcc, !!F1FAHRER)); hsh.position.set(hp[0], hp[1] + 0.005, hp[2]); hsh.castShadow = true; m.helm.add(hsh);
-  const SD = suitDesign(d, Tm), torso = new THREE.Mesh(mergeParts(driverParts(col(SD.base), col(SD.glove)).slice(0, 3).map(([g2, c2]) => [g2.translate(hp[0], hp[1], hp[2]), c2])), KDRV.suit); torso.castShadow = true; m.helm.add(torso);
-  const A = m.arms = makeArms(false, 0.022, false); A.suit.color.setHex(SD.base); A.hm.color.setHex(SD.glove); A.cuffM.color.setHex(SD.glove); piv.add(A.g); histArms(m, 0);
+  const SD = suitDesign(d, Tm);
+  if (F1FAHRER) m.drv = histDriver(m, T, SD, hp, piv);   // Rennfahrer wie im F1 (Anzug, Handschuhe, Arme per IK am Lenkrad), unsichtbare Teile je Auto entfernt
+  else { const torso = new THREE.Mesh(mergeParts(driverParts(col(SD.base), col(SD.glove)).slice(0, 3).map(([g2, c2]) => [g2.translate(hp[0], hp[1], hp[2]), c2])), KDRV.suit); m.helm.add(torso);
+    const A = m.arms = makeArms(false, 0.022, false); A.suit.color.setHex(SD.base); A.hm.color.setHex(SD.glove); A.cuffM.color.setHex(SD.glove); piv.add(A.g); histArms(m, 0); }   // Rückfall ohne f1fahrer.bin
   // Schatten aus der einfachsten Stufe (Leistung): Karosserie und Räder der Stufe 2 nur für die Schattenkarte (Ebene SHP_L, wie die Schattenfiguren der Gegner);
   // die sichtbaren Stufen werfen keinen Schatten. Gemessen Ferrari: Schattenkarte 26–28 Aufrufe / ~105.000 Dreiecke -> siehe docs/KLASSIKER.md
   const L2 = T.L[T.L.length - 1], root2 = L2.body.parent.parent, shp = new THREE.Group(); m.g.add(shp);
-  for (const n0 of [L2.body, ...Object.values(L2.w).filter(Boolean)]) { const n = n0.clone(); histRel(n0, root2, n); shp.add(n); }
+  for (const [n0, src] of [[L2.body, T.shp.body], ...Object.keys(L2.w).filter(k => L2.w[k]).map(k => [L2.w[k], T.shp.w[k]])]) { const n = src.clone(); histRel(n0, root2, n); shp.add(n); }
   shp.traverse(o => { o.layers.set(SHP_L); o.userData.shpOnly = true; if (o.isMesh) { o.castShadow = true; o.receiveShadow = false; } });   // shpOnly: der Auto-Durchgang (carPass) lässt sie aus
   for (const G of m.lodG) G.traverse(o => { if (o.isMesh) o.castShadow = false; }); for (const arr of m.lw) for (const n of arr) n.traverse(o => { if (o.isMesh) o.castShadow = false; });
+  if (T.rlPos) { const rl = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.045, 0.02), RLMAT); rl.position.set(...T.rlPos); rl.position.z -= 0.01; m.rl.add(rl); m.rl.visible = false; }   // blinkt beim Bremsen wie bei den heutigen Autos (updateMeshes)
   m.shpH = shp; envAll(m.g); histSetLod(m, 0, true);
+}
+// Fahrer aus f1fahrer.bin wie im modernen F1 (f1Driver): Helm an der Helmmitte des Klassikers, Fäuste am Kranz des Klassiker-Lenkrads.
+// Das Bau-Lenkrad des Modells (Lage _swQ, F1-Griffe) wird per Q auf die Lage dieses Lenkrads gedreht und auf den Griffradius sw.g skaliert (kartArmsIK).
+// Sichtbarkeit: modelle/klassiker/fahrer_sicht.json listet je Auto die Dreiecke des Rumpfs, die aus irgendeiner Kamera zu sehen sind (Messung mit
+// tools/klassiker/fahrer_sicht.js) – alle übrigen Rumpf-Dreiecke (Beine im Monocoque, Rücken im Sitz …) fallen weg. Arme und Hände bleiben immer (sie bewegen sich).
+function histDrvGeo(file) { const K = F1FAHRER, V = HIST.sicht && HIST.sicht[file]; if (!V || V.n !== K.geo.index.count / 3) return K.geo;
+  HIST.dgeo ||= {}; if (HIST.dgeo[file]) return HIST.dgeo[file];
+  const bits = Uint8Array.from(atob(V.vis), c => c.charCodeAt(0)), I = K.geo.index.array, B = K.geo.attributes.aBi.array, W = K.geo.attributes.aBw.array, keep = [];
+  const arm = v => { for (let k = 0; k < 4; k++) if (B[v * 4 + k] > 0 && W[v * 4 + k] > 0) return true; return false; };
+  for (let t = 0; t < I.length / 3; t++) { const a = I[t * 3], b = I[t * 3 + 1], c = I[t * 3 + 2]; if ((bits[t >> 3] >> (t & 7)) & 1 || arm(a) || arm(b) || arm(c)) keep.push(a, b, c); }
+  const g = new THREE.BufferGeometry(); for (const k in K.geo.attributes) g.setAttribute(k, K.geo.attributes[k]); g.setIndex(keep); g.boundingSphere = K.geo.boundingSphere;
+  return (HIST.dgeo[file] = g); }
+const _hQ = new THREE.Quaternion();
+function histDriver(m, T, SD, hp, piv) {
+  const K = F1FAHRER, H = m.H; K.fist ||= f1Fist(K);
+  const mesh = new THREE.Mesh(window.__histFull ? K.geo : histDrvGeo(H.file), kartFahrerMat('F1S_' + m.hist, col(SD.base), col(SD.acc), { sec: col(SD.sec), style: SD.style, glove: col(SD.glove) }));
+  const off = new THREE.Vector3(hp[0], hp[1] + 0.005, hp[2]).sub(new THREE.Vector3(...K.helm)); mesh.position.copy(off); m.lodG[0].add(mesh);
+  const AXb = new THREE.Vector3(0, 0, 1).applyQuaternion(_swQ), r0 = K.fist.c.clone().add(K.fist.o).sub(K.swC); r0.addScaledVector(AXb, -r0.dot(AXb));
+  const RIM = H.sw.g * K.rimR / r0.length(), AX = new THREE.Vector3(0, 0, 1).applyQuaternion(piv.quaternion), Q = piv.quaternion.clone().multiply(_hQ.copy(_swQ).invert());
+  const ov = new THREE.Vector3(0, -0.01, 0.02).multiplyScalar(RIM / 0.2).applyQuaternion(_swQ), C0 = piv.position.clone().add(ov);   // kartArmsIK zieht ov wieder ab: Drehpunkt = Lenkradmitte
+  const bones = Array.from({ length: 7 }, () => new THREE.Matrix4()), Cl = new THREE.Vector3(), st = { mesh, off, spin: 0, cut: false, bones, tris: mesh.geometry.index.count / 3 };
+  const U = mesh.material.userData.U; let last = NaN, lx = NaN;
+  mesh.onBeforeRender = () => { const sp = st.spin, px = mesh.position.y * 7 + mesh.position.z;
+    if (sp !== last || px !== lx) { Cl.copy(C0).sub(mesh.position); kartArmsIK(bones, sp, K, Cl, AX, RIM, Q); last = sp; lx = px; }
+    U.uBone.value = bones; U.uCut.value = st.cut ? 1 : 0; mesh.material.uniformsNeedUpdate = true; };
+  return st;
 }
 // Hände auf 9 und 3 Uhr am Kranz, sie wandern mit dem Einschlag mit (wie beim Roadster); Ellbogen-Ziel je Auto
 function histArms(m, steer) { const A = m.arms; if (!A) return; const sp = -steer * m.H.swRot, R = m.H.sw.g, E = m.H.sw.e;
@@ -4552,12 +4623,12 @@ function kartFahrerMat(tk, suit, acc, des = null) {   // des (F1/F2-Anzüge): { 
 // Arme folgen dem Lenkrad wie echte Arme: Die Hand bleibt am Kranz (dreht mit dem Lenkrad um dessen Achse), Schulter fest,
 // Ober- und Unterarm starr mit fester Länge – der Ellbogen ergibt sich aus der Zwei-Knochen-IK und bleibt in seiner Ebene (hebt/senkt sich natürlich).
 const _ik = { q: new THREE.Quaternion(), q2: new THREE.Quaternion(), r: new THREE.Quaternion(), v: new THREE.Vector3(), t: new THREE.Vector3(), e: new THREE.Vector3(), u: new THREE.Vector3(), p: new THREE.Vector3(), a: new THREE.Vector3(), b: new THREE.Vector3(), m: new THREE.Matrix4() };
-function kartArmsIK(out, spin, K = KFAHRER, C = K.swC, AX = K.swAx, RIM = K.rimR) {   // out: 7 Matrix4 (Bindhaltung -> aktuell), spin: Lenkraddrehung (rad); K: Fahrer (Kart oder F1), C/AX/RIM: Lenkradmitte, Drehachse, Griffradius im Fahrer-Rahmen
+function kartArmsIK(out, spin, K = KFAHRER, C = K.swC, AX = K.swAx, RIM = K.rimR, Q = null) {   // Q (Klassiker): Lage des Ziel-Lenkrads gegenüber dem Bau-Lenkrad (_swQ) – Griffe und Fäuste werden mitgedreht   // out: 7 Matrix4 (Bindhaltung -> aktuell), spin: Lenkraddrehung (rad); K: Fahrer (Kart oder F1), C/AX/RIM: Lenkradmitte, Drehachse, Griffradius im Fahrer-Rahmen
   // Hand: dreht mit dem Lenkrad UND zusätzlich um das Kranzrohr (wie eine echte Hand, die am Griff „rollt“), so dass sie in Linie mit dem
   // Unterarm bleibt – kein Abknicken im Handgelenk, keine Stulpe im Bündchen. Arm: Zwei-Knochen-IK auf das so gefundene Handgelenk.
   const X = _ik; out[0].identity();
   const FX = K.fist;   // F1/F2: Faustachse der Hand (der Griff liegt genau darauf) – Hand sitzt fest am Griff und rollt nur um diese Achse
-  X.r.setFromAxisAngle(AX, spin * (FX ? 1 : 0.8));   // Kart: Hände folgen dem Kranz zu 80 % – der Kranz gleitet etwas durch die Faust; F1/F2: 100 % (bei 80 % rutschte die Faust bis 3 cm neben den Griff)
+  X.r.setFromAxisAngle(AX, spin * (FX ? 1 : 0.8)); if (Q) X.r.multiply(Q);   // Kart: Hände folgen dem Kranz zu 80 % – der Kranz gleitet etwas durch die Faust; F1/F2: 100 % (bei 80 % rutschte die Faust bis 3 cm neben den Griff)
   for (let side = 0; side < 2; side++) {
     const mir = side ? -1 : 1, o = side ? 4 : 1;
     const sh = _ikA.copy(K.arm[0]).setX(K.arm[0].x * mir), el = _ikB.copy(K.arm[1]).setX(K.arm[1].x * mir), wr = _ikW.copy(K.arm[2]).setX(K.arm[2].x * mir);
@@ -10529,7 +10600,66 @@ function haloDraw(g, o) {
   if (!document.body.classList.contains('noBoost')) { const w = r0 * 1.5, x0 = gx - w / 2, y = gy + r0 + 6, b2 = clamp(pl.bat || 0, 0, 1); g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(x0, y, w, 3); g.fillStyle = pl.boosting ? '#fff27a' : '#ffd400'; g.fillRect(x0, y, w * b2, 3);
     g.font = '700 ' + Math.max(6, r0 * 0.15) + 'px ' + F; g.fillStyle = 'rgba(255,212,0,.9)'; g.fillText(pl.boosting ? BOOST_NAME : 'ERS ' + Math.round(b2 * 100) + '%', gx, y + 9); }
 }
-function drawGauge() { const g = gG; g.clearRect(0, 0, 640, 240); g.save(); g.scale(2, 2); haloDraw(g, { cx: 160, cy: 150, rx: 152, ry: 100, t: 26, th0: Math.PI + 0.42, th1: Math.PI * 2 - 0.42, full: false });   /* flacher Bogen: Schrift links steht fast waagerecht */ g.restore(); }
+// Klassiker (v2.69): Tacho im Stil der Zeit statt der heutigen Halo-Grafik – Zeichenfläche 320 × 120 (logisch), 30× je Sekunde wie drawGauge.
+// 1 Lotus 1970: Armaturenbrett (Schrumpflack, Nieten) mit großem Drehzahlmesser, Öl- und Wasseranzeige, Schreibmaschinenschrift
+// 2 McLaren 1988: analoger Drehzahlmesser mit orangem Zeiger, Ladedruck, bernsteinfarbene Sieben-Segment-Anzeige (Tempo, Runde, Platz)
+// 3 Ferrari 2004: Lenkrad-Display – Schaltlampen-Reihe, graugrünes LCD mit großem Gang, Tempo, Rundenzeit
+const HGV = { oil: 0.5, wat: 0.5 };
+function histGauge(g, H) {
+  const kmh = pl.v * 3.6, gi = gearP(kmh), pre = raceState === 'lights', rpm = pre ? 3000 + (pl.rev || 0) * (H.rpm[1] - 3000) : pl.v < 0.5 ? 2500 : gi.rpm, pos = Math.max(1, order.indexOf(pl) + 1);
+  const lap = clamp(pl.lapsDone + 1, 1, S.laps), cur = raceState === 'race' && pl.lapsDone >= 0 && !pl.finished ? raceTime - pl.lapStart : 0, tm = cur ? fmt(cur) : pl.best ? fmt(pl.best) : '0:00.000';
+  const gear = pl.v < 0.5 || pre ? 'N' : String(gi.g), thr = pre ? (pl.rev || 0) : (pl.thr || 0);
+  HGV.oil += ((0.35 + thr * 0.45 + rpm / H.rpm[1] * 0.15) - HGV.oil) * 0.05; HGV.wat += ((0.45 + Math.min(1, raceTime / 120) * 0.25) - HGV.wat) * 0.01;
+  const dial = (cx, cy, r, a0, a1, f, o) => {   // Rundinstrument: Gehäuse, Skala, Zeiger
+    const bez = g.createLinearGradient(cx - r, cy - r, cx + r, cy + r); bez.addColorStop(0, o.b0); bez.addColorStop(0.5, o.b1); bez.addColorStop(1, o.b0);
+    g.fillStyle = bez; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.fill(); g.fillStyle = o.face; g.beginPath(); g.arc(cx, cy, r * 0.88, 0, 7); g.fill();
+    if (o.red != null) { g.strokeStyle = o.redC || '#c8261c'; g.lineWidth = r * 0.07; g.beginPath(); g.arc(cx, cy, r * 0.74, a0 + (a1 - a0) * o.red, a1); g.stroke(); }
+    const n = o.n || 10; g.strokeStyle = o.tick; g.fillStyle = o.tick;
+    for (let i = 0; i <= n * 2; i++) { const a = a0 + (a1 - a0) * i / (n * 2), big = i % 2 === 0, r1 = r * 0.8, r2 = r * (big ? 0.66 : 0.72); g.lineWidth = big ? r * 0.035 : r * 0.02;
+      g.beginPath(); g.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1); g.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2); g.stroke();
+      if (big && o.lab) { const t = o.lab(i / 2); if (t !== '') { g.font = o.font(r); g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t, cx + Math.cos(a) * r * 0.5, cy + Math.sin(a) * r * 0.5); } } }
+    if (o.title) { g.font = o.tFont(r); g.fillStyle = o.tick; g.textAlign = 'center'; g.fillText(o.title, cx, cy + r * 0.38); }
+    const a = a0 + (a1 - a0) * clamp(f, 0, 1.04); g.strokeStyle = o.ndl; g.lineWidth = r * 0.06; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(cx - Math.cos(a) * r * 0.14, cy - Math.sin(a) * r * 0.14); g.lineTo(cx + Math.cos(a) * r * 0.76, cy + Math.sin(a) * r * 0.76); g.stroke(); g.lineCap = 'butt';
+    g.fillStyle = o.hub || '#222'; g.beginPath(); g.arc(cx, cy, r * 0.09, 0, 7); g.fill();
+    g.fillStyle = 'rgba(255,255,255,.07)'; g.beginPath(); g.ellipse(cx - r * 0.2, cy - r * 0.35, r * 0.55, r * 0.3, -0.5, 0, 7); g.fill(); };   // Glasreflex
+  const A0 = Math.PI * 0.75, A1 = Math.PI * 2.25;
+  if (H.fx === 1) {   // ---- Lotus 1970 ----
+    const pl0 = g.createLinearGradient(0, 0, 0, 120); pl0.addColorStop(0, '#26231f'); pl0.addColorStop(1, '#141210'); g.fillStyle = pl0; rrect(g, 4, 6, 312, 110, 14); g.fill();
+    g.strokeStyle = 'rgba(200,190,170,.35)'; g.lineWidth = 1.2; rrect(g, 4, 6, 312, 110, 14); g.stroke();
+    for (const [x, y] of [[14, 16], [306, 16], [14, 106], [306, 106]]) { g.fillStyle = '#9a958c'; g.beginPath(); g.arc(x, y, 2.4, 0, 7); g.fill(); g.fillStyle = '#5c5850'; g.beginPath(); g.arc(x + 0.6, y + 0.6, 1.2, 0, 7); g.fill(); }
+    const M = { b0: '#6d6a64', b1: '#e8e4dc', face: '#0b0b0b', tick: '#efe9dc', ndl: '#f4efe4', hub: '#3a3833', font: r => '700 ' + r * 0.17 + 'px Georgia,serif', tFont: r => 'italic 600 ' + r * 0.11 + 'px Georgia,serif' };
+    dial(160, 64, 52, A0, A1, rpm / 12000, { ...M, n: 12, red: 10 / 12, lab: i => String(i), title: 'RPM × 1000' });
+    dial(54, 70, 30, Math.PI * 0.85, Math.PI * 2.15, HGV.oil, { ...M, n: 4, red: 0.9, lab: i => ['0', '', '50', '', '100'][i], title: 'OIL' });
+    dial(266, 70, 30, Math.PI * 0.85, Math.PI * 2.15, HGV.wat, { ...M, n: 4, red: 0.85, lab: i => ['40', '', '80', '', '120'][i], title: 'WATER' });
+    g.fillStyle = '#e9e1cc'; rrect(g, 128, 98, 64, 15, 2); g.fill(); g.fillStyle = '#111'; g.font = '700 12px "Courier New",monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(String(Math.round(kmh)).padStart(3, '0') + ' km/h', 160, 106);
+    g.fillStyle = '#d8cfb8'; g.font = '700 10px "Courier New",monospace'; g.textAlign = 'left'; g.fillText('P' + pos + ' RD ' + lap + '/' + S.laps, 14, 30); g.textAlign = 'right'; g.fillText(tm, 306, 30);
+  } else if (H.fx === 2) {   // ---- McLaren 1988 ----
+    g.fillStyle = '#0d0e10'; rrect(g, 4, 6, 312, 110, 10); g.fill(); g.strokeStyle = '#3a3c42'; g.lineWidth = 1.5; rrect(g, 4, 6, 312, 110, 10); g.stroke();
+    const M = { b0: '#1d1e21', b1: '#55585e', face: '#050506', tick: '#f2f2f2', ndl: '#ff7a12', hub: '#111', font: r => '700 ' + r * 0.16 + 'px Arial,Helvetica,sans-serif', tFont: r => '600 ' + r * 0.1 + 'px Arial,sans-serif' };
+    dial(150, 62, 53, A0, A1, rpm / 14000, { ...M, n: 14, red: 12.5 / 14, redC: '#e8231b', lab: i => i % 2 ? '' : String(i), title: 'RPM × 1000' });
+    const boost = 1 + clamp(thr, 0, 1) * 1.5 * clamp(rpm / 9000, 0.3, 1);   // Ladedruck (bar) wächst mit Gas und Drehzahl
+    dial(52, 66, 32, Math.PI * 0.85, Math.PI * 2.15, boost / 3, { ...M, n: 3, red: 2.5 / 3, lab: i => String(i), title: 'BOOST bar' });
+    const seg = (txt, x, y, sz, w) => { g.font = '700 ' + sz + 'px "Courier New",monospace'; g.textAlign = 'right'; g.textBaseline = 'middle'; g.fillStyle = 'rgba(255,150,30,.12)'; g.fillText('8'.repeat(w), x, y); g.shadowColor = '#ff9a1e'; g.shadowBlur = 6; g.fillStyle = '#ffab2e'; g.fillText(txt.padStart(w, ' '), x, y); g.shadowBlur = 0; };
+    g.fillStyle = '#1a0f05'; rrect(g, 218, 22, 90, 80, 5); g.fill(); g.strokeStyle = '#4a3a24'; g.lineWidth = 1; rrect(g, 218, 22, 90, 80, 5); g.stroke();
+    seg(String(Math.round(kmh)), 300, 42, 24, 3); g.fillStyle = 'rgba(255,171,46,.7)'; g.font = '600 7px Arial'; g.textAlign = 'left'; g.fillText('KM/H', 223, 30);
+    seg('P' + pos, 300, 68, 14, 3); seg(lap + '-' + S.laps, 252, 68, 14, 4); seg(tm, 302, 90, 12, 8);
+  } else {   // ---- Ferrari 2004 ----
+    const cf = g.createLinearGradient(0, 0, 320, 120); cf.addColorStop(0, '#1b1c1f'); cf.addColorStop(1, '#0c0d0f'); g.fillStyle = cf; rrect(g, 4, 4, 312, 112, 16); g.fill();
+    g.strokeStyle = 'rgba(255,255,255,.04)'; g.lineWidth = 1; for (let x = -120; x < 330; x += 6) { g.beginPath(); g.moveTo(x, 4); g.lineTo(x + 112, 116); g.stroke(); }   // Kohlefaser angedeutet
+    g.strokeStyle = '#3d3f44'; g.lineWidth = 1.5; rrect(g, 4, 4, 312, 112, 16); g.stroke();
+    const n = 15, lit = Math.round(clamp((rpm - H.rpm[0] * 0.55) / (H.rpm[1] - H.rpm[0] * 0.55), 0, 1) * n), blink = rpm > H.rpm[1] * 0.97 && (performance.now() / 90 | 0) % 2;
+    for (let k = 0; k < n; k++) { const x = 42 + k * 16.8, on = k < lit && !blink, c = k < 5 ? '#2ee86a' : k < 10 ? '#ff2d1a' : '#3d7dff'; g.fillStyle = '#050506'; g.beginPath(); g.arc(x, 16, 5.6, 0, 7); g.fill();
+      g.fillStyle = on ? c : '#1c1f24'; if (on) { g.shadowColor = c; g.shadowBlur = 8; } g.beginPath(); g.arc(x, 16, 4, 0, 7); g.fill(); g.shadowBlur = 0; }
+    const lcd = g.createLinearGradient(0, 28, 0, 108); lcd.addColorStop(0, '#a9bca3'); lcd.addColorStop(1, '#8ea38a'); g.fillStyle = '#000'; rrect(g, 70, 28, 180, 82, 6); g.fill(); g.fillStyle = lcd; rrect(g, 73, 31, 174, 76, 4); g.fill();
+    g.fillStyle = '#16200f'; g.textBaseline = 'middle'; g.font = '800 54px "Arial Narrow",Arial,sans-serif'; g.textAlign = 'center'; g.fillText(gear, 160, 66);
+    g.font = '700 15px "Courier New",monospace'; g.textAlign = 'left'; g.fillText(String(Math.round(kmh)), 80, 46); g.font = '600 7px Arial'; g.fillText('KM/H', 80, 58);
+    g.font = '700 13px "Courier New",monospace'; g.textAlign = 'right'; g.fillText('P' + pos, 240, 46); g.font = '600 7px Arial'; g.fillText('LAP ' + lap + '/' + S.laps, 240, 58);
+    g.font = '700 12px "Courier New",monospace'; g.textAlign = 'center'; g.fillText(tm, 160, 99);
+    for (const [x, y, c] of [[34, 52, '#ffd400'], [34, 82, '#d81e1e'], [286, 52, '#2a62d8'], [286, 82, '#f2f2f2']]) { g.fillStyle = '#050506'; g.beginPath(); g.arc(x, y, 9, 0, 7); g.fill(); g.fillStyle = c; g.beginPath(); g.arc(x, y, 6.5, 0, 7); g.fill(); g.fillStyle = 'rgba(255,255,255,.35)'; g.beginPath(); g.arc(x - 2, y - 2, 2.2, 0, 7); g.fill(); }
+  }
+}
+function drawGauge() { const g = gG; g.clearRect(0, 0, 640, 240); g.save(); g.scale(2, 2); if (pl && pl.mesh && pl.mesh.H) { histGauge(g, pl.mesh.H); g.restore(); return; } haloDraw(g, { cx: 160, cy: 150, rx: 152, ry: 100, t: 26, th0: Math.PI + 0.42, th1: Math.PI * 2 - 0.42, full: false });   /* flacher Bogen: Schrift links steht fast waagerecht */ g.restore(); }
 // TV-Ansicht: die Grafik liegt auf dem echten Halo – drei Punkte des Halo-Bogens werden auf den Bildschirm projiziert, daraus die Ellipse
 const HHC = $('#haloHud'), HHG = HHC.getContext('2d'), _hv = new THREE.Vector3();
 // Helmrand in der Cockpitansicht (wie Need for Speed Shift): unscharfe Polsterung und Visierkante an den Bildrändern. Einmal als SVG gebaut (Unschärfe im SVG-Filter, statisch).
@@ -10738,6 +10868,12 @@ const SND_ENG = {   // cyl: Zündungen je Umdrehung · loops: [Datei, Grundton, 
   kart: { cyl: 1, vol: 0.5, cut: [0, 1], loops: [['sounds/kart_v0.wav', 78], ['sounds/kart_v1.wav', 104], ['sounds/kart_mittel.wav', 156], ['sounds/kart_v3.wav', 224]], schub: ['sounds/kart_schub.wav', 152, 0.8] } };   // Grundton gemessen mit tools/sounds/varianten.py
 SND_ENG.road = { cyl: 2, vol: 0.6, cut: [0.16, 0.3], loops: [['sounds/mx5e_leer.wav', 28.4, [0.4, 0.4]], ['sounds/mx5e_5200.wav', 172.8, [0.2, 0.06]], ['sounds/mx5e_6900.wav', 230.5]], schub: ['sounds/mx5n_schub.wav', 253.3, 0.3], blips: ['sounds/mx5e_blip1.wav', 'sounds/mx5e_blip2.wav', 'sounds/mx5e_blip3.wav'],
   gran: { von: 950, bis: 1500, aus: [3900, 4000], quellen: [{ file: 'sounds/mx5e_durchzug.wav', tab: [[0.032,1207],[0.132,1279],[0.232,1399],[0.332,1497],[0.432,1540],[0.532,1652],[0.632,1801],[0.732,1931],[0.832,2055],[0.932,2176],[1.032,2291],[1.132,2399],[1.232,2526],[1.332,2651],[1.432,2823],[1.532,2953],[1.632,3076],[1.732,3232],[1.832,3380],[1.932,3542],[2.032,3678],[2.132,3809],[2.232,3950],[2.332,4120],[2.432,4285],[2.532,4485],[2.632,4660],[2.732,4923],[2.832,5052],[2.932,5079],[3.032,5245],[3.132,5485],[3.232,5614],[3.332,5714],[3.432,5853],[3.532,6037],[3.632,6114]] }] } };   // v2.16: Übergänge schmal und außerhalb des Fahrbereichs (5.200→6.900 bei 5.500–5.600, Durchzug→Schleife bei 3.900–4.000) – vorher liefen bei ~6.100–6.250 und ~4.250 U/min dauerhaft zwei Fassungen derselben Aufnahme gemischt („unsauber, doppelt“) · v2.14 = Stand v2.07d (vom Nutzer gewählt) bis auf das Anfahren: 1.000–4.400 U/min granular aus einem echten Durchzug (wie v2.08, „Anfahren klingt richtig“), darüber die echten Stufen 5.200/6.900 aus v2.07d; Leerlauf und echte Gasstöße wie v2.07d. MX-5-Aufnahme: Wikimedia Commons, Ride in Japan, CC BY 3.0
+// Klassiker (v2.69): eigene Aufnahmen (ElevenLabs-Arbeitsfläche, aufbereitet mit tools/sounds/klassiker.py; Grundton = Zündfrequenz bei Tempo 1).
+// lazy: nicht beim Spielstart laden, nur wenn mit dem Auto gefahren wird (histSnd). cyl: V8 4, V6 3, V10 5 Zündungen je Umdrehung.
+SND_ENG.hist_lot = { cyl: 4, vol: 0.62, lazy: true, cut: [0.09, 0.3], loops: [['sounds/hist_lot_mittel.wav', 512, [0.25, 0.5]], ['sounds/hist_lot_hoch.wav', 576.6]], schub: ['sounds/hist_lot_schub.wav', 496.2, 0.85] };   // Cosworth DFV: rau, H-Schaltung (lange Lücke)
+SND_ENG.hist_mcl = { cyl: 3, vol: 0.6, lazy: true, cut: [0.08, 0.35], loops: [['sounds/hist_mcl_mittel.wav', 563.9, [0.2, 0.5]], ['sounds/hist_mcl_hoch.wav', 561.4]], schub: ['sounds/hist_mcl_schub.wav', 284.4, 0.8] };   // Honda V6 Turbo
+SND_ENG.hist_fer = { cyl: 5, vol: 0.55, lazy: true, cut: [0.03, 0.6], loops: [['sounds/hist_fer_mittel.wav', 1098.7, [0.2, 0.5]], ['sounds/hist_fer_hoch.wav', 1625.4]], schub: ['sounds/hist_fer_schub.wav', 1296.2, 0.7] };   // Ferrari V10 bis 18.300 U/min, Schaltwippen (kurze Lücke)
+function histSnd(cls) { const D = SND_ENG[cls]; if (!D) return; for (const l of D.loops) sndLoad(l[0]); sndLoad(D.schub[0]); }
 const SND_FERN = { f1: 2, f2: 1, kart: 2, road: 1 };   // Gegner (Doppler) nutzen eine Stufe aus der Mitte des Renn-Drehzahlbereichs
 // v2.00: Einschläge je Fahrzeugart (cf = F1/F2-Carbon, stahl = Roadster, kart) und Ziel (Auto / Leitplanke / Betonmauer), nach Stärke abgestuft
 // v2.01: keine eigenen „schweren“ Unfälle mehr (zu übertrieben) – starke Treffer nutzen dieselbe Aufnahme, nur etwas lauter und länger
@@ -10753,7 +10889,7 @@ const SNDB = {};   // url -> AudioBuffer | 'laedt' | null (fehlt)
 function sndLoad(url) { if (!ac || SNDB[url] !== undefined) return; SNDB[url] = 'laedt';
   fetch(url).then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status)).then(b => new Promise((res, rej) => ac.decodeAudioData(b, res, rej))).then(buf => { SNDB[url] = buf; }).catch(() => { SNDB[url] = null; }); }
 const sndBuf = url => (SNDB[url] && typeof SNDB[url] === 'object' ? SNDB[url] : null);
-function sndPreload() { for (const k in SND_ENG) { for (const l of SND_ENG[k].loops) sndLoad(l[0]); sndLoad(SND_ENG[k].schub[0]); if (SND_ENG[k].alt) sndLoad(SND_ENG[k].alt[0]); for (const b of SND_ENG[k].blips || []) sndLoad(b); for (const q of (SND_ENG[k].gran || {}).quellen || []) sndLoad(q.file); } for (const c in SND_CRASH) for (const k in SND_CRASH[c]) sndLoad(SND_CRASH[c][k]); for (const k in SND_FX) sndLoad(SND_FX[k]); }
+function sndPreload() { for (const k in SND_ENG) { if (SND_ENG[k].lazy) continue; for (const l of SND_ENG[k].loops) sndLoad(l[0]); sndLoad(SND_ENG[k].schub[0]); if (SND_ENG[k].alt) sndLoad(SND_ENG[k].alt[0]); for (const b of SND_ENG[k].blips || []) sndLoad(b); for (const q of (SND_ENG[k].gran || {}).quellen || []) sndLoad(q.file); } for (const c in SND_CRASH) for (const k in SND_CRASH[c]) sndLoad(SND_CRASH[c][k]); for (const k in SND_FX) sndLoad(SND_FX[k]); }
 // Motor-Aufnahmen abspielen: gibt true zurück, wenn die Aufnahme läuft (dann schweigt der synthetische Motor)
 function sndEngine(E, cls, on, load, t) {
   const M = E.smp; if (!M) return false;
@@ -10874,7 +11010,7 @@ function updateAudio(thr) {
   if (road && raceState === 'race' && pl.v < 12 && thr > 0.3) target0 = Math.max(target0, 4300 - pl.v * 50);   // v2.15 Roadster-Start: Kupplung schleift, Drehzahl bleibt ~4.000–4.300 (vorher fiel sie von 7.350 auf 3.170)
   const target = kart ? (raceState === 'lights' ? 2800 + rev * 1700 + lim * 0.3 : Math.min(15500, Math.max(14000 * kfr, thr > 0.1 ? 4600 + thr * 600 : 2800)) + (kfr > 1.08 ? lim * 0.5 : 0))
     : f2 ? (raceState === 'lights' ? 4000 + rev * 4750 + (rev > 0.93 ? (Math.random() - .5) * 500 : 0) : gi.rpm) : target0;
-  if (kart) E.gear = gi.g; else if (gi.g !== E.gear) { const C = SND_ENG[road ? 'road' : f2 ? 'f2' : 'f1'].cut; E.cut = gi.g > E.gear ? C[0] : C[0] * 0.6; E.gear = gi.g; }   // Kart: kein Getriebe · F1: nahtlos (kurz), F2: Zündunterbrechung
+  if (kart) E.gear = gi.g; else if (gi.g !== E.gear) { const C = SND_ENG[pl.mesh && pl.mesh.H ? pl.mesh.H.snd : road ? 'road' : f2 ? 'f2' : 'f1'].cut; E.cut = gi.g > E.gear ? C[0] : C[0] * 0.6; E.gear = gi.g; }   // Kart: kein Getriebe · F1: nahtlos (kurz), F2: Zündunterbrechung
   E.cut = Math.max(0, E.cut - 1 / 60);
   E.rpm += (target - E.rpm) * 0.35; const jit = 1 + (Math.random() - .5) * 0.006;
   if (!isFinite(E.rpm)) E.rpm = 4000;   /* nie NaN an die Audio-Parameter geben (wirft sonst jedes Bild) */
@@ -10885,7 +11021,7 @@ function updateAudio(thr) {
   else { E.o1.frequency.setTargetAtTime(f * jit, t, 0.012); E.o2.frequency.setTargetAtTime(f * 2.005, t, 0.012); E.o3.frequency.setTargetAtTime(f * 0.5, t, 0.012); E.o4.frequency.setTargetAtTime(f * 1.5, t, 0.012); }
   E.nbp.frequency.setTargetAtTime(f * (kart ? 4 : 2.5), t, 0.02); E.ng.gain.setTargetAtTime(kart ? 0.1 + load * 0.2 : f2 ? 0.16 + load * 0.26 : 0.12 + load * 0.22, t, 0.05);
   E.lp.frequency.setTargetAtTime(kart ? Math.min(5200, 1300 + load * 2700 + (E.rpm / 14000) * 1500) : f2 ? Math.min(3300, 450 + load * 2000 + (E.rpm / 10500) * 1000) : road ? Math.min(1900, 260 + load * 900 + (E.rpm / 7300) * 700) : Math.min(4200, 500 + load * 2600 + (E.rpm / 12000) * 1300), t, 0.03);
-  const rec = sndEngine(E, road ? null : kart ? 'kart' : f2 ? 'f2' : 'f1', on, load, t);   // v2.17: Roadster wieder SYNTHETISCH (Wunsch des Nutzers) – Aufnahmen aus; Synthesizer jetzt als Vierzylinder (2 Zündungen/Umdrehung, vor v2.00 fälschlich 3 wie ein Sechszylinder)   // Aufnahme läuft → synthetischer Motor still (Turbo-Pfeifen, ERS und Fehlzündungen bleiben)
+  const rec = sndEngine(E, pl.mesh && pl.mesh.H ? pl.mesh.H.snd : road ? null : kart ? 'kart' : f2 ? 'f2' : 'f1', on, load, t);   // v2.17: Roadster wieder SYNTHETISCH (Wunsch des Nutzers) – Aufnahmen aus; Synthesizer jetzt als Vierzylinder (2 Zündungen/Umdrehung, vor v2.00 fälschlich 3 wie ein Sechszylinder)   // Aufnahme läuft → synthetischer Motor still (Turbo-Pfeifen, ERS und Fehlzündungen bleiben)
   const vol = on && !rec ? (E.cut > 0 ? 0.03 : (kart ? 0.055 + load * 0.065 : f2 ? 0.075 + load * 0.085 : road ? 0.09 + load * 0.09 : 0.07 + load * 0.08)) : 0;
   E.out.gain.setTargetAtTime(vol, t, E.cut > 0 ? 0.01 : 0.04);
   E.turbo.frequency.setTargetAtTime(2600 + (E.rpm / 12000) * 2600, t, 0.05); E.tg.gain.setTargetAtTime(on && !road && !kart ? load * (f2 ? 0.006 : 0.012) : 0, t, 0.1);
@@ -11291,10 +11427,10 @@ function trackPace() {
 function startRace() {
   camAcc = 0; camK = 0; if (pl) pl.vPrevCam = 0;   // Kamera-Zustand vom letzten Rennen verwerfen (sonst kurzer Ruck am Start)
   if (S.cam === 3 && !(pl && pl.mesh && pl.mesh.tv)) S.cam = 2;
-  document.body.classList.toggle('noBoost', !!SERIES[SER].noBoost);
+  { const hd = byCode(S.driver); document.body.classList.toggle('noBoost', !!SERIES[SER].noBoost || !!(hd && HIST_CAR[hd.team])); }   // Klassiker: kein ERS – Boost-Taste und Batterie weg
   diff = DIFF[S.diff] || DIFF.mid;
   seriesProfiles();
-  placeOnGrid(); warmRace(); visorNew(); document.body.classList.add('warmhelm'); setTimeout(() => document.body.classList.remove('warmhelm'), 1800);   /* Helmrand einmal unsichtbar zeichnen lassen */
+  placeOnGrid(); if (pl && pl.mesh && pl.mesh.H && typeof ac !== 'undefined' && ac) histSnd(pl.mesh.H.snd); warmRace(); visorNew(); document.body.classList.add('warmhelm'); setTimeout(() => document.body.classList.remove('warmhelm'), 1800);   /* Helmrand einmal unsichtbar zeichnen lassen */
   DYN.acc = DYN.n = DYN.bad = DYN.calm = 0; DYN.tChg = performance.now() + 5000;   /* Auflösung in den ersten 15 s nicht umschalten: jede Umschaltung legt alle Render-Ziele neu an (Hänger genau am Start) */
   raceSongPick(false);
   $('#hud').style.visibility = ''; running = true; hadRace = true; paused = false; resultsShown = false; raceState = 'lights'; lightsT = 0; lightsOut = 5 + Math.random() * 1.4;
@@ -11691,7 +11827,7 @@ function updateMeshes(dt) {
     if (m.mkF1) f1Own(m, c === pl);
     if (m.f1Fahrer) { const F = m.f1Fahrer; F.spin = -(c.steer || 0) * SW_ROT; if (!F.sw) f1CarWheel(m); F.sw.rotation.z = F.spin; }   // F1/F2: Hände und Lenkrad (dreht wie SW in der Cockpitansicht)
     if ((m.road || m.kart || m.hist) && m.swSpin) m.swSpin.rotation.z = -(c.steer || 0) * (m.kartFahrer ? KART_SW_ROT : m.H ? m.H.swRot : 1.6);
-    if (m.hist) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z; histLod(m, c, dx * dx + dz * dz); if (m.arms && m.lod === 0) histArms(m, c.steer || 0); }   // Klassiker: Detailstufe, Hände folgen dem Lenkrad   /* Kart mit neuem Fahrer: weniger Drehung – die Hände bleiben am Kranz, bei 92° lag der Arm quer vor dem Gesicht */
+    if (m.hist) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z; histLod(m, c, dx * dx + dz * dz); if (m.arms && m.lod === 0) histArms(m, c.steer || 0); if (m.drv) m.drv.spin = -(c.steer || 0) * m.H.swRot; }   // Klassiker: Detailstufe, Hände folgen dem Lenkrad   /* Kart mit neuem Fahrer: weniger Drehung – die Hände bleiben am Kranz, bei 92° lag der Arm quer vor dem Gesicht */
     if (m.road) m.brakeMat.emissiveIntensity = running && c.brk > 0.1 ? 4 : 0.15;
     else m.rl.visible = running && c.v > 25 && ((c.thr || 0) < 0.6 || c.brk > 0.1) && ((performance.now() / 110) | 0) % 2 === 0;
     m.wfl.rotation.x = m.wfr.rotation.x = m.rr.rotation.x = c.spin;
@@ -12056,6 +12192,7 @@ function updateCamera(dt) {
         if (m.haloPre) m.haloPre.visible = gh; } }
     if (pl.mesh.tp || pl.mesh.hist) pl.mesh.helm.position.set(0, S.cam === 3 ? -0.03 : 0, S.cam === 3 ? 0.06 : 0);   // TV-Kamera: Helm leicht nach vorn/unten versetzt – bleibt sichtbar, ohne an der Kamera anzuschneiden
     if (pl.mesh.f1Fahrer) { const F = pl.mesh.f1Fahrer; F.mesh.position.copy(F.off).add(pl.mesh.helm.position); F.cut = S.cam === 2; F.mesh.updateMatrixWorld(); if (F.sw) F.sw.visible = S.cam < 2 && !(pl.mesh.far && pl.mesh.far.visible); }   // Helm-/TV-Kamera: Cockpit-Lenkrad SW statt der Außen-Kopie   // Fahrer bewegt sich mit dem Helm (TV-Kamera); Helmkamera: nur Unterarme und Hände
+    if (pl.mesh.drv) { const F = pl.mesh.drv; F.mesh.position.copy(F.off).add(pl.mesh.helm.position); F.cut = S.cam === 2; }   // Klassiker: wie f1Fahrer
     pl.mesh.label.visible = false;
   }
 
@@ -12833,7 +12970,7 @@ function showroomCareer(c) { initShowroom(); const key = 'career|' + c.ser + '|'
   SHOW.cars = [m]; SHOW.team = key; SHOW.ser = SER; showroomPick(); return true; }
 function showroomPick() { const scr = MENU.scr, has = SHOW.cars.some(x => x.code === S.driver);
   SHOW.cars.forEach((m, n0) => { const n = m.slot ?? n0, sel = m.code === S.driver, solo = scr === 'team' ? n === 0 : has ? sel : n === 0;
-    m.g.visible = scr === 'driver' ? true : solo; const P = scr === 'driver' ? SHOW_POS[n % 2] : SHOW_POS[0]; m.g.position.set(P[0], 0, P[2]);
+    m.g.visible = scr === 'driver' ? true : solo; const P = scr === 'driver' ? (SHOW.cars.length === 1 ? [0, 0, (SHOW_POS[0][2] + SHOW_POS[1][2]) / 2] : SHOW_POS[n % 2]) : SHOW_POS[0];   /* Klassiker (ein Fahrer): Auto mittig zwischen den Plätzen, dorthin schaut die Kamera */ m.g.position.set(P[0], 0, P[2]);
     const sp = SHOW.spots[n % 2]; sp.visible = m.g.visible; sp.position.set(P[0] - 2.5, 8, P[2] + 1); sp.target.position.set(P[0], 0, P[2]); sp.intensity = scr === 'driver' ? (sel ? 60 : 10) : 30; }); if (SHOW.old) for (const m of SHOW.cars) m.g.visible = false; }
 const _sp = new THREE.Vector3(), _st = new THREE.Vector3();
 function showroomFrame(dt) {
@@ -12897,7 +13034,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.69'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.70'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -13246,7 +13383,8 @@ window.__arms = () => ARMS; window.__sw = () => SW; window.__f1f = () => F1FAHRE
 window.__layout = () => { effCtrl = S.ctrl; layoutControls(); return effCtrl; };   /* Test: Touch-Tasten zeigen */
 window.__ks = s2 => KS[Math.floor(modL(s2) / DS) % N]; window.__head = () => HEAD; window.__tp = s2 => { const q = trackAt(s2, 0); pl.x = q.x; pl.z = q.z; pl.h = q.h; camH = q.h; projectCar(pl); pl.sPrev = modL(s2); return pl.idx; };
 window.__plRef = () => pl;
-window.__S = () => S; window.__mesh = () => ({ ALL, pl, MODELS, camera });   /* Test: Einstellungen und Fahrzeuge lesen/setzen */
+window.__S = () => S; window.__mesh = () => ({ ALL, pl, MODELS, camera });
+window.__histDbg = () => ({ THREE, HIST, HIST_CAR, histLoad, makeHist, poseArm, TEAMS: F1_TEAMS, F1FAHRER, renderer, scene });   /* Klassiker: Messwerkzeug tools/klassiker/fahrer_sicht.js */   /* Test: Einstellungen und Fahrzeuge lesen/setzen */
 window.__laps = () => ais.map(a => a.code + ':' + (a.lapTimes || []).map(t => t.toFixed(1)).join('/'));
 window.__cutz = () => CUTZ; window.__cut = (c, dt) => cutCheck(c, dt);   /* Test: Schikanen-Zonen und Strafprüfung */
 window.__dbg = () => ({ L, N, raceState, running, paused, lightsT, raceTime, plD: pl.d, plV: pl.v, plLat: pl.lat, order: order.map(c => c.code), best: pl.best, fastest, resultsShown, aiBest: ais.slice(0, 5).map(a => a.code + ':' + (a.best || 0).toFixed(1)) });

@@ -54,5 +54,12 @@ keep = (set(np.unique(lab[yel])) | {lab[int(h * 0.12), w // 2]}) - {0}   # Schil
 m = ndimage.binary_fill_holes(np.isin(lab, list(keep)))
 m = ndimage.binary_dilation(m, iterations=4)   # schwarzen Rand des Schildes mitnehmen
 alpha = ndimage.gaussian_filter(m.astype(np.float32), 1.2)
-im = np.dstack([A.clip(0, 255).astype(np.uint8), (alpha * 255).astype(np.uint8)])
+# lebendiger (Wunsch v2.69): die Textur ist matt/olivgelb -> Gelb auf Ferrari-Gelb ziehen, Sättigung und Helligkeit anheben
+from PIL import ImageEnhance
+rgb = Image.fromarray(A.clip(0, 255).astype(np.uint8)); rgb = ImageEnhance.Color(rgb).enhance(1.7); rgb = ImageEnhance.Brightness(rgb).enhance(1.18); rgb = ImageEnhance.Contrast(rgb).enhance(1.12)
+B = np.asarray(rgb).astype(np.float32); yl = np.clip(((B[..., 0] + B[..., 1]) / 2 - B[..., 2] - 30) / 60, 0, 1)   # Anteil „gelb“
+lumY = B.mean(2); med = np.median(lumY[yl > 0.6]) if (yl > 0.6).any() else 150.0
+shade = (lumY / med).clip(0.55, 1.12)[..., None]   # Schattierung des Schildes behalten, Farbe = sattes Ferrari-Gelb
+B = B * (1 - yl[..., None]) + np.array([255, 214, 0], np.float32) * shade * yl[..., None]
+im = np.dstack([B.clip(0, 255).astype(np.uint8), (alpha * 255).astype(np.uint8)])
 save(Image.fromarray(im, 'RGBA'), 'H_FER')

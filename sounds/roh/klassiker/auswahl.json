@@ -1,0 +1,83 @@
+{
+ "hist_lot_mittel": {
+  "variante": 2,
+  "lautheit_schwankung": 0.03,
+  "tonhoehe_schwankung": 0.008,
+  "gemessen_hz": 256.0,
+  "grundton": 512.0,
+  "verlangt_upm": 7000,
+  "tempo_bei_verlangt": 0.91
+ },
+ "hist_lot_hoch": {
+  "variante": 2,
+  "lautheit_schwankung": 0.224,
+  "tonhoehe_schwankung": 0.096,
+  "gemessen_hz": 288.3,
+  "grundton": 576.6,
+  "verlangt_upm": 9800,
+  "tempo_bei_verlangt": 1.13
+ },
+ "hist_lot_schub": {
+  "variante": 1,
+  "lautheit_schwankung": 0.174,
+  "tonhoehe_schwankung": 0.293,
+  "gemessen_hz": 248.1,
+  "grundton": 496.2,
+  "verlangt_upm": 7000,
+  "tempo_bei_verlangt": 0.94
+ },
+ "hist_mcl_mittel": {
+  "variante": 1,
+  "lautheit_schwankung": 0.128,
+  "tonhoehe_schwankung": 0.272,
+  "gemessen_hz": 281.9,
+  "grundton": 563.9,
+  "verlangt_upm": 8500,
+  "tempo_bei_verlangt": 0.75
+ },
+ "hist_mcl_hoch": {
+  "variante": 1,
+  "lautheit_schwankung": 0.065,
+  "tonhoehe_schwankung": 0.046,
+  "gemessen_hz": 561.4,
+  "grundton": 561.4,
+  "verlangt_upm": 12000,
+  "tempo_bei_verlangt": 1.07
+ },
+ "hist_mcl_schub": {
+  "variante": 1,
+  "lautheit_schwankung": 0.283,
+  "tonhoehe_schwankung": 0.972,
+  "gemessen_hz": 142.2,
+  "grundton": 284.4,
+  "verlangt_upm": 8000,
+  "tempo_bei_verlangt": 1.41
+ },
+ "hist_fer_mittel": {
+  "variante": 2,
+  "lautheit_schwankung": 0.153,
+  "tonhoehe_schwankung": 0.028,
+  "gemessen_hz": 274.7,
+  "grundton": 1098.7,
+  "verlangt_upm": 13000,
+  "tempo_bei_verlangt": 0.99
+ },
+ "hist_fer_hoch": {
+  "variante": 1,
+  "lautheit_schwankung": 0.104,
+  "tonhoehe_schwankung": 0.206,
+  "gemessen_hz": 203.2,
+  "grundton": 1625.4,
+  "verlangt_upm": 18000,
+  "tempo_bei_verlangt": 0.92
+ },
+ "hist_fer_schub": {
+  "variante": 2,
+  "lautheit_schwankung": 0.066,
+  "tonhoehe_schwankung": 0.198,
+  "gemessen_hz": 81.0,
+  "grundton": 1296.2,
+  "verlangt_upm": 13000,
+  "tempo_bei_verlangt": 0.84
+ }
+}
