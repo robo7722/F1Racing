@@ -44,5 +44,28 @@
  "zones": [[0.98, 1.36, 0, 0.4]],
  "number": {"color": "#ffffff", "spots": [{"v": "side", "z": -1.31, "y": 0.73, "s": 0.085}, {"v": "top", "x": 0, "z": 2.0, "s": 0.13}]},
  "logoFile": "FER",
- "logos": [{"v": "top", "x": 0, "z": 1.5, "s": 0.16}]
+ "logos": [{"v": "top", "x": 0, "z": 1.5, "s": 0.16}],
+ "top": {
+  "photo": "tools/sticker/.cache/oben/FER_3.png",
+  "src": "https://media.formula1.com/image/upload/fom-website/2026/Ferrari/F678_still_f08_16_9_v10.png",
+  "rear": [905, 1100],
+  "front": [2773, 1100],
+  "stickers": [
+   {"name": "rot", "poly": [[318, 28], [372, 28], [395, 300], [420, 585], [600, 600], [625, 1420], [65, 1420], [90, 600], [270, 585], [295, 300]], "kind": "key", "key": "#cf1018", "smooth": 6, "holes": false},
+   {"name": "weiss_vorn", "box": [150, 585, 480, 748], "kind": "key", "key": "#f3f3f1", "tol": 70, "smooth": 5},
+   {"name": "weiss_spine", "box": [150, 745, 480, 1205], "kind": "key", "key": "#f3f3f1", "tol": 70, "smooth": 6},
+   {"name": "unicredit_nase", "box": [316, 99, 380, 139], "kind": "w", "dz": 0.06},
+   {"name": "genesys", "box": [316, 145, 380, 159], "kind": "w", "dz": 0.06},
+   {"name": "pirelli", "box": [316, 166, 380, 181], "kind": "w", "dz": 0.06},
+   {"name": "whoop", "box": [313, 194, 382, 212], "kind": "w", "dz": 0.06},
+   {"name": "bingx_nase", "box": [317, 219, 377, 237], "kind": "w", "dz": 0.06},
+   {"name": "ibm_nase", "box": [317, 249, 377, 271], "kind": "w", "dz": 0.06},
+   {"name": "shell_nase", "box": [306, 283, 382, 339], "kind": "c", "dz": 0.06},
+   {"name": "zyn_nase", "box": [298, 416, 386, 468], "kind": "w"},
+   {"name": "peroni_l", "box": [294, 628, 337, 660], "kind": "d"},
+   {"name": "peroni_r", "box": [349, 628, 390, 660], "kind": "d"},
+   {"name": "hp_fluegel_l", "box": [208, 1580, 258, 1621], "kind": "c"},
+   {"name": "hp_fluegel_r", "box": [426, 1580, 473, 1621], "kind": "c"}
+  ]
+ }
 }
