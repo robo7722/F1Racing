@@ -16,5 +16,14 @@
   {"name": "wappen", "box": [1250, 180, 1553, 277], "kind": "w"},
   {"name": "corescientific", "box": [1540, 315, 1936, 385], "kind": "w"},
   {"name": "twg", "box": [1320, 465, 1885, 623], "kind": "w"}
- ]
+ ],
+ "top": {
+  "photo": "tools/sticker/.cache/oben/CAD_2.jpg",
+  "src": "https://media.formula1.com/image/upload/fom-website/2026/Cadillac/CadillacF1Team_2193_HiRes.jpg",
+  "rear": [1924, 1660],
+  "front": [1914, 420],
+  "stickers": [
+
+  ]
+ }
 }
