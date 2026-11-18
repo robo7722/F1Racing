@@ -416,3 +416,24 @@ Bild: `docs/bilder/ledwand_legenden_entwuerfe.jpg`. Oben die heutige Wand, links
   - Vier Zeilen: LEGENDE, Jahr, Auto, Fahrer (Fahrer in Gelb).
   - Ein Band in den Teamfarben am linken Rand.
   - Die Zeichen blättern beim Wechsel durch, bevor sie stehen bleiben.
+
+## Smartphone-Prüfung der Teamleiste (18.11.2026, Entwurf zur Abnahme)
+Wunsch: „mit dem UI-Smartphone-Skill prüfen“. Einen solchen Skill gibt es nicht, weder im Projekt noch unter den Skills des Nutzers. Stattdessen hat ein unabhängiger Prüfer die Leiste aus Sicht von Smartphone-UI/UX bewertet. Grundlage waren Screenshots auf iPhone SE (667×375), Galaxy S23 (780×360), iPhone 15 (852×393) und einem großen Android-Gerät (915×412).
+
+**Befunde, nach Schwere:**
+1. **Umschalter zu klein:** Die Knöpfe sind nur 17–26 px hoch, empfohlen sind 44 pt (Apple) bzw. 48 dp (Android). Die Schrift ist 8 px groß, und das rote „2026“ ist mit Deckkraft 0,6 kaum lesbar.
+2. **Teamkacheln zu klein:** Auf dem SE 37 px, auf dem S23 44 px, mit nur 6 px Abstand. Das führt zu Fehltipps.
+3. **Legendenkarten auf dem SE abgeschnitten:** Die Fahrerzeile wird halb abgeschnitten, „MCLAREN MP4/13“ läuft über.
+4. **Gequetschte Karten:** Die Karten sind gleich hoch wie die Logo-Kacheln, obwohl sie dreimal so viel Text tragen.
+5. **Safe-Areas:** Nicht berücksichtigt (Notch links, Home-Indikator unten).
+6. **Schrift zu klein:** Fahrernamen 7,5 px, Kopf-Unterzeile 10,5 px.
+7. **Aktive Kachel kaum erkennbar:** Dazu sind die Logos von Aston Martin und Cadillac zu dunkel.
+
+**Entwurf** (Bild `docs/bilder/teamleiste_handy_entwurf.jpg`, links vorher, rechts Entwurf; Skript `tools/klassiker/teamleiste_handy_entwurf.js`):
+- **Umschalter:** Je Knopf 28–33 px hoch, Tippfläche nach außen erweitert, Schrift 10–12 px. Das Jahr ist immer voll deckend, beim Wischen bleibt der Umschalter links stehen (sticky).
+- **Kacheln:** Mindestens 44 px groß, 8 px Abstand. Lange Reihen werden gewischt statt geschrumpft, mit Einrasten und einem Ausblendverlauf rechts als Hinweis.
+- **Legendenkarten:** Mindestens 58 px hoch und 112 px breit, Jahr 17–22 px, Auto und Fahrer 9–11,5 px, Ellipse statt Abschneiden.
+- **Aktive Kachel bzw. Karte:** 3 px angehoben, kräftigere Unterkante, Glühen in Team- bzw. Goldfarbe. Inaktive Kacheln leicht gedimmt, Logos heller.
+- **Safe-Areas und Kopf:** Seitenabstand mit `env(safe-area-inset-*)`. Kopf-Unterzeile 11,5 px, die Technikzeile fällt bei Höhe unter 380 px weg.
+
+**Kompromiss:** Auf dem SE passen nicht mehr alle 11 Teams bzw. 6 Legenden ins Bild, der Rest wird gewischt.
