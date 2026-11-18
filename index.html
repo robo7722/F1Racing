@@ -1301,6 +1301,16 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
 }
 #hub .xhero{clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%)}
 #hub .xchip,#hub .xch2,#hub .xb{clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%)}
+/* v2.81 Start-Minispiel: Kupplung halten bis die Ampel ausgeht */
+#controls .pad.clutch{width:calc(min(16vw,104px) * 2 + 10px)!important;background:linear-gradient(180deg,rgba(255,200,0,.35),rgba(150,110,0,.4))!important}
+#controls .pad.clutch::after{background:#ffc800}
+#controls .pad.clutch.on{background:linear-gradient(180deg,rgba(255,210,40,.75),rgba(190,140,0,.65))!important}
+#sgHint{position:absolute;left:50%;top:calc(14% + 72px);transform:translateX(-50%);padding:6px 14px;border-radius:8px;background:rgba(10,10,14,.72);border:1px solid rgba(255,200,0,.5);color:#fff;font:800 14px "Titillium Web",system-ui,sans-serif;letter-spacing:.12em;text-align:center;white-space:nowrap;pointer-events:none}
+#sgHint.armed{border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.8);font-size:12px}
+#sgReact{position:absolute;left:50%;top:max(8px,env(safe-area-inset-top));transform:translateX(-50%);padding:3px 10px;border-radius:6px;background:rgba(10,10,14,.6);border:1px solid rgba(255,200,0,.45);font:700 11px "Titillium Web",system-ui,sans-serif;letter-spacing:.12em;color:#ffc800;white-space:nowrap;pointer-events:none}
+#sgReact{opacity:1;transition:opacity .6s}
+#sgReact.fade{opacity:0}
+#sgHint.hidden,#sgReact.hidden{display:none}
 </style>
 </head>
 <body>
@@ -1333,6 +1343,8 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
   <canvas id="haloHud"></canvas>
   <div id="msg"></div>
   <div id="lights" class="hidden"><i></i><i></i><i></i><i></i><i></i></div>
+  <div id="sgHint" class="hidden"></div>
+  <div id="sgReact" class="hidden"></div>
   <div id="perf" class="hidden"><div id="perfTxt"></div><canvas id="perfG" width="240" height="44"></canvas></div>
 </div>
 
@@ -1341,6 +1353,7 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
   <div class="side left">
     <button class="pad steer" id="bL" aria-label="Links"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="square"/></svg></button>
     <button class="pad steer" id="bR" aria-label="Rechts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4 8 8-8 8" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="square"/></svg></button>
+    <button class="pad clutch hidden" id="bClutch" aria-label="Kupplung"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="9" width="16" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M8 13h8M8 16h8" stroke="currentColor" stroke-width="1.6"/></svg><b>KUPPLUNG</b></button>
     <button class="pad brake hidden" id="bBrakeL"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="9" width="14" height="11" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M8 13h8M8 16h8" stroke="currentColor" stroke-width="1.6"/></svg><b>BREMSE</b></button>
   </div>
   <div class="side right">
@@ -4511,7 +4524,7 @@ function histDashBuild(m) {
   m.dash = { g, tex, cv, t: 0, S: S0 }; histDashDraw(m, true);
 }
 function histDashDraw(m, first) {
-  const D = m.dash, g = D.g, W = D.cv.width, Hh = D.cv.height, H = m.H, me = pl && pl.mesh === m, kmh = me ? pl.v * 3.6 : 0, gi = me ? gearP(kmh) : { g: 1, rpm: 4000 }, pre = me && raceState === 'lights';
+  const D = m.dash, g = D.g, W = D.cv.width, Hh = D.cv.height, H = m.H, me = pl && pl.mesh === m, kmh = me ? pl.v * 3.6 : 0, gi = me ? gearP(kmh) : { g: 1, rpm: 4000 }, pre = me && preGo();
   const rpm = !me ? 0 : pre ? 3000 + (pl.rev || 0) * (H.rpm[1] - 3000) : pl.v < 0.5 ? 2500 : gi.rpm, gear = !me || pl.v < 0.5 || pre ? 'N' : String(gi.g);
   g.clearRect(0, 0, W, Hh);
   if (H.fx === 1) {   // Lotus: drei Rundinstrumente (schwarzes Zifferblatt, weiße Skala, weißer Zeiger)
@@ -10686,7 +10699,7 @@ const BOOST_NAME = 'ERS AKTIV';
 // Ein Zeichenverfahren für beide Fälle: o = Ellipse (cx, cy, rx, ry), Bandbreite t, Bogen th0..th1; full = mit Name/Zeit (TV-Ansicht über dem echten Halo).
 function haloDraw(g, o) {
   const { cx, cy, rx, ry, t, th0, th1, full, visL = th0, visR = th1 } = o, k = ry / rx, F = '"Titillium Web",system-ui,sans-serif', thC = Math.PI * 1.5;
-  const kmh = pl.v * 3.6, gi = gearP(kmh), pre = raceState === 'lights', f = clamp(pre ? 0.05 + 0.95 * (pl.rev || 0) : pl.v < 0.5 ? 0 : gi.f, 0, 1);
+  const kmh = pl.v * 3.6, gi = gearP(kmh), pre = preGo(), f = clamp(pre ? 0.05 + 0.95 * (pl.rev || 0) : pl.v < 0.5 ? 0 : gi.f, 0, 1);
   const P = (th, d) => [cx + (rx - d) * Math.cos(th), cy + (ry - d * k) * Math.sin(th)], tan = th => Math.atan2(ry * Math.cos(th), -rx * Math.sin(th));
   const txt = (s2, th, d, size, col, w = 700, al = 'center') => { const [x, y] = P(th, d); g.save(); g.translate(x, y); g.rotate(tan(th)); g.font = w + ' ' + size + 'px ' + F; g.fillStyle = col; g.textAlign = al; g.textBaseline = 'middle'; g.fillText(s2, 0, 0); g.restore(); };
   const quad = (tA, tB, dA, dB, col) => { const a = P(tA, dA), b = P(tB, dA), c = P(tB, dB), d = P(tA, dB); g.fillStyle = col; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.lineTo(c[0], c[1]); g.lineTo(d[0], d[1]); g.closePath(); g.fill(); };
@@ -10741,7 +10754,7 @@ function haloDraw(g, o) {
 // 3 Ferrari 2004: Lenkrad-Display – Schaltlampen-Reihe, graugrünes LCD mit großem Gang, Tempo, Rundenzeit
 const HGV = { oil: 0.5, wat: 0.5 };
 function histGauge(g, H) {
-  const kmh = pl.v * 3.6, gi = gearP(kmh), pre = raceState === 'lights', rpm = pre ? 3000 + (pl.rev || 0) * (H.rpm[1] - 3000) : pl.v < 0.5 ? 2500 : gi.rpm, pos = Math.max(1, order.indexOf(pl) + 1);
+  const kmh = pl.v * 3.6, gi = gearP(kmh), pre = preGo(), rpm = pre ? 3000 + (pl.rev || 0) * (H.rpm[1] - 3000) : pl.v < 0.5 ? 2500 : gi.rpm, pos = Math.max(1, order.indexOf(pl) + 1);
   const lap = clamp(pl.lapsDone + 1, 1, S.laps), cur = raceState === 'race' && pl.lapsDone >= 0 && !pl.finished ? raceTime - pl.lapStart : 0, tm = cur ? fmt(cur) : pl.best ? fmt(pl.best) : '0:00.000';
   const gear = pl.v < 0.5 || pre ? 'N' : String(gi.g), thr = pre ? (pl.rev || 0) : (pl.thr || 0);
   HGV.oil += ((0.35 + thr * 0.45 + rpm / H.rpm[1] * 0.15) - HGV.oil) * 0.05; HGV.wat += ((0.45 + Math.min(1, raceTime / 120) * 0.25) - HGV.wat) * 0.01;
@@ -10862,7 +10875,7 @@ function drawHaloHud() {
 }
 
 /* ======================= Eingabe ======================= */
-const inp = { boost: false, kB: false, L: false, R: false, gas: false, brakeL: false, brakeR: false, kL: false, kR: false, kU: false, kD: false };
+const inp = { clutch: false, clutchUpT: 0, boost: false, kB: false, L: false, R: false, gas: false, brakeL: false, brakeR: false, kL: false, kR: false, kU: false, kD: false };
 function bindPad(id, key) {
   const el = $('#' + id);
   const on = e => { if (document.body.classList.contains('editCtl')) return; e.preventDefault(); inp[key] = true; el.classList.add('on'); try { el.setPointerCapture(e.pointerId); } catch (_) {} };
@@ -10870,6 +10883,7 @@ function bindPad(id, key) {
   el.addEventListener('pointerdown', on); el.addEventListener('pointerup', off); el.addEventListener('pointercancel', off); el.addEventListener('lostpointercapture', off);
   el.addEventListener('contextmenu', e => e.preventDefault());
 }
+bindPad('bClutch', 'clutch'); $('#bClutch').addEventListener('pointerup', () => { inp.clutchUpT = performance.now(); });
 bindPad('bBoost', 'boost'); bindPad('bL', 'L'); bindPad('bR', 'R'); bindPad('bGas', 'gas'); bindPad('bBrake', 'brakeR'); bindPad('bBrakeL', 'brakeL');
 const KEYMAP = { ShiftLeft: 'kB', ShiftRight: 'kB', KeyE: 'kB', ArrowLeft: 'kL', KeyA: 'kL', ArrowRight: 'kR', KeyD: 'kR', ArrowUp: 'kU', KeyW: 'kU', ArrowDown: 'kD', KeyS: 'kD', Space: 'kD' };
 addEventListener('keydown', e => {
@@ -10877,7 +10891,50 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyC' && running) toggleCam();
   if ((e.code === 'KeyP' || e.code === 'Escape') && running && !resultsShown) paused ? resume() : pause();
 });
-addEventListener('keyup', e => { if (KEYMAP[e.code]) inp[KEYMAP[e.code]] = false; });
+addEventListener('keyup', e => { if (KEYMAP[e.code]) { inp[KEYMAP[e.code]] = false; if (KEYMAP[e.code] === 'kD') inp.clutchUpT = performance.now(); } });
+
+/* ---- v2.81 Start-Minispiel (Wunsch) ----
+   Vor dem Start Kupplung + Gas gedrückt halten – erst dann läuft die Ampel an. Kupplung = Touch: große gelbe Taste links (statt der Pfeile),
+   Controller: Bremse (L2/LT oder X/□), Tastatur: S/↓/Leertaste. Gas = Gas-Taste/R2/W/↑ (mit Auto-Gas entfällt das Gas).
+   Geht die Ampel aus, läuft die Uhr, bis die Kupplung losgelassen wird: das ist die Reaktionszeit (klein oben in der Rundenzeit-Box).
+   Kupplung vor dem Erlöschen losgelassen → FEHLSTART: das Auto rollt erst 1 s nach dem Erlöschen los. Danach erscheinen die Richtungstasten und die ERS-Taste wieder; kein „LOS!“-Text.
+   KI-Testfahrten (window.__auto / __plAI) und window.__noStartGame überspringen das Spiel. */
+var SG = { on: false, armed: false, jump: false, go: true, react: null, outT: 0 };
+function preGo() { return raceState === 'lights' || (raceState === 'race' && !!SG && !SG.go); }   // Motor/Anzeige im „vor dem Start“-Zustand (hochdrehen statt fahren)
+const sgSkip = () => !!(window.__auto || window.__plAI || window.__noStartGame);
+const sgClutch = () => inp.clutch || inp.kD || GP.brk > 0.5;
+const sgGas = () => S.autogas || inp.gas || inp.kU || GP.thr > 0.5;
+function sgHint(t, armed) { const el = $('#sgHint'); if (!el) return; if (!t) { el.classList.add('hidden'); return; } el.textContent = t; el.classList.toggle('armed', !!armed); el.classList.remove('hidden'); }
+function sgReset() {
+  const skip = sgSkip(); Object.assign(SG, { on: !skip, armed: skip, jump: false, go: skip, react: null });
+  clearTimeout(sgShow.t); const r = $('#sgReact'); if (r) { r.classList.add('hidden'); r.classList.remove('fade'); r.textContent = ''; }
+  if (skip) { sgHint(''); return; }
+  const pad = GP.on, gasTxt = S.autogas ? '' : pad ? ' + GAS (R2)' : isTouch ? ' + GAS' : ' + GAS (W/↑)';
+  sgHint((pad ? 'BREMSE = KUPPLUNG' : isTouch ? 'KUPPLUNG' : 'KUPPLUNG (S/↓)') + gasTxt + ' HALTEN');
+}
+function sgShow() {
+  const r = $('#sgReact'); if (!r) return;
+  /* nur die Zeit, nach 2 s ausblenden (Wunsch); beim Fehlstart nichts – dort steht groß „FEHLSTART“ */
+  if (SG.jump || SG.react == null) return;
+  clearTimeout(sgShow.t); r.textContent = SG.react.toFixed(3).replace('.', ',') + ' s'; r.classList.remove('hidden', 'fade');
+  sgShow.t = setTimeout(() => r.classList.add('fade'), 2000);
+}
+function sgGo() { SG.go = true; sgHint(''); if (isTouch) layoutControls(); }
+// Ampelphase: gibt zurück, ob die Ampel weiterlaufen darf
+function sgLights() {
+  if (!SG.on) return true;
+  if (!SG.armed) { if (sgClutch() && sgGas()) { SG.armed = true; sgHint('KUPPLUNG LOSLASSEN, WENN DIE AMPEL AUSGEHT', true); } return SG.armed; }
+  if (!SG.jump && !sgClutch()) { SG.jump = true; showMsg('FEHLSTART', 2.5); sgHint(''); sgShow(); }
+  return true;
+}
+// nach dem Erlöschen: Reaktionszeit messen bzw. nach einem Fehlstart 1 s warten
+function sgRace() {
+  if (SG.go) return;
+  if (SG.jump) { if (raceTime >= 1) sgGo(); return; }
+  if (!sgClutch()) {   /* in echter Zeit gemessen (nicht in Spielzeit: ruckelnde Bilder würden die Zeit sonst schönen); Touch/Tastatur: Zeitpunkt des Loslassens selbst */
+    const now = performance.now(), up = inp.clutchUpT > SG.outT && now - inp.clutchUpT < 250 ? inp.clutchUpT : now;
+    SG.react = Math.max(0, (up - SG.outT) / 1000); sgShow(); sgGo(); }
+}
 function clearKeys() { for (const k of ['kB', 'kL', 'kR', 'kU', 'kD']) inp[k] = false; }
 addEventListener('blur', clearKeys);   // Fenster verliert den Fokus (Alt-Tab): das keyup kommt nie an -> sonst bleibt Gas/Lenkung hängen
 
@@ -11138,18 +11195,18 @@ function updateAudio(thr) {
   const kart = !!(pl.mesh && pl.mesh.kart), f2 = SER === 'f2' && !road && !kart;   // Kart: hoher Einzylinder-Zweitakter (direkt, ohne Getriebe) · F2: rauer V6-Turbo bis ~10.500 U/min, kein ERS
   const rev = pl.rev || 0, lim = rev > 0.93 ? (Math.random() - .5) * 700 : 0;   // Begrenzer flattert oben
   const kfr = clamp(pl.v / (VTOP * SERPH.top), 0, 1.1);
-  let target0 = raceState === 'lights' ? (road ? 950 + rev * 3600 : 4200 + rev * 8000 + lim) : road ? (pl.street ? gi.rpm : 1100 + (gi.rpm / 12000) * 6200) : gi.rpm;
+  let target0 = preGo() ? (road ? 950 + rev * 3600 : 4200 + rev * 8000 + lim) : road ? (pl.street ? gi.rpm : 1100 + (gi.rpm / 12000) * 6200) : gi.rpm;
   // Kart (v1.99): Direktantrieb, Drehzahl proportional zur Geschwindigkeit (14.000 bei Höchstgeschw.), Begrenzer ~15.500. Darunter hält die Fliehkraftkupplung
   // die Drehzahl: Leerlauf ~2.800, mit Gas schleifend ~5.000. Am Start nur Gasstöße unterhalb der Kupplung (darüber würde das Kart losfahren).
   // F2 (v1.99): eigenes 6-Gang-Getriebe (gearP), Drehzahl direkt, Begrenzer 8.750.
   if (road && raceState === 'race' && pl.v < 12 && thr > 0.3) target0 = Math.max(target0, 4300 - pl.v * 50);   // v2.15 Roadster-Start: Kupplung schleift, Drehzahl bleibt ~4.000–4.300 (vorher fiel sie von 7.350 auf 3.170)
-  const target = kart ? (raceState === 'lights' ? 2800 + rev * 1700 + lim * 0.3 : Math.min(15500, Math.max(14000 * kfr, thr > 0.1 ? 4600 + thr * 600 : 2800)) + (kfr > 1.08 ? lim * 0.5 : 0))
-    : f2 ? (raceState === 'lights' ? 4000 + rev * 4750 + (rev > 0.93 ? (Math.random() - .5) * 500 : 0) : gi.rpm) : target0;
+  const target = kart ? (preGo() ? 2800 + rev * 1700 + lim * 0.3 : Math.min(15500, Math.max(14000 * kfr, thr > 0.1 ? 4600 + thr * 600 : 2800)) + (kfr > 1.08 ? lim * 0.5 : 0))
+    : f2 ? (preGo() ? 4000 + rev * 4750 + (rev > 0.93 ? (Math.random() - .5) * 500 : 0) : gi.rpm) : target0;
   if (kart) E.gear = gi.g; else if (gi.g !== E.gear) { const C = SND_ENG[pl.mesh && pl.mesh.H ? pl.mesh.H.snd : road ? 'road' : f2 ? 'f2' : 'f1'].cut; E.cut = gi.g > E.gear ? C[0] : C[0] * 0.6; E.gear = gi.g; }   // Kart: kein Getriebe · F1: nahtlos (kurz), F2: Zündunterbrechung
   E.cut = Math.max(0, E.cut - 1 / 60);
   E.rpm += (target - E.rpm) * 0.35; const jit = 1 + (Math.random() - .5) * 0.006;
   if (!isFinite(E.rpm)) E.rpm = 4000;   /* nie NaN an die Audio-Parameter geben (wirft sonst jedes Bild) */
-  const f = E.rpm / 60 * (kart ? 1 : road ? 2 : 3), load = raceState === 'lights' ? 0.2 + 0.8 * (pl.rev || 0) : thr;   // V6: 3 Zündungen pro Umdrehung · Roadster-Vierzylinder: 2 · Zweitakt-Kart: 1
+  const f = E.rpm / 60 * (kart ? 1 : road ? 2 : 3), load = preGo() ? 0.2 + 0.8 * (pl.rev || 0) : thr;   // V6: 3 Zündungen pro Umdrehung · Roadster-Vierzylinder: 2 · Zweitakt-Kart: 1
   if (kart) { E.o1.frequency.setTargetAtTime(f * jit, t, 0.012); E.o2.frequency.setTargetAtTime(f * 2.01, t, 0.012); E.o3.frequency.setTargetAtTime(f * 0.5, t, 0.012); E.o4.frequency.setTargetAtTime(f * 3.02, t, 0.012); }
   else if (f2) { E.o1.frequency.setTargetAtTime(f * jit, t, 0.012); E.o2.frequency.setTargetAtTime(f * 1.503, t, 0.012); E.o3.frequency.setTargetAtTime(f * 0.5, t, 0.012); E.o4.frequency.setTargetAtTime(f * 0.75 * 1.004, t, 0.012); }
   else if (road) { /* MX-5-Vierzylinder: f = Zündfrequenz (2. Motorordnung); 1,5·f = 3. Ordnung, 0,5·f = Kurbelwelle (1.), 0,25·f = Arbeitsspiel (½) */ E.o1.frequency.setTargetAtTime(f * jit, t, 0.02); E.o2.frequency.setTargetAtTime(f * 1.5, t, 0.02); E.o3.frequency.setTargetAtTime(f * 0.5, t, 0.02); E.o4.frequency.setTargetAtTime(f * 0.25 * 1.003, t, 0.02); }
@@ -11571,6 +11628,7 @@ function startRace() {
   $('#hud').style.visibility = ''; running = true; hadRace = true; paused = false; resultsShown = false; raceState = 'lights'; lightsT = 0; lightsOut = 5 + Math.random() * 1.4;
   raceTime = 0; leaderFinished = false; fastest = null; tiltCheckT = 0;
   effCtrl = isTouch ? S.ctrl : 'touch';
+  sgReset();
   tiltZero = tiltAngle; camH = pl.h;
   for (const m of lampMats) m.color.setHex(0x2a0606);
   ['#menu', '#pause', '#results'].forEach(s => $(s).classList.add('hidden'));
@@ -11639,7 +11697,8 @@ function layoutControls() {
   if (!isTouch) { ctl.classList.add('hidden'); return; }
   ctl.classList.remove('hidden'); document.body.classList.add('touchUI');
   const tilt = effCtrl === 'tilt', show = (id, v) => $('#' + id).classList.toggle('hidden', !v);
-  show('bL', !tilt); show('bR', !tilt); show('bBrakeL', false); show('bBrake', true);   /* nur noch die rechte Bremse (Wunsch), auch beim Neigen */ show('bGas', !S.autogas);
+  const sg = SG.on && !SG.go;   /* Start-Minispiel: Kupplung statt der Pfeile */
+  show('bClutch', sg); show('bBoost', !sg); show('bL', !tilt && !sg); show('bR', !tilt && !sg); show('bBrakeL', false); show('bBrake', true);   /* nur noch die rechte Bremse (Wunsch), auch beim Neigen */ show('bGas', !S.autogas);
   applyLayout();
 }
 
@@ -11779,7 +11838,7 @@ function updatePlayer(dt) {
   else if (GP.on && (GP.steer || !(kb || tb))) { p.steer += clamp(GP.steer - p.steer, -7 * dt, 7 * dt); }
   else if (kb || tb || effCtrl !== 'tilt') { const tg = clamp(kb + tb, -1, 1); p.steer += clamp(tg - p.steer, -4.5 * dt, 4.5 * dt); }
   else { const tg = tiltSteer(); p.steer += clamp((tg - p.steer) * (1 - Math.exp(-dt * 6.5)), -3.2 * dt, 3.2 * dt); }   // ruhiger, ohne Zucken
-  const canDrive = raceState === 'race';
+  const canDrive = raceState === 'race' && SG.go;
   { const rv = canDrive ? 0 : Math.max(inp.gas || inp.kU ? 1 : 0, GP.thr || 0); p.rev = (p.rev || 0) + (rv - (p.rev || 0)) * Math.min(1, dt * (rv > (p.rev || 0) ? 7 : 4)); }   // vor dem Start: Gas = Motor hochdrehen
   let brk = inp.brakeL || inp.brakeR || inp.kD || !canDrive ? 1 : GP.brk;
   let thr = (S.autogas ? (brk > .05 ? 0 : 1) : Math.max(inp.gas || inp.kU || inp.boost ? 1 : 0, GP.thr)) || (inp.kU ? 1 : 0);   /* ERS-Taste gibt auch Gas */
@@ -11934,7 +11993,7 @@ function sortOrder() { order.sort((a, b) => (a.finished && b.finished) ? ((b.fin
 function step(dt) {
   bumpCd -= dt;
   if (raceState === 'lights') {
-    lightsT += dt;
+    if (sgLights()) lightsT += dt;
     const lit = lightsT >= lightsOut ? 0 : Math.min(5, Math.floor(lightsT / 0.95));
     if (lit > (step.lit || 0)) lightBeep(false); step.lit = lit;
     $$('#lights i').forEach((el, k) => el.classList.toggle('on', k < lit));
@@ -11944,8 +12003,8 @@ function step(dt) {
       if (tiltCheckT > 1.5 && !tiltSeen) { effCtrl = 'touch'; layoutControls(); showMsg('Neigung nicht verfügbar – Touch aktiv', 3); }
       else if (tiltSeen && lightsT < 4.5) tiltZero = tiltAngle;
     }
-    if (lightsT >= lightsOut) { raceState = 'race'; step.lit = 0; lightBeep(true); showMsg('LOS!', 1); setTimeout(() => $('#lights').classList.add('hidden'), 700); }
-  } else raceTime += dt;
+    if (lightsT >= lightsOut) { raceState = 'race'; step.lit = 0; lightBeep(true); /* kein „LOS!“-Text mehr (Wunsch v2.81) */ setTimeout(() => $('#lights').classList.add('hidden'), 700); SG.outT = performance.now(); if (SG.armed && !SG.jump && SG.on) sgHint(''); }
+  } else { raceTime += dt; sgRace(); }
   updatePlayer(dt);
   for (const c of ais) updateAI(c, dt);
   if (raceState === 'race') { collisions(); for (const c of cars) lapCheck(c); }
@@ -12064,7 +12123,7 @@ const SW = (() => {
 function roadDashTick(dt) {
   const D = ROAD_DASH; if (!D) return;
   D.t += dt; if (D.t < 1 / 30) return; D.t = 0; D.flip = !D.flip;
-  const gi = gearP(pl.v * 3.6), lights = raceState === 'lights';
+  const gi = gearP(pl.v * 3.6), lights = preGo();
   const tr = lights ? 950 + (pl.rev || 0) * 3600 : (pl.street ? gi.rpm : 1100 + (gi.rpm / 12000) * 6200) - (ENG ? ENG.cut * 9000 : 0);
   D.rpm = (D.rpm ?? 900) + (tr - (D.rpm ?? 900)) * 0.45; D.kmh = (D.kmh ?? 0) + (pl.v * 3.6 - (D.kmh ?? 0)) * 0.6; D.temp = Math.min(92, D.temp + 0.03);
   if (D.flip) {   // Instrumente
@@ -12234,7 +12293,7 @@ function drawWheel(dt) {
   g.fillStyle = '#020305'; g.fillRect(0, 0, w, h); g.fillStyle = '#07090d'; g.fillRect(14, 44, w - 28, h - 58);
   g.strokeStyle = 'rgba(120,140,160,.12)'; g.lineWidth = 1; for (let x = 14; x < w - 14; x += 6) { g.beginPath(); g.moveTo(x, 44); g.lineTo(x, h - 14); g.stroke(); }
   // Schaltlichter: 15 kleine LEDs mit Glanz
-  const gf = raceState === 'lights' ? 0.35 + 0.63 * (pl.rev || 0) : gi.f, lit = Math.round(clamp((gf - 0.35) / 0.58, 0, 1) * 15), blink = gf > 0.95 && (performance.now() / 90 | 0) % 2;   // F1-Lenkrad-LEDs auch beim Hochdrehen
+  const gf = preGo() ? 0.35 + 0.63 * (pl.rev || 0) : gi.f, lit = Math.round(clamp((gf - 0.35) / 0.58, 0, 1) * 15), blink = gf > 0.95 && (performance.now() / 90 | 0) % 2;   // F1-Lenkrad-LEDs auch beim Hochdrehen
   for (let k = 0; k < 15; k++) { const on = k < lit && !blink, cx = 48 + k * 39, col = k < 5 ? '#22e06a' : k < 10 ? '#ff2a10' : '#4d7cff';
     g.fillStyle = '#11151b'; g.beginPath(); g.arc(cx, 22, 11, 0, 7); g.fill(); g.fillStyle = on ? col : '#1d232b'; g.beginPath(); g.arc(cx, 22, 8, 0, 7); g.fill();
     if (on) { g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.arc(cx - 2.5, 19, 2.5, 0, 7); g.fill(); } }
@@ -12416,9 +12475,9 @@ function showTTResults() {   // Zeitfahren: Rundenzeiten, Bestzeit, persönliche
 }
 
 /* ======================= Pause / Menü ======================= */
-function pause() { if (!running || resultsShown) return; paused = true; $('#toMenu').textContent = CHP ? 'Speichern & Hauptmenü (Rennen wird wiederholt)' : 'Rennen beenden · Hauptmenü'; mountSettings('pause'); renderMenu(); $('#pause').classList.remove('hidden');
+function pause() { if (!running || resultsShown) return; paused = true; pause.t = performance.now(); $('#toMenu').textContent = CHP ? 'Speichern & Hauptmenü (Rennen wird wiederholt)' : 'Rennen beenden · Hauptmenü'; mountSettings('pause'); renderMenu(); $('#pause').classList.remove('hidden');
   { const pos = order.indexOf(pl) + 1; $('#pInfo').innerHTML = '<span><b>P' + pos + '</b>/' + cars.length + '</span><span>Runde <b>' + clamp(pl.lapsDone + 1, 1, S.laps) + '</b>/' + S.laps + '</span><span>Beste <b>' + fmt(pl.best) + '</b></span><span>' + TRK.name + '</span>'; } $('#nextSong').textContent = '⏭ Nächstes Lied (jetzt: ' + raceSongName() + ')'; }
-function resume() { paused = false; $('#pause').classList.add('hidden'); last = performance.now(); }
+function resume() { if (SG.on && !SG.go && SG.outT && pause.t) SG.outT += performance.now() - pause.t; paused = false; $('#pause').classList.add('hidden'); last = performance.now(); }
 function quickRestore() { if (S.qs) { const q = S.qs; delete S.qs; Object.assign(S, q); save(); } }   // Karriere verlassen: Schwierigkeit, Runden, Startplatz, Strecke und Fahrer des Schnellen Spiels wiederherstellen
 function toMenu() {
   if (CHP) { saveChamp(); CHP = null; }
@@ -13172,7 +13231,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.80'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.83'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -13525,7 +13584,7 @@ window.__S = () => S; window.__mesh = () => ({ ALL, pl, MODELS, camera });
 window.__histDbg = () => ({ THREE, HIST, HIST_CAR, histLoad, makeHist, poseArm, TEAMS: F1_TEAMS, F1FAHRER, renderer, scene });   /* Klassiker: Messwerkzeug tools/klassiker/fahrer_sicht.js */   /* Test: Einstellungen und Fahrzeuge lesen/setzen */
 window.__laps = () => ais.map(a => a.code + ':' + (a.lapTimes || []).map(t => t.toFixed(1)).join('/'));
 window.__cutz = () => CUTZ; window.__cut = (c, dt) => cutCheck(c, dt);   /* Test: Schikanen-Zonen und Strafprüfung */
-window.__dbg = () => ({ L, N, raceState, running, paused, lightsT, raceTime, plD: pl.d, plV: pl.v, plLat: pl.lat, order: order.map(c => c.code), best: pl.best, fastest, resultsShown, aiBest: ais.slice(0, 5).map(a => a.code + ':' + (a.best || 0).toFixed(1)) });
+window.__dbg = () => ({ SG, L, N, raceState, running, paused, lightsT, raceTime, plD: pl.d, plV: pl.v, plLat: pl.lat, order: order.map(c => c.code), best: pl.best, fastest, resultsShown, aiBest: ais.slice(0, 5).map(a => a.code + ':' + (a.best || 0).toFixed(1)) });
 // QC-Bot (qc/qc-bot.js, Start mit ?qc): Zugriff auf den Spielzustand, ohne das Spiel selbst zu verändern
 window.__qcApi = { THREE, renderer, camera, scene, trackGroup, sky, skyBox, S, TRACKS, SERIES, GP, tick: (t, f) => tick(t, f), renderNow: () => composer ? composer.render(0) : renderPlain(), renderCam: cam => renderLikeGame(cam), surface: (i, l) => surface(i, l), nearestDist: (x, z) => nearestDist(x, z), wallAt: (j, sd) => wallAt(j, sd), groundY: (x, z) => groundY(x, z), placeY: (x, z) => placeY(x, z),
   get pl() { return pl; }, get ais() { return ais; }, get running() { return running; }, get paused() { return paused; }, get raceState() { return raceState; }, get raceTime() { return raceTime; }, get SER() { return SER; },

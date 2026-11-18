@@ -117,3 +117,20 @@ Textur 2037 × 2041 (Grafikspeicher je Team ~22 MB mit Mipmaps statt ~15 MB). To
 - Halo je Lackierung einfarbig in der echten Farbe, ohne Logos: `tools/sticker/halo.json` (am oberen Bügel der Seitenfotos abgelesen) → `halo` in
   liveries.json → `liveryMat` (Klasse 7) und TV-Halo (`haloFlat`). Bunt: Alpine rosa, Aston Martin grün, Audi grau, Haas weiß; F2: AIX grün,
   ITA rot, DAMS/Trident dunkelblau, BLK/Campos/Rodin hell; sonst schwarz.
+
+## v2.83: Alle Seiten – Draufsichten für alle F1-Teams, Symmetrie, F2 von oben (18.11.2026)
+Auftrag des Nutzers: Bilder von oben suchen, Texturen von allen Seiten komplett, auch F2 und Karts; alle Richtungen prüfen und Überschneidungen
+korrigieren; Halos in echter Farbe ohne Logos; **Regel: Lackierungen links/rechts spiegelgleich – die Seite nehmen, von der es mehr/schönere Referenzen gibt**.
+- **Draufsichten F1 (alle 11):** senkrechte Präsentations-/Studiofotos für MER, FER, MCL, RBR, RB, HAA, CAD, AUD (Audi-Studio), fast senkrecht für ALP
+  (Boxengasse), entzerrte Schrägansicht für WIL (offizielles Render) und AST (kein besseres Bild gefunden). Quellen je Team in `top.src`.
+  Bilder selbst liegen nur im Zwischenspeicher `tools/sticker/.cache/oben/` (nicht im Repo).
+- **Symmetrie** (`build.py`): Farbflächen werden von einer Wagenhälfte gespiegelt (`top.sym`, Standard L; HAA/CAD/ALP rechts, weil dort besser belichtet),
+  Logos außerhalb der Mitte bekommen automatisch die Gegenseite (Schrift nicht gespiegelt).
+- **Reihenfolge beim Backen:** Draufsicht zuerst, Seitenbogen darüber – an geneigten Schultern gewinnt der Seitenbogen (RB: VISA wurde von Weiß überdeckt).
+- **Seitenbogen-Übergang** 0,2 → 0,45 (ab 0,45 voll wie früher).
+- **F2 von oben:** Fotos aus fiaformula2.com-Rennberichten (Getty, klein). Eingetragen: Prema (weiße Oberseite), Rodin und ART (dunkle Felder um
+  die Kühlschlitze). Übrige F2: Fotos zu dunkel/schräg oder nichts Neues gegenüber der Seite; der F2-Heckflügel ist am Modell Carbon (nicht bemalbar).
+- **Karts:** waren schon von allen Seiten beklebt (erfundene Teams, `kartStickerDraw`) – keine Änderung.
+- Startnummern bleiben je Fahrer eine Einblendung über der Textur (beide Autos eines Teams teilen die Textur, jeder hat seine Nummer).
+- Geprüft je F1-Team aus 10 Richtungen (L, R, vorn, hinten, oben, 4× schräg, Heck nah). Rest: AUD-„27“ an der gewölbten Motorabdeckung leicht verbogen
+  (Nummer-Einblendung, wie vorher); F2_ITA rote Flecken seitlich an der Motorabdeckung (aus dem Lack-Programm, zu steil für die Draufsicht).

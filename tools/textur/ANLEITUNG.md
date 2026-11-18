@@ -76,3 +76,5 @@ Fotos von oben: `tools/sticker/.cache/oben/<Kürzel>_<n>.*` (nicht im Repo; Quel
    Der Frontflügel ist am Modell überwiegend Carbon (bekommt keine Aufkleber).
 5. `python3 tools/sticker/build.py <K>` → `node tools/textur/backen.js <K>` → `node tools/sticker/shot.js <K> <Vorsilbe> top,f34,f34n,hk` ansehen,
    höchstens 3–4 Runden. Die Ansicht von oben greift nur auf Flächen, deren Normale deutlich nach oben zeigt (ab 0,5); seitliche Flächen bleiben beim Seitenbogen.
+6. **Regeln (Nutzer, 18.11.2026):** spiegelgleich (build.py macht Flächen symmetrisch und setzt Logos auf die Gegenseite; mit `top.sym` die besser
+   sichtbare Seite wählen); nichts doppelt, was der Seitenbogen schon trägt; Draufsicht wird VOR dem Seitenbogen aufgetragen (Seite gewinnt an Schultern).
