@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Klassiker Vorschau</title>
+<style>
+html,body{margin:0;height:100%;background:#1a1d22;overflow:hidden;font:14px system-ui,sans-serif;color:#ddd}
+#ui{position:absolute;left:12px;top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;max-width:calc(100% - 24px)}
+#ui button{background:#2a2e35;color:#ddd;border:1px solid #3a3f47;padding:5px 10px;font:inherit;cursor:pointer}
+#ui button.on{background:#e8e8e8;color:#111}
+#st{position:absolute;left:12px;bottom:10px;opacity:.75;white-space:pre}
+</style>
+</head>
+<body>
+<div id="ui"></div>
+<div id="st"></div>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+const CARS = [['lotus49c', 'Lotus 49C'], ['mclaren_mp44', 'McLaren MP4/4'], ['ferrari_f2004', 'Ferrari F2004']];
+const q = new URLSearchParams(location.search);
+const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); r.setPixelRatio(Math.min(devicePixelRatio, 2)); r.setSize(innerWidth, innerHeight);
+r.toneMapping = THREE.ACESFilmicToneMapping; r.shadowMap.enabled = true; document.body.appendChild(r.domElement);
+const s = new THREE.Scene(); s.background = new THREE.Color(0x1a1d22);
+s.environment = new THREE.PMREMGenerator(r).fromScene(new RoomEnvironment(), 0.04).texture; s.environmentIntensity = 0.7;
+const cam = new THREE.PerspectiveCamera(32, innerWidth / innerHeight, 0.05, 400); cam.position.set(4.2, 1.8, 4.6);
+const ctl = new OrbitControls(cam, r.domElement); ctl.target.set(0, 0.4, 0); ctl.enableDamping = true;
+if (q.has('cam')) { const [x, y, z, tx, ty, tz] = q.get('cam').split(',').map(Number); cam.position.set(x, y, z); ctl.target.set(tx, ty, tz); }
+const key = new THREE.DirectionalLight(0xfff4e8, 2.2); key.position.set(3, 5, 3); key.castShadow = true; key.shadow.mapSize.set(2048, 2048);
+Object.assign(key.shadow.camera, { left: -3, right: 3, top: 3, bottom: -3 }); key.shadow.normalBias = 0.02; s.add(key);
+s.add(new THREE.HemisphereLight(0xcfe0ff, 0x30302a, 0.6));
+const floor = new THREE.Mesh(new THREE.CircleGeometry(8, 64).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x2a2e34, roughness: .8 })); floor.receiveShadow = true; s.add(floor);
+const loader = new GLTFLoader(); const cache = {};
+let car = null, carKey = q.get('car') || 'lotus49c', lod = q.has('lod') ? +q.get('lod') : -1, spin = q.has('spin'), info = '';
+const ui = document.getElementById('ui'), st = document.getElementById('st');
+function btn(lbl, on, fn) { const b = document.createElement('button'); b.textContent = lbl; b.className = on ? 'on' : ''; b.onclick = fn; ui.appendChild(b); }
+function drawUI() { ui.innerHTML = ''; for (const [k, n] of CARS) btn(n, k === carKey, () => { carKey = k; load(); });
+  for (const [l, n] of [[-1, 'Auto-LOD'], [0, 'LOD0'], [1, 'LOD1'], [2, 'LOD2']]) btn(n, l === lod, () => { lod = l; drawUI(); });
+  btn('Räder drehen', spin, () => { spin = !spin; drawUI(); }); }
+async function load() {
+  drawUI(); if (car) s.remove(car);
+  const url = './' + carKey + '.glb'; const t0 = performance.now();
+  const g = cache[url] || (cache[url] = await loader.loadAsync(url)); car = g.scene; s.add(car);
+  car.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; } });
+  const root = car.children[0], ex = root.userData || {};
+  const size = (await fetch(url, { method: 'HEAD' })).headers.get('content-length');
+  info = `${ex.title || carKey}  ·  ${(size / 1e6).toFixed(2)} MB  ·  Laden ${(performance.now() - t0).toFixed(0)} ms\n` + (ex.lods || []).map(L => `LOD${L.lod}: ${L.tris} Dreiecke, ${L.draws} Zeichenaufrufe`).join('   ');
+  window.__car = car;
+}
+const v = new THREE.Vector3();
+function frame() {
+  if (car && !car.userData.noLod) { const root = car.children[0]; const d = cam.position.distanceTo(ctl.target); const dists = root.userData.lodDistances || [0, 18, 45];
+    const L = lod >= 0 ? lod : (d > dists[2] ? 2 : d > dists[1] ? 1 : 0);
+    root.children.forEach((c, i) => c.visible = i === L);
+    if (spin) root.children[L].children.forEach(c => { if (c.name.startsWith('wheel_')) c.rotation.x += 0.08; });
+    r.info.reset(); }
+  ctl.update(); r.render(s, cam);
+  st.textContent = info + `\nAktuell: ${r.info.render.triangles} Dreiecke, ${r.info.render.calls} Zeichenaufrufe (inkl. Boden)`;
+}
+r.info.autoReset = false; r.setAnimationLoop(frame);
+addEventListener('resize', () => { cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); r.setSize(innerWidth, innerHeight); });
+window.__render = frame; window.__cam = (x, y, z, tx, ty, tz) => { cam.position.set(x, y, z); ctl.target.set(tx, ty, tz); frame(); };
+window.__set = (k, l) => { carKey = k; lod = l; return load(); };
+// Prüfhilfe: Originalmodell (beliebige URL) mit Maßstab/Drehung/Verschiebung daneben laden: __orig(url, s, rotY, dx, dy, dz)
+window.__orig = async (url, sc = 1, ry = 0, dx = 0, dy = 0, dz = 0) => { if (car) s.remove(car); const g = await loader.loadAsync(url);
+  car = new THREE.Group(); const w = new THREE.Group(); w.add(g.scene); w.position.set(dx, dy, dz); car.add(w); car.scale.setScalar(sc); car.rotation.y = ry;
+  car.userData.noLod = true; s.add(car); info = 'Original: ' + url; return 1; };
+load();
+</script>
+</body>
+</html>
