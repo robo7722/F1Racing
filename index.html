@@ -2438,12 +2438,26 @@ class SunRaysPass extends Pass {
 // eigene Auto (Ebene 6) mit kleiner Nahgrenze. Die Schattenkarte aus dem ersten Durchgang bleibt (sonst fehlte dem Boden der Autoschatten).
 const SPLIT_L = 6, WORLD_NEAR = 0.8;
 const splitOn = () => running && (S.cam === 2 || S.cam === 3) && !!(pl && pl.mesh && pl.mesh.g) && camera.near < 0.2 && !window.__noSplit;
+// Leistung (v2.64): Die Cockpitteile laufen als „durchsichtig“ (Reihenfolge, siehe cockLast) und sind meist beidseitig – Three.js zeichnet solche Flächen
+// dann zweimal (erst Rück-, dann Vorderseite). Sie sind aber voll deckend und schreiben Tiefe: ein Durchgang reicht (forceSinglePass, kein neuer Shader).
+// Vorher kostete das eigene Auto im Cockpit 26 Aufrufe / 190.000 Dreiecke, jetzt etwa die Hälfte.
+const fspMat = mt => { if (mt && mt.transparent && (mt.depthWrite || mt.userData.fsp) && !mt.forceSinglePass) mt.forceSinglePass = true; };
+// Reihenfolge im Auto-Durchgang: deckende Teile (schreiben Tiefe) von vorn nach hinten statt von hinten nach vorn – die Karosserie hinter Wanne, Lenkrad
+// und Armen wird dann gar nicht erst schattiert (Klarlack-Material, im Cockpit ein großer Teil des Bildes). Echte Durchsicht (Geister-Halo) zuletzt, hinten zuerst.
+const carSort = (a, b) => { if (a.groupOrder !== b.groupOrder) return a.groupOrder - b.groupOrder; if (a.renderOrder !== b.renderOrder) return a.renderOrder - b.renderOrder;
+  const da = a.material.depthWrite ? 0 : 1, db = b.material.depthWrite ? 0 : 1; if (da !== db) return da - db; if (a.z !== b.z) return da ? b.z - a.z : a.z - b.z; return a.id - b.id; };
+const _hid = [];
 function drawOwnCar(cam = camera) {
-  const g = pl.mesh.g; g.traverse(o => o.layers.enable(SPLIT_L));
-  const bg = scene.background, sa = renderer.shadowMap.autoUpdate, ac = renderer.autoClear, mask = cam.layers.mask;
-  renderer.autoClear = false; renderer.shadowMap.autoUpdate = false; scene.background = null; cam.layers.set(SPLIT_L);
-  renderer.clearDepth(); renderer.render(scene, cam);
-  cam.layers.mask = mask; scene.background = bg; renderer.shadowMap.autoUpdate = sa; renderer.autoClear = ac;
+  const g = pl.mesh.g; const old = !!window.__oldCar; g.traverse(o => { o.layers.enable(SPLIT_L); const m = o.material; if (m && !old) { if (Array.isArray(m)) m.forEach(fspMat); else fspMat(m); } });   /* Testschalter __oldCar: alter Weg (zwei Durchgänge je Fläche, Reihenfolge hinten zuerst) */
+  const bg = scene.background, sa = renderer.shadowMap.autoUpdate, ac = renderer.autoClear, mask = cam.layers.mask, mu = scene.matrixWorldAutoUpdate;
+  // Alles außer dem eigenen Auto und den Lichtern kurz ausblenden: der zweite Durchgang muss sonst die ganze Strecke (Tausende Objekte) noch einmal
+  // durchlaufen, nur um festzustellen, dass nichts davon auf Ebene 6 liegt. Matrizen sind aus dem Welt-Durchgang dieses Bildes schon aktuell.
+  let top = g; while (top.parent && top.parent !== scene) top = top.parent;
+  for (const o of scene.children) if (o !== top && o.visible && !o.isLight) { o.visible = false; _hid.push(o); }
+  renderer.autoClear = false; renderer.shadowMap.autoUpdate = false; scene.background = null; cam.layers.set(SPLIT_L); scene.matrixWorldAutoUpdate = false; if (!old) renderer.setTransparentSort(carSort);
+  try { renderer.clearDepth(); renderer.render(scene, cam); }
+  finally { for (const o of _hid) o.visible = true; _hid.length = 0; renderer.setTransparentSort(null); scene.matrixWorldAutoUpdate = mu;
+    cam.layers.mask = mask; scene.background = bg; renderer.shadowMap.autoUpdate = sa; renderer.autoClear = ac; }
 }
 // Im Welt-Durchgang ist das eigene Auto ausgeblendet (es wird im zweiten Durchgang ohnehin komplett neu gezeichnet – vorher kostete es doppelt
 // Ecken und Pixel). Für die Schattenkarte wird es wieder eingeblendet: die läuft erst, nachdem das Hauptbild seine Netze eingesammelt hat (siehe shadowSwap).
@@ -10329,7 +10343,7 @@ function drawHaloHud() {
   const on = !!(running && S.cam === 3 && pl && pl.mesh && pl.mesh.tp); if (on !== HH.on) { HH.on = on; document.body.classList.toggle('tvcam', on); HH.t = 0; } if (!on) return;
   { const tn = performance.now(); if (tn - HH.t < 30) return; HH.t = tn; EVT.halo++;   /* höchstens ~30× pro Sekunde: die Grafik ist bildschirmgroß, jedes Neuzeichnen lädt sie neu auf die Grafikkarte */
     if (tn - HH.ot > 1000) { HH.ot = tn; HH.obst = [...document.querySelectorAll('#controls .pad, #controls .boostBtn, #tr .hb, #map')].map(e => e.getBoundingClientRect()).filter(r => r.width > 0); } }
-  const dpr = Math.min(1.5, devicePixelRatio || 1), W = innerWidth, H = innerHeight; if (HHC.width !== Math.round(W * dpr) || HHC.height !== Math.round(H * dpr)) { HHC.width = Math.round(W * dpr); HHC.height = Math.round(H * dpr); }
+  const dpr = Math.min(1.5, devicePixelRatio || 1), W = innerWidth, H = innerHeight;
   // Lage der Grafik: EINMAL je Bildgröße und Modell aus einer festen Hilfskamera berechnet (Sitz der TV-Kamera im Auto, festes Sichtfeld) – nicht mehr in jedem Bild aus der bewegten Spielkamera.
   // Vorher zitterte und verzerrte sich das Band, weil Sichtfeld (Tempo/Boost) und Kameralage die Ellipse laufend veränderten.
   const isF2 = pl.mesh.tp.M === MODELS.f2, key = W + 'x' + H + (isF2 ? 'b' : 'a');
@@ -10343,8 +10357,16 @@ function drawHaloHud() {
     for (let c = A[1] + 20; c < A[1] + H * 3; c += 0.5) { const r_y = c - A[1], qb = 1 - ((c - B[1]) / r_y) ** 2; if (qb <= 0.01) continue; const r_x = B[0] / Math.sqrt(qb), e = (C[0] / r_x) ** 2 + ((c - C[1]) / r_y) ** 2 - 1; if (e * e < best) { best = e * e; cy = c; rx = r_x; ry = r_y; } }
     if (isFinite(rx) && rx >= 40) HH.e = { cx: A[0], cy, rx, ry }; }
   if (!HH.e) return; const { cx, cy, rx, ry } = HH.e;
-  HHG.setTransform(dpr, 0, 0, dpr, 0, 0); HHG.clearRect(0, 0, W, H);
   const t = clamp(H * 0.085, 26, 46), th0 = Math.PI + 0.02, th1 = Math.PI * 2 - 0.02, k = ry / rx;
+  // Leistung (v2.64): Die Leinwand ist nur so groß wie das Band samt Tacho (vorher bildschirmgroß, ~30× je Sekunde ganz gelöscht, neu gezeichnet und
+  // vom Browser über das ganze Bild gelegt). Ausschnitt einmal je Lage berechnen; Inhalt und Lage der Grafik bleiben gleich.
+  if (!HH.bb || HH.bbKey !== HH.key + dpr) { HH.bbKey = HH.key + dpr; let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; const add = (x, y) => { if (x < -t || x > W + t || y < -t || y > H + t) return; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); };
+    for (let i = 0; i <= 400; i++) { const th = th0 + (th1 - th0) * i / 400, c = Math.cos(th), sn = Math.sin(th); for (const d of [0, t * 1.6]) add(cx + (rx - d) * c, cy + (ry - d * k) * sn); }   /* Außenkante und Beschriftung innen (bis ~1,5 Bandbreiten) */
+    { const r0 = t * 1.08, gx = cx, gy = cy - (ry - t * 0.5 * k); add(gx - r0 * 1.2, gy - r0); add(gx + r0 * 1.2, gy + r0 + 26); }   /* Tacho-Kreis mit ERS-Balken darunter */
+    const P = 8; x0 = Math.max(0, Math.floor(x0 - P)); y0 = Math.max(0, Math.floor(y0 - P)); x1 = Math.min(W, Math.ceil(x1 + P)); y1 = Math.min(H, Math.ceil(y1 + P));
+    HH.bb = x1 > x0 + 8 && y1 > y0 + 8 ? [x0, y0, x1 - x0, y1 - y0] : [0, 0, W, H]; const [bx, by, bw, bh] = HH.bb, st = HHC.style;
+    st.left = bx + 'px'; st.top = by + 'px'; st.width = bw + 'px'; st.height = bh + 'px'; st.right = st.bottom = 'auto'; HHC.width = Math.round(bw * dpr); HHC.height = Math.round(bh * dpr); }
+  { const [bx, by, bw, bh] = HH.bb; HHG.setTransform(dpr, 0, 0, dpr, -bx * dpr, -by * dpr); HHG.clearRect(bx, by, bw, bh); }
   const seen = th => { const x = cx + (rx - t * 0.5) * Math.cos(th), y = cy + (ry - t * 0.5 * k) * Math.sin(th); return x > 8 && x < W - 8 && y < H - 8 && !HH.obst.some(r => x > r.left - 6 && x < r.right + 6 && y > r.top - 6 && y < r.bottom + 6); };
   let visL = th0, visR = th1; while (visL < Math.PI * 1.4 && !seen(visL)) visL += 0.01; while (visR > Math.PI * 1.6 && !seen(visR)) visR -= 0.01;   // Bogen nur dort beschriften, wo er im Bild und nicht unter den Tasten liegt
   haloDraw(HHG, { cx, cy, rx, ry, t, th0, th1, full: true, visL, visR });
@@ -10995,6 +11017,9 @@ function warmUpTrack() {
   window.__warmMs = Math.round(performance.now() - t0);
 }
 function precompile() { const hid = [];
+  // Leistung (v2.64): beidseitige Flächen mit Durchsicht zeichnet Three.js zweimal (Rück-, dann Vorderseite). Bei Ausstanz-Texturen (Zaungitter, alphaTest) und
+  // voll deckenden, tiefeschreibenden Flächen ändert die Reihenfolge nichts am Bild – ein Durchgang genügt (halbiert z. B. die Fangzaun-Aufrufe). Kein neuer Shader.
+  trackGroup.traverse(o => { if (o.isMesh && o.material) for (const mt of [].concat(o.material)) if (mt.transparent && mt.side === THREE.DoubleSide && !mt.forceSinglePass && (mt.alphaTest > 0 || (mt.depthWrite && mt.opacity >= 1))) mt.forceSinglePass = true; });
   const wk = WAKE.m, wkP = wk.parent, wkV = wk.visible; if (!wkP) scene.add(wk); wk.visible = true;   /* Windschatten-Kegel: hing bisher an keinem Auto und war unsichtbar -> seine Shader, Textur und Geometrie entstanden erst beim ersten Windschatten (Ruckler kurz nach dem Start) */ for (const c of cars) { const m = c.mesh; if (!m || !m.g) continue; m.g.traverse(o => { if ((o.isMesh || o.isGroup) && !o.visible && !o.isSprite) { o.visible = true; hid.push(o); } }); }   /* ALLE Teile jedes Autos (Fernmodell, Überblend-Geister, Nahteile wie Helm und Räder ferner Autos) sind teils unsichtbar: Shader trotzdem jetzt übersetzen und – im winzigen Vorwärm-Bild unten – ihre Texturen hochladen. Sonst kamen sie erst, wenn ein Gegner zum ersten Mal ganz nah war (erste Kurve) */
   try { const prev = renderer.getRenderTarget(); if (composer) renderer.setRenderTarget(composer.renderTarget1); renderer.compile(scene, camera); renderer.setRenderTarget(prev); } catch (e) { console.warn('precompile', e); } finally { for (const o of hid) o.visible = false; }
   // (Der frühere Zusatzschritt, der Cockpit- und TV-Kamera-Materialien in einer eigenen Hilfsszene übersetzte, ist entfallen: seine 9 Shader wurden im Rennen nie
