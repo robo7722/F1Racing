@@ -39,5 +39,13 @@
  "zones": [[0.98, 1.36, 0, 0.4]],
  "logoFile": "WIL",
  "logos": [{"v": "top", "x": 0, "z": 1.5, "s": 0.2}],
- "number": {"color": "#ffffff", "spots": [{"v": "side", "z": -1.22, "y": 0.72, "s": 0.1}, {"v": "top", "x": 0, "z": 2.0, "s": 0.13}]}
+ "number": {"color": "#ffffff", "spots": [{"v": "side", "z": -1.22, "y": 0.72, "s": 0.1}, {"v": "top", "x": 0, "z": 2.0, "s": 0.13}]},
+ "top": {
+  "photo": "tools/sticker/.cache/oben/WIL_3.jpg",
+  "src": "https://media.formula1.com/image/upload/fom-website/2026/Williams/WIL_3.jpg",
+  "pts": [[1810, 1262, -0.18, 1.83], [2040, 1262, 0.18, 1.83], [1826, 1786, -0.13, 2.87], [2010, 1786, 0.13, 2.87], [1790, 976, -0.21, 1.26], [2052, 976, 0.21, 1.26]],
+  "stickers": [
+
+  ]
+ }
 }
