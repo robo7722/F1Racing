@@ -3,3 +3,4 @@ tools/sticker/.cache/
 qc-reports/
 tools/textur/.cache/
 *.vor_alpha
+*.vor_ersetzen

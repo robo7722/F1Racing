@@ -163,3 +163,12 @@ Ihr Bogen ist im verkleinerten Modell ein JPEG mit schwarzem Hintergrund und das
 dem Rechner des Nutzers. Behoben ohne Original: `tools/klassiker/aufkleber_alpha.py` macht das reine Schwarz (Wert 0), das mit dem Hintergrund zusammenhängt,
 durchsichtig (die dunklen Logos haben Wert 24 und bleiben), speichert den Bogen als PNG und stellt das Material auf `MASK`. Laden mit `?v=2`.
 Beim nächsten Neubau aus dem Original (`build_klassiker.py`) muss das wiederholt werden, falls das Original den Bogen ebenso ohne Deckkraft liefert.
+
+## v2.79 – McLaren: Original-Aufkleberbogen vom Nutzer
+Der Nutzer hat die Originaltexturen des MP4/4 geschickt (18.11.2026). Der Aufkleberbogen (`tools/klassiker/quellen/mclaren/aufkleber.png`, 1024², echte
+Deckkraft, senkrecht gespiegelt gegenüber glTF) ersetzt mit `tools/klassiker/textur_ersetzen.py … --flip --mask` den Bogen aus v2.78 – doppelte Auflösung,
+und das Innere des TAG-Heuer-Schilds ist jetzt durchsichtig (v2.78 hatte es als eingeschlossene Fläche schwarz gelassen). Laden mit `?v=3`.
+- **Tacho-Beschriftung** (Original 512×256: BOOST, RADIO, FUEL, BRAKE …): im verkleinerten Modell gibt es dafür keine Texturfläche mehr – `build_klassiker.py`
+  hat das Armaturenbrett in Eckpunktfarben umgewandelt (UVs weg). `Material_#59.003` ist NICHT der Tacho, sondern Pedale/Halter/Fußstützen, die ihre Farbe
+  aus den Farbfeldern dieses Bilds nehmen (dort liegt auch das BOSS-Schild) – nicht ersetzen. Für die Beschriftung braucht es das Original-GLB (Neubau mit
+  erhaltener Armaturen-Textur) oder eine eigene Fläche über dem Armaturenbrett.
