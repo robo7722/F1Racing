@@ -10097,7 +10097,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   try { HOLES = fillGroundHoles(); } catch (e) { console.warn('fillGroundHoles', e); }
   tileGround(trackGroup);
   mergeGroups(trackGroup);
-  chunkStrips(trackGroup);
+  chunkStrips(trackGroup, TRK.nos ? 1800 : 900);   /* Nordschleife: Streifen in 1800-m-Stücken – halb so viele Zeichenaufrufe (an der schwersten Stelle ~110 weniger) */
   try { bldOverlap(80, true); } catch (e) { console.warn('bldOverlap', e); } for (const c of trackGroup.children) if (c.userData.afterBld) c.userData.afterBld();   // Füll-Gebäude, die in ein gestaltetes Gebäude ragen, entfernen (Monaco hatte 12 solche Stellen)
   chunkInstances(trackGroup, TRK.nos ? 480 : 360);   /* größere Kacheln: weniger Zeichenaufrufe */
   try { grassTufts(); } catch (e) { console.warn('grassTufts', e); }
