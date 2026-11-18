@@ -172,3 +172,10 @@ und das Innere des TAG-Heuer-Schilds ist jetzt durchsichtig (v2.78 hatte es als 
   hat das Armaturenbrett in Eckpunktfarben umgewandelt (UVs weg). `Material_#59.003` ist NICHT der Tacho, sondern Pedale/Halter/Fußstützen, die ihre Farbe
   aus den Farbfeldern dieses Bilds nehmen (dort liegt auch das BOSS-Schild) – nicht ersetzen. Für die Beschriftung braucht es das Original-GLB (Neubau mit
   erhaltener Armaturen-Textur) oder eine eigene Fläche über dem Armaturenbrett.
+
+## v2.80 – Ferrari F2004: schwarze Kästen hinter Logos
+Gleiche Ursache wie beim McLaren: Im Original (`f2004.glb`, vom Nutzer als Archiv geschickt, nicht im Repo) ist `EXT_Sponsors.png` zu 39 % durchsichtig,
+das Material aber `OPAQUE` → `build_klassiker.py` speicherte JPEG ohne Deckkraft. Ersetzt durch das Original (`tools/klassiker/quellen/ferrari/sponsoren.png`,
+`textur_ersetzen.py … --mask`, gleiche Ausrichtung, nicht spiegeln). Laden mit `?v=2`. Sichtbar vor allem an der Nase (Vodafone, Olympus).
+**Bau-Skript-Lehre:** `build_klassiker.py` sollte Deckkraft behalten, wenn das BILD durchsichtige Pixel hat – auch wenn das Material `OPAQUE` ist.
+Die Bremssattel-/Detail-Logos (`EXT_Decal.png`) wurden beim Bau zu Eckpunktfarben und fehlen weiter.
