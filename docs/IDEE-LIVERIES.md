@@ -65,3 +65,25 @@ Die Reifen tragen die echte Beschriftung (PIRELLI, P ZERO, zwei Bögen mit Karom
 ## Radabdeckungen F1 – November 2026
 
 Jedes F1-Team hat seine Radabdeckung der Saison 2026 (Vorlage: F1-Grafik „Wheel covers for 2026“). Technik: flache Scheibe auf der Radaußenseite in `wheelGeoM()`, Design je Team in `WHEEL_COVER` gezeichnet, `wheelMat(team)` legt es in die Mitte einer Kopie der Flankentextur. Kein zusätzlicher Zeichenaufruf; je Team eine Textur (1024², auf Touch-Geräten 512²). Die Designs sind nach der Grafik nachgezeichnet, nicht ausgeschnitten. F2 und Kart unverändert. Nur im Showroom geprüft.
+
+## Idee 18.11.2026: echte Texturen wie bei den Klassikern (noch nichts gebaut)
+
+Frage des Nutzers: Lassen sich aus den Aufklebern „richtige“ Texturen machen wie bei den historischen Autos?
+
+**Unterschied heute:**
+- Klassiker (`modelle/klassiker/*.glb`): fertige Modelle mit UV-Abwicklung, Lack und Sponsoren als Bild (1024 px) – jede Fläche hat ihren festen Platz in der Textur, auch Oberseite und Front.
+- F1/F2 (`car.bin`, `f2car.bin`): **ein** gemeinsames Modell je Klasse ohne UV-Koordinaten (`parseCarBin` errechnet nur eine Würfelprojektion). Die Lackierung entsteht im Shader: Grundfarbe aus `glsl`, Aufkleberbogen nur **von der Seite** projiziert, Teamlogo und Nummer als Einblendung.
+
+**Weg dorthin:**
+1. Einmalig `car.bin` und `f2car.bin` abwickeln (z. B. xatlas in Python), UV-Koordinaten in die .bin schreiben (alle drei Detailstufen gleiche Abwicklung bzw. eigene, gebacken aus Stufe 0).
+2. Backen: je Lackierung das heutige Ergebnis (glsl + Bogen + Logo) in eine Textur 1024² (Touch 512²) rendern – sieht danach zunächst gleich aus, ist aber die Grundlage.
+3. Nachbessern pro Fläche: Oberseite (Motorabdeckung, Nase, Heckflügel, Endplatten), die die Seitenprojektion nicht erreicht; Nähte an schrägen Flächen fallen weg.
+4. Startnummer bleibt Einblendung je Fahrer (sonst eine Textur je Fahrer statt je Team).
+5. Danach im Spiel ein einfaches Material mit Textur statt Projektions-Shader (eher leichter; Speicher 1024² ≈ 5 MB mit Mipmaps statt 2048×1024 ≈ 8 MB heute).
+
+**Referenzen (Stand 18.11.2026 geprüft):**
+- Alle 27 Aufkleber-Dateien `tools/sticker/*.json` mit Foto-Adresse und Ausschnitt-Koordinaten liegen im Repo; die offiziellen Seitenfotos (formula1.com, fiaformula2.com) sind noch abrufbar.
+- `tools/sticker/.cache/` (Ausschnitte, Übersichten) ist nicht eingecheckt, `photo.py` erzeugt es neu.
+- Es gibt **nur Seitenansichten**. Für Oberseite/Front fehlen Vorlagen – müssten aus Launch- und Rennfotos (schräg/oben) nachgezeichnet werden.
+
+**Vorschlag:** Prototyp mit einem Team (Mercedes), im Showroom vergleichen, dann entscheiden.
