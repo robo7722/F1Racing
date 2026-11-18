@@ -218,5 +218,39 @@
     "s": 0.13
    }
   ]
+ },
+ "top": {
+  "photo": "tools/sticker/.cache/oben/RB_3.jpg",
+  "src": "https://media.formula1.com/image/upload/fom-website/2026/Racing%20Bulls%20(VCARB)/SI202601151062%20(1).jpg",
+  "rear": [928, 1080],
+  "front": [2683, 1082],
+  "stickers": [
+   {"name": "weiss_l", "poly": [[238, 935], [240, 1000], [243, 1050], [245, 1100], [250, 1150], [254, 1200], [256, 1250], [270, 1267], [302, 1285], [334, 1303], [345, 1306], [345, 935]], "kind": "key", "key": "#f2f3f6", "fill": true},
+   {"name": "weiss_r", "poly": [[452, 935], [450, 1000], [447, 1050], [445, 1100], [440, 1150], [436, 1200], [434, 1250], [420, 1267], [388, 1285], [356, 1303], [345, 1306], [345, 935]], "kind": "key", "key": "#f2f3f6", "fill": true},
+   {"name": "blau_l", "poly": [[256, 1250], [265, 1300], [270, 1350], [272, 1405], [345, 1405], [345, 1306], [334, 1303], [302, 1285], [270, 1267]], "kind": "key", "key": "#1740b8", "fill": true},
+   {"name": "blau_r", "poly": [[434, 1250], [425, 1300], [420, 1350], [418, 1405], [345, 1405], [345, 1306], [356, 1303], [388, 1285], [420, 1267]], "kind": "key", "key": "#1740b8", "fill": true},
+   {"name": "gelb_nase", "box": [300, 50, 390, 175], "kind": "key", "key": "#f4cf2e", "smooth": 5},
+   {"name": "sonne", "box": [238, 860, 450, 1115], "kind": "key", "key": "#f4cf2e", "smooth": 6},
+   {"name": "bulle", "poly": [[288, 1000], [405, 1000], [405, 1100], [398, 1240], [292, 1240], [285, 1100]], "kind": "key", "key": "#e8201c", "smooth": 4},
+   {"name": "neft", "box": [320, 221, 366, 252], "kind": "d", "dz": 0.08},
+   {"name": "pirelli", "box": [311, 252, 379, 266], "kind": "d", "dz": 0.08},
+   {"name": "octave", "box": [308, 270, 379, 285], "kind": "d", "dz": 0.08},
+   {"name": "dynatrace", "box": [308, 286, 379, 302], "kind": "d", "dz": 0.08},
+   {"name": "cashapp_nase", "box": [308, 302, 380, 322], "kind": "c", "dz": 0.08},
+   {"name": "visa_nase", "box": [304, 320, 381, 353], "kind": "c", "dz": 0.08},
+   {"name": "tudor_nase", "box": [306, 480, 386, 535], "kind": "c"},
+   {"name": "cashapp_nase2", "box": [303, 544, 385, 570], "kind": "c"},
+   {"name": "visa_nase2", "box": [302, 570, 388, 610], "kind": "c"},
+   {"name": "redbull_nase", "box": [284, 610, 402, 704], "kind": "c", "mask": [[284, 610, 336, 704], [358, 610, 402, 704]]},
+   {"name": "nouryon_l", "box": [198, 727, 250, 745], "kind": "d"},
+   {"name": "nouryon_r", "box": [440, 727, 492, 745], "kind": "d"},
+   {"name": "confluent_l", "box": [158, 795, 193, 960], "kind": "d"},
+   {"name": "confluent_r", "box": [497, 795, 528, 960], "kind": "d"},
+   {"name": "cashapp_fluegel", "box": [206, 1492, 398, 1528], "kind": "w"},
+   {"name": "cashapp_logo_fluegel", "box": [412, 1482, 481, 1551], "kind": "key", "key": "#3ad13a", "smooth": 3, "holes": false},
+   {"name": "dollar_fluegel", "box": [430, 1495, 465, 1540], "kind": "w"},
+   {"name": "tudor_band", "poly": [[188, 1563], [504, 1563], [504, 1611], [188, 1611]], "kind": "key", "key": "#eef0f3", "fill": true},
+   {"name": "tudor_fluegel", "box": [192, 1566, 500, 1608], "kind": "c"}
+  ]
  }
 }

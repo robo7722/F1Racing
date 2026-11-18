@@ -36,5 +36,24 @@
  ],
  "logoFile": "RBR",
  "logos": [{"v": "top", "x": 0, "z": 1.6, "s": 0.2}],
- "number": {"color": "#d8102c", "spots": [{"v": "side", "z": -1.12, "y": 0.76, "s": 0.1}, {"v": "top", "x": 0, "z": 2.1, "s": 0.13}]}
+ "number": {"color": "#d8102c", "spots": [{"v": "side", "z": -1.12, "y": 0.76, "s": 0.1}, {"v": "top", "x": 0, "z": 2.1, "s": 0.13}]},
+ "top": {
+  "photo": "tools/sticker/.cache/oben/RBR_3.jpg",
+  "src": "https://media.formula1.com/image/upload/fom-website/2026/Red%20Bull/SI202601150724.jpg",
+  "rear": [2916, 1078],
+  "front": [1137, 1075],
+  "stickers": [
+   {"name": "gelb_nase", "box": [295, 50, 395, 205], "kind": "key", "key": "#f5b400", "smooth": 5},
+   {"name": "sonne", "box": [250, 888, 435, 1100], "kind": "key", "key": "#f5b400", "smooth": 6},
+   {"name": "bulle", "poly": [[290, 1032], [400, 1032], [404, 1100], [400, 1180], [398, 1320], [292, 1320], [288, 1180], [285, 1100]], "kind": "key", "key": "#d8102c", "smooth": 8},
+   {"name": "oracle", "box": [294, 550, 393, 570], "kind": "w"},
+   {"name": "redbull_nase", "box": [287, 613, 399, 699], "kind": "c"},
+   {"name": "pepe_l", "box": [170, 740, 253, 773], "kind": "w"},
+   {"name": "pepe_r", "box": [430, 737, 516, 772], "kind": "w"},
+   {"name": "visa_l", "box": [260, 850, 293, 920], "kind": "w"},
+   {"name": "visa_r", "box": [395, 850, 428, 920], "kind": "w"},
+   {"name": "fluegel_schwarz", "poly": [[172, 1478], [518, 1478], [518, 1640], [172, 1640]], "kind": "key", "key": "#16171b", "fill": true},
+   {"name": "gate", "box": [203, 1557, 492, 1623], "kind": "w", "thr": [0.55, 0.9], "at": [0, -1.99]}
+  ]
+ }
 }

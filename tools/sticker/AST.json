@@ -38,5 +38,24 @@
  "zones": [[0.98, 1.36, 0, 0.4]],
  "logoFile": "AST",
  "logos": [{"v": "top", "x": 0, "z": 1.5, "s": 0.2}],
- "number": {"color": "#cedc00", "spots": [{"v": "side", "z": -1.24, "y": 0.65, "s": 0.13}, {"v": "top", "x": 0, "z": 2.0, "s": 0.13}]}
+ "number": {"color": "#cedc00", "spots": [{"v": "side", "z": -1.24, "y": 0.65, "s": 0.13}, {"v": "top", "x": 0, "z": 2.0, "s": 0.13}]},
+ "top": {
+  "photo": "tools/sticker/.cache/oben/AST_3.jpg",
+  "src": "https://media.formula1.com/image/upload/fom-website/2026/Aston%20Martin/GD2_2406%20copy.jpg",
+  "pts": [[1814, 1426, -0.18, 1.83], [2017, 1426, 0.18, 1.83], [1814, 1933, -0.165, 2.62], [2010, 1933, 0.165, 2.62], [1790, 1117, -0.21, 1.35], [2040, 1117, 0.21, 1.35]],
+  "stickers": [
+   {"name": "heck_blau", "poly": [[227, 932], [465, 932], [465, 972], [227, 972]], "fill": true, "color": "#1aa7e6", "at": [0, -2.04], "w": 1.14, "h": 0.56},
+   {"name": "heck_aramco", "box": [244, 937, 452, 968], "kind": "w", "at": [0, -2.04], "w": 0.85, "h": 0.2},
+   {"name": "astonwings", "box": [308, 76, 385, 99], "kind": "w"},
+   {"name": "valvoline", "box": [312, 115, 388, 133], "kind": "w"},
+   {"name": "valvoline_logo", "box": [306, 132, 386, 171], "kind": "c"},
+   {"name": "pirelli", "box": [308, 177, 386, 196], "kind": "w"},
+   {"name": "netapp", "box": [302, 206, 391, 231], "kind": "w"},
+   {"name": "xerox", "box": [304, 237, 389, 262], "kind": "w"},
+   {"name": "nexgen", "box": [302, 265, 391, 287], "kind": "w"},
+   {"name": "honda", "box": [318, 391, 378, 436], "kind": "w"},
+   {"name": "maaden", "box": [305, 507, 388, 542], "kind": "w"},
+   {"name": "cognizant", "box": [293, 590, 404, 609], "kind": "w"}
+  ]
+ }
 }

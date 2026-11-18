@@ -48,8 +48,8 @@
   "front": [950, 640],
   "stickers": [
    {"name": "schwarz", "poly": [[75, 600], [615, 600], [615, 1420], [75, 1420]], "kind": "key", "key": "#1b1d1f", "fill": true},
-   {"name": "orange_nase", "poly": [[325, 20], [365, 20], [400, 560], [420, 700], [270, 700], [290, 560]], "kind": "key", "key": "#ff9a00", "smooth": 4, "holes": false},
-   {"name": "orange_mitte", "box": [180, 690, 510, 1425], "kind": "key", "key": "#ff9a00", "smooth": 6, "holes": false},
+   {"name": "orange_nase", "poly": [[325, 20], [365, 20], [400, 560], [420, 700], [270, 700], [290, 560]], "kind": "key", "key": "#ff9a00", "smooth": 4, "holes": false, "color": "#ff7a00"},
+   {"name": "orange_mitte", "box": [180, 690, 510, 1425], "kind": "key", "key": "#ff9a00", "smooth": 6, "holes": false, "color": "#ff7a00"},
    {"name": "petrol", "box": [268, 935, 425, 1165], "kind": "key", "key": "#0b4f56", "smooth": 5},
    {"name": "pirelli", "box": [321, 99, 367, 113], "kind": "d"},
    {"name": "dewalt", "box": [317, 127, 373, 143], "kind": "d"},
@@ -58,7 +58,7 @@
    {"name": "deloitte", "box": [315, 227, 375, 247], "kind": "d"},
    {"name": "dell_nase", "box": [313, 259, 377, 292], "kind": "d"},
    {"name": "hilton", "box": [311, 421, 377, 459], "kind": "d"},
-   {"name": "fluegel_orange", "kind": "key", "key": "#ff9a00", "at": [0.0, -2.04], "w": 1.14, "poly": [[150, 1515], [540, 1515], [540, 1680], [150, 1680]], "fill": true},
+   {"name": "fluegel_orange", "kind": "key", "key": "#ff9a00", "at": [0.0, -2.04], "w": 1.14, "poly": [[150, 1515], [540, 1515], [540, 1680], [150, 1680]], "fill": true, "color": "#ff7a00"},
    {"name": "moneyapp", "box": [180, 1557, 336, 1586], "kind": "d", "at": [0.254, -1.964], "w": 0.456},
    {"name": "thenew", "box": [351, 1557, 487, 1586], "kind": "d", "at": [-0.216, -1.964], "w": 0.398},
    {"name": "okx_karos", "box": [195, 1628, 495, 1672], "kind": "d", "at": [0.0, -2.193], "w": 0.877}
