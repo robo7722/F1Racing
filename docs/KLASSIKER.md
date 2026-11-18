@@ -393,3 +393,26 @@ Die Aufkleber-Flächen (`Material_#1.005`) liegen an der Seitenkastenwölbung st
 - **Lösung:** `HIST_CAR.H_MCL.decal = ['Material_#1.005']`. histPrep gibt diesen Materialien einen Tiefenversatz (polygonOffset −4/−8), damit die Aufkleber vor der Karosserie liegen.
 - Das Feld gilt allgemein: Andere Legenden mit demselben Fehler bekommen nur einen Eintrag in `decal`.
 - Geprüft im Showroom per Ausschnitt-Vergleich.
+
+## v2.90 – Teamleiste Entwurf C eingebaut (Go des Nutzers 18.11.2026)
+- **Umschalter:** Links in der Teamleiste sitzt ein Umschalter `.tmtabs` mit „<Jahr> Saison / ★ Legenden“ (`MENU.leg`).
+- **Legendenansicht:** „Legenden“ ersetzt die Teamkacheln durch Goldkarten `.tm.hist.lcard`. Jede Karte zeigt das Jahr, das Auto (`HIST_CAR.title`) und den Fahrer als „A. Senna“. Der Inhalt ist mittig (Wunsch), das Logo sitzt klein oben rechts.
+- **Umschalten:** Ein Wechsel wählt sofort das zuletzt gewählte Auto der jeweiligen Gruppe (`MENU.lastLeg` bzw. `MENU.lastNow`).
+- **Synchron:** Die Ansicht folgt immer dem gewählten Auto. renderMenu baut die Leiste neu, wenn `MENU.leg` nicht mehr dazu passt.
+- **Karriere:** Dort gibt es keine Legenden und deshalb auch keinen Umschalter.
+- **Entfernt:** Die v2.88/89-Lösung (`.tmnow`, `.tmsep`, `hasLeg`, Legenden rechts außerhalb des Bildes).
+- **Arbeitsregel neu (CLAUDE.md):** Bei Design-Fragen erst einen Entwurf zur Abnahme schicken und auf das Go warten.
+
+## Entwurf LED-Wand für Legenden (zur Abnahme, noch nicht eingebaut)
+Bild: `docs/bilder/ledwand_legenden_entwuerfe.jpg`. Oben die heutige Wand, links Entwurf 1, rechts Entwurf 2, jeweils mit McLaren 1988 und Ferrari 1967. Mockup-Skript: `tools/klassiker/ledwand_entwurf.js` (ersetzt `wallDraw` im laufenden Spiel).
+- **Sichtbarer Wandausschnitt** in der Teamwahl, gemessen per Raycast: Leinwand x ≈ 450…880 und y ≈ 225…320 von 1024×320, Bildmitte bei x ≈ 630. Alles, was gelesen werden soll, muss in diesem Fenster liegen.
+- **Entwurf 1 „Archiv“:**
+  - Hintergrund in warmem Sepia, mit schrägen Streifen in den Teamfarben, die ins Sepia gezogen sind.
+  - In der Mitte das Jahr als große goldene Konturzahl.
+  - Links daneben das Auto, rechts der Fahrer, jeweils unterstrichen.
+  - Oben ein Filmstreifen mit Lochung, dazu Filmkorn.
+- **Entwurf 2 „Fallblatt-Tafel“:**
+  - Schwarze Klappziffern wie bei alten Zeitnahme-Tafeln.
+  - Vier Zeilen: LEGENDE, Jahr, Auto, Fahrer (Fahrer in Gelb).
+  - Ein Band in den Teamfarben am linken Rand.
+  - Die Zeichen blättern beim Wechsel durch, bevor sie stehen bleiben.
