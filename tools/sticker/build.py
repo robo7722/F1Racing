@@ -37,7 +37,8 @@ Beschreibung (JSON):
               pts    [[px, py, x, z], ...] mind. 4 Passpunkte Foto-Pixel -> Modell (x quer, links positiv; z vorn) für schräge Fotos,
               stickers  wie oben, aber box/poly in Pixeln des AUSGERICHTETEN Bilds tools/sticker/.cache/<Kürzel>_oben_ganz.png
                         (TOP_PXM Pixel je Meter, Nase oben, linke Wagenseite links; Raster in <Kürzel>_oben_raster.png);
-                        at [x, z] / w / h / dx / dz wie bei der Seite }
+                        at [x, z] / w / h / dx / dz wie bei der Seite;
+                        sym "L"/"R": Farbfläche symmetrisch machen (linke bzw. rechte Wagenhälfte gespiegelt auf die andere – nur für Flächen, nicht für Schrift) }
             -> tools/sticker/.cache/<Kürzel>_oben_bogen.png (gleicher Ausschnitt wie _oben_ganz), backen.js legt ihn auf alle nach oben
                zeigenden Lackflächen, die von oben zu sehen sind (Höhenkarte).
 """
@@ -97,7 +98,15 @@ def build_top(key, cfg):
         if 'at' in st: cx, cz = st['at']
         cx += st.get('dx', 0); cz += st.get('dz', 0); wm = st.get('w', (x1 - x0) / TOP_PXM); hm = st.get('h', wm * p.height / p.width)
         w, h = max(1, round(wm * TOP_PXM)), max(1, round(hm * TOP_PXM)); p = p.resize((w, h), Image.LANCZOS)
-        sheet.alpha_composite(p, (max(0, round((TOP_XW - cx) * TOP_PXM - w / 2)), max(0, round((Z1 - cz) * TOP_PXM - h / 2))))
+        pos = (max(0, round((TOP_XW - cx) * TOP_PXM - w / 2)), max(0, round((Z1 - cz) * TOP_PXM - h / 2)))
+        if st.get('sym') in ('L', 'R'):                                        # Farbfläche symmetrisch: eine Wagenhälfte (L = +x, im Bild links) auf die andere spiegeln
+            lay = Image.new('RGBA', sheet.size, (0, 0, 0, 0)); lay.alpha_composite(p, pos); half = Wt // 2
+            src = lay.crop((0, 0, half, Ht)) if st['sym'] == 'L' else lay.crop((Wt - half, 0, Wt, Ht))
+            lay = Image.new('RGBA', sheet.size, (0, 0, 0, 0)); mir = src.transpose(Image.FLIP_LEFT_RIGHT)
+            if st['sym'] == 'L': lay.paste(src, (0, 0)); lay.paste(mir, (Wt - half, 0))
+            else: lay.paste(src, (Wt - half, 0)); lay.paste(mir, (0, 0))
+            sheet.alpha_composite(lay)
+        else: sheet.alpha_composite(p, pos)
         print('  oben %-12s x %.2f  z %.2f  Breite %.2f m' % (st.get('name', '?'), cx, cz, wm))
     sheet = bleed(sheet); sheet.save(os.path.join(CACHE, key + '_oben_bogen.png'))
     bg = Image.new('RGB', sheet.size, (36, 38, 44)); bg.paste(sheet, (0, 0), sheet); bg.save(os.path.join(CACHE, key + '_oben_vorschau.png'))

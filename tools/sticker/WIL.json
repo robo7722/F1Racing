@@ -42,7 +42,7 @@
  "number": {"color": "#ffffff", "spots": [{"v": "side", "z": -1.22, "y": 0.72, "s": 0.1}, {"v": "top", "x": 0, "z": 2.0, "s": 0.13}]},
  "top": {
   "photo": "tools/sticker/.cache/oben/WIL_3.jpg",
-  "src": "unbekannt (Rendering der Williams-Präsentation 2026, schräg von vorn-oben; Quell-URL nachtragen)",
+  "src": "https://media.formula1.com/image/upload/fom-website/2026/Williams/fhigh_v4-Albon_169.jpg",
   "pts": [[1810, 1262, -0.18, 1.83], [2040, 1262, 0.18, 1.83], [1826, 1786, -0.13, 2.87], [2010, 1786, 0.13, 2.87], [1790, 976, -0.21, 1.26], [2052, 976, 0.21, 1.26]],
   "stickers": [
    {"name": "w_logo", "box": [327, 46, 358, 66], "kind": "w"},

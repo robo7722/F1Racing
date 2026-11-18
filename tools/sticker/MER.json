@@ -327,7 +327,8 @@
     "key": "#c8c3bf",
     "tol": 95,
     "smooth": 5,
-    "holes": false
+    "holes": false,
+    "sym": "L"
    },
    {
     "name": "silber_pods",
@@ -353,7 +354,8 @@
     "key": "#c8c3bf",
     "tol": 95,
     "smooth": 5,
-    "holes": false
+    "holes": false,
+    "sym": "L"
    },
    {
     "name": "tuerkis",
@@ -366,7 +368,8 @@
     "kind": "key",
     "key": "#1bc2ba",
     "smooth": 3,
-    "holes": false
+    "holes": false,
+    "sym": "L"
    },
    {
     "name": "teamviewer_l",
