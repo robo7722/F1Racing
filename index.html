@@ -1308,8 +1308,8 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
 #sgHint{position:absolute;left:50%;top:calc(14% + 72px);transform:translateX(-50%);padding:6px 14px;border-radius:8px;background:rgba(10,10,14,.72);border:1px solid rgba(255,200,0,.5);color:#fff;font:800 14px "Titillium Web",system-ui,sans-serif;letter-spacing:.12em;text-align:center;white-space:nowrap;pointer-events:none}
 #sgHint.armed{border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.8);font-size:12px}
 #sgReact{position:absolute;left:50%;top:max(8px,env(safe-area-inset-top));transform:translateX(-50%);padding:3px 10px;border-radius:6px;background:rgba(10,10,14,.6);border:1px solid rgba(255,200,0,.45);font:700 11px "Titillium Web",system-ui,sans-serif;letter-spacing:.12em;color:#ffc800;white-space:nowrap;pointer-events:none}
-#sgReact.jump{border-color:rgba(255,59,47,.6)}
-#sgReact.jump{color:#ff3b2f}
+#sgReact{opacity:1;transition:opacity .6s}
+#sgReact.fade{opacity:0}
 #sgHint.hidden,#sgReact.hidden{display:none}
 </style>
 </head>
@@ -10907,14 +10907,17 @@ const sgGas = () => S.autogas || inp.gas || inp.kU || GP.thr > 0.5;
 function sgHint(t, armed) { const el = $('#sgHint'); if (!el) return; if (!t) { el.classList.add('hidden'); return; } el.textContent = t; el.classList.toggle('armed', !!armed); el.classList.remove('hidden'); }
 function sgReset() {
   const skip = sgSkip(); Object.assign(SG, { on: !skip, armed: skip, jump: false, go: skip, react: null });
-  const r = $('#sgReact'); if (r) { r.classList.add('hidden'); r.classList.remove('jump'); r.textContent = ''; }
+  clearTimeout(sgShow.t); const r = $('#sgReact'); if (r) { r.classList.add('hidden'); r.classList.remove('fade'); r.textContent = ''; }
   if (skip) { sgHint(''); return; }
   const pad = GP.on, gasTxt = S.autogas ? '' : pad ? ' + GAS (R2)' : isTouch ? ' + GAS' : ' + GAS (W/↑)';
   sgHint((pad ? 'BREMSE = KUPPLUNG' : isTouch ? 'KUPPLUNG' : 'KUPPLUNG (S/↓)') + gasTxt + ' HALTEN');
 }
 function sgShow() {
   const r = $('#sgReact'); if (!r) return;
-  r.textContent = SG.jump ? 'FEHLSTART · +1,0 s' : 'REAKTION ' + SG.react.toFixed(3).replace('.', ',') + ' s'; r.classList.toggle('jump', SG.jump); r.classList.remove('hidden');
+  /* nur die Zeit, nach 2 s ausblenden (Wunsch); beim Fehlstart nichts – dort steht groß „FEHLSTART“ */
+  if (SG.jump || SG.react == null) return;
+  clearTimeout(sgShow.t); r.textContent = SG.react.toFixed(3).replace('.', ',') + ' s'; r.classList.remove('hidden', 'fade');
+  sgShow.t = setTimeout(() => r.classList.add('fade'), 2000);
 }
 function sgGo() { SG.go = true; sgHint(''); if (isTouch) layoutControls(); }
 // Ampelphase: gibt zurück, ob die Ampel weiterlaufen darf
@@ -13228,7 +13231,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.81'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.82'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

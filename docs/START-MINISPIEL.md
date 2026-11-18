@@ -7,9 +7,9 @@ Wunsch vom 18.11.2026: Beim Rennstart muss man die Kupplung halten, bis die Ampe
 1. **Warten:** Ampel steht still, Hinweis „KUPPLUNG + GAS HALTEN“. Erst wenn Kupplung **und** Gas gleichzeitig gehalten werden, läuft der Countdown (rote Lichter) an.
    Mit Auto-Gas reicht die Kupplung.
 2. **Countdown:** Hinweis „KUPPLUNG LOSLASSEN, WENN DIE AMPEL AUSGEHT“. Gas dreht den Motor hoch wie bisher.
-3. **Ampel aus:** Uhr läuft, bis die Kupplung losgelassen wird → **Reaktionszeit** klein oben in der Mitte („REAKTION 0,231 s“), bleibt das ganze Rennen stehen.
+3. **Ampel aus:** Uhr läuft, bis die Kupplung losgelassen wird → **Reaktionszeit** klein oben in der Mitte, nur die Zahl („0,231 s“), blendet nach 2 s aus (v2.82).
    Bis dahin bleibt das Auto stehen (Motor weiter im „vor dem Start“-Zustand).
-4. **Fehlstart:** Kupplung vor dem Erlöschen losgelassen → großes „FEHLSTART“, oben „FEHLSTART · +1,0 s“. Ampel läuft normal weiter, das Auto rollt erst **1 s nach dem Erlöschen** los.
+4. **Fehlstart:** Kupplung vor dem Erlöschen losgelassen → großes „FEHLSTART“ (oben keine Zeit). Ampel läuft normal weiter, das Auto rollt erst **1 s nach dem Erlöschen** los.
 5. Danach erscheinen wieder die Richtungstasten und die ERS-Taste. Kein „LOS!“-Text mehr.
 
 ## Belegung
