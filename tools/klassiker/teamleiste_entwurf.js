@@ -37,7 +37,7 @@ async function variant(p, v, legMode) {
     const tw = document.querySelector('#teams'); const now = [...tw.querySelectorAll('.tmnow .tm')], old = [...tw.querySelectorAll('.tm.hist')];
     if (!tw.dataset.orig) tw.dataset.orig = tw.innerHTML; tw.innerHTML = tw.dataset.orig; document.querySelectorAll('.mk-seg,.mk-lbl,.mk-line').forEach(e => e.remove());
     const N = [...tw.querySelectorAll('.tmnow .tm')].map(e => e.outerHTML), O = [...tw.querySelectorAll('.tm.hist')];
-    const DR = { H_F67: 'Chris Amon', H_LOT: 'Emerson Fittipaldi', H_MCL: 'Ayrton Senna', H_MCL98: 'Mika Häkkinen', H_FER: 'Michael Schumacher', H_RBR: 'Sebastian Vettel' };
+    const DR = { H_F67: 'C. Amon', H_LOT: 'J. Rindt', H_MCL: 'A. Senna', H_MCL98: 'M. Häkkinen', H_FER: 'M. Schumacher', H_RBR: 'S. Vettel' };
     const card = (e, i) => { const k = e.dataset.team, y = e.querySelector('.hy').textContent, nm = e.title.split(' · ')[1].replace(' (Legende)', ''); return '<div class="mk-card' + (i === 2 ? ' on' : '') + '">' + e.querySelector('svg').outerHTML + '<div><div class="y">' + y + '</div><div class="n">' + nm + '<br>' + (DR[k] || '') + '</div></div></div>'; };
     tw.classList.remove('hasLeg'); tw.style.justifyContent = 'center'; tw.style.overflow = 'visible';
     let html;

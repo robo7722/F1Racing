@@ -377,8 +377,19 @@ Das Bild `docs/bilder/teamleiste_entwuerfe.jpg` zeigt oben 1280 px und unten 844
   - Nach dem Antippen zeigt die Leiste die Legendenkarten und vorne eine Kachel „‹ 2026“ für den Rückweg.
 - **Verworfen, Entwurf A:** Ein schwebender Pillen-Umschalter über der Leiste. Er lag auf dem Auto, und Position und Design gefielen nicht.
 
-Fahrer auf den Karten: Amon (1967), Fittipaldi (1970), Senna (1988), Häkkinen (1998), Schumacher (2004), Vettel (2012).
+Schreibweise auf den Karten (Wunsch): Initiale des Vornamens mit Punkt, dann der ausgeschriebene Nachname, also C. Amon, J. Rindt, A. Senna, M. Häkkinen, M. Schumacher und S. Vettel.
+
+Frage „Oder war Rindt berühmter bei dem Auto?“: Ja.
+- Rindt gewann 1970 im 49C den Großen Preis von Monaco, mit dem berühmten Überholen von Brabham in der letzten Runde. 1970 wurde er postum Weltmeister.
+- Fittipaldi fuhr den 49C 1970 nur in seinen ersten Rennen. Seinen ersten Sieg holte er im Lotus 72.
+- Empfehlung: Rindt bleibt, wie bisher im Spiel. Im Entwurf steht deshalb „J. Rindt“.
 
 Im Spiel fährt der Lotus derzeit Jochen Rindt (`RIN` in index.html, Helmfarben nach FAHRER.md). Für Fittipaldi müssen beim Einbau auch Fahrereintrag und Helm geändert werden.
 
 Das Mockup entsteht nur per DOM-Einspritzung im echten Spiel, mit `node tools/klassiker/teamleiste_entwurf.js` aus dem Scratch-Ordner (schreibt `mk_*.png`).
+
+## v2.90 – MP4/4: „Shell“ und „Honda“ vorn abgeschnitten
+Die Aufkleber-Flächen (`Material_#1.005`) liegen an der Seitenkastenwölbung stellenweise minimal unter der Karosserie. Dadurch fehlte vom „S“ in „Shell“ der vordere Teil, ebenso vorn ein Stück von „Honda“.
+- **Lösung:** `HIST_CAR.H_MCL.decal = ['Material_#1.005']`. histPrep gibt diesen Materialien einen Tiefenversatz (polygonOffset −4/−8), damit die Aufkleber vor der Karosserie liegen.
+- Das Feld gilt allgemein: Andere Legenden mit demselben Fehler bekommen nur einen Eintrag in `decal`.
+- Geprüft im Showroom per Ausschnitt-Vergleich.

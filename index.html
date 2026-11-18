@@ -4331,7 +4331,7 @@ const HIST_CAR = {
   H_LOT: { file: 'lotus49c', title: 'Lotus 49C', year: 1970, ax: { RL: [0.37, -0.73], RR: [-0.37, 0.73] }, snd: 'hist_lot', fx: 1, gauge: 1, swRot: 1.1, mass: 500, gears: 5, rpm: [9600, 10200], ck: [0.033, 0.745, 0.04, 2.6], tvY: 1.35, seat: [-0.155, -0.08],
     sw: { c: [0.033, 0.52, 0.463], a: [-0.008, -0.38, 0.925], r: 0.165, t: 0.03, rh: 0.05, th: 0.09, h: 9, g: 0.134, e: [0.31, -0.32, 0.3] },
     ph: { top: 0.82, grip: 0.62, brk: 0.6, acc: 0.72 }, info: 'Cosworth DFV V8 · ca. 430 PS · 500 kg · 5 Gänge' },
-  H_MCL: { file: 'mclaren_mp44', title: 'McLaren MP4/4', year: 1988, seat: [-0.145, 0.33], snd: 'hist_mcl', rl: [0.25, 0.6], fx: 2, gauge: 2, swRot: 1.2, mass: 540, gears: 6, rpm: [11800, 12500], ck: [0.007, 0.735, 0.28, 1.2], tvY: 1.06,
+  H_MCL: { file: 'mclaren_mp44', title: 'McLaren MP4/4', year: 1988, decal: ['Material_#1.005'], seat: [-0.145, 0.33], snd: 'hist_mcl', rl: [0.25, 0.6], fx: 2, gauge: 2, swRot: 1.2, mass: 540, gears: 6, rpm: [11800, 12500], ck: [0.007, 0.735, 0.28, 1.2], tvY: 1.06,
     sw: { c: [0.007, 0.48, 0.722], a: [-0.005, -0.2, 0.98], r: 0.17, t: 0.025, rh: 0.05, th: 0.08, h: 9, g: 0.129, e: [0.24, -0.24, 0.36] },
     ph: { top: 0.93, grip: 0.78, brk: 0.75, acc: 0.95 }, info: 'Honda V6 Turbo · ca. 680 PS · 540 kg · 6 Gänge' },
   H_FER: { file: 'ferrari_f2004', title: 'Ferrari F2004', year: 2004, tyreUV: true, seat: [-0.04, 0.12], ck: [0, 0.765, 0.17, 0.3], ax: { FL: [-2.27, 0.44], FR: [2.19, -0.54], RL: [-0.25, -0.04], RR: [0.42, -0.19] }, snd: 'hist_fer', rl: [0.25, 0.6], fx: 3, gauge: 3, swRot: 0.95, mass: 605, gears: 7, rpm: [17600, 18300],
@@ -4433,7 +4433,7 @@ function histPrep(sc, H) {
   if (T.shp) T.shp.body.traverse(o => { if (o.isMesh) { o.geometry = o.geometry.clone(); } });
   if (H.tyreUV) histTyreUV(T, root, ud.wheels || {});
   histSplitWheels(T, root, ud.wheels || {});
-  for (const e of T.L) e.body.traverse(o => { if (!o.isMesh) return; const m = o.material; if (m.map) m.map.anisotropy = 4; m.userData.env = true; o.castShadow = true; o.receiveShadow = true; });
+  for (const e of T.L) e.body.traverse(o => { if (!o.isMesh) return; const m = o.material; if (m.map) m.map.anisotropy = 4; if (H.decal && H.decal.includes(m.name)) { m.polygonOffset = true; m.polygonOffsetFactor = -4; m.polygonOffsetUnits = -8; }   /* Aufkleber-Flächen liegen teils minimal in der Karosserie (MP4/4: „Shell“-S und „Honda“ vorn abgeschnitten) → nach vorn ziehen */ m.userData.env = true; o.castShadow = true; o.receiveShadow = true; });
   // Lenkrad aus der vollen Stufe lösen: Dreiecke, deren drei Ecken im Lenkrad-Bereich liegen, wandern in eine eigene Geometrie (gleiche, geteilte Attribute – nur ein neuer Index)
   const S0 = H.sw, c = new THREE.Vector3(...S0.c), a = new THREE.Vector3(...S0.a).normalize(), v = new THREE.Vector3(), d = new THREE.Vector3();
   const az = a.clone().negate(), axx = new THREE.Vector3(-1, 0, 0), ay = new THREE.Vector3().crossVectors(az, axx);   // lokal wie beim Roadster: Lenkradebene x/y (y oben), z zum Fahrer
@@ -13312,7 +13312,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.89'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.90'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
