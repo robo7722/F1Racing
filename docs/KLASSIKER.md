@@ -301,11 +301,12 @@ Werkzeug: Kopie von `rennen.js` mit Feld `ck` je Aufnahme, das `pl.mesh.cam` im 
 
 ### Legenden in der Teamleiste
 - „Historisch“ heißt jetzt **„Legenden“** (Trenner, Schild in der Teaminfo, Tooltip).
-- Die aktuellen Teams füllen die sichtbare Leiste (`.tmnow`, min-width 100 %, mittig). Die Legenden liegen rechts **außerhalb des Bildes**. Man erreicht sie durch Wischen, mit dem Mausrad oder über den Knopf „Legenden ›“ am rechten Rand.
-- Der Knopf erscheint nur, solange die Legenden außerhalb des Bildes liegen (`teamsHint`).
+- Die aktuellen Teams stehen mittig. Ganz rechts schaut **genau eine Legende** (Trenner + Ferrari 1967) ins Bild, die übrigen erreicht man durch Wischen oder mit dem Mausrad.
+  - Umsetzung: `.tmnow` min-width `100 % − Knopfbreite − 40 px`, Knopfbreite als `--tw`.
+  - v2.89: Der Knopf „Legenden ›“ aus v2.88 ist entfernt. Er verdeckte das letzte Team (Rückmeldung 18.11.2026: „soll nichts verdecken, rechts nur ein Auto sehen und für die anderen wischen“).
 - Ist eine Legende gewählt, scrollt die Leiste beim Aufbau zu ihr.
 - Knopfbreite `(100vw − 190px)/13`, weil nur noch die aktuellen Teams in die Breite passen müssen.
-- Bild: `bilder/teamleiste_legenden.png` (1280 und 844 px, jeweils vor und nach dem Klick auf „Legenden ›“).
+- Bild: `bilder/teamleiste_legenden.png` (1280 und 844 px, jeweils Anfang und ganz nach rechts gewischt).
 
 ### Motorklang: synthetisch, für alle sechs Legenden
 Wunsch: synthetische, passende Klänge. Außerdem hieß es: „RB8 klingt falsch bei hohem Tempo“ und „alle Autos klingen bei max. Drehzahl falsch“.

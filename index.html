@@ -968,17 +968,15 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 /* ===== Teamwahl (Vorlage): Teamname oben links, große Konturschrift hinter den Autos, Teamleiste mit Wappen unten ===== */
 #scrTeam .teamwrap{width:100%!important;height:auto!important;flex:1;min-height:0;position:static}
 #scrTeam .teams{margin-top:auto;display:flex!important;gap:6px!important;overflow-x:auto;padding:2px!important;justify-content:safe center;flex:none}
-#scrTeam .tm{flex:none;width:clamp(30px,min(13.5vh,calc((100vw - 190px) / 13)),62px);height:clamp(30px,min(13.5vh,calc((100vw - 190px) / 13)),62px);padding:0!important;display:grid!important;place-items:center;transform:none!important}
+#scrTeam .tm{flex:none;width:var(--tw);height:var(--tw);padding:0!important;display:grid!important;place-items:center;transform:none!important}
 #scrTeam .tm>span{display:none}
 #scrTeam .tm svg{width:70%!important;height:70%!important}
 #scrTeam .tm::after{display:none}
 #scrTeam .tm.on{outline:2px solid #fff!important;outline-offset:-2px;background:linear-gradient(180deg,rgba(110,114,124,.95),rgba(58,60,68,.95))!important;box-shadow:inset 0 -3px 0 var(--c1)!important}
 #scrTeam .tmsep{flex:none;align-self:stretch;display:grid;place-items:center;writing-mode:vertical-rl;transform:rotate(180deg);font:900 9px/1 system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#d9b45a;font-style:normal;padding:0 3px;margin:0 4px;border-right:1px solid rgba(217,180,90,.55)}
-#scrTeam .tmnow{flex:none;min-width:100%;box-sizing:border-box;display:flex;gap:6px;justify-content:center}#scrTeam .hasLeg .tmnow{padding:0 100px}   /* v2.88: aktuelle Teams füllen die sichtbare Leiste, Legenden liegen rechts daneben (scrollen) */
+#scrTeam{--tw:clamp(30px,min(13.5vh,calc((100vw - 190px) / 13)),62px)}
+#scrTeam .tmnow{flex:none;min-width:calc(100% - var(--tw) - 40px);box-sizing:border-box;display:flex;gap:6px;justify-content:center}   /* v2.89: aktuelle Teams mittig, rechts schaut genau eine Legende (Trenner + erstes Auto) ins Bild – die übrigen durch Wischen (Wunsch: kein Knopf, nichts verdecken) */   /* v2.88: aktuelle Teams füllen die sichtbare Leiste, Legenden liegen rechts daneben (scrollen) */
 #scrTeam .teams.hasLeg{justify-content:flex-start;scroll-behavior:smooth;scrollbar-width:none}#scrTeam .teams.hasLeg::-webkit-scrollbar{display:none}
-#scrTeam .leghint{display:none;position:sticky;right:0;flex:none;margin-left:-200px;align-self:center;gap:6px;align-items:center;padding:6px 10px 6px 12px;border-radius:10px;border:1px solid rgba(217,180,90,.6);background:linear-gradient(180deg,rgba(92,74,44,.92),rgba(38,30,20,.95));color:#ecd394;font:900 10px/1 system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;z-index:2}
-#scrTeam .leghint.on{display:flex}#scrTeam .leghint b{font-size:17px;line-height:.7;animation:legNudge 1.4s ease-in-out infinite}
-@keyframes legNudge{50%{transform:translateX(3px)}}
 #scrTeam .tm.hist{background:linear-gradient(180deg,rgba(92,74,44,.78),rgba(38,30,20,.85))!important;border-color:rgba(217,180,90,.45)!important}
 #scrTeam .tm .hy{position:absolute;right:2px;bottom:1px;font:800 6.5px/1 system-ui,sans-serif;letter-spacing:.04em;color:#ecd394;font-style:normal;opacity:.85;pointer-events:none}
 #scrTeam .tm.hist svg{width:62%!important;height:62%!important}
@@ -13042,17 +13040,14 @@ function renderTeams() {
     return '<button class="tm' + (H ? ' hist' : '') + '" data-team="' + k + '" title="' + T.name + (H ? ' · ' + H.title + ' (Legende)' : '') + '" style="--c1:' + hex(uiCol(T)) + '">' + teamBadge(k) + '<span><b>' + T.name + '</b><small>' + ds.map(c => c.code).join(' · ') + '</small></span>' + (H ? '<em class="hy">' + H.year + '</em>' : '') + '</button>'; };
   const keys = Object.keys(TEAMS).filter(shown), now = keys.filter(k => !TEAMS[k].hist), old = keys.filter(k => TEAMS[k].hist).sort((a, b) => (HIST_CAR[a] ? HIST_CAR[a].year : 0) - (HIST_CAR[b] ? HIST_CAR[b].year : 0));   // Klassiker nach Jahr
   const tw = $('#teams'), sl = tw.scrollLeft;
-  tw.innerHTML = '<span class="tmnow">' + now.map(btn).join('') + '</span>' + (old.length ? '<i class="tmsep" aria-hidden="true">Legenden</i>' + old.map(btn).join('') + '<button id="legHint" class="leghint" type="button" aria-label="Zu den Legenden scrollen">Legenden<b>›</b></button>' : '');   // v2.88: Legenden (Klassiker) beginnen rechts außerhalb des Bildes – die aktuellen Teams füllen die Leiste (.tmnow min-width 100 %), zu den Legenden wird gescrollt
-  tw.classList.toggle('hasLeg', old.length > 0); tw.scrollLeft = sl; if (TEAMS[MENU.team] && TEAMS[MENU.team].hist) requestAnimationFrame(() => teamsScrollTo(tw.querySelector('[data-team="' + MENU.team + '"]'))); requestAnimationFrame(teamsHint);
+  tw.innerHTML = '<span class="tmnow">' + now.map(btn).join('') + '</span>' + (old.length ? '<i class="tmsep" aria-hidden="true">Legenden</i>' + old.map(btn).join('') : '');   // v2.88: Legenden (Klassiker) beginnen rechts außerhalb des Bildes – die aktuellen Teams füllen die Leiste (.tmnow min-width 100 %), zu den Legenden wird gescrollt
+  tw.classList.toggle('hasLeg', old.length > 0); tw.scrollLeft = sl; if (TEAMS[MENU.team] && TEAMS[MENU.team].hist) requestAnimationFrame(() => teamsScrollTo(tw.querySelector('[data-team="' + MENU.team + '"]')));
   $$('.tm').forEach(b => { const k = b.dataset.team, open = teamOpen(k); b.classList.toggle('locked', !open); if (!open) b.querySelector('small').textContent = lockMsg(k);
     b.addEventListener('click', () => { if (!teamOpen(k)) { toast(f1Rank() ? 'Dieses Team war im Vorjahr mehr als 1 Platz besser als dein Team' : 'Dafür brauchst du in der F2 mindestens Platz ' + f1Need(k)); return; } MENU.team = k; showroomTeam(MENU.team); renderMenu(); }); });
-  { const h = $('#legHint'); if (h) h.addEventListener('click', e => { e.stopPropagation(); teamsScrollTo(tw.querySelector('.tmsep'), true); }); }
-  if (!tw.dataset.wh) { tw.dataset.wh = 1; tw.addEventListener('scroll', teamsHint, { passive: true }); addEventListener('resize', teamsHint);
-    tw.addEventListener('wheel', e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && tw.scrollWidth > tw.clientWidth) { tw.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false }); }   // Mausrad: waagrecht durch die Leiste
+  if (!tw.dataset.wh) { tw.dataset.wh = 1; tw.addEventListener('wheel', e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && tw.scrollWidth > tw.clientWidth) { tw.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false }); }   // Mausrad: waagrecht durch die Leiste
   MENU.roneShown = !!S.rone; MENU.histShown = histOk;
 }
-// Teamleiste: Hinweis „Legenden ›“ rechts, solange die Legenden außerhalb des Bildes liegen; Mausrad scrollt waagrecht
-function teamsHint() { const tw = $('#teams'), h = $('#legHint'); if (!tw || !h) return; const sep = tw.querySelector('.tmsep'); h.classList.toggle('on', !!sep && sep.getBoundingClientRect().left > tw.getBoundingClientRect().right - 8); }
+// Teamleiste: Mausrad scrollt waagrecht; gewählte Legende wird ins Bild geholt
 function teamsScrollTo(el, smooth) { const tw = $('#teams'); if (!tw || !el) return; const r = el.getBoundingClientRect(), R = tw.getBoundingClientRect(); if (r.left < R.left || r.right > R.right) tw.scrollTo({ left: tw.scrollLeft + r.left - R.left - (R.width - r.width) / 2, behavior: smooth ? 'smooth' : 'auto' }); }
 // v2.88 (Wunsch 18.11.2026: „Fahrzeugwechsel flüssig, ohne Hakler – alles vorab laden“): im Leerlauf nach dem Start alle Legenden-Modelle laden
 // und für jedes Team einmal ein Showroom-Auto bauen und seine Shader vorab übersetzen (compileAsync, blockiert nicht). Vorher wurde ein Klassiker
@@ -13317,7 +13312,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.88'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.89'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
