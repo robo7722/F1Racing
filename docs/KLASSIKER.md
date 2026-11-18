@@ -361,3 +361,24 @@ Wunsch: synthetische, passende Klänge. Außerdem hieß es: „RB8 klingt falsch
 ### Weitere Korrekturen
 - **Unschärfe blieb stehen:** Wurde während des Kamera-Schwenks beim Teamwechsel schon ein Auto/Fahrer gewählt, blieb die Bewegungsunschärfe auf dem Bild. Jetzt wird der Schwenk beim Verlassen der Teamwahl beendet und der Filter zurückgesetzt, auch beim Rennstart.
 - **Musikregler:** Die Lautstärke folgt jetzt sofort (`musSnap`). Vorher blendete die Menümusik ~1 s und die Rennmusik bis zu 3 s nach, deshalb ging die Musik beim Herunterziehen nur verspätet aus.
+
+## Entwurf Teamleiste/Legenden (18.11.2026, zur Abnahme, noch nicht eingebaut)
+
+Rückmeldung zu v2.89: Auch die Lösung mit einer rechts angeschnittenen Legende gefällt nicht. Gewünscht ist ein schöneres UI für die Legenden. Jede Legende soll Jahr, Auto und Fahrer zeigen, beim Lotus nur **Emerson Fittipaldi**.
+
+Das Bild `docs/bilder/teamleiste_entwuerfe.jpg` zeigt oben 1280 px und unten 844 px Breite, jeweils links den Start und rechts die geöffneten Legenden.
+
+- **Entwurf C, Umschalter in der Leiste (Empfehlung):**
+  - Links in der Teamleiste sitzt ein kleiner Umschalter mit „2026 Saison“ und „★ Legenden“. Er hat die Höhe einer Kachel und folgt dem Stil der oberen Schrittleiste: dunkles Glas, aktiver Eintrag mit rotem Balken.
+  - „Legenden“ tauscht den Inhalt der Leiste aus: Statt der elf Teamkacheln erscheinen sechs breitere Goldkarten mit großem Jahr, Auto und Fahrer sowie dem Logo klein oben rechts.
+  - Es gibt kein Scrollen und nichts liegt über dem Auto.
+- **Entwurf B, Legenden-Kachel:**
+  - Am Ende der Teamreihe steht eine goldene Kachel „★ Legenden“.
+  - Nach dem Antippen zeigt die Leiste die Legendenkarten und vorne eine Kachel „‹ 2026“ für den Rückweg.
+- **Verworfen, Entwurf A:** Ein schwebender Pillen-Umschalter über der Leiste. Er lag auf dem Auto, und Position und Design gefielen nicht.
+
+Fahrer auf den Karten: Amon (1967), Fittipaldi (1970), Senna (1988), Häkkinen (1998), Schumacher (2004), Vettel (2012).
+
+Im Spiel fährt der Lotus derzeit Jochen Rindt (`RIN` in index.html, Helmfarben nach FAHRER.md). Für Fittipaldi müssen beim Einbau auch Fahrereintrag und Helm geändert werden.
+
+Das Mockup entsteht nur per DOM-Einspritzung im echten Spiel, mit `node tools/klassiker/teamleiste_entwurf.js` aus dem Scratch-Ordner (schreibt `mk_*.png`).
