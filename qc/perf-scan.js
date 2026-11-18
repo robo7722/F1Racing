@@ -16,8 +16,8 @@ try {
   for (const c of [0, 2]) {
     S.cam = c; let worst = null;
     const spots = window.__psAt || Array.from({ length: N }, (_, k) => (k + 0.5) * L / N);
-    for (const s of spots) { window.__tp(s); window.__frame(4); window.__tp(s); window.__frame(2); R.info.autoReset = false; I.calls = 0; A.renderNow(); const n = I.calls; R.info.autoReset = true; if (!worst || n > worst.n) worst = { s, n }; }
-    window.__tp(worst.s); window.__frame(4); window.__tp(worst.s); window.__frame(2);
+    for (const s of spots) { window.__tp(s); window.__frame(4); window.__tp(s); window.__frame(12); R.info.autoReset = false; I.calls = 0; A.renderNow(); const n = I.calls; R.info.autoReset = true; if (!worst || n > worst.n) worst = { s, n }; }
+    window.__tp(worst.s); window.__frame(4); window.__tp(worst.s); window.__frame(12);
     rec = []; A.renderNow(); const list = rec; rec = null;
     const main = list.filter(e => e.cam === 'main'), sh = list.filter(e => e.cam === 'shadow');
     const by = new Map(); for (const e of main) { const own = isOwn(e.obj), car = !own && isCar(e.obj); const k = own ? 'EIGENES AUTO' : car ? 'GEGNER-AUTOS' : name(e.obj) + ' | ' + e.mat.type + (e.mat.map ? '+map' : '') + (e.obj.isInstancedMesh ? ' inst' : ''); const q = by.get(k) || { k, calls: 0, tris: 0, objs: new Set(), mats: new Set() }; q.calls++; q.tris += e.tris; q.objs.add(e.obj.id); q.mats.add(e.mat.uuid); by.set(k, q); }

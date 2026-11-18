@@ -15,7 +15,7 @@ try {
   for (const c of cams) {
     S.cam = c; const rows = [];
     for (let k = 0; k < N; k++) {
-      const s = (k + 0.5) * L / N; window.__tp(s); window.__frame(4); window.__tp(s); window.__frame(2);
+      const s = (k + 0.5) * L / N; window.__tp(s); window.__frame(4); window.__tp(s); window.__frame(12);   // 12 Bilder: Detailstufen-Überblendungen (0,35 s) nach dem Versetzen abwarten
       log = []; I.calls = I.triangles = 0; const t0 = performance.now(); A.renderNow(); const cpu = performance.now() - t0; sync();
       const sum = { s: Math.round(s), calls: I.calls, tris: I.triangles, cpu: +cpu.toFixed(2) }; for (const e of log) { const q = sum[e.k] || (sum[e.k] = { calls: 0, tris: 0, ms: 0 }); q.calls += e.calls; q.tris += e.tris; q.ms += e.ms; }
       if (sum.world && sum.shadow) { sum.world.calls -= sum.shadow.calls; sum.world.tris -= sum.shadow.tris; sum.world.ms -= sum.shadow.ms; }   // Schattenkarte läuft innerhalb des Welt-Durchgangs
