@@ -983,9 +983,9 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 #scrTeam .tmtabs button.on{color:#fff;background:linear-gradient(90deg,rgba(225,6,0,.22),rgba(225,6,0,0))}
 #scrTeam .tmtabs button.on::before{content:'';position:absolute;left:0;top:18%;bottom:18%;width:3px;background:#e10600;border-radius:2px}
 #scrTeam .tmtabs button.on i{opacity:1}
-#scrTeam .tm.lcard{width:min(calc(var(--tw)*2.55),calc((100vw - 180px) / 6 - 6px));display:block!important;padding:clamp(5px,1.4vh,9px) 8px 0 9px!important;text-align:left!important;border-radius:10px;background:linear-gradient(180deg,rgba(92,74,44,.80),rgba(30,24,15,.9))!important;border:1px solid rgba(217,180,90,.45)!important;box-sizing:border-box}
+#scrTeam .tm.lcard{width:min(calc(var(--tw)*2.55),calc((100vw - 180px) / 6 - 6px));display:block!important;padding:clamp(5px,1.4vh,9px) 6px 0!important;text-align:center!important;border-radius:10px;background:linear-gradient(180deg,rgba(92,74,44,.80),rgba(30,24,15,.9))!important;border:1px solid rgba(217,180,90,.45)!important;box-sizing:border-box}
 #scrTeam .tm.lcard svg{position:absolute;right:5px;top:5px;width:calc(var(--tw)*.36)!important;height:calc(var(--tw)*.36)!important}
-#scrTeam .tm.lcard .ly,#scrTeam .tm.lcard .ln,#scrTeam .tm.lcard .ld{text-align:left!important}
+#scrTeam .tm.lcard .ly,#scrTeam .tm.lcard .ln,#scrTeam .tm.lcard .ld{text-align:center!important}   /* Wunsch 18.11.2026: Inhalt der Karten mittig */
 #scrTeam .tm.lcard .ly{display:block;font:900 clamp(13px,3.1vh,20px)/1 system-ui,sans-serif!important;color:#ecd394;letter-spacing:.02em}
 #scrTeam .tm.lcard .ln{display:block;font:800 clamp(8px,1.9vh,11px)/1.15 system-ui,sans-serif!important;color:rgba(255,255,255,.82);text-transform:uppercase;letter-spacing:.06em;margin-top:3px;white-space:nowrap;overflow:hidden}
 #scrTeam .tm.lcard .ld{display:block;font:600 clamp(7.5px,1.7vh,10px)/1.15 system-ui,sans-serif!important;color:#ecd394;margin-top:2px;white-space:nowrap;overflow:hidden;text-transform:uppercase;letter-spacing:.06em}
@@ -13133,7 +13133,7 @@ function renderDrivers() {
   $$('.dcard').forEach(b => b.addEventListener('click', () => { S.driver = b.dataset.drv; save(); placeOnGrid(); renderMenu(); if (SHOW.on) showroomPick(); }));
 }
 function renderMenu() {
-  if ((MENU.roneShown !== undefined && MENU.roneShown !== !!S.rone) || (MENU.histShown !== undefined && MENU.histShown !== (MENU.mode !== 'career'))) renderTeams();
+  if ((MENU.roneShown !== undefined && MENU.roneShown !== !!S.rone) || (MENU.histShown !== undefined && MENU.histShown !== (MENU.mode !== 'career')) || (MENU.leg !== undefined && TEAMS[MENU.team] && !!TEAMS[MENU.team].hist !== !!MENU.leg)) renderTeams();   /* Legenden-Ansicht folgt dem gewählten Auto */
   const d = byCode(S.driver) || ALL[0];
   if (!MENU.team) MENU.team = d.team;
   $$('.tcard').forEach(b => b.classList.toggle('on', b.dataset.trk === S.track)); renderTrackInfo();
