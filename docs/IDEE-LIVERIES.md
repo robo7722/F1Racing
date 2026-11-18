@@ -139,3 +139,4 @@ korrigieren; Halos in echter Farbe ohne Logos; **Regel: Lackierungen links/recht
 Der Cockpit-Kasten `COCK.f1.b2` (Sitzlehne, Kopfstütze, Innenwände dunkel) reichte über die Karosserie neben der Öffnung, auf der die hinteren
 Halo-Streben sitzen → schwarzes Rechteck bei allen F1-Autos. Jetzt ausgenommen: |x| > 0,19 und höher als 0,63 m. Alle Texturen neu gebacken.
 Halo-Farben geprüft: am echten Auto sind die meisten 2026er Halos schwarz; farbig nur Alpine (rosa), Aston Martin (grün), Haas (weiß), Audi (silber).
+- v2.85: auch die Kopfstütze hinter dem Fahrer in Wagenfarbe (Wunsch) – dunkel bleibt nur, was unter dem Cockpitrand (0,63 m) liegt.
