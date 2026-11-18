@@ -117,3 +117,20 @@ v2.68 hatte eigene Entwürfe in Creme/Gold. Die Logo-Knöpfe der Klassiker haben
 | `hist_mcl` (Honda V6 Turbo) | mittel 564 Hz, hoch 561 Hz | 284 Hz | 3 | 11.800 / 12.500 |
 | `hist_fer` (Ferrari V10) | mittel 1.099 Hz, hoch 1.625 Hz | 1.296 Hz | 5 | 17.600 / 18.300 |
 Dateien `sounds/hist_*.wav`, werden nur geladen, wenn mit dem Klassiker gefahren wird (`lazy`, `histSnd`).
+
+## v2.71 – Sitzposition nach Fotos, Räder um die echte Achse, Live-Instrumente, Schikanen-Strafe
+- **Sitzposition** (Referenzfotos vom Nutzer: MP4/5B Senna, Lotus 49B, F2004 Schumacher): `HIST_CAR.seat` = [tiefer, zurück] m – McLaren −7 cm
+  (vorher ragten Schultern und Arme über die Seitenkästen, auf dem Foto sieht man nur den Helm), Ferrari −4 cm; Lotus unverändert (aufrecht, Schultern sichtbar).
+  Sichtbarkeit danach neu gemessen (`fahrer_sicht.json`).
+- **Räder drehen um ihre echte Achse**: `tools/klassiker/radachsen.py` misst Sturz/Spur an den Laufflächenpunkten → `HIST_CAR.ax`. Ferrari vorn 2,2° Sturz,
+  0,5° Spur (eierte, weil um die waagerechte Achse gedreht); Lotus hinten 0,7° Spur; Rest < 0,5°. Aufbau: vorn `fl` (lenkt) → Neigung → `wfl` (dreht);
+  hinten je Rad Neigung → Drehgruppe (`m.spR`), `m.rr` bleibt leer.
+- **Reifenschrift Ferrari**: Die Flankentextur (runder Schriftring) war im Modell zerstückelt und nicht auf die Achse zentriert abgebildet (Ausgleichsrechnung:
+  mittlere Abweichung 0,14 Texturbreite) – die Schrift schlingerte. `histTyreUV` bildet die Flanken neu ab (eben um die Radmitte, von außen lesbar).
+- **Radteile**: „rund“ nur, wenn der äußere Rand in allen Richtungen gleich weit reicht (±12 % des Radius) – angehängte Halter/Radträger drehen nicht mehr mit
+  (Lotus hinten). Vorn zusätzlich 12 cm nach innen erfasst (bis 80 % Radius): Bremsscheibe, Sattel und Radträger lenken mit.
+- **Live-Instrumente im Modell** (`HIST_DASH`, `histDashBuild/Draw/Tick`): Flächen über den echten Anzeigen, Lage per Strahl-Treffer aus der Augenposition gemessen.
+  Lotus: Drehzahlmesser (Ø 9,4 cm) + Öl/Wasser; McLaren: Anzeigeschlitz 8,5 × 1,6 cm hinter dem Lenkrad (bernsteinfarbene Leuchtbalken, Gang, Tempo);
+  Ferrari: Lenkrad-Display 7,9 × 5,5 cm (dreht mit). EINE CPU-Leinwand je Auto, 15× je Sekunde, nur in Helm-/TV-Kamera.
+- **Schikanen-Strafe** (alle Autos): zählt nur noch Strecke auf der Kurveninnenseite (`sign(lat) = sign(KS)`, |KS| > 1/400) – wer außen herum fährt, wird nicht
+  bestraft. Geprüft an der Monza-Schikane: Innenseite an 15 von 16 Messpunkten richtig (der eine liegt am Übergang zwischen den beiden Kurven).
