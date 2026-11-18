@@ -246,9 +246,7 @@
    {"name": "nouryon_r", "box": [440, 727, 492, 745], "kind": "d"},
    {"name": "confluent_l", "box": [158, 795, 193, 960], "kind": "d"},
    {"name": "confluent_r", "box": [497, 795, 528, 960], "kind": "d"},
-   {"name": "cashapp_fluegel", "box": [206, 1492, 398, 1528], "kind": "w", "at": [0.0, -1.92], "w": 0.63},
-   {"name": "tudor_band", "poly": [[188, 1563], [504, 1563], [504, 1611], [188, 1611]], "kind": "key", "key": "#eef0f3", "fill": true, "at": [-0.003, -2.173], "w": 1.038},
-   {"name": "tudor_fluegel", "box": [192, 1566, 500, 1608], "kind": "c", "at": [-0.003, -2.173], "w": 1.011}
+   {"name": "cashapp_fluegel", "box": [206, 1492, 398, 1528], "kind": "w", "at": [0.0, -2.0], "w": 0.63}
   ]
  }
 }

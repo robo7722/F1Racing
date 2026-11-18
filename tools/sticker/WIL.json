@@ -42,10 +42,18 @@
  "number": {"color": "#ffffff", "spots": [{"v": "side", "z": -1.22, "y": 0.72, "s": 0.1}, {"v": "top", "x": 0, "z": 2.0, "s": 0.13}]},
  "top": {
   "photo": "tools/sticker/.cache/oben/WIL_3.jpg",
-  "src": "https://media.formula1.com/image/upload/fom-website/2026/Williams/WIL_3.jpg",
+  "src": "unbekannt (Rendering der Williams-Präsentation 2026, schräg von vorn-oben; Quell-URL nachtragen)",
   "pts": [[1810, 1262, -0.18, 1.83], [2040, 1262, 0.18, 1.83], [1826, 1786, -0.13, 2.87], [2010, 1786, 0.13, 2.87], [1790, 976, -0.21, 1.26], [2052, 976, 0.21, 1.26]],
   "stickers": [
-
+   {"name": "w_logo", "box": [327, 46, 358, 66], "kind": "w"},
+   {"name": "pirelli", "box": [312, 89, 375, 112], "kind": "w"},
+   {"name": "keeper", "box": [312, 135, 377, 150], "kind": "w"},
+   {"name": "vast", "box": [312, 175, 375, 193], "kind": "w"},
+   {"name": "brillio", "box": [317, 217, 370, 241], "kind": "w"},
+   {"name": "betway", "box": [313, 260, 375, 281], "kind": "w"},
+   {"name": "komatsu", "box": [306, 300, 383, 320], "kind": "w"},
+   {"name": "barclays", "box": [288, 561, 400, 577], "kind": "w"},
+   {"name": "atlassian_logo", "box": [306, 606, 384, 648], "kind": "w"}
   ]
  }
 }
