@@ -2,7 +2,7 @@
 
 Aufruf (x64-Python mit pymeshlab, scipy, pillow):
     python tools/klassiker/build_klassiker.py <quelle.glb> <schluessel> <zielordner>
-Schlüssel: lotus49c | ferrari_f2004 | mclaren_mp44
+Schlüssel: lotus49c | ferrari_f2004 | mclaren_mp44 | mclaren_mp413 | redbull_rb8 | ferrari_312
 
 Was passiert:
   1. Alle Teile in Weltkoordinaten zusammenführen, ausrichten wie die Spielautos (Meter, y = oben, +z = vorne,
@@ -29,7 +29,10 @@ CARS = {
     'lotus49c':      dict(title='Lotus 49C (1970)',     front=-1, wheelbase=2.413, big=['main_body']),
     'ferrari_f2004': dict(title='Ferrari F2004 (2004)', front=1,  wheelbase=None,  big=['Carpaint', 'EXT_Sponsors']),
     'mclaren_mp44':  dict(title='McLaren MP4/4 (1988)', front=1,  wheelbase=None,  big=['BODY']),
-}
+    'mclaren_mp413': dict(title='McLaren MP4/13 (1998)', front=1, wheelbase=None, big=['Material_001'], exclude=[]),
+    'redbull_rb8':   dict(title='Red Bull RB8 (2012)',   front=1, wheelbase=None, big=['wccarbody'], exclude=[], wheel_mats=['generic_tyre', 'generic_tread']),
+    'ferrari_312':   dict(title='Ferrari 312 (1967)',    front=1, wheelbase=None, big=['car_chassis'], exclude=['CONEMESH', 'rimblur']),
+}   # exclude: Teile mit diesen Materialnamen werden vor allem anderen entfernt (Pylonen, Zäune, Unschärfe-Felgen der Spielvorlagen)
 LOD_TRIS = [80000, 26000, 9000]
 # Kameras wie MODELS.cam/.tv im Spiel (Auto-Koordinaten, +z vorne, z = 0 Mitte zwischen den Achsen): [x, y, z, Absenkung des Blickziels in 30 m]
 CAMS = {"lotus49c": {"cockpit": [0, 0.9, 0.02, 0.3], "tv": [0, 1.14, -0.75, 1.9, 52]}, "mclaren_mp44": {"cockpit": [0, 0.88, -0.05, 0.15], "tv": [0, 1.08, -0.35, 1.6, 52]}, "ferrari_f2004": {"cockpit": [0, 0.8, 0.05, 0.3], "tv": [0, 1.18, -0.4, 1.6, 52]}}
@@ -76,6 +79,7 @@ def analyse_materials(js, bn, uv_range):
             ims = im if max(w, h) <= 256 else im.resize((max(1, w * 256 // max(w, h)), max(1, h * 256 // max(w, h))), Image.BOX)
             a = np.asarray(ims, np.float64) / 255; I.arr = np.concatenate([srgb2lin(a[..., :3]), a[..., 3:]], -1)
             I.img_id = si; I.img = im
+            if I.alpha == 'OPAQUE' and (np.asarray(im)[..., 3] < 10).mean() > 0.02 and any(x in I.name.lower() for x in ('sponsor', 'decal', 'logo', 'sticker', 'number', 'aufkleber', 'material_#1')): I.alpha = 'MASK'; I.cutoff = 0.5   # Lehre McLaren/Ferrari (v2.79/80): Aufkleberbögen mit Durchsicht trotz OPAQUE ausstanzen
             mrt = pb.get('metallicRoughnessTexture')
             if mrt is not None and mrt.get('texCoord', 0) == bt.get('texCoord', 0): I.mr_img = img(mrt['index'])
         # Transparenz nur behalten, wenn wirklich durchsichtig
@@ -186,10 +190,18 @@ def main(src, key, outdir):
         Ps.append(p['pos']); Fs.append(p['idx'] + off); off += len(p['pos'])
         UVs.append(p['uv'][p['idx']]); Ms.append(np.full(len(p['idx']), p['mat']))
     P = np.concatenate(Ps); F = np.concatenate(Fs); WUV = np.concatenate(UVs); FM = np.concatenate(Ms); FM[FM < 0] = 9999
+    if cfg.get('exclude'):
+        names = [m.get('name', '') for m in js.get('materials', [])]
+        drop = np.array([FM[i] < len(names) and any(x.lower() in names[FM[i]].lower() for x in cfg['exclude']) for i in range(len(FM))])
+        print('  entfernt (exclude):', int(drop.sum()), 'Dreiecke'); F, WUV, FM = F[~drop], WUV[~drop], FM[~drop]
     print(key, 'Quelle:', len(F), 'Dreiecke', len(js.get('materials', [])), 'Materialien')
     # ---- ausrichten ----
     if cfg['front'] < 0: P = P * np.array([-1, 1, -1])            # 180° um y
-    wh = find_wheels(P)
+    if cfg.get('wheel_mats'):                                       # Räder nur über diese Materialien suchen (RB8: Frontflügel-Endplatten ragen weiter nach außen als die Reifen)
+        names = [m.get('name', '') for m in js.get('materials', [])]
+        sel = np.array([FM[i] < len(names) and any(x.lower() in names[FM[i]].lower() for x in cfg['wheel_mats']) for i in range(len(FM))])
+        wh = find_wheels(P[np.unique(F[sel])])
+    else: wh = find_wheels(P)
     zF = (wh['FL']['cz'] + wh['FR']['cz']) / 2; zR = (wh['RL']['cz'] + wh['RR']['cz']) / 2
     s = cfg['wheelbase'] / (zF - zR) if cfg['wheelbase'] else 1.0
     xc = np.mean([w['xc'] for w in wh.values()])
@@ -402,7 +414,7 @@ def write(cfg, key, outdir, lods, mats, wh, uvoff, uvsc, js, bn):
         stats.append(dict(lod=li, tris=tri, draws=draws))
     wheels = {k: dict(x=round(w['cx'], 4), y=round(w['cy'], 4), z=round(w['cz'], 4), r=round(w['R'], 4), width=round(w['outer'] - w['inner'], 4)) for k, w in wh.items()}
     W.node({'name': key, 'children': root_children, 'extras': {'title': cfg['title'], 'wheels': wheels, 'lods': stats,
-                                                              'lodDistances': [0, 18, 45], 'cams': CAMS[key]}})
+                                                              'lodDistances': [0, 18, 45], 'cams': CAMS.get(key, {'cockpit': [0, 0.85, 0.0, 0.3], 'tv': [0, 1.1, -0.4, 1.6, 52]})}})   # neue Autos: Startwerte, im Spiel über HIST_CAR.ck/tvY angepasst
     os.makedirs(outdir, exist_ok=True); path = os.path.join(outdir, key + '.glb'); W.save(path)
     print('  ->', path, '%.2f MB' % (os.path.getsize(path) / 1e6), 'Materialien', len(W.js.get('materials', [])), 'Texturen', len(W.js.get('images', [])), stats)
 

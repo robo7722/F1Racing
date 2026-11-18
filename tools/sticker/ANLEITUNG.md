@@ -96,7 +96,7 @@ Liegen zwei lackierte Flächen hintereinander (z. B. Chassis-Seite und Seitenkas
 ### `logos` und `number`
 `v: "top"`: von oben, `x`/`z` = Mitte, `s` = Kantenlänge (Logo) bzw. Ziffernhöhe (Nummer; das Feld ist doppelt so breit). `v: "side"`: von der Seite, `z`/`y` = Mitte; `x0`/`x1` begrenzen den Abstand von der Mitte.
 Logo nur dort, wo das echte Auto eins hat und es sich vom Lack abhebt (die Logos in `logos/` sind weiß) – sonst `logos` weglassen.
-Jede Nummern-Stelle kann mit `"color": "#rrggbb"` eine eigene Farbe bekommen (z. B. weiß am schwarzen Heckflügel, schwarz auf der hellen Nase).
+Jede Nummern-Stelle kann mit `"color": "#rrggbb"` eine eigene Farbe bekommen und mit `"n": 0.8` (Seite) nur auf steile Seitenflächen greifen – gegen verzogene Ziffern auf gewölbten Motorabdeckungen (Audi) (z. B. weiß am schwarzen Heckflügel, schwarz auf der hellen Nase).
 Nummer: Farbe und Stellen wie am echten Auto (meist Nase oben und seitlich an Motorabdeckung/Heckflosse). Die Stelle muss eine lackierte Fläche treffen – im Bild prüfen.
 
 ## Prüfen
