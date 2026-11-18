@@ -112,7 +112,7 @@ Textur 2037 × 2041 (Grafikspeicher je Team ~22 MB mit Mipmaps statt ~15 MB). To
 
 ### v2.76/v2.77: Überschneidungen und Halos (Rückmeldungen 18.11.2026)
 - Doppelte Sponsoren: was der Seitenbogen schon trägt (Schulter der Motorabdeckung, Seitenkasten-Rand), nicht noch einmal aus der Draufsicht nehmen
-  (Mercedes: Microsoft/Solera/TeamViewer standen doppelt). Seitenbogen läuft jetzt weich aus (Normale 0,3 → 0,55 statt harter Kante bei 0,45),
+  (Mercedes: Microsoft/Solera/TeamViewer standen doppelt). Seitenbogen läuft jetzt weich aus (Normale 0,2 → 0,45, ab 0,45 voll wie früher; erst 0,3 → 0,55 riss Schrift auf geneigten Seitenkästen auf),
   Draufsicht greift erst ab 0,5 (weich bis 0,72).
 - Halo je Lackierung einfarbig in der echten Farbe, ohne Logos: `tools/sticker/halo.json` (am oberen Bügel der Seitenfotos abgelesen) → `halo` in
   liveries.json → `liveryMat` (Klasse 7) und TV-Halo (`haloFlat`). Bunt: Alpine rosa, Aston Martin grün, Audi grau, Haas weiß; F2: AIX grün,
