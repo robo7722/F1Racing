@@ -459,3 +459,24 @@ Wunsch: „mit dem UI-Smartphone-Skill prüfen“. Einen solchen Skill gibt es n
   | Desktop 1280×640 | 117×39 | 158×81 |
 
 - **Bild:** `docs/bilder/teamleiste_handy_v292.jpg`. Die drei Zeilen sind iPhone SE, Galaxy S23 und iPhone 15, jeweils links Saison und rechts Legenden.
+
+## Teamwahl nach Smartphone-Vorlage (19.11.2026, Entwurf zur Abnahme)
+Rückmeldung zu v2.92: Auswahl und Umschalter unten gefallen auf dem Handy nicht. Wunsch: Einen UI-Skill für Smartphones suchen und daraus eine Vorlage ableiten.
+
+**Gefundene Skills** (Katalog, alle noch nicht installiert, dem Nutzer zum Hinzufügen gezeigt):
+- „Mobile Design System“ (Material 3 / Apple HIG)
+- „frontend-design“ (Anthropic)
+- „Design“ (Anthropic: Design-Kritik, Barrierefreiheit)
+
+**Gelesen und als Vorlage genutzt:**
+- Die öffentliche Anleitung des „frontend-design“-Skills: erst einen Designplan machen, Generisches vermeiden, sparsam animieren, Texte nur, wo sie helfen.
+- Die Apple Human Interface Guidelines zu Segmented Controls: Sie wechseln die Ansicht desselben Inhalts und stehen **oben unter der Navigation**, nicht unten in Konkurrenz zur Leiste. Höchstens etwa fünf Segmente, Tippflächen mindestens 44 pt.
+- Dazu das typische Muster aus Handy-Rennspielen: Man blättert am Auto selbst, mit Pfeilen links und rechts und durch Wischen. Unten bleibt nur eine schlanke Positionsanzeige.
+
+**Entwürfe** (Bild `docs/bilder/teamwahl_handy_hig_entwuerfe.jpg`, Skript `tools/klassiker/teamwahl_hig_entwurf.js`):
+- **Gemeinsam:**
+  - Segment-Umschalter „Saison 2026 | ★ Legenden“ oben neben „Team wählen“, je Segment 112×38 px. Legenden aktiv = Gold.
+  - Runde Pfeilknöpfe (48 px) links und rechts neben dem Auto, Wischen über das Auto blättert ebenfalls.
+  - Team- bzw. Legendenname mit Fahrern zentriert unter dem Auto. Die Kopfinfo links oben entfällt.
+- **A „Logo-Dock“:** Unten links ein schlankes Dock mit allen Logos (44 px hoch) zum direkten Springen. Bei Legenden stehen die Jahreszahlen unter den Logos.
+- **B „Punkte“:** Unten nur Seitenpunkte, der aktive Punkt ist breit, bei Legenden in Gold. Gewählt wird ausschließlich über Pfeile und Wischen, das ist die ruhigste Variante.
