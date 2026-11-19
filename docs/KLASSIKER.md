@@ -446,3 +446,16 @@ Wunsch: „mit dem UI-Smartphone-Skill prüfen“. Einen solchen Skill gibt es n
 - **Getestet:** Teamwahl (McLaren, Lotus), Fahrerwahl (Lotus) und Rückwechsel zu Mercedes (alte Wand). Keine Seitenfehler.
 - **Bild:** `docs/bilder/ledwand_legenden.jpg`.
 - **Offen:** Der Handy-Entwurf der Teamleiste (siehe oben) wartet noch auf ein eigenes Go.
+
+## v2.92 – Smartphone-Überarbeitung der Teamleiste eingebaut (Go 19.11.2026)
+- **Übernahme:** Der Entwurf aus der „Smartphone-Prüfung“ ist 1:1 übernommen, als eigener CSS-Block nach `#scrTeam .tbig`.
+- **Auswahl sichtbar:** renderTeams holt die gewählte Kachel bzw. Karte nach jedem Neuaufbau ins Bild (`teamsScrollTo`), weil die Reihe auf kleinen Handys jetzt breiter als der Bildschirm sein kann.
+- **Gemessene Größen:**
+
+  | Gerät | Umschalter-Knopf | Legendenkarte |
+  |---|---|---|
+  | iPhone SE / Galaxy S23 | 103×28 | 112×58 |
+  | iPhone 15 | 104×32 | 112×66 |
+  | Desktop 1280×640 | 117×39 | 158×81 |
+
+- **Bild:** `docs/bilder/teamleiste_handy_v292.jpg`. Die drei Zeilen sind iPhone SE, Galaxy S23 und iPhone 15, jeweils links Saison und rechts Legenden.
