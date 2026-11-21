@@ -483,3 +483,16 @@ Rückmeldung zu v2.92: Auswahl und Umschalter unten gefallen auf dem Handy nicht
 - **Wahl des Nutzers (21.11.2026): „A central“.** Gemeint ist Entwurf A mit dem Logo-Dock mittig unten.
   - Auf schmalen Handys (≤ 760 px, z. B. iPhone SE) würde das mittige Dock den WEITER-Knopf überdecken. Dort wird WEITER deshalb zu einem kompakten roten Pfeilknopf (52 px).
   - Neuer Entwurf: `docs/bilder/teamwahl_handy_A_mittig.jpg`. Er wartet auf das Go.
+
+## Neustart 21.11.2026: nur der Umschalter Saison/Legenden fürs Handy (Entwurf zur Abnahme)
+Der angefangene Umbau v2.93 (Entwurf A mit Pfeilen und Logo-Dock) wurde auf Wunsch verworfen und nie gepusht. Stand im Spiel bleibt v2.92. Neuer Auftrag: Nur der Umschalter zwischen Legenden und 2026 soll fürs Handy angepasst werden, der Rest der Leiste bleibt.
+
+Bild: `docs/bilder/umschalter_handy_entwuerfe.jpg`. Zeilen 1 und 3 zeigen Entwurf 1, Zeilen 2 und 4 Entwurf 2, jeweils iPhone SE bzw. iPhone 15, links Saison und rechts Legenden. Skript: `tools/klassiker/umschalter_entwurf.js`.
+- **Entwurf 1 „Segment oben“:**
+  - Nach Apple HIG oben neben „Team wählen“, unter der Navigation.
+  - Zwei Segmente je 112×38 px. Aktiv ist weiß bzw. bei Legenden gold.
+  - Die Leiste unten enthält nur noch die Teams bzw. Karten.
+- **Entwurf 2 „Reiter über der Leiste“:**
+  - Zwei Reiter (36 px hoch) sitzen direkt auf der Leiste, linksbündig.
+  - Aktiv ist dunkel mit rotem Strich oben, bei Legenden gold.
+  - Umschalter und Auswahl bleiben zusammen unten, wo der Daumen ist.
