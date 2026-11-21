@@ -480,3 +480,6 @@ Rückmeldung zu v2.92: Auswahl und Umschalter unten gefallen auf dem Handy nicht
   - Team- bzw. Legendenname mit Fahrern zentriert unter dem Auto. Die Kopfinfo links oben entfällt.
 - **A „Logo-Dock“:** Unten links ein schlankes Dock mit allen Logos (44 px hoch) zum direkten Springen. Bei Legenden stehen die Jahreszahlen unter den Logos.
 - **B „Punkte“:** Unten nur Seitenpunkte, der aktive Punkt ist breit, bei Legenden in Gold. Gewählt wird ausschließlich über Pfeile und Wischen, das ist die ruhigste Variante.
+- **Wahl des Nutzers (21.11.2026): „A central“.** Gemeint ist Entwurf A mit dem Logo-Dock mittig unten.
+  - Auf schmalen Handys (≤ 760 px, z. B. iPhone SE) würde das mittige Dock den WEITER-Knopf überdecken. Dort wird WEITER deshalb zu einem kompakten roten Pfeilknopf (52 px).
+  - Neuer Entwurf: `docs/bilder/teamwahl_handy_A_mittig.jpg`. Er wartet auf das Go.

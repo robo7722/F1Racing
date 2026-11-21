@@ -12,7 +12,7 @@ const CSS = `
 .hg-name b{display:block;font:900 15px/1.1 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
 .hg-name small{display:block;font:700 10.5px/1.3 system-ui,sans-serif;letter-spacing:.1em;color:rgba(255,255,255,.65);text-transform:uppercase;margin-top:2px}
 .hg-name.gold b{color:#ecd394}
-.hg-dock{position:fixed;left:max(14px,env(safe-area-inset-left));bottom:calc(14px + env(safe-area-inset-bottom));z-index:50;display:flex;gap:2px;padding:4px;border-radius:14px;background:rgba(10,12,18,.6);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(12px)}
+.hg-dock{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));z-index:50;display:flex;gap:2px;padding:4px;border-radius:14px;background:rgba(10,12,18,.6);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(12px)}
 .hg-dock span{width:42px;height:44px;display:grid;place-items:center;border-radius:10px;opacity:.55}
 .hg-dock span svg{width:26px!important;height:26px!important;filter:brightness(1.4)}
 .hg-dock span.on{opacity:1;background:rgba(255,255,255,.14);box-shadow:inset 0 -3px 0 var(--c)}
@@ -29,12 +29,13 @@ const CSS = `
 #scrTeam #teams,#scrTeam .teams{display:none!important}
 #scrTeam .teaminfo{display:none!important}
 #mNext{bottom:calc(14px + env(safe-area-inset-bottom))!important}
+@media (max-width:760px){#mNext{font-size:0!important;width:52px!important;min-width:0!important;padding:0!important;justify-content:center!important}#mNext span{margin:0!important}}
 `;
 async function mock(p, v, leg) {
   await p.evaluate(([v, leg]) => {
     document.querySelectorAll('.hg-seg,.hg-arr,.hg-name,.hg-dock,.hg-dots,.hg-lbl').forEach(e => e.remove());
     const add = h => { const d = document.createElement('div'); d.innerHTML = h; const e = d.firstElementChild; document.body.appendChild(e); return e; };
-    add('<div class="hg-lbl">' + (v === 'A' ? 'ENTWURF A · Segment oben + Pfeile + Logo-Dock' : 'ENTWURF B · Segment oben + Pfeile/Wischen + Punkte') + (leg ? ' · Legenden' : ' · Saison') + '</div>');
+    add('<div class="hg-lbl">' + (v === 'A' ? 'ENTWURF A mittig · Segment oben + Pfeile + Logo-Dock in der Mitte' : 'ENTWURF B · Segment oben + Pfeile/Wischen + Punkte') + (leg ? ' · Legenden' : ' · Saison') + '</div>');
     add('<div class="hg-seg"><b class="' + (leg ? '' : 'on') + '">Saison <i>2026</i></b><b class="' + (leg ? 'on gold' : '') + '">★ Legenden</b></div>');
     add('<div class="hg-arr l">‹</div>'); add('<div class="hg-arr r">›</div>');
     const teams = leg ? ['H_F67', 'H_LOT', 'H_MCL', 'H_MCL98', 'H_FER', 'H_RBR'] : ['MER', 'FER', 'MCL', 'RBR', 'AST', 'WIL', 'RB', 'ALP', 'HAA', 'AUD', 'CAD'].filter(k => window.__T[k]);
@@ -53,7 +54,7 @@ async function mock(p, v, leg) {
   await p.addStyleTag({ content: CSS });
   const hide = () => p.evaluate(() => [...document.querySelectorAll('div')].filter(d => d.textContent.trim().startsWith('QC-Bot') && d.children.length < 4).forEach(d => d.style.display = 'none'));
   await p.waitForTimeout(4000); await hide();
-  for (const v of ['A', 'B']) { await mock(p, v, 0); await p.screenshot({ path: `phone/hig_${v}0_${n}.png` }); }
+  for (const v of ['A']) { await mock(p, v, 0); await p.screenshot({ path: `phone/higm_${v}0_${n}.png` }); }
   await ev(`MENU.team = 'H_F67'; showroomTeam('H_F67'); renderMenu(); 1`); await p.waitForTimeout(7000); await hide();
-  for (const v of ['A', 'B']) { await mock(p, v, 1); await p.screenshot({ path: `phone/hig_${v}1_${n}.png` }); }
+  for (const v of ['A']) { await mock(p, v, 1); await p.screenshot({ path: `phone/higm_${v}1_${n}.png` }); }
   await b.close(); } })();
