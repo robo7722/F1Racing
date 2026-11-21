@@ -501,3 +501,8 @@ Bild: `docs/bilder/umschalter_handy_entwuerfe.jpg`. Zeilen 1 und 3 zeigen Entwur
   - **Entfernt:** Der alte Kasten `.tmtabs` in der Leiste samt CSS.
   - **Verhalten:** Wie bisher (`MENU.leg`, zuletzt gewähltes Auto je Gruppe). In der Karriere bleibt das Segment ausgeblendet.
   - **Getestet:** iPhone SE, iPhone 15 und Desktop, Umschalten in beide Richtungen, keine Seitenfehler. Bild: `docs/bilder/umschalter_v293.jpg`.
+
+## v2.94 – Legenden unten mittig (Wunsch 21.11.2026)
+- **Kartenbreite:** `min(2,55 × --tw, (100 % − 40 px) / 6)`, gerechnet aus der Leistenbreite (`.teamwrap` hat seitliche Ränder, daher nicht aus `100vw`). Alle sechs Legenden passen auch aufs iPhone SE und stehen mittig, ohne Wischen.
+- **Ohne Verlauf:** Der Ausblendverlauf rechts gilt in der Legenden-Ansicht nicht mehr.
+- **Bild:** `docs/bilder/legenden_mittig_v294.jpg` (iPhone SE, iPhone 15, Desktop).
