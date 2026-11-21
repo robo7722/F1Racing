@@ -496,3 +496,8 @@ Bild: `docs/bilder/umschalter_handy_entwuerfe.jpg`. Zeilen 1 und 3 zeigen Entwur
   - Zwei Reiter (36 px hoch) sitzen direkt auf der Leiste, linksbündig.
   - Aktiv ist dunkel mit rotem Strich oben, bei Legenden gold.
   - Umschalter und Auswahl bleiben zusammen unten, wo der Daumen ist.
+- **Umgesetzt als v2.93 (Go „Entwurf 1“, 21.11.2026):** `#teamSeg` (`.tmseg`) im `#scrTeam`, fest oben mittig unter der Schrittleiste.
+  - **Größe:** Je Segment 112×38 px, Tippfläche über `::after` auf 46 px Höhe erweitert.
+  - **Entfernt:** Der alte Kasten `.tmtabs` in der Leiste samt CSS.
+  - **Verhalten:** Wie bisher (`MENU.leg`, zuletzt gewähltes Auto je Gruppe). In der Karriere bleibt das Segment ausgeblendet.
+  - **Getestet:** iPhone SE, iPhone 15 und Desktop, Umschalten in beide Richtungen, keine Seitenfehler. Bild: `docs/bilder/umschalter_v293.jpg`.

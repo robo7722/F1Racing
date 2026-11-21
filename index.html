@@ -975,14 +975,6 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 #scrTeam .tm.on{outline:2px solid #fff!important;outline-offset:-2px;background:linear-gradient(180deg,rgba(110,114,124,.95),rgba(58,60,68,.95))!important;box-shadow:inset 0 -3px 0 var(--c1)!important}
 #scrTeam{--tw:clamp(30px,min(13.5vh,calc((100vw - 190px) / 13)),62px)}
 /* v2.90 Entwurf C (Abnahme 18.11.2026): links in der Leiste ein Umschalter „Saison / ★ Legenden“ im Stil der oberen Schrittleiste; „Legenden“ tauscht die Teamkacheln gegen Goldkarten (Jahr, Auto, Fahrer) */
-#scrTeam .tmtabs{flex:none;display:flex;flex-direction:column;height:var(--tw);box-sizing:border-box;border-radius:8px;overflow:hidden;background:rgba(14,16,22,.78);border:1px solid rgba(255,255,255,.14);margin-right:8px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-#scrTeam .tmtabs button{flex:1;display:flex;align-items:center;gap:6px;padding:0 12px 0 10px;border:0;background:none;font:800 clamp(8px,1.8vh,10.5px)/1 system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.45);position:relative;white-space:nowrap;cursor:pointer;transition:color .2s,background .2s}
-#scrTeam .tmtabs button+button{border-top:1px solid rgba(255,255,255,.1)}
-#scrTeam .tmtabs button i{font-style:normal;color:#e10600;opacity:.6;font-weight:900}
-#scrTeam .tmtabs button:hover{color:rgba(255,255,255,.8)}
-#scrTeam .tmtabs button.on{color:#fff;background:linear-gradient(90deg,rgba(225,6,0,.22),rgba(225,6,0,0))}
-#scrTeam .tmtabs button.on::before{content:'';position:absolute;left:0;top:18%;bottom:18%;width:3px;background:#e10600;border-radius:2px}
-#scrTeam .tmtabs button.on i{opacity:1}
 #scrTeam .tm.lcard{width:min(calc(var(--tw)*2.55),calc((100vw - 180px) / 6 - 6px));display:block!important;padding:clamp(5px,1.4vh,9px) 6px 0!important;text-align:center!important;border-radius:10px;background:linear-gradient(180deg,rgba(92,74,44,.80),rgba(30,24,15,.9))!important;border:1px solid rgba(217,180,90,.45)!important;box-sizing:border-box}
 #scrTeam .tm.lcard svg{position:absolute;right:5px;top:5px;width:calc(var(--tw)*.36)!important;height:calc(var(--tw)*.36)!important}
 #scrTeam .tm.lcard .ly,#scrTeam .tm.lcard .ln,#scrTeam .tm.lcard .ld{text-align:center!important}   /* Wunsch 18.11.2026: Inhalt der Karten mittig */
@@ -1004,12 +996,6 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 #scrTeam .teams{gap:8px!important;padding:8px max(10px,env(safe-area-inset-right)) 6px max(10px,env(safe-area-inset-left))!important;scroll-snap-type:x proximity;align-items:flex-end;justify-content:safe center;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);scrollbar-width:none}
 #scrTeam .teams::-webkit-scrollbar{display:none}
 #scrTeam .teams .tm{scroll-snap-align:center}
-#scrTeam .tmtabs{position:sticky;left:0;z-index:3;height:auto;align-self:stretch;min-height:var(--tw);background:rgba(14,16,22,.92)}
-#scrTeam .teams.leg .tmtabs{min-height:max(58px,calc(var(--tw)*1.3))}
-#scrTeam .tmtabs button{min-height:24px;font-size:clamp(10px,2.6vh,12px)!important;padding:0 14px 0 12px}
-#scrTeam .tmtabs button::after{content:'';position:absolute;inset:-4px -2px}
-#scrTeam .tmtabs button i{opacity:1!important}
-#scrTeam .tmtabs button:not(.on) i{color:rgba(255,255,255,.55)}
 #scrTeam .tm:not(.lcard) svg{filter:brightness(1.35)}
 #scrTeam .tm:not(.on):not(.lcard){opacity:.88}
 #scrTeam .tm.on:not(.lcard){transform:translateY(-3px)!important;box-shadow:inset 0 -4px 0 var(--c1),0 6px 16px rgba(0,0,0,.5),0 0 14px color-mix(in srgb,var(--c1) 55%,transparent)!important}
@@ -1020,6 +1006,16 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 #scrTeam .tm.lcard.on{transform:translateY(-3px)!important;box-shadow:inset 0 -4px 0 #ecd394,0 0 16px rgba(236,211,148,.35)!important}
 #scrTeam .teaminfo p{font-size:11.5px!important}
 @media (max-height:380px){#scrTeam .teaminfo p+p{display:none}}
+/* v2.93 Umschalter Saison/Legenden als Segment oben (Entwurf 1, Go 21.11.2026; Vorlage Apple HIG: Ansicht wechseln = Segment oben unter der Navigation,
+   Tippfläche ≥ 44 pt): ersetzt den kleinen Kasten links in der Leiste. Aktiv weiß, bei Legenden gold. In der Karriere (keine Legenden) ausgeblendet. */
+#scrTeam .tmseg{position:fixed;left:50%;transform:translateX(-50%);top:calc(56px + env(safe-area-inset-top));z-index:5;display:flex;padding:3px;border-radius:12px;background:rgba(10,12,18,.72);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+#scrTeam .tmseg[hidden]{display:none}
+#scrTeam .tmseg button{position:relative;min-width:112px;height:38px;display:flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:9px;background:none;cursor:pointer;font:800 12px/1 system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.6);transition:background .2s,color .2s}
+#scrTeam .tmseg button::after{content:'';position:absolute;inset:-4px -1px}
+#scrTeam .tmseg button i{font-style:normal;font-size:11px;opacity:.75}
+#scrTeam .tmseg button:not(.on):hover{color:#fff}
+#scrTeam .tmseg button.on{background:#fff;color:#0b0d12;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+#scrTeam .tmseg button.on.gold{background:linear-gradient(180deg,#f1d68e,#c99a3e);color:#2a1d07}
 @media (orientation:portrait){.tsel{flex-direction:column}.tinfo{max-width:none}.tbig{display:none}}
 
 /* Hauptmenü: fester, gezeichneter Hintergrund statt Kamerafahrt – dunkles Graphit mit schrägen Flächen und rotem Schein */
@@ -1441,6 +1437,7 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
       <div class="teams" id="teams"></div>
     </div>
     <div class="teaminfo" id="teamInfo"></div><div class="tbig" id="teamBig"></div>
+    <div class="tmseg" id="teamSeg" role="tablist" hidden></div>
   </section>
 
   <section class="scr" id="scrDriver">
@@ -13076,10 +13073,11 @@ function renderTeams() {
   const keys = Object.keys(TEAMS).filter(shown), now = keys.filter(k => !TEAMS[k].hist), old = keys.filter(k => TEAMS[k].hist && HIST_CAR[k]).sort((a, b) => HIST_CAR[a].year - HIST_CAR[b].year);   // Klassiker nach Jahr
   if (!old.length) MENU.leg = false; else if (MENU.leg === undefined || (TEAMS[MENU.team] && !!TEAMS[MENU.team].hist) !== !!MENU.leg) MENU.leg = !!(TEAMS[MENU.team] && TEAMS[MENU.team].hist);   // Ansicht folgt dem gewählten Auto
   const tw = $('#teams'), leg = !!MENU.leg;
-  tw.innerHTML = (old.length ? '<div class="tmtabs" role="tablist"><button data-leg="0" class="' + (leg ? '' : 'on') + '" role="tab"><i>' + new Date().getFullYear() + '</i>Saison</button><button data-leg="1" class="' + (leg ? 'on' : '') + '" role="tab"><i>★</i>Legenden</button></div>' : '')
-    + (leg ? old.map(card) : now.map(btn)).join('');   // v2.90 Entwurf C: Umschalter links, Legenden ersetzen die Teamkacheln (kein Scrollen mehr)
+  const seg = $('#teamSeg'); seg.hidden = !old.length;   // v2.93: Umschalter als Segment oben (statt links in der Leiste)
+  seg.innerHTML = '<button data-leg="0" role="tab" aria-selected="' + !leg + '" class="' + (leg ? '' : 'on') + '">Saison <i>' + new Date().getFullYear() + '</i></button><button data-leg="1" role="tab" aria-selected="' + leg + '" class="' + (leg ? 'on gold' : '') + '">★ Legenden</button>';
+  tw.innerHTML = (leg ? old.map(card) : now.map(btn)).join('');
   tw.classList.toggle('leg', leg); requestAnimationFrame(() => teamsScrollTo(tw.querySelector('[data-team="' + MENU.team + '"]')));   // v2.92: auf dem Handy wird gewischt – Auswahl sichtbar halten
-  $$('#teams .tmtabs button').forEach(b => b.addEventListener('click', () => { const L = b.dataset.leg === '1'; if (L === !!MENU.leg) return;
+  $$('#teamSeg button').forEach(b => b.addEventListener('click', () => { const L = b.dataset.leg === '1'; if (L === !!MENU.leg) return;
     const k = L ? (MENU.lastLeg && old.includes(MENU.lastLeg) ? MENU.lastLeg : old[0]) : (MENU.lastNow && now.includes(MENU.lastNow) && teamOpen(MENU.lastNow) ? MENU.lastNow : now.find(teamOpen) || now[0]);   // Umschalten wählt gleich das zuletzt gewählte Auto der Gruppe
     MENU.leg = L; if (k) { MENU.team = k; showroomTeam(k); } renderTeams(); renderMenu(); }));
   $$('#teams .tm').forEach(b => { const k = b.dataset.team, open = teamOpen(k); b.classList.toggle('locked', !open); if (!open) b.querySelector('small').textContent = lockMsg(k);
@@ -13371,7 +13369,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.92'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.93'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
