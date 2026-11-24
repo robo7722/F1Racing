@@ -1,6 +1,6 @@
 # Wetter: Regen (v2.95)
 
-Stand 24.11.2026 (v2.99). Regen und das neue Menü „Rennen einstellen“ (Entwurf A, vom Nutzer gewählt) sind eingebaut und auf `main`. Das Wetter wird im Menü
+Stand 24.11.2026 (v3.00). Regen und das neue Menü „Rennen einstellen“ (Entwurf A, vom Nutzer gewählt) sind eingebaut und auf `main`. Das Wetter wird im Menü
 unter **Rennen einstellen → Wetter** gewählt; in der Karriere wird es je Rennwochenende ausgelost.
 
 Bilder (echte Spielbilder): `docs/bilder/regen_entwurf_tag.jpg`, `regen_entwurf_nacht.jpg`, `regen_helm_reifen.jpg` (Visier-Tropfen, blaue Regenreifen),
@@ -21,7 +21,7 @@ Menü: `rennmenue_v295.jpg` (eingebaut), `rennmenue_wetter_v298.jpg` (Regenrisik
 | Regen | ~5.600 feine Striche in einem Kasten um die Kamera, komplett im Vertex-Shader; bei Tempo laufen sie auf den Fluchtpunkt zu (Länge begrenzt) |
 | Nachtrennen | Überall nur ein Hauch von Regen, im Lichtkegel der Flutlichter deutlich kräftiger (v2.99, Wunsch): die Tropfen um die Kamera leuchten voll, wenn sie im Kegel eines der acht nächsten Masten liegen, sonst mit 10 %; dazu je Mast ein Lichtkegel mit fallendem Regen (nah einzelne Striche, fern ein heller Schleier). v2.98 zeigte abseits der Kegel gar keinen Regen – das war zu wenig. |
 | Gischt | Wasserschleier hinter den Hinterrädern, Menge nach Tempo und Nässe; wer dicht folgt, sieht schlecht |
-| Reifen | alle Autos auf Intermediates (grüne Flanke) bzw. Regenreifen (blaue Flanke) |
+| Reifen | leichter Regen: alle Autos auf Intermediates (grüne Flanke), starker Regen: Regenreifen (blaue Flanke). Geprüft 24.11.2026 mit `tools/wetter/reifen_pruefen.js` über den echten Menüweg, auch nach Wetterwechsel zwischen zwei Rennen und bei „Zufall“ (Bild `docs/bilder/regen_reifen_v300.jpg`) |
 | Regenlicht | blinkt bei Nässe durchgehend (4 Hz) |
 | Fahrphysik | Haftung −14 % / −25 %, Bremse −12 % / −21 %, Traktion −8 % / −16 % (leicht / stark); nasse Randsteine, Farbe und Gras deutlich glatter; Aquaplaning in Pfützen bei hohem Tempo; die KI bremst früher und fährt Kurven langsamer (gleiche Faktoren) |
 | Ton | berechnetes Regenprasseln und Reifenzischen (kein Download, keine ElevenLabs-Credits) |
@@ -131,6 +131,11 @@ Alles steht in `index.html` im Block „Wetter: Regen (v2.95)“ vor dem Himmel.
   und erst ab ~1,2 m Abstand eingeblendet (ganz nahe Tropfen wären im Bild lange, grobe Striche). `uFine` = Renderauflösung / Geräteauflösung × 1,3 (0,6…1):
   ein Strich ist mindestens ein Renderpixel breit – rechnet „Schön“ auf dem Handy gröber als das Display, wird er entsprechend schwächer gezeichnet und wirkt dünner.
   Nachts: `uBase` = 0,1 Grundsichtbarkeit überall, im Kegel bis 1,8 (`lit`), `RAINC` 1,45-fach hell und mit feineren Strichen (24 statt 17 Spalten je Meter).
+- **Regenstärke je Stufe (v3.00, Wunsch: „leichten Regen sieht man nachts kaum, starker soll deutlich stärker sein“)**: `wxRainSetup` stellt aus `WX.rain`
+  (leicht 0,42 · stark 1) ein: Anteil der 12000 Striche (`uAmt` = 42 % / 100 %), Helligkeit (`uFine` × 1,19 / × 1,6), Belichtung und Höchstlänge (`uExp` 0,028 / 0,036 s,
+  `uLen` 0,62 / 0,85 m), Fallrichtung (`uFall`: fast senkrecht / schräg im Wind und schneller). Nachts Grundsichtbarkeit `uBase` 0,22 (v2.99: 0,1 – leichter Regen
+  war abseits der Lampen kaum zu sehen), Lichtkegel-Regen `RAINC` 0,75 / 1,3. Bilder: `docs/bilder/regen_stufen_v300.jpg`.
+  Anlass war auch eine Verwechslung: Mit dem feineren Regen (v2.99) sah starker Regen schwach aus – blaue Regenreifen wirkten dann wie „Regenreifen bei leichtem Regen“.
 - **Lichtkegel-Regen** (`RAINC`, nur Nacht): ein Zeichenaufruf für alle Masten; Lampenpositionen sammelt `WX.lamps` an den drei Stellen, an denen Masten gebaut werden.
 - **Visier-Tropfen** (`dropLayer` im Bild-Shader `FinishShader`, Uniform `uDrop`: x Menge, y Fahrtwind, z Laufzeit, w Weg zur Seite): zwei Schichten (wenige
   mittlere, viele kleine), je Rasterzelle höchstens ein Tropfen. Das Raster jeder Bildhälfte wandert nach außen; der Weg wird in `tick` aufsummiert
@@ -194,7 +199,8 @@ Alles steht in `index.html` im Block „Wetter: Regen (v2.95)“ vor dem Himmel.
 | Himmel, Dunst, Licht, Bildstimmung bei Regen | `wxTheme` (Tag und Nacht getrennt) |
 | Abdunkelung/Glanz je Belag | `WXK` (`asph`, `paint`) |
 | Tropfen: Anzahl, Kasten, Belichtung, Farbe | `RAINFX` (`N`, `uBox`, `uExp`), `wxRainSetup` (`uCol`, `uAmt`) |
-| Nachtregen: Hauch ohne Lampe, Stärke im Kegel | `RAINFX` (`uBase` 0,1; im Shader `1.8 * e * e * … / ( 1.0 + t * t * 2.5 )`), `RAINC` (`uCol`) |
+| Unterschied leichter/starker Regen | `wxRainSetup` (Block mit `const s = WX.rain`: `uAmt`, `uExp`, `uLen`, `uFall`, `uFine`), `RAINC` `uAmt` |
+| Nachtregen: Hauch ohne Lampe, Stärke im Kegel | `RAINFX` (`uBase` 0,22; im Shader `1.8 * e * e * … / ( 1.0 + t * t * 2.5 )`), `RAINC` (`uCol`) |
 | Nachtregen: Kegelbreite, Reichweite der Mastsuche | `RAINFX` Vertex-Shader (`mix( 1.6, 9.5, t )`), `wxTick` (70 m) |
 | Regen feiner/gröber | `RAINFX`: `N`, `uExp`, Höchstlänge (`0.6 /`), Nah-Einblendung (`smoothstep( 1.2, 4.5, … )`), Deckkraft (`0.4 + 0.4 * …`), `uFine` in `wxRainSetup` |
 | Visier-Tropfen: Zusatzglanz Tag/Nacht | `tick` (`amb`, nachts `* 0.3`), Shader `0.05 * uDropA` |

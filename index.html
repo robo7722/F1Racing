@@ -2892,7 +2892,7 @@ function wetMat(m, kind) {
     .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
       #ifdef WX_WET
       { vec3 wV = normalize( vBkW - cameraPosition ), wN = normalize( ( vec4( normal, 0.0 ) * viewMatrix ).xyz ); wN.y = abs( wN.y );
-        float wF0 = mix( 0.025, 0.075, wxPud ), wF = wF0 + ( 1.0 - wF0 ) * pow( 1.0 - clamp( dot( - wV, wN ), 0.0, 1.0 ), 5.0 ), wK = wF * mix( 0.34 * wxFilm, 1.0, wxPud ) * uWxK.z;
+        float wX = 1.0 - clamp( dot( - wV, wN ), 0.0, 1.0 ), wF0 = mix( 0.025, 0.075, wxPud ), wF = wF0 + ( 1.0 - wF0 ) * wX * wX * wX * wX * wX /* ohne pow(): bei Basis 0 auf manchen Handy-Grafikchips ungültig */, wK = wF * mix( 0.34 * wxFilm, 1.0, wxPud ) * uWxK.z;
         vec3 wR = reflect( wV, wN ); wR.y = max( wR.y, 0.0 ); wR = normalize( wR );
         vec3 wSky = uWxSky * ( 0.8 + 0.5 * ( 1.0 - wR.y ) * ( 1.0 - wR.y ) );
         #ifdef WX_SSR
@@ -2991,18 +2991,18 @@ function wxFrame(wb) {
 // und, nur für Nachtstrecken ohne erfasste Masten, einen schwachen Schein entlang der Strecke.
 const WXM = { tex: null, r: new THREE.Vector4(0, 0, 1, 1) };
 const RAINFX = (() => {
-  const N = 9000, P = new Float32Array(N * 6), SD = new Float32Array(N * 8), E = new Float32Array(N * 2);   /* v2.99 feiner: mehr, dafür kürzere, schwächere und erst ab ~1,2 m sichtbare Striche (vorher 5600 kräftige) */
+  const N = 12000, P = new Float32Array(N * 6), SD = new Float32Array(N * 8), E = new Float32Array(N * 2);   /* v2.99 feiner: mehr, dafür kürzere, schwächere und erst ab ~1,2 m sichtbare Striche (vorher 5600 kräftige) */
   for (let i = 0; i < N; i++) { const a = Math.random(), b = Math.random(), c = Math.random(), d = Math.random(); for (let k = 0; k < 2; k++) { SD.set([a, b, c, d], (i * 2 + k) * 4); E[i * 2 + k] = k; } }
   const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(P, 3)); geo.setAttribute('aSeed', new THREE.BufferAttribute(SD, 4)); geo.setAttribute('aEnd', new THREE.BufferAttribute(E, 1));
   const blank = new THREE.DataTexture(new Uint8Array([255, 0, 0, 255]), 1, 1, THREE.RGBAFormat); blank.needsUpdate = true;
   const mat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false,
-    uniforms: { uCam: { value: new THREE.Vector3() }, uFall: { value: new THREE.Vector3(0.6, -8.6, 0.3) }, uCamV: { value: new THREE.Vector3() }, uBox: { value: new THREE.Vector3(26, 15, 26) }, uT: { value: 0 }, uExp: { value: 0.026 }, uAmt: { value: 1 }, uFine: { value: 1 }, uBase: { value: 0.1 },   // uFine: Deckkraft (ein Strich ist mindestens ein Renderpixel breit – bei gröberer Renderauflösung schwächer, damit er fein wirkt), uBase: Grundsichtbarkeit bei Nacht ohne Lampe
+    uniforms: { uCam: { value: new THREE.Vector3() }, uFall: { value: new THREE.Vector3(0.6, -8.6, 0.3) }, uCamV: { value: new THREE.Vector3() }, uBox: { value: new THREE.Vector3(26, 15, 26) }, uT: { value: 0 }, uExp: { value: 0.026 }, uLen: { value: 0.6 }, uAmt: { value: 1 }, uFine: { value: 1 }, uBase: { value: 0.22 },   // uFine: Deckkraft (ein Strich ist mindestens ein Renderpixel breit – bei gröberer Renderauflösung schwächer, damit er fein wirkt), uBase: Grundsichtbarkeit bei Nacht ohne Lampe
       uNight: { value: 0 }, uCol: { value: new THREE.Color(0.6, 0.64, 0.7) }, tMask: { value: blank }, uMaskR: { value: WXM.r }, uLit: { value: 0 },
       uLH: { value: Array.from({ length: 8 }, () => new THREE.Vector3(0, -9999, 0)) }, uLF: { value: Array.from({ length: 8 }, () => new THREE.Vector3(0, -9998, 0)) } },   // uLH/uLF: Kopf und Lichtfleck der acht nächsten Flutlichter (wxTick), uLit: Schein ohne Masten
-    vertexShader: `attribute vec4 aSeed; attribute float aEnd; uniform vec3 uCam, uFall, uCamV, uBox; uniform float uT, uExp, uAmt, uNight, uLit, uFine, uBase; uniform sampler2D tMask; uniform vec4 uMaskR; uniform vec3 uLH[ 8 ], uLF[ 8 ]; varying float vA;
+    vertexShader: `attribute vec4 aSeed; attribute float aEnd; uniform vec3 uCam, uFall, uCamV, uBox; uniform float uT, uExp, uLen, uAmt, uNight, uLit, uFine, uBase; uniform sampler2D tMask; uniform vec4 uMaskR; uniform vec3 uLH[ 8 ], uLF[ 8 ]; varying float vA;
       void main() { float sp = 0.8 + 0.4 * aSeed.w;
         vec3 p = mod( aSeed.xyz * uBox + uFall * ( uT * sp ) - uCam, uBox ) - 0.5 * uBox;   // Lage relativ zur Kamera, läuft im Kasten um
-        vec3 rel = uFall * sp - uCamV; float rl = length( rel ) * uExp, rk = min( 1.0, 0.6 / max( rl, 1e-4 ) );   // Strich höchstens 60 cm lang (sonst wird Regen bei Tempo zu „Warp-Streifen“)
+        vec3 rel = uFall * sp - uCamV; float rl = length( rel ) * uExp, rk = min( 1.0, uLen / max( rl, 1e-4 ) );   // Strich höchstens uLen lang (leicht ~60 cm, stark 85 cm – sonst wird Regen bei Tempo zu „Warp-Streifen“)
         vec3 w = uCam + p - rel * ( uExp * rk * aEnd );   // Schweif: wo der Tropfen eine Belichtungszeit vorher war
         gl_Position = projectionMatrix * viewMatrix * vec4( w, 1.0 );
         vec3 q = abs( p ) / uBox; float a = smoothstep( 1.2, 4.5, length( p ) ) * ( 1.0 - smoothstep( 0.36, 0.5, max( q.x, max( q.y, q.z ) ) ) );   // ganz nahe Tropfen wären im Bild lange, grobe Striche – erst ab ~1,2 m einblenden
@@ -3082,13 +3082,17 @@ function wxRainSetup() {
     const t = new THREE.CanvasTexture(cv); t.flipY = false; t.generateMipmaps = false; t.minFilter = t.magFilter = THREE.LinearFilter; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; WXM.tex = t; WXM.r.set(x0, z0, 1 / W, 1 / H);
     U.tMask.value = t;
   } else { U.tMask.value = RAINFX.blank; WXM.r.set(0, 0, 1, 1); }
-  U.uNight.value = night ? 1 : 0; U.uAmt.value = 0.3 + 0.7 * WX.rain; U.uT.value = 0; WX.has = false; U.uLit.value = night && !WX.lamps.length ? 0.3 : 0; U.uFine.value = clamp(renderer.getPixelRatio() / (devicePixelRatio || 1) * 1.3, 0.6, 1);   /* Nachtstrecke ohne erfasste Masten: schwacher Schein entlang der Strecke statt gar kein Regen */
+  U.uNight.value = night ? 1 : 0; U.uT.value = 0; WX.has = false; U.uLit.value = night && !WX.lamps.length ? 0.3 : 0;
+  { const s = WX.rain;   /* v3.00 (Wunsch: „starker Regen soll deutlich stärker sein“, leichter nachts besser sichtbar): die Stufen unterscheiden sich jetzt in Anzahl, Helligkeit, Länge und Schräge der Striche.
+       leicht (0,42): 42 % der 12000 Striche, fein und fast senkrecht · stark (1): alle Striche, 1,35-fach hell, 30 % länger, schräg im Wind – zusammen rund 4-mal so viel Regen im Bild */
+    U.uAmt.value = clamp(s, 0.3, 1); U.uExp.value = 0.022 + 0.014 * s; U.uLen.value = 0.45 + 0.4 * s; U.uFall.value.set(0.3 + 1.5 * s, -8 - 2.2 * s, 0.15 + 0.75 * s);
+    U.uFine.value = clamp(renderer.getPixelRatio() / (devicePixelRatio || 1) * 1.3, 0.6, 1) * (0.9 + 0.7 * s); }   /* Nachtstrecke ohne erfasste Masten: schwacher Schein entlang der Strecke statt gar kein Regen */
   if (night) U.uCol.value.setRGB(0.8, 0.77, 0.7); else U.uCol.value.setHex(TH.fog).multiplyScalar(0.9);
   if (S.gfx === 'low') U.uCol.value.multiplyScalar(0.4);   /* „Schnell“: ohne Nachbearbeitung wird im fertigen Bild (nicht im HDR-Puffer) addiert – dieselbe Farbe wirkte dort viel zu grell */
   SPRAY.mat.uniforms.uCol.value.copy(night ? new THREE.Color(0.2, 0.2, 0.215) : new THREE.Color(TH.fog).multiplyScalar(1.12));   /* nachts nur vom Flutlicht angestrahlt: grauer Schleier, kein leuchtender Fleck */
   const LP = WX.lamps; RAINC.n = night && S.gfx !== 'low' ? LP.length : 0;
   if (RAINC.n) { const g = RAINC.geo, h = new Float32Array(LP.length * 3), f = new Float32Array(LP.length * 3); LP.forEach((l, k) => { h.set([l[0], l[1], l[2]], k * 3); f.set([l[3], l[5] ?? 0, l[4]], k * 3); });
-    g.setAttribute('aHead', new THREE.InstancedBufferAttribute(h, 3)); g.setAttribute('aFoot', new THREE.InstancedBufferAttribute(f, 3)); g.instanceCount = LP.length; RAINC.mat.uniforms.uAmt.value = 0.45 + 0.55 * WX.rain; }
+    g.setAttribute('aHead', new THREE.InstancedBufferAttribute(h, 3)); g.setAttribute('aFoot', new THREE.InstancedBufferAttribute(f, 3)); g.instanceCount = LP.length; RAINC.mat.uniforms.uAmt.value = 0.35 + 0.95 * WX.rain; }
 }
 // Je Bild: Regen folgt der Kamera, Gischt hinter den Autos
 function wxTick(dt, now) {
@@ -4233,7 +4237,7 @@ function cockNew(tp, k, bodyCol) {
     const lp = new Float32Array(n * 3); for (let i = 0; i < n; i++) { const z = pp.getZ(i), y = pp.getY(i); lp[i * 3] = pp.getX(i); lp[i * 3 + 1] = z < G.z1 ? Math.min(y, G.yR + 0.012) : y; lp[i * 3 + 2] = z; } g.setAttribute('aLP', new THREE.BufferAttribute(lp, 3)); }   /* aLP: Position, an der die Lackierung berechnet wird – die erhöhten Schultern bekommen die Farbe des Decks auf Randhöhe (wie das Fahrzeug von außen), nicht die Farbfelder weiter oben */
   const gc = g.clone(); gc.setIndex(ICb); g.setIndex(I);
   if (!tp.shellMat) { const gm = tp.glossMat, sm = gm.clone(), ob = gm.onBeforeCompile; sm.onBeforeCompile = (sh, r) => { if (ob) ob.call(gm, sh, r); if (sh.vertexShader.includes('vLP = position;')) sh.vertexShader = 'attribute vec3 aLP;\n' + sh.vertexShader.replace('vLP = position;', 'vLP = aLP;');
-      const bt = 'vCls < 2.5 ? texture2D(uBake, vBUV).rgb : ', tk = tp.tk;   /* v2.99: Die Schale hat keine UV der gebackenen Lack-Textur (seit v2.73) – sie las immer denselben Bildpunkt (Fläche vor dem Cockpit einfarbig hellgrau statt lackiert). Hier wieder: Lack berechnen, Bogen und Logo projizieren */
+      const bt = 'vCls < 2.5 && uBakeOn > 0.5 ? texture2D(uBake, vBUV).rgb : ', tk = tp.tk;   /* v2.99: Die Schale hat keine UV der gebackenen Lack-Textur (seit v2.73) – sie las immer denselben Bildpunkt (Fläche vor dem Cockpit einfarbig hellgrau statt lackiert). Hier wieder: Lack berechnen, Bogen und Logo projizieren */
       if (tk && sh.fragmentShader.includes(bt)) { sh.fragmentShader = sh.fragmentShader.replace(bt, '').replace('livery(vLP, vCls);', 'livery(vLP, vCls);' + (hasDecal(tk) ? ' if (vCls < 2.5) {' + decalGLSL(tk, true) + ' }' : '')); Object.assign(sh.uniforms, decalProj(tk)); } }; const ck = gm.customProgramCacheKey(); sm.customProgramCacheKey = () => ck + '|ckLP'; tp.shellMat = sm; }   // Lack wie die Karosserie, Farbe an der Lackierposition aLP berechnet
   const grp = new THREE.Group(); grp.add(new THREE.Mesh(g, tp.shellMat)); grp.add(new THREE.Mesh(gc, COCK_MAT));
   { const w = 0.062, y0 = G.fl, y1 = hC1 - 0.003, zp = G.z1 - 0.002, pg = new THREE.BufferGeometry();   // Armaturenwand: ebene Carbonplatte in der Mitte der Vorderwand (dort laufen die Punktreihen beider Hälften zusammen – ohne Platte eine dunkle Naht)
@@ -4324,7 +4328,7 @@ function liveryMat(tk, gloss) { const code = LIVERY[tk]; if (!code) return gloss
   const dec = hasDecal(tk) ? decalGLSL(tk) : '', bk = baked(tk), hc = LIVMAN[tk] && LIVMAN[tk].halo ? lc(parseInt(String(LIVMAN[tk].halo).replace('#', ''), 16)) : null;   // hc: Halo einfarbig in der echten Farbe (tools/sticker/halo.json), ohne Logos
   gloss.onBeforeCompile = sh => {
     sh.vertexShader = 'attribute float aCls; varying float vCls; varying vec3 vLP; varying vec3 vLN;\n' + (bk ? 'attribute vec2 uvB; varying vec2 vBUV;\n' : '') + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vLP = position; vCls = aCls; vLN = normal;' + (bk ? ' vBUV = uvB;' : ''));
-    sh.fragmentShader = 'uniform vec3 uMir; varying float vCls; varying vec3 vLP;\n' + (bk ? 'uniform sampler2D uBake; varying vec2 vBUV;\n' : '') + (dec ? DECAL_HEAD : '') + LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 2.5 || vCls > 6.5) { diffuseColor.rgb = ' + (bk ? 'vCls < 2.5 ? texture2D(uBake, vBUV).rgb : ' : '') + (hc ? 'vCls > 6.5 ? ' + hc + ' : ' : '') + 'livery(vLP, vCls);' + (dec ? ' if (vCls < 2.5) {' + dec + ' }' : '') + ' }\n vec3 gN = normalize(cross(dFdx(vLP), dFdy(vLP))); float mirF = 0.0;   /* Spiegelglas ist jetzt ein eigenes Teil im Modell (Chunk mirror) */ if (mirF > 0.5) diffuseColor.rgb = vec3(0.0);' /* Spiegelglas (F1): die nach hinten zeigende Fläche der Spiegelgehäuse – im Modell kein eigenes Teil – zeigt die Himmelsfarbe der Strecke */ + cockGLSL('f1')).replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n if (mirF > 0.5) totalEmissiveRadiance = uMir;'); sh.uniforms.uMir = { value: MIRMAT.emissive }; if (dec || bk) Object.assign(sh.uniforms, decalUniforms(tk));
+    sh.fragmentShader = 'uniform vec3 uMir; varying float vCls; varying vec3 vLP;\n' + (bk ? 'uniform sampler2D uBake; uniform float uBakeOn; varying vec2 vBUV;\n' : '') + (dec ? DECAL_HEAD : '') + LIV_COMMON + '\nvec3 livery(vec3 p, float c) {\n' + code + '\n}\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n if (vCls < 2.5 || vCls > 6.5) { diffuseColor.rgb = ' + (bk ? 'vCls < 2.5 && uBakeOn > 0.5 ? texture2D(uBake, vBUV).rgb : ' : '')   /* v3.00: solange die Lack-Textur nicht geladen ist (langsames Netz, Ladefehler), den berechneten Lack zeigen statt einer leeren Textur = schwarzes Auto */ + (hc ? 'vCls > 6.5 ? ' + hc + ' : ' : '') + 'livery(vLP, vCls);' + (dec ? ' if (vCls < 2.5) {' + dec + ' }' : '') + ' }\n vec3 gN = normalize(cross(dFdx(vLP), dFdy(vLP))); float mirF = 0.0;   /* Spiegelglas ist jetzt ein eigenes Teil im Modell (Chunk mirror) */ if (mirF > 0.5) diffuseColor.rgb = vec3(0.0);' /* Spiegelglas (F1): die nach hinten zeigende Fläche der Spiegelgehäuse – im Modell kein eigenes Teil – zeigt die Himmelsfarbe der Strecke */ + cockGLSL('f1')).replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n if (mirF > 0.5) totalEmissiveRadiance = uMir;'); sh.uniforms.uMir = { value: MIRMAT.emissive }; if (dec || bk) Object.assign(sh.uniforms, decalUniforms(tk));
   };
   gloss.livHook = gloss.onBeforeCompile;   /* unveränderte Fassung für die Nummern-Materialien (numMat) – andere Stellen hängen sich später an onBeforeCompile an */
   gloss.customProgramCacheKey = () => 'livery-' + tk + (dec ? '-d' : '') + (bk ? '-t' : ''); return gloss; }
@@ -12855,7 +12859,9 @@ const COCK_RO = 990;
 const CKFILL = { value: 0 }, CKFILL_NIGHT = 0.24;   /* muss über der Schwelle liegen, unter der die Bildabstimmung (Kontrast um Mittelgrau) alles zu Schwarz zieht – 0,07 blieb unsichtbar */
 function ckFill(mt) { if (!mt || !mt.isMeshStandardMaterial || mt.userData.ckFill) return; mt.userData.ckFill = true; const ob = mt.onBeforeCompile, k0 = mt.customProgramCacheKey();   /* Schlüssel VOR dem Umhängen lesen: ohne eigenen Schlüssel ist er der Text des bisherigen Hakens */
   mt.onBeforeCompile = (sh, r) => { if (ob) ob.call(mt, sh, r); sh.uniforms.uCkFill = CKFILL;
-    sh.fragmentShader = 'uniform float uCkFill;\n' + sh.fragmentShader.replace('#include <opaque_fragment>', ' outgoingLight = max( outgoingLight, pow( max( diffuseColor.rgb, vec3( 0.0 ) ), vec3( 0.35 ) ) * ( uCkFill * ( 0.55 + 0.45 * normal.y ) ) );\n#include <opaque_fragment>'); };   /* Untergrenze statt Zuschlag: was schon beleuchtet ist (Handschuhe im Flutlicht), bleibt wie es ist */
+    sh.fragmentShader = 'uniform float uCkFill;\n' + sh.fragmentShader.replace('#include <opaque_fragment>', ' if ( uCkFill > 0.0 ) { vec3 ckA = max( diffuseColor.rgb, vec3( 0.0 ) ); ckA = sqrt( ckA ) * 0.4 + sqrt( sqrt( ckA ) ) * 0.6; outgoingLight = max( outgoingLight, ckA * ( uCkFill * ( 0.55 + 0.45 * normal.y ) ) ); }\n#include <opaque_fragment>'); };   /* Untergrenze statt Zuschlag: was schon beleuchtet ist (Handschuhe im Flutlicht), bleibt wie es ist.
+     v3.00: KEIN pow() mehr und am Tag gar nicht ausgeführt. pow( 0.0, 0.35 ) ist auf manchen Handy-Grafikchips ungültig (NaN) – bei reinen Farben (Ferrari-Rot hat Grün und Blau = 0) wurde daraus über max() und
+     die Bildabstimmung ein schwarzes Auto, auch am Tag (0 × NaN = NaN). Rückmeldung 24.11.2026 mit Bild: Cockpit „manchmal schwarz“. Wurzeln sind bei 0 überall definiert; die Kurve entspricht Potenz 0,35. */
   mt.customProgramCacheKey = () => k0 + '|ckF'; mt.needsUpdate = true; }
 // Lack in Helm-/TV-Kamera seidenmatt (v2.99): Aus Augenhöhe sieht man die Fläche vor dem Cockpit sehr flach – der Klarlack spiegelte dort fast nur noch den Himmel
 // (weiße Kuppe statt Wagenfarbe). Nur die Cockpit-Fassungen des eigenen Autos (aufgeschnittene Karosserie und Schale, beide gleich – sonst sähe man die Naht).
@@ -13923,7 +13929,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.99'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '3.00'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

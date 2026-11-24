@@ -93,6 +93,8 @@ schlimmer an als eine etwas niedrigere, aber gleichmäßige Bildrate).
 
 - **Im Ruhezustand nichts tun**: kein Rechnen, kein Hochladen (`instanceMatrix.needsUpdate`), kein Zeichnen (`visible = false`). Vorbild `Particles.live`, `FOUNT`.
 - **Vorwärmen**: Effekt in der Szene lassen und in `precompile()` einmal sichtbar zeichnen (Fehler 5).
+- **Shader auf Handys (v3.00)**: kein `pow()` mit einer Basis, die 0 werden kann, kein `normalize()` eines Nullvektors, und nichts ins Bild mischen, das NaN sein könnte –
+  auch nicht mit Faktor 0 (`0 × NaN = NaN`). Der Testbrowser rechnet per Software und zeigt solche Fehler nicht (schwarzes Cockpit in v2.99, siehe `docs/COCKPIT.md`).
 - **Vollbild-Durchgänge** (Nachbearbeitung) kosten je Pixel in jedem Bild – lieber in den vorhandenen Finish-Shader einbauen als einen neuen Pass anlegen;
   nur in „Schön“/„Ultra“ (`S.gfx !== 'low'`).
 - **Effekte, die nur manchmal gebraucht werden, gehören nicht in den Standard-Shader**: Vorbild Regen (v2.95, `docs/WETTER.md`) – der Zusatzcode steht im Material hinter
