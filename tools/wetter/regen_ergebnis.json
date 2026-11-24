@@ -1,0 +1,196 @@
+{
+ "quelle": "Open-Meteo Archiv (ERA5), 2000–2024",
+ "schwelle_mm": 1.0,
+ "stark_mm_h": 2.0,
+ "strecken": {
+  "mel": {
+   "termin": "08.03.",
+   "start": 15,
+   "tage": 375,
+   "regen": 0.056,
+   "stark": 0.24
+  },
+  "chn": {
+   "termin": "15.03.",
+   "start": 15,
+   "tage": 375,
+   "regen": 0.099,
+   "stark": 0.22
+  },
+  "suz": {
+   "termin": "29.03.",
+   "start": 14,
+   "tage": 375,
+   "regen": 0.184,
+   "stark": 0.29
+  },
+  "bhr": {
+   "termin": "12.04.",
+   "start": 18,
+   "tage": 375,
+   "regen": 0.011,
+   "stark": 0.0
+  },
+  "jed": {
+   "termin": "19.04.",
+   "start": 20,
+   "tage": 375,
+   "regen": 0.005,
+   "stark": 1.0
+  },
+  "mia": {
+   "termin": "03.05.",
+   "start": 16,
+   "tage": 375,
+   "regen": 0.173,
+   "stark": 0.45
+  },
+  "mtl": {
+   "termin": "24.05.",
+   "start": 16,
+   "tage": 375,
+   "regen": 0.152,
+   "stark": 0.35
+  },
+  "mc": {
+   "termin": "07.06.",
+   "start": 15,
+   "tage": 375,
+   "regen": 0.181,
+   "stark": 0.24
+  },
+  "bcn": {
+   "termin": "14.06.",
+   "start": 15,
+   "tage": 375,
+   "regen": 0.112,
+   "stark": 0.33
+  },
+  "rbr": {
+   "termin": "28.06.",
+   "start": 15,
+   "tage": 375,
+   "regen": 0.365,
+   "stark": 0.46
+  },
+  "sil": {
+   "termin": "05.07.",
+   "start": 15,
+   "tage": 375,
+   "regen": 0.181,
+   "stark": 0.31
+  },
+  "spa": {
+   "termin": "19.07.",
+   "start": 15,
+   "tage": 375,
+   "regen": 0.261,
+   "stark": 0.32
+  },
+  "hun": {
+   "termin": "26.07.",
+   "start": 15,
+   "tage": 375,
+   "regen": 0.163,
+   "stark": 0.34
+  },
+  "zan": {
+   "termin": "23.08.",
+   "start": 15,
+   "tage": 375,
+   "regen": 0.163,
+   "stark": 0.34
+  },
+  "monza": {
+   "termin": "06.09.",
+   "start": 15,
+   "tage": 375,
+   "regen": 0.115,
+   "stark": 0.44
+  },
+  "mad": {
+   "termin": "13.09.",
+   "start": 15,
+   "tage": 375,
+   "regen": 0.056,
+   "stark": 0.29
+  },
+  "baku": {
+   "termin": "26.09.",
+   "start": 15,
+   "tage": 375,
+   "regen": 0.029,
+   "stark": 0.09
+  },
+  "sgp": {
+   "termin": "11.10.",
+   "start": 20,
+   "tage": 375,
+   "regen": 0.179,
+   "stark": 0.33
+  },
+  "cota": {
+   "termin": "25.10.",
+   "start": 15,
+   "tage": 375,
+   "regen": 0.083,
+   "stark": 0.48
+  },
+  "mex": {
+   "termin": "01.11.",
+   "start": 14,
+   "tage": 375,
+   "regen": 0.077,
+   "stark": 0.45
+  },
+  "bra": {
+   "termin": "08.11.",
+   "start": 14,
+   "tage": 375,
+   "regen": 0.4,
+   "stark": 0.46
+  },
+  "vegas": {
+   "termin": "21.11.",
+   "start": 20,
+   "tage": 375,
+   "regen": 0.024,
+   "stark": 0.22
+  },
+  "qat": {
+   "termin": "29.11.",
+   "start": 19,
+   "tage": 375,
+   "regen": 0.019,
+   "stark": 0.14
+  },
+  "yas": {
+   "termin": "06.12.",
+   "start": 17,
+   "tage": 375,
+   "regen": 0.005,
+   "stark": 0.5
+  },
+  "nos": {
+   "termin": "15.07.",
+   "start": 14,
+   "tage": 3775,
+   "regen": 0.174,
+   "stark": 0.29
+  },
+  "genk": {
+   "termin": "15.07.",
+   "start": 14,
+   "tage": 3775,
+   "regen": 0.161,
+   "stark": 0.38
+  },
+  "wack": {
+   "termin": "15.07.",
+   "start": 14,
+   "tage": 3775,
+   "regen": 0.157,
+   "stark": 0.3
+  }
+ }
+}

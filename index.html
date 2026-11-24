@@ -1692,7 +1692,7 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platfor
 const standalone = matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 
 /* ======================= Einstellungen ======================= */
-const S = { pace60: false, rmode: 'f1', level: true, songHist: [], rone: false, histFx: true, nos: false, perfHud: false, mode: 'race', ttBest: {}, song: 0, track: 'monza', driver: 'RUS', laps: 5, grid: 10, ctrl: 'touch', diff: 'mid', autogas: false, assist: false, sound: true, music: true, invert: false, cam: 0, gfx: 'high', line: 'off', champLaps: 3, volMusic: 0.7, volCar: 0.85 };
+const S = { pace60: false, rmode: 'f1', level: true, songHist: [], rone: false, histFx: true, nos: false, perfHud: false, mode: 'race', ttBest: {}, song: 0, track: 'monza', driver: 'RUS', laps: 5, grid: 10, ctrl: 'touch', diff: 'mid', autogas: false, assist: false, sound: true, music: true, invert: false, cam: 0, gfx: 'high', wx: 'dry', line: 'off', champLaps: 3, volMusic: 0.7, volCar: 0.85 };
 try { Object.assign(S, JSON.parse(localStorage.getItem('f1rennen') || '{}')); } catch (e) {}
 if (!S.v40) { S.rmode = 'f1'; S.v40 = true; }   // Roadster: Standard ist die F1-Variante
 if (!S.v17) { S.ctrl = 'touch'; S.autogas = false; S.assist = false; S.v17 = true; try { localStorage.setItem('f1rennen', JSON.stringify(S)); } catch (e) {} }
@@ -2613,6 +2613,7 @@ function renderLikeGame(cam) { if (!(cam.near < 0.2 && pl && pl.mesh && pl.mesh.
   try { carFirst(cam, () => renderer.render(scene, cam)); } finally { renderer.autoClear = ac; } }
 class SplitRenderPass extends RenderPass {
   render(r, wb, rb, dt, mask) {
+    if (WX.ssr) wxFrame(wb);
     if (!splitOn()) return super.render(r, wb, rb, dt, mask);
     if (window.__oldCar) { withWorldNear(() => super.render(r, wb, rb, dt, mask)); r.setRenderTarget(this.renderToScreen ? null : rb); drawOwnCar(); return; }
     const oR = r.render; r.render = function (sc, cm) { r.render = oR; carFirst(cm, () => oR.call(r, sc, cm)); };   /* RenderPass löscht das Ziel und ruft dann render(): genau dort Auto, Welt, Durchsicht */
@@ -2626,7 +2627,10 @@ function buildComposer() {
   if (S.gfx === 'low') return;
   const ultra = S.gfx === 'ultra';
   const rt = new THREE.WebGLRenderTarget(Math.max(1, innerWidth), Math.max(1, innerHeight), { type: THREE.HalfFloatType, samples: ultra || !isTouch ? 4 : 2 });
+  WX.ssr = wxSSRWanted(); WX.nf.w = 0; WX.w = 0;
+  if (WX.ssr) rt.depthTexture = new THREE.DepthTexture(rt.width, rt.height);   /* Regen: die Pfützen-Spiegelung liest die Tiefe des letzten Bildes (Three.js löst die Tiefe ohnehin mit auf – hier landet sie in einer Textur statt in einem Puffer) */
   composer = new EffectComposer(renderer, rt);
+  if (WX.ssr && ultra) { const sw = new Pass(); sw.needsSwap = true; sw.render = () => {}; composer.addPass(sw); }   /* Ultra: der AO-Durchgang tauscht die Puffer ein zweites Mal – mit diesem dritten Tausch wechselt die Szene wieder je Bild den Puffer, der andere hält Farbe + Tiefe des letzten Bildes */
   composer.addPass(new SplitRenderPass(scene, camera));
   if (ultra) { // Umgebungsverdeckung in Echtzeit nur noch bei Ultra – sonst kommt sie gebacken aus der Schatten-Textur
     syncAoCam(); const ao = new GTAOPass(scene, aoCam, innerWidth, innerHeight), aoS = ultra ? 0.75 : 0.5, aoSet = ao.setSize.bind(ao); ao.setSize = (w, h) => aoSet(Math.max(1, Math.round(w * aoS)), Math.max(1, Math.round(h * aoS)));
@@ -2660,6 +2664,317 @@ function applyGfx() {
   buildComposer();
   scene.traverse(o => { if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m.needsUpdate = true); });
   resize();
+}
+
+/* ======================= Wetter: Regen (v2.95) =======================
+   S.wx = 'dry' | 'light' | 'heavy' | 'auto' im Schnellen Spiel und Zeitrennen ('auto' lost nach der echten Regenwahrscheinlichkeit der Strecke aus, RAIN_P);
+   in der Karriere wird je Rennwochenende einmal ausgelost und gespeichert (CHP.wx). Details, Messwerte und Quellen: docs/WETTER.md.
+   Leistung: Trocken ist nichts davon aktiv – die Shader-Zusätze stehen hinter #ifdef WX_WET (im trockenen Programm nicht enthalten), Regen, Lichtkegel-Regen und Gischt
+   sind unsichtbar und rechnen nicht. Umgeschaltet wird ohne Streckenneubau (applyWeather): Himmel/Nebel/Licht, Material-Defines, Umgebung. */
+const RAIN_P = { mel: [0.104, 0.24], chn: [0.223, 0.22], suz: [0.149, 0.29], bhr: [0.003, 0.25], jed: [0.003, 0.25], mia: [0.199, 0.45], mtl: [0.136, 0.35], mc: [0.195, 0.24], bcn: [0.026, 0.33], rbr: [0.151, 0.45], sil: [0.241, 0.31], spa: [0.284, 0.32], hun: [0.215, 0.34], zan: [0.177, 0.34], monza: [0.086, 0.44], mad: [0.056, 0.29], baku: [0.014, 0.25], sgp: [0.143, 0.33], cota: [0.032, 0.45], mex: [0.034, 0.45], bra: [0.309, 0.45], vegas: [0.017, 0.25], qat: [0.013, 0.25], yas: [0.002, 0.25], nos: [0.170, 0.29], genk: [0.161, 0.38], wack: [0.157, 0.30] };   /*@RAIN_P – [Regenwahrscheinlichkeit, Anteil starker Regen], erzeugt mit tools/wetter */
+// rain: Stärke des Niederschlags, wet: Nässe der Fahrbahn, pud: Pfützen-Schwelle (kleiner = mehr Pfützen), cov: Pfützenanteil in der Ferne, grip/brk/acc: Fahrphysik
+const WXLV = { dry: { rain: 0, wet: 0, pud: 1, cov: 0, grip: 1, brk: 1, acc: 1 }, light: { rain: 0.42, wet: 0.72, pud: 0.6, cov: 0.1, grip: 0.86, brk: 0.88, acc: 0.92 }, heavy: { rain: 1, wet: 1, pud: 0.53, cov: 0.3, grip: 0.75, brk: 0.79, acc: 0.84 } };
+const WX = { cur: 'dry', on: false, rain: 0, wet: 0, pud: 1, cov: 0, grip: 1, brk: 1, acc: 1, ssr: false, bid: -1, th0: null, far0: 0, mats: [], soil: [], nofog: [], pools: [], imps: [], lamps: [], vp: new THREE.Matrix4(), nf: new THREE.Vector4(0.3, 4000, 0, 0), w: 0, t: 0, pv: new THREE.Vector3(), cv: new THREE.Vector3(), has: false };
+const WXN = 128;
+// Pfützenkarte: kachelbares, weiches Rauschen. Shader und Fahrphysik lesen dieselben Werte (wxPudAt) – wo man eine Pfütze sieht, ist auch eine.
+const WXPUD = (() => { const n = WXN, d = new Float32Array(n * n); let s = 20261124; const rnd = () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
+  for (const [per, amp] of [[4, 0.5], [8, 0.3], [16, 0.2]]) { const g = new Float32Array(per * per); for (let k = 0; k < g.length; k++) g[k] = rnd();
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) { const fx = x / n * per, fy = y / n * per, x0 = Math.floor(fx), y0 = Math.floor(fy); let tx = fx - x0, ty = fy - y0; tx = tx * tx * (3 - 2 * tx); ty = ty * ty * (3 - 2 * ty);
+      const a = g[(y0 % per) * per + x0 % per], b = g[(y0 % per) * per + (x0 + 1) % per], c = g[((y0 + 1) % per) * per + x0 % per], e = g[((y0 + 1) % per) * per + (x0 + 1) % per];
+      d[y * n + x] += (a + (b - a) * tx + (c - a) * ty + (a - b - c + e) * tx * ty) * amp; } }
+  const u8 = new Uint8Array(n * n * 4); for (let k = 0; k < n * n; k++) { const v = Math.round(clamp(d[k], 0, 1) * 255); u8[k * 4] = u8[k * 4 + 1] = u8[k * 4 + 2] = v; u8[k * 4 + 3] = 255; }
+  const tex = new THREE.DataTexture(u8, n, n, THREE.RGBAFormat); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.magFilter = THREE.LinearFilter; tex.minFilter = THREE.LinearMipmapLinearFilter; tex.generateMipmaps = true; tex.needsUpdate = true;
+  const at = (u, v) => { u = u * n - 0.5; v = v * n - 0.5; const x0 = Math.floor(u), y0 = Math.floor(v), fx = u - x0, fy = v - y0, w = k => ((k % n) + n) % n, g = (x, y) => u8[(w(y) * n + w(x)) * 4] / 255;
+    return (g(x0, y0) * (1 - fx) + g(x0 + 1, y0) * fx) * (1 - fy) + (g(x0, y0 + 1) * (1 - fx) + g(x0 + 1, y0 + 1) * fx) * fy; };
+  return { tex, at }; })();
+// Pfützenwert an einer Weltposition (wie im Shader): 0 = keine Pfütze … 1 = stehendes Wasser. i/lat: Streckenpunkt und Querlage (Ideallinie ist trockener gefahren)
+function wxPudAt(x, z, i, lat) { if (!WX.on) return 0; let n = WXPUD.at(x * 0.019, z * 0.019) * 0.62 + WXPUD.at(x * 0.053 + 0.37, z * 0.053 + 0.11) * 0.38;
+  if (i !== undefined && RL && HW && Math.abs(lat) <= HW[i]) { const rd = lat - RL[i]; n -= Math.exp(-rd * rd / 7) * 0.14; n += clamp((Math.abs(lat) / HW[i] - 0.62) / 0.38, 0, 1) * 0.05; }
+  return clamp((n - WX.pud) / 0.045, 0, 1); }
+// gemeinsame Uniforms aller nassen Bodenmaterialien
+const WXU = { tWxPud: { value: WXPUD.tex }, uWxA: { value: new THREE.Vector4(0, 1, 0, 0) }, uWxB: { value: new THREE.Vector4(1, 0, 0, 0) }, uWxSky: { value: new THREE.Vector3(0.5, 0.55, 0.6) },
+  tWxPrev: { value: null }, tWxPrevD: { value: null }, uWxPVP: { value: new THREE.Matrix4() }, uWxNF: { value: new THREE.Vector4(0.3, 4000, 0, 0) } };
+// je Belagsart: x Nässefilm, y Pfützen, z Spiegelung, w Abdunkelung (nasser Asphalt ist deutlich dunkler, Farbe kaum)
+const WXK = { asph: { value: new THREE.Vector4(1, 1, 1, 0.5) }, paint: { value: new THREE.Vector4(1, 0.35, 0.9, 0.78) } };
+const WX_GLSL = `
+#ifdef WX_WET
+uniform sampler2D tWxPud; uniform vec4 uWxA, uWxB, uWxK; uniform vec3 uWxSky;
+float wxIGN(vec2 p) { return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715)))); }
+vec2 wxH2(vec2 p) { vec3 q = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973)); q += dot(q, q.yzx + 33.33); return fract((q.xx + q.yz) * q.zy); }
+// Tropfenringe: je Zelle fällt immer wieder ein Tropfen an einer zufälligen Stelle; liefert die Neigung der Wasseroberfläche (x, z)
+vec2 wxRing(vec2 p, float t) { vec2 id = floor(p), f = fract(p) - 0.5, h = wxH2(id); float ph = fract(t * (0.75 + 0.6 * h.x) + h.y * 7.0);
+  vec2 d = f - (h - 0.5) * 0.5; float r = length(d) + 1e-4, w = (r - ph * 0.42) * 30.0, a = sin(w) * exp(-w * w * 0.16) * (1.0 - ph) * (1.0 - ph); return d / r * a; }
+#ifdef WX_SSR
+// Spiegelung aus dem letzten Bild (Farbe + Tiefe liegen ohnehin vor, kein eigener Durchgang): der gespiegelte Strahl wird in wenigen Höhenstufen über der Fahrbahn
+// abgetastet (fein nahe am Boden für Autos und Banden, grob nach oben für Tribünen, Masten, Himmel), der Treffer zwischen zwei Stufen eingemessen.
+uniform sampler2D tWxPrev, tWxPrevD; uniform mat4 uWxPVP; uniform vec4 uWxNF;
+#if WX_STEPS == 4
+const float WX_H[4] = float[4](0.35, 1.1, 3.6, 15.0);
+#elif WX_STEPS == 6
+const float WX_H[6] = float[6](0.3, 0.75, 1.5, 3.5, 9.0, 24.0);
+#else
+const float WX_H[8] = float[8](0.22, 0.5, 0.9, 1.5, 2.8, 6.0, 13.0, 30.0);
+#endif
+float wxLin(float d) { float z = (d - uWxNF.z) / (1.0 - uWxNF.z) * 2.0 - 1.0; return 2.0 * uWxNF.x * uWxNF.y / (uWxNF.y + uWxNF.x - z * (uWxNF.y - uWxNF.x)); }
+vec3 wxSSR(vec3 P, vec3 R, vec3 sky) {
+  if (uWxNF.w < 0.5) return sky;
+  float jit = 0.72 + 0.56 * wxIGN(gl_FragCoord.xy), ry = max(R.y, 0.012), t0 = 0.0, d0 = 0.25, z0 = 0.0, ok = 0.0; vec2 uvH = vec2(0.5);
+  for (int i = 0; i < WX_STEPS; i++) {
+    float t = min(WX_H[i] * jit / ry, 1500.0);
+    vec4 c = uWxPVP * vec4(P + R * t, 1.0); if (c.w < 0.5) break;
+    vec2 uv = c.xy / c.w * 0.5 + 0.5; if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) { ok = -1.0; break; }
+    float dw = textureLod(tWxPrevD, uv, 0.0).r; if (dw < uWxNF.z) { ok = -1.0; break; }   // eigenes Auto in Helm-/TV-Kamera: liegt im vorderen Tiefenbereich und wird nicht gespiegelt
+    float d = wxLin(dw) - c.w;
+    if (d < 0.0) { if (-d < (t - t0) * 1.3 + 1.0 + c.w * 0.02) { float th = mix(t0, t, clamp(d0 / (d0 - d), 0.0, 1.0)); vec4 ch = uWxPVP * vec4(P + R * th, 1.0); uvH = ch.xy / ch.w * 0.5 + 0.5; ok = 1.0; break; } }   // sonst: hinter etwas Dünnem vorbei, weiter
+    else { d0 = d; t0 = t; z0 = c.w; }
+  }
+  if (ok == 0.0) {   // nichts getroffen: Blick in die Ferne (Himmel, Flutlichter, Kulisse)
+    vec4 c = uWxPVP * vec4(R, 0.0);
+    if (c.w > 1e-4) { vec2 uv = c.xy / c.w * 0.5 + 0.5; if (uv.x > 0.0 && uv.x < 1.0 && uv.y > 0.0 && uv.y < 1.0) { float dw = textureLod(tWxPrevD, uv, 0.0).r; if (dw >= uWxNF.z && wxLin(dw) > z0 * 0.85) { uvH = uv; ok = 1.0; } } }
+  }
+  if (ok < 0.5) return sky;
+  vec2 e = smoothstep(vec2(0.0), vec2(0.06), uvH) * smoothstep(vec2(0.0), vec2(0.06, 0.1), 1.0 - uvH);
+  vec3 col = clamp(textureLod(tWxPrev, uvH, 0.0).rgb, vec3(0.0), vec3(32.0));
+  return mix(sky, col, e.x * e.y);
+}
+#endif
+#endif
+`;
+// Nässe in ein Bodenmaterial einbauen (einmal beim Streckenbau; aktiv erst mit dem Define WX_WET). Braucht die Weltposition aus bakeMat (vBkW, vBkN).
+function wetMat(m, kind) {
+  if (!m || m.userData.wx || !m.userData.bk || !m.isMeshStandardMaterial) return false;
+  m.userData.wx = kind; const prev = m.onBeforeCompile, pk = m.customProgramCacheKey, rub = !!m.userData.wxRub;
+  m.onBeforeCompile = function (sh, r) { if (prev) prev.call(this, sh, r); Object.assign(sh.uniforms, WXU); sh.uniforms.uWxK = WXK[kind];
+    sh.fragmentShader = WX_GLSL + sh.fragmentShader.replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+      #ifdef WX_WET
+      float wxPud = 0.0, wxFilm = uWxA.x * uWxK.x, wxDist = distance( cameraPosition, vBkW );
+      { float wn = texture2D( tWxPud, vBkW.xz * 0.019 ).r * 0.62 + texture2D( tWxPud, vBkW.xz * 0.053 + vec2( 0.37, 0.11 ) ).r * 0.38;
+        ${rub ? 'float wrd = ( vRub.x - vRub.y ) * 2.0 * vRub.z; wn += ( smoothstep( 0.62, 1.0, abs( vRub.x - 0.5 ) * 2.0 ) * 0.05 - exp( - wrd * wrd / 7.0 ) * 0.14 ) * step( 0.5, vRub.z );' : ''}
+        wxPud = smoothstep( uWxA.y, uWxA.y + 0.045, wn ) * uWxK.y;
+        wxPud = mix( wxPud, uWxB.z * uWxK.y, smoothstep( 70.0, 220.0, wxDist ) ) * smoothstep( 0.82, 0.97, vBkN );   /* in der Ferne mittelt die Karte aus: dort der mittlere Pfützenanteil */
+        wxFilm *= 0.8 + 0.2 * smoothstep( uWxA.y - 0.22, uWxA.y - 0.02, wn ); }
+      diffuseColor.rgb *= mix( 1.0, uWxK.w, wxFilm ) * mix( 1.0, 0.62, wxPud );
+      roughnessFactor = mix( mix( roughnessFactor, 0.36, wxFilm ), 0.05, wxPud );
+      #endif`)
+    .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+      #ifdef WX_WET
+      normal = normalize( mix( normal, nonPerturbedNormal, max( wxPud, wxFilm * 0.72 ) ) );   /* Wasser füllt das Relief */
+      if ( wxPud > 0.02 && wxDist < 45.0 && uWxB.y > 0.0 ) { vec2 wrg = wxRing( vBkW.xz * 1.9, uWxA.z ) + wxRing( vBkW.xz * 3.1 + 5.7, uWxA.z * 1.13 + 0.4 ) * 0.7;
+        normal = normalize( normal + ( viewMatrix * vec4( wrg.x, 0.0, wrg.y, 0.0 ) ).xyz * ( uWxB.y * wxPud * ( 1.0 - wxDist / 45.0 ) ) ); }
+      #endif`)
+    .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
+      #ifdef WX_WET
+      { vec3 wV = normalize( vBkW - cameraPosition ), wN = normalize( ( vec4( normal, 0.0 ) * viewMatrix ).xyz ); wN.y = abs( wN.y );
+        float wF0 = mix( 0.025, 0.075, wxPud ), wF = wF0 + ( 1.0 - wF0 ) * pow( 1.0 - clamp( dot( - wV, wN ), 0.0, 1.0 ), 5.0 ), wK = wF * mix( 0.34 * wxFilm, 1.0, wxPud ) * uWxK.z;
+        vec3 wR = reflect( wV, wN ); wR.y = max( wR.y, 0.0 ); wR = normalize( wR );
+        vec3 wSky = uWxSky * ( 0.8 + 0.5 * ( 1.0 - wR.y ) * ( 1.0 - wR.y ) );
+        #ifdef WX_SSR
+        vec3 wC = wK > 0.03 ? wxSSR( vBkW, wR, wSky ) : wSky;   /* unter 3 % Spiegelanteil (steiler Blick auf nur feuchten Asphalt) lohnt die Suche nicht */
+        #else
+        vec3 wC = wSky;
+        #endif
+        reflectedLight.directSpecular *= mix( 1.0, uWxB.x, wxFilm );
+        reflectedLight.directDiffuse *= 1.0 - wK * uWxB.w; reflectedLight.indirectDiffuse *= 1.0 - wK * uWxB.w;
+        reflectedLight.indirectSpecular += wC * wK; }
+      #endif`); };
+  m.customProgramCacheKey = function () { return (pk ? pk.call(this) : '') + '|wx' + kind + (rub ? 'r' : ''); };
+  m.needsUpdate = true; return true;
+}
+// Nach dem Schatten-Backen: Bodenmaterialien einsammeln und einteilen – Asphalt/Beton (Pfützen + Spiegelung), Farbe/Curbs (glänzender Film), Erde/Gras/Kies (nur dunkler)
+function wxCollect(objs) {
+  WX.mats.length = 0; WX.soil.length = 0; WX.nofog.length = 0; WX.pools.length = 0;
+  const soilSrc = new Set([TEX.grassP, TEX.grass, TEX.gravel, TEX.gravelOld, TEX.sand, TEX.tuft, TEX.leaf].filter(Boolean).map(t => t.source)), seen = new Set();
+  for (const o of objs) { if (!(o.userData.flat || o.userData.ground || o.userData.tile) || o.userData.tuft) continue;
+    for (const m of [].concat(o.material)) { if (!m || seen.has(m)) continue; seen.add(m);
+      const mp = m.map, soil = !!(mp && (soilSrc.has(mp.source) || mp.userData.gv || mp.userData.fol || mp.userData.soil));
+      if (soil) { WX.soil.push([m, m.color.clone()]); continue; }
+      if (wetMat(m, mp ? 'asph' : 'paint')) WX.mats.push(m); } }
+  trackGroup.traverse(o => { const m = o.material; if (m && !Array.isArray(m) && m.userData.pool && !WX.pools.some(q => q[0] === m)) WX.pools.push([m, m.color.clone()]); });
+  trackGroup.traverse(o => { const m = o.material; if (m && !Array.isArray(m) && m.fog === false && !m.transparent && m.blending === THREE.NormalBlending && (m.isMeshBasicMaterial || m.isMeshStandardMaterial || m.isMeshLambertMaterial) && !WX.nofog.includes(m)) WX.nofog.push(m); });
+}
+// Stimmung bei Regen aus dem Thema der Strecke ableiten (das trockene Thema bleibt unverändert; nicht überschriebene Werte kommen über die Prototyp-Kette)
+function wxTheme(T, k) { const hv = k === 'heavy', W = Object.create(T), L0 = T.look || {};
+  if (T.night) {   // Nachtrennen: der Himmel ist ohnehin schwarz – Dunst im Flutlicht, mehr Leuchten, nasse Fahrbahn spiegelt die Lampen
+    const f = new THREE.Color(T.fog).lerp(new THREE.Color(0x2a2f3a), 0.4);
+    Object.assign(W, { fog: f.getHex(), fogNear: T.fogNear * (hv ? 0.2 : 0.35), fogFar: T.fogFar * (hv ? 0.55 : 0.75), clouds: [0, .6, 1, 0],
+      look: { ...L0, bloom: (L0.bloom ?? .4) + (hv ? 0.16 : 0.1), thr: (L0.thr ?? 1.05) - 0.08, sat: (L0.sat ?? 1.1) * 0.94, vig: (L0.vig ?? .36) + 0.04 }, wxSky: [0.11, 0.11, 0.125], wxSpec: 0.12, wxKeep: 0.45 });   /* wxSky: der vom Flutlicht aufgehellte Dunst über der Strecke spiegelt sich als matter Glanz – sonst wäre die nasse Bahn im flachen Blick schwarz */
+  } else {
+    const fog = hv ? 0x8a929b : 0xa3abb4, sk = hv ? 0.62 : 0.8;
+    Object.assign(W, { phys: { turb: 10, ray: 0.35, mie: .003, g: .7, gain: hv ? 0.1 : 0.14 }, sky: hv ? [0x5c636b, 0x767d86, 0x8a929b] : [0x767d86, 0x8f97a0, 0xa3abb4], fog, fogNear: hv ? 35 : 80, fogFar: hv ? 1150 : 2300,
+      sunCol: 0x2a2d32, lightCol: 0xdde4ec, sunI: T.sunI * (hv ? 0.07 : 0.12), sunCos: 2, sunExp: 4000, clouds: [1, hv ? 0.2 : 0.26, 0.5, 3.7], cloudRGB: hv ? [0.98, 1.03, 1.1] : [1.35, 1.42, 1.5], haze: 0.97, hazeCol: fog,   /* Wolkendecke: heller als alles am Boden (HDR), dünnere Stellen leuchten etwas durch */
+      hemi: [0xb6c0cb, 0x4b5049, T.hemi[2] * 1.25], exposure: T.exposure * (hv ? 0.94 : 1), flare: 0, rays: 0,
+      look: { ...L0, sat: (L0.sat ?? 1.1) * (hv ? 0.76 : 0.84), con: (L0.con ?? 1.08) * 0.97, warm: Math.min(L0.warm ?? 0, 0) - 0.12, tint: [0.97, 1.0, 1.03], sh: [0.95, 1.0, 1.05], hi: [0.99, 1.0, 1.02], vig: (L0.vig ?? .3) + 0.05, bloom: (L0.bloom ?? .32) + 0.04 },
+      envSky: [1.05 * sk, 1.12 * sk, 1.22 * sk], wxSky: [0.86 * sk, 0.91 * sk, 0.98 * sk], wxSpec: 0.5 });
+  }
+  W.wx = k; return W; }
+// Himmel, Nebel und Licht aus dem gerade gültigen Thema setzen (auch beim Streckenbau)
+function applyAtmo() {
+  const u = skyMat.uniforms; u.top.value.setHex(TH.sky[0]); u.mid.value.setHex(TH.sky[1]); u.hor.value.setHex(TH.sky[2]);
+  u.sunDir.value.set(...TH.sunDir).normalize(); u.sunCol.value.setHex(TH.sunCol); u.cloudCol.value.setHex(TH.cloudCol || 0xffffff); if (TH.cloudRGB) u.cloudCol.value.setRGB(...TH.cloudRGB); u.cloud.value.set(...(TH.clouds || [0, .6, 1, 0]));
+  scene.fog = new THREE.Fog(TH.fog, TH.fogNear, TH.fogFar);
+  hemi.color.setHex(TH.hemi[0]); hemi.groundColor.setHex(TH.hemi[1]); hemi.intensity = TH.hemi[2];
+  sun.color.setHex(TH.lightCol ?? TH.sunCol); sun.intensity = TH.sunI;
+  flood.intensity = TH.flood;
+  sun.castShadow = TH.flood === 0; flood.castShadow = TH.flood > 0; flood.visible = TH.flood > 0;   /* Licht mit Stärke 0 nicht mitrechnen (sonst wertet jeder Pixel ein zweites Sonnenlicht aus) */
+  renderer.toneMappingExposure = TH.exposure;
+}
+const wxSSRWanted = () => WX.on && S.gfx !== 'low' && !window.__noSSR;
+// Wetter setzen: 'dry' | 'light' | 'heavy'. Baut die Strecke NICHT neu – Stimmung, Bodenmaterialien, Regen und Umgebung werden umgestellt.
+function applyWeather(k, force) {
+  if (!WXLV[k]) k = 'dry';
+  if (!TRK || !WX.th0) { Object.assign(WX, WXLV[k], { cur: k, on: k !== 'dry' }); return; }   // noch keine Strecke gebaut: buildTrack wendet es am Ende an
+  if (WX.cur === k && WX.bid === BID && !force) return;
+  const was = WX.ssr; Object.assign(WX, WXLV[k], { cur: k, on: k !== 'dry', bid: BID });
+  TH = WX.on ? wxTheme(WX.th0, k) : WX.th0; const day = WX.on && !TH.night;
+  applyAtmo();
+  camera.far = day ? Math.min(WX.far0, TH.fogFar * 1.08 + 250) : WX.far0; camera.updateProjectionMatrix();
+  for (const m of WX.nofog) { const f = !day; if (m.fog !== f) { m.fog = f; m.needsUpdate = true; } }   /* Kulisse ohne Nebel (Berge, Skyline): im Regen verschwindet sie im Dunst */
+  BAKE.u.bakeSun.value = TH.night ? 0.12 : WX.on ? (k === 'heavy' ? 0.14 : 0.24) : 1;   /* bedeckter Himmel: kaum Schlagschatten, die weiche Umgebungsverdeckung bleibt */
+  applySky(); buildEnv(TH.night ? 0x141218 : TH.ground === 'grass' ? 0x44582c : 0x8a7658);
+  WX.ssr = wxSSRWanted(); if (WX.ssr !== was) buildComposer(); else applyLook();
+  // Bodenmaterialien: Define setzen/entfernen (ein Shader je Zustand – im trockenen Programm steht kein Regen-Code)
+  const steps = S.gfx === 'ultra' ? 8 : isTouch ? 4 : 6;
+  for (const m of WX.mats) { const d = m.defines || (m.defines = {}), a = WX.on ? '' : undefined, b = WX.ssr ? '' : undefined, c = WX.ssr ? steps : undefined;
+    if (d.WX_WET !== a || d.WX_SSR !== b || d.WX_STEPS !== c) { for (const [n, v] of [['WX_WET', a], ['WX_SSR', b], ['WX_STEPS', c]]) { if (v === undefined) delete d[n]; else d[n] = v; } m.needsUpdate = true; } }
+  for (const [m, c0] of WX.soil) m.color.copy(c0).multiplyScalar(WX.on ? 1 - 0.2 * WX.wet : 1);   /* Gras, Kies, Sand: nass etwas dunkler */
+  for (const m of WX.imps) m.color.setScalar(day === !!m.userData.wxB ? 1 : day ? 0.62 : 1.6);   /* Fernbaum-Bilder: bei Sonne gebacken, jetzt bedeckt (oder umgekehrt) */
+  for (const [m, c0] of WX.pools) m.color.copy(c0).multiplyScalar(WX.on ? 0.7 : 1);   /* Lichtflecken der Flutlichter: nasser Asphalt streut wenig zurück – er spiegelt die Lampen stattdessen */
+  WXK.asph.value.w = TH.night ? 0.6 : 0.5;
+  WXU.uWxA.value.set(WX.wet, WX.pud, 0, WX.rain); WXU.uWxB.value.set(TH.wxSpec ?? 1, WX.rain > 0 ? 0.55 + 0.35 * WX.rain : 0, WX.cov, TH.wxKeep ?? 1); WXU.uWxSky.value.set(...(TH.wxSky || [0, 0, 0])); WXU.uWxNF.value.w = 0;
+  wxRainSetup();
+}
+window.__wx = (k, f) => { applyWeather(k, f); return WX.cur; }; window.__WX = WX;
+{ const m = /[?&]wetter=([a-z]+)/.exec(location.search), k = m && ({ leicht: 'light', stark: 'heavy', regen: 'heavy', trocken: 'dry', light: 'light', heavy: 'heavy', dry: 'dry' })[m[1]]; if (k) window.__wxForce = k; }   /* Testschalter: index.html?wetter=stark erzwingt das Wetter für jedes Rennen */
+// Je Bild vor dem Welt-Durchgang: die Spiegelung liest Farbe und Tiefe des LETZTEN Bildes aus dem zweiten Puffer des Composers (wb) – dazu dessen Kamera-Matrix.
+const _wxP = new THREE.Matrix4();
+function wxFrame(wb) {
+  const U = WXU; if (WX.w !== wb.width) { WX.w = wb.width; WX.nf.w = 0; }   // Auflösung geändert: der Puffer ist leer
+  U.tWxPrev.value = wb.texture; U.tWxPrevD.value = wb.depthTexture; U.uWxPVP.value.copy(WX.vp); U.uWxNF.value.copy(WX.nf);
+  camera.updateMatrixWorld(); const sp = splitOn(), n = sp ? camera.near * (WORLD_NEAR / 0.07) : camera.near, f = camera.far, e = _wxP.copy(camera.projectionMatrix).elements;
+  e[10] = -(f + n) / (f - n); e[14] = -2 * f * n / (f - n);   // Projektion des Welt-Durchgangs (Helm-/TV-Kamera: eigene Nahgrenze, Tiefenbereich ab CAR_DR)
+  WX.vp.multiplyMatrices(_wxP, camera.matrixWorldInverse); WX.nf.set(n, f, sp && !window.__oldCar ? CAR_DR : 0, 1);
+}
+
+// ---------- Regen: feine Streifen in einem Kasten um die Kamera (alles im Vertex-Shader, kein Rechnen und Hochladen je Bild) ----------
+// Jeder Tropfen ist eine Linie vom Tropfen zu seiner Position eine Belichtungszeit früher – relativ zur Kamera: bei Tempo werden die Striche lang und laufen auf
+// den Fluchtpunkt zu. Additiv in Himmelsfarbe: vor dunklem Hintergrund sichtbar, vor dem hellen Himmel fast nicht (wie in echt).
+// Nachts leuchtet Regen nur, wo Flutlicht hinfällt: Helligkeit aus der Lichtkarte der Strecke (WXM, von oben gezeichnet); überdachte Stellen (Tunnel) bleiben trocken.
+const WXM = { tex: null, r: new THREE.Vector4(0, 0, 1, 1) };
+const RAINFX = (() => {
+  const N = 5600, P = new Float32Array(N * 6), SD = new Float32Array(N * 8), E = new Float32Array(N * 2);
+  for (let i = 0; i < N; i++) { const a = Math.random(), b = Math.random(), c = Math.random(), d = Math.random(); for (let k = 0; k < 2; k++) { SD.set([a, b, c, d], (i * 2 + k) * 4); E[i * 2 + k] = k; } }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(P, 3)); geo.setAttribute('aSeed', new THREE.BufferAttribute(SD, 4)); geo.setAttribute('aEnd', new THREE.BufferAttribute(E, 1));
+  const blank = new THREE.DataTexture(new Uint8Array([255, 0, 0, 255]), 1, 1, THREE.RGBAFormat); blank.needsUpdate = true;
+  const mat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false,
+    uniforms: { uCam: { value: new THREE.Vector3() }, uFall: { value: new THREE.Vector3(0.6, -8.6, 0.3) }, uCamV: { value: new THREE.Vector3() }, uBox: { value: new THREE.Vector3(26, 15, 26) }, uT: { value: 0 }, uExp: { value: 0.032 }, uAmt: { value: 1 },
+      uNight: { value: 0 }, uCol: { value: new THREE.Color(0.6, 0.64, 0.7) }, tMask: { value: blank }, uMaskR: { value: WXM.r } },
+    vertexShader: `attribute vec4 aSeed; attribute float aEnd; uniform vec3 uCam, uFall, uCamV, uBox; uniform float uT, uExp, uAmt, uNight; uniform sampler2D tMask; uniform vec4 uMaskR; varying float vA;
+      void main() { float sp = 0.8 + 0.4 * aSeed.w;
+        vec3 p = mod( aSeed.xyz * uBox + uFall * ( uT * sp ) - uCam, uBox ) - 0.5 * uBox;   // Lage relativ zur Kamera, läuft im Kasten um
+        vec3 rel = uFall * sp - uCamV; float rl = length( rel ) * uExp, rk = min( 1.0, 0.85 / max( rl, 1e-4 ) );   // Strich höchstens 85 cm lang (sonst wird Regen bei Tempo zu „Warp-Streifen“)
+        vec3 w = uCam + p - rel * ( uExp * rk * aEnd );   // Schweif: wo der Tropfen eine Belichtungszeit vorher war
+        gl_Position = projectionMatrix * viewMatrix * vec4( w, 1.0 );
+        vec3 q = abs( p ) / uBox; float a = smoothstep( 0.5, 2.2, length( p ) ) * ( 1.0 - smoothstep( 0.36, 0.5, max( q.x, max( q.y, q.z ) ) ) );
+        a *= step( fract( aSeed.w * 7.31 ), uAmt ) * ( 0.55 + 0.45 * fract( aSeed.w * 13.7 ) );
+        vec4 mk = texture2D( tMask, ( w.xz - uMaskR.xy ) * uMaskR.zw ); a *= ( 1.0 - mk.g ) * mix( 1.0, mk.r, uNight );
+        vA = a * ( 1.0 - 0.9 * aEnd ) / ( 1.0 + length( uCamV ) * 0.016 ); }`,
+    fragmentShader: `uniform vec3 uCol; varying float vA; void main() { gl_FragColor = vec4( uCol, vA );
+      #include <tonemapping_fragment>
+      #include <colorspace_fragment>
+      }` });
+  const m = new THREE.LineSegments(geo, mat); m.frustumCulled = false; m.visible = false; m.renderOrder = 6; scene.add(m);
+  return { m, mat, u: mat.uniforms, blank };
+})();
+// Regen in den Lichtkegeln der Flutlichter (Nachtrennen): je Mast ein zur Kamera gedrehtes Band vom Lampenkopf zum beleuchteten Fleck. Nah sieht man einzelne
+// fallende Striche, in der Ferne verschmelzen sie zu einem hellen Schleier unter der Lampe – so sieht Regen im Flutlicht aus. Ein Zeichenaufruf für alle Masten.
+const RAINC = (() => {
+  const geo = new THREE.InstancedBufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute([-1, 0, 0, 1, 0, 0, 1, 1, 0, -1, 1, 0], 3)); geo.setIndex([0, 1, 2, 0, 2, 3]);
+  const mat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, side: THREE.DoubleSide,
+    uniforms: { uT: { value: 0 }, uCol: { value: new THREE.Color(1, 0.96, 0.88) }, uAmt: { value: 1 } },
+    vertexShader: `attribute vec3 aHead, aFoot; varying vec3 vP; varying vec2 vQ; varying float vF;
+      void main() { vec3 ax = aFoot - aHead; float t = position.y; vec3 c = aHead + ax * t;
+        vec3 sd = normalize( cross( ax, cameraPosition - c ) ); float wd = mix( 1.6, 9.5, t ); vec3 w = c + sd * ( position.x * wd );
+        vP = w; vQ = vec2( position.x, t ); vec4 mv = viewMatrix * vec4( w, 1.0 ); vF = ( 1.0 - smoothstep( 260.0, 420.0, - mv.z ) ) * smoothstep( 5.0, 16.0, - mv.z ); gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `uniform float uT, uAmt; uniform vec3 uCol; varying vec3 vP; varying vec2 vQ; varying float vF;
+      float h1( float p ) { p = fract( p * 0.1031 ); p *= p + 33.33; p *= p + p; return fract( p ); }
+      float h2( vec2 p ) { vec3 q = fract( vec3( p.xyx ) * 0.1031 ); q += dot( q, q.yzx + 33.33 ); return fract( ( q.x + q.y ) * q.z ); }
+      void main() { float ed = 1.0 - vQ.x * vQ.x, cone = ed * ed * smoothstep( 0.0, 0.05, vQ.y ) * ( 1.0 - smoothstep( 0.55, 1.0, vQ.y ) ) / ( 1.0 + vQ.y * vQ.y * 7.0 );   // hell am Lampenkopf, läuft zum Boden und zum Rand aus
+        float x = dot( vP.xz, vec2( 0.8, 0.6 ) ) * 17.0, cx = floor( x ), r = h1( cx ), y = ( vP.y + uT * ( 7.5 + r * 5.5 ) ) / ( 0.7 + r * 0.9 ) + r * 37.0, fy = fract( y ), r2 = h2( vec2( cx, floor( y ) ) );
+        float on = step( 1.0 - 0.3 * uAmt, r2 ), st = on * smoothstep( 0.0, 0.05, fy ) * smoothstep( 0.2 + 0.25 * fract( r2 * 9.7 ), 0.06, fy ) * smoothstep( 0.42, 0.12, abs( fract( x ) - 0.5 ) );   // dünne Striche, unterschiedlich lang und schnell
+        float fw = fwidth( x ), a = mix( st * 1.1, 0.05 * uAmt, smoothstep( 0.3, 1.1, fw ) );   // fern: einzelne Striche sind kleiner als ein Pixel – gleichmäßiger Schleier statt Flimmern
+        gl_FragColor = vec4( uCol, ( a + 0.035 * uAmt ) * cone * vF );
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }` });
+  const m = new THREE.Mesh(geo, mat); m.frustumCulled = false; m.visible = false; m.renderOrder = 5; scene.add(m);
+  return { m, mat, geo, n: 0 };
+})();
+// Gischt: weiche Wasserschleier hinter den Hinterrädern (wenige, große, schwache Partikel; in Kameranähe ausgeblendet – sonst füllt ein Schleier das ganze Bild)
+const SPRAY = (() => {
+  const n = 1400, p = new Float32Array(n * 3), v = new Float32Array(n * 3), life = new Float32Array(n), max = new Float32Array(n), s = new Float32Array(n * 2), al = new Float32Array(n), size = new Float32Array(n), a = new Float32Array(n);
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(p, 3)); geo.setAttribute('aSize', new THREE.BufferAttribute(size, 1)); geo.setAttribute('aA', new THREE.BufferAttribute(a, 1));
+  const mat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, fog: false, uniforms: { uScale: { value: 500 }, uCol: { value: new THREE.Color(0.7, 0.73, 0.78) } },
+    vertexShader: `attribute float aSize, aA; uniform float uScale; varying float vA; void main() { vec4 mv = modelViewMatrix * vec4( position, 1.0 ); float d = - mv.z;
+        vA = aA * smoothstep( 1.3, 5.0, d ); gl_PointSize = vA > 0.003 ? min( aSize * uScale / max( d, 0.1 ), 420.0 ) : 0.0; gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `uniform vec3 uCol; varying float vA; void main() { float d = length( gl_PointCoord - 0.5 ), k = smoothstep( 0.5, 0.05, d ); gl_FragColor = vec4( uCol, vA * k * sqrt( k ) );
+      #include <tonemapping_fragment>
+      #include <colorspace_fragment>
+      }` });
+  const pts = new THREE.Points(geo, mat); pts.frustumCulled = false; pts.visible = false; pts.renderOrder = 4; scene.add(pts);
+  const o = { n, i: 0, live: false, pts, mat,
+    emit(x, y, z, vx, vy, vz, lf, s0, s1, a0) { const i = o.i; o.i = (i + 1) % n; o.live = true; p[i * 3] = x; p[i * 3 + 1] = y; p[i * 3 + 2] = z; v[i * 3] = vx; v[i * 3 + 1] = vy; v[i * 3 + 2] = vz; life[i] = max[i] = lf; s[i * 2] = s0; s[i * 2 + 1] = s1; al[i] = a0; },
+    update(dt) { if (!o.live) { if (pts.visible) pts.visible = false; return; } let alive = 0; const dr = Math.exp(-1.9 * dt);
+      for (let i = 0; i < n; i++) { if (life[i] <= 0) { if (size[i] !== 0) { size[i] = 0; a[i] = 0; } continue; } alive++; life[i] -= dt; const t = 1 - Math.max(life[i], 0) / max[i], k = i * 3;
+        v[k] *= dr; v[k + 2] *= dr; v[k + 1] = v[k + 1] * dr - 0.5 * dt; p[k] += v[k] * dt; p[k + 1] += v[k + 1] * dt; p[k + 2] += v[k + 2] * dt;
+        size[i] = s[i * 2] + (s[i * 2 + 1] - s[i * 2]) * Math.sqrt(t); a[i] = al[i] * (1 - t) * (1 - t) * Math.min(1, t * 9); }
+      const A = geo.attributes; A.position.needsUpdate = A.aSize.needsUpdate = A.aA.needsUpdate = true; pts.visible = true; EVT.fx++; if (!alive) o.live = false; },
+    clear() { life.fill(0); size.fill(0); a.fill(0); o.live = false; pts.visible = false; } };
+  return o;
+})();
+// Regen-Objekte auf die Strecke einstellen: Lichtkarte (Flutlicht, Überdachung), Kegel je Mast, Farben
+function wxRainSetup() {
+  const on = WX.on, night = !!(TH && TH.night), U = RAINFX.u;
+  if (WXM.tex) { WXM.tex.dispose(); WXM.tex = null; }
+  RAINC.m.visible = false; RAINFX.m.visible = false; SPRAY.clear(); if (!on) return;
+  const cov = []; if (TRK.mc && TRK.mc.tun) cov.push([TRK.mc.tun[0] * L - 6, TRK.mc.tun[1] * L + 6]);   // Monaco: im Tunnel regnet es nicht
+  if (night || cov.length) {   // Lichtkarte von oben: R = Flutlicht am Boden, G = überdacht
+    let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (let i = 0; i < N; i += 4) { x0 = Math.min(x0, PX[i]); x1 = Math.max(x1, PX[i]); z0 = Math.min(z0, PZ[i]); z1 = Math.max(z1, PZ[i]); }
+    x0 -= 90; z0 -= 90; x1 += 90; z1 += 90; const W = x1 - x0, H = z1 - z0, n = Math.max(W, H) > 2600 ? 1024 : 512, cv = document.createElement('canvas'); cv.width = cv.height = n; const g = cv.getContext('2d');
+    g.fillStyle = night ? '#000' : '#f00'; g.fillRect(0, 0, n, n); g.globalCompositeOperation = 'lighter';
+    if (night) { for (const l of WX.lamps) { const x = (l[3] - x0) / W * n, y = (l[4] - z0) / H * n, r = 30 / W * n, gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, 'rgba(255,0,0,.95)'); gr.addColorStop(.5, 'rgba(255,0,0,.5)'); gr.addColorStop(1, 'rgba(255,0,0,0)'); g.fillStyle = gr; g.fillRect(x - r, y - r, 2 * r, 2 * r); }
+      if (!WX.lamps.length) { g.strokeStyle = 'rgba(255,0,0,.8)'; g.lineWidth = 46 / W * n; g.lineJoin = 'round'; g.beginPath(); for (let i = 0; i < N; i += 3) g[i ? 'lineTo' : 'moveTo']((PX[i] - x0) / W * n, (PZ[i] - z0) / H * n); g.closePath(); g.stroke(); } }
+    for (const [a, b] of cov) { g.strokeStyle = 'rgb(0,255,0)'; g.lineWidth = 34 / W * n; g.lineCap = 'butt'; g.beginPath(); let f = true; for (let s2 = a; s2 <= b; s2 += 3) { const i = Math.floor(modL(s2) / DS) % N; g[f ? 'moveTo' : 'lineTo']((PX[i] - x0) / W * n, (PZ[i] - z0) / H * n); f = false; } g.stroke(); }
+    const t = new THREE.CanvasTexture(cv); t.flipY = false; t.generateMipmaps = false; t.minFilter = t.magFilter = THREE.LinearFilter; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; WXM.tex = t; WXM.r.set(x0, z0, 1 / W, 1 / H);
+    U.tMask.value = t;
+  } else { U.tMask.value = RAINFX.blank; WXM.r.set(0, 0, 1, 1); }
+  U.uNight.value = night ? 1 : 0; U.uAmt.value = 0.3 + 0.7 * WX.rain; U.uT.value = 0; WX.has = false;
+  if (night) U.uCol.value.setRGB(0.8, 0.77, 0.7); else U.uCol.value.setHex(TH.fog).multiplyScalar(0.9);
+  SPRAY.mat.uniforms.uCol.value.copy(night ? new THREE.Color(0.2, 0.2, 0.215) : new THREE.Color(TH.fog).multiplyScalar(1.12));   /* nachts nur vom Flutlicht angestrahlt: grauer Schleier, kein leuchtender Fleck */
+  const LP = WX.lamps; RAINC.n = night && S.gfx !== 'low' ? LP.length : 0;
+  if (RAINC.n) { const g = RAINC.geo, h = new Float32Array(LP.length * 3), f = new Float32Array(LP.length * 3); LP.forEach((l, k) => { h.set([l[0], l[1], l[2]], k * 3); f.set([l[3], l[5] ?? 0, l[4]], k * 3); });
+    g.setAttribute('aHead', new THREE.InstancedBufferAttribute(h, 3)); g.setAttribute('aFoot', new THREE.InstancedBufferAttribute(f, 3)); g.instanceCount = LP.length; RAINC.mat.uniforms.uAmt.value = 0.45 + 0.55 * WX.rain; }
+}
+// Je Bild: Regen folgt der Kamera, Gischt hinter den Autos
+function wxTick(dt, now) {
+  if (!WX.on) return; const U = RAINFX.u, live = !window.__noRain;
+  WX.t = (WX.t + dt) % 3600; WXU.uWxA.value.z = WX.t;
+  if (!WX.has) { WX.pv.copy(camera.position); WX.cv.set(0, 0, 0); WX.has = true; }
+  if (dt > 0) { const k = Math.min(1, dt * 10), ix = (camera.position.x - WX.pv.x) / dt, iy = (camera.position.y - WX.pv.y) / dt, iz = (camera.position.z - WX.pv.z) / dt;
+    if (ix * ix + iy * iy + iz * iz < 200 * 200) { WX.cv.x += (ix - WX.cv.x) * k; WX.cv.y += (iy - WX.cv.y) * k; WX.cv.z += (iz - WX.cv.z) * k; }   /* Kamerasprung (Kamerawechsel): kein Riesenstrich */
+    WX.pv.copy(camera.position); U.uT.value += dt; RAINC.mat.uniforms.uT.value = WX.t; }
+  U.uCam.value.copy(camera.position); U.uCamV.value.copy(WX.cv); RAINFX.m.visible = live; RAINC.m.visible = live && RAINC.n > 0;
+  SPRAY.mat.uniforms.uScale.value = renderer.getDrawingBufferSize(_v2b).y / (2 * Math.tan(camera.fov * Math.PI / 360));
+  if (!paused) SPRAY.update(dt);
+}
+// Gischt eines Autos: hinter beiden Hinterrädern, Menge mit Tempo und Nässe; Gegner nur in Kameranähe
+function wxSpray(c, dt) {
+  if (!WX.on || S.gfx === 'low' || c.v < 9 || window.__noSpray) return;
+  const dx = c.x - camera.position.x, dz = c.z - camera.position.z, d2 = dx * dx + dz * dz; if (d2 > 150 * 150) return;
+  const on = c.surf === 'road' || c.surf === 'kerb' || c.surf === 'runoff', k = WX.wet * (on ? 1 : 0.35) * clamp((c.v - 9) / 45, 0, 1);
+  const rate = k * (d2 < 70 * 70 ? 30 : 14) * (c === pl ? 1.15 : 1); c.spAcc = (c.spAcc || 0) + rate * dt; if (c.spAcc < 1) return;
+  const fx = Math.sin(c.h), fz = Math.cos(c.h), rx = -fz, rz = fx, y0 = (c.ey || 0) + 0.3, hw = c.hb ? c.hb.hw * 0.78 : 0.75, zr = c.hb ? c.hb.zr + 0.5 : -1.6, big = 0.6 + 0.4 * WX.rain;
+  while (c.spAcc >= 1) { c.spAcc -= 1; const sd = (Math.random() < 0.5 ? -1 : 1) * hw * (0.5 + Math.random() * 0.6), back = 1.5 + Math.random() * 3.5, up = 1.6 + Math.random() * 2.6 + c.v * 0.02, sw = (Math.random() - 0.5) * 2.4;
+    SPRAY.emit(c.x + fx * zr + rx * sd, y0, c.z + fz * zr + rz * sd, fx * (c.v * 0.42 - back) + rx * sw, up, fz * (c.v * 0.42 - back) + rz * sw, 1.0 + Math.random() * 0.9, 0.8 + Math.random() * 0.5, (3.8 + Math.random() * 2.6) * big, (0.42 + Math.random() * 0.2) * k * big); }
 }
 
 // Himmel
@@ -2769,9 +3084,10 @@ function envProbe(es) {   // Umgebung -> Kugelflächenfunktionen (9 Koeffiziente
 }
 function buildEnv(groundCol) {
   const es = new THREE.Scene(), tmp = [], night = !!(TH && TH.night);
-  const s = new Sky(); s.material = skyPB.material; s.scale.setScalar(50); es.add(s);
+  const s = new Sky(); s.material = skyPB.material; s.scale.setScalar(50); if (!(TH && TH.envSky)) es.add(s);
   const mk = (geo, color, y) => { const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide })); m.position.y = y; es.add(m); tmp.push(m); return m; };
   const gc = new THREE.Color(groundCol);
+  if (TH && TH.envSky) mk(new THREE.SphereGeometry(90, 20, 10), new THREE.Color(...TH.envSky), 0);   /* Regen am Tag: gleichmäßig graue Wolkendecke als Lichtquelle */
   mk(new THREE.PlaneGeometry(400, 400).rotateX(-Math.PI / 2), gc.clone().lerp(new THREE.Color(0x30332e), 0.35), -3);   // Umland (leicht entsättigt: flach gesehenes Gras ist nie knallgrün)
   // Das Auto steht immer auf Asphalt: direkt unter und neben ihm spiegelt sich grauer Belag statt Wiese (sonst wirken Lack und Unterboden grünlich)
   mk(new THREE.CircleGeometry(11, 40).rotateX(-Math.PI / 2), night ? 0x0b0b0e : 0x39393c, -2.98);
@@ -3353,7 +3669,7 @@ function sideExtrude(pts, width, bevel = 0.04, seg = 16) {
 }
 function mapX(g, fn) { const p = g.attributes.position; for (let i = 0; i < p.count; i++) p.setX(i, fn(p.getX(i), p.getY(i), p.getZ(i))); g.computeVertexNormals(); return g; }
 
-const COMPOUNDS_ = [0xe8202a, 0xffd100, 0xf2f2f2];
+const COMPOUNDS_ = [0xe8202a, 0xffd100, 0xf2f2f2, 0x35b84c, 0x1f78dc];   // weich, mittel, hart; Regen: Intermediate (grün), Regenreifen (blau) – siehe wxWheels
 /* ======================= Autos ======================= */
 // hochdetailliertes Fahrzeugmodell (aus CAD-Modell reduziert, 3 Detailstufen) – Fallback: prozedurales Modell
 const CARBIN = await fetch('./car.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null);
@@ -3541,6 +3857,10 @@ const mkWheelM = (C, cover) => C ? C.lods.map((L, l) => {
   return { L: v(L.wheelL, hf, -1), R: v(L.wheelR, hf, 1), RL: v(L.rwheelL, hr, -1), RR: v(L.rwheelR, hr, 1) };
 }) : null;
 const WHEELM = mkWheelM(CARM, true), WHEELM2 = mkWheelM(CARM2);
+// Regen: Flankenmarkierung der Regenmischungen (3 = Intermediate, 4 = Regenreifen) erst erzeugen, wenn zum ersten Mal Regen fährt (spart Ladezeit und Speicher im Trockenen)
+function wxWheels(ci) { for (const [C, W, cover] of [[CARM, WHEELM, true], [CARM2, WHEELM2, false]]) { if (!C || !W || W[0].L[ci]) continue;
+  C.lods.forEach((L, l) => { const sg = [24, 12, 6][l], hf = C.hwf || 0.1695, hr = C.hwr || 0.2155, v = (g, hw, sd) => wheelGeoM(g, hw, ci, sg, cover && RF_IMG ? sd : 0);
+    W[l].L[ci] = v(L.wheelL, hf, -1); W[l].R[ci] = v(L.wheelR, hf, 1); W[l].RL[ci] = v(L.rwheelL, hr, -1); W[l].RR[ci] = v(L.rwheelR, hr, 1); }); } }
 const MODELS = { f1: CARM ? { C: CARM, W: WHEELM, helm: [0.79, 0.18], rl: [0.315, -2.335], swPos: [0, 0.60, 0.665], swS: 0.78, cam: [0, 0.765, 0.30, 3.0],   /* Lenkrad IN der Cockpitwanne (vorher z 0,98 = unter dem Vorderdeck, darüber gemalt), Augenpunkt etwas weiter hinten mit leichtem Blick nach unten wie in echten Onboards */ tv: [0, 1.04, 0.02, 2.4] } : null, f2: CARM2 ? { C: CARM2, W: WHEELM2, helm: [0.80, 0.21], rl: [0.40, -2.468], rlS: [0.085, 0.075, 0.02], swPos: [0, 0.61, 0.64], swS: 0.8, cam: [0, 0.795, 0.28, 3.5],   /* swS: Lenkrad im F2 kleiner – die Kamera sitzt dort viel näher dran */ tv: [0, 1.04, 0.02, 2.4] } : null };
 const COMPOUNDS = COMPOUNDS_;
 const WMAT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .88, metalness: .05, side: THREE.DoubleSide });
@@ -5974,7 +6294,7 @@ function treeSprites() {
   for (const kind of Object.keys(T.lists)) { const list = T.lists[kind]; if (!list.length) continue;
     let r = 0, H = 0; for (const [g] of T.parts[kind]) { const P = g.attributes.position; for (let i = 0; i < P.count; i++) { r = Math.max(r, Math.hypot(P.getX(i), P.getZ(i))); H = Math.max(H, P.getY(i)); } }
     const W = 2 * r * 1.03; H *= 1.03; const tex = treeImpostor(T.parts[kind], W, H);
-    const mat = new THREE.MeshBasicMaterial({ map: tex, alphaTest: 0.42, alphaToCoverage: true, side: THREE.DoubleSide });
+    const mat = new THREE.MeshBasicMaterial({ map: tex, alphaTest: 0.42, alphaToCoverage: true, side: THREE.DoubleSide }); mat.userData.wxB = WX.on && !TH.night ? 1 : 0; WX.imps.push(mat);   /* Fernbäume sind mit dem Licht beim Bau gebacken: bei späterem Wetterwechsel gleicht applyWeather die Helligkeit an */
     mat.onBeforeCompile = sh => {
       sh.vertexShader = 'varying float vTD; varying float vTK;\n' + sh.vertexShader.replace('#include <project_vertex>', `
         vec4 tcW = modelMatrix * instanceMatrix * vec4( 0.0, 0.0, 0.0, 1.0 ); float tsx = length( instanceMatrix[0].xyz ), tsy = length( instanceMatrix[1].xyz );
@@ -6352,7 +6672,7 @@ function poolMesh(list, w, l, mat) { const pos = [], uv = [], NX = 12, NZ = 16;
   const hY = (x, z) => { if (FLAT) return 0; const [d, j] = nearestDist(x, z); const lat = (x - PX[j]) * RX[j] + (z - PZ[j]) * RZ[j]; return Math.abs(lat) <= HW[j] + 0.3 ? ELEV[j] + bankY(j, lat) : Math.min(placeY(x, z), ELEV[j] + bankY(j, Math.sign(lat) * HW[j]) - 0.02); };   /* neben der Fahrbahn (Randstein, Auslauf liegen tiefer): auf Auslaufhöhe – vorher schwebte der Schein dort bis 12 cm */
   for (const [x0, z0, ang] of list) { const c = Math.cos(ang), sn = Math.sin(ang), V = (i, j) => { const lx = (i / NX - 0.5) * w, lz = (j / NZ - 0.5) * l, x = x0 + lx * c + lz * sn, z = z0 - lx * sn + lz * c; return [x, hY(x, z) + 0.06, z, i / NX, j / NZ]; };
     for (let i = 0; i < NX; i++) for (let j = 0; j < NZ; j++) for (const q of [[i, j], [i + 1, j + 1], [i + 1, j], [i, j], [i, j + 1], [i + 1, j + 1]]) { const v = V(q[0], q[1]); pos.push(v[0], v[1], v[2]); uv.push(v[3], v[4]); } }
-  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); const m = new THREE.Mesh(g, mat); m.userData.fixed = true; m.userData.clipSkip = true; m.renderOrder = 1; m.frustumCulled = false; return m; }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); const m = new THREE.Mesh(g, mat); mat.userData.pool = 1; m.userData.fixed = true; m.userData.clipSkip = true; m.renderOrder = 1; m.frustumCulled = false; return m; }
 
 // Auslaufzonen (Spa): Höhenfeld vorbelegen und glätten – eigene Funktionen, damit der JIT sie optimiert
 function zoneSeed(Y, FX, SEG, near, x0, z0, bw, bh) { const G1 = SEG + 1, px = PX, pz = PZ, hw = HW, el = ELEV;
@@ -6413,7 +6733,7 @@ function ropeLine(lat, LIM) {
 // Bereich der Boxengasse (wird in buildTrack ab Mauer +0,2 m bis +11 m gebaut, s = −300 … +160): dort keine Geländebänder, Büsche o. Ä.
 function pitZone(i, side) { if (TRK.noPit || side !== (TRK.pitOut ? -inSign : inSign)) return false; return i >= Math.round(modL(-310) / DS) || i <= Math.round(170 / DS); }
 function buildTrack(key) { BID++;
-  const _bt0 = performance.now(); TRK = TRACKS[key]; TH = THEMES[TRK.theme]; LOWER = ['chn', 'bhr', 'jed', 'mia', 'bcn', 'hun', 'zan', 'mad', 'baku', 'cota', 'mex', 'bra', 'qat'].includes(key) ? 1.2 : 4;   /* neue Strecken: Gelände hinter der Wand nur 1,2 m statt 4 m absenken – wo das Geländeband fehlt, schwebten sonst Bäume über einer 4-m-Senke */
+  const _bt0 = performance.now(); TRK = TRACKS[key]; TH = THEMES[TRK.theme]; WX.th0 = TH; WX.lamps.length = 0; WX.imps.length = 0; LOWER = ['chn', 'bhr', 'jed', 'mia', 'bcn', 'hun', 'zan', 'mad', 'baku', 'cota', 'mex', 'bra', 'qat'].includes(key) ? 1.2 : 4;   /* neue Strecken: Gelände hinter der Wand nur 1,2 m statt 4 m absenken – wo das Geländeband fehlt, schwebten sonst Bäume über einer 4-m-Senke */
   trackGroup.traverse(o => {
     if (o.geometry) o.geometry.dispose();
     if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (m.map && m.map.userData.own) m.map.dispose(); m.dispose(); });
@@ -6767,7 +7087,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   // Fahrbahn, Linien, Kerbs, Auslauf
   const [aMap, aNrm, aCol] = asphaltFor(TH);
   const roadM = new THREE.MeshStandardMaterial({ map: aMap, normalMap: aNrm, color: aCol || 0xffffff, normalScale: new THREE.Vector2(0.85, 0.85), roughness: .82, metalness: 0, envMapIntensity: .6, ...po(-2) }); sheenMat(roadM, TH.night ? 0.12 : 0.34); roadGrain(roadM);   // nachts ist der Horizont dunkel bzw. bunt beleuchtet -> nur ein Hauch
-  asphaltNoRepeat(roadM); rubberMat(roadM, TH.night ? 0.05 : 0.08);   /* sehr dezent: sonst wirkt die Spur als welliges Band */ rubberLine(hStrip(i => -HW[i], i => HW[i], 0.02, 0.02, roadM, { uFixed: true, vScale: 14 }));
+  asphaltNoRepeat(roadM); roadM.userData.wxRub = true; rubberMat(roadM, TH.night ? 0.05 : 0.08);   /* sehr dezent: sonst wirkt die Spur als welliges Band */ rubberLine(hStrip(i => -HW[i], i => HW[i], 0.02, 0.02, roadM, { uFixed: true, vScale: 14 }));
   { const id = ROADTEX[TRK.theme] || ROADTEX[TH.asph], k = TH.asph || 'std'; if (id && id !== 'asphalt_track') ROAD_WAIT = roadPhoto(id).then(P => { if (!P || roadM.userData.dead) return; roadM.map = P.d; roadM.normalMap = P.n; roadGrain(roadM); roadM.color.copy(photoTint(P, ASPH_T[k] || [70, 70, 72])); roadM.needsUpdate = true; }); }   // eigener Belag je Strecke
   const white = lam({ color: TH.night ? 0x9a9a9a : 0xf2f2f2, ...po(-3) });
   hStrip(i => HW[i] - .35, i => HW[i] - .12, .025, .025, white); hStrip(i => -HW[i] + .12, i => -HW[i] + .35, .025, .025, white);
@@ -7358,7 +7678,8 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
           const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(ps, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(cl, 3)); return beamUV(g, 3.2, 1.4); })();   /* oben doppelt so breit: der Strahl geht vom ganzen Lampenkopf aus (wirkte durch das Ausblenden zum Rand schmaler als die Lampe) */
         const beams = new THREE.InstancedMesh(bg, softBeamMat(new THREE.Color(0.11, 0.103, 0.088)), pp.length);
         pp.forEach((p, k) => { qq.setFromAxisAngle(_v2, p[2] + Math.PI / 2); m4.compose(pv.set(p[0], 0, p[1]), qq, one); beams.setMatrixAt(k, m4); }); beams.frustumCulled = false; beams.userData.clipSkip = true; beams.renderOrder = 2; trackGroup.add(beams);
-        trackGroup.add(lampHalos(pp.flatMap(p => { const a = p[2] + Math.PI / 2; return [p[0] - 1.2 * Math.cos(a), (FLAT ? 0 : placeY(p[0], p[1])) + 20, p[1] + 1.2 * Math.sin(a)]; }), new THREE.Color(0.3, 0.28, 0.24)));   /* Lampenkopf: lokal (−1,2 | 20 | 0), um a gedreht */
+        trackGroup.add(lampHalos(pp.flatMap(p => { const a = p[2] + Math.PI / 2; return [p[0] - 1.2 * Math.cos(a), (FLAT ? 0 : placeY(p[0], p[1])) + 20, p[1] + 1.2 * Math.sin(a)]; }), new THREE.Color(0.3, 0.28, 0.24)));
+        for (const p of pp) { const a = p[2] + Math.PI / 2, y = FLAT ? 0 : placeY(p[0], p[1]); WX.lamps.push([p[0] - 1.2 * Math.cos(a), y + 20, p[1] + 1.2 * Math.sin(a), p[0] - 14 * Math.cos(a), p[1] + 14 * Math.sin(a), y]); }   /* Regen im Lichtkegel: Lampenkopf und Mitte des Lichtflecks (lokal −14 | 0 | 0) */   /* Lampenkopf: lokal (−1,2 | 20 | 0), um a gedreht */
       }
     }
   }
@@ -8892,6 +9213,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
       I[0].castShadow = I[1].castShadow = true; trackGroup.add(...I);
       for (const [x, z] of pp) excl.push([x, z, 3]);
       if (night) trackGroup.add(lampHalos(pp.flatMap(([x, z, a]) => [x + 0.35 * Math.sin(a), (FLAT ? 0 : placeY(x, z)) + H + 2.1, z + 0.35 * Math.cos(a)]), new THREE.Color(0.32, 0.29, 0.24)));
+      if (night) for (const [x, z, a] of pp) { const y = FLAT ? 0 : placeY(x, z); WX.lamps.push([x + 0.35 * Math.sin(a), y + H + 2.1, z + 0.35 * Math.cos(a), x + 20 * Math.sin(a), z + 20 * Math.cos(a), y]); }   /* Regen im Lichtkegel */
       if (night && pp.length) {   /* Lichtkegel wie an allen Nachtstrecken: runder, weich auslaufender Strahl vom ganzen Scheinwerferfeld schräg auf die Strecke */
         const yT = H + 2.1, T = [[-3.5, yT - 1.6, 0.6], [3.5, yT - 1.6, 0.6], [3.5, yT + 1.6, 0.2], [-3.5, yT + 1.6, 0.2]], Bm = [[-10, 0, 10], [10, 0, 10], [10, 0, 30], [-10, 0, 30]], pos = [], col = [];
         for (let k = 0; k < 4; k++) { const k2 = (k + 1) % 4; for (const [P, c] of [[T[k], 1], [Bm[k], 0], [Bm[k2], 0], [T[k], 1], [Bm[k2], 0], [T[k2], 1]]) { pos.push(...P); col.push(c, c, c); } }
@@ -10227,7 +10549,8 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
         bm.forEach(([x, z, a, sc], k) => { qq.setFromAxisAngle(upv, a); sv.set(sc, sc, sc); m4.compose(pv.set(x, 0, z), qq, sv); beams.setMatrixAt(k, m4); }); beams.frustumCulled = false; beams.userData.clipSkip = true; beams.renderOrder = 2; trackGroup.add(beams);
         /* Schleier um die Scheinwerferfelder: weicher Lichthof mit fester Bildschirmgröße – nah klein gegen das Lampenfeld, in der Ferne ein deutlicher Glanz (wie Bloom im Dunst) */
         const haloT = canvasTex(128, 128, (g, w, h) => { const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.18, 'rgba(225,235,255,.55)'); gr.addColorStop(.5, 'rgba(180,200,255,.14)'); gr.addColorStop(1, 'rgba(150,170,230,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); haloT.userData.own = true;
-        const hp = []; for (const [x, z, a, sc] of pp) { const ca = Math.cos(a), sa = Math.sin(a); hp.push(x + sa * 0.4 * sc, (FLAT ? 0 : placeY(x, z)) + (H + 2.3) * sc, z + ca * 0.4 * sc); }
+        const hp = []; for (const [x, z, a, sc] of pp) { const ca = Math.cos(a), sa = Math.sin(a); hp.push(x + sa * 0.4 * sc, (FLAT ? 0 : placeY(x, z)) + (H + 2.3) * sc, z + ca * 0.4 * sc);
+          const y = FLAT ? 0 : placeY(x, z); WX.lamps.push([x + sa * 0.4 * sc, y + (H + 2.3) * sc, z + ca * 0.4 * sc, x + sa * 21 * sc, z + ca * 21 * sc, y]); }   /* Regen im Lichtkegel */
         const hg = new THREE.BufferGeometry(); hg.setAttribute('position', new THREE.Float32BufferAttribute(hp, 3));
         const halo = new THREE.Points(hg, new THREE.PointsMaterial({ map: haloT, size: 52, sizeAttenuation: false, color: new THREE.Color(0.17, 0.19, 0.25), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
         halo.userData.fixed = true; halo.userData.clipSkip = true; halo.frustumCulled = false; halo.renderOrder = 3; trackGroup.add(halo); }
@@ -10575,14 +10898,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   }
 
   // Licht & Himmel
-  const u = skyMat.uniforms; u.top.value.setHex(TH.sky[0]); u.mid.value.setHex(TH.sky[1]); u.hor.value.setHex(TH.sky[2]);
-  u.sunDir.value.set(...TH.sunDir).normalize(); u.sunCol.value.setHex(TH.sunCol); u.cloudCol.value.setHex(TH.cloudCol || 0xffffff); u.cloud.value.set(...(TH.clouds || [0, .6, 1, 0]));
-  scene.fog = new THREE.Fog(TH.fog, TH.fogNear, TH.fogFar);
-  hemi.color.setHex(TH.hemi[0]); hemi.groundColor.setHex(TH.hemi[1]); hemi.intensity = TH.hemi[2];
-  sun.color.setHex(TH.lightCol ?? TH.sunCol); sun.intensity = TH.sunI;
-  flood.intensity = TH.flood;
-  sun.castShadow = TH.flood === 0; flood.castShadow = TH.flood > 0; flood.visible = TH.flood > 0;   /* Licht mit Stärke 0 nicht mitrechnen (sonst wertet jeder Pixel ein zweites Sonnenlicht aus) */
-  renderer.toneMappingExposure = TH.exposure;
+  applyAtmo();
   applyElevation(); for (const c of trackGroup.children) if (c.userData.afterElev) c.userData.afterElev(); try { snapTreesToGround(); } catch (e) { console.warn('snapTreesToGround', e); }
   try { HOLES = fillGroundHoles(); } catch (e) { console.warn('fillGroundHoles', e); }
   tileGround(trackGroup);
@@ -10596,11 +10912,14 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   { // Horizont-Geometrie ohne Nebel (Monaco: echte Berge bis 8 km) darf nicht an der Sichtweite abgeschnitten werden – sonst „clippt“ die Bergkette vor dem Himmel
     const c0 = new THREE.Vector3((minX + maxX) / 2, 0, (minZ + maxZ) / 2); let hz = 0; for (const ch of trackGroup.children) if (ch.isMesh && ch.material && ch.material.fog === false && ch.userData.fixed && ch.geometry.boundingSphere) { const bs = ch.geometry.boundingSphere; hz = Math.max(hz, bs.center.distanceTo(c0) + bs.radius); }
     const reach = hz + Math.max(maxX - minX, maxZ - minZ) / 2 + 200;   /* auch vom entferntesten Streckenpunkt aus */ if (hz && reach > camera.far) { camera.far = Math.min(reach, 14000); camera.updateProjectionMatrix(); } }
+  WX.far0 = camera.far;
   applySky();
   buildEnv(TH.night ? 0x141218 : TH.ground === 'grass' ? 0x44582c : 0x8a7658);
   applyLook();
   buildMapBase();
   { const _bt1 = performance.now(); bakeShadows(); window.__btms = [Math.round(_bt1 - _bt0), Math.round(performance.now() - _bt1)]; }
+  WX.bid = -1; if (WX.on) applyWeather(WX.cur, true);   /* Regen: Stimmung, nasse Materialien, Lichtkarte für diese Strecke – VOR den Fernbaum-Bildern, die mit dem Licht der Szene gebacken werden */
+  else { WX.bid = BID; if (WX.ssr) { WX.ssr = false; buildComposer(); } }   /* trocken: nur den Tiefenpuffer der Spiegelung wieder abgeben, falls das letzte Rennen nass war */
   try { treeSprites(); } catch (e) { console.warn('treeSprites', e); } TREESPR = null;
   trackGroup.traverse(o => { if (o.material) for (const m of Array.isArray(o.material) ? o.material : [o.material]) if (m.normalMap && m.normalMap.anisotropy > 4) { m.normalMap.anisotropy = 4; if (m.normalMap.image) m.normalMap.needsUpdate = true; } });   /* Reliefkarten: feine Struktur mittelt sich in der Ferne ohnehin aus – 4-fach reicht */
   buildEvict(trackGroup); for (const e of EVICT) e.m.userData.evRef = e;
@@ -10723,7 +11042,7 @@ function bakeShadows() {
   // ab jetzt: alle Materialien nutzen die gebackenen Schatten; Echtzeitschatten nur noch von den Autos auf Strecke/Gelände
   // nur Empfänger (Gelände, Strecke, Dächer) und Autos bekommen die gebackenen Schatten – Baumkronen usw. nicht (die sitzen über der Schattenfläche)
   const mats = new Set(), add = o => { if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => mats.add(m)); };
-  recvs.forEach(o => { if (o.userData.flat || o.userData.ground || o.userData.tile) add(o); }); ALL.forEach(c => c.mesh.g.traverse(add)); mats.forEach(bakeMat);   /* nur Boden/Fahrbahn/flache Flächen: auf senkrechten Fassaden erzeugte die Draufsicht-Karte Störpixel */
+  recvs.forEach(o => { if (o.userData.flat || o.userData.ground || o.userData.tile) add(o); }); ALL.forEach(c => c.mesh.g.traverse(add)); mats.forEach(bakeMat); wxCollect(recvs);   /* nur Boden/Fahrbahn/flache Flächen: auf senkrechten Fassaden erzeugte die Draufsicht-Karte Störpixel */
   trackGroup.traverse(o => { if (o.isMesh || o.isInstancedMesh) { o.castShadow = false; o.receiveShadow = !!(o.userData.flat || o.userData.ground || o.userData.tile); } });
 }
 const lampMats = [];
@@ -11336,6 +11655,16 @@ function updateAudio(thr) {
 // ===== Fahr-Geräusche (v2.00, ElevenLabs): Untergrund, Reifenquietschen, Schaben an Bande und Auto, Fahrtwind =====
 // Jedes Geräusch ist ein nahtloser Loop, der nur läuft, solange er hörbar ist (Lautstärke/Tempo folgen dem Fahrzustand).
 const FXL = {}, FXS = { t: 0, surf: 'road' };
+// Regen (v2.95): gleichmäßiges Prasseln und das Zischen der Reifen im Wasser – berechnetes Rauschen durch zwei Filter (keine Aufnahme, kein Download).
+const WXS = { g: null, h: null, ctx: null, src: [] };
+function wxSound(t, on) {
+  if (!WX.on) { if (WXS.g) { for (const x of WXS.src) try { x.stop(); } catch (e) {} WXS.g = WXS.h = null; WXS.src = []; } return; }
+  if (!WXS.g || WXS.ctx !== ac) { const len = ac.sampleRate * 3, b = ac.createBuffer(1, len, ac.sampleRate), d = b.getChannelData(0); let l = 0; for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; l = l * 0.6 + w * 0.4; d[i] = w * 0.55 + l * 0.8; }
+    const mk = (type, f, q) => { const sc = ac.createBufferSource(), fl = ac.createBiquadFilter(), g = ac.createGain(); sc.buffer = b; sc.loop = true; fl.type = type; fl.frequency.value = f; fl.Q.value = q; g.gain.value = 0; sc.connect(fl); fl.connect(g); g.connect(fxBus()); sc.start(t, Math.random() * 2); WXS.src.push(sc); return g; };
+    WXS.src = []; WXS.g = mk('bandpass', 2400, 0.4); WXS.h = mk('highpass', 2600, 0.6); WXS.ctx = ac; }
+  const v = on ? pl.v : 0, road = pl.surf === 'road' || pl.surf === 'kerb' || pl.surf === 'runoff';
+  WXS.g.gain.setTargetAtTime(on ? 0.035 + 0.06 * WX.rain : 0, t, 0.3); WXS.h.gain.setTargetAtTime(on && road ? (0.1 + 0.08 * (pl.pud || 0)) * WX.wet * Math.pow(clamp(v / 85, 0, 1.1), 1.6) : 0, t, 0.08);
+}
 function fxLoop(k, gain, rate, t) {
   let L = FXL[k]; const b = sndBuf(SND_FX[k]); if (!b) return;
   if (!L) { if (gain < 0.003) return; const src = ac.createBufferSource(), g = ac.createGain(); src.buffer = b; src.loop = true; g.gain.value = 0; src.connect(g); g.connect(fxBus()); src.start(t, Math.random() * b.duration); L = FXL[k] = { src, g }; }
@@ -11360,6 +11689,7 @@ function fxTick(t, on, cls) {
   // v2.01: Reiben Auto an Auto entfernt – die Aufnahme quietschte und lief schon bei leichtester Berührung im Pulk
   // Fahrtwind: offenes Cockpit bzw. offener Roadster, wächst mit dem Quadrat des Tempos
   const wf = Math.pow(clamp(v / (cls === 'stahl' ? 60 : cls === 'kart' ? 45 : 85), 0, 1.1), 2);
+  wxSound(t, on);
   fxLoop('wind', on ? 0.12 * wf : 0, 0.9 + 0.15 * clamp(wf, 0, 1), t);   // v2.05: gleichmäßiges berechnetes Rauschen (tools/sounds/wind.py) – die Aufnahme pulsierte („wellig“)
 }
 // Startampel-Töne
@@ -11608,6 +11938,14 @@ let running = false, paused = false, raceState = 'menu', lightsT = 0, lightsOut 
 let camOrb = 0, camPit = 0;
 let resultsShown = false, resultsAt = 0, fastest = null, effCtrl = 'touch', diff = DIFF.mid, order = [], msgT = 0, hudT = 0, tiltCheckT = 0, bumpCd = 0;
 
+// Wetter des anstehenden Rennens: Karriere = je Rennwochenende einmal ausgelost und gespeichert; sonst die Wahl im Menü ('auto' = nach echter Regenwahrscheinlichkeit der Strecke)
+const wxRoll = key => { const p = RAIN_P[key] || [0.15, 0.2]; return Math.random() < p[0] ? (Math.random() < p[1] ? 'heavy' : 'light') : 'dry'; };
+function wxPick() { if (window.__wxForce) return window.__wxForce;
+  if (CHP && CHP.career) { const w = CHP.wx || (CHP.wx = {}); if (!WXLV[w[CHP.round]]) { w[CHP.round] = wxRoll(S.track); saveChamp(); } return w[CHP.round]; }
+  if (S.wx === 'auto') { if (!WX.autoK || WX.autoFor !== BID + '|' + S.track) { WX.autoK = wxRoll(S.track); WX.autoFor = BID + '|' + S.track; } return WX.autoK; }
+  return WXLV[S.wx] ? S.wx : 'dry'; }
+// Vor dem Streckenbau: das Wetter des kommenden Rennens schon vormerken (bei „Zufall“ wird erst am Start gelost – bis dahin trocken)
+function wxPreset() { const k = window.__wxForce || ((CHP && CHP.career) || S.wx !== 'auto' ? wxPick() : 'dry'); if (k !== WX.cur) Object.assign(WX, WXLV[k], { cur: k, on: k !== 'dry' }); }
 function gridOrder() {
   if (CHP && CHP.career && CHP.grid && !QL) { const m = CHP.grid.map(cd => DRIVERS.find(d => d[0] === cd)).filter(Boolean); if (m.length === fieldSize()) return m; }
   const ai = DRIVERS.filter(d => d[0] !== pl.code && inField(d, pl.code)).sort((a, b) => skillOf(b) - skillOf(a));
@@ -11624,16 +11962,16 @@ function placeOnGrid() {
     Object.assign(c, { isPlayer: c === pl, d: s, v: 0, startD: s, gridLat: slotLat(j), yawKick: 0, sx: 0, sz: 0, lat: slotLat(j), latT: slotLat(j), latV: 0, home: (Math.random() - .5) * 3, laneT: 0,
       lapsDone: -1, lapStart: 0, last: 0, best: 0, lapTimes: [], finished: false, finishTime: 0, finishLaps: 0, grid: j + 1, pen: 0, cutD: 0, cutZ: -1,
       react: 0.05 + Math.random() * 0.15, form: Math.random() * 0.006, phase: Math.random() * 6.28, thrS: 0, brkS: 0, slip: 0, slipS: 0, blkPrev: null, ovr: null, lineK: 0.85 + Math.random() * 0.15, idx: p.i, x: p.x, z: p.z, h: p.h, steer: 0, brk: 0, sPrev: modL(s), wallCd: 0, stuckT: 0, wrongT: 0, thr: 0, spin: 0 });
-    const comp = c === pl ? 1 : Math.floor(Math.random() * 3);
-    if (c.mesh.road || c.mesh.kart || c.mesh.hist) { } else if (c.mesh.tp) { c.mesh.comp = comp; setLod(c.mesh, 0, true); c.mesh.halo.visible = true; } else { c.mesh.wfl.geometry = WHEEL.f[comp]; c.mesh.wfr.geometry = WHEEL.f[comp]; c.mesh.rr.geometry = WHEEL.r[comp]; }
+    const wci = WX.on ? (WX.cur === 'heavy' ? 4 : 3) : -1, comp = wci > 0 ? wci : c === pl ? 1 : Math.floor(Math.random() * 3);   /* Regen: alle auf Intermediates (grün) bzw. Regenreifen (blau) */
+    if (c.mesh.road || c.mesh.kart || c.mesh.hist) { } else if (c.mesh.tp) { if (wci > 0) wxWheels(wci); c.mesh.comp = comp; setLod(c.mesh, 0, true); c.mesh.halo.visible = true; } else { const k = comp % 3; c.mesh.wfl.geometry = WHEEL.f[k]; c.mesh.wfr.geometry = WHEEL.f[k]; c.mesh.rr.geometry = WHEEL.r[k]; }
     c.mesh.g.visible = true; c.mesh.g.position.set(p.x, 0, p.z); c.mesh.g.rotation.y = p.h; c.mesh.label.visible = c !== pl; c.mesh.helm.visible = true;
     cars.push(c);
   });
   ais = cars.filter(c => c !== pl);
   if (window.__solo) { cars.length = 0; cars.push(pl); ais = []; ALL.forEach(c => { if (c !== pl) c.mesh.g.visible = false; }); }
-  const dd = DIFF[S.diff] || DIFF.mid, ph = SERPH, pm = PM; for (const c of cars) { const me = c === pl; c.gripMul = (me ? pm.grip : (dd.grip || 1) * PACE * PACE) * ph.grip; c.brkMul = (me ? pm.brk : (dd.brk || 1) * PACE * PACE) * ph.brk; c.accMul = (me ? pm.acc : (dd.acc || 1) * PACE * PACE) * ph.acc; c.topMul = (me ? pm.top : Math.max(1, dd.top || 1) * PACE) * ph.top; c.noBoost = !!SERIES[SER].noBoost; c.bat = 0.5; c.boostFx = 0; c.boosting = false; c.street = false; }
+  const dd = DIFF[S.diff] || DIFF.mid, ph = SERPH, pm = PM; for (const c of cars) { const me = c === pl; c.gripMul = (me ? pm.grip : (dd.grip || 1) * PACE * PACE) * ph.grip * WX.grip; c.brkMul = (me ? pm.brk : (dd.brk || 1) * PACE * PACE) * ph.brk * WX.brk; c.accMul = (me ? pm.acc : (dd.acc || 1) * PACE * PACE) * ph.acc * WX.acc;   /* Regen: weniger Haftung, längere Bremswege, weniger Traktion – für alle Autos gleich */ c.topMul = (me ? pm.top : Math.max(1, dd.top || 1) * PACE) * ph.top; c.noBoost = !!SERIES[SER].noBoost; c.bat = 0.5; c.boostFx = 0; c.boosting = false; c.street = false; }
   if (pl.mesh && pl.mesh.H) { const P = pl.mesh.H.ph; pl.topMul *= P.top; pl.gripMul *= P.grip; pl.brkMul *= P.brk; pl.accMul *= P.acc; pl.noBoost = true; }   // Klassiker: eigene Fahrleistung, kein Boost (ERS)
-  if (pl.mesh && pl.mesh.road && S.rmode !== 'f1') { pl.street = true; pl.topMul = STREET.vmax / VTOP; pl.brkMul = STREET.brk / BRAKE; pl.gripMul = STREET.lat / GRIP; pl.accMul = 1; }   // Roadster Straßenversion
+  if (pl.mesh && pl.mesh.road && S.rmode !== 'f1') { pl.street = true; pl.topMul = STREET.vmax / VTOP; pl.brkMul = STREET.brk / BRAKE * WX.brk; pl.gripMul = STREET.lat / GRIP * WX.grip; pl.accMul = WX.acc; }   // Roadster Straßenversion
   order = cars.slice();
 }
 // Alle Shader vorab übersetzen (auch für Objekte, die gerade nicht im Bild sind) – sonst kompiliert der Browser sie mitten im Rennen, sobald sie zum ersten Mal auftauchen (Ruckler)
@@ -11659,6 +11997,7 @@ function precompile() { const hid = [];
   // voll deckenden, tiefeschreibenden Flächen ändert die Reihenfolge nichts am Bild – ein Durchgang genügt (halbiert z. B. die Fangzaun-Aufrufe). Kein neuer Shader.
   trackGroup.traverse(o => { if (o.isMesh && o.material) for (const mt of [].concat(o.material)) if (mt.transparent && mt.side === THREE.DoubleSide && !mt.forceSinglePass && (mt.alphaTest > 0 || (mt.depthWrite && mt.opacity >= 1) || o.userData.flat)) mt.forceSinglePass = true; });   /* flat: flache Bodenstreifen (Gummispuren u. ä.) – von oben zeigt der Rückseiten-Durchgang nichts */
   for (const c of cars) if (c !== pl && c.mesh && c.mesh.kart) kartLod(c.mesh, false);   /* Kart-Fernstufe schon beim Laden berechnen (~45 ms einmalig), nicht im Rennen */
+  const wxo = WX.on ? [RAINFX.m, SPRAY.pts, RAINC.m].filter(o => !o.visible && (o !== RAINC.m || RAINC.n)) : []; for (const o of wxo) o.visible = true;   /* Regen, Gischt, Lichtkegel-Regen: Shader jetzt übersetzen, nicht beim ersten Tropfen */
   const wk = WAKE.m, wkP = wk.parent, wkV = wk.visible; if (!wkP) scene.add(wk); wk.visible = true;   /* Windschatten-Kegel: hing bisher an keinem Auto und war unsichtbar -> seine Shader, Textur und Geometrie entstanden erst beim ersten Windschatten (Ruckler kurz nach dem Start) */ for (const c of cars) { const m = c.mesh; if (!m || !m.g) continue; m.g.traverse(o => { if ((o.isMesh || o.isGroup) && !o.visible && !o.isSprite) { o.visible = true; hid.push(o); } }); }   /* ALLE Teile jedes Autos (Fernmodell, Überblend-Geister, Nahteile wie Helm und Räder ferner Autos) sind teils unsichtbar: Shader trotzdem jetzt übersetzen und – im winzigen Vorwärm-Bild unten – ihre Texturen hochladen. Sonst kamen sie erst, wenn ein Gegner zum ersten Mal ganz nah war (erste Kurve) */
   try { const prev = renderer.getRenderTarget(); if (composer) renderer.setRenderTarget(composer.renderTarget1); renderer.compile(scene, camera); renderer.setRenderTarget(prev); } catch (e) { console.warn('precompile', e); } finally { for (const o of hid) o.visible = false; }
   // (Der frühere Zusatzschritt, der Cockpit- und TV-Kamera-Materialien in einer eigenen Hilfsszene übersetzte, ist entfallen: seine 9 Shader wurden im Rennen nie
@@ -11673,7 +12012,7 @@ function precompile() { const hid = [];
     const steps = Math.max(0, ...LODS.map(m => m.userData.lodSteps.length));
     for (let k = 0; k < steps; k++) { let any = false; for (const m of LODS) { const st = m.userData.lodSteps[k]; if (st && st[0] && m.geometry !== st[0]) { m.geometry = st[0]; any = true; } } if (any) renderer.render(scene, camera); }
     LODS.forEach((m, i) => m.geometry = geo[i]); vis.forEach(m => m.visible = false); fc.forEach(o => o.frustumCulled = true); renderer.setRenderTarget(prev); } catch (e) { console.warn('warm', e); }
-  wk.visible = wkV; if (!wkP) scene.remove(wk);
+  wk.visible = wkV; if (!wkP) scene.remove(wk); for (const o of wxo) o.visible = false;
   // Lichtstrahlen und Sonnen-Sichtbarkeit: die beiden Shader liefen erst, wenn die Sonne zum ersten Mal ins Bild kam (Spa: bei ~1.080 m, gemessen 67 ms Hänger).
   // Jetzt einmal in ihre eigenen Ziele zeichnen (übersetzt die Shader, legt die Texturen an), danach die Ziele leeren.
   try { if (composer && raysPass) { const u = raysPass.mat.uniforms, v = raysPass.vmat.uniforms, prev = renderer.getRenderTarget(), ac = renderer.autoClear, cc0 = renderer.getClearColor(new THREE.Color()), ca0 = renderer.getClearAlpha();
@@ -11684,10 +12023,10 @@ function precompile() { const hid = [];
 const PM = { top: 1, grip: 1, brk: 1, acc: 1 };   // Fahrzeug-Upgrades des Spielers (Karriere)
 function seriesProfiles() {
   const dd = DIFF[S.diff] || DIFF.mid, df = typeof diff !== 'undefined' && diff ? diff : dd;
-  profP = buildProfile(30 * SERPH.grip * PM.grip, VTOP * SERPH.top * PM.top, 36 * SERPH.brk * PM.brk);
+  profP = buildProfile(30 * SERPH.grip * PM.grip * WX.grip, VTOP * SERPH.top * PM.top, 36 * SERPH.brk * PM.brk * WX.brk);
   PACE = trackPace(); const s2 = PACE * PACE;
-  profAI = buildProfile(df.aLat * SERPH.grip * s2, VTOP * Math.max(1, df.top) * SERPH.top * PACE, df.brake * SERPH.brk * s2, KR);
-  for (const c of cars) if (c !== pl) { c.gripMul = (dd.grip || 1) * s2 * SERPH.grip; c.brkMul = (dd.brk || 1) * s2 * SERPH.brk; c.topMul = Math.max(1, dd.top || 1) * PACE * SERPH.top; }
+  profAI = buildProfile(df.aLat * SERPH.grip * s2 * WX.grip, VTOP * Math.max(1, df.top) * SERPH.top * PACE, df.brake * SERPH.brk * s2 * WX.brk, KR);   /* Regen: die KI bremst früher und fährt die Kurven langsamer (gleicher Faktor wie die Haftung) */
+  for (const c of cars) if (c !== pl) { c.gripMul = (dd.grip || 1) * s2 * SERPH.grip * WX.grip; c.brkMul = (dd.brk || 1) * s2 * SERPH.brk * WX.brk; c.topMul = Math.max(1, dd.top || 1) * PACE * SERPH.top; }
 }
 // Schwierigkeit je Strecke angleichen. Die KI fährt ein Tempoprofil aus Kurvenradius, Bremse und Beschleunigung; ein Mensch holt auf engen,
 // langsamen Kursen (Monaco) deutlich mehr gegenüber diesem Profil heraus als auf schnellen (Monza) – dort war die KI zu leicht, hier passend.
@@ -11732,7 +12071,7 @@ function startRace() {
 // Läuft deshalb schon im Ladebildschirm der Strecke (nach buildTrack + placeOnGrid), nicht mehr erst beim Druck auf „Rennen starten“ (dort stand das Bild).
 // Der Schlüssel merkt sich, wofür vorgewärmt wurde (Strecke, Grafik, Klasse, eigenes Auto, Starterfeld); passt er beim Rennstart noch, entfällt die Arbeit.
 let WARM_KEY = '';
-const warmKey = () => BID + '|' + S.gfx + '|' + SER + '|' + (pl ? pl.code : '') + '|' + cars.map(c => c.code).sort().join(',');
+const warmKey = () => BID + '|' + S.gfx + '|' + WX.cur + '|' + SER + '|' + (pl ? pl.code : '') + '|' + cars.map(c => c.code).sort().join(',');
 function warmRace() {
   const key = warmKey(); if (key === WARM_KEY || window.__noWarm || !TRK || !cars.length) return false;
   precompile(); warmUpTrack();
@@ -11847,12 +12186,18 @@ function surface(i, lat) {
 }
 // [Gas-Faktor, Zusatzbremsung, ab Tempo, Grip-Faktor]
 const SURF = { road: [1, 0, 999, 1], kerb: [1, 0, 999, 1], runoff: [0.55, 9, 22, 0.8], grass: [0.35, 20, 18, 0.55], gravel: [0.22, 32, 12, 0.45] };
+// Nässe (die Grundhaftung steckt schon in gripMul): nasse Randsteine und Farbe sind glatt, nasses Gras ist Schmierseife
+const SURFW = { road: [1, 0, 999, 1], kerb: [0.92, 0, 999, 0.84], runoff: [0.5, 9, 22, 0.74], grass: [0.28, 20, 18, 0.42], gravel: [0.22, 32, 12, 0.42] };
+const surfT = () => WX.on ? SURFW : SURF;
+// Aquaplaning: in stehendem Wasser schwimmt der Reifen bei hohem Tempo auf – etwas weniger Haftung und Wasserwiderstand, solange man durch die Pfütze fährt
+function wxAqua(c, dt) { const pd = c.surf === 'road' || c.surf === 'runoff' ? wxPudAt(c.x, c.z, c.idx, c.lat) : 0; c.pud = pd; if (pd < 0.2) return 1;
+  const k = pd * clamp((c.v - 28) / 45, 0, 1); c.v = Math.max(0, c.v - c.v * k * 0.05 * WX.rain * dt); return 1 - k * (0.07 + 0.13 * WX.rain); }
 const wrapA = a => Math.atan2(Math.sin(a), Math.cos(a));
 
 // EIN Fahrzeugmodell für alle: Spieler und KI haben exakt dieselbe Beschleunigung, Bremse, Haftung und Lenkung.
 // thr/brk sind Pedalstellungen 0..1, steer -1..1, limit = optionale Höchstgeschwindigkeit (Bremsassistent)
 function carStep(c, thr, brk, dt, limit) {
-  const sf = SURF[surface(c.idx, c.lat)];
+  const sf = surfT()[surface(c.idx, c.lat)];
   { const raw = SER === 'kart' ? 0 : slipstream(c); c.slipR = raw; c.slipS = (c.slipS || 0) + (raw - (c.slipS || 0)) * Math.min(1, dt * (raw > (c.slipS || 0) ? 1.6 : 4)); }   // baut sich auf, fällt beim Ausscheren schnell ab
   c.slip = thr > 0 ? c.slipS : 0; c.surf = surface(c.idx, c.lat);
   { const hb = c.hb; c.kerbW = 0; if (hb && c.v > 3) { const i0 = c.idx, fr = Math.sin(c.h) * RX[i0] + Math.cos(c.h) * RZ[i0], ft = Math.sin(c.h) * TX[i0] + Math.cos(c.h) * TZ[i0];   // Curb-Kontakt je Rad (nicht Fahrzeugmitte): sobald ein Reifen die Randsteine berührt
@@ -11873,6 +12218,7 @@ function carStep(c, thr, brk, dt, limit) {
   if (limit !== undefined && c.v > limit) c.v = Math.max(limit, v0 - BRAKE * dt);
   c.thr = thr; c.brk = Math.max(brk, c.v < v0 + a * dt - 0.05 ? 1 : 0);
   let yawMax = Math.min(c.v / 6, GRIP * (c.gripMul || 1) / Math.max(c.v, 1)) * sf[3];
+  if (WX.on) yawMax *= wxAqua(c, dt);
 /*@zan:x3{*/
   if (BANKG && BANK && BANK[c.idx]) yawMax *= bankGrip(c.idx);   /* Steilkurve: mehr Haftung (siehe bankGrip) */
 /*}@zan:x3*/
@@ -11890,7 +12236,7 @@ function carStep(c, thr, brk, dt, limit) {
   wallCheck(c, dt);
 }
 // Quer-Haftgrenze der Reifen in m/s²: mechanischer Grip + Abtrieb (wächst mit dem Tempo), mal Fahrzeug- und Untergrundfaktor
-function tyreGrip(c, sf) { return (c.gripMul || 1) * (sf || SURF[c.surf] || SURF.road)[3] * (13 + (GRIP - 13) * Math.min(1, c.v * c.v / 4900)); }
+function tyreGrip(c, sf) { return (c.gripMul || 1) * (sf || surfT()[c.surf] || SURF.road)[3] * (13 + (GRIP - 13) * Math.min(1, c.v * c.v / 4900)); }
 function wallCheck(c, dt) {
   c.wallCd -= dt;
   // Hitbox gegen die Bande: gedrehtes Rechteck (schräg stehendes Auto braucht mehr Platz), Mittelpunkt der Box statt Fahrzeugursprung
@@ -11942,7 +12288,7 @@ function updatePlayer(dt) {
 function updateAI(c, dt, prof = profAI, top = diff.top) {
   if (raceState !== 'race' || raceTime < c.react) { c.steer = 0; carStep(c, 0, raceState === 'race' ? 0 : 1, dt); c.brk = 0; return; }
   const mood = (1 - (1 - c.skill) * (S.diff === 'pro' || S.diff === 'leg' ? 0.55 : 1.3) - (c.form || 0))   /* größere Tempounterschiede + Tagesform je Fahrer: das Feld zieht sich auseinander statt in Ketten zu fahren */ * (1 + 0.003 * Math.sin(raceTime * 0.27 + c.phase)) * aiSlow();
-  { const dacc = (DIFF[S.diff] || DIFF.mid).acc || 1; c.accMul = SERPH.acc * (raceTime < 9 ? PM.acc : dacc * PACE * PACE); }   // Start: KI beschleunigt wie der Spieler (kein Raketenstart auf Profi); danach der Schwierigkeitsbonus
+  { const dacc = (DIFF[S.diff] || DIFF.mid).acc || 1; c.accMul = SERPH.acc * (raceTime < 9 ? PM.acc : dacc * PACE * PACE) * WX.acc; }   // Start: KI beschleunigt wie der Spieler (kein Raketenstart auf Profi); danach der Schwierigkeitsbonus
   let vt = Math.min(prof[c.idx] * mood, VTOP * top * SERPH.top * mood * (prof === profAI ? PACE : 1) + (c.slip || 0) * 6.5);
   if (c.finished) vt = Math.min(vt, 45);
   // Verkehr: vorausfahrendes Auto in der eigenen Spur + Autos direkt daneben
@@ -12095,6 +12441,7 @@ function step(dt) {
   for (const c of ais) updateAI(c, dt);
   if (raceState === 'race') { collisions(); for (const c of cars) lapCheck(c); }
   for (const c of cars) emitEffects(c, dt);
+  if (WX.on) for (const c of cars) wxSpray(c, dt);
   sortOrder();
   if (window.__trace) window.__trace(cars, pl, raceTime);
   if (pl.finished && !resultsShown && raceTime > resultsAt) showResults();
@@ -12112,7 +12459,7 @@ function updateMeshes(dt) {
     if ((m.road || m.kart || m.hist) && m.swSpin) m.swSpin.rotation.z = -(c.steer || 0) * (m.kartFahrer ? KART_SW_ROT : m.H ? m.H.swRot : 1.6);
     if (m.hist) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z; histLod(m, c, dx * dx + dz * dz); if (m.arms && m.lod === 0) histArms(m, c.steer || 0); if (m.drv) m.drv.spin = -(c.steer || 0) * m.H.swRot; if (m.spR) m.spR[0].rotation.x = m.spR[1].rotation.x = c.spin; if (m.linkU) m.linkU.value = m.fl.rotation.y; histDashTick(m, c, dt); }   // Klassiker: Detailstufe, Hände folgen dem Lenkrad   /* Kart mit neuem Fahrer: weniger Drehung – die Hände bleiben am Kranz, bei 92° lag der Arm quer vor dem Gesicht */
     if (m.road) m.brakeMat.emissiveIntensity = running && c.brk > 0.1 ? 4 : 0.15;
-    else m.rl.visible = running && c.v > 25 && ((c.thr || 0) < 0.6 || c.brk > 0.1) && ((performance.now() / 110) | 0) % 2 === 0;
+    else m.rl.visible = running && (WX.on ? ((performance.now() / 125) | 0) % 2 === 0 : c.v > 25 && ((c.thr || 0) < 0.6 || c.brk > 0.1) && ((performance.now() / 110) | 0) % 2 === 0);   /* Regen: das Regenlicht blinkt durchgehend (4 Hz, wie vorgeschrieben) */
     m.wfl.rotation.x = m.wfr.rotation.x = m.rr.rotation.x = c.spin;
     if (m.sw) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z; m.sw.visible = c === pl || dx * dx + dz * dz < 625; }   /* Kart: Lenkrad (viele kleine Teile) nur aus der Nähe zeichnen */
     if (m.kart) { const dx = c.x - camera.position.x, dz = c.z - camera.position.z, R = m.klOn ? KART_FAR - 2 : KART_FAR + 2; kartLod(m, !window.__noKartLod && c !== pl && dx * dx + dz * dz > R * R); }   /* Kart-Fernstufe (Spieler-Kart immer voll); Testschalter __noKartLod */
@@ -12727,7 +13074,7 @@ function setupCareerRace(laps) {
   S.grid = QL ? 1 : (CHP.qpos || fieldSize()); applyPM();
   ['#results', '#pause'].forEach(x => $(x).classList.add('hidden'));
   const go = () => { placeOnGrid(); $('#go').click(); };
-  if (TRK !== TRACKS[S.track]) { loading(true); setTimeout(() => { try { buildTrack(S.track); placeOnGrid(); warmRace(); } finally { loading(false); } go(); }, 30); } else go();
+  if (TRK !== TRACKS[S.track]) { loading(true); setTimeout(() => { try { wxPreset(); buildTrack(S.track); placeOnGrid(); warmRace(); } finally { loading(false); } go(); }, 30); } else go();
 }
 function careerStartQuali() { if (!CHP || CHP.round >= CAL.length) return; QL = true; CHP.phase = 'quali'; setupCareerRace(1); }
 const LEN_LAPS = { s: 3, m: 5, l: 8 }, LEN_NAME = { s: 'Kurz', m: 'Mittel', l: 'Lang' };   // Rennlänge in der Karriere: wählbar auf dem Saison-Bildschirm
@@ -12915,7 +13262,7 @@ function menuNext() {
   if (k === 'series') { setSeries(SER, true); MENU.team = (byCode(S.driver) || ALL[0]).team; return showScreen('team'); }
   if (k === 'track') {
     const go = () => showScreen('race');
-    if (TRK !== TRACKS[S.track]) { loading(true); setTimeout(() => { try { buildTrack(S.track); placeOnGrid(); warmRace(); } finally { loading(false); } go(); }, 30); } else go();   /* Strecke bauen UND fürs Rennen vorwärmen in einer Ladezeit */
+    if (TRK !== TRACKS[S.track]) { loading(true); setTimeout(() => { try { wxPreset(); buildTrack(S.track); placeOnGrid(); warmRace(); } finally { loading(false); } go(); }, 30); } else go();   /* Strecke bauen UND fürs Rennen vorwärmen in einer Ladezeit */
     return;
   }
   if (k === 'team') { if (!teamOpen(MENU.team)) return; const d = byCode(S.driver); if (!d || d.team !== MENU.team) { S.driver = ALL.find(c => c.team === MENU.team).code; save(); placeOnGrid(); } return showScreen('driver'); }
@@ -13354,7 +13701,9 @@ $('#go').addEventListener('click', () => {
   }
   initAudio();
   /* Ist noch nicht (oder für ein anderes Starterfeld/Auto) vorgewärmt, läuft das Vorwärmen jetzt – dann aber hinter dem Ladebildschirm statt mit stehendem Bild */
-  const launch = () => { placeOnGrid(); if (warmKey() !== WARM_KEY && !window.__noWarm) { loading(true); setTimeout(() => { try { startRace(); } finally { loading(false); } }, 40); } else startRace(); };
+  const launch = () => { const wk = wxPick(), nw = wk !== WX.cur || WX.bid !== BID; placeOnGrid();   /* Wetter für dieses Rennen: gewählt, ausgelost oder aus der Karriere */
+    if (nw || (warmKey() !== WARM_KEY && !window.__noWarm)) { loading(true); if (wk !== WX.cur) $('#ldTxt').textContent = wk === 'dry' ? 'Strecke trocknet ab' : 'Regen zieht auf';
+      setTimeout(() => { try { if (nw) { applyWeather(wk); placeOnGrid(); } startRace(); } finally { loading(false); } }, 40); } else startRace(); };
   const go = () => { if (ROAD_WAIT) { const w = ROAD_WAIT; ROAD_WAIT = null; Promise.race([w, new Promise(r => setTimeout(r, 2000))]).then(launch); } else launch(); };   /* Asphalt-Foto erst fertig laden: sonst wird das Fahrbahn-Material mitten im Start neu übersetzt */
   const hd = byCode(S.driver);   // Klassiker: erst starten, wenn das Modell geladen ist (sonst führe eine leere Hülle, und die Shader kämen mitten im Rennen)
   if (hd && HIST_CAR[hd.team] && !HIST.tpl[hd.team]) { loading(true); $('#ldTxt').textContent = 'Klassiker wird geladen'; histLoad(hd.team).then(T => { loading(false); if (T) go(); else toast('Klassiker konnte nicht geladen werden – Internetverbindung prüfen'); }); return; }
@@ -13370,7 +13719,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.94'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.95'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -13508,6 +13857,10 @@ const LT_STEPS = [
   ['ohne Schatten', () => { LTEST.sa = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false; }, () => { renderer.shadowMap.autoUpdate = LTEST.sa; }],
   ['ohne zweiten Durchgang (eigenes Auto)', () => { window.__noSplit = true; }, () => { window.__noSplit = false; }],
   ['ohne Nachbearbeitung', () => { window.__ptPlain = true; }, () => { window.__ptPlain = false; }],
+  ['Regen: ohne Tropfen und Lichtkegel-Regen', () => { window.__noRain = true; }, () => { window.__noRain = false; }, () => WX.on],
+  ['Regen: ohne Gischt', () => { window.__noSpray = true; SPRAY.clear(); }, () => { window.__noSpray = false; }, () => WX.on],
+  ['Regen: ohne Pfützen-Spiegelung', () => { window.__noSSR = true; applyWeather(WX.cur, true); }, () => { window.__noSSR = false; applyWeather(WX.cur, true); }, () => WX.on && S.gfx !== 'low'],
+  ['Regen: trocken zum Vergleich', () => { LTEST.wx = WX.cur; applyWeather('dry'); }, () => { applyWeather(LTEST.wx); }, () => WX.on],
   ['leere Szene', () => { scene.visible = false; }, () => { scene.visible = true; }],
   ['ohne Anzeigen und Tasten', () => document.body.classList.add('ptNoHud'), () => document.body.classList.remove('ptNoHud')],
   ['ohne 3D-Bild', () => { window.__norender = true; }, () => { window.__norender = false; }],
@@ -13515,7 +13868,7 @@ const LT_STEPS = [
 function ltStart() { if (LTEST.on || RLOG.on || !running || paused || raceState !== 'race') return; LTEST.on = true; LTEST.i = -1; LTEST.res = []; LTEST.bot = [window.__plAI, profBot]; window.__plAI = true; profBot = buildProfile(45.5, VTOP, 44, KR); ltNext(performance.now()); }
 function ltNext(now, abort) {
   if (LTEST.i >= 0) { const s = LT_STEPS[LTEST.i], n = Math.max(1, LTEST.n); if (!abort && LTEST.t1) LTEST.res.push([s[0], LTEST.cpu / n, LTEST.rnd / n, LTEST.n * 1000 / Math.max(1, now - LTEST.t1)]); try { s[2](); } catch (e) {} }
-  LTEST.i++;
+  LTEST.i++; while (!abort && LTEST.i < LT_STEPS.length && LT_STEPS[LTEST.i][3] && !LT_STEPS[LTEST.i][3]()) LTEST.i++;   /* Schritte mit Bedingung (Regen) nur, wenn sie zutrifft */
   if (abort || LTEST.i >= LT_STEPS.length) { LTEST.on = false; window.__plAI = LTEST.bot[0]; profBot = LTEST.bot[1]; ltShow(); return; }
   try { LT_STEPS[LTEST.i][1](); } catch (e) {} LTEST.t0 = now; LTEST.t1 = 0; LTEST.n = 0; LTEST.cpu = LTEST.rnd = 0;
   if (PERF.txt) PERF.txt.innerHTML = 'Lasttest ' + (LTEST.i + 1) + '/' + LT_STEPS.length + ' <i>·</i> ' + LT_STEPS[LTEST.i][0] + '<br><i>das Auto fährt selbst · antippen = abbrechen</i>';
@@ -13595,6 +13948,7 @@ function tick(now, forced) {
   sparks.mat.uniforms.uScale.value = dust.mat.uniforms.uScale.value = fwP.mat.uniforms.uScale.value = ps;
   if (!paused) { sparks.update(dt); dust.update(dt); fireworksTick(dt); fwP.update(dt); }
   updateStreaks(dt);
+  wxTick(dt, now);
   skyTick(dt);
   if (HORIZ) { HORIZ.position.x = camera.position.x; HORIZ.position.z = camera.position.z; }
   // Pause: das Bild steht still, also nur zwei Bilder zeichnen und dann die Grafikkarte schonen
