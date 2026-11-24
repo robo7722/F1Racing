@@ -506,7 +506,7 @@ h1 b{background:linear-gradient(90deg,#ff3b2f,#ff7a45);-webkit-background-clip:t
 #menu[data-m=career] .msteps{display:none}
 #cName{width:100%;height:48px;border-radius:6px;border:1px solid rgba(255,255,255,.22);background:#15151e;color:#fff;font:700 19px system-ui,sans-serif;padding:0 14px;user-select:text;-webkit-user-select:text;touch-action:auto;outline:0}
 #cName:focus{border-color:#e10600}
-.swatches{display:grid;grid-template-columns:repeat(7,40px);gap:10px}.sw2{width:40px;height:40px;border-radius:50%;border:3px solid transparent;box-shadow:0 0 0 1px rgba(255,255,255,.28)}.sw2.on{border-color:#fff}
+.swatches{display:grid;grid-template-columns:repeat(7,minmax(0,40px));gap:10px}.sw2{width:100%;aspect-ratio:1;height:auto;border-radius:50%;border:3px solid transparent;box-shadow:0 0 0 1px rgba(255,255,255,.28)}.sw2.on{border-color:#fff}
 #serCards,#carCards{justify-content:center;align-items:stretch}
 #serCards .tcard,#carCards .tcard{flex:1 1 0;max-width:340px}
 .scard{justify-content:flex-start;gap:4px}
@@ -822,7 +822,8 @@ th{background:#0c0c12!important;letter-spacing:.16em;font-size:10px!important;co
 /* Upgrades als Reiter */
 .seup{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;height:100%}
 .seup .rpanel{min-height:0;overflow-y:auto}
-@media (max-width:760px){.sepane[data-pane=race].on{grid-template-columns:1fr}.seup{grid-template-columns:1fr;height:auto}.sechips{display:none}.setabs button{letter-spacing:.06em;font-size:12px}}
+@media (max-width:760px){.seup{grid-template-columns:1fr;height:auto}.sechips{display:none}.setabs button{letter-spacing:.06em;font-size:12px}.seside .seg button{letter-spacing:.02em!important;font-size:11px!important;padding:0 1px}}
+@media (max-width:760px) and (orientation:portrait){.sepane[data-pane=race].on{grid-template-columns:1fr}}   /* v2.95: quer bleibt es zweispaltig (kleines Handy: „Rennlänge“ lag sonst unter dem Start-Knopf und war nur durch unsichtbares Scrollen erreichbar) */
 @media (max-height:470px){#seProg{display:none}.setabs{margin:8px 0 10px}.setabs button{height:40px}}
 @media (max-height:380px){.setabs{margin:6px 0 8px}.setabs button{height:36px}#seNext .sn-l span{display:none!important}.sechips{display:none}}
 /* Klassenwahl der Karriere: ruhiger – Status als Marke, gesperrte Klassen klar erkennbar */
@@ -1091,6 +1092,9 @@ body.touchUI #speedo{left:50%!important;right:auto!important;transform:translate
 .ldLogo .glogo.ld{display:block;height:clamp(54px,20vh,130px);width:auto;max-width:70vw;margin:0 auto;object-fit:contain}
 .mtop .mlogo{margin-left:auto;flex:0 1 auto;min-width:0;height:34px;max-width:22vw;object-fit:contain;object-position:right center}
 .mtop .mlogo:not([hidden])+.mgear{margin-left:0!important}
+/* v2.95: in der Auswahl (Klasse, Team, Fahrer, Strecke, Rennen) bleibt das Logo weg – die Schrittleiste braucht den Platz (auf dem Handy war „05 Rennen“ abgeschnitten) */
+#menu[data-scr=series] .mtop .mlogo,#menu[data-scr=team] .mtop .mlogo,#menu[data-scr=driver] .mtop .mlogo,#menu[data-scr=track] .mtop .mlogo,#menu[data-scr=race] .mtop .mlogo{display:none!important}
+#menu[data-scr=series] .mtop .mgear,#menu[data-scr=team] .mtop .mgear,#menu[data-scr=driver] .mtop .mgear,#menu[data-scr=track] .mtop .mgear,#menu[data-scr=race] .mtop .mgear{margin-left:auto!important}
 @media (orientation:portrait){.mtop .mlogo{display:none}}
 
 /* Kachelbilder leicht unscharf (eigene Ebene hinter dem Text): mehr Kontrast zur Schrift */
@@ -1343,6 +1347,56 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
 #sgReact{opacity:1;transition:opacity .6s}
 #sgReact.fade{opacity:0}
 #sgHint.hidden,#sgReact.hidden{display:none}
+.msel{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent)}   /* v2.95: Chips, die nicht mehr ganz passen, laufen weich aus */
+.slider b{color:rgba(255,255,255,.82)!important}   /* v2.95: Prozentwerte waren dunkelrot auf dunkel kaum lesbar */
+#setAudio .row2{margin-top:8px}
+@media (max-height:380px){.slider{padding:3px 0!important}#setAudio .row2 .big{height:38px!important;min-height:0!important}}   /* kleines Handy quer: Regler und beide Knöpfe passen ohne Scrollen über „Fertig“ */
+@media (max-width:760px) and (orientation:landscape){   /* Saison auf dem kleinen Handy: zwei gleich breite Spalten, Niveau in EINER Zeile, Streckenkarte klein in der Ecke (lag über den Chips) */
+  .sepane[data-pane=race].on{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
+  #scrSeason .seg{flex-wrap:nowrap!important;gap:3px!important}#scrSeason .seg button{min-width:0!important;padding:0 2px!important;font-size:10.5px!important;letter-spacing:0!important}
+  .snext canvas{position:absolute!important;right:8px;top:8px;width:92px!important;max-width:none}
+  .snext{min-height:0!important;padding:10px 12px 10px 18px!important}.snext .sn-l b{font-size:clamp(22px,7vh,30px)!important}
+  .snext .sn-l{flex:1 1 0;min-width:0;max-width:100%}.snext .sn-tags{flex-wrap:wrap;gap:4px 6px}.snext .sn-tags i{white-space:nowrap}
+}
+/* ===== Rennen einstellen (v2.95, Entwurf A): Reiter links mit aktuellem Wert, rechts die Einstellungen der gewählten Gruppe ===== */
+.rx{height:calc(100% - 46px);display:grid;grid-template-columns:minmax(200px,29%) 1fr;gap:12px;align-items:start;color:#fff}
+.rx svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.rx-nav{display:flex;flex-direction:column;gap:8px;min-height:0}
+.rx-nav button{flex:0 1 78px;min-height:44px;display:flex;align-items:center;gap:12px;padding:0 14px 0 12px;text-align:left;color:#fff;border:1px solid rgba(255,255,255,.16);border-left:4px solid rgba(255,255,255,.16);border-radius:6px;background:rgba(21,21,30,.86)}
+.rx-nav button svg{width:24px;height:24px;flex:none;opacity:.6}
+.rx-nav button span{min-width:0;flex:1}
+.rx-nav button b{display:block;font-weight:900;font-style:italic;font-size:14px;letter-spacing:.12em;text-transform:uppercase;line-height:1.15}
+.rx-nav button small{display:block;font-size:12px;font-weight:600;color:rgba(255,255,255,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+.rx-nav button em{font-style:normal;font-size:18px;opacity:.35}
+.rx-nav button.on{border-color:rgba(255,255,255,.3);border-left-color:#e10600;background:linear-gradient(90deg,rgba(225,6,0,.3),rgba(40,22,26,.92) 55%,rgba(21,21,30,.92))}
+.rx-nav button.on svg{opacity:1}.rx-nav button.on small{color:rgba(255,255,255,.85)}.rx-nav button.on em{opacity:.9;color:#fff}
+.rx-pane{align-self:stretch;max-height:340px;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-start;padding:18px 20px!important}
+.rx-p:not(.on){display:none!important}.rx-p.on{display:flex;flex-direction:column;gap:14px}.rx-p.rx-2.on{display:grid}
+.rx-pane .field{margin:0!important}
+.rx-2{display:grid;grid-template-columns:1fr 1fr;gap:14px 26px;align-items:start}
+.rx-p[data-rx=help] .rx-2{grid-template-columns:2fr 3fr}
+@media (max-width:720px){.rx-pane .seg button{font-size:11px!important;letter-spacing:.02em!important}.rx-2{gap:10px 16px}}
+.rx-wx{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.rx-wx button{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px 9px;min-height:88px;text-align:left;color:#fff;border:1px solid rgba(255,255,255,.16);border-radius:5px;background:rgba(0,0,0,.32)}
+.rx-wx button svg{width:30px;height:30px;margin-bottom:auto;opacity:.75}
+.rx-wx button b{font-weight:900;font-size:13px;letter-spacing:.08em;text-transform:uppercase;line-height:1.15}
+.rx-wx button small{font-size:11px;font-weight:600;color:rgba(255,255,255,.58);line-height:1.25}
+.rx-wx button.on{background:linear-gradient(180deg,#fff,#dcdde3);color:#101114;border-color:#fff;box-shadow:inset 0 -4px 0 #e10600}
+.rx-wx button.on svg{opacity:1}.rx-wx button.on small{color:rgba(16,17,20,.7)}
+.rx-risk{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:9px 12px;border-radius:5px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
+.rx-risk label{font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.6);white-space:nowrap}
+.rx-risk .bar{height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}.rx-risk .bar i{display:block;height:100%;background:linear-gradient(90deg,#4aa3ff,#9fd0ff)}
+.rx-risk b{font-weight:900;font-size:18px;font-variant-numeric:tabular-nums}
+.rx-note{font-size:12px;line-height:1.45;color:rgba(255,255,255,.66);margin:0}.rx-note b{color:#fff}
+#seNext .sn-tags{flex-wrap:wrap!important;row-gap:4px}   /* v2.95: mit dem Wetter-Chip sind es drei – in schmalen Karten umbrechen statt abschneiden */
+.sn-tags i.wx{display:inline-flex;align-items:center;gap:6px}.sn-tags i.wx svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media (max-height:480px){   /* Handy quer: die Überschrift steht schon im Reiter „05 Rennen“, die vier Reiter füllen die Höhe */
+  .rx{height:100%}#menu[data-scr=race] #scrRace>.mh{display:none!important}.rx-nav{height:100%}.rx-nav button{flex:1}
+  .rx-pane{max-height:none;justify-content:center;padding:10px 14px!important}.rx-p.on{gap:8px}
+  .rx-wx button{min-height:74px;padding:8px 10px 8px}.rx-wx button svg{width:26px;height:26px}.rx-wx button b{font-size:12px}.rx-wx button small{font-size:10.5px}
+  .msel .rxc{display:none}
+}
+@media (orientation:portrait){.rx{grid-template-columns:1fr;height:auto}.rx-nav{flex-direction:row;flex-wrap:wrap}.rx-nav button{flex:1 1 45%;min-height:52px}.rx-wx{grid-template-columns:1fr 1fr}.rx-2{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -1511,9 +1565,17 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
 
   <section class="scr" id="scrRace">
     <h2 class="mh">Rennen einstellen</h2>
-    <div class="rgrid">
-      <div class="rpanel">
-                <div class="field"><label>Renndauer</label>
+    <!-- v2.95: vier Gruppen statt einer überladenen Seite – links die Reiter mit ihrem aktuellen Wert (alles auf einen Blick), rechts die Einstellungen der gewählten Gruppe -->
+    <div class="rx" id="rx">
+    <nav class="rx-nav" id="rxNav">
+      <button data-rx="race"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4"/><path d="M5 5h13l-2.6 4 2.6 4H5"/></svg><span><b>Rennen</b><small id="rxSumRace"></small></span><em>›</em></button>
+      <button data-rx="wx"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 15.5a4 4 0 0 1 .5-7.97A5.5 5.5 0 0 1 18.4 9a3.3 3.3 0 0 1-.4 6.5z"/><path d="M9 18.5l-1 2.5M13 18.5l-1 2.5M17 18.5l-1 2.5"/></svg><span><b>Wetter</b><small id="rxSumWx"></small></span><em>›</em></button>
+      <button data-rx="ai"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14a8 8 0 0 1 16 0v2.5a2 2 0 0 1-2 2H10l-6-3z"/><path d="M4.2 13H13a2.5 2.5 0 0 1 2.5 2.5V16"/></svg><span><b>Gegner</b><small id="rxSumAi"></small></span><em>›</em></button>
+      <button data-rx="help"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.2"/><path d="M3.8 10.5h5.9M14.3 10.5h5.9M12 14.2v6.2"/></svg><span><b>Fahrhilfen</b><small id="rxSumHelp"></small></span><em>›</em></button>
+    </nav>
+    <div class="rpanel rx-pane">
+      <div class="rx-p rx-2" data-rx="race">
+        <div class="field"><label>Renndauer</label>
           <div class="stepper"><button data-step="laps" data-d="-1">−</button><output id="oLaps">5</output><button data-step="laps" data-d="1">+</button><span class="unit">Runden</span></div>
           <div class="chips" id="lapChips"></div>
         </div>
@@ -1522,15 +1584,29 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
           <div class="gridinfo" id="gridInfo"></div>
         </div>
       </div>
-      <div class="rpanel">
+      <div class="rx-p" data-rx="wx">
+        <div class="rx-wx" id="rxWx">
+          <button data-wx="dry"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="5.5"/><path d="M16 4v3M16 25v3M4 16h3M25 16h3M7.5 7.5l2.1 2.1M22.4 22.4l2.1 2.1M7.5 24.5l2.1-2.1M22.4 9.6l2.1-2.1"/></svg><b>Trocken</b><small>Slicks<br>volle Haftung</small></button>
+          <button data-wx="light"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M9.5 19a5.2 5.2 0 0 1 .7-10.36A7.2 7.2 0 0 1 24 10.6a4.3 4.3 0 0 1-.5 8.4z"/><path d="M13 23l-1 2.6M19.5 23l-1 2.6"/></svg><b>Leichter Regen</b><small id="rxWxL"></small></button>
+          <button data-wx="heavy"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M9.5 17a5.2 5.2 0 0 1 .7-10.36A7.2 7.2 0 0 1 24 8.6a4.3 4.3 0 0 1-.5 8.4z"/><path d="M9.5 21l-2 5.5M14 21l-2 5.5M18.5 21l-2 5.5M23 21l-2 5.5"/></svg><b>Starker Regen</b><small id="rxWxH"></small></button>
+          <button data-wx="auto"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="6" y="6" width="20" height="20" rx="4"/><circle cx="11.5" cy="11.5" r="1.3" fill="currentColor"/><circle cx="20.5" cy="20.5" r="1.3" fill="currentColor"/><circle cx="16" cy="16" r="1.3" fill="currentColor"/><circle cx="20.5" cy="11.5" r="1.3" fill="currentColor"/><circle cx="11.5" cy="20.5" r="1.3" fill="currentColor"/></svg><b>Zufall</b><small id="rxWxA"></small></button>
+        </div>
+        <div class="rx-risk"><label id="rxRiskL">Regenrisiko</label><div class="bar"><i id="rxRiskB"></i></div><b id="rxRiskV">0 %</b></div>
+        <p class="rx-note" id="rxWxNote"></p>
+      </div>
+      <div class="rx-p" data-rx="ai">
         <div class="field" id="diffField"><label>Schwierigkeit</label><div class="seg" data-key="diff"><button data-v="easy">Leicht</button><button data-v="mid">Mittel</button><button data-v="hard">Schwer</button><button data-v="pro">Profi</button><button data-v="leg">Legende</button></div></div>
-        <div class="field"><label>Steuerung</label><div class="seg" data-key="ctrl"><button data-v="tilt">Neigen</button><button data-v="touch">Touch</button></div></div>
+        <p class="rx-note" id="rxAiNote"></p>
+      </div>
+      <div class="rx-p" data-rx="help">
+        <div class="rx-2"><div class="field"><label>Steuerung</label><div class="seg" data-key="ctrl"><button data-v="tilt">Neigen</button><button data-v="touch">Touch</button></div></div>
+          <div class="field"><label>Ideallinie</label><div class="seg" data-key="line"><button data-v="off">Aus</button><button data-v="brake">Nur Bremsen</button><button data-v="full">Voll</button></div></div></div>
         <div class="togs">
           <div class="tog"><span>Auto-Gas</span><button class="sw" data-tog="autogas" aria-label="Auto-Gas"></button></div>
           <div class="tog"><span>Bremsassistent</span><button class="sw" data-tog="assist" aria-label="Bremsassistent"></button></div>
         </div>
-        <div class="field" style="margin-top:8px"><label>Ideallinie</label><div class="seg" data-key="line"><button data-v="off">Aus</button><button data-v="brake">Nur Bremsen</button><button data-v="full">Voll</button></div></div>
       </div>
+    </div>
     </div>
   </section>
 
@@ -1600,8 +1676,7 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
     <div class="slider"><span>Musik</span><input type="range" min="0" max="100" step="1" id="volMusic"><b id="volMusicV"></b></div>
     <div class="slider"><span>Motor &amp; Autos</span><input type="range" min="0" max="100" step="1" id="volCar"><b id="volCarV"></b></div>
     <div class="slider"><span>Effekte</span><input type="range" min="0" max="100" step="1" id="volFx"><b id="volFxV"></b></div>
-    <button class="big alt" id="nextSong">⏭ Nächstes Lied</button>
-    <button class="big alt" id="resetMix">↺ Tonmischung auf Standard</button>
+    <div class="row2"><button class="big alt" id="nextSong">⏭ Nächstes Lied</button><button class="big alt" id="resetMix">↺ Tonmischung auf Standard</button></div>   <!-- v2.95: nebeneinander – untereinander war der zweite Knopf auf dem Handy angeschnitten -->
   </section></div>
   <div class="ppane" id="sGfx"><section class="panel" id="setGfx">
     <div class="seg gfx" data-key="gfx"><button data-v="low">Schnell</button><button data-v="high">Schön</button><button data-v="ultra">Ultra</button></div>
@@ -2377,12 +2452,21 @@ const FinishShader = {
   uniforms: { tDiffuse: { value: null }, uSpeed: { value: 0 }, uVig: { value: 0.38 }, uSat: { value: 1.12 }, uCon: { value: 1.08 }, uTint: { value: new THREE.Vector3(1, 1, 1) }, uLift: { value: new THREE.Vector3(0, 0, 0) },
     uSun: { value: new THREE.Vector2(0.5, 0.5) }, uSunOn: { value: 0 }, uAspect: { value: 1 }, uSunCol: { value: new THREE.Vector3(1, .9, .7) },
     tRays: { value: null }, uRays: { value: 0 }, uSh: { value: new THREE.Vector3(0.97, 0.99, 1.04) }, uHi: { value: new THREE.Vector3(1.03, 1.0, 0.96) }, tSunVis: { value: null }, uSharp: { value: 0 }, uTexel: { value: new THREE.Vector2(1 / 1024, 1 / 1024) },
-    tBloom: { value: null }, uBloom: { value: 0 }, uTime: { value: 0 }, uWarm: { value: 0 }, uFade: { value: new THREE.Vector3(0, 0, 0) }, uGrain: { value: 0.012 }, uBoost: { value: 0 }, uEra: { value: 0 } },   // uEra: Bildfilter der Klassiker (HIST_CAR.fx)
+    tBloom: { value: null }, uBloom: { value: 0 }, uTime: { value: 0 }, uWarm: { value: 0 }, uFade: { value: new THREE.Vector3(0, 0, 0) }, uGrain: { value: 0.012 }, uBoost: { value: 0 }, uEra: { value: 0 }, uDrop: { value: new THREE.Vector3(0, 0, 0) } },   // uEra: Bildfilter der Klassiker (HIST_CAR.fx) · uDrop: Regentropfen auf dem Visier (x Menge, y Fahrtwind, z Laufzeit)
   vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
   // Ein einziger Vollbild-Durchgang: Bloom und Lichtstrahlen dazu, Tempo-Effekte, Farbgebung je Strecke, Vignette, Filmkorn
-  fragmentShader: `uniform sampler2D tDiffuse, tRays, tSunVis, tBloom; uniform float uSpeed, uVig, uSat, uCon, uSunOn, uAspect, uRays, uSharp, uBloom, uTime, uWarm, uGrain, uBoost, uEra; uniform vec3 uTint, uLift, uSunCol, uSh, uHi, uFade; uniform vec2 uSun, uTexel; varying vec2 vUv;
+  fragmentShader: `uniform sampler2D tDiffuse, tRays, tSunVis, tBloom; uniform float uSpeed, uVig, uSat, uCon, uSunOn, uAspect, uRays, uSharp, uBloom, uTime, uWarm, uGrain, uBoost, uEra; uniform vec3 uTint, uLift, uSunCol, uSh, uHi, uFade, uDrop; uniform vec2 uSun, uTexel; varying vec2 vUv;
     float ghost(vec2 p, float size){ vec2 d = vUv - p; d.x *= uAspect; return smoothstep(size, size * 0.55, length(d)); }
     float hash12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
+    // Regentropfen auf dem Visier (Helmansicht, v2.95): je Rasterzelle höchstens ein Tropfen mit eigenem Lebenslauf – er entsteht, wird vom Fahrtwind nach oben geschoben
+    // und langgezogen und vergeht. Jeder Tropfen wirkt wie eine kleine Linse (Bild darin versetzt und gespiegelt). Rückgabe: xy = Bildversatz, z = Deckung.
+    vec2 hash22(vec2 p){ vec3 q = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973)); q += dot(q, q.yzx + 33.33); return fract((q.xx + q.yz) * q.zy); }
+    vec3 dropLayer(vec2 p, float n, float t, float amt, float wind){
+      vec2 g = p * n, id = floor(g), f = fract(g) - 0.5, h = hash22(id), c = (hash22(id + 7.3) - 0.5) * 0.5;
+      float life = fract(t * (0.045 + 0.1 * h.y) + h.y * 17.0), r = 0.1 + 0.15 * h.y;
+      c.y += (life - 0.5) * 0.4 * wind; vec2 d = f - c; d.y /= 1.0 + wind * 0.9;
+      float m = (1.0 - smoothstep(0.5, 1.0, length(d) / r)) * smoothstep(1.0 - amt, 1.12 - amt, h.x) * smoothstep(0.0, 0.07, life) * (1.0 - smoothstep(0.72, 1.0, life));
+      return vec3(-d * (1.2 * m / n), m); }
     void main(){
       float sp = min(uSpeed, 2.2);
       vec2 c0 = vUv - 0.5; float r0 = length(c0 * vec2(uAspect, 1.0)) / max(uAspect, 1.0) * 1.4142;
@@ -2395,9 +2479,14 @@ const FinishShader = {
         else if (uEra < 2.5) { float ln = floor(vUv.y * 288.0); bnd = 1.0 - smoothstep(0.0, 0.03, abs(vUv.y - (1.15 - fract(uTime * 0.06) * 1.3)));   // Zeilen zittern, ein Störstreifen wandert durchs Bild
           uv.x += (hash12(vec2(ln, floor(uTime * 25.0))) - 0.5) * (0.0010 + bnd * 0.010) + (1.0 - smoothstep(0.0, 0.05, vUv.y)) * 0.004 * sin(uTime * 9.0 + vUv.y * 90.0); }   // unten: Kopfumschaltung
       }
+      vec3 drp = vec3(0.0);
+      if (uDrop.x > 0.001) { vec2 dq = c0 * vec2(uAspect, 1.0);   // nur bei Regen in der Helmansicht (Uniform-Verzweigung: sonst kostet es nichts)
+        drp = dropLayer(dq, 9.0, uDrop.z, uDrop.x * 0.42, uDrop.y) + dropLayer(dq + 3.7, 21.0, uDrop.z * 1.3 + 5.0, uDrop.x * 0.55, uDrop.y * 0.7);   // wenige mittlere und viele kleine Tropfen
+        uv += drp.xy * vec2(1.0 / uAspect, 1.0); drp.z = min(drp.z, 1.0); }
       vec2 c = uv - 0.5; float r = length(c);
       float top = smoothstep(0.9, 1.5, sp); float amt = (sp * 0.085 + top * top * 0.07) * smoothstep(0.12, 0.7, r) * mix(0.2 + top * 0.15, 1.0, smoothstep(0.42, 0.75, uv.y)) + uBoost * 0.075 * smoothstep(0.08, 0.6, r);   // nahe Höchstgeschwindigkeit und bei Boost deutlich mehr Radialunschärfe   // Fahrbahn, Linien und Curbs (untere Bildhälfte) bleiben scharf
       vec3 col = texture2D(tDiffuse, uv).rgb;
+      col *= 1.0 + 0.1 * drp.z - 0.3 * drp.z * (1.0 - drp.z);   // Tropfen: innen etwas heller, dunkler weicher Rand (ohne Tropfen ×1)
       if (uSharp > 0.01) {   // Nachschärfen (gleicht die niedrigere Renderauflösung aus), begrenzt gegen helle Säume
         vec3 nb = texture2D(tDiffuse, uv + vec2(uTexel.x, 0.0)).rgb + texture2D(tDiffuse, uv - vec2(uTexel.x, 0.0)).rgb + texture2D(tDiffuse, uv + vec2(0.0, uTexel.y)).rgb + texture2D(tDiffuse, uv - vec2(0.0, uTexel.y)).rgb;
         col += clamp((col - nb * 0.25) * uSharp, -col * 0.3, col * 0.3);
@@ -13379,7 +13468,10 @@ function renderSeason() {
   // Reiter „Rennen“
   { const nxI = Math.min(CHP.round, CAL.length - 1), nk = CAL[nxI][0], tk = TRACKS[nk];
     $('#seNext').innerHTML = '<div class="sn-l"><small>' + (CHP.done ? 'Saison beendet' : 'Nächstes Rennen · ' + (CHP.round + 1) + ' von ' + CAL.length) + '</small><b>' + tk.name + '</b><span>' + flagSVG(nk) + tk.full + ' · ' + tk.land + '</span>'
-      + '<div class="sn-tags"><i>' + (CHP.done ? 'Platz ' + CHP.finalPos : CHP.phase === 'race' ? 'Startplatz P' + CHP.qpos : 'Qualifying steht an') + '</i><i>' + tk.km + '</i></div></div><canvas width="300" height="190"></canvas>';
+      + '<div class="sn-tags"><i>' + (CHP.done ? 'Platz ' + CHP.finalPos : CHP.phase === 'race' ? 'Startplatz P' + CHP.qpos : 'Qualifying steht an') + '</i><i>' + tk.km + '</i>'
+      + (CHP.done ? '' : (() => { const wk = CHP.wx && CHP.wx[CHP.round], wet = wk ? wk !== 'dry' : true;   /* vor dem Rennwochenende das Regenrisiko, ab dem Qualifying das ausgeloste Wetter */
+        return '<i class="wx">' + (wet ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 15.5a4 4 0 0 1 .5-7.97A5.5 5.5 0 0 1 18.4 9a3.3 3.3 0 0 1-.4 6.5z"/><path d="M9 18.5l-1 2.5M13 18.5l-1 2.5M17 18.5l-1 2.5"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></svg>') + (wk ? WX_NAME[wk] : 'Regenrisiko ' + rainPct(nk) + ' %') + '</i>'; })())
+      + '</div></div><canvas width="300" height="190"></canvas>';
     const cv = $('#seNext canvas'), g = cv.getContext('2d'), W2 = cv.width, H2 = cv.height; let a = 1e9, bb = -1e9, c = 1e9, d = -1e9; for (const p of tk.pts) { a = Math.min(a, p[0]); bb = Math.max(bb, p[0]); c = Math.min(c, p[1]); d = Math.max(d, p[1]); }
     const sc = Math.min((W2 - 30) / (bb - a), (H2 - 30) / (d - c)), ox = (W2 - (bb - a) * sc) / 2, oz = (H2 - (d - c) * sc) / 2, fx = x => ox + (x - a) * sc, fz = z => oz + (z - c) * sc, path = () => { g.beginPath(); tk.pts.forEach((p, q) => q ? g.lineTo(fx(p[0]), fz(p[1])) : g.moveTo(fx(p[0]), fz(p[1]))); g.closePath(); };
     g.lineJoin = 'round'; path(); g.strokeStyle = 'rgba(0,0,0,.45)'; g.lineWidth = 8; g.stroke(); path(); g.strokeStyle = '#ffffff'; g.lineWidth = 4; g.stroke(); const p0 = tk.pts[0]; g.fillStyle = '#fff'; g.beginPath(); g.arc(fx(p0[0]), fz(p0[1]), 6, 0, 7); g.fill(); g.fillStyle = '#e10600'; g.beginPath(); g.arc(fx(p0[0]), fz(p0[1]), 3.4, 0, 7); g.fill(); }
@@ -13502,6 +13594,29 @@ function renderDrivers() {
       + '<div class="pick">' + (c.code === S.driver ? 'Ausgewählt' : (n ? 'Rechts' : 'Links') + ' wählen') + '</div></button>'; }).join('');
   $$('.dcard').forEach(b => b.addEventListener('click', () => { S.driver = b.dataset.drv; save(); placeOnGrid(); renderMenu(); if (SHOW.on) showroomPick(); }));
 }
+// „Rennen einstellen“ (v2.95): Reiter, Zusammenfassungen und Wetterkarten
+const WX_NAME = { dry: 'Trocken', light: 'Leichter Regen', heavy: 'Starker Regen', auto: 'Zufall' }, DIFF_NAME = { easy: 'Leicht', mid: 'Mittel', hard: 'Schwer', pro: 'Profi', leg: 'Legende' };
+const DIFF_NOTE = { easy: 'Die Gegner lassen viel Platz und bremsen sehr früh. Zum Kennenlernen von Auto und Strecke.', mid: 'Die Gegner fahren sauber, bremsen aber früh. Gut zum Einfahren auf einer neuen Strecke.',
+  hard: 'Die Gegner fahren nah am Limit und nutzen jeden Fehler aus.', pro: 'Sehr schnelle Gegner mit mehr Haftung und Leistung als dein Auto – hier zählt jede Kurve.', leg: 'Das stärkste Feld: nur mit sauberer Linie, spätem Bremsen und gutem Start zu schlagen.' };
+const WX_NOTE = { dry: '<b>Trocken:</b> Rennen bei gutem Wetter.', light: '<b>Leichter Regen:</b> feuchte Fahrbahn mit einzelnen Pfützen, längere Bremswege. Alle fahren auf Intermediates.',
+  heavy: '<b>Starker Regen:</b> viel stehendes Wasser, Gischt hinter den Autos, schlechte Sicht. Alle fahren auf Regenreifen.', auto: '<b>Zufall:</b> Das Wetter wird vor dem Start ausgelost – so oft Regen, wie es an dieser Strecke am Rennwochenende wirklich regnet.' };
+const wxSel = () => WX_NAME[S.wx] ? S.wx : 'dry', rainPct = k => Math.round((RAIN_P[k] || [0.15])[0] * 100);
+function renderRx() {
+  const rx = document.getElementById('rx'); if (!rx) return; const tt = S.mode === 'tt', tr = TRACKS[S.track], pc = rainPct(S.track), wx = wxSel();
+  if (tt && MENU.rx === 'ai') MENU.rx = 'race'; const tab = MENU.rx || 'race';
+  $$('#rxNav button').forEach(b => { b.classList.toggle('on', b.dataset.rx === tab); if (b.dataset.rx === 'ai') b.style.display = tt ? 'none' : ''; });   /* Zeitrennen: keine Gegner */
+  $$('#rx .rx-p').forEach(e => e.classList.toggle('on', e.dataset.rx === tab));
+  const rd = S.laps + (S.laps === 1 ? ' Runde' : ' Runden');
+  $('#rxSumRace').textContent = tt ? rd + ' · Zeitfahren' : rd + ' · Start P' + S.grid;
+  $('#rxSumWx').textContent = WX_NAME[wx] + (wx === 'auto' ? ' · ' + pc + ' %' : '');
+  $('#rxSumAi').textContent = 'Schwierigkeit ' + (DIFF_NAME[S.diff] || 'Mittel');
+  $('#rxSumHelp').textContent = [isTouch ? (S.ctrl === 'tilt' ? 'Neigen' : 'Touch') : null, 'Ideallinie ' + (({ off: 'aus', brake: 'beim Bremsen', full: 'voll' })[S.line] || 'aus'), S.autogas ? 'Auto-Gas' : null, S.assist ? 'Bremsassistent' : null].filter(Boolean).join(' · ');
+  $$('#rxWx button').forEach(b => b.classList.toggle('on', b.dataset.wx === wx));
+  $('#rxWxL').innerHTML = 'Intermediates<br>−' + Math.round((1 - WXLV.light.grip) * 100) + ' % Grip'; $('#rxWxH').innerHTML = 'Regenreifen<br>−' + Math.round((1 - WXLV.heavy.grip) * 100) + ' % Grip'; $('#rxWxA').innerHTML = 'wie in echt<br>' + pc + ' % Regen';
+  { const cd = CAL_F1.find(c => c[0] === S.track), m = cd && /^(\d+)\.(\d+)\./.exec(cd[1]), MON = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+    $('#rxRiskL').textContent = 'Regenrisiko ' + tr.name + (m ? ' · ' + (+m[1]) + '. ' + MON[+m[2] - 1] : ''); $('#rxRiskB').style.width = pc + '%'; $('#rxRiskV').textContent = pc + ' %'; }
+  $('#rxWxNote').innerHTML = WX_NOTE[wx]; $('#rxAiNote').innerHTML = '<b>' + (DIFF_NAME[S.diff] || 'Mittel') + ':</b> ' + (DIFF_NOTE[S.diff] || DIFF_NOTE.mid);
+}
 function renderMenu() {
   if ((MENU.roneShown !== undefined && MENU.roneShown !== !!S.rone) || (MENU.histShown !== undefined && MENU.histShown !== (MENU.mode !== 'career')) || (MENU.leg !== undefined && TEAMS[MENU.team] && !!TEAMS[MENU.team].hist !== !!MENU.leg)) renderTeams();   /* Legenden-Ansicht folgt dem gewählten Auto */
   const d = byCode(S.driver) || ALL[0];
@@ -13514,8 +13629,9 @@ function renderMenu() {
   if (MENU.mode !== 'career' && SCR.indexOf(MENU.scr) >= 2) sel.push('<span>' + SERIES[SER].name + '</span>');
   if (MENU.mode !== 'career' && SCR.indexOf(MENU.scr) >= 3) sel.push('<span><i style="background:' + hex(uiCol(TEAMS[MENU.team])) + '"></i>' + TEAMS[MENU.team].name + '</span>');
   if (MENU.mode !== 'career' && SCR.indexOf(MENU.scr) >= 4) sel.push('<span>#' + d.num + ' ' + d.name + '</span>');
-  if (MENU.mode !== 'career' && SCR.indexOf(MENU.scr) >= 5) sel.push('<span><i style="background:' + ((TRACK_INFO[S.track] || {}).col || '#e10600') + '"></i>' + tr.name + '</span>', '<span>' + (S.mode === 'tt' ? 'Zeitfahren · ' + S.laps + ' Runden' : S.laps + ' Runden · P' + S.grid) + '</span>');
+  if (MENU.mode !== 'career' && SCR.indexOf(MENU.scr) >= 5) sel.push('<span><i style="background:' + ((TRACK_INFO[S.track] || {}).col || '#e10600') + '"></i>' + tr.name + '</span>', '<span>' + (S.mode === 'tt' ? 'Zeitfahren · ' + S.laps + ' Runden' : S.laps + ' Runden · P' + S.grid) + '</span>', '<span class="rxc">' + WX_NAME[wxSel()] + '</span>');
   { const gf = document.getElementById('gridField'); if (gf) gf.style.display = S.mode === 'tt' ? 'none' : ''; const df = document.getElementById('diffField'); if (df) df.style.display = S.mode === 'tt' ? 'none' : ''; }
+  renderRx();
   { const rv = document.getElementById('rVar'); if (rv) rv.style.display = MENU.team && TEAMS[MENU.team] && TEAMS[MENU.team].road ? '' : 'none'; }
   $('#mSel').innerHTML = sel.join('');
   $('#oLaps').textContent = S.laps; $('#oGrid').textContent = 'P' + S.grid;
@@ -13691,6 +13807,8 @@ $$('[data-step]').forEach(b => b.addEventListener('click', () => {
 $$('.seg button').forEach(b => b.addEventListener('click', () => { const k = b.parentElement.dataset.key; S[k] = b.dataset.v; save();
   if (k === 'line') applyLine();
   if (k === 'ctrl' && running) { effCtrl = isTouch ? S.ctrl : 'touch'; if (effCtrl === 'tilt') { enableMotion(); tiltZero = tiltAngle; } layoutControls(); } if (k === 'gfx') { const was = running; REBUILD = true; loading(true); setTimeout(() => { try { applyGfx(); if (TRK) { buildTrack(S.track); if (!was) placeOnGrid(); } } finally { loading(false); REBUILD = false; last = performance.now(); pauseDrawn = 0; } }, 30); } renderMenu(); }));   /* im Rennen: Strecke neu aufbauen, Autos und Rennstand bleiben (nur die Bildschleife steht kurz) */
+$$('#rxNav button').forEach(b => b.addEventListener('click', () => { MENU.rx = b.dataset.rx; renderMenu(); }));   /* Rennen einstellen: Reiter */
+$$('#rxWx button').forEach(b => b.addEventListener('click', () => { S.wx = b.dataset.wx; save(); renderMenu(); }));   /* Wetterwahl */
 $$('.sw').forEach(b => b.addEventListener('click', () => { S[b.dataset.tog] = !S[b.dataset.tog]; save(); if (b.dataset.tog === 'nos') renderTracks(); renderMenu(); $$('.sw').forEach(x => x.classList.toggle('on', !!S[x.dataset.tog])); if (b.dataset.tog === 'autogas') try { layoutControls(); } catch (e) {} }));   /* auch im Pausenmenü: alle Schalter gleichen Namens nachziehen, Gas-Taste ein-/ausblenden */
 // Vollbild + Querformat schon beim ersten Antippen im Menü – nicht erst beim Rennstart (die Größenänderung legte alle Render-Ziele neu an: Hänger beim Start)
 addEventListener('pointerup', function fsOnce() { if (!isTouch || standalone || document.fullscreenElement) { removeEventListener('pointerup', fsOnce, true); return; } try { const el = document.documentElement; if (el.requestFullscreen) el.requestFullscreen({ navigationUI: 'hide' }).then(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {}); } catch (e) {} removeEventListener('pointerup', fsOnce, true); }, true);
@@ -13935,6 +14053,8 @@ function tick(now, forced) {
   lodTick(dt); wakeTick(dt); drawWheel(dt); if (running) updateLine(dt); updateHUD(dt); sphereTick(dt); vegasTick(dt); updateAudio(pl.thr || 0); musicTick();
   if (finishPass) {
     const fu = finishPass.uniforms; fu.uSpeed.value = running && !paused ? clamp((pl.v - 50) / 42, 0, 1.2) ** 1.5 * 1.25 + (pl.boostFx || 0) * 1.05 : 0;
+    { const d = fu.uDrop.value, want = WX.on && running && S.cam === 2 ? 0.42 + 0.58 * WX.rain : 0;   /* Regentropfen auf dem Visier: weich ein/aus (Kamerawechsel), Lebenslauf läuft mit dem Fahrtwind schneller */
+      d.x += (want - d.x) * Math.min(1, dt * (want ? 2.5 : 8)); if (!want && d.x < 0.004) d.x = 0; d.y = clamp(pl.v / 75, 0, 1); if (d.x > 0 && !paused) d.z = (d.z + dt * (1 + d.y * 2.6)) % 3600; }
     fu.uTime.value = now / 1000; fu.uBoost.value = running && !paused ? (pl.boostFx || 0) : 0; fu.uEra.value = running && pl.mesh && pl.mesh.H && S.histFx !== false ? pl.mesh.H.fx : 0;   // Klassiker: Bildfilter der Epoche
     if (bloomPass) bloomPass.strength = (TH.look?.bloom ?? .5) + (pl.boostFx || 0) * 0.3; fu.uSat.value = (TH.look?.sat ?? 1.1) * TONE.sat * (1 - (pl.boostFx || 0) * 0.4); fu.uVig.value = (TH.look?.vig ?? .38) + clamp((pl.v - 65) / 30, 0, 1) * 0.32 + (pl.boostFx || 0) * 0.6;
     _sv.copy(skyMat.uniforms.sunDir.value).multiplyScalar(1000).add(camera.position).project(camera);

@@ -1,11 +1,10 @@
 # Wetter: Regen (v2.95)
 
-Stand 24.11.2026. Regen ist im Spielcode eingebaut (Arbeits-Branch), aber **noch nicht abgenommen**: Die Optik des Regens und das neue Menü
-„Rennen einstellen“ warten auf das Go (Regel: Gestaltung erst nach Abnahme). Bis dahin gibt es keine Wetterwahl im Menü; zum Ausprobieren dient
-der Testschalter in der Adresse (siehe 2).
+Stand 24.11.2026. Regen und das neue Menü „Rennen einstellen“ (Entwurf A, vom Nutzer gewählt) sind eingebaut und auf `main`. Das Wetter wird im Menü
+unter **Rennen einstellen → Wetter** gewählt; in der Karriere wird es je Rennwochenende ausgelost.
 
-Bilder: `docs/bilder/regen_entwurf_tag.jpg`, `regen_entwurf_nacht.jpg` (echte Spielbilder) · Menü-Entwürfe: `rennmenue_entwurf_A.jpg`,
-`rennmenue_entwurf_B.jpg`, `rennmenue_entwurf_desktop.jpg`.
+Bilder (echte Spielbilder): `docs/bilder/regen_entwurf_tag.jpg`, `regen_entwurf_nacht.jpg`, `regen_helm_reifen.jpg` (Visier-Tropfen, blaue Regenreifen) ·
+Menü: `rennmenue_v295.jpg` (eingebaut), Entwürfe `rennmenue_entwurf_A.jpg`, `_B.jpg`, `_desktop.jpg`.
 
 ---
 
@@ -25,12 +24,14 @@ Bilder: `docs/bilder/regen_entwurf_tag.jpg`, `regen_entwurf_nacht.jpg` (echte Sp
 | Ton | berechnetes Regenprasseln und Reifenzischen (kein Download, keine ElevenLabs-Credits) |
 | Karriere | je Rennwochenende einmal ausgelost (Quali und Rennen gleich), im Spielstand gespeichert (`CHP.wx`) |
 | Monaco | im Tunnel fällt kein Regen (Lichtkarte, Kanal „überdacht“) |
+| Helmansicht | Regentropfen auf dem Visier: entstehen, werden vom Fahrtwind nach oben geschoben und langgezogen, vergehen; jeder Tropfen wirkt als kleine Linse (nur „Schön“/„Ultra“) |
 
 ## 2. Bedienen und testen
 
-- **Testschalter** (bis zur Abnahme des Menüs): `index.html?wetter=stark`, `?wetter=leicht`, `?wetter=trocken` – erzwingt das Wetter für jedes Rennen.
+- **Im Spiel**: Rennen einstellen → Reiter „Wetter“: Trocken, Leichter Regen, Starker Regen oder Zufall (nach dem Regenrisiko der Strecke, wird bei jedem Start neu gelost).
+- **Testschalter**: `index.html?wetter=stark`, `?wetter=leicht`, `?wetter=trocken` – erzwingt das Wetter für jedes Rennen (auch in der Karriere).
 - Konsole: `__wx('heavy')` / `__wx('light')` / `__wx('dry')` schaltet auf der gebauten Strecke um (ohne Neubau), `__WX` zeigt den Zustand.
-- Einstellung `S.wx` (`dry`/`light`/`heavy`/`auto`) ist vorbereitet; die Bedienung dazu kommt mit dem neuen Menü.
+- Gespeichert wird die Wahl in `S.wx` (`dry`/`light`/`heavy`/`auto`).
 - **Lasttest am Handy** (Einstellungen → Extras → Debug-Menü): Bei Regen misst er zusätzlich „ohne Tropfen und Lichtkegel-Regen“, „ohne Gischt“,
   „ohne Pfützen-Spiegelung“ und „trocken zum Vergleich“ – so lässt sich am echten Gerät ablesen, was jeder Baustein kostet.
 - Testschalter für Messungen: `window.__noRain`, `__noSpray`, `__noSSR` (danach `applyWeather(WX.cur, true)`).
@@ -152,21 +153,34 @@ Alles steht in `index.html` im Block „Wetter: Regen (v2.95)“ vor dem Himmel.
 | Untergründe bei Nässe, Aquaplaning | `SURFW`, `wxAqua` |
 | Spiegel-Stufen je Gerät | `applyWeather` (`steps`) |
 
-## 7. Menü „Rennen einstellen“ – Entwürfe (warten auf Abnahme)
+## 7. Menü „Rennen einstellen“ (Entwurf A, eingebaut)
 
-Bisher steht alles auf einer Seite; auf dem Handy ist die Ideallinie unten abgeschnitten. Vier Gruppen: **Rennen** (Renndauer, Startplatz), **Wetter**
-(Trocken, Leichter Regen, Starker Regen, Zufall + Regenrisiko der Strecke), **Gegner** (Schwierigkeit), **Fahrhilfen** (Steuerung, Ideallinie, Auto-Gas,
-Bremsassistent).
+Vorher stand alles auf einer Seite; auf dem Handy war die Ideallinie unten abgeschnitten. Jetzt vier Gruppen: **Rennen** (Renndauer, Startplatz), **Wetter**
+(Trocken, Leichter Regen, Starker Regen, Zufall + Regenrisiko der Strecke), **Gegner** (Schwierigkeit mit kurzer Erklärung), **Fahrhilfen** (Steuerung, Ideallinie,
+Auto-Gas, Bremsassistent). Links die Reiter – jeder zeigt seinen aktuellen Wert, man sieht alle Einstellungen auf einen Blick –, rechts die gewählte Gruppe.
 
-- **Entwurf A** (Empfehlung): Reiter links, jeder zeigt seinen aktuellen Wert – man sieht alle Einstellungen auf einen Blick und ändert rechts eine Gruppe.
-- **Entwurf B**: Reiter oben wie in den Einstellungen, darunter eine Fläche.
-- Karriere: am nächsten Rennen steht das Regenrisiko, ab dem Qualifying das ausgeloste Wetter.
+- HTML: `#scrRace` → `.rx` (`#rxNav`, `.rx-pane` mit vier `.rx-p`), Anzeige: `renderRx()` (wird aus `renderMenu` aufgerufen), gemerkter Reiter: `MENU.rx`.
+- Zeitrennen: Reiter „Gegner“ und der Startplatz entfallen. Karriere: am nächsten Rennen steht das Regenrisiko, ab dem Qualifying das ausgeloste Wetter (`renderSeason`).
+- Das Logo oben rechts bleibt in der Auswahl (Klasse, Team, Fahrer, Strecke, Rennen) weg – die Schrittleiste braucht den Platz.
+- Entwürfe (Bilder): `docs/bilder/rennmenue_entwurf_A.jpg`, `_B.jpg`, `_desktop.jpg`; Mockup-Skript `tools/wetter/rennmenue_entwurf.js`.
 
-Mockup-Skript: `tools/wetter/rennmenue_entwurf.js` (spritzt den Entwurf in den echten Menü-Bildschirm), Bögen: `tools/wetter/bogen.py`.
+### Menü-Prüfung (`tools/menue/pruefen.js`)
+
+Geht alle Menü-Bildschirme durch (Schnelles Spiel, Zeitrennen, Karriere, Einstellungen, Pause, Ergebnis), nimmt je Bildschirm ein Bild auf und meldet Elemente, die
+außerhalb liegen, abgeschnitten oder überdeckt sind oder deren Text nicht passt:
+
+```bash
+node tools/menue/pruefen.js <Ordner> 667x375 740x360 852x393 915x412 1280x720     # --ohne-rennen lässt Pause/Ergebnis weg
+```
+
+Gewollte Meldungen (kein Fehler): Scroll-Listen (Streckenkarten, Tabellen, lange Einstellungsseiten), die große Zierzahl auf den Fahrerkarten, „Text gekürzt“ am
+Weiter-Knopf (Glanz-Effekt), Überschrift „Team wählen“ (ihr Kasten reicht unter den Umschalter, der Text nicht). Am 24.11.2026 behoben: Saison-Seite auf kleinen
+Handys (Rennlänge lag unter dem Start-Knopf), abgeschnittene Helmfarben, mitten im Wort endende Auswahl-Chips in der Fußzeile, angeschnittener Knopf und kaum
+lesbare Prozentwerte in den Audio-Einstellungen.
 
 ## 8. Ideen für später
 
-- Tropfen auf Visier und Kameralinse (im Bild-Shader, eine Texturabfrage je Pixel).
+- Tropfen auch auf der Linse der TV-Kamera (auf dem Visier der Helmansicht gibt es sie schon: `dropLayer` im Bild-Shader, `uDrop`).
 - Wechselndes Wetter im Rennen (abtrocknende Ideallinie, einsetzender Regen) – `WX.wet`/`WX.rain` sind schon getrennte Werte.
 - Spritzer beim Durchfahren von Pfützen, Regenrinnen am Fahrbahnrand.
 - Boxenstopps mit Reifenwahl gibt es im Spiel nicht – deshalb fahren bei Regen alle auf dem passenden Reifen.

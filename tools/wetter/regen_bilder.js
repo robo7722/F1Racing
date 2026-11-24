@@ -1,7 +1,7 @@
 // Regen-Bilder aus dem echten Spiel aufnehmen (Abnahme, Vergleich nach Änderungen):
 //   node tools/wetter/regen_bilder.js <Strecke> <dry|light|heavy> <Ausgabeordner> [Streckenmeter,Kamera ...] [--gfx high|ultra|low] [--size 1280,720] [--nohud]
 //   Beispiel: node tools/wetter/regen_bilder.js Spa heavy bilder 300,0 1200,2 --nohud
-//   Standbild mit fester Kamera: fix:s:quer:höhe:s2:quer2:höhe2 (Kamera an Streckenmeter s, Blick auf s2; die Autos stehen davor)
+//   Standbild mit fester Kamera: fix:s:quer:höhe:s2:quer2:höhe2[:basis] (Kamera an Streckenmeter s, Blick auf s2; das eigene Auto steht bei basis+14, sonst s+14)
 // Kamera: 0 Verfolger, 1 hoch hinten, 2 Helm, 3 TV. Das eigene Auto fährt selbst (KI), vor jedem Bild laufen ~1,3 s Spielzeit.
 const { spiel } = require('../textur/spiel.js'); const fs = require('fs'); const path = require('path');
 (async () => {
@@ -18,11 +18,11 @@ const { spiel } = require('../textur/spiel.js'); const fs = require('fs'); const
   await p.evaluate(() => [...document.querySelectorAll('div')].filter(d => d.textContent.trim().startsWith('QC-Bot') && d.children.length < 4).forEach(d => d.style.display = 'none'));
   await ev(`raceState = 'race'; raceTime = 20; SG.go = true; window.__plAI = true; profBot = buildProfile(45.5 * WX.grip, VTOP, 44 * WX.brk, KR); document.querySelector('#lights').classList.add('hidden'); document.querySelector('#sgHint').classList.add('hidden'); ${nohud ? "document.body.classList.add('ptNoHud'); document.querySelector('#hud').style.visibility = 'hidden'; document.querySelector('#controls').style.display = 'none';" : ''} 1`);
   for (const v of views.length ? views : ['300,0']) {
-    if (v.startsWith('fix:')) { const q = v.slice(4).split(':').map(Number), s = q[0];   // Standbild
+    if (v.startsWith('fix:')) { const q = v.slice(4).split(':').map(Number), s = q.length > 6 ? q.pop() : q[0];   // Standbild; optionaler 7. Wert: Streckenmeter, ab dem die Autos stehen (sonst wie die Kamera)
       await ev(`S.cam = 0; { const put = (c, s, lat) => { const q = trackAt(s, lat); c.x = q.x; c.z = q.z; c.h = q.h; c.steer = 0; c.sx = c.sz = 0; c.yawKick = 0; c.idx = q.i; c.sPrev = modL(s); projectCar(c); c.d = modL(s); c.sPrev = modL(s); c.v = 0; c.stuckT = 0; };
         put(pl, ${s} + 14, -1.5); cars.filter(c => c !== pl).forEach((c, k) => put(c, ${s} + 26 + k * 11, (k % 2 ? -1 : 1) * 2.6)); }
         window.__view(${q.join(',')}); raceState = 'lights'; window.__frame(8, 33); raceState = 'race'; 1`);
-      const f = path.join(out, `${trk.toLowerCase()}_${wx}_fix${s}_${q[2]}.png`); await p.screenshot({ path: f }); await ev(`window.__camFix = null; 1`); console.log(T(), f); continue; }
+      const f = path.join(out, `${trk.toLowerCase()}_${wx}_fix${Math.round(q[0])}_${q[2]}.png`); await p.screenshot({ path: f }); await ev(`window.__camFix = null; 1`); console.log(T(), f); continue; }
     const [s, cam = 0] = v.split(',').map(Number);
     // Feld hinter und vor dem eigenen Auto aufstellen (alle mit dem Tempo, das ihr Profil dort erlaubt), dann ohne Zeichnen einfahren lassen und die letzten Bilder zeichnen
     const info = await ev(`S.cam = ${cam}; { const put = (c, s, lat) => { const q = trackAt(s, lat); c.x = q.x; c.z = q.z; c.h = q.h; c.steer = 0; c.sx = c.sz = 0; c.yawKick = 0; c.idx = q.i; c.sPrev = modL(s); projectCar(c); c.d = modL(s); c.sPrev = modL(s); c.stuckT = 0; c.wrongT = 0; c.v = Math.min((c === pl ? profBot : profAI)[c.idx] * 0.9, 80); };
