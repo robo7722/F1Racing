@@ -1404,6 +1404,7 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
 .rx-risk label{font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.6);white-space:nowrap}
 .rx-risk .bar{height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}.rx-risk .bar i{display:block;height:100%;background:linear-gradient(90deg,#4aa3ff,#9fd0ff)}
 .rx-risk b{font-weight:900;font-size:18px;font-variant-numeric:tabular-nums}
+.rx-risk.off{visibility:hidden}   /* v2.98: das Regenrisiko gibt es nur bei „Zufall“ – der Platz bleibt frei, damit beim Umschalten nichts springt */
 .rx-note{font-size:12px;line-height:1.45;color:rgba(255,255,255,.66);margin:0}.rx-note b{color:#fff}
 #seNext .sn-tags{flex-wrap:wrap!important;row-gap:4px}   /* v2.95: mit dem Wetter-Chip sind es drei – in schmalen Karten umbrechen statt abschneiden */
 .sn-tags i.wx{display:inline-flex;align-items:center;gap:6px}.sn-tags i.wx svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -1412,6 +1413,7 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
   .rx-pane{max-height:none;justify-content:center;padding:10px 14px!important}.rx-p.on{gap:8px}
   .rx-wx button{min-height:74px;padding:8px 10px 8px}.rx-wx button svg{width:26px;height:26px}.rx-wx button b{font-size:12px}.rx-wx button small{font-size:10.5px}
   .msel .rxc{display:none}
+  #rxWxNote{min-height:2.9em}   /* v2.98: immer zwei Zeilen Platz – sonst rutschten die Wetterkarten beim Umschalten (der Hinweis zu „Trocken“ ist einzeilig) */
 }
 @media (orientation:portrait){.rx{grid-template-columns:1fr;height:auto}.rx-nav{flex-direction:row;flex-wrap:wrap}.rx-nav button{flex:1 1 45%;min-height:52px}.rx-wx{grid-template-columns:1fr 1fr}.rx-2{grid-template-columns:1fr}}
 @media (min-height:560px) and (orientation:landscape){   /* Laptop/Monitor: „Rennen einstellen“ nutzt die Höhe – höhere Reiter, die Fläche rechts so hoch wie die Reiter, Inhalt darin mittig */
@@ -1615,8 +1617,8 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
           <button data-wx="heavy"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M9.5 17a5.2 5.2 0 0 1 .7-10.36A7.2 7.2 0 0 1 24 8.6a4.3 4.3 0 0 1-.5 8.4z"/><path d="M9.5 21l-2 5.5M14 21l-2 5.5M18.5 21l-2 5.5M23 21l-2 5.5"/></svg><b>Starker Regen</b><small id="rxWxH"></small></button>
           <button data-wx="auto"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="6" y="6" width="20" height="20" rx="4"/><circle cx="11.5" cy="11.5" r="1.3" fill="currentColor"/><circle cx="20.5" cy="20.5" r="1.3" fill="currentColor"/><circle cx="16" cy="16" r="1.3" fill="currentColor"/><circle cx="20.5" cy="11.5" r="1.3" fill="currentColor"/><circle cx="11.5" cy="20.5" r="1.3" fill="currentColor"/></svg><b>Zufall</b><small id="rxWxA"></small></button>
         </div>
-        <div class="rx-risk"><label id="rxRiskL">Regenrisiko</label><div class="bar"><i id="rxRiskB"></i></div><b id="rxRiskV">0 %</b></div>
         <p class="rx-note" id="rxWxNote"></p>
+        <div class="rx-risk" id="rxRisk"><label id="rxRiskL">Regenrisiko</label><div class="bar"><i id="rxRiskB"></i></div><b id="rxRiskV">0 %</b></div>
       </div>
       <div class="rx-p" data-rx="ai">
         <div class="field" id="diffField"><label>Schwierigkeit</label><div class="seg" data-key="diff"><button data-v="easy">Leicht</button><button data-v="mid">Mittel</button><button data-v="hard">Schwer</button><button data-v="pro">Profi</button><button data-v="leg">Legende</button></div></div>
@@ -2476,10 +2478,10 @@ const FinishShader = {
   uniforms: { tDiffuse: { value: null }, uSpeed: { value: 0 }, uVig: { value: 0.38 }, uSat: { value: 1.12 }, uCon: { value: 1.08 }, uTint: { value: new THREE.Vector3(1, 1, 1) }, uLift: { value: new THREE.Vector3(0, 0, 0) },
     uSun: { value: new THREE.Vector2(0.5, 0.5) }, uSunOn: { value: 0 }, uAspect: { value: 1 }, uSunCol: { value: new THREE.Vector3(1, .9, .7) },
     tRays: { value: null }, uRays: { value: 0 }, uSh: { value: new THREE.Vector3(0.97, 0.99, 1.04) }, uHi: { value: new THREE.Vector3(1.03, 1.0, 0.96) }, tSunVis: { value: null }, uSharp: { value: 0 }, uTexel: { value: new THREE.Vector2(1 / 1024, 1 / 1024) },
-    tBloom: { value: null }, uBloom: { value: 0 }, uTime: { value: 0 }, uWarm: { value: 0 }, uFade: { value: new THREE.Vector3(0, 0, 0) }, uGrain: { value: 0.012 }, uBoost: { value: 0 }, uEra: { value: 0 }, uDrop: { value: new THREE.Vector4(0, 0, 0, 0) } },   // uEra: Bildfilter der Klassiker (HIST_CAR.fx) · uDrop: Regentropfen auf dem Visier (x Menge, y Fahrtwind, z Laufzeit, w zurückgelegter Weg zur Seite)
+    tBloom: { value: null }, uBloom: { value: 0 }, uTime: { value: 0 }, uWarm: { value: 0 }, uFade: { value: new THREE.Vector3(0, 0, 0) }, uGrain: { value: 0.012 }, uBoost: { value: 0 }, uEra: { value: 0 }, uDrop: { value: new THREE.Vector4(0, 0, 0, 0) }, uDropA: { value: 1 } },   // uEra: Bildfilter der Klassiker (HIST_CAR.fx) · uDrop: Regentropfen auf dem Visier (x Menge, y Fahrtwind, z Laufzeit, w zurückgelegter Weg zur Seite)
   vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
   // Ein einziger Vollbild-Durchgang: Bloom und Lichtstrahlen dazu, Tempo-Effekte, Farbgebung je Strecke, Vignette, Filmkorn
-  fragmentShader: `uniform sampler2D tDiffuse, tRays, tSunVis, tBloom; uniform float uSpeed, uVig, uSat, uCon, uSunOn, uAspect, uRays, uSharp, uBloom, uTime, uWarm, uGrain, uBoost, uEra; uniform vec3 uTint, uLift, uSunCol, uSh, uHi, uFade; uniform vec4 uDrop; uniform vec2 uSun, uTexel; varying vec2 vUv;
+  fragmentShader: `uniform sampler2D tDiffuse, tRays, tSunVis, tBloom; uniform float uSpeed, uVig, uSat, uCon, uSunOn, uAspect, uRays, uSharp, uBloom, uTime, uWarm, uGrain, uBoost, uEra; uniform vec3 uTint, uLift, uSunCol, uSh, uHi, uFade; uniform vec4 uDrop; uniform float uDropA; uniform vec2 uSun, uTexel; varying vec2 vUv;
     float ghost(vec2 p, float size){ vec2 d = vUv - p; d.x *= uAspect; return smoothstep(size, size * 0.55, length(d)); }
     float hash12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
     // Regentropfen auf dem Visier (Helmansicht, v2.95/2.97): je Rasterzelle höchstens ein Tropfen mit eigenem Lebenslauf (entsteht, vergeht). Der Fahrtwind treibt die
@@ -2529,7 +2531,6 @@ const FinishShader = {
       // chromatische Aberration am Bildrand (stärker bei Tempo)
       float ca = (0.0004 + sp * 0.0018 + uBoost * 0.002) * smoothstep(0.35, 0.75, r);   // nur ganz am Rand, damit Curbs und Linien nicht farbig verschmieren
       if (ca > 0.00005) { float cm = 0.85 * (1.0 - bw); col.r = mix(col.r, texture2D(tDiffuse, uv + c * ca).r, cm); col.b = mix(col.b, texture2D(tDiffuse, uv - c * ca).b, cm); }   // nicht im verwischten Bereich: dort kämen Rot und Blau scharf, Grün verwischt (rosa/grüne Flecken an Bäumen und Banden bei Höchsttempo, v2.97 behoben)
-      col = col * (1.0 + drp.w - 0.25 * drp.z * (1.0 - drp.z)) + 0.05 * max(drp.w, 0.0);   // Tropfen auf dem Visier (nach Unschärfe und Farbsaum, sie sitzen scharf vor dem Bild): oben dunkel, unten hell, Glanzpunkt, dunkler weicher Rand (ohne Tropfen unverändert)
       if (uEra > 0.5) {
         if (uEra < 1.5 || uEra > 4.5) { vec2 o = vec2(0.0005, 0.0008);   // Film (Farbe 1970 und Schwarz-Weiß 1967): nur ein Hauch weicher (v2.69: vorher viel zu unscharf)
           vec3 b = texture2D(tDiffuse, uv + o).rgb + texture2D(tDiffuse, uv - o).rgb + texture2D(tDiffuse, uv + vec2(o.x, -o.y)).rgb + texture2D(tDiffuse, uv - vec2(o.x, -o.y)).rgb; col = mix(col, b * 0.25, 0.3); }
@@ -2548,6 +2549,10 @@ const FinishShader = {
           col += max(hl - vec3(0.75), 0.0) * 0.55; }
       }
       if (uBloom > 0.0) col += texture2D(tBloom, uv).rgb * uBloom;   // Leuchten (in Viertelauflösung berechnet)
+      // Tropfen auf dem Visier – nach Unschärfe, Farbsaum und Leuchten (sie sitzen scharf vor dem Bild und brechen auch den Lichthof der Lampen): oben dunkel, unten hell,
+      // Glanzpunkt, dunkler weicher Rand. Fast alles ist ein Faktor auf das Bild dahinter: wo kein Licht ist, sieht man auch keinen Tropfen. Nur der kleine Zusatzglanz
+      // (Spiegelung der Umgebung) kommt dazu – mit uDropA: am Tag voll, nachts nur im Flutlicht, im Dunkeln 0 (v2.98; vorher leuchteten die Tropfen nachts von selbst).
+      col = col * (1.0 + drp.w - 0.25 * drp.z * (1.0 - drp.z)) + 0.05 * uDropA * max(drp.w, 0.0);
       if (uRays > 0.001) col += texture2D(tRays, uv).rgb * uRays;   // Lichtstrahlen der tiefen Sonne
       // Sonnenreflexe: nur wenn die Sonne wirklich sichtbar ist (helle Pixel an ihrer Position)
       if (uSunOn > 0.0) {
@@ -2980,7 +2985,10 @@ function wxFrame(wb) {
 // ---------- Regen: feine Streifen in einem Kasten um die Kamera (alles im Vertex-Shader, kein Rechnen und Hochladen je Bild) ----------
 // Jeder Tropfen ist eine Linie vom Tropfen zu seiner Position eine Belichtungszeit früher – relativ zur Kamera: bei Tempo werden die Striche lang und laufen auf
 // den Fluchtpunkt zu. Additiv in Himmelsfarbe: vor dunklem Hintergrund sichtbar, vor dem hellen Himmel fast nicht (wie in echt).
-// Nachts leuchtet Regen nur, wo Flutlicht hinfällt: Helligkeit aus der Lichtkarte der Strecke (WXM, von oben gezeichnet); überdachte Stellen (Tunnel) bleiben trocken.
+// Nachts leuchtet Regen nur im Lichtkegel eines Flutlichts (v2.98): der Shader prüft je Tropfen die acht nächsten Masten (Achse Lampenkopf → Lichtfleck am Boden,
+// nach unten breiter und schwächer – dieselbe Form wie der Lichtkegel-Regen RAINC). Vorher zählte nur, ob der Boden darunter beleuchtet ist: der Regen leuchtete
+// dann über der ganzen Strecke bis in den schwarzen Himmel. Die Karte WXM (von oben gezeichnet) liefert weiter die überdachten Stellen (Tunnel bleiben trocken)
+// und, nur für Nachtstrecken ohne erfasste Masten, einen schwachen Schein entlang der Strecke.
 const WXM = { tex: null, r: new THREE.Vector4(0, 0, 1, 1) };
 const RAINFX = (() => {
   const N = 5600, P = new Float32Array(N * 6), SD = new Float32Array(N * 8), E = new Float32Array(N * 2);
@@ -2989,8 +2997,9 @@ const RAINFX = (() => {
   const blank = new THREE.DataTexture(new Uint8Array([255, 0, 0, 255]), 1, 1, THREE.RGBAFormat); blank.needsUpdate = true;
   const mat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false,
     uniforms: { uCam: { value: new THREE.Vector3() }, uFall: { value: new THREE.Vector3(0.6, -8.6, 0.3) }, uCamV: { value: new THREE.Vector3() }, uBox: { value: new THREE.Vector3(26, 15, 26) }, uT: { value: 0 }, uExp: { value: 0.032 }, uAmt: { value: 1 },
-      uNight: { value: 0 }, uCol: { value: new THREE.Color(0.6, 0.64, 0.7) }, tMask: { value: blank }, uMaskR: { value: WXM.r } },
-    vertexShader: `attribute vec4 aSeed; attribute float aEnd; uniform vec3 uCam, uFall, uCamV, uBox; uniform float uT, uExp, uAmt, uNight; uniform sampler2D tMask; uniform vec4 uMaskR; varying float vA;
+      uNight: { value: 0 }, uCol: { value: new THREE.Color(0.6, 0.64, 0.7) }, tMask: { value: blank }, uMaskR: { value: WXM.r }, uLit: { value: 0 },
+      uLH: { value: Array.from({ length: 8 }, () => new THREE.Vector3(0, -9999, 0)) }, uLF: { value: Array.from({ length: 8 }, () => new THREE.Vector3(0, -9998, 0)) } },   // uLH/uLF: Kopf und Lichtfleck der acht nächsten Flutlichter (wxTick), uLit: Schein ohne Masten
+    vertexShader: `attribute vec4 aSeed; attribute float aEnd; uniform vec3 uCam, uFall, uCamV, uBox; uniform float uT, uExp, uAmt, uNight, uLit; uniform sampler2D tMask; uniform vec4 uMaskR; uniform vec3 uLH[ 8 ], uLF[ 8 ]; varying float vA;
       void main() { float sp = 0.8 + 0.4 * aSeed.w;
         vec3 p = mod( aSeed.xyz * uBox + uFall * ( uT * sp ) - uCam, uBox ) - 0.5 * uBox;   // Lage relativ zur Kamera, läuft im Kasten um
         vec3 rel = uFall * sp - uCamV; float rl = length( rel ) * uExp, rk = min( 1.0, 0.85 / max( rl, 1e-4 ) );   // Strich höchstens 85 cm lang (sonst wird Regen bei Tempo zu „Warp-Streifen“)
@@ -2998,7 +3007,11 @@ const RAINFX = (() => {
         gl_Position = projectionMatrix * viewMatrix * vec4( w, 1.0 );
         vec3 q = abs( p ) / uBox; float a = smoothstep( 0.5, 2.2, length( p ) ) * ( 1.0 - smoothstep( 0.36, 0.5, max( q.x, max( q.y, q.z ) ) ) );
         a *= step( fract( aSeed.w * 7.31 ), uAmt ) * ( 0.55 + 0.45 * fract( aSeed.w * 13.7 ) );
-        vec4 mk = texture2D( tMask, ( w.xz - uMaskR.xy ) * uMaskR.zw ); a *= ( 1.0 - mk.g ) * mix( 1.0, mk.r, uNight );
+        vec4 mk = texture2D( tMask, ( w.xz - uMaskR.xy ) * uMaskR.zw ); a *= 1.0 - mk.g;
+        if ( uNight > 0.5 ) { vec3 dp = uCam + p; float lit = uLit * mk.r;   // nachts nur im Lichtkegel: Abstand zur Kegelachse, Kegel wird nach unten breiter (1,6 → 9,5 m) und schwächer
+          for ( int i = 0; i < 8; i ++ ) { vec3 ax = uLF[ i ] - uLH[ i ], d = dp - uLH[ i ]; float t = clamp( dot( d, ax ) / dot( ax, ax ), 0.0, 1.0 ), e = 1.0 - smoothstep( 0.35, 1.0, length( d - ax * t ) / mix( 1.6, 9.5, t ) );
+            lit = max( lit, e * e * ( 1.0 - smoothstep( 0.6, 1.0, t ) ) / ( 1.0 + t * t * 5.0 ) ); }
+          a *= lit; }
         vA = a * ( 1.0 - 0.9 * aEnd ) / ( 1.0 + length( uCamV ) * 0.016 ); }`,
     fragmentShader: `uniform vec3 uCol; varying float vA; void main() { gl_FragColor = vec4( uCol, vA );
       #include <tonemapping_fragment>
@@ -3069,7 +3082,7 @@ function wxRainSetup() {
     const t = new THREE.CanvasTexture(cv); t.flipY = false; t.generateMipmaps = false; t.minFilter = t.magFilter = THREE.LinearFilter; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; WXM.tex = t; WXM.r.set(x0, z0, 1 / W, 1 / H);
     U.tMask.value = t;
   } else { U.tMask.value = RAINFX.blank; WXM.r.set(0, 0, 1, 1); }
-  U.uNight.value = night ? 1 : 0; U.uAmt.value = 0.3 + 0.7 * WX.rain; U.uT.value = 0; WX.has = false;
+  U.uNight.value = night ? 1 : 0; U.uAmt.value = 0.3 + 0.7 * WX.rain; U.uT.value = 0; WX.has = false; U.uLit.value = night && !WX.lamps.length ? 0.3 : 0;   /* Nachtstrecke ohne erfasste Masten: schwacher Schein entlang der Strecke statt gar kein Regen */
   if (night) U.uCol.value.setRGB(0.8, 0.77, 0.7); else U.uCol.value.setHex(TH.fog).multiplyScalar(0.9);
   if (S.gfx === 'low') U.uCol.value.multiplyScalar(0.4);   /* „Schnell“: ohne Nachbearbeitung wird im fertigen Bild (nicht im HDR-Puffer) addiert – dieselbe Farbe wirkte dort viel zu grell */
   SPRAY.mat.uniforms.uCol.value.copy(night ? new THREE.Color(0.2, 0.2, 0.215) : new THREE.Color(TH.fog).multiplyScalar(1.12));   /* nachts nur vom Flutlicht angestrahlt: grauer Schleier, kein leuchtender Fleck */
@@ -3086,6 +3099,10 @@ function wxTick(dt, now) {
     if (ix * ix + iy * iy + iz * iz < 200 * 200) { WX.cv.x += (ix - WX.cv.x) * k; WX.cv.y += (iy - WX.cv.y) * k; WX.cv.z += (iz - WX.cv.z) * k; }   /* Kamerasprung (Kamerawechsel): kein Riesenstrich */
     WX.pv.copy(camera.position); U.uT.value += dt; RAINC.mat.uniforms.uT.value = WX.t; }
   U.uCam.value.copy(camera.position); U.uCamV.value.copy(WX.cv); RAINFX.m.visible = live; RAINC.m.visible = live && RAINC.n > 0;
+  if (U.uNight.value && live) { const LP = WX.lamps, NL = WX.nl || (WX.nl = { q: new Float32Array(8), i: new Int32Array(8) }), cx = camera.position.x, cz = camera.position.z; let n = 0;   /* die acht nächsten Flutlichter für den Regen im Lichtkegel (Mitte zwischen Mast und Lichtfleck, höchstens 70 m) – ohne Speicheranforderung */
+    for (let j = 0; j < LP.length; j++) { const l = LP[j], mx = (l[0] + l[3]) * 0.5 - cx, mz = (l[2] + l[4]) * 0.5 - cz, q = mx * mx + mz * mz; if (q > 4900 || (n === 8 && q >= NL.q[7])) continue;
+      let k = n < 8 ? n++ : 7; while (k > 0 && NL.q[k - 1] > q) { NL.q[k] = NL.q[k - 1]; NL.i[k] = NL.i[k - 1]; k--; } NL.q[k] = q; NL.i[k] = j; }
+    for (let k = 0; k < 8; k++) { if (k < n) { const l = LP[NL.i[k]]; U.uLH.value[k].set(l[0], l[1], l[2]); U.uLF.value[k].set(l[3], l[5] ?? 0, l[4]); } else { U.uLH.value[k].set(0, -9999, 0); U.uLF.value[k].set(0, -9998, 0); } } }
   SPRAY.mat.uniforms.uScale.value = renderer.getDrawingBufferSize(_v2b).y / (2 * Math.tan(camera.fov * Math.PI / 360));
   if (!paused) SPRAY.update(dt);
 }
@@ -13646,9 +13663,9 @@ function renderRx() {
   $('#rxSumAi').textContent = 'Schwierigkeit ' + (DIFF_NAME[S.diff] || 'Mittel');
   $('#rxSumHelp').textContent = [isTouch ? (S.ctrl === 'tilt' ? 'Neigen' : 'Touch') : null, 'Ideallinie ' + (({ off: 'aus', brake: 'beim Bremsen', full: 'voll' })[S.line] || 'aus'), S.autogas ? 'Auto-Gas' : null, S.assist ? 'Bremsassistent' : null].filter(Boolean).join(' · ');
   $$('#rxWx button').forEach(b => b.classList.toggle('on', b.dataset.wx === wx));
-  $('#rxWxL').innerHTML = 'Intermediates<br>−' + Math.round((1 - WXLV.light.grip) * 100) + ' % Grip'; $('#rxWxH').innerHTML = 'Regenreifen<br>−' + Math.round((1 - WXLV.heavy.grip) * 100) + ' % Grip'; $('#rxWxA').innerHTML = 'wie in echt<br>' + pc + ' % Regen';
+  $('#rxWxL').innerHTML = 'Intermediates<br>−' + Math.round((1 - WXLV.light.grip) * 100) + ' % Grip'; $('#rxWxH').innerHTML = 'Regenreifen<br>−' + Math.round((1 - WXLV.heavy.grip) * 100) + ' % Grip'; $('#rxWxA').innerHTML = 'wie in echt<br>' + (wx === 'auto' ? pc + ' % Regen' : 'wird ausgelost');   /* v2.98: die Regenwahrscheinlichkeit steht nur da, wenn „Zufall“ gewählt ist (Karte, Reiter, Balken) */
   { const cd = CAL_F1.find(c => c[0] === S.track), m = cd && /^(\d+)\.(\d+)\./.exec(cd[1]), MON = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
-    $('#rxRiskL').textContent = 'Regenrisiko ' + tr.name + (m ? ' · ' + (+m[1]) + '. ' + MON[+m[2] - 1] : ''); $('#rxRiskB').style.width = pc + '%'; $('#rxRiskV').textContent = pc + ' %'; }
+    $('#rxRiskL').textContent = 'Regenrisiko ' + tr.name + (m ? ' · ' + (+m[1]) + '. ' + MON[+m[2] - 1] : ''); $('#rxRiskB').style.width = pc + '%'; $('#rxRiskV').textContent = pc + ' %'; $('#rxRisk').classList.toggle('off', wx !== 'auto'); }   /* nur bei „Zufall“ – bei fest gewähltem Wetter gibt es kein Risiko */
   $('#rxWxNote').innerHTML = WX_NOTE[wx]; $('#rxAiNote').innerHTML = '<b>' + (DIFF_NAME[S.diff] || 'Mittel') + ':</b> ' + (DIFF_NOTE[S.diff] || DIFF_NOTE.mid);
 }
 function renderMenu() {
@@ -13872,7 +13889,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.97'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.98'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -14089,6 +14106,8 @@ function tick(now, forced) {
     const fu = finishPass.uniforms; fu.uSpeed.value = running && !paused ? clamp((pl.v - 50) / 42, 0, 1.2) ** 1.5 * 1.25 + (pl.boostFx || 0) * 1.05 : 0;
     { const d = fu.uDrop.value, want = WX.on && running && S.cam === 2 && !window.__noDrops ? 0.42 + 0.58 * WX.rain : 0;   /* Regentropfen auf dem Visier: weich ein/aus (Kamerawechsel), Lebenslauf läuft mit dem Fahrtwind schneller */
       d.x += (want - d.x) * Math.min(1, dt * (want ? 2.5 : 8)); if (!want && d.x < 0.004) { d.x = 0; d.w = 0; } d.y += (clamp((pl.v - 6) / 72, 0, 1) - d.y) * Math.min(1, dt * 4);
+      if (d.x > 0) { let amb = 1; if (TH.night) { amb = WX.lamps.length ? 0 : 0.6; for (const l of WX.lamps) { const dx = l[3] - pl.x, dz = l[4] - pl.z, q = dx * dx + dz * dz; if (q < 1600) amb = Math.max(amb, 1 - Math.sqrt(q) / 40); } amb *= 0.3; }   /* Zusatzglanz der Tropfen: nachts nur, wo Flutlicht hinfällt (Lichtfleck je Mast, 40 m), und schwächer als am Tag */
+        fu.uDropA.value += (amb - fu.uDropA.value) * Math.min(1, dt * 5); }
       if (d.x > 0 && !paused) { d.z = (d.z + dt * (1 + d.y * 2.6)) % 3600; d.w = (d.w + dt * Math.pow(d.y, 1.4) * 1.3) % 512; } }   /* w: Weg zur Seite in Bildhöhen – bei 100 km/h ~0,25 je Sekunde, bei 200 km/h ~0,8, bei 300 km/h ~1,3 (in unter einer Sekunde quer über die Visierhälfte); Umlauf bei 512, damit die Rechengenauigkeit im Shader auch nach Stunden reicht */
     fu.uTime.value = now / 1000; fu.uBoost.value = running && !paused ? (pl.boostFx || 0) : 0; fu.uEra.value = running && pl.mesh && pl.mesh.H && S.histFx !== false ? pl.mesh.H.fx : 0;   // Klassiker: Bildfilter der Epoche
     if (bloomPass) bloomPass.strength = (TH.look?.bloom ?? .5) + (pl.boostFx || 0) * 0.3; fu.uSat.value = (TH.look?.sat ?? 1.1) * TONE.sat * (1 - (pl.boostFx || 0) * 0.4); fu.uVig.value = (TH.look?.vig ?? .38) + clamp((pl.v - 65) / 30, 0, 1) * 0.32 + (pl.boostFx || 0) * 0.6;

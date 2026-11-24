@@ -1,11 +1,12 @@
 # Wetter: Regen (v2.95)
 
-Stand 24.11.2026 (v2.97). Regen und das neue Menü „Rennen einstellen“ (Entwurf A, vom Nutzer gewählt) sind eingebaut und auf `main`. Das Wetter wird im Menü
+Stand 24.11.2026 (v2.98). Regen und das neue Menü „Rennen einstellen“ (Entwurf A, vom Nutzer gewählt) sind eingebaut und auf `main`. Das Wetter wird im Menü
 unter **Rennen einstellen → Wetter** gewählt; in der Karriere wird es je Rennwochenende ausgelost.
 
 Bilder (echte Spielbilder): `docs/bilder/regen_entwurf_tag.jpg`, `regen_entwurf_nacht.jpg`, `regen_helm_reifen.jpg` (Visier-Tropfen, blaue Regenreifen),
-`regen_helm_tropfen_v297.jpg` (Tropfen fliegen mit dem Tempo zur Seite: Stand / 150 / 300 km/h) ·
-Menü: `rennmenue_v295.jpg` (eingebaut), `menue_kopfzeile_v296.jpg` (Schrittleiste über die volle Breite), Entwürfe `rennmenue_entwurf_A.jpg`, `_B.jpg`, `_desktop.jpg`.
+`regen_helm_tropfen_v297.jpg` (Tropfen fliegen mit dem Tempo zur Seite: Stand / 150 / 300 km/h),
+`regen_nacht_lichtkegel_v298.jpg` (Nachtregen vorher/nachher: nur noch im Lichtkegel) ·
+Menü: `rennmenue_v295.jpg` (eingebaut), `rennmenue_wetter_v298.jpg` (Regenrisiko nur bei „Zufall“), `menue_kopfzeile_v296.jpg` (Schrittleiste über die volle Breite), Entwürfe `rennmenue_entwurf_A.jpg`, `_B.jpg`, `_desktop.jpg`.
 
 ---
 
@@ -17,7 +18,7 @@ Menü: `rennmenue_v295.jpg` (eingebaut), `menue_kopfzeile_v296.jpg` (Schrittleis
 | Stimmung | geschlossene, helle Wolkendecke mit Struktur, kein Sonnenlicht/keine Schlagschatten (weiche Umgebungsverdeckung bleibt), Dunst (Sicht ~2,3 km leicht, ~1,15 km stark), entsättigtes, kühleres Bild; Nachtrennen: Dunst im Flutlicht, mehr Leuchten |
 | Nasse Fahrbahn | dunklerer, glatter Asphalt, Pfützen (auf der Ideallinie weniger, am Rand mehr), Tropfenringe in den Pfützen, Spiegelung der Umgebung (Autos, Banden, Bäume, Tribünen, Flutlichter, Himmel) |
 | Regen | ~5.600 feine Striche in einem Kasten um die Kamera, komplett im Vertex-Shader; bei Tempo laufen sie auf den Fluchtpunkt zu (Länge begrenzt) |
-| Nachtrennen | Regen ist nur im Flutlicht sichtbar: Lichtkarte der Strecke für die Tropfen um die Kamera, dazu je Mast ein Lichtkegel mit fallendem Regen (nah einzelne Striche, fern ein heller Schleier) |
+| Nachtrennen | Regen ist nur im Lichtkegel der Flutlichter sichtbar (v2.98): die Tropfen um die Kamera leuchten nur, wenn sie im Kegel eines der acht nächsten Masten liegen; dazu je Mast ein Lichtkegel mit fallendem Regen (nah einzelne Striche, fern ein heller Schleier). Vor dunklem Himmel und abseits der Masten sieht man keinen Regen. |
 | Gischt | Wasserschleier hinter den Hinterrädern, Menge nach Tempo und Nässe; wer dicht folgt, sieht schlecht |
 | Reifen | alle Autos auf Intermediates (grüne Flanke) bzw. Regenreifen (blaue Flanke) |
 | Regenlicht | blinkt bei Nässe durchgehend (4 Hz) |
@@ -121,13 +122,19 @@ Alles steht in `index.html` im Block „Wetter: Regen (v2.95)“ vor dem Himmel.
   Nur Pixel mit mindestens 3 % Spiegelanteil suchen überhaupt. Das eigene Auto in Helm-/TV-Kamera wird nicht gespiegelt (eigener Tiefenbereich).
   Bei Ultra sorgt ein leerer Tausch-Schritt dafür, dass die Szene trotz AO-Durchgang je Bild den Puffer wechselt.
 - **Regen** (`RAINFX`): Linien, Position = Zufallswert im Kasten + Fallweg, relativ zur Kamera umlaufend; Schweif = Bewegung relativ zur Kamera × Belichtungszeit
-  (höchstens 85 cm). Additiv in Dunstfarbe. Lichtkarte `WXM` (von oben gezeichnet: R = Flutlicht am Boden, G = überdacht).
+  (höchstens 85 cm). Additiv in Dunstfarbe. **Nachts** prüft der Vertex-Shader je Tropfen die acht nächsten Flutlichter (`uLH`/`uLF`: Lampenkopf und Lichtfleck,
+  in `wxTick` je Bild aus `WX.lamps` gewählt, höchstens 70 m entfernt): hell nur nahe der Kegelachse, Kegel wird nach unten breiter (1,6 → 9,5 m) und schwächer –
+  dieselbe Form wie `RAINC`. Karte `WXM` (von oben gezeichnet: G = überdacht; R = Flutlicht am Boden, nur noch als schwacher Schein `uLit` für Nachtstrecken
+  ohne erfasste Masten – alle fünf Nachtstrecken haben welche: Bahrain 155, Jeddah 134, Las Vegas 136, Lusail 275, Singapur 107).
 - **Lichtkegel-Regen** (`RAINC`, nur Nacht): ein Zeichenaufruf für alle Masten; Lampenpositionen sammelt `WX.lamps` an den drei Stellen, an denen Masten gebaut werden.
 - **Visier-Tropfen** (`dropLayer` im Bild-Shader `FinishShader`, Uniform `uDrop`: x Menge, y Fahrtwind, z Laufzeit, w Weg zur Seite): zwei Schichten (wenige
   mittlere, viele kleine), je Rasterzelle höchstens ein Tropfen. Das Raster jeder Bildhälfte wandert nach außen; der Weg wird in `tick` aufsummiert
   (`uDrop.w`, Umlauf bei 512 wegen der Rechengenauigkeit), jede Zeile hat ihr eigenes Tempo. Die Zellen sind 2,5-mal so breit wie hoch – so passt der Schweif
   ohne Nachbarzellen-Abfrage hinein. Die Tropfen werden **nach** Radialunschärfe und Farbsaum eingerechnet (sie sitzen scharf vor dem Bild; vorher
   verschwand ihre Schattierung bei Höchsttempo in der Unschärfe und der Farbsaum färbte sie braun). Uniform-Verzweigung: ohne Regen/Helmansicht kostet es nichts.
+- **Visier-Tropfen bei Nacht** (v2.98): Der Zusatzglanz (`+ 0.05 * uDropA * …`, wird vor der Tonwertkurve addiert und wirkt im Dunkeln deshalb viel heller als
+  die Zahl vermuten lässt) hängt am Umgebungslicht `uDropA`: am Tag 1, nachts höchstens 0,3 und nur im Lichtfleck eines Mastes (40 m), sonst 0. Alles andere am
+  Tropfen ist ein Faktor auf das Bild dahinter – ohne Licht kein Tropfen. Eingerechnet wird nach dem Leuchten (Bloom), damit Tropfen auch den Lichthof brechen.
 - **Visierschmutz** (`visorDirtTick`, dunkle Flecken aus Staub/Gummiabrieb/Insekten, gab es schon vorher): bei Regen kommen keine neuen dazu (v2.97) –
   zwischen den Tropfen sahen sie wie Fehler aus.
 - **Composer neu bauen** (`buildComposer()`): danach immer `resize()` aufrufen – der neue Composer startet sonst in einfacher Auflösung (siehe Abschnitt 5a).
@@ -166,6 +173,10 @@ Alles steht in `index.html` im Block „Wetter: Regen (v2.95)“ vor dem Himmel.
 - **Rosa/grüne Flecken bei Höchsttempo (alt, seit vor v2.95, behoben in v2.97).** Der Farbsaum am Bildrand holte Rot und Blau scharf aus dem Bild, während Grün
   schon radial verwischt war – an hellen Schriftzügen und Baumkanten entstanden rosa/grüne Flecken (im Regen durch den hellen Himmel besonders deutlich).
   Der Farbsaum wird jetzt im verwischten Bereich ausgeblendet (`cm = 0.85 * (1 - bw)`).
+- **Nachtregen leuchtete auch ohne Licht (v2.95–v2.97, behoben in v2.98).** Die Lichtkarte kannte nur „Boden beleuchtet ja/nein“. Weil nachts fast die ganze Strecke
+  beleuchtet ist, leuchtete jeder Tropfen über der Fahrbahn – bis hinauf vor den schwarzen Himmel, sehr hell (additiv). Im Fahrbild fiel das kaum auf (Striche werden
+  mit dem Tempo schwächer), im Stand und bei langsamer Fahrt deutlich. Lehre: Nachteffekte auch mit stehender Kamera prüfen (`regen_bilder.js … fix:…`).
+  Dazu: Die Visier-Tropfen bekamen in v2.97 einen festen Zusatzglanz und leuchteten damit nachts schwach von selbst – jetzt an das Umgebungslicht gekoppelt.
 - **Visier-Tropfen erst nur dunkle Punkte**: siehe „Visier-Tropfen“ in Abschnitt 4 (Reihenfolge im Bild-Shader).
 
 ## 6. Stellschrauben
@@ -176,6 +187,8 @@ Alles steht in `index.html` im Block „Wetter: Regen (v2.95)“ vor dem Himmel.
 | Himmel, Dunst, Licht, Bildstimmung bei Regen | `wxTheme` (Tag und Nacht getrennt) |
 | Abdunkelung/Glanz je Belag | `WXK` (`asph`, `paint`) |
 | Tropfen: Anzahl, Kasten, Belichtung, Farbe | `RAINFX` (`N`, `uBox`, `uExp`), `wxRainSetup` (`uCol`, `uAmt`) |
+| Nachtregen: Kegelbreite, Helligkeit entlang des Kegels | `RAINFX` Vertex-Shader (`mix( 1.6, 9.5, t )`, `1.0 / ( 1.0 + t * t * 5.0 )`), Reichweite der Mastsuche in `wxTick` (70 m) |
+| Visier-Tropfen: Zusatzglanz Tag/Nacht | `tick` (`amb`, nachts `* 0.3`), Shader `0.05 * uDropA` |
 | Gischt: Menge, Größe, Deckkraft | `wxSpray` |
 | Untergründe bei Nässe, Aquaplaning | `SURFW`, `wxAqua` |
 | Spiegel-Stufen je Gerät | `applyWeather` (`steps`) |
@@ -191,6 +204,10 @@ Auto-Gas, Bremsassistent). Links die Reiter – jeder zeigt seinen aktuellen Wer
 
 - HTML: `#scrRace` → `.rx` (`#rxNav`, `.rx-pane` mit vier `.rx-p`), Anzeige: `renderRx()` (wird aus `renderMenu` aufgerufen), gemerkter Reiter: `MENU.rx`.
 - Zeitrennen: Reiter „Gegner“ und der Startplatz entfallen. Karriere: am nächsten Rennen steht das Regenrisiko, ab dem Qualifying das ausgeloste Wetter (`renderSeason`).
+- **Regenrisiko nur bei „Zufall“** (v2.98, Wunsch des Nutzers): Ist ein festes Wetter gewählt, steht nirgends eine Wahrscheinlichkeit – der Balken ist
+  ausgeblendet (`.rx-risk.off`, der Platz bleibt frei, damit nichts springt; er steht jetzt unter dem Hinweistext), die Zufall-Karte zeigt „wird ausgelost“ statt
+  der Prozentzahl, der Reiter nur den Namen. Mit „Zufall“ erscheinen Prozentzahl (Karte, Reiter) und Balken. In der Karriere ist das Wetter immer ausgelost –
+  dort bleibt das Regenrisiko am nächsten Rennen stehen. Auf dem Handy hat der Hinweistext immer zwei Zeilen Platz (vorher rutschten die Karten um 8 px).
 - Das Logo oben rechts bleibt in der Auswahl (Klasse, Team, Fahrer, Strecke, Rennen) weg – die Schrittleiste braucht den Platz.
 - Kopf- und Fußzeile der Auswahl folgen einem Raster (CSS-Block „Kopf- und Fußzeile der Auswahl (v2.95)“): Die Schrittleiste läuft über die volle Breite zwischen
   „Zurück“ und „Einstellungen“ (fünf gleich breite Felder), Kopfzeile, Inhalt und Fußzeile haben denselben Seitenrand (22 px; vorher 16 / 22 / 18), Leiste und
