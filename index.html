@@ -1358,6 +1358,23 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
   .snext{min-height:0!important;padding:10px 12px 10px 18px!important}.snext .sn-l b{font-size:clamp(22px,7vh,30px)!important}
   .snext .sn-l{flex:1 1 0;min-width:0;max-width:100%}.snext .sn-tags{flex-wrap:wrap;gap:4px 6px}.snext .sn-tags i{white-space:nowrap}
 }
+/* ===== Kopf- und Fußzeile der Auswahl (v2.95): ein Raster für alles =====
+   Schrittleiste über die volle Breite zwischen „Zurück“ und „Einstellungen“ (fünf gleich breite Felder – das Logo fehlt dort), Kopfzeile, Inhalt und Fußzeile mit
+   demselben Seitenrand (22 px; vorher 16 / 22 / 18), Leiste und Knöpfe gleich hoch, gleicher Abstand Kopfzeile → Inhalt → Fußzeile. */
+#menu .mtop{padding-left:max(22px,env(safe-area-inset-left))!important;padding-right:max(22px,env(safe-area-inset-right))!important;gap:10px!important}
+#menu .mfoot{padding-left:max(22px,env(safe-area-inset-left))!important;padding-right:max(22px,env(safe-area-inset-right))!important}
+#menu .dcards{left:max(22px,env(safe-area-inset-left));right:max(22px,env(safe-area-inset-right))}   /* Fahrerkarten: gleicher Seitenrand wie Kopf- und Fußzeile (vorher 18 px) */
+#menu .mtop .msteps{flex:1 1 0;min-width:0;margin-left:0!important}
+#menu .mtop .msteps i{flex:1 1 0;min-width:0;justify-content:center;padding:0 6px!important;white-space:nowrap;overflow:hidden}
+#menu .mtop .msteps i:last-child{padding-right:6px!important}
+#menu .scr:not(#scrTitle){padding-top:calc(62px + env(safe-area-inset-top))}
+@media (max-width:720px){#menu .mtop .msteps i{letter-spacing:.07em!important;font-size:11px!important;gap:5px!important}#menu .mtop .msteps i b{font-size:11px!important}}
+@media (max-height:430px){#menu .scr:not(#scrTitle){padding-top:calc(62px + env(safe-area-inset-top))!important}}
+@media (max-height:380px){   /* kleines Handy quer: alles in der Kopfzeile 38 px hoch (die Leiste war 38, die Knöpfe 42), 8 px Luft nach oben und unten */
+  #menu .mtop{padding-top:calc(8px + env(safe-area-inset-top))!important}.mback,.mgear{width:38px!important;height:38px!important}
+  #menu .mtop .msteps i{line-height:36px!important}
+  #menu .scr:not(#scrTitle){padding-top:calc(54px + env(safe-area-inset-top))!important;padding-bottom:64px!important}
+}
 /* ===== Rennen einstellen (v2.95, Entwurf A): Reiter links mit aktuellem Wert, rechts die Einstellungen der gewählten Gruppe ===== */
 .rx{height:calc(100% - 46px);display:grid;grid-template-columns:minmax(200px,29%) 1fr;gap:12px;align-items:start;color:#fff}
 .rx svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -1397,6 +1414,13 @@ body.warmhelm:not(.cockpit) #helmet{display:block!important;opacity:.01}   /* nu
   .msel .rxc{display:none}
 }
 @media (orientation:portrait){.rx{grid-template-columns:1fr;height:auto}.rx-nav{flex-direction:row;flex-wrap:wrap}.rx-nav button{flex:1 1 45%;min-height:52px}.rx-wx{grid-template-columns:1fr 1fr}.rx-2{grid-template-columns:1fr}}
+@media (min-height:560px) and (orientation:landscape){   /* Laptop/Monitor: „Rennen einstellen“ nutzt die Höhe – höhere Reiter, die Fläche rechts so hoch wie die Reiter, Inhalt darin mittig */
+  .rx{align-items:stretch;align-content:start;grid-auto-rows:auto}.rx-nav button{flex:0 1 112px;min-height:84px;padding:0 20px 0 16px;gap:16px}.rx-nav button svg{width:28px;height:28px}
+  .rx-nav button b{font-size:16px}.rx-nav button small{font-size:13.5px;margin-top:2px}
+  .rx-pane{max-height:none;justify-content:center;padding:26px 30px!important}.rx-p.on{gap:18px}
+  .rx-wx{gap:12px}.rx-wx button{min-height:128px;padding:16px 16px 14px}.rx-wx button svg{width:38px;height:38px}.rx-wx button b{font-size:15px}.rx-wx button small{font-size:12.5px}
+  .rx-risk{padding:13px 16px}.rx-risk b{font-size:20px}.rx-note{font-size:13.5px}.rx-2{gap:22px 40px}
+}
 </style>
 </head>
 <body>
@@ -13838,7 +13862,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.95'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.96'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

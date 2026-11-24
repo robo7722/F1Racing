@@ -4,7 +4,7 @@ Stand 24.11.2026. Regen und das neue Menü „Rennen einstellen“ (Entwurf A, v
 unter **Rennen einstellen → Wetter** gewählt; in der Karriere wird es je Rennwochenende ausgelost.
 
 Bilder (echte Spielbilder): `docs/bilder/regen_entwurf_tag.jpg`, `regen_entwurf_nacht.jpg`, `regen_helm_reifen.jpg` (Visier-Tropfen, blaue Regenreifen) ·
-Menü: `rennmenue_v295.jpg` (eingebaut), Entwürfe `rennmenue_entwurf_A.jpg`, `_B.jpg`, `_desktop.jpg`.
+Menü: `rennmenue_v295.jpg` (eingebaut), `menue_kopfzeile_v296.jpg` (Schrittleiste über die volle Breite), Entwürfe `rennmenue_entwurf_A.jpg`, `_B.jpg`, `_desktop.jpg`.
 
 ---
 
@@ -162,6 +162,10 @@ Auto-Gas, Bremsassistent). Links die Reiter – jeder zeigt seinen aktuellen Wer
 - HTML: `#scrRace` → `.rx` (`#rxNav`, `.rx-pane` mit vier `.rx-p`), Anzeige: `renderRx()` (wird aus `renderMenu` aufgerufen), gemerkter Reiter: `MENU.rx`.
 - Zeitrennen: Reiter „Gegner“ und der Startplatz entfallen. Karriere: am nächsten Rennen steht das Regenrisiko, ab dem Qualifying das ausgeloste Wetter (`renderSeason`).
 - Das Logo oben rechts bleibt in der Auswahl (Klasse, Team, Fahrer, Strecke, Rennen) weg – die Schrittleiste braucht den Platz.
+- Kopf- und Fußzeile der Auswahl folgen einem Raster (CSS-Block „Kopf- und Fußzeile der Auswahl (v2.95)“): Die Schrittleiste läuft über die volle Breite zwischen
+  „Zurück“ und „Einstellungen“ (fünf gleich breite Felder), Kopfzeile, Inhalt und Fußzeile haben denselben Seitenrand (22 px; vorher 16 / 22 / 18), Leiste und
+  Knöpfe sind gleich hoch (42 px, auf kleinen Handys 38 px), der Abstand Kopfzeile → Inhalt → Fußzeile ist gleich (10 px, kleines Handy 8 px).
+- Am Laptop/Monitor (ab 560 px Höhe) nutzt „Rennen einstellen“ die Höhe: höhere Reiter, die Fläche rechts so hoch wie die Reiter, Inhalt darin mittig.
 - Entwürfe (Bilder): `docs/bilder/rennmenue_entwurf_A.jpg`, `_B.jpg`, `_desktop.jpg`; Mockup-Skript `tools/wetter/rennmenue_entwurf.js`.
 
 ### Menü-Prüfung (`tools/menue/pruefen.js`)
