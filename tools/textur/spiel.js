@@ -3,9 +3,9 @@
 const { chromium } = require('playwright'); const fs = require('fs'); const path = require('path');
 const ROOT = path.resolve(__dirname, '../..');
 const MIME = { html: 'text/html', js: 'text/javascript', json: 'application/json', png: 'image/png', jpg: 'image/jpeg', bin: 'application/octet-stream', mp3: 'audio/mpeg', webmanifest: 'application/manifest+json', svg: 'image/svg+xml', glb: 'model/gltf-binary', wav: 'audio/wav' };
-async function spiel({ w = 1280, h = 640, query = '' } = {}) {
+async function spiel({ w = 1280, h = 640, query = '', dpr = 1 } = {}) {   // dpr: Pixelverhältnis des Geräts (Handy 2–3) – wichtig für alles, was mit der Renderauflösung zu tun hat
   const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
-  const p = await b.newPage({ viewport: { width: w, height: h } }); p.setDefaultTimeout(600000);
+  const p = await b.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: dpr }); p.setDefaultTimeout(600000);
   p.on('pageerror', e => console.log('SEITENFEHLER', String(e).slice(0, 500)));
   p.on('console', m => { const t = m.text(); if (/THREE\.WebGLProgram|shader error|ERROR:/i.test(t)) console.log('SHADER', t.slice(0, 1500)); });
   await p.route('http://f1.test/**', async r => {

@@ -2476,21 +2476,30 @@ const FinishShader = {
   uniforms: { tDiffuse: { value: null }, uSpeed: { value: 0 }, uVig: { value: 0.38 }, uSat: { value: 1.12 }, uCon: { value: 1.08 }, uTint: { value: new THREE.Vector3(1, 1, 1) }, uLift: { value: new THREE.Vector3(0, 0, 0) },
     uSun: { value: new THREE.Vector2(0.5, 0.5) }, uSunOn: { value: 0 }, uAspect: { value: 1 }, uSunCol: { value: new THREE.Vector3(1, .9, .7) },
     tRays: { value: null }, uRays: { value: 0 }, uSh: { value: new THREE.Vector3(0.97, 0.99, 1.04) }, uHi: { value: new THREE.Vector3(1.03, 1.0, 0.96) }, tSunVis: { value: null }, uSharp: { value: 0 }, uTexel: { value: new THREE.Vector2(1 / 1024, 1 / 1024) },
-    tBloom: { value: null }, uBloom: { value: 0 }, uTime: { value: 0 }, uWarm: { value: 0 }, uFade: { value: new THREE.Vector3(0, 0, 0) }, uGrain: { value: 0.012 }, uBoost: { value: 0 }, uEra: { value: 0 }, uDrop: { value: new THREE.Vector3(0, 0, 0) } },   // uEra: Bildfilter der Klassiker (HIST_CAR.fx) · uDrop: Regentropfen auf dem Visier (x Menge, y Fahrtwind, z Laufzeit)
+    tBloom: { value: null }, uBloom: { value: 0 }, uTime: { value: 0 }, uWarm: { value: 0 }, uFade: { value: new THREE.Vector3(0, 0, 0) }, uGrain: { value: 0.012 }, uBoost: { value: 0 }, uEra: { value: 0 }, uDrop: { value: new THREE.Vector4(0, 0, 0, 0) } },   // uEra: Bildfilter der Klassiker (HIST_CAR.fx) · uDrop: Regentropfen auf dem Visier (x Menge, y Fahrtwind, z Laufzeit, w zurückgelegter Weg zur Seite)
   vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
   // Ein einziger Vollbild-Durchgang: Bloom und Lichtstrahlen dazu, Tempo-Effekte, Farbgebung je Strecke, Vignette, Filmkorn
-  fragmentShader: `uniform sampler2D tDiffuse, tRays, tSunVis, tBloom; uniform float uSpeed, uVig, uSat, uCon, uSunOn, uAspect, uRays, uSharp, uBloom, uTime, uWarm, uGrain, uBoost, uEra; uniform vec3 uTint, uLift, uSunCol, uSh, uHi, uFade, uDrop; uniform vec2 uSun, uTexel; varying vec2 vUv;
+  fragmentShader: `uniform sampler2D tDiffuse, tRays, tSunVis, tBloom; uniform float uSpeed, uVig, uSat, uCon, uSunOn, uAspect, uRays, uSharp, uBloom, uTime, uWarm, uGrain, uBoost, uEra; uniform vec3 uTint, uLift, uSunCol, uSh, uHi, uFade; uniform vec4 uDrop; uniform vec2 uSun, uTexel; varying vec2 vUv;
     float ghost(vec2 p, float size){ vec2 d = vUv - p; d.x *= uAspect; return smoothstep(size, size * 0.55, length(d)); }
     float hash12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
-    // Regentropfen auf dem Visier (Helmansicht, v2.95): je Rasterzelle höchstens ein Tropfen mit eigenem Lebenslauf – er entsteht, wird vom Fahrtwind nach oben geschoben
-    // und langgezogen und vergeht. Jeder Tropfen wirkt wie eine kleine Linse (Bild darin versetzt und gespiegelt). Rückgabe: xy = Bildversatz, z = Deckung.
+    // Regentropfen auf dem Visier (Helmansicht, v2.95/2.97): je Rasterzelle höchstens ein Tropfen mit eigenem Lebenslauf (entsteht, vergeht). Der Fahrtwind treibt die
+    // Tropfen von der Visiermitte zur Seite: das Raster jeder Bildhälfte wandert nach außen (jede Zeile unterschiedlich schnell, leicht ansteigend), der Weg kommt
+    // aufsummiert aus uDrop.w – im Stand sitzen runde Perlen still, mit dem Tempo ziehen sie einen spitz zulaufenden Schweif hinter sich her und fliegen über den Rand.
+    // Jeder Tropfen wirkt wie eine kleine Linse (Bild darin versetzt und gespiegelt: oben dunkel, unten hell, Glanzpunkt). Rückgabe: xy = Bildversatz, z = Deckung,
+    // w = Helligkeit (±). Prüfstand zum schnellen Abstimmen ohne Spiel: tools/wetter/tropfen_pruefstand.js
     vec2 hash22(vec2 p){ vec3 q = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973)); q += dot(q, q.yzx + 33.33); return fract((q.xx + q.yz) * q.zy); }
-    vec3 dropLayer(vec2 p, float n, float t, float amt, float wind){
-      vec2 g = p * n, id = floor(g), f = fract(g) - 0.5, h = hash22(id), c = (hash22(id + 7.3) - 0.5) * 0.5;
-      float life = fract(t * (0.045 + 0.1 * h.y) + h.y * 17.0), r = 0.1 + 0.15 * h.y;
-      c.y += (life - 0.5) * 0.4 * wind; vec2 d = f - c; d.y /= 1.0 + wind * 0.9;
-      float m = (1.0 - smoothstep(0.5, 1.0, length(d) / r)) * smoothstep(1.0 - amt, 1.12 - amt, h.x) * smoothstep(0.0, 0.07, life) * (1.0 - smoothstep(0.72, 1.0, life));
-      return vec3(-d * (1.2 * m / n), m); }
+    vec4 dropLayer(vec2 p, float n, float t, float amt, float wind, float flow){
+      float sd = p.x < 0.0 ? -1.0 : 1.0, u = abs(p.x), v = p.y - flow * 0.12, row = floor(v * n);
+      float rs = 0.6 + 0.8 * hash12(vec2(row, 7.0 + sd));   // Tempo dieser Zeile
+      vec2 g = vec2((u - flow * rs) * n * 0.4, v * n), id = floor(g), f = fract(g) - 0.5; id.x += sd * 61.0;   // Zellen 2,5-mal so breit wie hoch (Platz für den Schweif); linke und rechte Hälfte tragen verschiedene Tropfen
+      vec2 h = hash22(id), c = hash22(id + 7.3);
+      float life = fract(t * (0.045 + 0.1 * h.y) + h.y * 17.0), r = 0.1 + 0.15 * h.y, st = 1.0 + wind * 2.4;
+      vec2 d = vec2((f.x - c.x * 0.5 + 0.1) * 2.5, f.y - (c.y - 0.5) * 0.44); d.y -= 0.12 * min(d.x, 0.0);   // Abstand zum Tropfenkopf in Zellenhöhen, x zeigt nach außen
+      float bx = d.x < 0.0 ? d.x / st : d.x, tf = clamp(-bx / r, 0.0, 1.0), ry = 1.0 - wind * 0.78 * tf;   // hinter dem Kopf (zur Visiermitte) langgezogen, läuft spitz zu
+      float q = length(vec2(bx, d.y / ry)) / r;
+      float m = (1.0 - smoothstep(0.55, 1.0, q)) * smoothstep(1.0 - amt, 1.12 - amt, h.x) * smoothstep(0.0, 0.07, life) * (1.0 - smoothstep(0.72, 1.0, life)) * smoothstep(0.012, 0.05, u) * (1.0 - 0.55 * wind * tf);
+      float gl = 1.0 - smoothstep(0.0, 0.34, length(vec2(bx - 0.18 * r, d.y - 0.36 * r)) / r);   // Glanzpunkt oben am Kopf
+      return vec4(-vec2(bx * sd, d.y) * (1.3 * m / n), m, m * (0.3 * clamp(-d.y / (r * ry), -1.0, 1.0) + 0.55 * gl)); }
     void main(){
       float sp = min(uSpeed, 2.2);
       vec2 c0 = vUv - 0.5; float r0 = length(c0 * vec2(uAspect, 1.0)) / max(uAspect, 1.0) * 1.4142;
@@ -2503,14 +2512,13 @@ const FinishShader = {
         else if (uEra < 2.5) { float ln = floor(vUv.y * 288.0); bnd = 1.0 - smoothstep(0.0, 0.03, abs(vUv.y - (1.15 - fract(uTime * 0.06) * 1.3)));   // Zeilen zittern, ein Störstreifen wandert durchs Bild
           uv.x += (hash12(vec2(ln, floor(uTime * 25.0))) - 0.5) * (0.0010 + bnd * 0.010) + (1.0 - smoothstep(0.0, 0.05, vUv.y)) * 0.004 * sin(uTime * 9.0 + vUv.y * 90.0); }   // unten: Kopfumschaltung
       }
-      vec3 drp = vec3(0.0);
+      vec4 drp = vec4(0.0);
       if (uDrop.x > 0.001) { vec2 dq = c0 * vec2(uAspect, 1.0);   // nur bei Regen in der Helmansicht (Uniform-Verzweigung: sonst kostet es nichts)
-        drp = dropLayer(dq, 9.0, uDrop.z, uDrop.x * 0.42, uDrop.y) + dropLayer(dq + 3.7, 21.0, uDrop.z * 1.3 + 5.0, uDrop.x * 0.55, uDrop.y * 0.7);   // wenige mittlere und viele kleine Tropfen
+        drp = dropLayer(dq, 10.0, uDrop.z, uDrop.x * 0.65, uDrop.y, uDrop.w) + dropLayer(dq + vec2(0.0, 3.7), 26.0, uDrop.z * 1.3 + 5.0, uDrop.x * 0.8, uDrop.y, uDrop.w * 1.3 + 9.0);   // wenige mittlere und viele kleine Tropfen (die kleinen fliegen schneller)
         uv += drp.xy * vec2(1.0 / uAspect, 1.0); drp.z = min(drp.z, 1.0); }
       vec2 c = uv - 0.5; float r = length(c);
       float top = smoothstep(0.9, 1.5, sp); float amt = (sp * 0.085 + top * top * 0.07) * smoothstep(0.12, 0.7, r) * mix(0.2 + top * 0.15, 1.0, smoothstep(0.42, 0.75, uv.y)) + uBoost * 0.075 * smoothstep(0.08, 0.6, r);   // nahe Höchstgeschwindigkeit und bei Boost deutlich mehr Radialunschärfe   // Fahrbahn, Linien und Curbs (untere Bildhälfte) bleiben scharf
       vec3 col = texture2D(tDiffuse, uv).rgb;
-      col *= 1.0 + 0.1 * drp.z - 0.3 * drp.z * (1.0 - drp.z);   // Tropfen: innen etwas heller, dunkler weicher Rand (ohne Tropfen ×1)
       if (uSharp > 0.01) {   // Nachschärfen (gleicht die niedrigere Renderauflösung aus), begrenzt gegen helle Säume
         vec3 nb = texture2D(tDiffuse, uv + vec2(uTexel.x, 0.0)).rgb + texture2D(tDiffuse, uv - vec2(uTexel.x, 0.0)).rgb + texture2D(tDiffuse, uv + vec2(0.0, uTexel.y)).rgb + texture2D(tDiffuse, uv - vec2(0.0, uTexel.y)).rgb;
         col += clamp((col - nb * 0.25) * uSharp, -col * 0.3, col * 0.3);
@@ -2520,7 +2528,8 @@ const FinishShader = {
         for (int i = 0; i < 8; i++) { float t = (float(i) + j) / 8.0, w = 1.0 - t * 0.5; acc += texture2D(tDiffuse, uv - c * amt * t).rgb * w; tot += w; } col = mix(col, acc / tot, bw); }
       // chromatische Aberration am Bildrand (stärker bei Tempo)
       float ca = (0.0004 + sp * 0.0018 + uBoost * 0.002) * smoothstep(0.35, 0.75, r);   // nur ganz am Rand, damit Curbs und Linien nicht farbig verschmieren
-      if (ca > 0.00005) { col.r = mix(col.r, texture2D(tDiffuse, uv + c * ca).r, 0.85); col.b = mix(col.b, texture2D(tDiffuse, uv - c * ca).b, 0.85); }
+      if (ca > 0.00005) { float cm = 0.85 * (1.0 - bw); col.r = mix(col.r, texture2D(tDiffuse, uv + c * ca).r, cm); col.b = mix(col.b, texture2D(tDiffuse, uv - c * ca).b, cm); }   // nicht im verwischten Bereich: dort kämen Rot und Blau scharf, Grün verwischt (rosa/grüne Flecken an Bäumen und Banden bei Höchsttempo, v2.97 behoben)
+      col = col * (1.0 + drp.w - 0.25 * drp.z * (1.0 - drp.z)) + 0.05 * max(drp.w, 0.0);   // Tropfen auf dem Visier (nach Unschärfe und Farbsaum, sie sitzen scharf vor dem Bild): oben dunkel, unten hell, Glanzpunkt, dunkler weicher Rand (ohne Tropfen unverändert)
       if (uEra > 0.5) {
         if (uEra < 1.5 || uEra > 4.5) { vec2 o = vec2(0.0005, 0.0008);   // Film (Farbe 1970 und Schwarz-Weiß 1967): nur ein Hauch weicher (v2.69: vorher viel zu unscharf)
           vec3 b = texture2D(tDiffuse, uv + o).rgb + texture2D(tDiffuse, uv - o).rgb + texture2D(tDiffuse, uv + vec2(o.x, -o.y)).rgb + texture2D(tDiffuse, uv - vec2(o.x, -o.y)).rgb; col = mix(col, b * 0.25, 0.3); }
@@ -2944,7 +2953,7 @@ function applyWeather(k, force) {
   for (const m of WX.nofog) { const f = !day; if (m.fog !== f) { m.fog = f; m.needsUpdate = true; } }   /* Kulisse ohne Nebel (Berge, Skyline): im Regen verschwindet sie im Dunst */
   BAKE.u.bakeSun.value = TH.night ? 0.12 : WX.on ? (k === 'heavy' ? 0.14 : 0.24) : 1;   /* bedeckter Himmel: kaum Schlagschatten, die weiche Umgebungsverdeckung bleibt */
   applySky(); buildEnv(TH.night ? 0x141218 : TH.ground === 'grass' ? 0x44582c : 0x8a7658);
-  WX.ssr = wxSSRWanted(); if (WX.ssr !== was) buildComposer(); else applyLook();
+  WX.ssr = wxSSRWanted(); if (WX.ssr !== was) { buildComposer(); resize(); } else applyLook();   /* resize(): der neue Composer steht sonst auf einfacher Auflösung (ohne Pixelverhältnis) – das Bild war nach jedem Wetterwechsel unscharf, bis zum nächsten Neustart (Fehler in 2.95/2.96) */
   // Bodenmaterialien: Define setzen/entfernen (ein Shader je Zustand – im trockenen Programm steht kein Regen-Code)
   const steps = S.gfx === 'ultra' ? 8 : isTouch ? 4 : 6;
   for (const m of WX.mats) { const d = m.defines || (m.defines = {}), a = WX.on ? '' : undefined, b = WX.ssr ? '' : undefined, c = WX.ssr ? steps : undefined;
@@ -11033,7 +11042,7 @@ const fenceAt = (i, s) => !inTunMC(i) && !(s > 0 && inChicMC(i)) && (!TRK.nos ||
   buildMapBase();
   { const _bt1 = performance.now(); bakeShadows(); window.__btms = [Math.round(_bt1 - _bt0), Math.round(performance.now() - _bt1)]; }
   WX.bid = -1; if (WX.on) applyWeather(WX.cur, true);   /* Regen: Stimmung, nasse Materialien, Lichtkarte für diese Strecke – VOR den Fernbaum-Bildern, die mit dem Licht der Szene gebacken werden */
-  else { WX.bid = BID; if (WX.ssr) { WX.ssr = false; buildComposer(); } }   /* trocken: nur den Tiefenpuffer der Spiegelung wieder abgeben, falls das letzte Rennen nass war */
+  else { WX.bid = BID; if (WX.ssr) { WX.ssr = false; buildComposer(); resize(); } }   /* trocken: nur den Tiefenpuffer der Spiegelung wieder abgeben, falls das letzte Rennen nass war */
   try { treeSprites(); } catch (e) { console.warn('treeSprites', e); } TREESPR = null;
   trackGroup.traverse(o => { if (o.material) for (const m of Array.isArray(o.material) ? o.material : [o.material]) if (m.normalMap && m.normalMap.anisotropy > 4) { m.normalMap.anisotropy = 4; if (m.normalMap.image) m.normalMap.needsUpdate = true; } });   /* Reliefkarten: feine Struktur mittelt sich in der Ferne ohnehin aus – 4-fach reicht */
   buildEvict(trackGroup); for (const e of EVICT) e.m.userData.evRef = e;
@@ -11342,7 +11351,8 @@ function visorNew() { const v = document.querySelector('#helmet .visor'); if (v)
 // Häufiger im Windschatten (aufgewirbelter Dreck des Vordermanns) und abseits der Strecke. Reine CSS-Animation je Fleck – kein Neuzeichnen pro Bild.
 const VDIRT = { t: 2, el: null };
 function visorDirtTick(dt) {
-  if (!(pl.v > 8)) return; const off = pl.surf && pl.surf !== 'road' && pl.surf !== 'kerb', rate = (0.16 + (pl.slipS || 0) * 0.9 + (off ? 1.8 : 0)) * clamp(pl.v / 60, 0.3, 1.3);
+  if (!(pl.v > 8) || WX.on) return;   /* bei Regen kein Staub, Gummiabrieb oder Insekten – das Wasser wäscht das Visier (dort gibt es die Tropfen, uDrop) */
+  const off = pl.surf && pl.surf !== 'road' && pl.surf !== 'kerb', rate = (0.16 + (pl.slipS || 0) * 0.9 + (off ? 1.8 : 0)) * clamp(pl.v / 60, 0.3, 1.3);
   VDIRT.t -= dt * rate; if (VDIRT.t > 0) return; VDIRT.t = 0.6 + Math.random() * 0.9;
   const el = (VDIRT.el ||= document.querySelector('#helmet .vdirt')); if (!el || el.childElementCount >= 18) return;
   const n = off ? 2 + Math.floor(Math.random() * 3) : 1 + (Math.random() < 0.3 ? 1 : 0), x0 = 7 + Math.random() * 86, y0 = 10 + Math.random() * 68;
@@ -13862,7 +13872,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.96'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.97'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -14077,8 +14087,9 @@ function tick(now, forced) {
   lodTick(dt); wakeTick(dt); drawWheel(dt); if (running) updateLine(dt); updateHUD(dt); sphereTick(dt); vegasTick(dt); updateAudio(pl.thr || 0); musicTick();
   if (finishPass) {
     const fu = finishPass.uniforms; fu.uSpeed.value = running && !paused ? clamp((pl.v - 50) / 42, 0, 1.2) ** 1.5 * 1.25 + (pl.boostFx || 0) * 1.05 : 0;
-    { const d = fu.uDrop.value, want = WX.on && running && S.cam === 2 ? 0.42 + 0.58 * WX.rain : 0;   /* Regentropfen auf dem Visier: weich ein/aus (Kamerawechsel), Lebenslauf läuft mit dem Fahrtwind schneller */
-      d.x += (want - d.x) * Math.min(1, dt * (want ? 2.5 : 8)); if (!want && d.x < 0.004) d.x = 0; d.y = clamp(pl.v / 75, 0, 1); if (d.x > 0 && !paused) d.z = (d.z + dt * (1 + d.y * 2.6)) % 3600; }
+    { const d = fu.uDrop.value, want = WX.on && running && S.cam === 2 && !window.__noDrops ? 0.42 + 0.58 * WX.rain : 0;   /* Regentropfen auf dem Visier: weich ein/aus (Kamerawechsel), Lebenslauf läuft mit dem Fahrtwind schneller */
+      d.x += (want - d.x) * Math.min(1, dt * (want ? 2.5 : 8)); if (!want && d.x < 0.004) { d.x = 0; d.w = 0; } d.y += (clamp((pl.v - 6) / 72, 0, 1) - d.y) * Math.min(1, dt * 4);
+      if (d.x > 0 && !paused) { d.z = (d.z + dt * (1 + d.y * 2.6)) % 3600; d.w = (d.w + dt * Math.pow(d.y, 1.4) * 1.3) % 512; } }   /* w: Weg zur Seite in Bildhöhen – bei 100 km/h ~0,25 je Sekunde, bei 200 km/h ~0,8, bei 300 km/h ~1,3 (in unter einer Sekunde quer über die Visierhälfte); Umlauf bei 512, damit die Rechengenauigkeit im Shader auch nach Stunden reicht */
     fu.uTime.value = now / 1000; fu.uBoost.value = running && !paused ? (pl.boostFx || 0) : 0; fu.uEra.value = running && pl.mesh && pl.mesh.H && S.histFx !== false ? pl.mesh.H.fx : 0;   // Klassiker: Bildfilter der Epoche
     if (bloomPass) bloomPass.strength = (TH.look?.bloom ?? .5) + (pl.boostFx || 0) * 0.3; fu.uSat.value = (TH.look?.sat ?? 1.1) * TONE.sat * (1 - (pl.boostFx || 0) * 0.4); fu.uVig.value = (TH.look?.vig ?? .38) + clamp((pl.v - 65) / 30, 0, 1) * 0.32 + (pl.boostFx || 0) * 0.6;
     _sv.copy(skyMat.uniforms.sunDir.value).multiplyScalar(1000).add(camera.position).project(camera);

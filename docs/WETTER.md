@@ -1,9 +1,10 @@
 # Wetter: Regen (v2.95)
 
-Stand 24.11.2026. Regen und das neue Menü „Rennen einstellen“ (Entwurf A, vom Nutzer gewählt) sind eingebaut und auf `main`. Das Wetter wird im Menü
+Stand 24.11.2026 (v2.97). Regen und das neue Menü „Rennen einstellen“ (Entwurf A, vom Nutzer gewählt) sind eingebaut und auf `main`. Das Wetter wird im Menü
 unter **Rennen einstellen → Wetter** gewählt; in der Karriere wird es je Rennwochenende ausgelost.
 
-Bilder (echte Spielbilder): `docs/bilder/regen_entwurf_tag.jpg`, `regen_entwurf_nacht.jpg`, `regen_helm_reifen.jpg` (Visier-Tropfen, blaue Regenreifen) ·
+Bilder (echte Spielbilder): `docs/bilder/regen_entwurf_tag.jpg`, `regen_entwurf_nacht.jpg`, `regen_helm_reifen.jpg` (Visier-Tropfen, blaue Regenreifen),
+`regen_helm_tropfen_v297.jpg` (Tropfen fliegen mit dem Tempo zur Seite: Stand / 150 / 300 km/h) ·
 Menü: `rennmenue_v295.jpg` (eingebaut), `menue_kopfzeile_v296.jpg` (Schrittleiste über die volle Breite), Entwürfe `rennmenue_entwurf_A.jpg`, `_B.jpg`, `_desktop.jpg`.
 
 ---
@@ -24,7 +25,7 @@ Menü: `rennmenue_v295.jpg` (eingebaut), `menue_kopfzeile_v296.jpg` (Schrittleis
 | Ton | berechnetes Regenprasseln und Reifenzischen (kein Download, keine ElevenLabs-Credits) |
 | Karriere | je Rennwochenende einmal ausgelost (Quali und Rennen gleich), im Spielstand gespeichert (`CHP.wx`) |
 | Monaco | im Tunnel fällt kein Regen (Lichtkarte, Kanal „überdacht“) |
-| Helmansicht | Regentropfen auf dem Visier: entstehen, werden vom Fahrtwind nach oben geschoben und langgezogen, vergehen; jeder Tropfen wirkt als kleine Linse (nur „Schön“/„Ultra“) |
+| Helmansicht | Regentropfen auf dem Visier: im Stand runde Perlen, die still sitzen; mit dem Tempo treibt sie der Fahrtwind von der Visiermitte zur Seite – erst langsam, bei 300 km/h in unter einer Sekunde über den Rand, mit spitz zulaufendem Schweif (v2.97). Jeder Tropfen wirkt als kleine Linse mit Glanzpunkt (nur „Schön“/„Ultra“) |
 
 ## 2. Bedienen und testen
 
@@ -36,7 +37,13 @@ Menü: `rennmenue_v295.jpg` (eingebaut), `menue_kopfzeile_v296.jpg` (Schrittleis
   „ohne Pfützen-Spiegelung“ und „trocken zum Vergleich“ – so lässt sich am echten Gerät ablesen, was jeder Baustein kostet.
 - Testschalter für Messungen: `window.__noRain`, `__noSpray`, `__noSSR` (danach `applyWeather(WX.cur, true)`).
 - Bilder aus dem echten Spiel: `node tools/wetter/regen_bilder.js Spa heavy <Ordner> 1700,0 1700,2 fix:2200:0:1.3:2300:0:0.5`
-  (Strecke, Wetter, Ansichten: `Streckenmeter,Kamera` oder Standbild `fix:…`).
+  (Strecke, Wetter, Ansichten: `Streckenmeter,Kamera` oder Standbild `fix:…`). `--folge 18,1` nimmt nach jedem Bild 18 weitere auf (je 1 Spielbild später) –
+  für alles, was sich bewegt. Im Testbrowser kostet jedes Spielbild ~18 s.
+- **Visier-Tropfen schnell abstimmen**: `node tools/wetter/tropfen_pruefstand.js <Standbild.png> <Ordner> 0 120 290` legt den Tropfen-Shader (direkt aus
+  `index.html` gelesen) über ein Standbild und rendert je Tempo eine Bildfolge plus `zoom.png` – Sekunden statt Minuten. Standbild ohne Tropfen:
+  `regen_bilder.js … 2150,2 --pre "window.__noDrops = 1"`.
+- **Auflösung prüfen**: Der Testbrowser läuft mit Pixelverhältnis 1 – Fehler in der Renderauflösung fallen so nicht auf. Für solche Prüfungen
+  `spiel({ …, dpr: 2 })` (`tools/textur/spiel.js`). Fertige Prüfung über Wetterwechsel hinweg: `node tools/wetter/aufloesung_pruefen.js` (Soll und Ist je Zeile).
 
 ## 3. Regenwahrscheinlichkeit je Strecke („wie in echt“)
 
@@ -116,6 +123,14 @@ Alles steht in `index.html` im Block „Wetter: Regen (v2.95)“ vor dem Himmel.
 - **Regen** (`RAINFX`): Linien, Position = Zufallswert im Kasten + Fallweg, relativ zur Kamera umlaufend; Schweif = Bewegung relativ zur Kamera × Belichtungszeit
   (höchstens 85 cm). Additiv in Dunstfarbe. Lichtkarte `WXM` (von oben gezeichnet: R = Flutlicht am Boden, G = überdacht).
 - **Lichtkegel-Regen** (`RAINC`, nur Nacht): ein Zeichenaufruf für alle Masten; Lampenpositionen sammelt `WX.lamps` an den drei Stellen, an denen Masten gebaut werden.
+- **Visier-Tropfen** (`dropLayer` im Bild-Shader `FinishShader`, Uniform `uDrop`: x Menge, y Fahrtwind, z Laufzeit, w Weg zur Seite): zwei Schichten (wenige
+  mittlere, viele kleine), je Rasterzelle höchstens ein Tropfen. Das Raster jeder Bildhälfte wandert nach außen; der Weg wird in `tick` aufsummiert
+  (`uDrop.w`, Umlauf bei 512 wegen der Rechengenauigkeit), jede Zeile hat ihr eigenes Tempo. Die Zellen sind 2,5-mal so breit wie hoch – so passt der Schweif
+  ohne Nachbarzellen-Abfrage hinein. Die Tropfen werden **nach** Radialunschärfe und Farbsaum eingerechnet (sie sitzen scharf vor dem Bild; vorher
+  verschwand ihre Schattierung bei Höchsttempo in der Unschärfe und der Farbsaum färbte sie braun). Uniform-Verzweigung: ohne Regen/Helmansicht kostet es nichts.
+- **Visierschmutz** (`visorDirtTick`, dunkle Flecken aus Staub/Gummiabrieb/Insekten, gab es schon vorher): bei Regen kommen keine neuen dazu (v2.97) –
+  zwischen den Tropfen sahen sie wie Fehler aus.
+- **Composer neu bauen** (`buildComposer()`): danach immer `resize()` aufrufen – der neue Composer startet sonst in einfacher Auflösung (siehe Abschnitt 5a).
 - **Gischt** (`SPRAY`, `wxSpray`): bis 1.400 weiche Punkte, nur Autos im Umkreis von 150 m, in Kameranähe ausgeblendet.
 - **Vorwärmen**: `precompile()` zeichnet Regen, Gischt und Lichtkegel einmal mit; `warmKey` enthält das Wetter. Gemessen (Spa, starker Regen, alle vier Kameras):
   nach dem Laden 171 Shader, im Rennen kommt keiner dazu.
@@ -141,6 +156,18 @@ Alles steht in `index.html` im Block „Wetter: Regen (v2.95)“ vor dem Himmel.
   in `applyWeather` die Stufenzahl für `isTouch` senken oder die Spiegelung auf dem Handy nur bei „Ultra“ einschalten (`wxSSRWanted`).
 - Regeln aus `docs/LEISTUNG-ANLEITUNG.md` eingehalten: im Ruhezustand nichts tun, vorgewärmt, kein neuer Vollbild-Durchgang, Durchsicht testet die Tiefe.
 
+## 5a. Fehler und Lehren
+
+- **Auflösung brach nach dem ersten Regenrennen ein (v2.95–v2.96, behoben in v2.97).** `applyWeather` baut den Composer neu, wenn die Pfützen-Spiegelung
+  an- oder ausgeht (Tiefentextur). Dabei fehlte `resize()`: Der neue Composer rechnete mit einfacher statt Geräteauflösung – auf dem Handy rund ein Drittel
+  der Bildpunkte von „Schön“ (im Test 852×393 statt 1491×688) – und das blieb bis zum Neuladen so, auch in trockenen Rennen danach. Jetzt folgt auf jedes
+  `buildComposer()` ein `resize()` (in `applyWeather` und im Trockenpfad von `buildTrack`). Aufgefallen ist es im Test nicht, weil der Testbrowser mit
+  Pixelverhältnis 1 lief – deshalb der Schalter `dpr` in `tools/textur/spiel.js`.
+- **Rosa/grüne Flecken bei Höchsttempo (alt, seit vor v2.95, behoben in v2.97).** Der Farbsaum am Bildrand holte Rot und Blau scharf aus dem Bild, während Grün
+  schon radial verwischt war – an hellen Schriftzügen und Baumkanten entstanden rosa/grüne Flecken (im Regen durch den hellen Himmel besonders deutlich).
+  Der Farbsaum wird jetzt im verwischten Bereich ausgeblendet (`cm = 0.85 * (1 - bw)`).
+- **Visier-Tropfen erst nur dunkle Punkte**: siehe „Visier-Tropfen“ in Abschnitt 4 (Reihenfolge im Bild-Shader).
+
 ## 6. Stellschrauben
 
 | Was | Wo |
@@ -152,6 +179,9 @@ Alles steht in `index.html` im Block „Wetter: Regen (v2.95)“ vor dem Himmel.
 | Gischt: Menge, Größe, Deckkraft | `wxSpray` |
 | Untergründe bei Nässe, Aquaplaning | `SURFW`, `wxAqua` |
 | Spiegel-Stufen je Gerät | `applyWeather` (`steps`) |
+| Visier-Tropfen: Menge und Größe je Schicht | Aufruf `drp = dropLayer(…)` (Rasterzeilen 10/26, Füllgrad 0,65/0,8), Größe `r` in `dropLayer` |
+| Visier-Tropfen: Tempo zur Seite, ab wann | `tick` (`d.w += … Math.pow(d.y, 1.4) * 1.3`; Fahrtwind `d.y`: 0 unter 22 km/h, 1 ab 281 km/h) |
+| Visier-Tropfen: Schweiflänge, Zuspitzung, Schräge | `dropLayer` (`st = 1 + wind * 2.4`, `ry`, `d.y -= 0.12 * …`) |
 
 ## 7. Menü „Rennen einstellen“ (Entwurf A, eingebaut)
 
