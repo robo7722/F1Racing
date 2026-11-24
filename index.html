@@ -2949,6 +2949,7 @@ function wxRainSetup() {
   } else { U.tMask.value = RAINFX.blank; WXM.r.set(0, 0, 1, 1); }
   U.uNight.value = night ? 1 : 0; U.uAmt.value = 0.3 + 0.7 * WX.rain; U.uT.value = 0; WX.has = false;
   if (night) U.uCol.value.setRGB(0.8, 0.77, 0.7); else U.uCol.value.setHex(TH.fog).multiplyScalar(0.9);
+  if (S.gfx === 'low') U.uCol.value.multiplyScalar(0.4);   /* „Schnell“: ohne Nachbearbeitung wird im fertigen Bild (nicht im HDR-Puffer) addiert – dieselbe Farbe wirkte dort viel zu grell */
   SPRAY.mat.uniforms.uCol.value.copy(night ? new THREE.Color(0.2, 0.2, 0.215) : new THREE.Color(TH.fog).multiplyScalar(1.12));   /* nachts nur vom Flutlicht angestrahlt: grauer Schleier, kein leuchtender Fleck */
   const LP = WX.lamps; RAINC.n = night && S.gfx !== 'low' ? LP.length : 0;
   if (RAINC.n) { const g = RAINC.geo, h = new Float32Array(LP.length * 3), f = new Float32Array(LP.length * 3); LP.forEach((l, k) => { h.set([l[0], l[1], l[2]], k * 3); f.set([l[3], l[5] ?? 0, l[4]], k * 3); });
@@ -11942,7 +11943,7 @@ let resultsShown = false, resultsAt = 0, fastest = null, effCtrl = 'touch', diff
 const wxRoll = key => { const p = RAIN_P[key] || [0.15, 0.2]; return Math.random() < p[0] ? (Math.random() < p[1] ? 'heavy' : 'light') : 'dry'; };
 function wxPick() { if (window.__wxForce) return window.__wxForce;
   if (CHP && CHP.career) { const w = CHP.wx || (CHP.wx = {}); if (!WXLV[w[CHP.round]]) { w[CHP.round] = wxRoll(S.track); saveChamp(); } return w[CHP.round]; }
-  if (S.wx === 'auto') { if (!WX.autoK || WX.autoFor !== BID + '|' + S.track) { WX.autoK = wxRoll(S.track); WX.autoFor = BID + '|' + S.track; } return WX.autoK; }
+  if (S.wx === 'auto') return wxRoll(S.track);   /* Zufall: bei jedem Start aus dem Menü neu gelost („Nochmal“ und Neustart behalten das Wetter – sie rufen wxPick nicht auf) */
   return WXLV[S.wx] ? S.wx : 'dry'; }
 // Vor dem Streckenbau: das Wetter des kommenden Rennens schon vormerken (bei „Zufall“ wird erst am Start gelost – bis dahin trocken)
 function wxPreset() { const k = window.__wxForce || ((CHP && CHP.career) || S.wx !== 'auto' ? wxPick() : 'dry'); if (k !== WX.cur) Object.assign(WX, WXLV[k], { cur: k, on: k !== 'dry' }); }

@@ -42,7 +42,8 @@ Bilder: `docs/bilder/regen_entwurf_tag.jpg`, `regen_entwurf_nacht.jpg` (echte Sp
 Zwei Quellen, verrechnet in `tools/wetter/regen_tabelle.py`:
 
 1. **Tatsächlich nasse Formel-1-Rennen seit 2000** je Strecke: Feld „Weather“ der Wikipedia-Rennseiten (über DBpedia in einer Abfrage, die jüngsten Rennen
-   direkt von Wikipedia). Skript: `tools/wetter/regenrennen_wikipedia.py`, Ergebnis mit allen Wettertexten: `regenrennen_ergebnis.json`.
+   direkt von Wikipedia). Stand: 405 Rennen von 2000 bis 2025, davon 55 nass. Die Rennen 2026 fehlen noch bis auf Melbourne – Wikipedia gibt von hier nur wenige
+   Seiten je Minute heraus; ein späterer Lauf des Skripts holt sie nach (Zwischenspeicher). Skript: `tools/wetter/regenrennen_wikipedia.py`, Ergebnis mit allen Wettertexten: `regenrennen_ergebnis.json`.
 2. **Wetterarchiv** (Open-Meteo, ERA5-Reanalyse, stündlicher Niederschlag am Ort der Strecke, 2000–2024): Anteil der Tage im Fenster ±7 Tage um den
    Renntermin 2026, an denen von einer Stunde vor dem Start bis zwei Stunden danach mindestens 1,0 mm fallen. Skript: `tools/wetter/regenwahrscheinlichkeit.py`,
    Ergebnis: `regen_ergebnis.json`. Die Schwelle 1,0 mm ist geeicht: Damit passt die Summe über alle Strecken zu den tatsächlich nassen Rennen
@@ -118,9 +119,20 @@ Alles steht in `index.html` im Block „Wetter: Regen (v2.95)“ vor dem Himmel.
 - **Vorwärmen**: `precompile()` zeichnet Regen, Gischt und Lichtkegel einmal mit; `warmKey` enthält das Wetter. Gemessen (Spa, starker Regen, alle vier Kameras):
   nach dem Laden 171 Shader, im Rennen kommt keiner dazu.
 
+### Neue Strecken regentauglich bauen
+
+- **Böden** werden automatisch nass, wenn sie wie üblich als flache Streifen/Bodenflächen gebaut sind (`userData.flat`, `ground`, `tile`). Flächen mit Gras-, Kies-,
+  Sand- oder Laubtextur werden nur dunkler; eine neue Erd-/Rasentextur bitte mit `textur.userData.soil = 1` kennzeichnen, sonst gilt sie als Asphalt und bekommt Pfützen.
+- **Flutlichtmasten** (Nachtstrecken): beim Bau je Mast `WX.lamps.push([Kopf x, Kopf y, Kopf z, Lichtfleck x, Lichtfleck z, Boden y])` – daraus entstehen die Lichtkarte für
+  die Tropfen und der Regen im Lichtkegel. Ohne Einträge leuchtet der Regen nur als Band entlang der Strecke.
+- **Lichtflecken** auf dem Asphalt über `poolMesh` bauen – sie werden bei Nässe automatisch gedimmt (nasser Asphalt spiegelt statt zu streuen).
+- **Überdachte Abschnitte** (Tunnel): in `wxRainSetup` in die Liste `cov` eintragen (Streckenmeter von–bis), dann fällt dort kein Regen.
+- **Fernbäume** werden mit dem Licht beim Streckenbau gebacken; bei späterem Wetterwechsel gleicht `applyWeather` nur die Helligkeit an (`WX.imps`).
+
 ## 5. Leistung
 
 - Trocken: unverändert (kein Regen-Shader im Programm, keine Tiefentextur, Regen-Objekte unsichtbar und ohne Rechenarbeit; geprüft: Zustand und Bild).
+- Wetterwechsel auf gebauter Strecke: Himmel und Umgebung neu backen, Bodenmaterialien neu übersetzen – läuft hinter dem Ladebildschirm (im Testbrowser mit Software-Grafik ~2,2 s).
 - Regen kostet **höchstens drei Zeichenaufrufe** (Tropfen, Gischt, nachts Lichtkegel) und kein zusätzliches Vollbild; die Sichtweite sinkt (Tag), dadurch werden
   ferne Objekte gar nicht mehr gezeichnet.
 - Der eigentliche Preis ist die Spiegelung im Fahrbahn-Shader: je spiegelndem Pixel 4/6/8 Tiefenabfragen + 1–2 weitere + 1 Farbabfrage. Das lässt sich im
@@ -158,3 +170,4 @@ Mockup-Skript: `tools/wetter/rennmenue_entwurf.js` (spritzt den Entwurf in den e
 - Wechselndes Wetter im Rennen (abtrocknende Ideallinie, einsetzender Regen) – `WX.wet`/`WX.rain` sind schon getrennte Werte.
 - Spritzer beim Durchfahren von Pfützen, Regenrinnen am Fahrbahnrand.
 - Boxenstopps mit Reifenwahl gibt es im Spiel nicht – deshalb fahren bei Regen alle auf dem passenden Reifen.
+- Bekannte Kleinigkeit: Im Monaco-Tunnel fällt kein Regen, die Fahrbahn bleibt dort aber nass und die Pfützen zeigen weiter Tropfenringe.

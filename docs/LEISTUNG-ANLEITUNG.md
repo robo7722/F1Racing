@@ -87,6 +87,9 @@ schlimmer an als eine etwas niedrigere, aber gleichmäßige Bildrate).
 - **Vorwärmen**: Effekt in der Szene lassen und in `precompile()` einmal sichtbar zeichnen (Fehler 5).
 - **Vollbild-Durchgänge** (Nachbearbeitung) kosten je Pixel in jedem Bild – lieber in den vorhandenen Finish-Shader einbauen als einen neuen Pass anlegen;
   nur in „Schön“/„Ultra“ (`S.gfx !== 'low'`).
+- **Effekte, die nur manchmal gebraucht werden, gehören nicht in den Standard-Shader**: Vorbild Regen (v2.95, `docs/WETTER.md`) – der Zusatzcode steht im Material hinter
+  `#ifdef WX_WET`, das Define wird nur bei Regen gesetzt (`material.defines`, danach `needsUpdate`). Im trockenen Programm ist er nicht enthalten und kostet nichts.
+  Wer das letzte Bild braucht (Spiegelung, Verzerrung): Der Composer hält im zweiten Puffer Farbe und Tiefe des letzten Bildes bereit (`wxFrame`) – kein eigener Durchgang nötig.
 - **Durchsicht** sparsam und **nie über das Cockpit**: Effekte schreiben keine Tiefe, testen sie aber (`depthTest` bleibt an) – dann verdeckt das Cockpit sie richtig.
 - **Echtzeitschatten** werfen nur die Autos; neue Objekte bekommen gebackene Schatten (`bakeShadows`), kein `castShadow`.
 - **Gegner-Schatten** (seit 2.67): Gegnerautos werfen ihren Schatten über eine Schattenfigur (`m.shp`, Fernmodell `tp.far3`, Ebene `SHP_L` = 8), ihre
