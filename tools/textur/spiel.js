@@ -15,6 +15,7 @@ async function spiel({ w = 1280, h = 640, query = '', dpr = 1 } = {}) {   // dpr
     if (f === '/index.html') { const s = body.toString('utf8'), c = 'const SHOW = {'; if (!s.includes(c)) console.log('WARNUNG: Einhängepunkt fehlt'); body = s.replace(c, 'window.__stkEval = q => eval(q); ' + c); }
     await r.fulfill({ body, contentType: MIME[f.split('.').pop()] || 'application/octet-stream' });
   });
+  if (!/[?&](nopre|mitpre)/.test(query)) query += (query ? '&' : '?') + 'nopre';   // Werkzeuge: das Vorbereiten aller Autos im Ladebildschirm (v2.99, im Testbrowser ~45 s) überspringen; mit ?mitpre bleibt es an
   await p.goto('http://f1.test/index.html' + query, { waitUntil: 'load', timeout: 300000 });
   await p.waitForFunction(() => typeof window.__stkEval === 'function', null, { timeout: 300000 });
   const ev = (code, arg) => p.evaluate(([c, a]) => { window.__arg = a; return window.__stkEval(c); }, [code, arg]);

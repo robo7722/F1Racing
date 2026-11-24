@@ -41,6 +41,14 @@ schlimmer an als eine etwas niedrigere, aber gleichmäßige Bildrate).
    im Rennen übersetzt (gemessen 42–67 ms). Alles muss in `precompile()`/`warmCams()` einmal gezeichnet werden (in der Szene hängen lassen und dort kurz
    sichtbar schalten, Vorbild `WAKE.m`). QC-Kategorie „Nachladen“ muss leer sein.
 6. **Zu kleine Instanz-Kacheln** (jede Kachel = ein Aufruf) und **Instanzen ohne Detailstufe** (Bäume mit 17–28 Tsd. Dreiecken je Kachel).
+7. **Vorbereiten im sichtbaren Hauptmenü** (bis v2.98): Nach dem Ladebildschirm wurde erst der Showroom gebaut und im ersten Bild übersetzt, 2 s später
+   liefen 16 Fahrzeug-Vorbereitungen „im Leerlauf“ (`makeCar` + Shader je Team, Legenden-Modelle laden) – das Hauptmenü ruckelte bei jedem ersten Start
+   (Rückmeldung 24.11.2026). Seit v2.99 läuft alles **vor** dem Einblenden hinter dem Ladebildschirm (`showroomPreload` liefert ein Versprechen, auf das der
+   Start wartet; Anzeige „Autos werden vorbereitet · n / m“; nach `PRE_MAX` = 25 s wird das Menü trotzdem freigegeben, der Rest läuft im Leerlauf weiter).
+   Gemessen mit `tools/menue/start_messen.js` (Testbrowser, Software-Grafik): Shader nach dem Einblenden vorher 17 → 48, jetzt 49 → 49; erster Hänger im Menü
+   5,9 s → 0,9 s; Ladebildschirm dafür 6,4 s → 17 s (am Handy deutlich weniger, aber spürbar länger als vorher – bewusst so gewünscht).
+   Regel: Was ein Menü zum ersten Mal zeigt, wird vor dem Einblenden gebaut **und einmal gezeichnet**. Werkzeuge überspringen das Vorbereiten
+   (Adressen mit `?qc=…` oder `?nopre` überspringen es – QC-Bot und Testbrowser bleiben schnell; `?mitpre` erzwingt es, so misst `start_messen.js`).
 
 ---
 
@@ -114,6 +122,7 @@ schlimmer an als eine etwas niedrigere, aber gleichmäßige Bildrate).
 | Takt-Messung (Skript unten) | findet **wiederkehrende** Hänger (z. B. Hochladen einer Textur alle n Bilder) |
 | `window.__oldCar = true` | alter Zeichenweg für Cockpit/TV (Bildvergleich, Fehlersuche) |
 | Handy: Einstellungen → Extras → Debug-Menü | echte Bildzeiten, Ruckler-Protokoll, Lasttest (die Laptop-Zeiten sind nur Hinweise) |
+| `node tools/menue/start_messen.js [Sekunden] [BxH]` | erster Start: Dauer des Ladebildschirms; danach im Hauptmenü lange Aufgaben, Bildabstände, neu übersetzte Shader, neue Texturen/Geometrien (müssen gleich bleiben) |
 
 Takt-Messung je Kamera (als `--script`-Datei; Median und 90-%-Wert der kompletten Spieltakte inkl. Zeichnen):
 

@@ -2991,26 +2991,26 @@ function wxFrame(wb) {
 // und, nur für Nachtstrecken ohne erfasste Masten, einen schwachen Schein entlang der Strecke.
 const WXM = { tex: null, r: new THREE.Vector4(0, 0, 1, 1) };
 const RAINFX = (() => {
-  const N = 5600, P = new Float32Array(N * 6), SD = new Float32Array(N * 8), E = new Float32Array(N * 2);
+  const N = 9000, P = new Float32Array(N * 6), SD = new Float32Array(N * 8), E = new Float32Array(N * 2);   /* v2.99 feiner: mehr, dafür kürzere, schwächere und erst ab ~1,2 m sichtbare Striche (vorher 5600 kräftige) */
   for (let i = 0; i < N; i++) { const a = Math.random(), b = Math.random(), c = Math.random(), d = Math.random(); for (let k = 0; k < 2; k++) { SD.set([a, b, c, d], (i * 2 + k) * 4); E[i * 2 + k] = k; } }
   const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(P, 3)); geo.setAttribute('aSeed', new THREE.BufferAttribute(SD, 4)); geo.setAttribute('aEnd', new THREE.BufferAttribute(E, 1));
   const blank = new THREE.DataTexture(new Uint8Array([255, 0, 0, 255]), 1, 1, THREE.RGBAFormat); blank.needsUpdate = true;
   const mat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false,
-    uniforms: { uCam: { value: new THREE.Vector3() }, uFall: { value: new THREE.Vector3(0.6, -8.6, 0.3) }, uCamV: { value: new THREE.Vector3() }, uBox: { value: new THREE.Vector3(26, 15, 26) }, uT: { value: 0 }, uExp: { value: 0.032 }, uAmt: { value: 1 },
+    uniforms: { uCam: { value: new THREE.Vector3() }, uFall: { value: new THREE.Vector3(0.6, -8.6, 0.3) }, uCamV: { value: new THREE.Vector3() }, uBox: { value: new THREE.Vector3(26, 15, 26) }, uT: { value: 0 }, uExp: { value: 0.026 }, uAmt: { value: 1 }, uFine: { value: 1 }, uBase: { value: 0.1 },   // uFine: Deckkraft (ein Strich ist mindestens ein Renderpixel breit – bei gröberer Renderauflösung schwächer, damit er fein wirkt), uBase: Grundsichtbarkeit bei Nacht ohne Lampe
       uNight: { value: 0 }, uCol: { value: new THREE.Color(0.6, 0.64, 0.7) }, tMask: { value: blank }, uMaskR: { value: WXM.r }, uLit: { value: 0 },
       uLH: { value: Array.from({ length: 8 }, () => new THREE.Vector3(0, -9999, 0)) }, uLF: { value: Array.from({ length: 8 }, () => new THREE.Vector3(0, -9998, 0)) } },   // uLH/uLF: Kopf und Lichtfleck der acht nächsten Flutlichter (wxTick), uLit: Schein ohne Masten
-    vertexShader: `attribute vec4 aSeed; attribute float aEnd; uniform vec3 uCam, uFall, uCamV, uBox; uniform float uT, uExp, uAmt, uNight, uLit; uniform sampler2D tMask; uniform vec4 uMaskR; uniform vec3 uLH[ 8 ], uLF[ 8 ]; varying float vA;
+    vertexShader: `attribute vec4 aSeed; attribute float aEnd; uniform vec3 uCam, uFall, uCamV, uBox; uniform float uT, uExp, uAmt, uNight, uLit, uFine, uBase; uniform sampler2D tMask; uniform vec4 uMaskR; uniform vec3 uLH[ 8 ], uLF[ 8 ]; varying float vA;
       void main() { float sp = 0.8 + 0.4 * aSeed.w;
         vec3 p = mod( aSeed.xyz * uBox + uFall * ( uT * sp ) - uCam, uBox ) - 0.5 * uBox;   // Lage relativ zur Kamera, läuft im Kasten um
-        vec3 rel = uFall * sp - uCamV; float rl = length( rel ) * uExp, rk = min( 1.0, 0.85 / max( rl, 1e-4 ) );   // Strich höchstens 85 cm lang (sonst wird Regen bei Tempo zu „Warp-Streifen“)
+        vec3 rel = uFall * sp - uCamV; float rl = length( rel ) * uExp, rk = min( 1.0, 0.6 / max( rl, 1e-4 ) );   // Strich höchstens 60 cm lang (sonst wird Regen bei Tempo zu „Warp-Streifen“)
         vec3 w = uCam + p - rel * ( uExp * rk * aEnd );   // Schweif: wo der Tropfen eine Belichtungszeit vorher war
         gl_Position = projectionMatrix * viewMatrix * vec4( w, 1.0 );
-        vec3 q = abs( p ) / uBox; float a = smoothstep( 0.5, 2.2, length( p ) ) * ( 1.0 - smoothstep( 0.36, 0.5, max( q.x, max( q.y, q.z ) ) ) );
-        a *= step( fract( aSeed.w * 7.31 ), uAmt ) * ( 0.55 + 0.45 * fract( aSeed.w * 13.7 ) );
+        vec3 q = abs( p ) / uBox; float a = smoothstep( 1.2, 4.5, length( p ) ) * ( 1.0 - smoothstep( 0.36, 0.5, max( q.x, max( q.y, q.z ) ) ) );   // ganz nahe Tropfen wären im Bild lange, grobe Striche – erst ab ~1,2 m einblenden
+        a *= step( fract( aSeed.w * 7.31 ), uAmt ) * ( 0.4 + 0.4 * fract( aSeed.w * 13.7 ) ) * uFine;
         vec4 mk = texture2D( tMask, ( w.xz - uMaskR.xy ) * uMaskR.zw ); a *= 1.0 - mk.g;
-        if ( uNight > 0.5 ) { vec3 dp = uCam + p; float lit = uLit * mk.r;   // nachts nur im Lichtkegel: Abstand zur Kegelachse, Kegel wird nach unten breiter (1,6 → 9,5 m) und schwächer
+        if ( uNight > 0.5 ) { vec3 dp = uCam + p; float lit = max( uLit * mk.r, uBase );   // nachts: überall nur ein Hauch (uBase), im Lichtkegel eines Flutlichts deutlich kräftiger – Abstand zur Kegelachse, Kegel wird nach unten breiter (1,6 → 9,5 m) und schwächer
           for ( int i = 0; i < 8; i ++ ) { vec3 ax = uLF[ i ] - uLH[ i ], d = dp - uLH[ i ]; float t = clamp( dot( d, ax ) / dot( ax, ax ), 0.0, 1.0 ), e = 1.0 - smoothstep( 0.35, 1.0, length( d - ax * t ) / mix( 1.6, 9.5, t ) );
-            lit = max( lit, e * e * ( 1.0 - smoothstep( 0.6, 1.0, t ) ) / ( 1.0 + t * t * 5.0 ) ); }
+            lit = max( lit, 1.8 * e * e * ( 1.0 - smoothstep( 0.7, 1.0, t ) ) / ( 1.0 + t * t * 2.5 ) ); }
           a *= lit; }
         vA = a * ( 1.0 - 0.9 * aEnd ) / ( 1.0 + length( uCamV ) * 0.016 ); }`,
     fragmentShader: `uniform vec3 uCol; varying float vA; void main() { gl_FragColor = vec4( uCol, vA );
@@ -3025,7 +3025,7 @@ const RAINFX = (() => {
 const RAINC = (() => {
   const geo = new THREE.InstancedBufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute([-1, 0, 0, 1, 0, 0, 1, 1, 0, -1, 1, 0], 3)); geo.setIndex([0, 1, 2, 0, 2, 3]);
   const mat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, side: THREE.DoubleSide,
-    uniforms: { uT: { value: 0 }, uCol: { value: new THREE.Color(1, 0.96, 0.88) }, uAmt: { value: 1 } },
+    uniforms: { uT: { value: 0 }, uCol: { value: new THREE.Color(1.45, 1.39, 1.28) }, uAmt: { value: 1 } },   /* v2.99: im Lichtkegel deutlich kräftiger als der Hauch von Regen daneben */
     vertexShader: `attribute vec3 aHead, aFoot; varying vec3 vP; varying vec2 vQ; varying float vF;
       void main() { vec3 ax = aFoot - aHead; float t = position.y; vec3 c = aHead + ax * t;
         vec3 sd = normalize( cross( ax, cameraPosition - c ) ); float wd = mix( 1.6, 9.5, t ); vec3 w = c + sd * ( position.x * wd );
@@ -3034,7 +3034,7 @@ const RAINC = (() => {
       float h1( float p ) { p = fract( p * 0.1031 ); p *= p + 33.33; p *= p + p; return fract( p ); }
       float h2( vec2 p ) { vec3 q = fract( vec3( p.xyx ) * 0.1031 ); q += dot( q, q.yzx + 33.33 ); return fract( ( q.x + q.y ) * q.z ); }
       void main() { float ed = 1.0 - vQ.x * vQ.x, cone = ed * ed * smoothstep( 0.0, 0.05, vQ.y ) * ( 1.0 - smoothstep( 0.55, 1.0, vQ.y ) ) / ( 1.0 + vQ.y * vQ.y * 7.0 );   // hell am Lampenkopf, läuft zum Boden und zum Rand aus
-        float x = dot( vP.xz, vec2( 0.8, 0.6 ) ) * 17.0, cx = floor( x ), r = h1( cx ), y = ( vP.y + uT * ( 7.5 + r * 5.5 ) ) / ( 0.7 + r * 0.9 ) + r * 37.0, fy = fract( y ), r2 = h2( vec2( cx, floor( y ) ) );
+        float x = dot( vP.xz, vec2( 0.8, 0.6 ) ) * 24.0, cx = floor( x ), r = h1( cx ), y = ( vP.y + uT * ( 7.5 + r * 5.5 ) ) / ( 0.7 + r * 0.9 ) + r * 37.0, fy = fract( y ), r2 = h2( vec2( cx, floor( y ) ) );
         float on = step( 1.0 - 0.3 * uAmt, r2 ), st = on * smoothstep( 0.0, 0.05, fy ) * smoothstep( 0.2 + 0.25 * fract( r2 * 9.7 ), 0.06, fy ) * smoothstep( 0.42, 0.12, abs( fract( x ) - 0.5 ) );   // dünne Striche, unterschiedlich lang und schnell
         float fw = fwidth( x ), a = mix( st * 1.1, 0.05 * uAmt, smoothstep( 0.3, 1.1, fw ) );   // fern: einzelne Striche sind kleiner als ein Pixel – gleichmäßiger Schleier statt Flimmern
         gl_FragColor = vec4( uCol, ( a + 0.035 * uAmt ) * cone * vF );
@@ -3082,7 +3082,7 @@ function wxRainSetup() {
     const t = new THREE.CanvasTexture(cv); t.flipY = false; t.generateMipmaps = false; t.minFilter = t.magFilter = THREE.LinearFilter; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; WXM.tex = t; WXM.r.set(x0, z0, 1 / W, 1 / H);
     U.tMask.value = t;
   } else { U.tMask.value = RAINFX.blank; WXM.r.set(0, 0, 1, 1); }
-  U.uNight.value = night ? 1 : 0; U.uAmt.value = 0.3 + 0.7 * WX.rain; U.uT.value = 0; WX.has = false; U.uLit.value = night && !WX.lamps.length ? 0.3 : 0;   /* Nachtstrecke ohne erfasste Masten: schwacher Schein entlang der Strecke statt gar kein Regen */
+  U.uNight.value = night ? 1 : 0; U.uAmt.value = 0.3 + 0.7 * WX.rain; U.uT.value = 0; WX.has = false; U.uLit.value = night && !WX.lamps.length ? 0.3 : 0; U.uFine.value = clamp(renderer.getPixelRatio() / (devicePixelRatio || 1) * 1.3, 0.6, 1);   /* Nachtstrecke ohne erfasste Masten: schwacher Schein entlang der Strecke statt gar kein Regen */
   if (night) U.uCol.value.setRGB(0.8, 0.77, 0.7); else U.uCol.value.setHex(TH.fog).multiplyScalar(0.9);
   if (S.gfx === 'low') U.uCol.value.multiplyScalar(0.4);   /* „Schnell“: ohne Nachbearbeitung wird im fertigen Bild (nicht im HDR-Puffer) addiert – dieselbe Farbe wirkte dort viel zu grell */
   SPRAY.mat.uniforms.uCol.value.copy(night ? new THREE.Color(0.2, 0.2, 0.215) : new THREE.Color(TH.fog).multiplyScalar(1.12));   /* nachts nur vom Flutlicht angestrahlt: grauer Schleier, kein leuchtender Fleck */
@@ -4232,7 +4232,9 @@ function cockNew(tp, k, bodyCol) {
     g.setAttribute('color', new THREE.BufferAttribute(cc, 3)); g.setAttribute('aCls', new THREE.BufferAttribute(new Float32Array(n), 1));
     const lp = new Float32Array(n * 3); for (let i = 0; i < n; i++) { const z = pp.getZ(i), y = pp.getY(i); lp[i * 3] = pp.getX(i); lp[i * 3 + 1] = z < G.z1 ? Math.min(y, G.yR + 0.012) : y; lp[i * 3 + 2] = z; } g.setAttribute('aLP', new THREE.BufferAttribute(lp, 3)); }   /* aLP: Position, an der die Lackierung berechnet wird – die erhöhten Schultern bekommen die Farbe des Decks auf Randhöhe (wie das Fahrzeug von außen), nicht die Farbfelder weiter oben */
   const gc = g.clone(); gc.setIndex(ICb); g.setIndex(I);
-  if (!tp.shellMat) { const gm = tp.glossMat, sm = gm.clone(), ob = gm.onBeforeCompile; sm.onBeforeCompile = (sh, r) => { if (ob) ob.call(gm, sh, r); if (sh.vertexShader.includes('vLP = position;')) sh.vertexShader = 'attribute vec3 aLP;\n' + sh.vertexShader.replace('vLP = position;', 'vLP = aLP;'); }; const ck = gm.customProgramCacheKey(); sm.customProgramCacheKey = () => ck + '|ckLP'; tp.shellMat = sm; }   // Lack wie die Karosserie, Farbe an der Lackierposition aLP berechnet
+  if (!tp.shellMat) { const gm = tp.glossMat, sm = gm.clone(), ob = gm.onBeforeCompile; sm.onBeforeCompile = (sh, r) => { if (ob) ob.call(gm, sh, r); if (sh.vertexShader.includes('vLP = position;')) sh.vertexShader = 'attribute vec3 aLP;\n' + sh.vertexShader.replace('vLP = position;', 'vLP = aLP;');
+      const bt = 'vCls < 2.5 ? texture2D(uBake, vBUV).rgb : ', tk = tp.tk;   /* v2.99: Die Schale hat keine UV der gebackenen Lack-Textur (seit v2.73) – sie las immer denselben Bildpunkt (Fläche vor dem Cockpit einfarbig hellgrau statt lackiert). Hier wieder: Lack berechnen, Bogen und Logo projizieren */
+      if (tk && sh.fragmentShader.includes(bt)) { sh.fragmentShader = sh.fragmentShader.replace(bt, '').replace('livery(vLP, vCls);', 'livery(vLP, vCls);' + (hasDecal(tk) ? ' if (vCls < 2.5) {' + decalGLSL(tk, true) + ' }' : '')); Object.assign(sh.uniforms, decalProj(tk)); } }; const ck = gm.customProgramCacheKey(); sm.customProgramCacheKey = () => ck + '|ckLP'; tp.shellMat = sm; }   // Lack wie die Karosserie, Farbe an der Lackierposition aLP berechnet
   const grp = new THREE.Group(); grp.add(new THREE.Mesh(g, tp.shellMat)); grp.add(new THREE.Mesh(gc, COCK_MAT));
   { const w = 0.062, y0 = G.fl, y1 = hC1 - 0.003, zp = G.z1 - 0.002, pg = new THREE.BufferGeometry();   // Armaturenwand: ebene Carbonplatte in der Mitte der Vorderwand (dort laufen die Punktreihen beider Hälften zusammen – ohne Platte eine dunkle Naht)
     pg.setAttribute('position', new THREE.Float32BufferAttribute([-w, y0, zp, w, y0, zp, w, y1, zp, -w, y0, zp, w, y1, zp, -w, y1, zp], 3)); pg.setAttribute('uv', new THREE.Float32BufferAttribute([-w * 30, y0 * 30, w * 30, y0 * 30, w * 30, y1 * 30, -w * 30, y0 * 30, w * 30, y1 * 30, -w * 30, y1 * 30], 2)); pg.computeVertexNormals(); grp.add(new THREE.Mesh(pg, COCK_MAT)); }
@@ -4277,11 +4279,17 @@ for (const k in LIVMAN) { const m = LIVMAN[k]; if (!m || !SHEET_BOX[m.kind]) con
 const LIVTEX = new Set(/[?&]nobake/.test(location.search) ? [] : LIVMAN._tex || []);
 const baked = tk => LIVTEX.has(tk) && !!LIVMAN[tk] && !!(MODELS[LIVMAN[tk].kind] && MODELS[LIVMAN[tk].kind].C.tex);
 const DECAL_TEX = {}, DECAL_SMALL = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+const decalLoad = (url, tx, on, full) => { tx.value = new THREE.TextureLoader().load(url, t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+    if (DECAL_SMALL && !full && t.image && t.image.width > 1024) { const c = document.createElement('canvas'); c.width = t.image.width >> 1; c.height = t.image.height >> 1; c.getContext('2d').drawImage(t.image, 0, 0, c.width, c.height); t.image = c; }   // Handy/Tablet: halbe Auflösung spart drei Viertel des Grafikspeichers (ein Feld hat bis zu 16 Bögen)
+    t.needsUpdate = true; on.value = 1; try { if (typeof renderer !== 'undefined' && renderer.initTexture) renderer.initTexture(t); } catch (e) {} }, undefined, () => {}); };
+// Cockpit-Schale (cockNew, Helm- und TV-Kamera): Sie hat keine UV der gebackenen Lack-Textur – dort wird der Lack wie vor v2.73 berechnet und der Aufkleberbogen
+// samt Teamlogo von der Seite/von oben aufgetragen. Bei Teams mit gebackener Textur sind Bogen und Logo sonst gar nicht geladen: hier bei Bedarf nachholen (nur das eigene Team).
+const DECAL_PROJ = new Set();
+function decalProj(tk) { const U = decalUniforms(tk); if (DECAL_PROJ.has(tk) || !baked(tk)) return U; DECAL_PROJ.add(tk);
+  if (DECALS[tk] && !U.uDecal.value) decalLoad('logos/' + DECALS[tk].file + '.png', U.uDecal, U.uDecalOn); if (SHEETS[tk] && !U.uSheet.value) decalLoad('liveries/' + tk + '.png', U.uSheet, U.uSheetOn); return U; }
 function decalUniforms(tk) { if (DECAL_TEX[tk]) return DECAL_TEX[tk];
   const U = DECAL_TEX[tk] = { uBake: { value: null }, uBakeOn: { value: 0 }, uDecal: { value: null }, uDecalOn: { value: 0 }, uSheet: { value: null }, uSheetOn: { value: 0 }, uNum: { value: null }, uNumOn: { value: 0 }, uNumCol: { value: new THREE.Color(1, 1, 1) } };
-  const ld = (url, tx, on, full) => { tx.value = new THREE.TextureLoader().load(url, t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
-    if (DECAL_SMALL && !full && t.image && t.image.width > 1024) { const c = document.createElement('canvas'); c.width = t.image.width >> 1; c.height = t.image.height >> 1; c.getContext('2d').drawImage(t.image, 0, 0, c.width, c.height); t.image = c; }   // Handy/Tablet: halbe Auflösung spart drei Viertel des Grafikspeichers (ein Feld hat bis zu 16 Bögen)
-    t.needsUpdate = true; on.value = 1; }, undefined, () => {}); };
+  const ld = decalLoad;
   if (baked(tk)) ld('liveries/textur/' + tk + '.webp', U.uBake, U.uBakeOn, ownLiv(tk));   // Textur enthält Bogen und Logo schon; Touch-Geräte: eigenes Team in voller Auflösung (Verfolgerkamera), alle anderen halb
   else { if (DECALS[tk]) ld('logos/' + DECALS[tk].file + '.png', U.uDecal, U.uDecalOn); if (SHEETS[tk]) ld('liveries/' + tk + '.png', U.uSheet, U.uSheetOn); }
   return U; }
@@ -4290,7 +4298,7 @@ const hasDecal = tk => !!(DECALS[tk] || SHEETS[tk] || NUMS[tk]);
 // Alle Aufkleber (Bögen und Teamlogos) werden beim ersten Start auf dem Ladebildschirm geladen (preloadDecals, siehe Spielstart) – danach muss in Menü und Fahrzeugauswahl nichts mehr nachladen.
 const preloadDecals = () => new Promise(res => { const us = Object.keys(LIVMAN).filter(k => DECALS[k] || SHEETS[k] || baked(k)).map(k => decalUniforms(k)), t0 = performance.now();
   const chk = () => { if (us.every(u => (!u.uDecal.value || u.uDecalOn.value) && (!u.uSheet.value || u.uSheetOn.value) && (!u.uBake.value || u.uBakeOn.value)) || performance.now() - t0 > 12000) res(); else setTimeout(chk, 60); }; chk(); });   // höchstens 12 s warten (fehlende Datei: bleibt ohne Aufkleber)
-function decalGLSL(tk) { const f = v => (+v).toFixed(4), bk = baked(tk), B = bk ? null : SHEETS[tk]; let g = '\n { vec3 dN = normalize(vLN); vec2 dUV; vec4 dT;';   /* gebackene Textur: nur noch die Nummer */
+function decalGLSL(tk, proj) { const f = v => (+v).toFixed(4), bk = !proj && baked(tk), B = bk ? null : SHEETS[tk];   /* proj: Bogen und Logo auch bei gebackener Textur projizieren (Cockpit-Schale) */ let g = '\n { vec3 dN = normalize(vLN); vec2 dUV; vec4 dT;';   /* gebackene Textur: nur noch die Nummer */
   if (B) g += '\n  if (uSheetOn > 0.5 && dN.x * sign(vLP.x) > 0.2) { dUV = vec2((vLP.z - ' + f(B.z0) + ') / ' + f(B.z1 - B.z0) + ', (vLP.y - ' + f(B.y0) + ') / ' + f(B.y1 - B.y0) + '); if (vLP.x > 0.0) dUV.x = 1.0 - dUV.x; float dIn = (dUV.x > 0.0 && dUV.x < 1.0 && dUV.y > 0.0 && dUV.y < 1.0) ? 1.0 : 0.0; ' + (B.zones || []).map(q => 'if (vLP.z > ' + f(q[0]) + ' && vLP.z < ' + f(q[1]) + ' && (abs(vLP.x) < ' + f(q[2]) + ' || abs(vLP.x) > ' + f(q[3]) + ')) dIn = 0.0; ').join('') + 'dUV.y = clamp(dUV.y, 0.004, 0.996) * 0.5 + (vLP.x > 0.0 ? 0.5 : 0.0); dT = texture2D(uSheet, dUV) * dIn * smoothstep(0.2, 0.45, dN.x * sign(vLP.x)); diffuseColor.rgb = mix(diffuseColor.rgb, dT.rgb, dT.a); }';   /* weich auslaufen, wo die Fläche nach oben kippt (bis v2.75 harte Kante bei 0,45: Streifen brachen ab). Ab 0,45 voll wie früher – v2.76 hatte 0,3…0,55 und riss Schrift auf leicht geneigten Seitenkästen auf (ORACLE bei Red Bull) */
   const spot = (d, smp, on, asp) => (d.v === 'top'
     ? '\n  if (' + on + ' > 0.5 && dN.y > 0.5) { dUV = vec2(0.5 + (vLP.x - ' + f(d.x || 0) + ') / ' + f(d.s * asp) + ', 0.5 - (vLP.z - ' + f(d.z) + ') / ' + f(d.s) + ');'
@@ -4336,7 +4344,7 @@ function teamTemplate(tk) {
       gloss.livHook = gloss.onBeforeCompile;
       gloss.customProgramCacheKey = () => 'f2paint-' + tk + (LIVERY[tk] ? '-l' : '') + (hasDecal(tk) ? '-d' : ''); }   /* F2: weicher Klarlack – der scharfe Klarlack spiegelte Asphalt und Schatten als schwarze Flecken */   /* F2 auf F1-Niveau: die dunkle Umgebung (Asphalt, Horizontband) spiegelt sich weich statt schwarz */   // F2: unscharfe, schwache Spiegelung – scharfe Umgebungsspiegelung (Gras/Tribünen) wirkte fleckig-grün
     const haloMat = gloss.clone();   // Halo in der TV-Kamera: einfarbig in der Fahrzeugfarbe, ohne Lackierungs-Verlauf (Material vor dem Livery-Shader kopieren)
-    return (TPL[tk] = { model: true, M: MD, lods: MD.C.lods.map(L => ({ gloss: paintGeo(L.gloss, pc), matte: paintGeo(L.matte, pc) })), halo: paintGeo(MD.C.halo, pc), haloCk: MD.C.haloCk ? paintGeo(MD.C.haloCk, pc) : null, haloFlat: paintGeo(MD.C.halo, (k, x, y, z, o) => o.copy(LIVMAN[tk] && LIVMAN[tk].halo ? col(parseInt(String(LIVMAN[tk].halo).replace('#', ''), 16)) : cB)), haloMat,   /* TV-Kamera: das Halo AUS DEM MODELL in der Wagenfarbe – genau wie Version 1.00 (Wunsch). Ein fast schwarzes Halo spiegelte nur den Himmel als dünne Linie und wirkte spitz */ glossMat: liveryMat(tk, gloss) });
+    return (TPL[tk] = { model: true, tk, M: MD, lods: MD.C.lods.map(L => ({ gloss: paintGeo(L.gloss, pc), matte: paintGeo(L.matte, pc) })), halo: paintGeo(MD.C.halo, pc), haloCk: MD.C.haloCk ? paintGeo(MD.C.haloCk, pc) : null, haloFlat: paintGeo(MD.C.halo, (k, x, y, z, o) => o.copy(LIVMAN[tk] && LIVMAN[tk].halo ? col(parseInt(String(LIVMAN[tk].halo).replace('#', ''), 16)) : cB)), haloMat,   /* TV-Kamera: das Halo AUS DEM MODELL in der Wagenfarbe – genau wie Version 1.00 (Wunsch). Ein fast schwarzes Halo spiegelte nur den Himmel als dünne Linie und wirkte spitz */ glossMat: liveryMat(tk, gloss) });
   }
   const T = TEAMS[tk];
   const cB = col(T.body), cA = col(T.acc), cT = col(T.tip), cLow = col(T.low ?? T.body), cC = col(0x5a6068), cD = col(0x16181b), cL = col(0xff1a0a), cW = col(0xe9ecef);
@@ -11943,11 +11951,13 @@ window.__mus = () => [TITLE, ...RP].map((a, n) => ({ n: n ? 'Rennen' + n : 'Men�
 function musVol(el, v) { if (ac && !el._g) musRoute(el); if (el._g && el._g.context !== ac && !(ac instanceof AudioContext)) return; if (el._g) { el._g.gain.value = v; if (el.volume !== 1) el.volume = 1; } else el.volume = v; }
 let titleT = performance.now(), musSnap = false;   // musSnap: Musikregler wurde bewegt → nächster Takt ohne Blende
 const rpVol = [0, 0];   // Lautstärke der beiden Renn-Musik-Player
-let hadRace = false;    // ab dem ersten Rennen läuft die Renn-Musik auch nach dem Rennen und in den Menüs weiter
+let hadRace = false;    // ab dem ersten Rennen läuft die Renn-Musik auch nach dem Rennen und in den Menüs weiter – seit v2.99 auch im Hauptmenü (Wunsch: läuft durch)
 function titleTick() {
   const nw = performance.now(), dt = Math.min(0.5, (nw - titleT) / 1000); titleT = nw;
-  if (!running && MENU.scr === 'title') hadRace = false;   // zurück im Hauptmenü: ab hier bleibt die Menü-Musik, bis das nächste Rennen wirklich startet (nicht schon bei der Klassenwahl)
-  const menuMus = !running && !hadRace;   // nach einem Rennen läuft die Renn-Musik in Ergebnis-/Folgemenüs weiter, bis man im Hauptmenü ist
+  // v2.99: Läuft die Renn-Musik schon, läuft sie auch im Hauptmenü durch (vorher blendete dort die Menü-Musik ein). Zur Menü-Musik geht es im Hauptmenü nur zurück,
+  // wenn gar kein Renn-Titel läuft (Musik war aus, kein Lied geladen oder Datei fehlerhaft) – sonst bliebe es dort still.
+  if (!running && hadRace && MENU.scr === 'title' && !document.hidden) { const a = RP[rpCur]; if (!S.music || !a.src || a.error) hadRace = false; }
+  const menuMus = !running && !hadRace;   // nach einem Rennen läuft die Renn-Musik in allen Menüs weiter
   const want = S.music && menuMus && !document.hidden && rpVol[0] + rpVol[1] < 0.15 ? 0.75 * (S.volMusic ?? 0.7) : 0;
   titleVol += (want - titleVol) * Math.min(1, dt * (want > titleVol ? 1.2 : 3)); if (Math.abs(want - titleVol) < 0.003) titleVol = want;
   if (musSnap) titleVol = want;   // Regler bewegt: Lautstärke sofort übernehmen (vorher ~1 s Nachblenden, wirkte verspätet)
@@ -12838,10 +12848,23 @@ function cockBodyCol() { const T = (typeof LIVS !== 'undefined' && LIVS[pl.team]
 // Cockpitteile (Karosserie des Spielers, Wanne, Lenkrad, Arme) werden NACH allen Effekten gezeichnet: ihre Materialien laufen in der Durchsicht-Reihe mit hoher Reihenfolge,
 // bleiben aber voll deckend und schreiben Tiefe. Windschattenkegel und Luftstreifen (schreiben keine Tiefe) liegen damit nie mehr über dem Cockpit.
 const COCK_RO = 990;
+// Cockpit bei Nacht (v2.99, Wunsch: „nicht komplett schwarz, man soll noch leicht was erkennen“): Die Cockpit-Teile des eigenen Autos (Schale, aufgeschnittene Karosserie,
+// Lenkrad, Arme) bekommen eine Helligkeits-Untergrenze aus ihrer Eigenfarbe – nur über eine Zahl (CKFILL), am Tag 0. Dunkle Flächen werden verhältnismäßig stärker angehoben
+// als helle (Potenz 0,35: Carbon wird erkennbar), Flächen nach oben mehr als nach unten (Flutlicht kommt von oben – das gibt den Teilen Form). Kein zusätzliches Licht in der
+// Szene: das würde alle Materialien neu übersetzen und jedes Auto aufhellen. Die Materialien hängen nur am eigenen Auto in Helm-/TV-Kamera (cutGloss/cutMatte, Schale, Lenkrad, Arme).
+const CKFILL = { value: 0 }, CKFILL_NIGHT = 0.24;   /* muss über der Schwelle liegen, unter der die Bildabstimmung (Kontrast um Mittelgrau) alles zu Schwarz zieht – 0,07 blieb unsichtbar */
+function ckFill(mt) { if (!mt || !mt.isMeshStandardMaterial || mt.userData.ckFill) return; mt.userData.ckFill = true; const ob = mt.onBeforeCompile, k0 = mt.customProgramCacheKey();   /* Schlüssel VOR dem Umhängen lesen: ohne eigenen Schlüssel ist er der Text des bisherigen Hakens */
+  mt.onBeforeCompile = (sh, r) => { if (ob) ob.call(mt, sh, r); sh.uniforms.uCkFill = CKFILL;
+    sh.fragmentShader = 'uniform float uCkFill;\n' + sh.fragmentShader.replace('#include <opaque_fragment>', ' outgoingLight = max( outgoingLight, pow( max( diffuseColor.rgb, vec3( 0.0 ) ), vec3( 0.35 ) ) * ( uCkFill * ( 0.55 + 0.45 * normal.y ) ) );\n#include <opaque_fragment>'); };   /* Untergrenze statt Zuschlag: was schon beleuchtet ist (Handschuhe im Flutlicht), bleibt wie es ist */
+  mt.customProgramCacheKey = () => k0 + '|ckF'; mt.needsUpdate = true; }
+// Lack in Helm-/TV-Kamera seidenmatt (v2.99): Aus Augenhöhe sieht man die Fläche vor dem Cockpit sehr flach – der Klarlack spiegelte dort fast nur noch den Himmel
+// (weiße Kuppe statt Wagenfarbe). Nur die Cockpit-Fassungen des eigenen Autos (aufgeschnittene Karosserie und Schale, beide gleich – sonst sähe man die Naht).
+function ckSatin(mt) { if (!mt || !mt.isMeshPhysicalMaterial || mt.userData.ckSatin) return; mt.userData.ckSatin = true; mt.clearcoat = Math.min(mt.clearcoat, 0.2); mt.clearcoatRoughness = Math.max(mt.clearcoatRoughness, 0.4); mt.roughness = Math.max(mt.roughness, 0.5); mt.metalness = Math.min(mt.metalness, 0.2); mt.envMapIntensity = Math.min(mt.envMapIntensity, 0.5); }   /* erster Versuch (Klarlack 0,35, Spiegelung 0,8) ließ die Kuppe noch blass – auch der metallische Grundlack spiegelt flach gesehen fast nur Himmel */
+function ckFillAll(o) { if (o) o.traverse(x => { if (x.isMesh) for (const mt of Array.isArray(x.material) ? x.material : [x.material]) ckFill(mt); }); }
 function cockLast(o, on) { if (!o) return; o.traverse(x => { if (!x.isMesh || x.material === HALO_PRE || x.renderOrder >= 998) return; x.renderOrder = on ? COCK_RO : 0; if (on) for (const mt of Array.isArray(x.material) ? x.material : [x.material]) if (!mt.transparent) { mt.transparent = true; mt.needsUpdate = true; } }); }
 // Baut (einmal je Auto) alles, was nur die Cockpitansicht braucht: aufgeschnittene Karosserie-Materialien, Wanne und – beim F1 – die einheitliche Schale. EINE Stelle für Vorladen und Umschalten.
-function cockBuild(m) { const tp = m.tp, k = tp.M === MODELS.f2 ? 'f2' : 'f1'; tp.cutGloss ||= cockCut(tp.glossMat, k); tp.cutMatte ||= cockCut(MATTE, k); tp.cutGloss.transparent = tp.cutMatte.transparent = true; if (m.tub) { return; }
-  m.tub = cockNew(tp, k, cockBodyCol()); cockLast(m.tub, true);   /* Reihenfolge und Durchsicht-Flag schon beim Bau: beim ersten Umschalten muss kein Shader neu übersetzt werden */ m.tub.visible = false; m.g.add(m.tub); }
+function cockBuild(m) { const tp = m.tp, k = tp.M === MODELS.f2 ? 'f2' : 'f1'; tp.cutGloss ||= cockCut(tp.glossMat, k); tp.cutMatte ||= cockCut(MATTE, k); tp.cutGloss.transparent = tp.cutMatte.transparent = true; ckFill(tp.cutGloss); ckFill(tp.cutMatte); ckFillAll(SW.g); if (ARMS.f1) ckFillAll(ARMS.f1.g); ckSatin(tp.cutGloss); if (m.tub) { return; }
+  m.tub = cockNew(tp, k, cockBodyCol()); ckSatin(tp.shellMat); ckFillAll(m.tub); cockLast(m.tub, true);   /* Reihenfolge und Durchsicht-Flag schon beim Bau: beim ersten Umschalten muss kein Shader neu übersetzt werden */ m.tub.visible = false; m.g.add(m.tub); }
 function cockpitInterior(on) {
   const m = pl && pl.mesh; if (cockOn && (!on || cockOn !== m)) { cockOn.body.material = cockOn.tp.glossMat; cockOn.matte.material = MATTE; cockOn.body.renderOrder = cockOn.matte.renderOrder = 0; if (cockOn.tub) cockOn.tub.visible = false; cockOn = null; }
   if (!on || cockOn === m) return; const tp = m.tp, k = tp.M === MODELS.f2 ? 'f2' : 'f1';
@@ -12849,6 +12872,7 @@ function cockpitInterior(on) {
   m.body.material = tp.cutGloss; m.matte.material = tp.cutMatte; m.tub.visible = true; cockOn = m;
   tp.cutGloss.transparent = tp.cutMatte.transparent = true; m.body.renderOrder = m.matte.renderOrder = COCK_RO; cockLast(m.tub, true); cockLast(SW.g, true); if (ARMS.f1) cockLast(ARMS.f1.g, true); }
 function drawWheel(dt) {
+  CKFILL.value = TH && TH.night ? CKFILL_NIGHT : 0;   /* Cockpit bei Nacht leicht aufgehellt (ckFill) */
   SW.g.visible = running && (S.cam === 2 || S.cam === 3) && !pl.mesh.road && !pl.mesh.kart && !pl.mesh.hist;   /* auch in der TV-Kamera: Blick von oben ins modellierte Cockpit mit Lenkrad und Händen */   // Roadster und Kart haben ihr eigenes rundes Lenkrad am Auto
   if (pl.mesh.tp) { SW.g.position.set(...(pl.mesh.tp.M.swPos || [0, 0.605, 0.98])); SW.g.scale.setScalar(pl.mesh.tp.M.swS || 1); }   // Lenkradposition je Modell (F2 sitzt weiter hinten und tiefer)
   document.body.classList.toggle('cockpit', running && S.cam === 2);
@@ -13582,20 +13606,30 @@ function teamsScrollTo(el, smooth) { const tw = $('#teams'); if (!tw || !el) ret
 // v2.88 (Wunsch 18.11.2026: „Fahrzeugwechsel flüssig, ohne Hakler – alles vorab laden“): im Leerlauf nach dem Start alle Legenden-Modelle laden
 // und für jedes Team einmal ein Showroom-Auto bauen und seine Shader vorab übersetzen (compileAsync, blockiert nicht). Vorher wurde ein Klassiker
 // erst beim Anklicken geladen (Platzhalter, danach Neubau des Showrooms) und neue Lackierungen übersetzten ihre Shader im ersten Bild.
-async function showroomPreload() {
-  if (window.__noPre) return;
-  const idle = () => new Promise(r => (window.requestIdleCallback || (f => setTimeout(f, 50)))(() => r(), { timeout: 700 }));
-  await new Promise(r => setTimeout(r, 2000)); if (typeof initShowroom === 'function') initShowroom();
-  const PRE = window.__preLog = [];
-  for (const k of Object.keys(TEAMS)) {
-    if (running) return; const t0 = performance.now();
-    if (HIST_CAR[k]) { if (MENU.mode === 'career') continue; try { await histLoad(k); } catch (e) {} }
-    await idle(); if (running) return;
-    const d = ALL.find(c => c.team === k); if (!d || !SHOW.scene) continue; let m = null;
-    try { m = makeCar(d); scene.remove(m.g); m.label.visible = false; showroomMirror(m); if (renderer.compileAsync) await renderer.compileAsync(m.g, SHOW.cam, SHOW.scene); else renderer.compile(m.g, SHOW.cam, SHOW.scene); }
-    catch (e) {} finally { if (m) m.g.traverse(o => { if (o.isSprite && o.material.map) o.material.map.dispose(); }); }
-    PRE.push(k + ' ' + Math.round(performance.now() - t0) + ' ms');
-  }
+// v2.99 (Wunsch: „Das Hauptmenü ruckelt beim ersten Start – alles in der ersten Ladezeit laden“): Das Vorbereiten läuft jetzt VOR dem Einblenden des Menüs, hinter dem
+// Ladebildschirm: zuerst der Showroom des Hauptmenüs samt erstem Bild (Shader, Texturen), dann alle Teams. Gemessen (tools/menue/start_messen.js): vorher wurden 31 Shader
+// erst im sichtbaren Menü übersetzt und 16 Fahrzeuge dort gebaut. Das Versprechen wird eingelöst, wenn alles fertig ist – spätestens nach PRE_MAX (langsame Verbindung beim
+// Laden der Legenden-Modelle): dann erscheint das Menü, der Rest läuft wie früher im Leerlauf weiter. Testschalter: ?nopre oder ?qc=… in der Adresse überspringt, ?mitpre erzwingt.
+const PRE_MAX = 25000;
+function showroomPreload(lt) {
+  if (window.__noPre || (/[?&](nopre|qc=)/.test(location.search) && !/[?&]mitpre/.test(location.search))) return Promise.resolve();   /* Werkzeuge (QC-Bot, Testbrowser: ?qc=… oder ?nopre) überspringen das Vorbereiten; ?mitpre erzwingt es */
+  let free = null, bg = false; const gate = new Promise(r => (free = r)), open = () => { if (!bg) { bg = true; free(); } }, tm = setTimeout(open, PRE_MAX);
+  const idle = () => new Promise(r => (window.requestIdleCallback || (f => setTimeout(f, 50)))(() => r(), { timeout: 700 })), paint = () => new Promise(r => setTimeout(r, 0));
+  (async () => { const PRE = window.__ladeLog = [], keys = Object.keys(TEAMS), t00 = performance.now();
+    try { showScreen('title'); if (SHOW.on && SHOW.scene) { showroomFrame(0.016); const on = ENVP.on, et = ENVP.tex; ENVP.on = true; if (SHOW.env) ENVP.tex = SHOW.env; renderer.render(SHOW.scene, SHOW.cam); ENVP.tex = et; ENVP.on = on; } } catch (e) {}   /* Hauptmenü: Showroom bauen und einmal zeichnen, solange der Ladebildschirm noch davor liegt */
+    PRE.push('Hauptmenü ' + Math.round(performance.now() - t00) + ' ms'); if (typeof initShowroom === 'function') initShowroom();
+    for (let n = 0; n < keys.length; n++) { const k = keys[n];
+      if (running) break; const t0 = performance.now();
+      if (lt && !bg) { lt.textContent = 'Autos werden vorbereitet · ' + (n + 1) + ' / ' + keys.length; await paint(); }
+      if (HIST_CAR[k]) { if (MENU.mode === 'career') continue; try { await histLoad(k); } catch (e) {} }
+      if (bg) await idle(); if (running) break;
+      const d = ALL.find(c => c.team === k); if (!d || !SHOW.scene) continue; let m = null;
+      try { m = makeCar(d); scene.remove(m.g); m.label.visible = false; showroomMirror(m); if (renderer.compileAsync) await renderer.compileAsync(m.g, SHOW.cam, SHOW.scene); else renderer.compile(m.g, SHOW.cam, SHOW.scene); }
+      catch (e) {} finally { if (m) m.g.traverse(o => { if (o.isSprite && o.material.map) o.material.map.dispose(); }); }
+      PRE.push(k + ' ' + Math.round(performance.now() - t0) + ' ms');
+    }
+    PRE.push('gesamt ' + Math.round(performance.now() - t00) + ' ms' + (bg ? ' (Menü nach ' + PRE_MAX / 1000 + ' s freigegeben)' : '')); clearTimeout(tm); open(); })();
+  return gate;
 }
 function buildMenu() { renderTracks(); buildMenu2(); }
 function trkMap(cv, t, col2, lw = 3) { const g = cv.getContext('2d'), W2 = cv.width, H2 = cv.height; g.clearRect(0, 0, W2, H2); let a = 1e9, bb = -1e9, c = 1e9, d = -1e9; for (const p of t.pts) { a = Math.min(a, p[0]); bb = Math.max(bb, p[0]); c = Math.min(c, p[1]); d = Math.max(d, p[1]); }
@@ -13889,7 +13923,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '2.98'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '2.99'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
@@ -14139,8 +14173,8 @@ if (!(TRACKS[S.track] && (!TRACKS[S.track].extra || S.nos) && !TRACKS[S.track].k
    Streckenwahl ein Rennen beginnt (TRK !== TRACKS[S.track] -> buildTrack). Bis dahin ist TRK leer; tick() zeichnet dann nur Menü und Showroom. */
 buildMenu(); renderMenu();
 { const lt = document.querySelector('#loading .ldTxt'); if (lt) lt.textContent = 'Aufkleber werden geladen'; try { await preloadDecals(); if (renderer.initTexture) for (const u of Object.values(DECAL_TEX)) for (const tx of [u.uDecal.value, u.uSheet.value]) if (tx && tx.image) renderer.initTexture(tx); } catch (e) {}   /* auch gleich zur Grafikkarte hochladen */ if (lt) lt.textContent = 'Strecke wird geladen'; }
+{ const lt = document.querySelector('#loading .ldTxt'); await showroomPreload(lt); if (lt) lt.textContent = 'Strecke wird geladen'; }   /* v2.99: Showroom und alle Autos schon hier vorbereiten – im Hauptmenü wird nichts mehr gebaut oder übersetzt */
 loading(false); $('#menu').classList.remove('hidden'); showScreen('title');
-showroomPreload();   // Showroom-Autos im Hintergrund vorbereiten
 window.__scene = () => scene; window.__cam = () => camera; window.__perf = (k = 20) => { const was = paused; paused = false; renderer.info.autoReset = false; renderer.info.reset(); let t = performance.now(); const t0 = t; for (let i = 0; i < k; i++) tick(t += 40, true); last = performance.now(); const gl = renderer.getContext(); gl.finish(); const ms = (performance.now() - t0) / k, r = renderer.info.render; const o = { calls: Math.round(r.calls / k), tris: Math.round(r.triangles / k), ms: +ms.toFixed(2), pr: renderer.getPixelRatio() }; renderer.info.autoReset = true; paused = was; return o; };   /* Test: Zeichenaufrufe/Bild und Zeit pro Bild (CPU+GPU, mit gl.finish) */
 // Testhilfen: Menü per Code bedienen (Strecke bauen, Rennen starten, feste Kamera)
 window.vb = () => [...document.querySelectorAll('button,.btn,[role=button],.card,.trk,div[onclick]')].filter(b => b.offsetParent !== null); window.W8 = ms => new Promise(r => setTimeout(r, ms));

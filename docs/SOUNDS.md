@@ -325,3 +325,11 @@ Stand: 18.11.2026. Erlaubnis des Nutzers, vorher gefragt (Schätzung über 200).
 - Rohdateien `sounds/roh/klassiker/`, Auswahl und Messwerte `sounds/roh/klassiker/auswahl.json`, Aufbereitung `tools/sounds/klassiker.py`
   (beste Variante nach Lautheit/Tonhöhe, 3,2-s-Loop, Grundton auf die Oktave der verlangten Zündfrequenz gelegt).
 - Im Spiel: `SND_ENG.hist_lot/hist_mcl/hist_fer` (siehe docs/KLASSIKER.md).
+
+## v2.99 – Renn-Musik läuft im Hauptmenü durch (Wunsch 24.11.2026)
+- Vorher: Nach einem Rennen lief der Renn-Titel in Ergebnis und Folgemenüs weiter, im Hauptmenü blendete aber die Menü-Musik ein (`hadRace = false` bei `MENU.scr === 'title'`).
+- Jetzt: Läuft ein Renn-Titel, läuft er auch im Hauptmenü weiter (und danach die weiteren Titel der Liste). Zur Menü-Musik geht es im Hauptmenü nur noch zurück,
+  wenn gar kein Renn-Titel läuft: Musik ausgeschaltet, kein Lied geladen oder Datei fehlerhaft (`titleTick`). Beim App-Start bis zum ersten Rennen bleibt die Menü-Musik.
+- Unverändert: Jedes Rennen beginnt mit einem neuen zufälligen Titel (`raceSongPick` im Rennstart, überblendet).
+- Geprüft im Testbrowser (Lautstärken der Musik-Knoten): im Rennen Renn-Titel 0,56 / Menü 0; nach `toMenu()` im Hauptmenü unverändert 0,56 / 0.
+

@@ -41,6 +41,13 @@ Die **Startnummer** gehört nicht in die Textur – sie bleibt eine Einblendung 
 - Fernmodell (`farCarGeo`): UV aus Stufe 2. Gröbstes Fernmodell (`clusterGeo`, ab `CAR_FAR3`): `bakeColors` liest die Farben aus der Textur
   (auf 256² verkleinert) als Eckpunktfarben – beim Zusammenfassen der Punkte würden die UVs über die Nähte springen.
 - Service Worker: `liveries/textur/` wird wie die Bögen immer zuerst am Server nachgefragt.
+- **Cockpit-Schale (`cockNew`, Helm- und TV-Kamera) – Fehler bis v2.98, behoben in v2.99:** Die Schale ersetzt in diesen Kameras die Karosserie rund ums Cockpit,
+  hat aber keine UV der Lack-Textur (`uvB` fehlt). Ihr Material ist eine Kopie des Lack-Materials – seit v2.73 las es deshalb überall denselben Bildpunkt der
+  Textur: die Fläche vor dem Cockpit war einfarbig hellgrau statt lackiert (Rückmeldung 24.11.2026: „Texturen werden in Cockpit- und TV-Ansicht nicht richtig
+  geladen“). Jetzt ersetzt der Haken des Schalen-Materials den Texturzugriff wieder durch das Lack-Programm (`livery(vLP, vCls)` an der Lackierposition `aLP`)
+  und trägt Bogen und Teamlogo wie vor v2.73 per Projektion auf (`decalGLSL(tk, true)`); `decalProj(tk)` lädt dafür Bogen und Logo des eigenen Teams nach
+  (bei gebackenen Teams sind sie sonst nicht geladen). Prüfen: `node tools/wetter/regen_bilder.js Spa dry <Ordner> 2150,2 2150,3 --pre "S.driver = 'VER'; MENU.team = byCode('VER').team"`.
+  Merke: Wer am Lack-Shader etwas ändert, das Attribute des Fahrzeugmodells braucht, muss die Schale mit prüfen (eigene Geometrie, nur `position`/`uv`/`aLP`/`aCls`).
 
 ## Ansicht von oben (seit v2.75)
 In `tools/sticker/<Kürzel>.json` ein Eintrag `top` (Beschreibung im Kopf von `build.py`): Foto von oben, Achsmitten (`rear`/`front`) oder
