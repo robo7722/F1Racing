@@ -1,6 +1,6 @@
 # Cockpit-Ansicht (Helm- und TV-Kamera)
 
-Stand 24.11.2026 (v3.00). Ältere Einzelheiten zum Cockpit-Modell: `docs/AENDERUNGEN-1.22.md` (Abschnitt „Cockpit-Neubau“), zur Leistung: `docs/LEISTUNG-ANLEITUNG.md`.
+Stand 24.11.2026 (v3.01). Ältere Einzelheiten zum Cockpit-Modell: `docs/AENDERUNGEN-1.22.md` (Abschnitt „Cockpit-Neubau“), zur Leistung: `docs/LEISTUNG-ANLEITUNG.md`.
 
 ## Aufbau (Kurzfassung)
 - In Kamera 2 (Helm) und 3 (TV) wird das Fahrzeugmodell des eigenen Autos im Kasten ums Cockpit nicht gezeichnet (`cockCut` → `tp.cutGloss`, `tp.cutMatte`);
@@ -30,13 +30,27 @@ Wunsch: „Bei Nachtrennen soll das Cockpit nicht komplett schwarz sein, man sol
 - Falle: Die Bildabstimmung zieht alles unter ~0,02–0,03 (linear) zu Schwarz (Kontrast um Mittelgrau, `uCon`). Der erste Versuch (Zuschlag 0,07) blieb deshalb
   unsichtbar – gemessen im Bild, nicht geschätzt.
 - Die Materialien hängen nur am eigenen Auto in Helm-/TV-Kamera – andere Autos und die Verfolgerkameras bleiben unverändert. Kein Neuübersetzen beim Wechsel Tag/Nacht.
-- **Fehler v2.99 → behoben v3.00: Cockpit „manchmal schwarz“** (Rückmeldung mit Bild vom Handy: Ferrari, Suzuka, Regen am Tag – Karosserie und Schale schwarz, Handschuhe
-  und Lenkrad richtig). Im Testbrowser nicht nachstellbar. Sehr wahrscheinliche Ursache: Die Formel rechnete `pow( Eigenfarbe, 0.35 )`. Bei Basis 0 liefern manche
-  Handy-Grafikchips dafür einen ungültigen Wert (NaN); reine Farben haben Kanäle mit genau 0 (Ferrari-Rot: Grün und Blau). Auch am Tag (Wert 0) blieb `0 × NaN = NaN`,
-  ging durch `max()` ins Bild und wurde in der Bildabstimmung (Helligkeit über alle Kanäle) zu Schwarz. Handschuhe und Lenkrad haben keine Kanäle mit 0 – sie blieben richtig.
-  Jetzt: keine Potenz mehr (zwei Wurzeln ergeben dieselbe Kurve und sind bei 0 überall definiert), und am Tag wird der Block gar nicht ausgeführt (`if ( uCkFill > 0.0 )`).
-  Zusätzlich abgesichert: Ist die Lack-Textur eines Teams noch nicht geladen (langsames Netz, Ladefehler), zeigt der Lack den berechneten Farbverlauf statt einer leeren
-  Textur (`uBakeOn`), und der Fahrbahn-Shader im Regen rechnet seine Spiegelstärke ohne `pow()`.
-  **Regel für alle Shader:** kein `pow()` mit einer Basis, die 0 werden kann; nichts ins Bild mischen, das NaN sein könnte (auch nicht mit Faktor 0). Der Testbrowser
-  (Software-Grafik) rechnet hier „richtig“ und zeigt solche Fehler nicht.
+- Absicherung v3.00 (war **nicht** die Ursache des schwarzen Cockpits, bleibt aber sinnvoll): keine Potenz mehr in der Formel (zwei Wurzeln ergeben dieselbe
+  Kurve und sind bei 0 überall definiert), am Tag wird der Block gar nicht ausgeführt (`if ( uCkFill > 0.0 )`).
 - Stellschraube: `CKFILL_NIGHT` (heller/dunkler). Bild: `docs/bilder/cockpit_nacht_v299.jpg` (vorher/nachher).
+
+## Schwarzes Cockpit nach Wetter- oder Streckenwechsel (behoben in v3.01)
+Rückmeldung 24.11.2026 mit zwei Bildern vom Handy (Ferrari; Suzuka und Zandvoort, beide im Regen): Karosserie und Schale in der Helmkamera schwarz, „lädt nicht
+immer richtig“.
+
+- **Ursache:** Die Umgebung (Licht und Spiegelung der Autos) ist eine gemeinsame Textur `ENVP.tex`; Materialien holen sie über den Abruf `material.envMap`
+  (Eigenschaft am Prototyp von `MeshStandardMaterial`). `clone()` kopiert aber `this.envMap = source.envMap` – der Abruf liefert dabei die **aktuelle** Umgebung,
+  und die Kopie legte sie fest bei sich ab. Jeder Neuaufbau der Umgebung (`buildEnv`: neue Strecke, Wetterwechsel) löscht die alte Textur; die Kopie zeigte danach
+  auf nichts mehr und bekam kein Umgebungslicht. Im Trockenen fiel das kaum auf (die Sonne beleuchtet weiter), im Regen gibt es keine Sonne → schwarz.
+- **Betroffen:** alle Kopien, die bei gebauter Strecke entstehen – die Cockpit-Fassungen des eigenen Autos (`cockCut` → `tp.cutGloss`/`tp.cutMatte`, Schale
+  `tp.shellMat`), außerdem Nummern-Materialien (`numMat`) nach einem Team-/Klassenwechsel während einer Sitzung.
+- **Warum „manchmal“:** nur wenn nach dem Bau der Cockpit-Teile die Umgebung neu entsteht – zweites Rennen mit demselben Team auf anderer Strecke oder mit anderem
+  Wetter, oder das Wetter wird erst nach dem Streckenbau gewählt/ausgelost („Zufall“). Das erste Rennen nach dem Start mit vorher gewähltem Wetter war immer richtig –
+  genau so liefen alle meine Einzelprüfungen, deshalb fiel es nicht auf.
+- **Behebung:** Der Setzer von `envMap` legt die gemeinsame Umgebung nie mehr im Material ab (`v === ENVP.tex` → `null`); jedes Material holt sie weiter bei jedem
+  Bild frisch. Eine eigene, ausdrücklich gesetzte Umgebung bleibt möglich.
+- **Nachgestellt und geprüft** mit `node tools/menue/rennfolge_cockpit.js <Ordner> LEC,dry,Zandvoort LEC,light,Zandvoort LEC,heavy,Suzuka` – vorher im zweiten
+  Rennen schwarz, jetzt rot. Bild: `docs/bilder/cockpit_schwarz_v301.jpg` (oben vorher, unten jetzt).
+- **Irrweg (v3.00):** Zuerst hatte ich eine ungültige Rechnung auf Handy-Grafikchips vermutet (`pow()` mit Basis 0) – nicht nachgestellt, nur geschlossen. Falsch.
+  **Lehre:** Ein Fehler, der „manchmal“ auftritt, wird erst nachgestellt (Reihenfolge der Schritte wie beim Spieler: mehrere Rennen, Wetter wechseln), dann behoben.
+
