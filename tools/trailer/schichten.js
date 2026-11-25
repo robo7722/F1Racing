@@ -19,6 +19,8 @@ module.exports = {
   ],
   // Hilfsschicht: nimmt die Legenden von hinten, sobald Schicht a fertig ist (Schicht c arbeitet sie von vorn ab)
   d: [{ strecke: 'Monza', schritte: [['VET', 's11_vet'], ['MSC', 's11_msc'], ['HAK', 's11_hak']].map(([fahrer, szenen]) => ({ fahrer, szenen })) }],
+  // Hilfsschicht: zweite Garage-Sitzung für die Helm-Einstellung, während Schicht b den Frontflügel rechnet
+  e: [{ menue: true, schritte: [{ szenen: 's02_garage_helm' }] }],
   c: [
     { strecke: 'Las Vegas', fahrer: 'RUS', schritte: [
       { wetter: 'heavy', szenen: 's17b_v1,s17b_v2,s17b_v3', probe: true },
