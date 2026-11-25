@@ -1,4 +1,7 @@
-"""Echte Radachsen der Klassiker messen (v2.71): Die Räder sind im Modell mit Sturz/Spur eingebaut, das Spiel dreht sie aber um die
+"""ACHTUNG (v3.03): unzuverlässig – beim McLaren MP4/13 (gewölbte Lauffläche, 3° Sturz) meldete dieses Verfahren unter 0,3°, bei Lotus und RB8 Neigungen,
+die es nicht gibt. Die Werte in HIST_CAR.ax stammen seit v3.03 aus tools/klassiker/radachsen_ringe.py (siehe docs/KLASSIKER.md). Nur noch zum Vergleich.
+
+Echte Radachsen der Klassiker messen (v2.71): Die Räder sind im Modell mit Sturz/Spur eingebaut, das Spiel dreht sie aber um die
 waagerechte Querachse -> sie „eierten“ (Ferrari). Je Rad (Stufe 0): Laufflächenpunkte (außerhalb 93 % des Radius um die Radmitte) auswählen, dann die
 Achsrichtung suchen, bei der deren Abstand zur Achse am gleichmäßigsten ist (Gitter ±12°, fein nachgesucht). Ausgabe für HIST_CAR.ax.
 Aufruf: python tools/klassiker/radachsen.py

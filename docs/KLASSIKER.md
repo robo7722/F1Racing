@@ -512,8 +512,56 @@ Bild: `docs/bilder/umschalter_handy_entwuerfe.jpg`. Zeilen 1 und 3 zeigen Entwur
 - **Befund:** Der Reifen des MP4/13 hat keine Textur, sondern Eckenfarben (`farbe_lack_matt`). Auf der Flanke (55–80 % des Radius) lagen dort helle Flecken
   (Werte bis 84 von 255, sonst 0) – Reste der weißen Reifenbeschriftung des Originals, auf das grobe Netz gebacken. Beim Drehen liefen die unregelmäßigen Flecken
   sichtbar um die Achse. Die Felge selbst (Bild `rim.png`) sitzt mittig.
+  *(Nachtrag v3.03: Das war nur ein Teil des Fehlers und der letzte Satz stimmt nicht – das ganze Rad steht im Modell schief zur Drehachse, siehe unten.)*
 - **Lösung:** `python3 tools/klassiker/reifen_einfarbig.py modelle/klassiker/mclaren_mp413.glb` setzt alle Ecken des Reifens (ab 55 % des Radius, 6.622 Ecken in den
   12 Rad-Netzen aller Detailstufen) auf ein gleichmäßiges, sehr dunkles Grau (9/255). Felge und Nabe bleiben. Die Datei wird an Ort und Stelle geändert (gleiche Größe).
 - Modell-Version in `index.html`: `mclaren_mp413: 2` (Abruf mit `?v=2`).
 - Geprüft im Testbrowser: Vorderrad aus 1,5 m in mehreren Drehstellungen – Flanke gleichmäßig dunkel, keine wandernden Flecken mehr.
 - Wird das Modell neu erzeugt, das Werkzeug danach wieder ausführen (wie `reifen_planar.py` beim MP4/4).
+
+## v3.03 – „Die Räder eiern“: echte Radachsen neu gemessen (Rückmeldung 25.11.2026)
+
+**Rückmeldung:** „Beim Häkkinen eiern die Räder immer noch“ (nach v3.02, das nur die wandernden Flecken auf dem Reifen beseitigt hatte).
+
+**Ursache:** Im Modell des McLaren MP4/13 ist das **ganze Rad starr mit Sturz eingebaut** – Reifen, Felge, Nabe, Bremsscheibe, dazu zwei Ringe aus dem
+Karosserie-Netz (dunkle Scheibe innen am Reifen, inneres Felgenbett): vorn links 2,98°, vorn rechts 3,51°, hinten 1,00°. Das Spiel drehte es um die
+waagerechte Querachse, weil für dieses Auto kein `HIST_CAR.ax` eingetragen war → die Reifenschulter taumelte vorn um ±13–15 mm, hinten um ±3,6 mm,
+der Felgenrand lag 8–10 mm (hinten 3 mm) neben der Drehachse.
+
+**Warum das vorher nicht auffiel:** `tools/klassiker/radachsen.py` (v2.71) hatte für den MP4/13 unter 0,3° gemeldet. Es sucht die Achse, um die die
+Laufflächenpunkte den gleichmäßigsten Abstand haben. Bei stark gewölbter Lauffläche (Schulter 294 mm, Mitte 326 mm) und der durch den Sturz schiefen
+Punktauswahl hebt sich die Neigung dabei auf. Das Werkzeug gilt damit als **unzuverlässig** – auch seine anderen Werte waren falsch (siehe Tabelle).
+
+**Neues Werkzeug:** `python3 tools/klassiker/radachsen_ringe.py [modell.glb …]` – zwei unabhängige Messungen und eine Probe je Rad:
+1. Ebene durch den äußeren Rand jedes Rings im Rad (Felgenhorn, Bremsscheibe, Nabe) → Neigung der Achse (Median über die Ringe),
+2. Reifen allein: Mitte der Reifenbreite über den Umfang (beim geneigten Rad oben und unten seitlich versetzt), viermal nachgeschätzt,
+3. Probe: Reifen um die jeweilige Achse zurückdrehen – der seitliche Taumel der Schulter muss verschwinden. Unter ±1 mm ohne Neigung: kein Eintrag.
+
+| Modell | bisher in `ax` (Sturz, Spur) | neu gemessen | Taumel der Reifenschulter ohne → mit neuer Achse |
+|---|---|---|---|
+| McLaren MP4/13 | – | FL −2,98° · FR +3,51° · RL −1,00° · RR +1,00° | vorn ±13,2/15,5 mm, hinten ±3,6 mm → ±0,1 mm |
+| Ferrari F2004 | FL −2,27/0,44 · FR 2,19/−0,54 · RL −0,25 · RR 0,42 | FL −3,00° · FR +3,00° · RL −1,43° · RR +1,43° | vorn ±9,5/10,2 mm, hinten ±5,7/7,2 mm → ±0,0 mm |
+| Lotus 49C | RL 0,37/−0,73 · RR −0,37/0,73 | gerade (0,00°) → Eintrag entfernt | ±0,0 mm (der alte Eintrag ließ die Hinterräder erst eiern) |
+| Red Bull RB8 | FL 0/0,63 · FR 0/−0,63 | gerade (0,00°) → Eintrag entfernt | ±0,0 mm (dito vorn) |
+| Ferrari 312, McLaren MP4/4 | – | gerade (unter ±0,5 mm) | – |
+
+Beim F2004 hängt hinten rechts fremde Geometrie am Reifen (Breite je Winkelabschnitt 420–461 mm statt 372 mm) – dort wertet das Werkzeug nur
+Lauffläche und Schulter (über 85 % des Radius); Ergebnis spiegelbildlich zu hinten links.
+
+**Im Spiel (`index.html`):**
+- `HIST_CAR`: `ax` beim MP4/13 neu, beim F2004 berichtigt, bei Lotus und RB8 entfernt.
+- Drehpunkt genau auf der geneigten Achse: `histSplitWheels` merkt sich die Mitte der Reifenbreite (`T.wc[k].tx`, höchstes Drehteil = Reifen); `wc()` verschiebt
+  den Drehpunkt bei x = `extras.wheels` längs der Achse dorthin (sonst bei 3,5° Sturz und 13 mm Abstand 0,8 mm Höhenschlag).
+- Das Modell selbst bleibt unverändert (Modell-Version des MP4/13 weiter 2).
+
+**Geprüft:** Nahaufnahmen im laufenden Spiel bei 0°/90°/180°/270° Raddrehung (`pl.spin` setzen, ein Takt, Bild) für MP4/13, F2004, RB8 und Lotus, vorn und
+hinten: Felgenrand und Reifenflanke bleiben in allen Stellungen deckungsgleich. Vorher (MP4/13, Achse waagerecht) wanderte bei 180° ein dunkler Spalt
+zwischen Felgenhorn und Reifenflanke um das Rad.
+
+**Fehlversuche (gleiche Sitzung, nicht wiederholen):**
+1. *Felgenringe einzeln mittig schieben* – Mitten kleiner oder unrunder Teile streuen um bis zu 6 mm; der Schrägstand bliebe.
+2. *Felge, Nabe und Scheibe im Modell gerade stellen* (GLB ändern, auch die beiden Karosserie-Ringe): Die Felge lief danach rund (Messung 0,0 mm / 0,02°),
+   aber der Reifen stand weiter schief – in der Nahaufnahme wanderte der Spalt zwischen Felgenhorn und Flanke. Die Messung „Kreismitte der Lauffläche“
+   hatte den Reifen fälschlich als gerade ausgewiesen. Das Rad ist ein starrer, geneigter Körper: Die Drehachse muss geneigt werden, nicht das Modell.
+3. *Messung nur über Kreismitten* – ein geneigter Ring hat seine Kreismitte fast auf der Achse; erst Scheiben längs der Achse, die Randebene oder der Vergleich
+   oben/unten/vorn/hinten zeigen die Neigung. Zahlen immer mit einem Bild bei halber Radumdrehung gegenprüfen.

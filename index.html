@@ -4834,13 +4834,13 @@ function makeRoadster(d, T) {
 // ck/tvY: Helmkamera bzw. Höhe der TV-Kamera abweichend vom Modell (extras.cams wurden ohne Fahrer bestimmt): Lotus-Lenkrad lag aus Augenhöhe unter dem
 //     Bildrand (Augenpunkt 10 cm zurück, 3 cm tiefer, Blick etwas tiefer), in der TV-Kamera füllte der Helm das halbe Bild (Kamera höher, Helm nur noch unten im Bild)
 const HIST_CAR = {
-  H_LOT: { file: 'lotus49c', title: 'Lotus 49C', year: 1970, ax: { RL: [0.37, -0.73], RR: [-0.37, 0.73] }, snd: 'hist_lot', fx: 1, gauge: 1, swRot: 1.1, mass: 500, gears: 5, rpm: [9600, 10200], ck: [0.033, 0.745, 0.04, 2.6], tvY: 1.35, seat: [-0.155, -0.08],
+  H_LOT: { file: 'lotus49c', title: 'Lotus 49C', year: 1970, snd: 'hist_lot', fx: 1, gauge: 1, swRot: 1.1, mass: 500, gears: 5, rpm: [9600, 10200], ck: [0.033, 0.745, 0.04, 2.6], tvY: 1.35, seat: [-0.155, -0.08],
     sw: { c: [0.033, 0.52, 0.463], a: [-0.008, -0.38, 0.925], r: 0.165, t: 0.03, rh: 0.05, th: 0.09, h: 9, g: 0.134, e: [0.31, -0.32, 0.3] },
     ph: { top: 0.82, grip: 0.62, brk: 0.6, acc: 0.72 }, info: 'Cosworth DFV V8 · ca. 430 PS · 500 kg · 5 Gänge' },
   H_MCL: { file: 'mclaren_mp44', title: 'McLaren MP4/4', year: 1988, decal: ['Material_#1.005'], seat: [-0.145, 0.33], snd: 'hist_mcl', rl: [0.25, 0.6], fx: 2, gauge: 2, swRot: 1.2, mass: 540, gears: 6, rpm: [11800, 12500], ck: [0.007, 0.735, 0.28, 1.2], tvY: 1.06,
     sw: { c: [0.007, 0.48, 0.722], a: [-0.005, -0.2, 0.98], r: 0.17, t: 0.025, rh: 0.05, th: 0.08, h: 9, g: 0.129, e: [0.24, -0.24, 0.36] },
     ph: { top: 0.93, grip: 0.78, brk: 0.75, acc: 0.95 }, info: 'Honda V6 Turbo · ca. 680 PS · 540 kg · 6 Gänge' },
-  H_FER: { file: 'ferrari_f2004', title: 'Ferrari F2004', year: 2004, tyreUV: true, seat: [-0.04, 0.12], ck: [0, 0.765, 0.17, 0.3], ax: { FL: [-2.27, 0.44], FR: [2.19, -0.54], RL: [-0.25, -0.04], RR: [0.42, -0.19] }, snd: 'hist_fer', rl: [0.25, 0.6], fx: 3, gauge: 3, swRot: 0.95, mass: 605, gears: 7, rpm: [17600, 18300],
+  H_FER: { file: 'ferrari_f2004', title: 'Ferrari F2004', year: 2004, tyreUV: true, seat: [-0.04, 0.12], ck: [0, 0.765, 0.17, 0.3], ax: { FL: [-3.0, 0], FR: [3.0, 0], RL: [-1.43, 0], RR: [1.43, 0] }, snd: 'hist_fer', rl: [0.25, 0.6], fx: 3, gauge: 3, swRot: 0.95, mass: 605, gears: 7, rpm: [17600, 18300],
     sw: { c: [0, 0.519, 0.517], a: [0, -0.118, 0.993], r: 0.175, t: 0.04, rh: 0.04, th: 0.06, h: 0.125, g: 0.118, e: [0.22, -0.24, 0.36] },
     ph: { top: 1.0, grip: 0.94, brk: 0.95, acc: 0.97 }, info: 'Ferrari V10 · 865 PS · 605 kg · 7 Gänge' },
   // Drei weitere Klassiker (docs/KLASSIKER.md, Abschnitt „Drei weitere Klassiker“): Lenkrad, Sitz und Achsen wie oben am Modell gemessen.
@@ -4849,10 +4849,10 @@ const HIST_CAR = {
   H_F67: { file: 'ferrari_312', title: 'Ferrari 312', year: 1967, snd: 'hist_f67', fx: 5, gauge: 1, swRot: 1.2, mass: 550, gears: 5, rpm: [10500, 11000], seat: [-0.135, -0.08], ck: [0, 0.80, -0.08, 1.3], tvY: 1.3,
     sw: { c: [0, 0.544, 0.427], a: [0, -0.126, 0.992], r: 0.175, t: 0.03, rh: 0.05, th: 0.08, h: 9, g: 0.14, e: [0.31, -0.32, 0.3] },
     ph: { top: 0.79, grip: 0.55, brk: 0.52, acc: 0.64 }, info: 'Ferrari V12 · ca. 390 PS · 550 kg · 5 Gänge' },
-  H_MCL98: { file: 'mclaren_mp413', title: 'McLaren MP4/13', year: 1998, snd: 'hist_mcl98', rl: [0.25, 0.6], fx: 3, gauge: 3, swRot: 0.95, mass: 600, gears: 6, rpm: [16800, 17500], seat: [-0.115, 0.30], ck: [0, 0.735, 0.30, 3.0], tvY: 1.22,
+  H_MCL98: { file: 'mclaren_mp413', title: 'McLaren MP4/13', year: 1998, snd: 'hist_mcl98', rl: [0.25, 0.6], fx: 3, gauge: 3, swRot: 0.95, mass: 600, gears: 6, rpm: [16800, 17500], seat: [-0.115, 0.30], ck: [0, 0.735, 0.30, 3.0], tvY: 1.22, ax: { FL: [-2.98, 0], FR: [3.51, 0], RL: [-1.0, 0], RR: [1.0, 0] },
     sw: { c: [0, 0.577, 0.585], a: [0, -0.012, 1], r: 0.16, t: 0.03, rh: 0.05, th: 0.06, h: 9, g: 0.13, e: [0.22, -0.24, 0.36] },
     ph: { top: 0.97, grip: 0.86, brk: 0.88, acc: 0.94 }, info: 'Mercedes-Benz V10 · ca. 780 PS · 600 kg · 6 Gänge' },
-  H_RBR: { file: 'redbull_rb8', title: 'Red Bull RB8', year: 2012, snd: 'hist_rbr', rl: [0.25, 0.6], fx: 4, gauge: 3, swRot: 0.95, mass: 640, gears: 7, rpm: [17500, 18000], seat: [-0.185, 0.39], ck: [0, 0.74, 0.39, 0.8], tvY: 1.2, ax: { FL: [0, 0.63], FR: [0, -0.63] },
+  H_RBR: { file: 'redbull_rb8', title: 'Red Bull RB8', year: 2012, snd: 'hist_rbr', rl: [0.25, 0.6], fx: 4, gauge: 3, swRot: 0.95, mass: 640, gears: 7, rpm: [17500, 18000], seat: [-0.185, 0.39], ck: [0, 0.74, 0.39, 0.8], tvY: 1.2,
     sw: { c: [0, 0.557, 0.733], a: [0, -0.012, 1], r: 0.15, t: 0.03, rh: 0.05, th: 0.06, h: 9, g: 0.12, e: [0.22, -0.24, 0.36] },
     ph: { top: 0.99, grip: 0.95, brk: 0.95, acc: 0.96 }, info: 'Renault V8 · ca. 750 PS + KERS · 640 kg · 7 Gänge' },
 };
@@ -4912,8 +4912,10 @@ function histSplitWheels(T, root, W) {
       e.body.traverse(o => { if (o.isMesh) handle(o, true); });
       e.wp[k] = parts;
       if (e === T.L[0] && parts.spin.length) {   // Achsmitte aus dem Reifen selbst (Mitte des runden Rings): extras.wheels lag beim F2004 vorn daneben -> Räder eierten
-        const bb = new THREE.Box3(); for (const pt of parts.spin) { const P = pt.g.attributes.position, I = pt.g.index.array; for (let i = 0; i < I.length; i++) bb.expandByPoint(v.fromBufferAttribute(P, I[i]).applyMatrix4(pt.M)); }
-        const c = bb.getCenter(new THREE.Vector3()); (T.wc ||= {})[k] = { x: cx, y: c.y, z: c.z, dy: c.y - cy, dz: c.z - cz }; } } }
+        const bb = new THREE.Box3(), b1 = new THREE.Box3(); let hMax = 0, tx = cx;
+        for (const pt of parts.spin) { const P = pt.g.attributes.position, I = pt.g.index.array; b1.makeEmpty(); for (let i = 0; i < I.length; i++) b1.expandByPoint(v.fromBufferAttribute(P, I[i]).applyMatrix4(pt.M)); bb.union(b1);
+          if (b1.max.y - b1.min.y > hMax) { hMax = b1.max.y - b1.min.y; tx = (b1.min.x + b1.max.x) / 2; } }   // tx: Mitte der Reifenbreite (das höchste Teil ist der Reifen) – durch sie läuft die geneigte Radachse (v3.03)
+        const c = bb.getCenter(new THREE.Vector3()); (T.wc ||= {})[k] = { x: cx, y: c.y, z: c.z, tx, dy: c.y - cy, dz: c.z - cz }; } } }
 }
 // Reifenflanken neu abbilden (v2.71, Ferrari): Die Flankentextur ist ein runder Schriftring mit der Mitte in der Bildmitte, im Modell aber zerstückelt und
 // nicht auf die Achse zentriert abgebildet -> die Schrift schlingerte beim Drehen („eiern“). Flanken-Ecken (Normale quer, |n.x| > 0,55) bekommen eine
@@ -4976,12 +4978,17 @@ function histFill(m) {
   const ud = T.ud, W = ud.wheels || {}, cams = ud.cams || {};
   if (cams.cockpit) m.cam = cams.cockpit.slice(); if (cams.tv) m.tv = cams.tv.slice(); m.lodD = ud.lodDistances || [0, 18, 45];
   const eye = m.cam.slice(); if (H.ck) m.cam = H.ck.slice(); if (H.tvY) m.tv[1] = H.tvY;
-  const wc = k => T.wc && T.wc[k] ? new THREE.Vector3(T.wc[k].x, T.wc[k].y, T.wc[k].z) : W[k] ? new THREE.Vector3(W[k].x, W[k].y, W[k].z) : new THREE.Vector3(), cFL = wc('FL'), cFR = wc('FR'), cRL = wc('RL'), cRR = wc('RR');   // wc: gemessene Achsmitte (histSplitWheels)
+  // Radachse je Rad (Sturz/Spur im Modell, HIST_CAR.ax in Grad) und ein Punkt auf ihr: Die gemessene Achsmitte (histSplitWheels) gilt für die Mitte der Reifenbreite (tx);
+  // der Drehpunkt sitzt bei x = extras.wheels und wird längs der geneigten Achse dorthin verschoben (bei 3,5° Sturz und 13 mm Abstand sonst 0,8 mm Höhenschlag).
+  const axv = k => { const A = (H.ax && H.ax[k]) || [0, 0], ty = A[0] * Math.PI / 180, tz = A[1] * Math.PI / 180; return new THREE.Vector3(Math.cos(ty) * Math.cos(tz), Math.sin(ty), Math.cos(ty) * Math.sin(tz)).normalize(); };
+  const wc = k => { const q = T.wc && T.wc[k]; if (!q) return W[k] ? new THREE.Vector3(W[k].x, W[k].y, W[k].z) : new THREE.Vector3(); const a = axv(k), d = (q.x - (q.tx ?? q.x)) / a.x; return new THREE.Vector3(q.x, q.y + d * a.y, q.z + d * a.z); },
+    cFL = wc('FL'), cFR = wc('FR'), cRL = wc('RL'), cRR = wc('RR');
   m.fl.position.copy(cFL); m.fr.position.copy(cFR); m.rr.position.set(0, (cRL.y + cRR.y) / 2, (cRL.z + cRR.z) / 2); m.wr = (W.RL && W.RL.r) || 0.33;
-  // Räder drehen um ihre echte Achse (Sturz/Spur im Modell, gemessen mit tools/klassiker/radachsen.py – Ferrari vorn 2,2° Sturz: eierte um die waagerechte Achse).
+  // Räder drehen um ihre echte Achse. Im Modell ist das ganze Rad (Reifen, Felge, Nabe) starr mit Sturz eingebaut; um die waagerechte Querachse gedreht, eiert es.
+  // Werte aus tools/klassiker/radachsen_ringe.py (v3.03: McLaren MP4/13 vorn 3,0°/3,5°, hinten 1,0° – fehlte bisher; F2004 vorn 3,0° statt 2,2°, hinten 1,4° statt 0,3°;
+  // Lotus hinten und RB8 vorn stehen gerade – die alten Einträge von 0,6–0,8° ließen sie erst eiern. Das alte radachsen.py maß an der gewölbten Lauffläche falsch.)
   // vorn: fl (lenkt) -> Neigung -> wfl (dreht) · hinten je Rad: Neigung -> Drehgruppe (m.spR); m.rr bleibt leer (das Spiel dreht es weiter, ohne Wirkung)
-  const qa = k => { const A = (H.ax && H.ax[k]) || [0, 0], ty = A[0] * Math.PI / 180, tz = A[1] * Math.PI / 180, a = new THREE.Vector3(Math.cos(ty) * Math.cos(tz), Math.sin(ty), Math.cos(ty) * Math.sin(tz)).normalize();
-    return new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(1, 0, 0), a); };
+  const qa = k => new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(1, 0, 0), axv(k));
   const tilt = (par, pos, q, spinG) => { const t = new THREE.Group(); t.position.copy(pos); t.quaternion.copy(q); par.add(t); t.add(spinG); return t; };
   m.fl.remove(m.wfl); m.fr.remove(m.wfr); tilt(m.fl, new THREE.Vector3(), qa('FL'), m.wfl); tilt(m.fr, new THREE.Vector3(), qa('FR'), m.wfr);
   const sRL = new THREE.Group(), sRR = new THREE.Group(); tilt(m.g, cRL, qa('RL'), sRL); tilt(m.g, cRR, qa('RR'), sRR); m.spR = [sRL, sRR];
@@ -13933,7 +13940,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '3.02'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '3.03'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
