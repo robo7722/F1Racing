@@ -506,3 +506,14 @@ Bild: `docs/bilder/umschalter_handy_entwuerfe.jpg`. Zeilen 1 und 3 zeigen Entwur
 - **Kartenbreite:** `min(2,55 × --tw, (100 % − 40 px) / 6)`, gerechnet aus der Leistenbreite (`.teamwrap` hat seitliche Ränder, daher nicht aus `100vw`). Alle sechs Legenden passen auch aufs iPhone SE und stehen mittig, ohne Wischen.
 - **Ohne Verlauf:** Der Ausblendverlauf rechts gilt in der Legenden-Ansicht nicht mehr.
 - **Bild:** `docs/bilder/legenden_mittig_v294.jpg` (iPhone SE, iPhone 15, Desktop).
+
+## v3.02 – McLaren MP4/13: „Reifentexturen eiern“ (Rückmeldung 25.11.2026)
+
+- **Befund:** Der Reifen des MP4/13 hat keine Textur, sondern Eckenfarben (`farbe_lack_matt`). Auf der Flanke (55–80 % des Radius) lagen dort helle Flecken
+  (Werte bis 84 von 255, sonst 0) – Reste der weißen Reifenbeschriftung des Originals, auf das grobe Netz gebacken. Beim Drehen liefen die unregelmäßigen Flecken
+  sichtbar um die Achse. Die Felge selbst (Bild `rim.png`) sitzt mittig.
+- **Lösung:** `python3 tools/klassiker/reifen_einfarbig.py modelle/klassiker/mclaren_mp413.glb` setzt alle Ecken des Reifens (ab 55 % des Radius, 6.622 Ecken in den
+  12 Rad-Netzen aller Detailstufen) auf ein gleichmäßiges, sehr dunkles Grau (9/255). Felge und Nabe bleiben. Die Datei wird an Ort und Stelle geändert (gleiche Größe).
+- Modell-Version in `index.html`: `mclaren_mp413: 2` (Abruf mit `?v=2`).
+- Geprüft im Testbrowser: Vorderrad aus 1,5 m in mehreren Drehstellungen – Flanke gleichmäßig dunkel, keine wandernden Flecken mehr.
+- Wird das Modell neu erzeugt, das Werkzeug danach wieder ausführen (wie `reifen_planar.py` beim MP4/4).

@@ -2766,6 +2766,7 @@ function buildComposer() {
     syncAoCam(); const ao = new GTAOPass(scene, aoCam, innerWidth, innerHeight), aoS = ultra ? 0.75 : 0.5, aoSet = ao.setSize.bind(ao); ao.setSize = (w, h) => aoSet(Math.max(1, Math.round(w * aoS)), Math.max(1, Math.round(h * aoS)));
     ao.updateGtaoMaterial({ radius: 1.6, distanceExponent: 1.6, thickness: 2.5, scale: 1.1, samples: ultra ? 16 : 8 }); ao.updatePdMaterial({ radius: ultra ? 6 : 5, rings: 2, samples: ultra ? 12 : 8 });
     ao.blendIntensity = ultra ? 0.9 : 0.75; composer.addPass(ao);
+    { const ov = ao.overrideVisibility.bind(ao); ao.overrideVisibility = function () { ov(); this.scene.traverse(o => { if (o.isMesh && o.visible && o.material && !Array.isArray(o.material) && o.material.transparent && o.material.depthWrite === false) o.visible = false; }); }; }   /* v3.02: Lichtkegel, Lichtflecken auf der Fahrbahn und andere rein aufhellende Flächen zählen im Vorlauf der Umgebungsverdeckung nicht als Körper – sonst wurden die Flutlicht-Kegel nachts zu schwarzen Flächen und die Fahrbahn darunter dunkel (three.js blendet dort nur Punkte und Linien aus; die Sichtbarkeit stellt restoreVisibility wieder her) */
   }
   bloomPass = new SoftBloomPass(ultra ? 5 : 4); bloomPass.scale = 0.25;   // Viertelauflösung reicht (das Leuchten ist ohnehin weich)   // weicher Bloom statt UnrealBloom (pixelig, flackernd)
   composer.addPass(bloomPass);
@@ -4862,7 +4863,7 @@ function histRel(o, root, dst) { _hInv.copy(root.matrixWorld).invert(); _hRel.mu
 function histLoad(team) {
   const H = HIST_CAR[team]; if (!H) return Promise.resolve(null); if (HIST.tpl[team]) return Promise.resolve(HIST.tpl[team]);
   HIST.sichtP ||= fetch('modelle/klassiker/fahrer_sicht.json?v=6').then(r => r.ok ? r.json() : null).catch(() => null).then(j => { HIST.sicht = j; });
-  return HIST.wait[team] ||= HIST.sichtP.then(() => import('three/addons/loaders/GLTFLoader.js')).then(({ GLTFLoader }) => new GLTFLoader().loadAsync('modelle/klassiker/' + H.file + '.glb?v=' + ({ mclaren_mp44: 4, ferrari_f2004: 2 }[H.file] || 1)))   /* McLaren v3 / Ferrari v2: Aufkleber/Sponsoren = Originale des Nutzers mit echter Deckkraft (tools/klassiker/textur_ersetzen.py) */
+  return HIST.wait[team] ||= HIST.sichtP.then(() => import('three/addons/loaders/GLTFLoader.js')).then(({ GLTFLoader }) => new GLTFLoader().loadAsync('modelle/klassiker/' + H.file + '.glb?v=' + ({ mclaren_mp44: 4, ferrari_f2004: 2, mclaren_mp413: 2 }[H.file] || 1)))   /* MP4/13 v2: Reifen einfarbig (tools/klassiker/reifen_einfarbig.py) */   /* McLaren v3 / Ferrari v2: Aufkleber/Sponsoren = Originale des Nutzers mit echter Deckkraft (tools/klassiker/textur_ersetzen.py) */
     .then(gl => { const T = histPrep(gl.scene, H); HIST.tpl[team] = T; histDone(team); return T; })
     .catch(e => { console.warn('Klassiker ' + team, e); delete HIST.wait[team]; return null; });
 }
@@ -13932,7 +13933,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '3.01'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '3.02'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

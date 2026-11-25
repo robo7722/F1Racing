@@ -110,6 +110,17 @@ schlimmer an als eine etwas niedrigere, aber gleichmäßige Bildrate).
   `renderer.shadowMap.render` nur während des Schattendurchgangs an der Kamera ein. Neue Autoteile werfen bei Gegnern also automatisch keinen Schatten.
   Startaufstellung Miami: Schattenkarte 73 → 21 Aufrufe, 223 → 88 Tsd. Dreiecke. Testschalter `window.__noShp`.
 
+### Aufhellende Flächen und die Umgebungsverdeckung auf „Ultra“ (v3.02)
+
+- **Fehler bis v3.01:** Auf „Ultra“ rechnet `GTAOPass` die Umgebungsverdeckung in Echtzeit. Sein Vorlauf (Tiefe/Normalen) zeichnete auch rein aufhellende Flächen mit –
+  Lichtkegel der Flutlichter, Lichtflecken auf der Fahrbahn. Sie galten damit als feste Körper: Nachts wurden die Kegel zu **schwarzen Flächen**, die Fahrbahn darunter dunkel.
+  Auf „Schön“ (gebackene Verdeckung) trat das nicht auf.
+- **Behebung in `buildComposer`:** Vor dem Vorlauf werden alle Netze mit `transparent: true` und `depthWrite: false` ausgeblendet (three.js blendet dort von sich aus nur
+  Punkte und Linien aus); `restoreVisibility` stellt die Sichtbarkeit wieder her.
+- **Regel für neue Effekte:** Was nur Licht addiert (Kegel, Lichthöfe, Schein auf dem Boden), bekommt `transparent: true` **und** `depthWrite: false` – dann zählt es
+  automatisch nicht als Körper. Gegenprobe im Testbrowser: Nachtstrecke auf „Ultra“, einmal mit `composer`, einmal `renderer.render(scene, camera)` – die Kegel müssen in beiden hell sein.
+- Aufgefallen bei den Trailer-Aufnahmen (alle Nachtszenen), siehe [[TRAILER]].
+
 ## 6. HUD und Oberfläche
 
 - HTML-Elemente über dem Spielbild werden vom Browser in jedem Bild über das Bild gelegt – **bildschirmgroße Ebenen** (Leinwände, Verläufe, Filter)
