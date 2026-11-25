@@ -87,7 +87,7 @@ Gestaltung der Schrift: Titillium Web wie im Spiel, unten links, kursiv, gesperr
 
 Am Spiel (`index.html`) ist für den Trailer **nichts geändert**. Die Werkzeuge laden das echte Spiel im Testbrowser und setzen nur dort Einhängepunkte ein
 (`tools/trailer/spielstart.js`): Code-Auswertung im Modul, eigene Kamera mit Brennweite und Neigung, Haken vor dem Zeichnen, einstellbare Kantenglättung –
-und seit Fassung 4 drei Änderungen an der KI-Lenkung (stufenloser Zielpunkt, weiches Lenkrad), siehe „Fassung 4“.
+und seit Fassung 4 vier Änderungen an der KI-Lenkung (stufenloser Zielpunkt, weiches Lenkrad, weiches Querziel), siehe „Fassung 4“.
 
 | Datei | Zweck |
 |---|---|
@@ -97,7 +97,8 @@ und seit Fassung 4 drei Änderungen an der KI-Lenkung (stufenloser Zielpunkt, we
 | `studio_showroom.js` | Garage (`TRS.…`): Kamera und echte Schärfentiefe |
 | `drehplan.js` | alle Einstellungen: Vorbereitung, Kamerafahrt, Dauer, Zeitlupe |
 | `dreh.js` | Einstellungen in einem Studio rechnen (`--probe`: vier Bilder in halber Auflösung als Kontaktblatt) |
-| `ruck.js` | Zittern einer Einstellung messen, ohne Bilder zu rechnen (Lenkung, Fahrtrichtung, Kamerastandort, Blickrichtung; `--alt` = Technik bis Fassung 3) |
+| `ruck.js` | Unruhe einer Einstellung messen, ohne Bilder zu rechnen: Zittern (Lenkung, Fahrtrichtung, Kamerastandort, Blickrichtung), Einschwingen nach dem Aufsetzen, Lenkweg je Sekunde, größter Lenkschritt (`--verlauf` = Lenkung der ersten 20 Bilder, `--quer N` = weiches Querziel erzwingen, `--alt` = Technik bis Fassung 3) |
+| `gleichlauf.py` | fertige Bilder prüfen: Bildänderung von Bild zu Bild (doppelte Bilder, Sprünge), schwarze oder stehende Einstellungen |
 | `schichten.js` / `schicht.js` | Warteschlangen: Studio starten, proben, rechnen, schließen – neustart-fest |
 | `schnittplan.json` / `schnitt.py` | Schnitt im Takt, Schriften, Schlusstafel, Balken, Korn, Ton (`--vorschau` zeigt Fehlendes grau) |
 | `schrift.js`, `logo_gross.py` | Schriften und Schlusstafel als Bild; Logo mit scharfen Kanten vergrößern |
@@ -112,6 +113,10 @@ python3 tools/trailer/logo_gross.py trailer-ausgabe/schrift/logo_gross.png && no
 python3 tools/trailer/ton.py <Musik.wav> <Ton.wav>
 python3 tools/trailer/schnitt.py <Ton.wav> trailer-ausgabe/Formula_Racing_Trailer.mp4
 ```
+
+**Vor dem Dreh** jede Einstellung messen (`node tools/trailer/ruck.js <Port> <Szenen> --verlauf`, dauert Sekunden): „Einschwingen“ über 12 % oder „Lenkweg“ über 100 %/s
+heißt, dass ein Auto im Bild hart umlenkt – dann `quer: 1.6` setzen oder das Auto mit `'ideal'` auf die Ideallinie stellen und neu proben.
+**Nach dem Dreh** `python3 tools/trailer/gleichlauf.py` (Ruckler, schwarze oder stehende Einstellungen). Ein Kontaktblatt aus vier Bildern zeigt beides nicht.
 
 ### Was die Aufnahme filmisch macht
 
@@ -192,6 +197,56 @@ Das Zittern von Bild zu Bild war also schon vorher klein (rund 1 Bildpunkt); der
 - Regen-Nahaufnahme in Singapur: Mit der weicheren KI-Lenkung fährt das Auto eine etwas andere Linie – die Kamera stand im ersten Bild hinter einer Werbebande. Starre Kameraführung (`glatt: false`) half nicht; die Einstellung beginnt jetzt 0,4 s später und näher an der Wagenmitte. **Nach jeder Änderung an Lenkung oder Zeitschritt alle Einstellungen neu proben.**
 - Der helle Punktestreifen quer durchs Bild bei Senna (MP4/4) ist kein Fehler, sondern das Bandrauschen des 1988er-Bildlooks des Spiels; in der halben Probenauflösung wirkt es doppelt so grob.
 - Idee fürs Spiel (nicht umgesetzt): der stufenlose Lenk-Zielpunkt würde auch im Spiel die KI-Autos ruhiger lenken lassen.
+
+### Nachdreh am selben Abend: Pendeln nach dem Aufsetzen, Sägezahn-Lenken der KI
+
+Gefunden erst beim Durchsehen der fertigen Häkkinen-Bilder (Ausschnitt des Vorderrads über zwölf Bilder nebeneinander): Das Rad lenkte in den ersten 0,4 s der
+1,1 s kurzen Einstellung von stark eingeschlagen auf gerade und wieder zurück – genau das kann man für „eiernde Räder“ halten. Die Messung zeigte zwei Ursachen,
+und sie betrafen 15 der 30 Einstellungen:
+
+1. **Aufsetzen neben der Ideallinie.** `TR.feld` stellt die Autos auf eine feste Querlage (meist Streckenmitte), die KI will aber sofort auf ihre Ideallinie –
+   in Monza bei s = 5300 liegt die 4 m daneben. Sie schwenkt hart ein und pendelt nach. Mit dem weicheren Lenkrad der Fassung 4 (3,5 statt 7 Vollausschläge je Sekunde)
+   dauert das Einpendeln länger und fällt mitten ins Bild; bis Fassung 3 war es im kurzen Vorlauf zum Teil schon vorbei.
+2. **Spurwechsel der KI sind Sprünge.** Zum Überholen setzt die KI ihr Querziel schlagartig auf eine andere Spur (`c.ovr`), und sie weicht hart aus, wenn ein Auto
+   neben ihr ist. Im Regen (wenig Grip, der Lenk-Sollwert geht sofort in den Anschlag) wird daraus ein Sägezahn zwischen den Vollausschlägen –
+   in der Helmansicht reißt der Fahrer das Lenkrad hin und her und fährt quer über die ganze Bahn (Singapur: von −5,3 m auf +1,2 m und zurück auf −6,7 m).
+
+**Lösung** (nur im Testbrowser, das Spiel bleibt unverändert):
+- **Weiches Querziel** (`quer: 1.6` je Einstellung → `window.__trQuer`): Das Querziel der KI wandert mit der Ideallinie mit und nähert sich dem, was die KI will
+  (Ideallinie, Überholspur, Ausweichen), mit höchstens 1,6 m/s seitlich und weichem Anfahren. Beim Aufsetzen zeigt das Auto entlang der – um seinen Abstand versetzten – Ideallinie.
+  Die Streckenbegrenzung gilt auch für das weiche Ziel.
+- **`TR.feld(s, 'ideal', …)`**: das eigene Auto direkt auf die Ideallinie setzen (Legenden – die Bildkomposition blieb fast gleich, weil das Auto dort ohnehin hinfuhr).
+
+**Gemessen** (`ruck.js`; Lenkweg = Summe aller Lenkänderungen je Sekunde, eine saubere Kurve kostet rund 50 %/s):
+
+| Einstellung | vorher | nachher |
+|---|---|---|
+| Legenden und 2026er Ferrari (7 Einstellungen) | Lenkung in 12 Bildern von +63 % auf −73 %, dann zurück auf +36 % | gleichmäßig von 0 auf 26 % (Einlenken in die Parabolica) |
+| Singapur-Kran | +48 % → −97 % → +70 % | 7 % → 5 % → 57 % (eine Kurve) |
+| Vorbeifahrt am Randstein | +81 % → −87 % in 15 Bildern | 5–6 % |
+| Zieleinlauf mit Feuerwerk | −50 % … −66 % mit Zacken (Lenk-Zittern 0,72 %) | −24 % → +2 % (0,03 %) |
+| Helm im Regen, Singapur (lang) | Lenkweg 137 %/s, mehrfach Vollausschlag hin und her | 46 %/s, eine Kurve |
+| Helm im Regen, Singapur (kurz) | 244 %/s | 26 %/s |
+| Helm im Regen, Spa (Eau Rouge) | 135 %/s; am Ende 3 % → 87 % → −51 % | 45 %/s |
+| Las Vegas Strip (Kamera über dem Helm) | 151 %/s, zwei Spurwechsel mit ±80 % | 6 %/s, größter Schritt von Bild zu Bild 0,8 % |
+| Kart | 110 %/s, größter Schritt 11,7 % | 55 %/s, größter Schritt 5,5 % |
+
+Unverändert geblieben (gemessen, kein Pendeln und kein Sägezahn): Start und Profilfahrt in Abu Dhabi, Gegenlicht, Singapur-Nahaufnahme (45 %/s), Nachtsprint (12 %/s),
+Regen-Nahaufnahme, Sphere (Vollausschlag in der engen Kurve, aber gleichmäßig: 27 %/s), Monaco Rad (eine Kurve) und T-Kamera (Schikane: einmal von links nach rechts),
+Cockpit MP4/4 (28 %/s), Zweikampf (10 %/s; das Einlenken in die Schikane in den letzten sechs Bildern ist gewollt), Spa-Teleobjektiv (3 %/s).
+
+**Stolpersteine beim Nachdreh:**
+- **Singapur-Nahaufnahme:** Mit weichem Querziel fuhr das Auto 0,9 m über den Randstein hinaus (das Mitwandern mit der Ideallinie galt auch jenseits der Streckenbegrenzung).
+  Die Begrenzung ist jetzt eingebaut; die Einstellung blieb, wie sie war.
+- **Kart:** Mit weichem Querziel blieben die drei Karts davor in ihrer Spur und standen vor der Kamera. Weit weggestellt flog das eigene Kart aus der Kurve –
+  `TR.start` baut das Tempoprofil des eigenen Fahrzeugs mit Formel-1-Grip, bisher hatten es nur die Vorderleute gebremst. In der Einstellung gilt jetzt `profBot = profAI`.
+- **Schwarze Bilder:** Die Spa-Helm-Einstellung wurde beim ersten Nachdreh komplett schwarz gerechnet (alle 82 Bilder, Helligkeit 6 von 255), obwohl die Probe unmittelbar davor
+  im selben Studio in Ordnung war und das Protokoll normal aussah. Ursache nicht geklärt; Verdacht: Probe in halber Auflösung im Regen, danach volle Auflösung ohne neues Rennen
+  (in Las Vegas – trocken – und in Singapur – mit neuem Rennen dazwischen – trat es nicht auf). Ein frisches Studio rechnete sie richtig.
+  **Nach einer Probe im Regen ein neues Rennen starten (`--rennen`) oder ein frisches Studio nehmen**; `gleichlauf.py` meldet schwarze und stehende Einstellungen jetzt von selbst.
+- **Studios beenden:** `pkill` auf `studio.js` beendete die Studios nicht; die neu gestarteten stürzten mit „Adresse belegt“ ab, und das Warten auf „BEREIT“ hing zehn Minuten.
+  Studios über `curl -X POST localhost:<Port>/ende` schließen.
+- **Proben mit vier Bildern zeigen keine Bewegung.** Alle Proben der Fassung 4 waren abgenommen – das Pendeln steckte zwischen den Probenbildern. Deshalb die Messung vor dem Dreh (oben).
 
 ## Fassung 3: was nach der Rückmeldung geändert wurde (25.11.2026)
 

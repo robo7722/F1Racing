@@ -95,13 +95,15 @@ module.exports = {
       kams: [{ a: { von: [-2.5, 0.3, 3.1], auf: [-0.85, 0.34, 1.8], fov: 23 }, b: { von: [-2.4, 0.3, 2.7], auf: [-0.85, 0.34, 1.8], fov: 23 }, ease: 'lin', speed: 0.5 }] },
     s08d_tcam: { dauer: 1.09, seite: true, ao: false, vor: `TR.feld(2470, 0, [[14, 0.5], [28, -0.5]]); S.cam = 3; window.__camFix = null; TR.sim(30, 33.3);`, kams: [{ a: { cam: 3 } }] },
     /* ---------- Kart ---------- */
-    s13_kart: { dauer: TAKT * 2, ao: true,
-      vor: `TR.feld(280, 0, [[5, 1.2], [10, -1], [-5, -1.2], [-10, 1], [-15, -0.6], [16, 0.5], [-20, 0.8]]); TR.sim(30, 33.3);`,
+    s13_kart: { dauer: TAKT * 2, ao: true, quer: 1.6,
+      vor: `profBot = profAI; TR.feld(280, 0, [[150, 1.2], [165, -1], [-5, -1.2], [-10, 1], [-15, -0.6], [180, 0.5], [-20, 0.8]]); TR.sim(30, 33.3);`,
+      // Die drei Karts davor stehen weit weg: Mit weichem Querziel bleiben sie in der Spur und stünden vor der Kamera (vorher wichen sie hart aus – und das eigene Kart zackte um sie herum).
+      // profBot = profAI: TR.start baut das Tempoprofil des eigenen Fahrzeugs mit Formel-1-Grip; allein gelassen fliegt das Kart damit aus der Kurve (bisher bremsten es die Karts davor).
       kams: [{ a: { von: [1.7, 0.3, 3.8], auf: [0, 0.4, 0], fov: 36 }, b: { von: [-0.9, 0.34, 3.3], auf: [0, 0.4, 0], fov: 34 }, ease: 'lin', speed: 0.2 }] },
     /* ---------- Las Vegas ---------- */
     s09_sphere: { dauer: TAKT * 2, zeitlupe: 0.35, ao: true,
       vor: `TR.feld(1946, 1.5, [[-16, -2, 0.9], [-33, 2, 0.9], [20, -2.2, 0.9]]); TR.sim(6, 33.3);`,
       kams: [{ a: { von: [5.4, 0.42, 1.6], auf: [342, 30, -496, 0], fov: 46 }, b: { von: [5.0, 0.42, 0.2], auf: [342, 24, -496, 0], fov: 43 }, ease: 'lin' }] },
-    s10_strip: { dauer: TAKT * 2, seite: true, ao: false, vor: `TR.feld(4250, 0, [[18, 2], [34, -2], [-15, -2.2], [52, 1]]); TR.sim(40, 33.3);`, kams: [{ a: { cam: 3 } }] },
+    s10_strip: { quer: 1.6, dauer: TAKT * 2, seite: true, ao: false, vor: `TR.feld(4250, 0, [[18, 2], [34, -2], [-15, -2.2], [52, 1]]); TR.sim(40, 33.3);`, kams: [{ a: { cam: 3 } }] },
   },
 };
