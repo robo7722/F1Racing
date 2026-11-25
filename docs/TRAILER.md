@@ -170,6 +170,10 @@ Deshalb: 24 Bilder/s, drei Studios gleichzeitig, Umgebungsverdeckung nur in ruhi
 | Zieleinlauf näher beginnen, flüssiger und höher | Start 6,5 m hinter dem Auto, Anstieg nur bis 1,7 m, mit Beschleunigen und Abbremsen | Start 3,3 m hinter dem Heck, gleichmäßig bis 10,5 m |
 | Regen-Shots 1:23/1:24 passen nicht | zweimal dieselbe Kameraidee (nah von vorn) hintereinander | Las Vegas jetzt seitlich vor der Sphere, die sich auf der nassen Bahn spiegelt (Kamera diesmal innerhalb der Mauer) |
 
+Lauf der Fassung 3: 19 Einstellungen neu gerechnet (08:11–10:00 Uhr, drei gleichzeitige Läufe, ohne Fehler), die Garage danach noch zweimal (je rund 20 min),
+bis die Nachmessung kein Flimmern mehr zeigte (Abweichung der Bildänderung am Rand 0,5–2,3 % ohne festen Takt). Dateien: `trailer-ausgabe/Formula_Racing_Trailer_v3.mp4`
+und `…_v3_nur_Musik.mp4` (je 134 MB) – nur beim Nutzer, nicht im Repository.
+
 ## Erste Fassung (Storyboard vom 24.11.2026)
 
 19 Einstellungen mit Monaco aus der Luft, RONE-Roadster auf der Nordschleife und Titel „FORMULA RACING“; Blätter in `docs/bilder/trailer_storyboard_1…3.jpg`,

@@ -36,7 +36,7 @@
   { "szene": "s11_hak", "von": 45.011, "text": "l1998", "textKurz": true },
   { "szene": "s11_msc", "von": 46.102, "text": "l2004", "textKurz": true },
   { "szene": "s11_vet", "von": 47.193, "text": "l2012", "textKurz": true },
-  { "szene": "s11_2026", "von": 48.284, "text": "l2026" },
+  { "szene": "s11_2026", "von": 48.284, "text": "l2026", "textKurz": true },
   { "szene": "s12_cockpit88", "von": 50.466 },
   { "szene": "s13_kart", "von": 54.83, "text": "kart" },
   { "szene": "s14_duell", "von": 59.194 },
