@@ -17,6 +17,8 @@ module.exports = {
     { strecke: 'Monaco', fahrer: 'RUS', schritte: [{ szenen: 's08a_helm,s08b_tunnel,s08c_rad,s08d_tcam' }] },
     { menue: true, schritte: [{ szenen: 's01_garage_fluegel,s02_garage_helm' }] },
   ],
+  // Hilfsschicht: nimmt die Legenden von hinten, sobald Schicht a fertig ist (Schicht c arbeitet sie von vorn ab)
+  d: [{ strecke: 'Monza', schritte: [['VET', 's11_vet'], ['MSC', 's11_msc'], ['HAK', 's11_hak']].map(([fahrer, szenen]) => ({ fahrer, szenen })) }],
   c: [
     { strecke: 'Las Vegas', fahrer: 'RUS', schritte: [
       { wetter: 'heavy', szenen: 's17b_v1,s17b_v2,s17b_v3', probe: true },
