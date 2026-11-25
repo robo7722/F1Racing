@@ -18,15 +18,13 @@ async function szene(name, proben) {
   if (!PROBE) fs.mkdirSync(dir, { recursive: true });
   const t0 = Date.now(), seite = !!z.seite, mb = PROBE ? 1 : (z.mb || 1), NP = +flag('proben', 4), zeigen = PROBE ? new Set(Array.from({ length: NP }, (_, k) => Math.min(n - 3, Math.max(1, Math.round(k * (n - 3) / (NP - 1))))) ) : null;
   const ziel = i => PROBE ? path.join(AUS, 'probe', `${name}_${[...zeigen].sort((x, y) => x - y).indexOf(i)}.jpg`) : path.join(dir, String(i + 1).padStart(4, '0') + '.jpg');
-  if (z.typ === 'garage') {   // Garage: Schärfentiefe aus gleitend gemittelten Zwischenbildern (jedes Zwischenbild mit anderem Blendenpunkt)
-    const sub = PROBE ? 1 : (z.sub || 3), fen = PROBE ? 8 : (z.fenster || 12);
+  if (z.typ === 'garage') {   // Garage: Schärfentiefe – je Trailerbild 4 Zwischenbilder (ausgewogene Blendenpunkte, gleiche Kamerastellung), gemittelt über die letzten 3 Trailerbilder
+    const sub = 4, fen = PROBE ? 8 : 12, U = i => (Math.max(0, i) + 0.5) / n;
     await ev(`TRS.setz(${J(z.a)}, ${J(z.b)}, ${J({ ease: z.ease || 'io', n: fen })}); ${z.vor || ''}; 1`);
-    let voll = false;
-    for (let i = 0; i < n; i++) { if (PROBE && !zeigen.has(i)) continue; if (!PROBE && !NEU && fs.existsSync(ziel(i))) { voll = false; continue; }
-      if (!PROBE && !voll) { for (let k = 0; k < fen - sub; k++) await ev(`TRS.sub(${Math.max(0, (i - (fen - sub - k) / sub) / n)}, ${(i - (fen - sub - k) / sub) / FPS}); 1`); voll = true; }   /* Puffer der gleitenden Mittelung füllen (am Anfang und nach einer Wiederaufnahme) */
-      if (PROBE) for (let k = 0; k < fen; k++) await ev(`TRS.sub(${(i + 0.5) / n}, ${i / FPS}); 1`);
-      else for (let k = 0; k < sub; k++) await ev(`TRS.sub(${(i + (k + 0.5) / sub) / n}, ${(i + (k + 0.5) / sub) / FPS}); 1`);
-      speichere(ziel(i), await ev(`TRS.mittel('image/jpeg', 0.96)`)); if (PROBE) proben.push(ziel(i)); else if (i % 20 === 19) console.log(T(), name, i + 1, '/', n); }
+    let voll = -9;
+    for (let i = 0; i < n; i++) { if (PROBE && !zeigen.has(i)) continue; if (!PROBE && !NEU && fs.existsSync(ziel(i))) continue;
+      for (let b = (voll === i - 1 ? i : i - fen / sub + 1); b <= i; b++) for (let k = 0; k < sub; k++) await ev(`TRS.sub(${U(b)}, ${b / FPS}, ${k}, ${b + 1000}); 1`);   /* Puffer füllen: am Anfang und nach einer Wiederaufnahme auch die beiden Bilder davor */
+      voll = i; speichere(ziel(i), await ev(`TRS.mittel('image/jpeg', 0.96)`)); if (PROBE) proben.push(ziel(i)); else if (i % 20 === 19) console.log(T(), name, i + 1, '/', n); }
   } else {
     await ev(`TR.start(); pl.lapsDone = 0; pl.finished = false; TR.seed(${z.seed ?? 7}); TR.je = null; TR.speed = 0; TR.vig = null; window.__plLod = ${z.lod ?? 0}; TR.ao(${z.ao !== false}); ${z.vor || ''}; 1`);
     let cur = null, segVon = 0;

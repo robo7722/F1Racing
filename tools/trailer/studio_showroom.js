@@ -13,12 +13,14 @@ window.TRS = {
   setz(a, b, o = {}) { TRS.a = a; TRS.b = b || a; TRS.ease = o.ease || 'io'; TRS.n = o.n || 12; TRS.ring = []; TRS.k = 0; document.querySelector('#menu').style.opacity = 0; window.__norender = true; return 'ok'; },
   wert(u) { const e = TRS.ease === 'lin' ? u : u * u * (3 - 2 * u), A = TRS.a, B = TRS.b, m = (x, y) => x + (y - x) * e, v = (x, y) => x.map((q, i) => m(q, y[i]));
     return { p: v(A.p, B.p), t: v(A.t, B.t), f: v(A.f || A.t, B.f || B.t), fov: m(A.fov, B.fov), ap: m(A.ap ?? 0.04, B.ap ?? 0.04) }; },
-  // ein Zwischenbild: Kamera bei u (0…1), Wandzeit wt (s); der Blendenpunkt wandert mit jedem Aufruf weiter
-  sub(u, wt = 0) { const W = TRS.wert(Math.max(0, Math.min(1, u))), c = SHOW.cam; SHOW.stage.updateMatrixWorld(); const M = SHOW.stage.matrixWorld;
+  // ein Zwischenbild: Kamera bei u (0…1), Wandzeit wt (s), j = Nummer des Zwischenbilds im Trailerbild (0…3), bild = Nummer des Trailerbilds.
+  // Blendenpunkte je Trailerbild: zwei gegenüberliegende Paare auf zwei Ringen (Schwerpunkt genau in der Blendenmitte), von Bild zu Bild um den goldenen Winkel gedreht.
+  // Vorher lief ein fester 12er-Umlauf über vier Bilder – der Schwerpunkt der Blende wanderte dabei im 4-Bilder-Takt, das Bild zitterte an den Rändern (gemessen: Bildänderung schwankte mit Periode 4).
+  sub(u, wt = 0, j = 0, bild = 0) { const W = TRS.wert(Math.max(0, Math.min(1, u))), c = SHOW.cam; SHOW.stage.updateMatrixWorld(); const M = SHOW.stage.matrixWorld;
     const P = new THREE.Vector3(...W.p).applyMatrix4(M), T = new THREE.Vector3(...W.t).applyMatrix4(M), F = new THREE.Vector3(...W.f).applyMatrix4(M);
     const fw = T.clone().sub(P).normalize(), rt = new THREE.Vector3().crossVectors(fw, new THREE.Vector3(0, 1, 0)).normalize(), up = new THREE.Vector3().crossVectors(rt, fw);
     const dF = F.clone().sub(P).dot(fw), F0 = P.clone().addScaledVector(fw, dF);   // Mitte der Schärfeebene auf der Blickachse
-    const i = TRS.k++ % TRS.n, r = W.ap * Math.sqrt((i + 0.5) / TRS.n), w = i * 2.399963;
+    const r = W.ap * (j % 2 ? 0.95 : 0.55), w = bild * 2.399963 + j * Math.PI / 2;
     c.position.copy(P).addScaledVector(rt, Math.cos(w) * r).addScaledVector(up, Math.sin(w) * r); c.up.set(0, 1, 0); c.lookAt(F0); c.fov = W.fov; c.aspect = innerWidth / innerHeight; c.clearViewOffset(); c.updateProjectionMatrix(); c.updateMatrixWorld();
     TRS.wall(wt); TRS.draw(); const gl = renderer.getContext(), buf = new Uint8Array(gl.drawingBufferWidth * gl.drawingBufferHeight * 4); gl.readPixels(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, gl.RGBA, gl.UNSIGNED_BYTE, buf);
     TRS.ring.push(buf); if (TRS.ring.length > TRS.n) TRS.ring.shift(); return TRS.ring.length; },

@@ -1,7 +1,7 @@
 // Wird im Spiel ausgewertet (Modul-Bereich von index.html): Helfer für Trailer-Aufnahmen unter window.TR.
 // Am Spiel selbst ändert das nichts – es läuft nur im Testbrowser (tools/trailer/spielstart.js).
 window.TR = (() => {
-  const alt = window.TR, TR = { speed: 0, vig: null, labels: false, grain: null, u: 0, vt: alt ? alt.vt : 0, je: null, tz: 0 };
+  const alt = window.TR, TR = { speed: 0, vig: null, labels: false, grain: null, wind: false, u: 0, vt: alt ? alt.vt : 0, je: null, tz: 0 };
   // beim Nachladen dieser Datei in eine laufende Sitzung die echten Funktionen behalten (die Uhr ist dann schon umgestellt)
   TR.now0 = alt ? alt.now0 : performance.now.bind(performance); TR.raf0 = alt ? alt.raf0 : window.requestAnimationFrame.bind(window); TR.rnd0 = alt ? alt.rnd0 : Math.random; TR.frame0 = alt ? alt.frame0 : window.__frame;
 
@@ -54,6 +54,7 @@ window.TR = (() => {
   window.__trPre = () => { if (!finishPass) return; const fu = finishPass.uniforms;
     if (window.__camFix) { fu.uSpeed.value = TR.speed; if (TR.vig != null) fu.uVig.value = TR.vig; }
     if (TR.grain != null) fu.uGrain.value = TR.grain;
+    if (window.__camFix && !TR.wind && typeof streaks !== 'undefined') streaks.visible = false;   /* Luftstreifen des Spiels fliegen immer in Fahrtrichtung an der Kamera vorbei – bei eigenen Kameras (vor allem rückwärts blickenden) falsch herum, deshalb aus */
     if (!TR.labels) for (const c of cars) if (c.mesh && c.mesh.label) c.mesh.label.visible = false; };
   // ein Bild neu zeichnen, ohne die Simulation weiterzudrehen
   TR.zeichne = () => { if (window.__trPre) window.__trPre(0, TR.vt); syncAoCam(); composer.render(0); };
