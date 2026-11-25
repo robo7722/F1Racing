@@ -1,171 +1,145 @@
-# Trailer „Formula Racing“ – Storyboard und Musikwahl
+# Trailer „Formula Racing“
 
-Stand 24.11.2026 · **wartet auf Abnahme** (Storyboard und Musik zuerst, gebaut wird der Trailer erst nach dem Go).
-Werkzeuge: `tools/trailer/` · Bilder: `docs/bilder/trailer_storyboard_1…3.jpg`, Einzelbilder in `docs/bilder/trailer/`.
+Stand 25.11.2026 · Fassung 2 (nach Rückmeldung zum Storyboard). Werkzeuge: `tools/trailer/` · Storyboard-Blätter der ersten Fassung: `docs/bilder/trailer_storyboard_1…3.jpg`.
 
-## Auftrag (24.11.2026)
+**Privat:** Der fertige Trailer und alle Vorschauen enthalten geschützte Musik. Sie kommen **nicht ins Repository** (Ausgabeordner `trailer-ausgabe/`
+steht in `.gitignore`), sondern gehen nur als Datei an den Nutzer. Im Repository liegen nur Skripte, Notizen und Bilder aus dem Spiel.
 
-Ein filmischer Spiel-Trailer nach dem Vorbild guter Spieletrailer, mit passender Musik aus dem Spiel („eine lizenzierte“ –
-verstanden als: eines der bekannten Lieder aus der Renn-Playlist, nicht die lizenzfreien Titel). Der Trailer bleibt privat beim Nutzer.
-Das Spiel soll so schön wie möglich aussehen. Zuerst Storyboard und Musikwahl zur Abnahme.
+## Auftrag und Rückmeldungen
 
-**Wichtig, weil privat:** Der fertige Trailer und die Vorschau mit Musik enthalten geschützte Musik. Sie kommen **nicht ins Repository**
-(nur als Datei an den Nutzer; Ausgabeordner `trailer-ausgabe/` steht in `.gitignore`). Im Repository liegen nur Skripte, Notizen und Bilder aus dem Spiel.
-
-## Was von guten Spieletrailern übernommen wird
-
-(Aus meiner Kenntnis der Trailer von Gran Turismo 7, Forza Horizon 5 und der F1-Reihe sowie des Trailers zum F1-Film – nicht neu recherchiert.)
-
-- **Ruhiger Auftakt mit Nahaufnahmen** statt sofort Action: Lack, Karbon, Helm – mit geringer Schärfentiefe.
-- **Ein klarer Wendepunkt**: Die Startampel geht aus, genau auf dem ersten Schlag der Musik.
-- **Schnitt im Takt**: Jede Einstellung dauert ganze Takte (2,18 s) oder halbe; in der Steigerung zwei Schläge je Schnitt.
-- **Wenige, kurze Schriften im Bild** mit den Kernaussagen statt Sprecher.
-- **Abwechslung der Schauplätze**: Dämmerung, Tag, Nacht, Regen; modern, historisch, Kart, Roadster.
-- **Atempause vor dem Titel**: nach dem lautesten Teil ein ruhiges, schönes Bild (Regen in Zeitlupe), dann der Titel auf dem Schlussakkord.
-- **Kinoformat 2,39:1**, echte Bewegungsunschärfe, keine Bedienelemente im Bild.
+- **24.11.2026:** filmischer Spiel-Trailer nach dem Vorbild guter Spieletrailer, Musik aus der Renn-Playlist, das Spiel so schön wie möglich; zuerst Storyboard und Musikwahl.
+- **25.11.2026 (Rückmeldung zum Storyboard):** MX-5 und „Grüne Hölle“ raus · bei Nr. 6 Singapur statt Monaco · im Regen auch Singapur und überhaupt Nachtstrecken im Regen ·
+  in der Helmkamera ein kurzer, spannender Zweikampf · am Ende das F1-Logo aus dem Repository (`logos/LOGO.png`) · sehr filmisch · ohne weitere Abnahme rendern.
+- **Musik:** zwischenzeitlich „Tate McRae – Just Keep Watching“ und „Höhepunkt früher“ gewünscht, dann zurückgenommen:
+  **Hans Zimmer – „F1“ im ursprünglich vorgeschlagenen Schnitt und Tempo** (1:38).
 
 ## Musik
 
-### Wahl: Hans Zimmer – „F1“ (`music/Hans Zimmer - F1.mp3`, 3:14)
+`music/Hans Zimmer - F1.mp3`, gemessen mit `tools/trailer/musik_analyse.py`: **110 BPM** (ein Schlag 0,5455 s, ein Takt 2,182 s), Tempo durchgehend gleich.
 
-Gemessen mit `tools/trailer/musik_analyse.py` (librosa): **110 BPM** (ein Schlag 0,5455 s, ein Takt 2,18 s), Tempo über das ganze Stück gleich.
+| Zeit im Stück | Was passiert | Nutzung im Trailer |
+|---|---|---|
+| 0:00–0:10,8 | fast Stille, schwillt an | Garage, Startampel |
+| 0:10,85 | Thema setzt ein | **Lichter aus** |
+| 0:19,6 / 0:28,3 | zweite Phrase / Anziehen | Singapur, Steigerung (Monaco) |
+| 0:33,0 | voller Einsatz mit Schlagwerk | Las Vegas, Legenden, Kart, Zweikampf, Zielsprint |
+| 2:09,5–2:21 | Musik bricht ab | Regen in Zeitlupe |
+| 2:21,0 | Schlussteil setzt ein | **F1-Logo** |
 
-| Zeit im Stück | Lautstärke (rel.) | Was passiert | Nutzung im Trailer |
+Schnitt auf 1:38: `python3 tools/trailer/musik_schnitt.py <Vorlage.wav> <Ausgabe.wav> --teile 0:76.65,126.83:148.3 --aus 4.0`
+(Teil 1 unverändert bis 1:16,65; dort auf einem Taktanfang weiter bei 2:06,83 im Stück, 40 ms Überblendung; Schlussakkord bei 1:30,8).
+Die Schnittstelle ist **gemessen, nicht gehört**.
+
+Geprüft und verworfen: Mad Max – Brothers in Arms (kein ruhiger Auftakt), Daft Punk – Derezzed, Eric Prydz – Opus (Aufbau zu lang), Royal Blood, Kx5.
+„Tate McRae – Just Keep Watching“ (130 BPM, ein Takt 1,846 s; Refrain bei 0:39, Bruch bei 1:38, Schlussrefrain ab 2:00) war für einen frühen Höhepunkt
+schon vermessen, wurde aber nicht verwendet.
+
+**Geräusche** (`tools/trailer/ton.py`, nur vorhandene Spielklänge und gerechnetes Rauschen, keine Kosten): Ampel-Töne und Motoren in der Startaufstellung,
+hochdrehende Motoren beim Start, dumpfe Schläge zum Feuerwerk, Regenrauschen im Regenteil. Gemischt nach Pegelmessung (Startaufstellung gleich laut wie die
+dort sehr leise Musik, sonst 11–14 dB unter der Musik), **nicht nach Gehör**. Mit `--ohne` entsteht die reine Musikfassung.
+
+Nebenbefunde in `music/` (nicht geändert): `Gesaffelstein - PURSUIT.mp3` ist nur 4 Byte groß; `Eric Prydz - Opus.mp3` und `Kx5 - Escape….mp3` sind WebM/Opus,
+`Mad Max … Brothers In Arms.mp3` ist AAC in MP4 – nur die Endung heißt `.mp3`.
+
+## Ablauf (Fassung 2, 1:38, 24 Bilder/s, Kinoformat 2,39:1 in 1920 × 1080)
+
+Quelle der Zeiten: `tools/trailer/schnittplan.json`, der Kameras: `tools/trailer/drehplan.js`.
+
+| Zeit | Einstellung | Schauplatz | Schrift |
 |---|---|---|---|
-| 0:00–0:10,8 | −60 … −28 dB | fast Stille, schwillt an | Garage, Startampel |
-| 0:10,85 | Sprung auf −11 dB | Thema setzt ein | **Lichter aus** |
-| 0:19,6 / 0:28,3 | −11 … −15 dB | zweite Phrase / Anziehen | Monaco, Steigerung |
-| 0:33,0 | −7 dB | voller Einsatz mit Schlagwerk | Las Vegas, Legenden, Vielfalt, Zielsprint |
-| 2:09,5–2:21 | fällt auf −20 dB | Musik bricht ab | Regen in Zeitlupe |
-| 2:21,0 | Sprung auf −10 dB | Schlussteil setzt ein | **Titel** |
+| 0:00–0:04 | Makrofahrt am Frontflügel, echte Schärfentiefe | Garage | – |
+| 0:04–0:07,4 | Zufahrt auf Helm und Halo, Schärfe wandert | Garage | – |
+| 0:07,4–0:10,85 | fünf rote Lichter gehen einzeln an, auf dem letzten Bild aus | Abu Dhabi, Dämmerung | – |
+| 0:10,85–0:15,2 | Start: das Feld schießt an der bodennahen Kamera vorbei | Abu Dhabi | – |
+| 0:15,2–0:19,6 | Profilfahrt im Gegenlicht, 60 % Tempo, echte Bewegungsunschärfe | Abu Dhabi | – |
+| 0:19,6–0:24 | Kranfahrt über die Marina Bay | Singapur, Nacht | 24 GRAND-PRIX-STRECKEN |
+| 0:24–0:28,3 | tiefe Mitfahrt, Riesenrad und Marina Bay Sands dahinter | Singapur | – |
+| 0:28,3–0:33 | vier Schnitte im Takt: Helm in der Haarnadel, Tunnelausfahrt, Rad ganz nah, T-Kamera; dann Schwarz | Monaco | – |
+| 0:33–0:37,4 | Silhouette vor der Sphere, 35 % Tempo | Las Vegas | TAG UND NACHT |
+| 0:37,4–0:41,7 | T-Kamera auf dem Strip, Tempo-Effekt des Spiels | Las Vegas | – |
+| 0:41,7–0:50,5 | sechs Legenden, gleiche Kamera, je 1,45 s, im Bildlook ihrer Zeit | Monza | Jahr und Auto (1967 … 2012) |
+| 0:50,5–0:54,8 | Cockpit des MP4/4 auf die erste Schikane zu | Monza | – |
+| 0:54,8–0:59,2 | bodennah im Bogen vor dem Kartfeld | Genk | VOM KART BIS IN DIE FORMEL 1 |
+| 0:59,2–1:10,1 | **Zweikampf**: Helmkamera im Windschatten, ausscheren – ein Takt von außen Rad an Rad – Helmkamera, spät bremsen, innen vorbei | Monza | – |
+| 1:10,1–1:14,5 | Nachtsprint, zwei Autos nebeneinander | Singapur | – |
+| 1:14,5–1:19,3 | Zielgerade mit Feuerwerk, Kamera steigt | Singapur | – |
+| 1:19,3–1:23,7 | Regen in Zeitlupe (45 %), Riesenrad, spiegelnde Fahrbahn | Singapur, Starkregen | BEI JEDEM WETTER |
+| 1:23,7–1:26,3 | Strip im Regen, 50 % | Las Vegas, Starkregen | – |
+| 1:26,3–1:28,5 | Teleobjektiv frontal, Autos aus der Gischt, 50 % | Spa, Starkregen | – |
+| 1:28,5–1:30,8 | Helmkamera, Tropfen auf dem Visier, ins Schwarz | Singapur, Starkregen | – |
+| 1:30,8–1:38 | **F1-Logo** (`logos/LOGO.png`, scharf vergrößert) mit Zeile FORMULA RACING | Schlusstafel | – |
 
-Warum dieses Stück: Es ist die Musik des F1-Films, also genau für solche Bilder geschrieben; es hat den für Trailer idealen Bogen
-(Stille → Einsatz → volle Kraft → Abbruch → Schlussakkord), und das feste Tempo macht taktgenaue Schnitte möglich.
+Gestaltung der Schrift: Titillium Web wie im Spiel, unten links, kursiv, gesperrt, roter Balken.
 
-### Schnitt auf Trailerlänge (1:38)
+## So wird gerechnet
 
-`tools/trailer/musik_schnitt.py <Vorlage.wav> <Ausgabe.wav> --teile 0:76.65,126.83:148.3 --aus 4.0`
-
-- Teil 1: 0:00–1:16,65 unverändert (Auftakt, Thema, 20 Takte volle Kraft).
-- Schnittstelle bei 1:16,65 auf einem Taktanfang, weiter bei 2:06,83 im Stück (gleiche Taktlage, 40 ms Überblendung): noch gut ein Takt volle Kraft, dann der Abbruch.
-- Schlussakkord im Trailer bei 1:30,8, ausgeblendet bis 1:38,1.
-- Ob die Schnittstelle sauber klingt, ist **nur gemessen, nicht gehört** – bitte in der Vorschau bei 1:16–1:20 hinhören.
-
-### Geprüfte Alternativen aus der Playlist
-
-| Lied | Tempo | Verlauf | Urteil |
-|---|---|---|---|
-| Mad Max – Brothers in Arms | 108 BPM | von Anfang an laut, kein ruhiger Auftakt | wuchtig, aber düster; zweite Wahl |
-| Daft Punk – Derezzed | 117 BPM | 20 s Aufbau, voller Einsatz erst bei 1:10 | elektronisch, weniger „Kino“ |
-| Eric Prydz – Opus | 123 BPM | steigt 3:45 lang an | Aufbau viel zu lang für 1:30 |
-| Royal Blood – Figure It Out | 108 BPM | Rock, starker Einsatz bei 1:32 | Gesang lenkt ab |
-| Tate McRae – Just Keep Watching | 129 BPM | Pop mit Gesang | passt zum Film, nicht zu Zeitlupen |
-| Kx5 – Escape | 123 BPM | Gesang, Drop bei 3:05 | Club statt Kino |
-
-### Nebenbefunde in `music/` (nicht geändert)
-
-- `Gesaffelstein - PURSUIT.mp3` ist nur **4 Byte** groß, also keine abspielbare Datei.
-- `Eric Prydz - Opus.mp3` und `Kx5 - Escape (feat. Hayla).mp3` sind in Wahrheit WebM/Opus, `Mad Max … Brothers In Arms.mp3` ist AAC in MP4 –
-  nur die Endung heißt `.mp3`. Ob das auf jedem Gerät abspielt, ist nicht geprüft.
-
-## Storyboard (19 Einstellungen, 1:38)
-
-Die Standbilder sind **echte Bilder aus dem Spiel** (Grafik „Ultra“, 1920 × 804, ohne Bedienelemente), aufgenommen mit `tools/trailer/studio.js`.
-Blätter: `docs/bilder/trailer_storyboard_1.jpg` (1–7), `_2.jpg` (8–13), `_3.jpg` (14–19). Quelle der Texte und Zeiten: `tools/trailer/storyboard.json`.
-
-| Nr. | Zeit | Einstellung | Schauplatz | Schrift im Bild |
-|---|---|---|---|---|
-| 1 | 0:00–0:04 | Licht auf Karbon: Makrofahrt am Frontflügel, unscharfe LED-Wand | Garage (Showroom) | – |
-| 2 | 0:04–0:07,4 | Der Fahrer wartet: Zufahrt auf Helm und Halo | Garage | – |
-| 3 | 0:07,4–0:10,85 | Fünf rote Lichter: Tele über die Startaufstellung | Abu Dhabi, Dämmerung | – |
-| 4 | 0:10,85–0:15,2 | Lichter aus: Feld schießt über die bodennahe Kamera | Abu Dhabi | – |
-| 5 | 0:15,2–0:19,6 | Goldene Stunde: Mitzieher von der Seite im Gegenlicht | Abu Dhabi | – |
-| 6 | 0:19,6–0:24 | Monaco von oben: Kranfahrt über den Hafen | Monaco | 24 GRAND-PRIX-STRECKEN |
-| 7 | 0:24–0:28,3 | Zwischen den Leitplanken: tiefe Mitfahrt | Monaco | – |
-| 8 | 0:28,3–0:33 | Steigerung: 4 Schnitte im Takt, letzter Schlag schwarz | Monaco (Helmkamera, Nahaufnahmen) | – |
-| 9 | 0:33–0:37,4 | Silhouette vor der Sphere | Las Vegas, Nacht | TAG UND NACHT |
-| 10 | 0:37,4–0:41,7 | 326 km/h auf dem Strip, T-Kamera | Las Vegas | – |
-| 11 | 0:41,7–0:50,5 | Sechs Legenden: gleiche Kamera, 6 Schnitte, je im Bildlook der Zeit | Monza | SECHS LEGENDEN · 1967 – 2012 |
-| 12 | 0:50,5–0:54,8 | Im Cockpit von 1988 (MP4/4, Fernsehlook) | Monza | – |
-| 13 | 0:54,8–0:59,2 | Wo alles beginnt: bodennah vor dem Kartfeld | Genk | VOM KART BIS IN DIE FORMEL 1 |
-| 14 | 0:59,2–1:03,6 | Grüne Hölle: RONE Racing #666 | Nordschleife | – |
-| 15 | 1:03,6–1:10,1 | Rad an Rad: 3 Schnitte (Zweikampf, Windschatten, Überholen) | Monaco, Las Vegas | – |
-| 16 | 1:10,1–1:19,3 | Zielsprint mit Feuerwerk, Kamera steigt auf | Las Vegas, Nacht | – |
-| 17 | 1:19,3–1:25 | Regen in Zeitlupe (50 %): Tele frontal, Autos aus der Gischt | Spa, Starkregen | BEI JEDEM WETTER |
-| 18 | 1:25–1:30,8 | Tropfen auf dem Visier, Helmkamera, ins Schwarz | Spa | – |
-| 19 | 1:30,8–1:38 | Titel: FORMULA RACING · „Vom Kart bis in die Formel 1“ | Schrifttafel | – |
-
-**Gestaltung der Schrift (Entwurf):** Titillium Web wie im Spiel; Schriften im Bild unten links, kursiv, gesperrt, mit rotem Balken;
-Titel weiß auf Schwarz mit roter Linie. Kein F1-Logo im Trailer, nur der Spielname.
-
-**Ton:** Musik im Vordergrund. Dazu aus den vorhandenen Spielklängen: Ampel-Töne und hochdrehende Motoren vor dem Start, Vorbeifahrten,
-Regen. Keine neuen ElevenLabs-Erzeugungen eingeplant (kostet nichts). Kein Sprecher.
-
-## Vorschau mit Musik (Animatic)
-
-`python3 tools/trailer/animatic.py <Bilderordner> <Musik.wav> <Ausgabe.mp4>` schneidet die Standbilder im geplanten Rhythmus zur
-geschnittenen Musik (1280 × 720, 1:38). Einstellungen mit mehreren Schnitten springen im Takt zwischen Bildausschnitten.
-Die Datei geht nur an den Nutzer, nicht ins Repository.
-
-## Technik
-
-### Werkzeuge (`tools/trailer/`)
+Am Spiel (`index.html`) ist **nichts geändert**. Die Werkzeuge laden das echte Spiel im Testbrowser und setzen nur dort vier Einhängepunkte ein
+(`tools/trailer/spielstart.js`): Code-Auswertung im Modul, eigene Kamera mit Brennweite und Neigung, Haken vor dem Zeichnen, einstellbare Kantenglättung.
 
 | Datei | Zweck |
 |---|---|
-| `musik_analyse.py` | Tempo, Lautheitsverlauf und Einsätze eines Liedes messen |
-| `musik_schnitt.py` | Abschnitte taktgenau aneinanderfügen, ausblenden, Verlauf als JSON |
-| `studio.js` | Spiel im Testbrowser starten, Strecke bauen, offen halten; Befehle über `localhost:<Port>/eval` und `/bild` |
-| `studio_spiel.js` | Helfer im Spiel (`TR.…`): Autos aufstellen, eigene Kamera mit Brennweite, Schärfentiefe und Bewegungsunschärfe durch Mitteln vieler Bilder |
-| `studio_showroom.js` | dasselbe für die Garage im Hauptmenü (`TRS.…`) |
-| `probe.sh`, `hol.sh`, `blatt.sh` | Probebild aufnehmen, gemitteltes Bild holen, Kontaktblatt bauen |
-| `storyboard.json` / `storyboard.js` | Inhalt des Storyboards / Blätter und Animatic-Bilder daraus erzeugen |
-| `animatic.py` | Vorschau-Video aus Standbildern und Musik |
+| `spielstart.js` | Spiel starten, Rennen wechseln (Fahrer, Wetter, Klasse) ohne Neuladen |
+| `studio.js` | Studio offen halten; Befehle über `localhost:<Port>/eval`, `/bild`, `/rennen`, `/ende` |
+| `studio_spiel.js` | Helfer im Spiel (`TR.…`): feste Zeitbasis, Autos aufstellen, Kamerafahrten, Bildmittelung, Feuerwerk |
+| `studio_showroom.js` | Garage (`TRS.…`): Kamera und echte Schärfentiefe |
+| `drehplan.js` | alle Einstellungen: Vorbereitung, Kamerafahrt, Dauer, Zeitlupe |
+| `dreh.js` | Einstellungen in einem Studio rechnen (`--probe`: vier Bilder in halber Auflösung als Kontaktblatt) |
+| `schichten.js` / `schicht.js` | Warteschlangen: Studio starten, proben, rechnen, schließen – neustart-fest |
+| `schnittplan.json` / `schnitt.py` | Schnitt im Takt, Schriften, Schlusstafel, Balken, Korn, Ton (`--vorschau` zeigt Fehlendes grau) |
+| `schrift.js`, `logo_gross.py` | Schriften und Schlusstafel als Bild; Logo mit scharfen Kanten vergrößern |
+| `ton.py` | Musik und Geräusche mischen |
+| `musik_analyse.py`, `musik_schnitt.py`, `storyboard.*`, `animatic.py` | erste Fassung: Musikwahl, Storyboard, Vorschau aus Standbildern |
 
-Am Spiel (`index.html`) wurde **nichts geändert**. `studio.js` setzt beim Laden im Testbrowser drei Einhängepunkte ein:
-Code-Auswertung im Modul, feste Kamera mit Brennweite und Neigung (`window.__camFix` darf eine Funktion sein), Haken vor dem Zeichnen (`window.__trPre`).
-
-Beispiel:
+Ablauf für einen neuen Lauf:
 
 ```bash
-node tools/trailer/studio.js --port 8801 --strecke Spa --wetter heavy --fahrer VER &
-tools/trailer/probe.sh 8801 bild.jpg "TR.start(); TR.feld(1150, 0, [[-11, 2.4], [-23, -2.2]]); TR.sim(45, 33); TR.cam({ von: { s: 1400, lat: -0.6, h: 0.6 }, auf: [0, 0.55, 0], fov: 6.5 })"
-curl -s localhost:8801/ende
+for k in a b c; do nohup node tools/trailer/schicht.js $k 882$(echo $k | tr abc 123) > trailer-ausgabe/schicht_$k.log 2>&1 & done   # rechnet alles, überspringt Fertiges
+python3 tools/trailer/logo_gross.py trailer-ausgabe/schrift/logo_gross.png && node tools/trailer/schrift.js trailer-ausgabe/schrift
+python3 tools/trailer/ton.py <Musik.wav> <Ton.wav>
+python3 tools/trailer/schnitt.py <Ton.wav> trailer-ausgabe/Formula_Racing_Trailer.mp4
 ```
 
-Kamera: `von`/`auf` als `[rechts, hoch, vor]` relativ zum Auto, als `{ s, lat, h }` an der Strecke oder als `[x, y, z, 0]` in Weltkoordinaten; `fov` in Grad.
-`TR.halt()` stoppt die Bildschleife des Spiels (sonst läuft das Rennen zwischen zwei Befehlen weiter); `TR.skala(0.5)` halbiert die Auflösung für schnelle Proben.
+### Was die Aufnahme filmisch macht
 
-### Gemessene Rechenzeiten (Testbrowser ohne Grafikkarte, 4 Kerne, Grafik „Ultra“)
+- **Feste Zeitbasis** (`TR.halt`, `TR.takt`): Die Bildschleife des Spiels steht, `performance.now` läuft auf einer eigenen Uhr. Jedes Bild ist exakt 1/24 s Spielzeit,
+  Zeitlupe ist einfach ein kleinerer Schritt, der Zufall ist je Einstellung festgelegt (`TR.seed`) – eine Einstellung läuft jedes Mal gleich ab.
+- **Kamerafahrten** (`TR.kam(a, b)`): zwei Kamera-Angaben (am Auto, an der Strecke oder in der Welt), dazwischen wird Bild für Bild überblendet; dazu leichte Handkamera-Unruhe.
+- **Echte Bewegungsunschärfe** (Profilfahrt): je Bild vier Zwischenbilder über 60 % der Bildzeit, im linearen Licht gemittelt.
+- **Echte Schärfentiefe** (Garage): jedes Zwischenbild von einem anderen Punkt der Blende aus; gemittelt wird gleitend über die letzten 12 Zwischenbilder,
+  so kostet ein Bild nur 3 statt 12 Zeichnungen.
+- **Tempo-Unschärfe des Spiels** bei Mitfahrten von vorn und hinten (`speed`), aus bei seitlichen Kameras.
+- **Feuerwerk gezielt** (`TR.feuerwerk`, `TR.fwLauf`): dieselben Teilchen wie im Spiel, aber dort gezündet, wo die Kamera hinsieht (120–280 m voraus, 50–100 m hoch).
+- Schnitt auf den Takt, Kinoformat mit schwarzen Balken, feines Filmkorn nur im Bild.
+
+### Gemessene Rechenzeiten (Testbrowser ohne Grafikkarte, 4 Kerne, „Ultra“, 1920 × 804)
 
 | Was | Zeit |
 |---|---|
-| Strecke bauen bis „Rennen läuft“ | 130–240 s (Nordschleife 240 s, Kartbahn 137 s) |
-| ein Bild 1920 × 804, Spa im Starkregen | 5,96 s |
-| ein Bild 1920 × 804, Nordschleife trocken | 6,45 s |
-| ein Bild 1280 × 536, Nordschleife trocken | 4,21 s |
-| ein Bild Garage 1920 × 1080 | 3,84 s |
+| Strecke bauen bis „Rennen läuft“ | 76–275 s |
+| ein Bild, Singapur trocken, ein Studio allein | 5,1 s (davon Szene 2,1 s, Umgebungsverdeckung 1,0 s, Schatten 0,7 s, Bloom 0,3 s, Sonnenstrahlen 0,3 s) |
+| Kantenglättung an/aus | kein messbarer Unterschied (5,1 s gegen 5,7 s) |
+| zwei Studios gleichzeitig | je 8,9–9,1 s (zusammen 1,5-mal so schnell wie eines) |
+| drei Studios gleichzeitig | je 11,9–13,4 s (zusammen 1,6-mal so schnell) |
+| Garage, ein Bild 1920 × 1080 | 3,8 s |
+| Fahrer wechseln in derselben Sitzung (Legende) | etwa 115 s |
 
-Der Trailer hat 2.943 Bilder (98,1 s × 30). **Schätzung** (nicht gemessen): mit einem Bild je Trailerbild etwa 5 Stunden Rechenzeit,
-mit echter Bewegungsunschärfe (mehrere Zwischenbilder) ein Mehrfaches. Deshalb zwei Wege:
+Deshalb: 24 Bilder/s, drei Studios gleichzeitig, Umgebungsverdeckung nur in ruhigen Einstellungen, Sonnenstrahlen-Durchgang nachts aus (dort ohne Wirkung).
 
-1. **Hier in der Cloud** rechnen, Einstellung für Einstellung im Hintergrund; echte Bewegungsunschärfe und Schärfentiefe nur dort, wo sie am meisten bringen (Garage, Mitzieher, Zeitlupe).
-2. **Auf dem PC des Nutzers** (mit Grafikkarte, über Remote Control): das Spiel läuft dort in Echtzeit, dann sind Bewegungsunschärfe überall und höhere Auflösung möglich.
+### Was schiefging (nicht wiederholen)
 
-### Erfahrungen aus den Probeaufnahmen (für die Umsetzung)
+- **Vier Studios gleichzeitig** (Last 16, 10 GB belegt): Um 01:10 Uhr startete der Rechner neu, alle laufenden Einstellungen waren weg. Seitdem höchstens drei,
+  und die Warteschlangen (`schicht.js`) überspringen fertige Einstellungen und setzen angefangene fort.
+- **Kamera relativ zum Auto an Steigungen**: lag unter der Straße – `TR.rel` nimmt die Fahrbahnhöhe an der Kamerastelle.
+- **Kamera seitlich neben dem Auto**: stand zweimal hinter der Bande (Abu Dhabi) bzw. hinter der Betonwand (Las Vegas im Regen). Auto auf die andere Fahrbahnseite legen
+  (`pl.ovr`) und höchstens 5 m Abstand nehmen.
+- **Zweikampf** (drei Fehlversuche): Die KI hält hinter einem Auto rund 35 m Abstand – das Tempo des eigenen Autos wird deshalb je Bild vorgegeben, samt Ausgleich für das,
+  was die KI wegbremst. Unter 7,1 m Abstand hält die KI beide Autos seitlich auseinander, dann kommt man nicht mehr auf die andere Seite – also erst ausscheren, dann aufschließen.
+  Unter etwa 2,3 m seitlichem Abstand berühren sich die Autos und beide bremsen stark; der Gegner bekommt deshalb eine feste Spur 3,5 m daneben.
+- **Nachtregen ist sehr dunkel**: von hinten in der Gischt war fast nichts zu sehen. Gewählt wurden Einstellungen von vorn mit beleuchteter Kulisse, im Schnitt um 22 % aufgehellt.
+- **Feuerwerk des Spiels** liegt 200–400 m voraus und wirkt klein; erst das gezielte Zünden füllt den Himmel. Zu nah (60–170 m) überstrahlt es das Bild.
+- `xstack` von ffmpeg stürzte bei acht Bildern ab – Kontaktblätter jetzt mit `concat` + `tile`.
 
-- Am besten sieht das Spiel **nah am Auto** aus (Mitfahrten, Helm- und T-Kamera), in der **Garage**, bei **Nacht** und im **Regen**.
-  Lange Brennweiten von der Tribüne zeigen die einfache Umgebung (Bäume, Häuser) – vermeiden.
-- Kamera relativ zum Auto braucht die **Fahrbahnhöhe an der Kamerastelle** (an der Steigung von Eau Rouge lag sie sonst unter der Straße) – in `TR.rel` gelöst.
-- Die Tempo-Unschärfe und die starke Vignette des Spiels hängen an der Geschwindigkeit; für Außenkameras stellt `window.__trPre` sie ab (`TR.speed = 0`).
-- Namensschilder über den Autos werden ausgeblendet (`TR.labels = false`).
-- Startampel: `raceState = 'lights'; SG.on = false; lightsOut = 99; lightsT = 4.85` hält fünf rote Lampen; `lightsOut = 0` startet.
-- Feuerwerk: `pl.lapsDone = S.laps - 1` und das Auto auf die letzten 700 m setzen; es braucht einige Sekunden Vorlauf und wirkt nur mit weitem Blick nach oben.
-- Legenden: Fahrer `SEN`, `RIN`, `MSC`, `AMO`, `HAK`, `VET` wählen – der Bildfilter der Epoche kommt von selbst. Je Legende ein eigener Start des Studios.
-- Die Einstellung „Lichter aus“ (Nr. 4) ist im Standbild noch zu weit weg – in der Umsetzung näher an die erste Reihe.
+## Erste Fassung (Storyboard vom 24.11.2026)
 
-## Offen bis zur Abnahme
-
-- Musik und Schnittstelle (1:16–1:20) in Ordnung?
-- Reihenfolge und Auswahl der Einstellungen, Texte der Schriften, Titel.
-- Wo gerechnet wird (Cloud oder PC des Nutzers).
+19 Einstellungen mit Monaco aus der Luft, RONE-Roadster auf der Nordschleife und Titel „FORMULA RACING“; Blätter in `docs/bilder/trailer_storyboard_1…3.jpg`,
+Inhalt in `tools/trailer/storyboard.json`. Die Standbilder dafür entstanden mit `studio.js` und `probe.sh`.
