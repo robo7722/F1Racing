@@ -35,6 +35,8 @@ module.exports = {
     { strecke: 'Abu Dhabi', fahrer: 'LEC', schritte: [{ szenen: 's03_ampel,s04_start,s05_profil,s08a_sonne' }] },
     { strecke: 'Monza', schritte: [{ fahrer: 'LEC', szenen: 's14_duell,s11_2026' }, ...legenden.map(([fahrer, szenen]) => ({ fahrer, szenen }))] },
   ],
+  // Helfer: Sobald eine Schicht fertig ist, nimmt sie der längsten (b) Arbeit vom Ende ihrer Warteschlange ab – Legenden in umgekehrter Reihenfolge.
+  d: [{ strecke: 'Monza', schritte: [...legenden].reverse().map(([fahrer, szenen]) => ({ fahrer, szenen })) }],
   c: [
     { menue: true, schritte: [{ szenen: 's01_garage_fluegel,s02_garage_helm' }] },
     { strecke: 'Las Vegas', fahrer: 'RUS', schritte: [{ szenen: 's09_sphere,s10_strip' }] },
