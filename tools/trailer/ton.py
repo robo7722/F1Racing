@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tonspur des Trailers: geschnittene Musik + dezente Geräusche aus den Klängen des Spiels (keine neuen Aufnahmen, keine Kosten).
    Aufruf: python3 tools/trailer/ton.py <Musik.wav> <Ausgabe.wav> [--ohne]        (--ohne: nur Musik, zum Vergleich)
-   Geräusche: Ampel-Töne und Motoren in der Startaufstellung (7,4–10,85 s), Start (ab 10,85 s), Feuerwerk (74,5–79,3 s), Regen (79,3–90,8 s).
+   Geräusche: Ampel-Töne und Motoren in der Startaufstellung (5,25–10,85 s), Start (ab 10,85 s), Feuerwerk (74,5–79,3 s), Regen (79,3–90,8 s).
    Alles bewusst leise unter der Musik – gemischt nach Pegelmessung, nicht nach Gehör."""
 import sys, os, numpy as np, soundfile as sf
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))); SR = 44100
@@ -23,13 +23,13 @@ def lege(x, t0, links=1.0, rechts=1.0):
 def huelle(m, ein, aus): e = np.ones(m, np.float32); a = int(ein * SR); b = int(aus * SR); e[:a] = np.linspace(0, 1, a); e[m - b:] = np.linspace(1, 0, b); return e
 if '--ohne' not in sys.argv:
     # Startaufstellung: drei Motoren im Leerlauf mit Gasstößen, lauter werdend
-    D = 3.6
+    D = 5.75
     for k, (basis, pan) in enumerate([(0.40, 0.3), (0.46, 0.7), (0.52, 0.5)]):
-        stoss = lambda t, k=k: basis + 0.34 * (np.exp(-((t - 1.0 - 0.21 * k) / 0.16) ** 2) + np.exp(-((t - 2.0 - 0.17 * k) / 0.16) ** 2) + 1.25 * np.exp(-((t - 2.95 - 0.1 * k) / 0.3) ** 2))
-        x = schleife('f1_mittel.wav', D, stoss); lege(x * huelle(len(x), 0.5, 0.05) * np.linspace(0.035, 0.085, len(x)), 7.3, 1 - pan * 0.6, 0.4 + pan * 0.6)
+        stoss = lambda t, k=k: basis + 0.34 * (np.exp(-((t - 1.6 - 0.21 * k) / 0.16) ** 2) + np.exp(-((t - 3.3 - 0.17 * k) / 0.16) ** 2) + 1.25 * np.exp(-((t - 5.05 - 0.1 * k) / 0.34) ** 2))
+        x = schleife('f1_mittel.wav', D, stoss); lege(x * huelle(len(x), 0.6, 0.05) * np.linspace(0.03, 0.085, len(x)), 5.15, 1 - pan * 0.6, 0.4 + pan * 0.6)
     # Ampel: fünf dumpfe Töne (wie im Spiel: Rechteck 330 Hz, gefiltert)
     for k in range(5):
-        m = int(0.13 * SR); t = np.arange(m) / SR; b = tief(np.sign(np.sin(2 * np.pi * 330 * t)).astype(np.float32), 900) * huelle(m, 0.005, 0.05) * 0.045; lege(b, 7.4 + 0.3 + 0.5 * k)
+        m = int(0.13 * SR); t = np.arange(m) / SR; b = tief(np.sign(np.sin(2 * np.pi * 330 * t)).astype(np.float32), 900) * huelle(m, 0.005, 0.05) * 0.045; lege(b, 5.25 + 0.45 + 0.95 * k)   # im Takt der Ampel: alle 0,95 s
     # Start: Drehzahl steigt durch drei Gänge, klingt in die Musik aus
     gang = lambda t: 0.78 + 0.42 * ((t % 1.15) / 1.15) + 0.05 * np.minimum(t, 3)
     for datei, gew, pan in (('f1_v2.wav', 0.6, 0.35), ('f1_v3.wav', 0.5, 0.65), ('f1_v4.wav', 0.35, 0.5)):
@@ -45,6 +45,6 @@ out = mus.astype(np.float32) + fx; sp = float(np.abs(out).max())
 if sp > 0.97: out *= 0.97 / sp
 db = lambda x: 20 * np.log10(max(float(np.sqrt(np.mean(x ** 2))), 1e-9))
 print('Spitze vor Begrenzung %.2f · Pegel Musik %.1f dB · Geräusche gesamt %.1f dB' % (sp, db(mus), db(fx)))
-for name, a, b in (('Startaufstellung 7,4–10,8', 7.4, 10.8), ('Start 10,85–13', 10.85, 13), ('Feuerwerk 74,5–79,3', 74.5, 79.3), ('Regen 80–90', 80, 90)):
+for name, a, b in (('Startaufstellung 5,3–10,8', 5.3, 10.8), ('Start 10,85–13', 10.85, 13), ('Feuerwerk 74,5–79,3', 74.5, 79.3), ('Regen 80–90', 80, 90)):
     i, j = int(a * SR), int(b * SR); print('  %-26s Musik %6.1f dB · Geräusche %6.1f dB' % (name, db(mus[i:j]), db(fx[i:j])))
 sf.write(sys.argv[2], out, SR, subtype='PCM_16'); print(sys.argv[2])
