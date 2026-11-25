@@ -26,6 +26,11 @@ const PATCH = [
   // sind das bis zu 29 % Lenkausschlag von einem Bild zum nächsten; gemessen beim Ausscheren im Zweikampf).
   ['c.steer += clamp(st - c.steer, -7 * dt, 7 * dt);',
     'if (__g) { const z0 = c.__stZ ?? c.steer; c.__stZ = z0 + (st - z0) * (1 - Math.exp(-dt / 0.07)); c.steer += clamp(c.__stZ - c.steer, -3.5 * dt, 3.5 * dt); } else c.steer += clamp(st - c.steer, -7 * dt, 7 * dt);'],
+  // Querziel weich (window.__trQuer = höchste Quergeschwindigkeit in m/s, 0 = aus): Ein neben der Ideallinie aufgesetztes Auto schwenkt im Spiel sofort hart ein –
+  // gemessen bis ±90 % Lenkausschlag im ersten Bilddrittel der Einstellung. Hier gleitet das Querziel stattdessen weich an: Es wandert mit der Ideallinie mit
+  // (solange die KI ihr folgt) und nähert sich dem Wunsch der KI – Ideallinie, Überholspur, Ausweichen – nur mit begrenzter Quergeschwindigkeit und weichem Anfahren.
+  ['const lm = KERB[ti] ? HW[ti] + 0.2 : HW[ti] - 1.15; latT = clamp(latT, -lm, lm);',
+    'const lm = KERB[ti] ? HW[ti] + 0.2 : HW[ti] - 1.15; latT = clamp(latT, -lm, lm); if (window.__trQuer > 0) { const __ref = (__g ? RL[__i0] + (RL[__i1] - RL[__i0]) * __t : RL[ti]) + c.home * 0.12, __fr = c.ovr === null; if (c.__qa == null) { c.__qa = c.lat + (__fr ? __ref - RL[c.idx] - c.home * 0.12 : 0); c.__qv = 0; } else if (__fr && c.__qr != null) c.__qa += __ref - c.__qr; c.__qr = __fr ? __ref : null; const __vz = clamp((latT - c.__qa) * 1.5, -window.__trQuer, window.__trQuer); c.__qv += (__vz - c.__qv) * Math.min(1, dt * 3); c.__qa += c.__qv * dt; latT = c.__qa; }'],
 ];
 async function starte({ size = [1920, 804], dpr = 1, menue = false, fahrer = 'VER', gfx = 'ultra', log = console.log } = {}) {
   const T0 = Date.now(), T = () => ((Date.now() - T0) / 1000).toFixed(0) + ' s';

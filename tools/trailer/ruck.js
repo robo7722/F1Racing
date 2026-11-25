@@ -1,12 +1,14 @@
 // Unruhe einer Einstellung messen, ohne Bilder zu rechnen: Kamerastandort, Blickrichtung und Auto (Fahrtrichtung, Lenkung) je Trailerbild aufzeichnen
 // und daraus das Zittern bestimmen: Abweichung jedes Werts von der glatten Bahn durch seine Nachbarn (Ausgleichsparabel über 7 Bilder).
 // Gleichmäßige Bewegung, Beschleunigen und Kurvenfahrt ergeben null – übrig bleibt, was von Bild zu Bild hin und her springt.
-//   node tools/trailer/ruck.js <Port> <Szene[,Szene…]> [--alt] [--rennen '{"fahrer":"LEC"}'] [--json datei]
+//   node tools/trailer/ruck.js <Port> <Szene[,Szene…]> [--alt] [--verlauf] [--rennen '{"fahrer":"LEC"}'] [--json datei]
+//   --quer N: weiches Querziel der KI (m/s) für alle Einstellungen erzwingen, 0 = aus (sonst gilt `quer` aus dem Drehplan)
+//   --verlauf: Lenkung der ersten 20 Bilder ausgeben (Einschwingen nach dem Aufsetzen erkennen)
 //   --alt: Aufnahmetechnik bis Fassung 3 (ein Simulationsschritt je Bild, Kamera starr am Auto, Höhe in Stufen, Lenk-Zielpunkt der KI in Stufen)
 // Ausgabe je Einstellung (jeweils mittleres Zittern): Lenkung in % des Vollausschlags, Fahrtrichtung des Autos in Grad, Kamerastandort in mm (waagerecht / Höhe),
 // Blickrichtung in Grad (seitlich / Neigung). Zum Vergleich: 0,03° Blickzittern sind bei 30° Bildwinkel rund 2 Bildpunkte.
 const http = require('http'); const fs = require('fs'); const a = process.argv.slice(2), flag = (n, d) => { const i = a.indexOf('--' + n); return i < 0 ? d : a[i + 1]; }, has = n => a.includes('--' + n);
-const PLAN = require('./drehplan.js'), PORT = +a[0], SZENEN = (a[1] || '').split(',').filter(Boolean), FPS = PLAN.fps, J = JSON.stringify, ALT = has('alt');
+const PLAN = require('./drehplan.js'), PORT = +a[0], SZENEN = (a[1] || '').split(',').filter(Boolean), FPS = PLAN.fps, J = JSON.stringify, ALT = has('alt'), QUER = ALT ? 0 : flag('quer', null);   // --quer N: weiches Querziel für alle Einstellungen erzwingen (0 = aus), sonst wie im Drehplan
 const post = (weg, daten) => new Promise((ok, nein) => { const r = http.request({ host: '127.0.0.1', port: PORT, path: weg, method: 'POST', timeout: 3600000 }, res => { const c = []; res.on('data', d => c.push(d)); res.on('end', () => { const s = Buffer.concat(c).toString(); if (res.statusCode !== 200) nein(new Error(s.slice(0, 600))); else ok(s); }); }); r.on('error', nein); r.end(daten); });
 const ev = async code => { const s = await post('/eval', code); try { return JSON.parse(s); } catch (e) { return s; } };
 const rms = v => Math.sqrt(v.reduce((s, x) => s + x * x, 0) / Math.max(1, v.length)), SG = [-2, 3, 6, 7, 6, 3, -2], zit = v => v.slice(3, -3).map((x, i) => x - SG.reduce((s, k, j) => s + k * v[i + j], 0) / 21);
@@ -16,7 +18,7 @@ const entw = v => { const o = [v[0]]; for (let i = 1; i < v.length; i++) { let d
   await ev(ALT ? 'TR.fein = 0; TR.glatt = null; TR.stufig = true; window.__trGlatt = false; 1' : 'TR.fein = 10.5; TR.glatt = { von: 0.28, auf: 0.09 }; TR.stufig = false; window.__trGlatt = true; 1');
   const alle = {};
   for (const name of SZENEN) { const z = PLAN.szenen[name]; if (!z || z.typ === 'garage') continue; const n = Math.round(z.dauer * FPS), R = [];
-    await ev(`TR.start(); pl.lapsDone = 0; pl.finished = false; TR.seed(${z.seed ?? 7}); TR.je = null; TR.speed = 0; TR.vig = null; TR.glatt = ${ALT || z.glatt === false ? 'null' : '{ von: 0.28, auf: 0.09 }'}; ${z.vor || ''}; 1`);
+    await ev(`TR.start(); pl.lapsDone = 0; pl.finished = false; TR.seed(${z.seed ?? 7}); TR.je = null; TR.speed = 0; TR.vig = null; window.__trQuer = ${QUER ?? z.quer ?? 0}; TR.glatt = ${ALT || z.glatt === false ? 'null' : '{ von: 0.28, auf: 0.09 }'}; ${z.vor || ''}; 1`);
     let cur = null, segVon = 0;
     for (let i = 0; i < n; i++) { const te = (i + 1) / FPS; let seg = z.kams[z.kams.length - 1], von = 0;
       for (const k of z.kams) { if (te <= (k.bis ?? 1e9) + 1e-6) { seg = k; break; } von = k.bis; }
@@ -34,6 +36,13 @@ const entw = v => { const o = [v[0]]; for (let i = 1; i < v.length; i++) { let d
       const by = entw(T.map(r => Math.atan2(r.t[0] - r.p[0], r.t[2] - r.p[2]))), bn = T.map(r => Math.atan2(r.t[1] - r.p[1], Math.hypot(r.t[0] - r.p[0], r.t[2] - r.p[2])));
       m.blick.push(...zit(by.map(x => x * 180 / Math.PI))); m.neig.push(...zit(bn.map(x => x * 180 / Math.PI))); }
     const e = { lenk: rms(m.lenk), gier: rms(m.gier), ort: rms(m.ort), hoch: rms(m.hoch), blick: rms(m.blick), neig: rms(m.neig) }; alle[name] = e;
-    console.log(`${name.padEnd(16)} Lenkung ${e.lenk.toFixed(2)} % · Auto ${e.gier.toFixed(4)}° · Kamera ${e.ort.toFixed(1)} mm, Höhe ${e.hoch.toFixed(1)} mm · Blick ${e.blick.toFixed(4)}° / ${e.neig.toFixed(4)}°`); }
+    // Einschwingen: Wie viel lenkt das Auto in der ersten Sekunde der Einstellung hin und her? (Nach dem Aufsetzen schwenkt die KI erst auf die Ideallinie ein –
+    // ist der Vorlauf zu kurz, sieht man das im Bild als Lenkbewegung der Vorderräder bzw. des Lenkrads.)
+    const st = teile[0].map(r => r.st * 100), kopf = st.slice(0, FPS), ein = kopf.slice(1).reduce((s, x, i) => s + Math.abs(x - kopf[i]), 0) - Math.abs(kopf[kopf.length - 1] - kopf[0]); e.ein = ein;   /* Hin und Her in der ersten Sekunde: gesamter Lenkweg minus Nettoänderung */ e.st = st.map(x => +x.toFixed(1)); e.lat = teile[0].map(r => +r.lat.toFixed(2));
+    // Lenkweg: Wie viel wird je Sekunde am Lenkrad gedreht (Summe aller Änderungen), und wie groß ist die größte Änderung von einem Bild zum nächsten?
+    // Eine saubere Kurve kostet rund 50 % je Sekunde; das Sägezahn-Lenken der KI im Regen (Vollausschlag hin und her) lag bei 135–245 %.
+    const alleSt = teile.flatMap(T => T.map(r => r.st * 100)), dSt = alleSt.slice(1).map((x, i) => Math.abs(x - alleSt[i])); e.weg = dSt.reduce((s, x) => s + x, 0) / (dSt.length / FPS); e.sprung = Math.max(...dSt);
+    console.log(`${name.padEnd(16)} Lenkung ${e.lenk.toFixed(2)} % · Auto ${e.gier.toFixed(4)}° · Kamera ${e.ort.toFixed(1)} mm, Höhe ${e.hoch.toFixed(1)} mm · Blick ${e.blick.toFixed(4)}° / ${e.neig.toFixed(4)}° · Einschwingen ${ein.toFixed(1)} %${ein > 12 ? ' ← pendelt nach dem Aufsetzen' : ''} · Lenkweg ${e.weg.toFixed(0)} %/s, größter Schritt ${e.sprung.toFixed(1)} %${e.weg > 100 ? ' ← Sägezahn?' : ''}`);
+    if (has('verlauf')) console.log('   Lenkung je Bild (%):', st.slice(0, 20).map(x => x.toFixed(0)).join(' '), '…', st.slice(-3).map(x => x.toFixed(0)).join(' ')); }
   if (flag('json', '')) fs.writeFileSync(flag('json'), J(alle, null, 1));
 })().catch(e => { console.error('FEHLER', e.message || e); process.exit(1); });

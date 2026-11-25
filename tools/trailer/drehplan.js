@@ -14,10 +14,12 @@
 // Kamera-Angaben: von/auf als [rechts, hoch, vor] am Auto, { s, lat, h } an der Strecke oder [x, y, z, 0] in der Welt; fov in Grad.
 // kams: Abschnitte einer Einstellung (bis = Ende in s); a → b ist eine Fahrt; speed = Tempo-Unschärfe des Spiels (0…1,2).
 // glatt: false = Kamerastandort starr am Auto (sonst folgt er der Fahrtrichtung träge, siehe TR.glatt in studio_spiel.js).
+// quer: 1.6 = Querziel der KI weich nachführen (höchstens so viele m/s seitlich) – für Einstellungen, in denen Autos neben der Ideallinie aufgesetzt werden;
+//   sonst schwenken sie in den ersten Bildern hart ein (messen: node tools/trailer/ruck.js <Port> <Szene> --verlauf, Spalte „Einschwingen“).
 // mb = Bewegungsunschärfe aus so vielen Zwischenbildern (kostet entsprechend Rechenzeit) – nur bei Kameras, an denen das Bild quer vorbeizieht.
 const TAKT = 2.182;   // ein Takt der Musik (110 BPM)
 const legende = { dauer: TAKT / 2, ao: false,   // je zwei Schläge der Musik (vorher 4 Takte durch 6 = nicht im Takt)
-  vor: `TR.feld(5300, 0, []); TR.sim(10, 33.3);`,
+  vor: `TR.feld(5300, 'ideal', []); TR.sim(10, 33.3);`,   // auf der Ideallinie aufsetzen: von der Streckenmitte aus pendelte die Lenkung im Bild von +63 % auf −73 % (sah aus wie eiernde Räder)
   kams: [{ a: { von: [2.4, 0.42, 5.4], auf: [0, 0.5, 0], fov: 30 }, b: { von: [2.1, 0.42, 5.0], auf: [0, 0.5, 0], fov: 29 }, ease: 'lin', speed: 0.3 }] };
 module.exports = {
   fps: 30, groesse: [1920, 804],
@@ -40,10 +42,10 @@ module.exports = {
       kams: [{ a: { von: [-5.0, 0.42, -0.5], auf: [0, 0.5, 0.2], fov: 37 }, b: { von: [-4.6, 0.38, 1.0], auf: [0, 0.5, 0.4], fov: 37 }, ease: 'lin' }] },
     s08a_sonne: { dauer: 1.09, seite: true, ao: false, vor: `TR.start(); TR.feld(1560, 0, [[16, 1.6], [31, -1.6], [-14, 2]]); S.cam = 2; window.__camFix = null; TR.sim(30, 33.3);`, kams: [{ a: { cam: 2 } }] },
     /* ---------- Singapur, Nacht ---------- */
-    s06_sgp_kran: { dauer: 4.4, ao: true, zeitlupe: 0.7,   // Kran-Aufzug (gewählt aus sieben Proben): tief vor dem Auto beginnen, rückwärts auf 6,5 m steigen – Feld, beleuchtete Strecke, Riesenrad und Skyline kommen ins Bild
+    s06_sgp_kran: { dauer: 4.4, ao: true, zeitlupe: 0.7, quer: 1.6,   // Kran-Aufzug (gewählt aus sieben Proben): tief vor dem Auto beginnen, rückwärts auf 6,5 m steigen – Feld, beleuchtete Strecke, Riesenrad und Skyline kommen ins Bild
       vor: `TR.feld(1000, 0, [[-12, 2.4], [-25, -2], [-38, 2.2], [-52, -1.2], [-66, 1.5], [-80, -2]]); TR.sim(12, 33.3);`,
       kams: [{ a: { von: [1.4, 0.55, 7], auf: [0, 0.7, 0], fov: 30 }, b: { von: [3.5, 6.5, 24], auf: [0, 5, -45], fov: 36 }, ease: 'lin' }] },
-    s08b_vorbei: { dauer: 1.09, ao: true, mb: 4, verschluss: 0.5,   // feste Kamera am Randstein: das Auto rauscht dicht vorbei (mit Bewegungsunschärfe – sonst springt es in vier Sätzen durchs Bild)
+    s08b_vorbei: { dauer: 1.09, ao: true, mb: 4, verschluss: 0.5, quer: 1.6,   // feste Kamera am Randstein: das Auto rauscht dicht vorbei (mit Bewegungsunschärfe – sonst springt es in vier Sätzen durchs Bild)
       vor: `TR.feld(1060, 0.5, [[-14, -2.2], [-27, 1.8], [-40, -1]]); TR.sim(8, 33.3);`, kams: [{ a: { von: { s: 1118, lat: -3.6, h: 0.22 }, auf: [0, 0.5, 0], fov: 34 } }] },
     s07_sgp_nah: { dauer: 4.3, zeitlupe: 0.8, ao: true,
       vor: `TR.feld(1470, 0, [[-12, 2.4], [-25, -2], [-38, 2.2], [-52, -1.2]]); TR.sim(12, 33.3);`,
@@ -51,7 +53,7 @@ module.exports = {
     s16a_sprint: { dauer: TAKT * 2, ao: false,
       vor: `TR.feld(3780, 1.5, [[1.2, -2.6, 0.95], [-15, 0.8, 0.95], [-28, -1.6, 0.95]], 0.93); TR.je = () => { pl.ovr = 1.5; pl.laneT = raceTime + 9; const r = TR.auto(0); r.ovr = -2.6; r.laneT = raceTime + 9; r.v = pl.v - 0.45; }; for (let i = 0; i < 30; i++) { TR.je(); TR.takt(33.3, false); }`,
       kams: [{ a: { von: [-0.6, 0.35, 10.5], auf: [-0.9, 0.6, 0], fov: 27 }, b: { von: [-1.4, 0.5, 8.5], auf: [-0.9, 0.6, 0], fov: 25 }, ease: 'lin', speed: 0.4 }] },
-    s16b_ziel: { dauer: TAKT * 2, ao: false,   // Schlussbild auf dem letzten Schlag der Musik, danach das Logo
+    s16b_ziel: { dauer: TAKT * 2, ao: false, quer: 1.6,   // Schlussbild auf dem letzten Schlag der Musik, danach das Logo
       vor: `TR.feld(L - 430, 1.2, [[-13, -2.2, 0.97], [-27, 1.5, 0.97], [12, -1.8, 0.97]], 0.97); TR.fwT = 0; TR.fwO = { vor: [120, 280], seit: [30, 95], hoch: [50, 100], takt: 0.26 }; TR.je = (t, ms) => TR.fwLauf(ms, TR.fwO); for (let i = 0; i < 60; i++) { TR.fwLauf(33.3, TR.fwO); TR.takt(33.3, false); }`,
       kams: [{ a: { von: [-0.5, 0.42, -3.3], auf: [0, 0.9, 10], fov: 50 }, b: { von: [-3.2, 10.5, -15], auf: [0, 15, 60], fov: 60 }, ease: 'lin', speed: 0.3 }] },   // dicht hinter dem Heck beginnen, gleichmäßig auf 10 m steigen
     /* ---------- Monza: Legenden und Zweikampf ---------- */
@@ -78,12 +80,12 @@ module.exports = {
     s17a_sgp_regen: { dauer: 4.4, zeitlupe: 0.45, ao: true, glatt: false,   // glatt: false = Kamera starr am Auto: mit träger Führung schwenkt sie in der Kurve am Anfang hinter eine Werbebande   // gewählt aus drei Proben: nah von vorn, Riesenrad dahinter, spiegelnde Fahrbahn (von hinten in der Gischt war es zu dunkel)
       vor: `TR.feld(1010, 0, [[-11, 2.4], [-23, -2.0], [-36, 1.8], [-50, -1.0]]); TR.sim(52, 33.3);`,   // 0,4 s später als in Fassung 3 und anfangs näher an der Wagenmitte: mit der weicheren KI-Lenkung stand die Kamera im ersten Bild hinter einer Werbebande
       kams: [{ a: { von: [1.6, 0.3, 6.2], auf: [0, 0.5, 0], fov: 30 }, b: { von: [1.3, 0.36, 5.4], auf: [0, 0.5, 0], fov: 28 }, ease: 'lin' }] },
-    s18b_sgp_helm: { dauer: 2.75, seite: true, ao: false,
+    s18b_sgp_helm: { dauer: 2.75, seite: true, ao: false, quer: 1.6,
       vor: `TR.feld(2180, 0, [[16, 1.8], [30, -1.6], [47, 0.8]]); S.cam = 2; window.__camFix = null; TR.sim(50, 33.3);`, kams: [{ a: { cam: 2 } }] },
     // Fassung 4: mehr Regen aus dem Helm (Rückmeldung: „der sieht hübsch aus, gerade in der Helmansicht“). Die Sphere im Regen (s17b) ist gestrichen.
-    s19a_sgp_helm: { dauer: TAKT * 2, seite: true, ao: false,   // Helm, hinter drei Autos in der Gischt – gewählt aus drei Proben (s = 940: enge Kurve, Arme überkreuzt; 3650; 4560: hell, Tribünen, Gischt gut zu sehen)
+    s19a_sgp_helm: { dauer: TAKT * 2, seite: true, ao: false, quer: 1.6,   // Helm, hinter drei Autos in der Gischt – gewählt aus drei Proben (s = 940: enge Kurve, Arme überkreuzt; 3650; 4560: hell, Tribünen, Gischt gut zu sehen)
       vor: `TR.feld(4560, 0, [[11, 1.7], [22, -1.5], [36, 0.6]]); S.cam = 2; window.__camFix = null; TR.sim(60, 33.3);`, kams: [{ a: { cam: 2 } }] },
-    s19b_spa_helm: { dauer: 2.65, seite: true, ao: false,   // Eau Rouge: rot-gelbe Randsteine, Tropfen auf dem Visier, Gischt des Vordermanns – gewählt aus drei Proben (s = 830, 1500, 6150)
+    s19b_spa_helm: { dauer: 2.65, seite: true, ao: false, quer: 1.6,   // Eau Rouge: rot-gelbe Randsteine, Tropfen auf dem Visier, Gischt des Vordermanns – gewählt aus drei Proben (s = 830, 1500, 6150)
       vor: `TR.feld(830, 0, [[14, 1.6], [27, -1.6], [43, 0.4]]); S.cam = 2; window.__camFix = null; TR.sim(60, 33.3);`, kams: [{ a: { cam: 2 } }] },
     s18a_spa_regen: { dauer: 2.2, zeitlupe: 0.5, ao: false,
       vor: `TR.feld(1150, 0, [[-11, 2.4], [-23, -2.2], [-34, 1.4], [-47, -2.0], [-58, 2.2], [-72, -1.5], [-84, 0.5]]); TR.sim(45, 33.3);`,

@@ -7,6 +7,7 @@ window.TR = (() => {
   TR.glatt = { von: 0.28, auf: 0.09 }; // Zeitkonstanten (s), mit denen der Kamerastandort (von) und das Blickziel (auf) der Fahrtrichtung des Autos folgen; null = starr am Auto
   TR.stufig = false;                   // true = Fahrbahnhöhe am Kamerapunkt in Stufen (nächster Streckenpunkt) wie bis Fassung 3
   window.__trGlatt = true;             // Lenk-Zielpunkt der KI stufenlos (Test-Änderung in spielstart.js)
+  window.__trQuer = 0;                 // Querziel der KI weich nachführen: höchste Quergeschwindigkeit in m/s (0 = aus; je Einstellung über `quer` im Drehplan)
   // beim Nachladen dieser Datei in eine laufende Sitzung die echten Funktionen behalten (die Uhr ist dann schon umgestellt)
   TR.now0 = alt ? alt.now0 : performance.now.bind(performance); TR.raf0 = alt ? alt.raf0 : window.requestAnimationFrame.bind(window); TR.rnd0 = alt ? alt.rnd0 : Math.random; TR.frame0 = alt ? alt.frame0 : window.__frame;
 
@@ -32,8 +33,13 @@ window.TR = (() => {
   TR.start = () => { raceState = 'race'; raceTime = 20; SG.go = true; window.__plAI = true; profBot = buildProfile(45.5 * WX.grip, VTOP * SERPH.top, 44 * WX.brk, KR);
     document.querySelector('#lights').classList.add('hidden'); const h = document.querySelector('#sgHint'); if (h) h.classList.add('hidden'); TR.hud(false); return 'ok'; };
   TR.hud = on => { document.body.classList.toggle('ptNoHud', !on); document.querySelector('#hud').style.visibility = on ? '' : 'hidden'; document.querySelector('#controls').style.display = on ? '' : 'none'; };
-  // Auto an Streckenmeter s (quer lat) setzen; vf = Anteil des dort möglichen Tempos
-  TR.put = (c, s, lat = 0, vf = 0.9, vmax = 95) => { const q = trackAt(s, lat); c.x = q.x; c.z = q.z; c.h = q.h; c.steer = 0; c.sx = c.sz = 0; c.yawKick = 0; c.idx = q.i; c.sPrev = modL(s); projectCar(c); c.d = modL(s); c.sPrev = modL(s); c.stuckT = 0; c.wrongT = 0; c.ovr = null; c.laneT = 0; c.__h1 = null; c.__ov = null; c.__ovV = 0; c.__stZ = 0;
+  // Auto an Streckenmeter s (quer lat) setzen; vf = Anteil des dort möglichen Tempos.
+  // lat = 'ideal': auf die Ideallinie der KI, Fahrtrichtung entlang der Linie. (Neben der Linie aufgesetzt schwenkt die KI erst ein – bei Monza s = 5300 liegt die Linie 4 m
+  // neben der Mitte: das Lenkrad pendelte in der ersten Sekunde zwischen +85 % und −65 %, mitten in der 1,1 s kurzen Legenden-Einstellung.)
+  // Mit weichem Querziel (window.__trQuer, siehe spielstart.js) zeigt jedes Auto beim Aufsetzen entlang der Ideallinie – um seinen Abstand zu ihr versetzt –, dann gibt es nichts einzuschwenken.
+  TR.put = (c, s, lat = 0, vf = 0.9, vmax = 95) => { const ideal = lat === 'ideal', n = PX.length, i0 = trackAt(s, 0).i, ab = j => RL[j] + (c.home || 0) * 0.12; if (ideal) lat = ab(i0);
+    const q = trackAt(s, lat); c.x = q.x; c.z = q.z; c.h = q.h; if (ideal || window.__trQuer > 0) { const j = (i0 + 4) % n, l2 = lat + ab(j) - ab(i0); c.h = Math.atan2(PX[j] + RX[j] * l2 - PX[i0] - RX[i0] * lat, PZ[j] + RZ[j] * l2 - PZ[i0] - RZ[i0] * lat); }
+    c.__qa = null; c.__qr = null; c.__qv = 0; c.steer = 0; c.sx = c.sz = 0; c.yawKick = 0; c.idx = q.i; c.sPrev = modL(s); projectCar(c); c.d = modL(s); c.sPrev = modL(s); c.stuckT = 0; c.wrongT = 0; c.ovr = null; c.laneT = 0; c.__h1 = null; c.__ov = null; c.__ovV = 0; c.__stZ = 0;
     c.v = Math.min((c === pl ? profBot : profAI)[c.idx] * vf, vmax); };
   // Feld aufstellen: eigenes Auto bei s, die anderen nach Liste [[Abstand in m (+ = davor), quer, Tempoanteil], …]; übrige Autos weit weg (halbe Runde)
   TR.feld = (s, lat = 0, liste = [], vf = 0.9) => { TR.put(pl, s, lat, vf); camH = pl.h; const rest = cars.filter(c => c !== pl);
