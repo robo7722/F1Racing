@@ -1,6 +1,6 @@
 # Trailer „Formula Racing“
 
-Stand 25.11.2026 · Fassung 2 (nach Rückmeldung zum Storyboard). Werkzeuge: `tools/trailer/` · Storyboard-Blätter der ersten Fassung: `docs/bilder/trailer_storyboard_1…3.jpg`.
+Stand 25.11.2026 · Fassung 3 (nach Rückmeldung zum ersten fertigen Trailer). Werkzeuge: `tools/trailer/` · Storyboard-Blätter der ersten Fassung: `docs/bilder/trailer_storyboard_1…3.jpg`.
 
 **Privat:** Der fertige Trailer und alle Vorschauen enthalten geschützte Musik. Sie kommen **nicht ins Repository** (Ausgabeordner `trailer-ausgabe/`
 steht in `.gitignore`), sondern gehen nur als Datei an den Nutzer. Im Repository liegen nur Skripte, Notizen und Bilder aus dem Spiel.
@@ -12,6 +12,11 @@ steht in `.gitignore`), sondern gehen nur als Datei an den Nutzer. Im Repository
   in der Helmkamera ein kurzer, spannender Zweikampf · am Ende das F1-Logo aus dem Repository (`logos/LOGO.png`) · sehr filmisch · ohne weitere Abnahme rendern.
 - **Musik:** zwischenzeitlich „Tate McRae – Just Keep Watching“ und „Höhepunkt früher“ gewünscht, dann zurückgenommen:
   **Hans Zimmer – „F1“ im ursprünglich vorgeschlagenen Schnitt und Tempo** (1:38).
+
+- **25.11.2026 (Rückmeldung zum ersten Trailer, Fassung 2):** Bild in der Garage zittert an den Rändern · Ampel viel zu schnell · bei 0:22 ein schönerer, filmischerer
+  Singapur-Shot · in allen Nachtszenen schwarze Lichtkegel · Shots bei 0:28 und 0:29 ersetzen · Legenden im Takt schneiden · bei Häkkinen eiern die Reifentexturen
+  (auch im Spiel beheben) · bei 1:08 wird die Schikane abgekürzt · bei 1:13 läuft der Windeffekt falsch herum (bei allen rückwärts blickenden Kameras entfernen) ·
+  Zieleinlauf näher am Auto beginnen und flüssiger, höher steigen · die beiden Regen-Shots bei 1:23/1:24 passen nicht zusammen. Umsetzung: Abschnitt „Fassung 3“ unten.
 
 ## Musik
 
@@ -41,30 +46,31 @@ dort sehr leise Musik, sonst 11–14 dB unter der Musik), **nicht nach Gehör**.
 Nebenbefunde in `music/` (nicht geändert): `Gesaffelstein - PURSUIT.mp3` ist nur 4 Byte groß; `Eric Prydz - Opus.mp3` und `Kx5 - Escape….mp3` sind WebM/Opus,
 `Mad Max … Brothers In Arms.mp3` ist AAC in MP4 – nur die Endung heißt `.mp3`.
 
-## Ablauf (Fassung 2, 1:38, 24 Bilder/s, Kinoformat 2,39:1 in 1920 × 1080)
+## Ablauf (Fassung 3, 1:38, 24 Bilder/s, Kinoformat 2,39:1 in 1920 × 1080)
 
 Quelle der Zeiten: `tools/trailer/schnittplan.json`, der Kameras: `tools/trailer/drehplan.js`.
 
 | Zeit | Einstellung | Schauplatz | Schrift |
 |---|---|---|---|
-| 0:00–0:04 | Makrofahrt am Frontflügel, echte Schärfentiefe | Garage | – |
-| 0:04–0:07,4 | Zufahrt auf Helm und Halo, Schärfe wandert | Garage | – |
-| 0:07,4–0:10,85 | fünf rote Lichter gehen einzeln an, auf dem letzten Bild aus | Abu Dhabi, Dämmerung | – |
+| 0:00–0:02,9 | Makrofahrt am Frontflügel, echte Schärfentiefe | Garage | – |
+| 0:02,9–0:05,3 | Zufahrt auf Helm und Halo, Schärfe wandert | Garage | – |
+| 0:05,3–0:10,85 | fünf rote Lichter im Abstand von 0,95 s, 1,2 s halten, auf dem letzten Bild aus | Abu Dhabi, Dämmerung | – |
 | 0:10,85–0:15,2 | Start: das Feld schießt an der bodennahen Kamera vorbei | Abu Dhabi | – |
 | 0:15,2–0:19,6 | Profilfahrt im Gegenlicht, 60 % Tempo, echte Bewegungsunschärfe | Abu Dhabi | – |
-| 0:19,6–0:24 | Kranfahrt über die Marina Bay | Singapur, Nacht | 24 GRAND-PRIX-STRECKEN |
+| 0:19,6–0:24 | **Kran-Aufzug**: tief vor dem Auto beginnen, rückwärts auf 6,5 m steigen – Feld, Riesenrad, Skyline | Singapur, Nacht | 24 GRAND-PRIX-STRECKEN |
 | 0:24–0:28,3 | tiefe Mitfahrt, Riesenrad und Marina Bay Sands dahinter | Singapur | – |
-| 0:28,3–0:33 | vier Schnitte im Takt: Helm in der Haarnadel, Tunnelausfahrt, Rad ganz nah, T-Kamera; dann Schwarz | Monaco | – |
+| 0:28,3–0:33 | vier Schnitte im Takt: Helmkamera der Sonne entgegen (Abu Dhabi), Vorbeiflug am Randstein (Singapur), Rad ganz nah und T-Kamera (Monaco); dann Schwarz | – | – |
 | 0:33–0:37,4 | Silhouette vor der Sphere, 35 % Tempo | Las Vegas | TAG UND NACHT |
-| 0:37,4–0:41,7 | T-Kamera auf dem Strip, Tempo-Effekt des Spiels | Las Vegas | – |
-| 0:41,7–0:50,5 | sechs Legenden, gleiche Kamera, je 1,45 s, im Bildlook ihrer Zeit | Monza | Jahr und Auto (1967 … 2012) |
+| 0:37,4–0:41,7 | T-Kamera auf dem Strip | Las Vegas | – |
+| 0:41,7–0:48,3 | sechs Legenden, gleiche Kamera, **je zwei Schläge** (1,09 s), im Bildlook ihrer Zeit | Monza | Jahr und Auto (1967 … 2012) |
+| 0:48,3–0:50,5 | dieselbe Kamera, das Auto von heute – ein Takt | Monza | 2026 · FERRARI |
 | 0:50,5–0:54,8 | Cockpit des MP4/4 auf die erste Schikane zu | Monza | – |
 | 0:54,8–0:59,2 | bodennah im Bogen vor dem Kartfeld | Genk | VOM KART BIS IN DIE FORMEL 1 |
-| 0:59,2–1:10,1 | **Zweikampf**: Helmkamera im Windschatten, ausscheren – ein Takt von außen Rad an Rad – Helmkamera, spät bremsen, innen vorbei | Monza | – |
+| 0:59,2–1:10,1 | **Zweikampf**: Helmkamera im Windschatten, ausscheren – ein Takt von außen Rad an Rad – Helmkamera, spät bremsen; endet beim Einlenken | Monza | – |
 | 1:10,1–1:14,5 | Nachtsprint, zwei Autos nebeneinander | Singapur | – |
-| 1:14,5–1:19,3 | Zielgerade mit Feuerwerk, Kamera steigt | Singapur | – |
-| 1:19,3–1:23,7 | Regen in Zeitlupe (45 %), Riesenrad, spiegelnde Fahrbahn | Singapur, Starkregen | BEI JEDEM WETTER |
-| 1:23,7–1:26,3 | Strip im Regen, 50 % | Las Vegas, Starkregen | – |
+| 1:14,5–1:19,3 | Zielgerade mit Feuerwerk: dicht hinter dem Heck beginnen, gleichmäßig auf 10 m steigen | Singapur | – |
+| 1:19,3–1:23,7 | Regen in Zeitlupe (45 %), Riesenrad, spiegelnde Fahrbahn, Lichtkegel im Dunst | Singapur, Starkregen | BEI JEDEM WETTER |
+| 1:23,7–1:26,3 | seitlich vor der Sphere, die sich auf der nassen Bahn spiegelt, 50 % | Las Vegas, Starkregen | – |
 | 1:26,3–1:28,5 | Teleobjektiv frontal, Autos aus der Gischt, 50 % | Spa, Starkregen | – |
 | 1:28,5–1:30,8 | Helmkamera, Tropfen auf dem Visier, ins Schwarz | Singapur, Starkregen | – |
 | 1:30,8–1:38 | **F1-Logo** (`logos/LOGO.png`, scharf vergrößert) mit Zeile FORMULA RACING | Schlusstafel | – |
@@ -105,9 +111,10 @@ python3 tools/trailer/schnitt.py <Ton.wav> trailer-ausgabe/Formula_Racing_Traile
   Zeitlupe ist einfach ein kleinerer Schritt, der Zufall ist je Einstellung festgelegt (`TR.seed`) – eine Einstellung läuft jedes Mal gleich ab.
 - **Kamerafahrten** (`TR.kam(a, b)`): zwei Kamera-Angaben (am Auto, an der Strecke oder in der Welt), dazwischen wird Bild für Bild überblendet; dazu leichte Handkamera-Unruhe.
 - **Echte Bewegungsunschärfe** (Profilfahrt): je Bild vier Zwischenbilder über 60 % der Bildzeit, im linearen Licht gemittelt.
-- **Echte Schärfentiefe** (Garage): jedes Zwischenbild von einem anderen Punkt der Blende aus; gemittelt wird gleitend über die letzten 12 Zwischenbilder,
-  so kostet ein Bild nur 3 statt 12 Zeichnungen.
-- **Tempo-Unschärfe des Spiels** bei Mitfahrten von vorn und hinten (`speed`), aus bei seitlichen Kameras.
+- **Echte Schärfentiefe** (Garage): zwölf feste Blendenpunkte auf zwei Ringen; je Bild sechs davon (ein Dreieck innen, eines außen), im nächsten Bild die um 60° gedrehten;
+  gemittelt wird über zwei Bilder. Ein Bild kostet so 6 statt 12 Zeichnungen (siehe „Fassung 3“ zum Zittern der ersten Lösung).
+- **Tempo-Unschärfe des Spiels** bei Mitfahrten von vorn und hinten (`speed`), aus bei seitlichen Kameras. Die **Luftstreifen** des Spiels sind bei eigenen Kameras immer aus
+  (sie fliegen in Fahrtrichtung an der Kamera vorbei – bei rückwärts blickenden Kameras also falsch herum).
 - **Feuerwerk gezielt** (`TR.feuerwerk`, `TR.fwLauf`): dieselben Teilchen wie im Spiel, aber dort gezündet, wo die Kamera hinsieht (120–280 m voraus, 50–100 m hoch).
 - Schnitt auf den Takt, Kinoformat mit schwarzen Balken, feines Filmkorn nur im Bild.
 
@@ -146,6 +153,22 @@ Deshalb: 24 Bilder/s, drei Studios gleichzeitig, Umgebungsverdeckung nur in ruhi
 - **Nachtregen ist sehr dunkel**: von hinten in der Gischt war fast nichts zu sehen. Gewählt wurden Einstellungen von vorn mit beleuchteter Kulisse, im Schnitt um 22 % aufgehellt.
 - **Feuerwerk des Spiels** liegt 200–400 m voraus und wirkt klein; erst das gezielte Zünden füllt den Himmel. Zu nah (60–170 m) überstrahlt es das Bild.
 - `xstack` von ffmpeg stürzte bei acht Bildern ab – Kontaktblätter jetzt mit `concat` + `tile`.
+
+## Fassung 3: was nach der Rückmeldung geändert wurde (25.11.2026)
+
+| Rückmeldung | Ursache | Lösung |
+|---|---|---|
+| Garage zittert an den Rändern | Die Schärfentiefe lief als fester 12er-Umlauf der Blendenpunkte über vier Bilder; der Schwerpunkt der Blende wanderte im 4-Bilder-Takt (gemessen: Bildänderung am Rand schwankte ±12 % mit Periode 4) | je Bild zwei Dreiecke von Blendenpunkten (Schwerpunkt in der Mitte, Streuung in alle Richtungen gleich), gleiche Kamerastellung für alle sechs Zwischenbilder. Zwischenversuch mit Vierergruppen ließ ±6 % im 3-Bilder-Takt übrig |
+| Ampel viel zu schnell | Lichter alle 0,5 s, weil die Einstellung nur 3,45 s lang war | Garage auf 5,25 s gekürzt, Ampel 5,6 s lang, Lichter alle 0,95 s wie im Spiel |
+| Singapur-Shot bei 0:22 | Luftaufnahme zeigte die einfache Stadt von oben | Kran-Aufzug auf Streckenhöhe mit Riesenrad und Skyline (aus sieben Proben gewählt) |
+| schwarze Lichtkegel in allen Nachtszenen | **Fehler im Spiel auf „Ultra“**: die Umgebungsverdeckung behandelte Lichtkegel und Lichtflecken als feste Körper | im Spiel behoben (v3.02, siehe [[LEISTUNG-ANLEITUNG]]); alle Nachtszenen neu gerechnet – jetzt helle Strahlen und beleuchtete Fahrbahn |
+| Shots bei 0:28 und 0:29 ersetzen | Monaco-Helmkamera und Tunnelausfahrt | Helmkamera der Sonne entgegen (Abu Dhabi) und Vorbeiflug am Randstein (Singapur) |
+| Legenden im Takt | 4 Takte durch 6 Autos = 2,67 Schläge je Auto | je 2 Schläge, danach ein Takt für das Auto von 2026 |
+| Reifen bei Häkkinen eiern | eingebackene helle Flecken auf der Reifenflanke des MP4/13 | im Spiel behoben (v3.02, siehe [[KLASSIKER]]) |
+| Schikane bei 1:08 abgekürzt | zu starkes Spätbremsen (3,3 m über dem Rand); auch ohne Eingriff fährt die KI dort 1,5 m über den inneren Randstein | Zweikampf 140 m früher beginnen, Einstellung endet beim Einlenken (s ≈ 593); Windschatten-Abstand 8,8 m, sonst klappte das Ausscheren nicht jedes Mal |
+| Windeffekt läuft bei 1:13 falsch herum | Luftstreifen des Spiels bei rückwärts blickender Kamera | Luftstreifen bei allen eigenen Kameras aus; betroffene Einstellungen neu gerechnet |
+| Zieleinlauf näher beginnen, flüssiger und höher | Start 6,5 m hinter dem Auto, Anstieg nur bis 1,7 m, mit Beschleunigen und Abbremsen | Start 3,3 m hinter dem Heck, gleichmäßig bis 10,5 m |
+| Regen-Shots 1:23/1:24 passen nicht | zweimal dieselbe Kameraidee (nah von vorn) hintereinander | Las Vegas jetzt seitlich vor der Sphere, die sich auf der nassen Bahn spiegelt (Kamera diesmal innerhalb der Mauer) |
 
 ## Erste Fassung (Storyboard vom 24.11.2026)
 
