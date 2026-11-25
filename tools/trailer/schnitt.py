@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Trailer schneiden: Bildfolgen aus trailer-ausgabe/bilder/ nach tools/trailer/schnittplan.json taktgenau aneinanderfügen,
    Schriften und Schlusstafel einblenden, Kinoformat mit schwarzen Balken, Musik darunter.
-   Aufruf: python3 tools/trailer/schnitt.py <Musik.wav> <Ausgabe.mp4> [--aus trailer-ausgabe] [--vorschau]
+   Aufruf: python3 tools/trailer/schnitt.py <Musik.wav> <Ausgabe.mp4> [--aus trailer-ausgabe] [--vorschau] [--crf 18] [--maxrate 12M | 0]
    --vorschau: halbe Auflösung und schnelle Kodierung; fehlende Einstellungen werden grau gezeigt (zum Prüfen des Schnitts, bevor alles gerechnet ist).
    Vorher: python3 tools/trailer/logo_gross.py <aus>/schrift/logo_gross.png  und  node tools/trailer/schrift.js <aus>/schrift
    Das Ergebnis enthält geschützte Musik – nicht ins Repository legen."""
@@ -10,7 +10,7 @@ a = sys.argv[1:]
 def flag(n, d=None):
     if '--' + n in a: i = a.index('--' + n); v = a[i + 1]; del a[i:i + 2]; return v
     return d
-vorschau = '--vorschau' in a; a = [x for x in a if x != '--vorschau']
+vorschau = '--vorschau' in a; a = [x for x in a if x != '--vorschau']; CRF = flag('crf', '18'); MAXRATE = flag('maxrate', '12M')   # Obergrenze der Datenrate: das Filmkorn treibt sie sonst auf ~49 Mbit/s (600 MB)
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))); AUS = os.path.join(ROOT, flag('aus', 'trailer-ausgabe')); musik, ziel = a[0], a[1]
 P = json.load(open(os.path.join(ROOT, 'tools/trailer/schnittplan.json'), encoding='utf-8')); FPS = P['fps']; S = P['schnitte']; f = lambda t: round(t * FPS)
 W, H, BH = 1920, 1080, 804; OBEN = (H - BH) // 2
@@ -46,6 +46,6 @@ if fehlt: print('Es fehlen noch:', ', '.join(fehlt))
 if fehlt and not vorschau: sys.exit('Abbruch: nicht alle Einstellungen sind gerechnet (mit --vorschau wird trotzdem geschnitten).')
 graph.append(''.join(teile) + f'concat=n={len(teile)}:v=1:a=0' + (',scale=960:540' if vorschau else '') + '[v]')
 im = eingang('-i', musik)
-kod = ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '24'] if vorschau else ['-c:v', 'libx264', '-preset', 'slow', '-crf', '15', '-profile:v', 'high', '-pix_fmt', 'yuv420p']
+kod = ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '24'] if vorschau else ['-c:v', 'libx264', '-preset', 'slow', '-crf', CRF, '-profile:v', 'high', '-pix_fmt', 'yuv420p'] + ([] if MAXRATE == '0' else ['-maxrate', MAXRATE, '-bufsize', str(2 * int(MAXRATE[:-1])) + 'M'])
 cmd = ['ffmpeg', '-v', 'error', '-y', *ein, '-filter_complex', ';'.join(graph), '-map', '[v]', '-map', f'{im}:a', *kod, '-r', str(FPS), '-c:a', 'aac', '-b:a', '256k', '-shortest', '-movflags', '+faststart', ziel]
 subprocess.run(cmd, check=True); print(ziel, round(os.path.getsize(ziel) / 1e6, 1), 'MB')

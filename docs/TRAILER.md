@@ -125,6 +125,14 @@ python3 tools/trailer/schnitt.py <Ton.wav> trailer-ausgabe/Formula_Racing_Traile
 
 Deshalb: 24 Bilder/s, drei Studios gleichzeitig, Umgebungsverdeckung nur in ruhigen Einstellungen, Sonnenstrahlen-Durchgang nachts aus (dort ohne Wirkung).
 
+### Ergebnis des Laufs vom 25.11.2026
+
+- 28 Einstellungen, 2.354 Trailerbilder; gerechnet von 01:13 bis 03:46 Uhr (2 h 33 min) in drei gleichzeitigen Warteschlangen, ohne Fehler.
+  Am längsten dauerten die Profilfahrt mit vierfacher Belichtung (rund 35 s je Bild), der Zweikampf (264 Bilder) und die Garage (drei Zeichnungen je Bild).
+- Schnitt: `schnitt.py` braucht einige Minuten. Mit Filmkorn und ohne Obergrenze wurde die Datei 600 MB groß (49 Mbit/s) –
+  deshalb `--crf 18 --maxrate 12M` für die Fassung zum Verschicken.
+- Ton: mittlere Lautstärke −18,2 dB, Spitze −0,4 dB. Zusätzlich gibt es eine Fassung nur mit Musik (ohne Geräusche).
+
 ### Was schiefging (nicht wiederholen)
 
 - **Vier Studios gleichzeitig** (Last 16, 10 GB belegt): Um 01:10 Uhr startete der Rechner neu, alle laufenden Einstellungen waren weg. Seitdem höchstens drei,
