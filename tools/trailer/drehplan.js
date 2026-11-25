@@ -75,7 +75,7 @@ module.exports = {
     s18b_sgp_helm: { dauer: 2.3, seite: true, ao: false,
       vor: `TR.feld(2180, 0, [[16, 1.8], [30, -1.6], [47, 0.8]]); S.cam = 2; window.__camFix = null; TR.sim(50, 33.3);`, kams: [{ a: { cam: 2 } }] },
     s17b_vegas_regen: { dauer: 2.6, zeitlupe: 0.5, ao: true,   // seitlich vor der Sphere: Auto links auf der Bahn (lat −1,5), Kamera 5,6 m rechts daneben = noch innerhalb der Mauer
-      vor: `TR.feld(1915, -1.5, [[-16, 1.6, 0.9], [-33, -1.0, 0.9]]); TR.je = () => { pl.ovr = -1.5; pl.laneT = raceTime + 9; }; TR.sim(25, 33.3);`,
+      vor: `TR.feld(1932, -1.5, [[-16, 1.6, 0.9], [-33, -1.0, 0.9]]); TR.je = () => { pl.ovr = -1.5; pl.laneT = raceTime + 9; }; TR.sim(25, 33.3);`,   // 17 m später als in der Probe: dort stand die Kamera anfangs noch neben einer Mauer
       kams: [{ a: { von: [5.6, 0.3, 1.3], auf: [342, 22, -496, 0], fov: 48 }, b: { von: [5.2, 0.3, 0.3], auf: [342, 22, -496, 0], fov: 46 }, ease: 'lin' }] },
     s18a_spa_regen: { dauer: 2.2, zeitlupe: 0.5, ao: false,
       vor: `TR.feld(1150, 0, [[-11, 2.4], [-23, -2.2], [-34, 1.4], [-47, -2.0], [-58, 2.2], [-72, -1.5], [-84, 0.5]]); TR.sim(45, 33.3);`,
