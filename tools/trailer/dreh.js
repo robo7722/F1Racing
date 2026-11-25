@@ -26,7 +26,7 @@ async function szene(name, proben) {
       for (let b = (voll === i - 1 ? i : i - fen / sub + 1); b <= i; b++) for (let k = 0; k < sub; k++) await ev(`TRS.sub(${U(b)}, ${b / FPS}, ${k}, ${b + 1000}); 1`);   /* Puffer füllen: am Anfang und nach einer Wiederaufnahme auch die beiden Bilder davor */
       voll = i; speichere(ziel(i), await ev(`TRS.mittel('image/jpeg', 0.96)`)); if (PROBE) proben.push(ziel(i)); else if (i % 20 === 19) console.log(T(), name, i + 1, '/', n); }
   } else {
-    await ev(`TR.start(); pl.lapsDone = 0; pl.finished = false; TR.seed(${z.seed ?? 7}); TR.je = null; TR.speed = 0; TR.vig = null; window.__plLod = ${z.lod ?? 0}; TR.ao(${z.ao !== false}); ${z.vor || ''}; 1`);
+    await ev(`TR.start(); pl.lapsDone = 0; pl.finished = false; TR.seed(${z.seed ?? 7}); TR.je = null; TR.speed = 0; TR.vig = null; TR.glatt = ${z.glatt === false ? 'null' : '{ von: 0.28, auf: 0.09 }'}; window.__plLod = ${z.lod ?? 0}; TR.ao(${z.ao !== false}); ${z.vor || ''}; 1`);
     let cur = null, segVon = 0;
     for (let i = 0; i < n; i++) {
       const ta = i / FPS, te = (i + 1) / FPS; let seg = z.kams[z.kams.length - 1], von = 0;
@@ -34,7 +34,7 @@ async function szene(name, proben) {
       if (seg !== cur) { cur = seg; segVon = von; await ev(`TR.kam(${J(seg.a)}, ${J(seg.b || null)}, ${J({ ease: seg.ease, wack: seg.wack, wackF: seg.wackF })}); TR.speed = ${seg.speed ?? 0}; TR.vig = ${seg.vig ?? 'null'}; ${seg.vor || ''}; 1`); }
       const bis = Math.min(cur.bis ?? z.dauer, z.dauer), u = t => Math.max(0, Math.min(1, (t - segVon) / Math.max(1e-6, bis - segVon)));
       const zl = Array.isArray(z.zeitlupe) ? z.zeitlupe[0] + (z.zeitlupe[1] - z.zeitlupe[0]) * (i / Math.max(1, n - 1)) : (z.zeitlupe || 1), ms = 1000 / FPS * zl;
-      if ((PROBE && !zeigen.has(i)) || (!PROBE && !NEU && fs.existsSync(ziel(i)))) { await ev(`TR.tz = ${te}; TR.je && TR.je(${te}, ${ms}); TR.u = ${u(te)}; TR.takt(${ms}, false); 1`); continue; }   /* Probe: nur ausgewählte Bilder; Wiederaufnahme nach Abbruch: vorhandene Bilder nur durchsimulieren */
+      if ((PROBE && !zeigen.has(i)) || (!PROBE && !NEU && fs.existsSync(ziel(i)))) { await ev(`TR.tz = ${te}; TR.je && TR.je(${te}, ${ms}); TR.u = ${u(te)}; TR.schritt(${ms}, false); 1`); continue; }   /* Probe: nur ausgewählte Bilder; Wiederaufnahme nach Abbruch: vorhandene Bilder nur durchsimulieren */
       const url = await ev(`TR.tz = ${te}; TR.bild(${u(ta)}, ${u(te)}, ${ms}, ${mb}, ${seite ? "''" : "'image/jpeg'"}, 0.96, ${z.verschluss ?? 0.5})`);
       if (seite) await post('/bild', J({ datei: ziel(i), jpg: 96 })); else speichere(ziel(i), url);
       if (PROBE) proben.push(ziel(i)); else if (i % 20 === 19) console.log(T(), name, i + 1, '/', n, await ev(`Math.round(pl.v * 3.6) + ' km/h s=' + Math.round(pl.d)`));

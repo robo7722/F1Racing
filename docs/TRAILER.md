@@ -1,6 +1,6 @@
 # Trailer „Formula Racing“
 
-Stand 25.11.2026 · Fassung 3 (nach Rückmeldung zum ersten fertigen Trailer). Werkzeuge: `tools/trailer/` · Storyboard-Blätter der ersten Fassung: `docs/bilder/trailer_storyboard_1…3.jpg`.
+Stand 25.11.2026 · Fassung 4 (nach der zweiten Rückmeldung zum fertigen Trailer; Fassung 3 siehe unten). Werkzeuge: `tools/trailer/` · Storyboard-Blätter der ersten Fassung: `docs/bilder/trailer_storyboard_1…3.jpg`.
 
 **Privat:** Der fertige Trailer und alle Vorschauen enthalten geschützte Musik. Sie kommen **nicht ins Repository** (Ausgabeordner `trailer-ausgabe/`
 steht in `.gitignore`), sondern gehen nur als Datei an den Nutzer. Im Repository liegen nur Skripte, Notizen und Bilder aus dem Spiel.
@@ -17,6 +17,9 @@ steht in `.gitignore`), sondern gehen nur als Datei an den Nutzer. Im Repository
   Singapur-Shot · in allen Nachtszenen schwarze Lichtkegel · Shots bei 0:28 und 0:29 ersetzen · Legenden im Takt schneiden · bei Häkkinen eiern die Reifentexturen
   (auch im Spiel beheben) · bei 1:08 wird die Schikane abgekürzt · bei 1:13 läuft der Windeffekt falsch herum (bei allen rückwärts blickenden Kameras entfernen) ·
   Zieleinlauf näher am Auto beginnen und flüssiger, höher steigen · die beiden Regen-Shots bei 1:23/1:24 passen nicht zusammen. Umsetzung: Abschnitt „Fassung 3“ unten.
+- **25.11.2026 (Rückmeldung zu Fassung 3):** die zweite Sphere-Einstellung (im Regen) ist schlecht · mehr Regen zeigen, „der sieht hübsch aus, gerade in der Helmansicht“ ·
+  manche Kamerafahrten sind zu hakelig, nicht flüssig genug – auch die Autobewegungen beim Lenken sollen weicher sein · bei Häkkinen eiern die Räder immer noch ·
+  der Feuerwerks-Shot gehört ans Ende. Umsetzung: Abschnitt „Fassung 4“ unten; die Räder: `docs/KLASSIKER.md`, v3.03.
 
 ## Musik
 
@@ -28,11 +31,13 @@ steht in `.gitignore`), sondern gehen nur als Datei an den Nutzer. Im Repository
 | 0:10,85 | Thema setzt ein | **Lichter aus** |
 | 0:19,6 / 0:28,3 | zweite Phrase / Anziehen | Singapur, Steigerung (Monaco) |
 | 0:33,0 | voller Einsatz mit Schlagwerk | Las Vegas, Legenden, Kart, Zweikampf, Zielsprint |
-| 2:09,5–2:21 | Musik bricht ab | Regen in Zeitlupe |
-| 2:21,0 | Schlussteil setzt ein | **F1-Logo** |
+| 2:09,5–2:21 | Musik bricht ab | Regen in Zeitlupe, Regen aus dem Helm, dann der Zielsprint als Anlauf |
+| 2:21,0 | Schlussteil setzt ein | **Zieleinlauf mit Feuerwerk** (bis Fassung 3: F1-Logo) |
+| 2:25,4 | zwei Takte später, wieder lauter | **F1-Logo** |
 
-Schnitt auf 1:38: `python3 tools/trailer/musik_schnitt.py <Vorlage.wav> <Ausgabe.wav> --teile 0:76.65,126.83:148.3 --aus 4.0`
-(Teil 1 unverändert bis 1:16,65; dort auf einem Taktanfang weiter bei 2:06,83 im Stück, 40 ms Überblendung; Schlussakkord bei 1:30,8).
+Schnitt auf 1:42 (Fassung 4): `python3 tools/trailer/musik_schnitt.py <Vorlage.wav> <Ausgabe.wav> --teile 0:76.65,126.83:151.95 --aus 4.0`
+(Teil 1 unverändert bis 1:16,65; dort auf einem Taktanfang weiter bei 2:06,83 im Stück, 40 ms Überblendung; Schlussakkord bei 1:30,8; Fassung 3 endete bei 148,3 = 1:38).
+Nach dem Schlussakkord läuft das Stück weiter (Pegel je halbe Sekunde gemessen: Akkord −19 dB, kurze Senke, ab zwei Takte später −17 dB) – dort sitzt jetzt das Logo.
 Die Schnittstelle ist **gemessen, nicht gehört**.
 
 Geprüft und verworfen: Mad Max – Brothers in Arms (kein ruhiger Auftakt), Daft Punk – Derezzed, Eric Prydz – Opus (Aufbau zu lang), Royal Blood, Kx5.
@@ -40,13 +45,13 @@ Geprüft und verworfen: Mad Max – Brothers in Arms (kein ruhiger Auftakt), Daf
 schon vermessen, wurde aber nicht verwendet.
 
 **Geräusche** (`tools/trailer/ton.py`, nur vorhandene Spielklänge und gerechnetes Rauschen, keine Kosten): Ampel-Töne und Motoren in der Startaufstellung,
-hochdrehende Motoren beim Start, dumpfe Schläge zum Feuerwerk, Regenrauschen im Regenteil. Gemischt nach Pegelmessung (Startaufstellung gleich laut wie die
+hochdrehende Motoren beim Start, Regenrauschen im Regenteil (1:10–1:26), dumpfe Schläge zum Feuerwerk (1:31–1:35). Gemischt nach Pegelmessung (Startaufstellung gleich laut wie die
 dort sehr leise Musik, sonst 11–14 dB unter der Musik), **nicht nach Gehör**. Mit `--ohne` entsteht die reine Musikfassung.
 
 Nebenbefunde in `music/` (nicht geändert): `Gesaffelstein - PURSUIT.mp3` ist nur 4 Byte groß; `Eric Prydz - Opus.mp3` und `Kx5 - Escape….mp3` sind WebM/Opus,
 `Mad Max … Brothers In Arms.mp3` ist AAC in MP4 – nur die Endung heißt `.mp3`.
 
-## Ablauf (Fassung 3, 1:38, 24 Bilder/s, Kinoformat 2,39:1 in 1920 × 1080)
+## Ablauf (Fassung 4, 1:42, 30 Bilder/s, Kinoformat 2,39:1 in 1920 × 1080)
 
 Quelle der Zeiten: `tools/trailer/schnittplan.json`, der Kameras: `tools/trailer/drehplan.js`.
 
@@ -66,21 +71,23 @@ Quelle der Zeiten: `tools/trailer/schnittplan.json`, der Kameras: `tools/trailer
 | 0:48,3–0:50,5 | dieselbe Kamera, das Auto von heute – ein Takt | Monza | 2026 · FERRARI |
 | 0:50,5–0:54,8 | Cockpit des MP4/4 auf die erste Schikane zu | Monza | – |
 | 0:54,8–0:59,2 | bodennah im Bogen vor dem Kartfeld | Genk | VOM KART BIS IN DIE FORMEL 1 |
-| 0:59,2–1:10,1 | **Zweikampf**: Helmkamera im Windschatten, ausscheren – ein Takt von außen Rad an Rad – Helmkamera, spät bremsen; endet beim Einlenken | Monza | – |
-| 1:10,1–1:14,5 | Nachtsprint, zwei Autos nebeneinander | Singapur | – |
-| 1:14,5–1:19,3 | Zielgerade mit Feuerwerk: dicht hinter dem Heck beginnen, gleichmäßig auf 10 m steigen | Singapur | – |
-| 1:19,3–1:23,7 | Regen in Zeitlupe (45 %), Riesenrad, spiegelnde Fahrbahn, Lichtkegel im Dunst | Singapur, Starkregen | BEI JEDEM WETTER |
-| 1:23,7–1:26,3 | seitlich vor der Sphere, die sich auf der nassen Bahn spiegelt, 50 % | Las Vegas, Starkregen | – |
-| 1:26,3–1:28,5 | Teleobjektiv frontal, Autos aus der Gischt, 50 % | Spa, Starkregen | – |
-| 1:28,5–1:30,8 | Helmkamera, Tropfen auf dem Visier, ins Schwarz | Singapur, Starkregen | – |
-| 1:30,8–1:38 | **F1-Logo** (`logos/LOGO.png`, scharf vergrößert) mit Zeile FORMULA RACING | Schlusstafel | – |
+| 0:59,2–1:10,1 | **Zweikampf**: Helmkamera im Windschatten, weich ausscheren – ein Takt von außen Rad an Rad – Helmkamera, spät bremsen; endet beim Einlenken | Monza | – |
+| 1:10,1–1:14,5 | **Helmkamera im Regen**, hinter drei Autos in der Gischt, Tribünen im Flutlicht | Singapur, Starkregen | BEI JEDEM WETTER |
+| 1:14,5–1:16,65 | Teleobjektiv frontal, Autos aus der Gischt, 50 % | Spa, Starkregen | – |
+| 1:16,65–1:19,3 | **Helmkamera im Regen** durch Eau Rouge: Randsteine, Tropfen auf dem Visier, Gischt | Spa, Starkregen | – |
+| 1:19,3–1:23,7 | Regen in Zeitlupe (45 %), Riesenrad, spiegelnde Fahrbahn, Lichtkegel im Dunst (Musik bricht ab) | Singapur, Starkregen | – |
+| 1:23,7–1:26,4 | **Helmkamera im Regen**, Tropfen auf dem Visier | Singapur, Starkregen | – |
+| 1:26,4–1:30,8 | Nachtsprint, zwei Autos nebeneinander – Anlauf auf den Schlussakkord | Singapur | – |
+| 1:30,8–1:35,2 | **Zieleinlauf mit Feuerwerk** auf dem Schlussakkord: dicht hinter dem Heck beginnen, gleichmäßig auf 10 m steigen | Singapur | – |
+| 1:35,2–1:41,8 | **F1-Logo** (`logos/LOGO.png`, scharf vergrößert) mit Zeile FORMULA RACING | Schlusstafel | – |
 
 Gestaltung der Schrift: Titillium Web wie im Spiel, unten links, kursiv, gesperrt, roter Balken.
 
 ## So wird gerechnet
 
-Am Spiel (`index.html`) ist **nichts geändert**. Die Werkzeuge laden das echte Spiel im Testbrowser und setzen nur dort vier Einhängepunkte ein
-(`tools/trailer/spielstart.js`): Code-Auswertung im Modul, eigene Kamera mit Brennweite und Neigung, Haken vor dem Zeichnen, einstellbare Kantenglättung.
+Am Spiel (`index.html`) ist für den Trailer **nichts geändert**. Die Werkzeuge laden das echte Spiel im Testbrowser und setzen nur dort Einhängepunkte ein
+(`tools/trailer/spielstart.js`): Code-Auswertung im Modul, eigene Kamera mit Brennweite und Neigung, Haken vor dem Zeichnen, einstellbare Kantenglättung –
+und seit Fassung 4 drei Änderungen an der KI-Lenkung (stufenloser Zielpunkt, weiches Lenkrad), siehe „Fassung 4“.
 
 | Datei | Zweck |
 |---|---|
@@ -90,6 +97,7 @@ Am Spiel (`index.html`) ist **nichts geändert**. Die Werkzeuge laden das echte 
 | `studio_showroom.js` | Garage (`TRS.…`): Kamera und echte Schärfentiefe |
 | `drehplan.js` | alle Einstellungen: Vorbereitung, Kamerafahrt, Dauer, Zeitlupe |
 | `dreh.js` | Einstellungen in einem Studio rechnen (`--probe`: vier Bilder in halber Auflösung als Kontaktblatt) |
+| `ruck.js` | Zittern einer Einstellung messen, ohne Bilder zu rechnen (Lenkung, Fahrtrichtung, Kamerastandort, Blickrichtung; `--alt` = Technik bis Fassung 3) |
 | `schichten.js` / `schicht.js` | Warteschlangen: Studio starten, proben, rechnen, schließen – neustart-fest |
 | `schnittplan.json` / `schnitt.py` | Schnitt im Takt, Schriften, Schlusstafel, Balken, Korn, Ton (`--vorschau` zeigt Fehlendes grau) |
 | `schrift.js`, `logo_gross.py` | Schriften und Schlusstafel als Bild; Logo mit scharfen Kanten vergrößern |
@@ -107,10 +115,10 @@ python3 tools/trailer/schnitt.py <Ton.wav> trailer-ausgabe/Formula_Racing_Traile
 
 ### Was die Aufnahme filmisch macht
 
-- **Feste Zeitbasis** (`TR.halt`, `TR.takt`): Die Bildschleife des Spiels steht, `performance.now` läuft auf einer eigenen Uhr. Jedes Bild ist exakt 1/24 s Spielzeit,
+- **Feste Zeitbasis** (`TR.halt`, `TR.takt`): Die Bildschleife des Spiels steht, `performance.now` läuft auf einer eigenen Uhr. Jedes Bild ist exakt 1/30 s Spielzeit (bis Fassung 3: 1/24 s), seit Fassung 4 in Schritten von höchstens 10,5 ms gerechnet (`TR.schritt`),
   Zeitlupe ist einfach ein kleinerer Schritt, der Zufall ist je Einstellung festgelegt (`TR.seed`) – eine Einstellung läuft jedes Mal gleich ab.
-- **Kamerafahrten** (`TR.kam(a, b)`): zwei Kamera-Angaben (am Auto, an der Strecke oder in der Welt), dazwischen wird Bild für Bild überblendet; dazu leichte Handkamera-Unruhe.
-- **Echte Bewegungsunschärfe** (Profilfahrt): je Bild vier Zwischenbilder über 60 % der Bildzeit, im linearen Licht gemittelt.
+- **Kamerafahrten** (`TR.kam(a, b)`): zwei Kamera-Angaben (am Auto, an der Strecke oder in der Welt), dazwischen wird Bild für Bild überblendet. Der Kamerastandort folgt der Fahrtrichtung des Autos träge (`TR.glatt`), die Handkamera-Unruhe ist seit Fassung 4 entfernt.
+- **Echte Bewegungsunschärfe** (Profilfahrt; seit Fassung 4 auch die feste Kamera am Randstein): je Bild vier Zwischenbilder über 50–60 % der Bildzeit, im linearen Licht gemittelt.
 - **Echte Schärfentiefe** (Garage): zwölf feste Blendenpunkte auf zwei Ringen; je Bild sechs davon (ein Dreieck innen, eines außen), im nächsten Bild die um 60° gedrehten;
   gemittelt wird über zwei Bilder. Ein Bild kostet so 6 statt 12 Zeichnungen (siehe „Fassung 3“ zum Zittern der ersten Lösung).
 - **Tempo-Unschärfe des Spiels** bei Mitfahrten von vorn und hinten (`speed`), aus bei seitlichen Kameras. Die **Luftstreifen** des Spiels sind bei eigenen Kameras immer aus
@@ -130,7 +138,7 @@ python3 tools/trailer/schnitt.py <Ton.wav> trailer-ausgabe/Formula_Racing_Traile
 | Garage, ein Bild 1920 × 1080 | 3,8 s |
 | Fahrer wechseln in derselben Sitzung (Legende) | etwa 115 s |
 
-Deshalb: 24 Bilder/s, drei Studios gleichzeitig, Umgebungsverdeckung nur in ruhigen Einstellungen, Sonnenstrahlen-Durchgang nachts aus (dort ohne Wirkung).
+Deshalb: drei Studios gleichzeitig (bis Fassung 3 mit 24 Bildern/s, seit Fassung 4 mit 30), Umgebungsverdeckung nur in ruhigen Einstellungen, Sonnenstrahlen-Durchgang nachts aus (dort ohne Wirkung).
 
 ### Ergebnis des Laufs vom 25.11.2026
 
@@ -153,6 +161,37 @@ Deshalb: 24 Bilder/s, drei Studios gleichzeitig, Umgebungsverdeckung nur in ruhi
 - **Nachtregen ist sehr dunkel**: von hinten in der Gischt war fast nichts zu sehen. Gewählt wurden Einstellungen von vorn mit beleuchteter Kulisse, im Schnitt um 22 % aufgehellt.
 - **Feuerwerk des Spiels** liegt 200–400 m voraus und wirkt klein; erst das gezielte Zünden füllt den Himmel. Zu nah (60–170 m) überstrahlt es das Bild.
 - `xstack` von ffmpeg stürzte bei acht Bildern ab – Kontaktblätter jetzt mit `concat` + `tile`.
+
+## Fassung 4: was nach der zweiten Rückmeldung geändert wurde (25.11.2026)
+
+| Rückmeldung | Ursache | Lösung |
+|---|---|---|
+| zweite Sphere-Einstellung (im Regen) ist schlecht | – | gestrichen (`s17b_vegas_regen`) |
+| mehr Regen, gerade in der Helmansicht | bisher eine Helm-Einstellung von 2,3 s | drei Helm-Einstellungen (Singapur 4,4 s, Spa/Eau Rouge 2,65 s, Singapur 2,75 s) plus Zeitlupe und Teleobjektiv: 16,3 s Regen statt 11,5 s. Stellen aus je drei Proben gewählt (verworfen: Singapur s = 940 – enge Kurve, Arme überkreuzt; Spa s = 6150 – ebenso) |
+| Feuerwerk ans Ende | stand vor dem Regenteil | Reihenfolge: Zweikampf → Regen (laut) → Regen (ruhig) → Nachtsprint als Anlauf → **Zieleinlauf mit Feuerwerk auf dem Schlussakkord** → Logo zwei Takte später. Musik dafür 3,7 s länger (bis 151,95 s des Stücks) |
+| Kamerafahrten hakelig | (1) Kamerahöhe am Auto = Höhe des *nächsten Streckenpunkts* → an Steigungen Stufen von einigen Zentimetern; (2) Kamera hing starr an der augenblicklichen Fahrtrichtung, jede Lenkkorrektur schwenkte sie mit; (3) Handkamera-Unruhe; (4) 24 Bilder/s laufen auf 60-Hz-Bildschirmen ungleichmäßig (3:2) | (1) `TR.hoehe`: Höhe stufenlos zwischen den Streckenpunkten; (2) `TR.glatt`: Standort folgt der Fahrtrichtung mit 0,28 s, Blickziel mit 0,09 s; (3) `wack` überall entfernt, Fahrten gleichförmig (`lin`); (4) **30 Bilder/s**; feste Kamera am Randstein mit Bewegungsunschärfe |
+| Autobewegungen beim Lenken nicht weich | Die KI zielt auf den Streckenpunkt Nr. `idx + Vorausschau` – der Zielpunkt springt alle paar Meter weiter, das Lenkrad zuckt; es darf sich mit 7 Vollausschlägen je Sekunde drehen. Dazu: ein Simulationsschritt je Trailerbild (42 ms), harte Spurvorgaben (`c.ovr`) und Tempo-Sprünge im Zweikampf (+20 km/h in einem Bild) | Nur im Testbrowser: Zielpunkt und Ideallinie stufenlos interpoliert, Lenkrad über 0,07 s geglättet und auf 3,5 Vollausschläge je Sekunde begrenzt (`window.__trGlatt`). Simulation in Schritten von höchstens 10,5 ms (`TR.schritt`). Spurwechsel weich über `TR.spur` (3,5 m in gut 2,5 s), Tempo-Vorgaben nur mit begrenzter Beschleunigung, Vorlauf jeder Einstellung mit derselben Steuerung wie im Bild |
+| Häkkinens Räder eiern | das ganze Rad ist im Modell mit Sturz eingebaut, gedreht wurde um die waagerechte Achse | im Spiel behoben (v3.03, `docs/KLASSIKER.md`); Legenden neu gerechnet |
+
+**Gemessen** (`node tools/trailer/ruck.js <Port> <Szenen> [--alt]`, Monza; „Zittern“ = Abweichung von der glatten Bahn durch die Nachbarbilder):
+
+| Einstellung | Kennzahl | bis Fassung 3 | Fassung 4 |
+|---|---|---|---|
+| Cockpit MP4/4 (Anbremsen erste Schikane) | Lenk-Zittern | 2,01 % des Vollausschlags | 0,08 % |
+| | größte Lenkänderung von Bild zu Bild | 17,9 % | 4,0 % |
+| | Zittern der Fahrtrichtung / der Blickrichtung | 0,038° / 0,039° | 0,002° / 0,005° |
+| Zweikampf | Lenk-Zittern | 1,58 % | 0,25 % |
+| | mittlere Lenkänderung je Bild | 1,70 % | 0,34 % |
+| | Ausscheren | Lenkrad in einem Bild von 0 auf 59 % | höchstens 6 % Ausschlag, über 3 s |
+| | Tempo beim Aufschließen | +21 km/h von einem Bild zum nächsten | +19 km/h über 1 s |
+
+Das Zittern von Bild zu Bild war also schon vorher klein (rund 1 Bildpunkt); der sichtbare Unterschied liegt in den **Rucken** – Lenkrad, Spurwechsel, Tempo.
+
+**Fehlversuche und Stolpersteine:**
+- Erste Kennzahl (zweite Differenz von Bild zu Bild) mischte echte Kurvenbeschleunigung mit Zittern und zeigte „schlechter“ an – ersetzt durch die Abweichung von einer Ausgleichsparabel über 7 Bilder.
+- Regen-Nahaufnahme in Singapur: Mit der weicheren KI-Lenkung fährt das Auto eine etwas andere Linie – die Kamera stand im ersten Bild hinter einer Werbebande. Starre Kameraführung (`glatt: false`) half nicht; die Einstellung beginnt jetzt 0,4 s später und näher an der Wagenmitte. **Nach jeder Änderung an Lenkung oder Zeitschritt alle Einstellungen neu proben.**
+- Der helle Punktestreifen quer durchs Bild bei Senna (MP4/4) ist kein Fehler, sondern das Bandrauschen des 1988er-Bildlooks des Spiels; in der halben Probenauflösung wirkt es doppelt so grob.
+- Idee fürs Spiel (nicht umgesetzt): der stufenlose Lenk-Zielpunkt würde auch im Spiel die KI-Autos ruhiger lenken lassen.
 
 ## Fassung 3: was nach der Rückmeldung geändert wurde (25.11.2026)
 

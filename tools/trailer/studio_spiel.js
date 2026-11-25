@@ -2,6 +2,11 @@
 // Am Spiel selbst ändert das nichts – es läuft nur im Testbrowser (tools/trailer/spielstart.js).
 window.TR = (() => {
   const alt = window.TR, TR = { speed: 0, vig: null, labels: false, grain: null, wind: false, u: 0, vt: alt ? alt.vt : 0, je: null, tz: 0 };
+  // Fassung 4 – flüssigere Bewegung (alles abschaltbar, damit sich alt und neu messen lassen: tools/trailer/ruck.js):
+  TR.fein = 10.5;                      // längster Simulationsschritt in ms: ein Trailerbild wird in mehreren Schritten gerechnet (0 = ein Schritt je Bild wie bis Fassung 3)
+  TR.glatt = { von: 0.28, auf: 0.09 }; // Zeitkonstanten (s), mit denen der Kamerastandort (von) und das Blickziel (auf) der Fahrtrichtung des Autos folgen; null = starr am Auto
+  TR.stufig = false;                   // true = Fahrbahnhöhe am Kamerapunkt in Stufen (nächster Streckenpunkt) wie bis Fassung 3
+  window.__trGlatt = true;             // Lenk-Zielpunkt der KI stufenlos (Test-Änderung in spielstart.js)
   // beim Nachladen dieser Datei in eine laufende Sitzung die echten Funktionen behalten (die Uhr ist dann schon umgestellt)
   TR.now0 = alt ? alt.now0 : performance.now.bind(performance); TR.raf0 = alt ? alt.raf0 : window.requestAnimationFrame.bind(window); TR.rnd0 = alt ? alt.rnd0 : Math.random; TR.frame0 = alt ? alt.frame0 : window.__frame;
 
@@ -12,7 +17,12 @@ window.TR = (() => {
   // zurück zur echten Uhr und Bildschleife (für Menüs und den Rennstart)
   TR.weiter = () => { const off = Math.max(0, TR.vt - TR.now0()); performance.now = () => TR.now0() + off; window.requestAnimationFrame = TR.raf0; window.__frame = TR.frame0; Math.random = TR.rnd0; window.__camFix = null; TR.je = null; last = performance.now(); requestAnimationFrame(frame); return 'läuft'; };
   // ein Schritt Spielzeit (ms), mit oder ohne Zeichnen
-  TR.takt = (ms, zeichnen = true) => { window.__norender = !zeichnen; last = TR.vt; TR.vt += ms; tick(TR.vt, true); window.__norender = false; };
+  TR.takt = (ms, zeichnen = true) => { window.__norender = !zeichnen; last = TR.vt; TR.vt += ms; tick(TR.vt, true); window.__norender = false; nachfuehren(ms / 1000); };
+  // Spielzeit in feinen Schritten (höchstens TR.fein ms): Fahrphysik, KI-Lenkung und die Kamera-Nachführung des Spiels laufen dann wie bei hoher Bildrate; gezeichnet wird nur der letzte Schritt
+  TR.schritt = (ms, zeichnen = true) => { const n = TR.fein > 0 ? Math.max(1, Math.ceil(ms / TR.fein - 1e-6)) : 1; for (let i = 0; i < n; i++) TR.takt(ms / n, zeichnen && i === n - 1); };
+  // geglättete Fahrtrichtung je Auto: __h2 (zwei Stufen, träge – für den Kamerastandort) und __h3 (eine Stufe, flink – für das Blickziel)
+  const nachfuehren = dt => { const G = TR.glatt || { von: 0, auf: 0 }, k1 = G.von > 0 ? 1 - Math.exp(-dt / (G.von / 2)) : 1, k3 = G.auf > 0 ? 1 - Math.exp(-dt / G.auf) : 1;
+    for (const c of cars) { if (c.__h1 == null || !isFinite(c.__h1)) { c.__h1 = c.__h2 = c.__h3 = c.h; continue; } c.__h1 += wrapA(c.h - c.__h1) * k1; c.__h2 += wrapA(c.__h1 - c.__h2) * k1; c.__h3 += wrapA(c.h - c.__h3) * k3; } };
   TR.sim = (n, ms = 16.667, zeichnen = false) => { for (let i = 0; i < n; i++) TR.takt(ms, zeichnen); return Math.round(pl.v * 3.6); };
   // Zufall festlegen (gleiche Szene → gleicher Ablauf)
   TR.seed = n => { let a = n >>> 0; Math.random = () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; return 'ok'; };
@@ -23,23 +33,31 @@ window.TR = (() => {
     document.querySelector('#lights').classList.add('hidden'); const h = document.querySelector('#sgHint'); if (h) h.classList.add('hidden'); TR.hud(false); return 'ok'; };
   TR.hud = on => { document.body.classList.toggle('ptNoHud', !on); document.querySelector('#hud').style.visibility = on ? '' : 'hidden'; document.querySelector('#controls').style.display = on ? '' : 'none'; };
   // Auto an Streckenmeter s (quer lat) setzen; vf = Anteil des dort möglichen Tempos
-  TR.put = (c, s, lat = 0, vf = 0.9, vmax = 95) => { const q = trackAt(s, lat); c.x = q.x; c.z = q.z; c.h = q.h; c.steer = 0; c.sx = c.sz = 0; c.yawKick = 0; c.idx = q.i; c.sPrev = modL(s); projectCar(c); c.d = modL(s); c.sPrev = modL(s); c.stuckT = 0; c.wrongT = 0; c.ovr = null; c.laneT = 0;
+  TR.put = (c, s, lat = 0, vf = 0.9, vmax = 95) => { const q = trackAt(s, lat); c.x = q.x; c.z = q.z; c.h = q.h; c.steer = 0; c.sx = c.sz = 0; c.yawKick = 0; c.idx = q.i; c.sPrev = modL(s); projectCar(c); c.d = modL(s); c.sPrev = modL(s); c.stuckT = 0; c.wrongT = 0; c.ovr = null; c.laneT = 0; c.__h1 = null; c.__ov = null; c.__ovV = 0; c.__stZ = 0;
     c.v = Math.min((c === pl ? profBot : profAI)[c.idx] * vf, vmax); };
   // Feld aufstellen: eigenes Auto bei s, die anderen nach Liste [[Abstand in m (+ = davor), quer, Tempoanteil], …]; übrige Autos weit weg (halbe Runde)
   TR.feld = (s, lat = 0, liste = [], vf = 0.9) => { TR.put(pl, s, lat, vf); camH = pl.h; const rest = cars.filter(c => c !== pl);
     rest.forEach((c, k) => { const e = liste[k]; if (e) TR.put(c, s + e[0], e[1], e[2] ?? vf); else TR.put(c, s + L / 2 + k * 14, (k % 2 ? 1 : -1) * 2.2, 0.5); }); return rest.slice(0, liste.length).map(c => c.code).join(','); };
   TR.pos = c => { const g = c.mesh.g.position; return [g.x, g.y, g.z, c.h]; };
   // Punkt relativ zum Auto: [rechts, hoch, vor]. Höhe = Fahrbahnhöhe an dieser Stelle + hoch (an Steigungen läge ein Punkt „6 m vor dem Auto auf Autohöhe“ sonst unter der Straße)
-  TR.rel = (c, o) => { const [x, y, z, h] = TR.pos(c), fx = Math.sin(h), fz = Math.cos(h), rx = -fz, rz = fx, X = x + rx * o[0] + fx * o[2], Z = z + rz * o[0] + fz * o[2];
-    let Y = y; if (!FLAT) { const j = nearestDist(X, Z)[1]; Y = ELEV[j] || 0; } return [X, Y + o[1], Z]; };
+  // art: 'von' = träge geglättete Fahrtrichtung (Kamerastandort), 'auf' = flink geglättete (Blickziel), sonst die augenblickliche
+  TR.rel = (c, o, art) => { const [x, y, z, h0] = TR.pos(c), h = !TR.glatt || c.__h1 == null ? h0 : art === 'von' ? c.__h2 : art === 'auf' ? c.__h3 : h0, fx = Math.sin(h), fz = Math.cos(h), rx = -fz, rz = fx, X = x + rx * o[0] + fx * o[2], Z = z + rz * o[0] + fz * o[2];
+    return [X, (FLAT ? y : TR.hoehe(X, Z)) + o[1], Z]; };
+  // Fahrbahnhöhe an einem Punkt, stufenlos: auf die beiden Streckenabschnitte am nächsten Streckenpunkt fällen und dazwischen interpolieren.
+  // (Bis Fassung 3: Höhe des nächsten Streckenpunkts – an Steigungen sprang die Kamera alle paar Meter um einige Zentimeter.)
+  TR.hoehe = (X, Z) => { const j = nearestDist(X, Z)[1], n = PX.length; if (TR.stufig) return ELEV[j] || 0; let best = ELEV[j] || 0, bd = 1e9;
+    for (const i0 of [(j - 1 + n) % n, j]) { const i1 = (i0 + 1) % n, ax = PX[i0], az = PZ[i0], dx = PX[i1] - ax, dz = PZ[i1] - az, t = Math.max(0, Math.min(1, ((X - ax) * dx + (Z - az) * dz) / (dx * dx + dz * dz || 1))), ex = X - ax - dx * t, ez = Z - az - dz * t, d = ex * ex + ez * ez;
+      if (d < bd) { bd = d; best = (ELEV[i0] || 0) + ((ELEV[i1] || 0) - (ELEV[i0] || 0)) * t; } } return best; };
+  // Spur eines Autos weich wechseln: Quer-Ziel (m) mit höchstens `tempo` m/s anfahren, Anfahren und Ankommen weich. (c.ovr hart umzusetzen lässt die KI am Lenkrad reißen.)
+  TR.spur = (c, ziel, ms, tempo = 1.6) => { if (c.__ov == null) { c.__ov = c.ovr ?? c.lat ?? 0; c.__ovV = 0; } const dt = ms / 1000, e = ziel - c.__ov, vz = Math.max(-tempo, Math.min(tempo, e * 2.5)); c.__ovV += (vz - c.__ovV) * Math.min(1, dt * 5); c.__ov += c.__ovV * dt; c.ovr = c.__ov; c.laneT = raceTime + 9; return c.__ov; };
   TR.trk = (s, lat = 0, h = 0) => { const a = window.__tAt(s, lat); return [a[0], a[1] + h, a[2]]; };
   const car = k => k == null ? pl : typeof k === 'number' ? cars.filter(c => c !== pl)[k] : cars.find(c => c.code === k) || pl;
   TR.auto = car;
 
   /* ---------- Kamera ---------- */
   // Angabe: { von: [r,u,v] am Auto | { s, lat, h } an der Strecke | [x,y,z,0] Welt, auf: ebenso (Standard: Auto-Mitte), auto / zielAuto: Kennung oder Index, fov, roll }
-  const pt = (q, c, std) => q == null ? TR.rel(c, std) : Array.isArray(q) ? (q.length === 4 ? q.slice(0, 3) : TR.rel(c, q)) : TR.trk(q.s, q.lat || 0, q.h || 0);
-  TR.kamWert = sp => { const c = car(sp.auto), ca = car(sp.zielAuto ?? sp.auto); return { p: pt(sp.von, c, [3, 1.2, -6]), t: pt(sp.auf, ca, [0, 0.45, 0]), fov: sp.fov || 40, roll: sp.roll || 0 }; };
+  const pt = (q, c, std, art) => q == null ? TR.rel(c, std, art) : Array.isArray(q) ? (q.length === 4 ? q.slice(0, 3) : TR.rel(c, q, art)) : TR.trk(q.s, q.lat || 0, q.h || 0);
+  TR.kamWert = sp => { const c = car(sp.auto), ca = car(sp.zielAuto ?? sp.auto); return { p: pt(sp.von, c, [3, 1.2, -6], 'von'), t: pt(sp.auf, ca, [0, 0.45, 0], 'auf'), fov: sp.fov || 40, roll: sp.roll || 0 }; };
   const EASE = { lin: u => u, io: u => u * u * (3 - 2 * u), aus: u => 1 - (1 - u) * (1 - u), ein: u => u * u };
   const rau = (T, k) => Math.sin(T * 3.1 + k * 1.7) * 0.5 + Math.sin(T * 7.3 + k * 2.9) * 0.3 + Math.sin(T * 13.7 + k * 4.1) * 0.2;
   // Kamerafahrt von Angabe a nach b über TR.u = 0…1 (b weglassen = feste Angabe). o: { ease: 'io'|'lin'|'aus'|'ein', wack: Handkamera-Unruhe in m, wackF: Tempo der Unruhe }
@@ -73,8 +91,8 @@ window.TR = (() => {
   // Ein Trailerbild rechnen: Kamerafahrt von u0 nach u1, ms Spielzeit. mb > 1: Bewegungsunschärfe aus mb Zwischenbildern über den Anteil „verschluss“ der Bildzeit (0,5 = 180°).
   // typ = 'image/jpeg' liefert das Bild als Data-URL; typ leer: nur zeichnen (Seitenbild wird außen aufgenommen).
   TR.bild = (u0, u1, ms, mb = 1, typ = '', q = 0.95, verschluss = 0.5) => { if (TR.je) TR.je(TR.tz, ms);
-    if (mb > 1) { TR.u = u0; TR.takt(ms * (1 - verschluss), false); TR.akStart(); for (let k = 0; k < mb; k++) { TR.u = u0 + (u1 - u0) * (1 - verschluss + verschluss * (k + 1) / mb); TR.takt(ms * verschluss / mb); TR.akAdd(); } return typ ? TR.akEnde(typ, q) : 1; }
-    TR.u = u1; TR.takt(ms); return typ ? renderer.domElement.toDataURL(typ, q) : 1; };
+    if (mb > 1) { TR.u = u0; TR.schritt(ms * (1 - verschluss), false); TR.akStart(); for (let k = 0; k < mb; k++) { TR.u = u0 + (u1 - u0) * (1 - verschluss + verschluss * (k + 1) / mb); TR.schritt(ms * verschluss / mb); TR.akAdd(); } return typ ? TR.akEnde(typ, q) : 1; }
+    TR.u = u1; TR.schritt(ms); return typ ? renderer.domElement.toDataURL(typ, q) : 1; };
   // Standbild mit Schärfentiefe (Blende ap in m, scharf auf dem Blickziel) – für Proben
   TR.dof = (n = 24, ap = 0.06) => { const f = window.__camFix && window.__camFix(); if (!f) return null; const P = new THREE.Vector3(...f.p), Tg = new THREE.Vector3(...f.t), fw = Tg.clone().sub(P).normalize(), rt = new THREE.Vector3().crossVectors(fw, new THREE.Vector3(0, 1, 0)).normalize(), up = new THREE.Vector3().crossVectors(rt, fw);
     TR.akStart(); for (let i = 0; i < n; i++) { const r = ap * Math.sqrt((i + 0.5) / n), w = i * 2.399963; camera.position.copy(P).addScaledVector(rt, Math.cos(w) * r).addScaledVector(up, Math.sin(w) * r); camera.up.set(0, 1, 0); camera.lookAt(Tg); if (f.roll) camera.rotateZ(f.roll); camera.fov = f.fov; camera.updateProjectionMatrix(); camera.updateMatrixWorld(); TR.zeichne(); TR.akAdd(); }

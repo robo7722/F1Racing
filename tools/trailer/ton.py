@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tonspur des Trailers: geschnittene Musik + dezente Geräusche aus den Klängen des Spiels (keine neuen Aufnahmen, keine Kosten).
    Aufruf: python3 tools/trailer/ton.py <Musik.wav> <Ausgabe.wav> [--ohne]        (--ohne: nur Musik, zum Vergleich)
-   Geräusche: Ampel-Töne und Motoren in der Startaufstellung (5,25–10,85 s), Start (ab 10,85 s), Feuerwerk (74,5–79,3 s), Regen (79,3–90,8 s).
+   Geräusche: Ampel-Töne und Motoren in der Startaufstellung (5,25–10,85 s), Start (ab 10,85 s), Regen (70,1–86,4 s), Feuerwerk im Schlussbild (90,8–95,2 s). Zeiten für Fassung 4.
    Alles bewusst leise unter der Musik – gemischt nach Pegelmessung, nicht nach Gehör."""
 import sys, os, numpy as np, soundfile as sf
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))); SR = 44100
@@ -35,16 +35,16 @@ if '--ohne' not in sys.argv:
     for datei, gew, pan in (('f1_v2.wav', 0.6, 0.35), ('f1_v3.wav', 0.5, 0.65), ('f1_v4.wav', 0.35, 0.5)):
         x = schleife(datei, 5.0, gang); e = huelle(len(x), 0.03, 2.6) * np.linspace(1, 0.35, len(x)); lege(x * e * 0.45 * gew, 10.83, 1 - pan * 0.5, 0.5 + pan * 0.5)
     # Feuerwerk: tiefe, verhallende Schläge
-    for t0 in (74.9, 75.6, 76.1, 76.9, 77.4, 78.2, 78.8):
+    for t0 in (91.15, 91.8, 92.3, 93.0, 93.5, 94.2, 94.75):
         m = int(0.9 * SR); b = tief(rng.standard_normal(m).astype(np.float32), 140) * np.exp(-np.arange(m) / (0.22 * SR)) * 2.5; p = rng.random(); lege(b, t0 + rng.random() * 0.1, 0.5 + 0.5 * p, 1 - 0.5 * p)
     # Regen: gleichmäßiges Rauschen, links und rechts verschieden
-    m = int(12.2 * SR)
+    m = int(17.0 * SR)   # in der lauten Stelle (70–79 s) kaum zu hören, trägt dann durch die ruhige Stelle bis zum Sprint
     for c in (0, 1):
-        r = rng.standard_normal(m).astype(np.float32); r = r - tief(r, 1800); r = tief(r, 7000) * huelle(m, 1.2, 2.5) * 0.04; i = int(79.1 * SR); k = min(m, n - i); fx[i:i + k, c] += r[:k]
+        r = rng.standard_normal(m).astype(np.float32); r = r - tief(r, 1800); r = tief(r, 7000) * huelle(m, 1.2, 2.5) * 0.04; i = int(69.8 * SR); k = min(m, n - i); fx[i:i + k, c] += r[:k]
 out = mus.astype(np.float32) + fx; sp = float(np.abs(out).max())
 if sp > 0.97: out *= 0.97 / sp
 db = lambda x: 20 * np.log10(max(float(np.sqrt(np.mean(x ** 2))), 1e-9))
 print('Spitze vor Begrenzung %.2f · Pegel Musik %.1f dB · Geräusche gesamt %.1f dB' % (sp, db(mus), db(fx)))
-for name, a, b in (('Startaufstellung 5,3–10,8', 5.3, 10.8), ('Start 10,85–13', 10.85, 13), ('Feuerwerk 74,5–79,3', 74.5, 79.3), ('Regen 80–90', 80, 90)):
+for name, a, b in (('Startaufstellung 5,3–10,8', 5.3, 10.8), ('Start 10,85–13', 10.85, 13), ('Regen laut 70–79', 70.2, 79.2), ('Regen ruhig 79,5–86', 79.5, 86.0), ('Feuerwerk 90,9–95,1', 90.9, 95.1)):
     i, j = int(a * SR), int(b * SR); print('  %-26s Musik %6.1f dB · Geräusche %6.1f dB' % (name, db(mus[i:j]), db(fx[i:j])))
 sf.write(sys.argv[2], out, SR, subtype='PCM_16'); print(sys.argv[2])

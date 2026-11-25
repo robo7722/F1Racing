@@ -1,19 +1,48 @@
 {
- "fps": 24,
- "musik": "0:76.65,126.83:148.3",
+ "fps": 30,
+ "musik": "0:76.65,126.83:151.95",
  "titelzeile": "FORMULA RACING",
  "schriften": {
-  "strecken": { "text": "24 GRAND-PRIX-STRECKEN" },
-  "nacht": { "text": "TAG UND NACHT" },
-  "kart": { "text": "VOM KART BIS IN DIE FORMEL 1" },
-  "wetter": { "text": "BEI JEDEM WETTER" },
-  "l1967": { "jahr": "1967", "name": "FERRARI 312" },
-  "l1970": { "jahr": "1970", "name": "LOTUS 49C" },
-  "l1988": { "jahr": "1988", "name": "McLAREN MP4/4" },
-  "l1998": { "jahr": "1998", "name": "McLAREN MP4/13" },
-  "l2004": { "jahr": "2004", "name": "FERRARI F2004" },
-  "l2012": { "jahr": "2012", "name": "RED BULL RB8" },
-  "l2026": { "jahr": "2026", "name": "FERRARI" }
+  "strecken": {
+   "text": "24 GRAND-PRIX-STRECKEN"
+  },
+  "nacht": {
+   "text": "TAG UND NACHT"
+  },
+  "kart": {
+   "text": "VOM KART BIS IN DIE FORMEL 1"
+  },
+  "wetter": {
+   "text": "BEI JEDEM WETTER"
+  },
+  "l1967": {
+   "jahr": "1967",
+   "name": "FERRARI 312"
+  },
+  "l1970": {
+   "jahr": "1970",
+   "name": "LOTUS 49C"
+  },
+  "l1988": {
+   "jahr": "1988",
+   "name": "McLAREN MP4/4"
+  },
+  "l1998": {
+   "jahr": "1998",
+   "name": "McLAREN MP4/13"
+  },
+  "l2004": {
+   "jahr": "2004",
+   "name": "FERRARI F2004"
+  },
+  "l2012": {
+   "jahr": "2012",
+   "name": "RED BULL RB8"
+  },
+  "l2026": {
+   "jahr": "2026",
+   "name": "FERRARI"
+  }
  },
  "schnitte": [
   { "szene": "s01_garage_fluegel", "von": 0.0, "ein": 1.0 },
@@ -40,13 +69,14 @@
   { "szene": "s12_cockpit88", "von": 50.466 },
   { "szene": "s13_kart", "von": 54.83, "text": "kart" },
   { "szene": "s14_duell", "von": 59.194 },
-  { "szene": "s16a_sprint", "von": 70.104 },
-  { "szene": "s16b_ziel", "von": 74.468 },
-  { "szene": "s17a_sgp_regen", "filter": "eq=gamma=1.12:saturation=1.06", "von": 79.3, "text": "wetter" },
-  { "szene": "s17b_vegas_regen", "filter": "eq=gamma=1.12:saturation=1.06", "von": 83.7 },
-  { "szene": "s18a_spa_regen", "von": 86.3 },
-  { "szene": "s18b_sgp_helm", "filter": "eq=gamma=1.12:saturation=1.06", "von": 88.5, "aus": 1.0 },
-  { "szene": "@titel", "von": 90.8, "ein": 0.25, "aus": 1.6 },
-  { "szene": "@ende", "von": 98.1 }
+  { "szene": "s19a_sgp_helm", "filter": "eq=gamma=1.12:saturation=1.06", "von": 70.104, "text": "wetter" },
+  { "szene": "s18a_spa_regen", "von": 74.468 },
+  { "szene": "s19b_spa_helm", "von": 76.65 },
+  { "szene": "s17a_sgp_regen", "filter": "eq=gamma=1.12:saturation=1.06", "von": 79.3 },
+  { "szene": "s18b_sgp_helm", "filter": "eq=gamma=1.12:saturation=1.06", "von": 83.7 },
+  { "szene": "s16a_sprint", "von": 86.436 },
+  { "szene": "s16b_ziel", "von": 90.8, "aus": 0.5 },
+  { "szene": "@titel", "von": 95.164, "ein": 0.5, "aus": 1.6 },
+  { "szene": "@ende", "von": 101.77 }
  ]
 }

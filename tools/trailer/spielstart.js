@@ -15,6 +15,17 @@ const PATCH = [
   ['const tR0 = performance.now(); PERF.rT = 0;', 'if (window.__trPre) window.__trPre(dt, now); const tR0 = performance.now(); PERF.rT = 0;'],
   // Kantenglättung des Zwischenbilds einstellbar (für Messungen und Mehrfachbelichtung)
   ['{ type: THREE.HalfFloatType, samples: ultra || !isTouch ? 4 : 2 }', '{ type: THREE.HalfFloatType, samples: window.__trMSAA ?? (ultra || !isTouch ? 4 : 2) }'],
+  // Fassung 4 – weichere Lenkbewegungen: Die KI zielt im Spiel auf den Streckenpunkt Nr. (idx + Vorausschau) – der Zielpunkt springt also alle DS Meter um einen
+  // Punkt weiter, die Lenkung zuckt im Takt der Streckenpunkte (bei 24 Bildern/s deutlich zu sehen). Mit window.__trGlatt liegt der Zielpunkt stufenlos zwischen
+  // den Punkten (Lage und Ideallinie interpoliert). Abschaltbar, damit sich alt und neu im selben Studio messen lassen (tools/trailer/ruck.js).
+  ['let latT = c.ovr !== null ? c.ovr : RL[ti] + c.home * 0.12;',
+    'const __g = !!window.__trGlatt, __f = (modL(c.d) + Ld) / DS, __i0 = ((Math.floor(__f) % N) + N) % N, __i1 = (__i0 + 1) % N, __t = __f - Math.floor(__f); let latT = c.ovr !== null ? c.ovr : (__g ? RL[__i0] + (RL[__i1] - RL[__i0]) * __t : RL[ti]) + c.home * 0.12;'],
+  ['const tx = PX[ti] + RX[ti] * latT, tz = PZ[ti] + RZ[ti] * latT;',
+    'const tx = __g ? lerp(PX[__i0] + RX[__i0] * latT, PX[__i1] + RX[__i1] * latT, __t) : PX[ti] + RX[ti] * latT, tz = __g ? lerp(PZ[__i0] + RZ[__i0] * latT, PZ[__i1] + RZ[__i1] * latT, __t) : PZ[ti] + RZ[ti] * latT;'],
+  // … und das Lenkrad folgt dem Sollwert weich: erst über 0,07 s geglättet, dann höchstens 3,5 Vollausschläge je Sekunde (im Spiel 7 – bei 24–30 Bildern/s
+  // sind das bis zu 29 % Lenkausschlag von einem Bild zum nächsten; gemessen beim Ausscheren im Zweikampf).
+  ['c.steer += clamp(st - c.steer, -7 * dt, 7 * dt);',
+    'if (__g) { const z0 = c.__stZ ?? c.steer; c.__stZ = z0 + (st - z0) * (1 - Math.exp(-dt / 0.07)); c.steer += clamp(c.__stZ - c.steer, -3.5 * dt, 3.5 * dt); } else c.steer += clamp(st - c.steer, -7 * dt, 7 * dt);'],
 ];
 async function starte({ size = [1920, 804], dpr = 1, menue = false, fahrer = 'VER', gfx = 'ultra', log = console.log } = {}) {
   const T0 = Date.now(), T = () => ((Date.now() - T0) / 1000).toFixed(0) + ' s';
