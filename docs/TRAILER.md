@@ -145,7 +145,17 @@ heißt, dass ein Auto im Bild hart umlenkt – dann `quer: 1.6` setzen oder das 
 
 Deshalb: drei Studios gleichzeitig (bis Fassung 3 mit 24 Bildern/s, seit Fassung 4 mit 30), Umgebungsverdeckung nur in ruhigen Einstellungen, Sonnenstrahlen-Durchgang nachts aus (dort ohne Wirkung).
 
-### Ergebnis des Laufs vom 25.11.2026
+### Ergebnis der Läufe vom 25.11.2026
+
+**Fassung 4** (abends):
+- Hauptdreh: 30 Einstellungen, 2.910 Trailerbilder, gerechnet von 15:17 bis 19:37 Uhr (4 h 20 min) in drei Warteschlangen, zuletzt mit einer Hilfsschicht für die Legenden.
+  Mit drei Studios kostet ein Bild rund 13,6 s, die Profilfahrt mit vierfacher Belichtung 44 s, die Garage 36 s (sechs Zeichnungen je Bild), das Kart 22 s.
+- Nachdreh (siehe „Fassung 4“): 15 Einstellungen, 1.145 Bilder, von 20:02 bis 21:47 Uhr – einschließlich Messen aller Strecken, Proben und der zweimal gerechneten Spa-Einstellung.
+- Prüfung: `gleichlauf.py` meldet vier Stellen, alle erwartet (zwei Kamerawechsel im Zweikampf, zwei Reservebilder hinter dem Ende der Ampel-Einstellung).
+- Schnitt: je Fassung rund 4 Minuten; 1920 × 1080, 30 Bilder/s, 3.053 Bilder, 101,77 s, 147,5 MB (11,6 Mbit/s) mit `--crf 18 --maxrate 12M`.
+- Ton: mittlere Lautstärke −16,4 dB, Spitze −0,3 dB; nur Musik: −16,2 dB / −0,4 dB.
+
+**Fassung 2** (nachts):
 
 - 28 Einstellungen, 2.354 Trailerbilder; gerechnet von 01:13 bis 03:46 Uhr (2 h 33 min) in drei gleichzeitigen Warteschlangen, ohne Fehler.
   Am längsten dauerten die Profilfahrt mit vierfacher Belichtung (rund 35 s je Bild), der Zweikampf (264 Bilder) und die Garage (drei Zeichnungen je Bild).
@@ -237,7 +247,8 @@ Cockpit MP4/4 (28 %/s), Zweikampf (10 %/s; das Einlenken in die Schikane in den 
 
 **Stolpersteine beim Nachdreh:**
 - **Singapur-Nahaufnahme:** Mit weichem Querziel fuhr das Auto 0,9 m über den Randstein hinaus (das Mitwandern mit der Ideallinie galt auch jenseits der Streckenbegrenzung).
-  Die Begrenzung ist jetzt eingebaut; die Einstellung blieb, wie sie war.
+  Die Begrenzung ist jetzt eingebaut; die Einstellung blieb, wie sie war. (Eingebaut wurde sie erst, nachdem Kran, Vorbeifahrt, Zieleinlauf und die beiden Singapur-Helm-Einstellungen
+  gerechnet waren – ob sie dort eingreifen würde, ist nicht nachgemessen; ein erneuter Dreh dieser fünf kann deshalb geringfügig anders ausfallen.)
 - **Kart:** Mit weichem Querziel blieben die drei Karts davor in ihrer Spur und standen vor der Kamera. Weit weggestellt flog das eigene Kart aus der Kurve –
   `TR.start` baut das Tempoprofil des eigenen Fahrzeugs mit Formel-1-Grip, bisher hatten es nur die Vorderleute gebremst. In der Einstellung gilt jetzt `profBot = profAI`.
 - **Schwarze Bilder:** Die Spa-Helm-Einstellung wurde beim ersten Nachdreh komplett schwarz gerechnet (alle 82 Bilder, Helligkeit 6 von 255), obwohl die Probe unmittelbar davor
