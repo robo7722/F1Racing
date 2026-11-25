@@ -19,7 +19,7 @@ module.exports = {
   szenen: {
     /* ---------- Garage ---------- */
     s01_garage_fluegel: { typ: 'garage', dauer: 4.0, sub: 3, fenster: 12, ease: 'lin',
-      a: { p: [-5.0, 0.30, 3.0], t: [-3.35, 0.42, 0.45], fov: 26, ap: 0.05 }, b: { p: [-4.15, 0.36, 3.55], t: [-2.7, 0.46, 0.2], fov: 26, ap: 0.05 } },
+      a: { p: [-5.0, 0.30, 3.0], t: [-2.9, 0.42, 0.3], f: [-3.3, 0.42, 0.45], fov: 26, ap: 0.05 }, b: { p: [-4.15, 0.36, 3.55], t: [-2.2, 0.46, 0.1], f: [-2.75, 0.46, 0.25], fov: 26, ap: 0.05 } },
     s02_garage_helm: { typ: 'garage', dauer: 3.4, sub: 3, fenster: 12, ease: 'lin',
       a: { p: [-2.75, 1.22, 2.0], t: [0.2, 0.82, 0], f: [-0.75, 0.95, 0.1], fov: 21, ap: 0.04 }, b: { p: [-2.15, 1.12, 1.6], t: [0.25, 0.8, 0], f: [0.3, 0.85, 0.05], fov: 20, ap: 0.04 } },
     /* ---------- Abu Dhabi, Dämmerung ---------- */
@@ -65,30 +65,17 @@ module.exports = {
         { bis: TAKT * 3, a: { von: [-1.4, 0.34, 11.5], auf: [-1.55, 0.6, 0.5], fov: 27 }, b: { von: [-1.2, 0.42, 9.5], auf: [-1.55, 0.6, 0.5], fov: 26 }, ease: 'lin', speed: 0.7, wack: 0.02 },
         { bis: TAKT * 5, a: { cam: 2 } }] },
     /* ---------- Regen ---------- */
-    s17a_sgp_regen: { dauer: 4.4, zeitlupe: 0.45, ao: true,
+    s17a_sgp_regen: { dauer: 4.4, zeitlupe: 0.45, ao: true,   // gewählt aus drei Proben: nah von vorn, Riesenrad dahinter, spiegelnde Fahrbahn (von hinten in der Gischt war es zu dunkel)
       vor: `TR.feld(1010, 0, [[-11, 2.4], [-23, -2.0], [-36, 1.8], [-50, -1.0]]); TR.sim(40, 33.3);`,
-      kams: [{ a: { von: [2.8, 0.36, 8.5], auf: [0, 0.55, 0], fov: 28 }, b: { von: [1.6, 0.42, 7.0], auf: [0, 0.55, 0], fov: 26 }, ease: 'lin', wack: 0.008 }] },
+      kams: [{ a: { von: [2.3, 0.3, 6.2], auf: [0, 0.5, 0], fov: 30 }, b: { von: [1.3, 0.36, 5.4], auf: [0, 0.5, 0], fov: 28 }, ease: 'lin', wack: 0.008 }] },
     s18b_sgp_helm: { dauer: 2.3, seite: true, ao: false,
       vor: `TR.feld(2180, 0, [[16, 1.8], [30, -1.6], [47, 0.8]]); S.cam = 2; window.__camFix = null; TR.sim(50, 33.3);`, kams: [{ a: { cam: 2 } }] },
-    s17b_vegas_regen: { dauer: 2.6, ao: true,
-      vor: `TR.feld(1900, -0.5, [[-15, 1.5, 0.9], [-31, -1.5, 0.9]]); TR.sim(25, 33.3);`,
-      kams: [{ a: { von: { s: 1988, lat: 5.6, h: 0.32 }, auf: [0, 0.5, 0], fov: 42 }, wack: 0.006 }] },
+    s17b_vegas_regen: { dauer: 2.6, zeitlupe: 0.5, ao: true,   // gewählt: Strip von vorn (seitlich vor der Sphere stand die Kamera im Regen-Rennen hinter der Betonwand)
+      vor: `TR.feld(4250, 0, [[-12, 2.4], [-25, -2], [-38, 2]]); TR.sim(30, 33.3);`,
+      kams: [{ a: { von: [1.4, 0.3, 7.2], auf: [0, 0.6, 0], fov: 27 }, b: { von: [0.9, 0.34, 6.4], auf: [0, 0.6, 0], fov: 26 }, ease: 'lin' }] },
     s18a_spa_regen: { dauer: 2.2, zeitlupe: 0.5, ao: false,
       vor: `TR.feld(1150, 0, [[-11, 2.4], [-23, -2.2], [-34, 1.4], [-47, -2.0], [-58, 2.2], [-72, -1.5], [-84, 0.5]]); TR.sim(45, 33.3);`,
       kams: [{ a: { von: { s: 1410, lat: -0.6, h: 0.6 }, auf: [0, 0.55, 0], fov: 6.5 }, b: { von: { s: 1410, lat: -0.6, h: 0.6 }, auf: [0, 0.55, 0], fov: 7.5 }, ease: 'lin' }] },
-    /* Varianten zur Auswahl (nur Proben) */
-    s17a_v1: { dauer: 4.4, zeitlupe: 0.45, ao: true, vor: `TR.feld(1010, 0, [[-11, 2.4], [-23, -2.0], [-36, 1.8], [-50, -1.0]]); TR.sim(40, 33.3);`,
-      kams: [{ a: { von: [2.3, 0.3, 6.2], auf: [0, 0.5, 0], fov: 30 }, b: { von: [1.3, 0.36, 5.4], auf: [0, 0.5, 0], fov: 28 }, ease: 'lin', wack: 0.008 }] },
-    s17a_v2: { dauer: 4.4, zeitlupe: 0.45, ao: true, vor: `TR.feld(1430, 0, [[-11, 2.4], [-23, -2.0], [-36, 1.8], [-50, -1.0]]); TR.sim(40, 33.3);`,
-      kams: [{ a: { von: [2.3, 0.3, 6.2], auf: [0, 0.5, 0], fov: 30 }, b: { von: [1.3, 0.36, 5.4], auf: [0, 0.5, 0], fov: 28 }, ease: 'lin', wack: 0.008 }] },
-    s17a_v3: { dauer: 4.4, zeitlupe: 0.45, ao: true, vor: `TR.feld(1010, 0, [[14, 1.8], [27, -1.5], [-12, 2.0]]); TR.sim(40, 33.3);`,
-      kams: [{ a: { von: [-1.6, 0.4, -5.5], auf: [0.3, 0.7, 4], fov: 40 }, b: { von: [-0.8, 0.5, -6.5], auf: [0.3, 0.7, 4], fov: 38 }, ease: 'lin', wack: 0.008 }] },
-    s17b_v1: { dauer: 2.6, zeitlupe: 0.5, ao: true, vor: `TR.feld(1915, 1.5, [[-16, -2, 0.9], [-33, 2, 0.9]]); TR.sim(25, 33.3);`,
-      kams: [{ a: { von: [6.0, 0.3, 1.2], auf: [342, 22, -496, 0], fov: 48 }, b: { von: [5.6, 0.3, 0.2], auf: [342, 22, -496, 0], fov: 46 }, ease: 'lin' }] },
-    s17b_v2: { dauer: 2.6, zeitlupe: 0.5, ao: true, vor: `TR.feld(1915, 1.5, [[-16, -2, 0.9], [-33, 2, 0.9]]); TR.sim(25, 33.3);`,
-      kams: [{ a: { von: [7.5, 0.22, 1.0], auf: [342, 18, -496, 0], fov: 52 }, b: { von: [7.2, 0.22, 0.2], auf: [342, 18, -496, 0], fov: 50 }, ease: 'lin' }] },
-    s17b_v3: { dauer: 2.6, zeitlupe: 0.5, ao: true, vor: `TR.feld(4250, 0, [[-12, 2.4], [-25, -2], [-38, 2]]); TR.sim(30, 33.3);`,
-      kams: [{ a: { von: [1.5, 0.3, 9], auf: [0, 0.6, 0], fov: 26 }, b: { von: [1.0, 0.34, 8], auf: [0, 0.6, 0], fov: 25 }, ease: 'lin' }] },
     /* ---------- Monaco: vier schnelle Schnitte ---------- */
     s08a_helm: { dauer: 1.09, seite: true, ao: false, vor: `TR.feld(1195, 0, [[12, 0.5], [-12, -0.5]]); S.cam = 2; window.__camFix = null; TR.sim(30, 33.3);`, kams: [{ a: { cam: 2 } }] },
     s08b_tunnel: { dauer: 1.09, ao: false, vor: `TR.feld(1850, 0, [[-12, 1.5], [-25, -1.5], [-38, 1]]); TR.sim(25, 33.3);`,

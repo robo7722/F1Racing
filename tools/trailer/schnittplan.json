@@ -40,10 +40,10 @@
     { "szene": "s14_duell", "von": 59.194 },
     { "szene": "s16a_sprint", "von": 70.104 },
     { "szene": "s16b_ziel", "von": 74.468 },
-    { "szene": "s17a_sgp_regen", "von": 79.3, "text": "wetter" },
-    { "szene": "s17b_vegas_regen", "von": 83.7 },
+    { "szene": "s17a_sgp_regen", "filter": "eq=gamma=1.22:saturation=1.08", "von": 79.3, "text": "wetter" },
+    { "szene": "s17b_vegas_regen", "filter": "eq=gamma=1.22:saturation=1.08", "von": 83.7 },
     { "szene": "s18a_spa_regen", "von": 86.3 },
-    { "szene": "s18b_sgp_helm", "von": 88.5, "aus": 1.0 },
+    { "szene": "s18b_sgp_helm", "filter": "eq=gamma=1.22:saturation=1.08", "von": 88.5, "aus": 1.0 },
     { "szene": "@titel", "von": 90.8, "ein": 0.25, "aus": 1.6 },
     { "szene": "@ende", "von": 98.1 }
   ]
