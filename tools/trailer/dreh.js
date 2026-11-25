@@ -18,8 +18,8 @@ async function szene(name, proben) {
   if (!PROBE) fs.mkdirSync(dir, { recursive: true });
   const t0 = Date.now(), seite = !!z.seite, mb = PROBE ? 1 : (z.mb || 1), NP = +flag('proben', 4), zeigen = PROBE ? new Set(Array.from({ length: NP }, (_, k) => Math.min(n - 3, Math.max(1, Math.round(k * (n - 3) / (NP - 1))))) ) : null;
   const ziel = i => PROBE ? path.join(AUS, 'probe', `${name}_${[...zeigen].sort((x, y) => x - y).indexOf(i)}.jpg`) : path.join(dir, String(i + 1).padStart(4, '0') + '.jpg');
-  if (z.typ === 'garage') {   // Garage: Schärfentiefe – je Trailerbild 4 Zwischenbilder (ausgewogene Blendenpunkte, gleiche Kamerastellung), gemittelt über die letzten 3 Trailerbilder
-    const sub = 4, fen = PROBE ? 8 : 12, U = i => (Math.max(0, i) + 0.5) / n;
+  if (z.typ === 'garage') {   // Garage: Schärfentiefe – je Trailerbild 6 Zwischenbilder (zwei Dreiecke von Blendenpunkten, gleiche Kamerastellung), gemittelt über die letzten 2 Trailerbilder
+    const sub = 6, fen = 12, U = i => (Math.max(0, i) + 0.5) / n;
     await ev(`TRS.setz(${J(z.a)}, ${J(z.b)}, ${J({ ease: z.ease || 'io', n: fen })}); ${z.vor || ''}; 1`);
     let voll = -9;
     for (let i = 0; i < n; i++) { if (PROBE && !zeigen.has(i)) continue; if (!PROBE && !NEU && fs.existsSync(ziel(i))) continue;

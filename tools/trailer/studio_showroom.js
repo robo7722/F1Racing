@@ -13,17 +13,18 @@ window.TRS = {
   setz(a, b, o = {}) { TRS.a = a; TRS.b = b || a; TRS.ease = o.ease || 'io'; TRS.n = o.n || 12; TRS.ring = []; TRS.k = 0; document.querySelector('#menu').style.opacity = 0; window.__norender = true; return 'ok'; },
   wert(u) { const e = TRS.ease === 'lin' ? u : u * u * (3 - 2 * u), A = TRS.a, B = TRS.b, m = (x, y) => x + (y - x) * e, v = (x, y) => x.map((q, i) => m(q, y[i]));
     return { p: v(A.p, B.p), t: v(A.t, B.t), f: v(A.f || A.t, B.f || B.t), fov: m(A.fov, B.fov), ap: m(A.ap ?? 0.04, B.ap ?? 0.04) }; },
-  // ein Zwischenbild: Kamera bei u (0…1), Wandzeit wt (s), j = Nummer des Zwischenbilds im Trailerbild (0…3), bild = Nummer des Trailerbilds.
+  // ein Zwischenbild: Kamera bei u (0…1), Wandzeit wt (s), j = Nummer des Zwischenbilds im Trailerbild (0…5), bild = Nummer des Trailerbilds.
   // Blendenpunkte je Trailerbild: zwei gegenüberliegende Paare auf zwei Ringen (Schwerpunkt genau in der Blendenmitte), von Bild zu Bild um den goldenen Winkel gedreht.
   // Vorher lief ein fester 12er-Umlauf über vier Bilder – der Schwerpunkt der Blende wanderte dabei im 4-Bilder-Takt, das Bild zitterte an den Rändern (gemessen: Bildänderung schwankte mit Periode 4).
   sub(u, wt = 0, j = 0, bild = 0) { const W = TRS.wert(Math.max(0, Math.min(1, u))), c = SHOW.cam; SHOW.stage.updateMatrixWorld(); const M = SHOW.stage.matrixWorld;
     const P = new THREE.Vector3(...W.p).applyMatrix4(M), T = new THREE.Vector3(...W.t).applyMatrix4(M), F = new THREE.Vector3(...W.f).applyMatrix4(M);
     const fw = T.clone().sub(P).normalize(), rt = new THREE.Vector3().crossVectors(fw, new THREE.Vector3(0, 1, 0)).normalize(), up = new THREE.Vector3().crossVectors(rt, fw);
     const dF = F.clone().sub(P).dot(fw), F0 = P.clone().addScaledVector(fw, dF);   // Mitte der Schärfeebene auf der Blickachse
-    // Zwölf feste Blendenpunkte auf zwei Ringen (innen 6, außen 6, um 30° versetzt), aufgeteilt in drei Vierergruppen aus je zwei gegenüberliegenden Paaren.
-    // Trailerbild n zeichnet Gruppe n mod 3 – in jedem Mittelungsfenster (3 Bilder) stecken damit immer genau dieselben zwölf Punkte: gleiche Unschärfeform in jedem Bild.
-    // (Mit je Bild weitergedrehten Punkten flimmerte das unscharfe LED-Raster der Wand noch unregelmäßig.)
-    const m = ((bild % 3) + 3) % 3, r = W.ap * (j % 2 ? 0.95 : 0.5), w = ((j % 2 ? 30 : 0) + m * 60 + (j >= 2 ? 180 : 0)) * Math.PI / 180;
+    // Zwölf feste Blendenpunkte auf zwei Ringen (innen 6, außen 6, um 30° versetzt). Je Trailerbild sechs davon: ein Dreieck innen und eines außen (je 120° Abstand),
+    // im nächsten Bild die um 60° gedrehten Dreiecke. Ein Dreieck hat seinen Schwerpunkt in der Blendenmitte UND streut in alle Richtungen gleich –
+    // damit sieht jedes Bild dieselbe Unschärfe, auch wenn die Mittelung über zwei Bilder läuft. (Vierergruppen aus zwei Paaren streuen in einer Richtung stärker;
+    // das drehte sich im 3-Bilder-Takt und war als Rest-Flimmern messbar: Bildänderung ±6 %, davor im 4-Bilder-Takt ±12 %.)
+    const par = ((bild % 2) + 2) % 2, aussen = j >= 3, r = W.ap * (aussen ? 0.95 : 0.5), w = ((aussen ? 30 : 0) + par * 60 + (j % 3) * 120) * Math.PI / 180;
     c.position.copy(P).addScaledVector(rt, Math.cos(w) * r).addScaledVector(up, Math.sin(w) * r); c.up.set(0, 1, 0); c.lookAt(F0); c.fov = W.fov; c.aspect = innerWidth / innerHeight; c.clearViewOffset(); c.updateProjectionMatrix(); c.updateMatrixWorld();
     TRS.wall(wt); TRS.draw(); const gl = renderer.getContext(), buf = new Uint8Array(gl.drawingBufferWidth * gl.drawingBufferHeight * 4); gl.readPixels(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, gl.RGBA, gl.UNSIGNED_BYTE, buf);
     TRS.ring.push(buf); if (TRS.ring.length > TRS.n) TRS.ring.shift(); return TRS.ring.length; },
