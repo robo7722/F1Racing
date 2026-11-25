@@ -20,7 +20,10 @@ window.TRS = {
     const P = new THREE.Vector3(...W.p).applyMatrix4(M), T = new THREE.Vector3(...W.t).applyMatrix4(M), F = new THREE.Vector3(...W.f).applyMatrix4(M);
     const fw = T.clone().sub(P).normalize(), rt = new THREE.Vector3().crossVectors(fw, new THREE.Vector3(0, 1, 0)).normalize(), up = new THREE.Vector3().crossVectors(rt, fw);
     const dF = F.clone().sub(P).dot(fw), F0 = P.clone().addScaledVector(fw, dF);   // Mitte der Schärfeebene auf der Blickachse
-    const r = W.ap * (j % 2 ? 0.95 : 0.55), w = bild * 2.399963 + j * Math.PI / 2;
+    // Zwölf feste Blendenpunkte auf zwei Ringen (innen 6, außen 6, um 30° versetzt), aufgeteilt in drei Vierergruppen aus je zwei gegenüberliegenden Paaren.
+    // Trailerbild n zeichnet Gruppe n mod 3 – in jedem Mittelungsfenster (3 Bilder) stecken damit immer genau dieselben zwölf Punkte: gleiche Unschärfeform in jedem Bild.
+    // (Mit je Bild weitergedrehten Punkten flimmerte das unscharfe LED-Raster der Wand noch unregelmäßig.)
+    const m = ((bild % 3) + 3) % 3, r = W.ap * (j % 2 ? 0.95 : 0.5), w = ((j % 2 ? 30 : 0) + m * 60 + (j >= 2 ? 180 : 0)) * Math.PI / 180;
     c.position.copy(P).addScaledVector(rt, Math.cos(w) * r).addScaledVector(up, Math.sin(w) * r); c.up.set(0, 1, 0); c.lookAt(F0); c.fov = W.fov; c.aspect = innerWidth / innerHeight; c.clearViewOffset(); c.updateProjectionMatrix(); c.updateMatrixWorld();
     TRS.wall(wt); TRS.draw(); const gl = renderer.getContext(), buf = new Uint8Array(gl.drawingBufferWidth * gl.drawingBufferHeight * 4); gl.readPixels(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, gl.RGBA, gl.UNSIGNED_BYTE, buf);
     TRS.ring.push(buf); if (TRS.ring.length > TRS.n) TRS.ring.shift(); return TRS.ring.length; },

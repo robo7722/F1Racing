@@ -18,6 +18,9 @@ module.exports = {
     { menue: true, schritte: [{ szenen: 's01_garage_fluegel,s02_garage_helm' }] },
     { strecke: 'Monaco', fahrer: 'RUS', schritte: [{ szenen: 's08c_rad,s08d_tcam' }] },
   ],
+  // Garage auf zwei Sitzungen verteilt (jede Einstellung für sich)
+  g1: [{ menue: true, schritte: [{ szenen: 's01_garage_fluegel' }] }],
+  g2: [{ menue: true, schritte: [{ szenen: 's02_garage_helm' }] }],
   c: [
     { strecke: 'Monza', schritte: [{ fahrer: 'LEC', szenen: 's14_duell,s11_2026' }, ...legenden.map(([fahrer, szenen]) => ({ fahrer, szenen }))] },
   ],
