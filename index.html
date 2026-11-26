@@ -4214,50 +4214,32 @@ const ckWo = (G, z) => { const T = G.wx; let w = G.wo + T[T.length - 1][1]; if (
 const CK_SCH = 0.032;
 const ckTab = (T, z) => { if (z <= T[0][0]) return T[0][1]; for (let i = 1; i < T.length; i++) if (z <= T[i][0]) return lerp(T[i - 1][1], T[i][1], (z - T[i - 1][0]) / (T[i][0] - T[i - 1][0])); return T[T.length - 1][1]; };
 const ckGLSL = (T, v) => { let e = T[T.length - 1][1].toFixed(4); for (let i = T.length - 1; i >= 1; i--) e = '(' + v + ' < ' + T[i][0].toFixed(3) + ' ? mix(' + T[i - 1][1].toFixed(4) + ', ' + T[i][1].toFixed(4) + ', clamp((' + v + ' - ' + T[i - 1][0].toFixed(3) + ') / ' + (T[i][0] - T[i - 1][0]).toFixed(3) + ', 0.0, 1.0)) : ' + e + ')'; return e; };
-// v3.05 (Rückmeldung 26.11.2026: „Man sieht die Sponsoren, Nummern und andere Lackierungen aus Helm- und TV-Ansicht nicht, nur die Farbe“):
-// Die Schale ersetzt in diesen Kameras die Karosserie ums Cockpit (Vorderdeck, Schultern, Flanken) – genau die Fläche, die man von dort sieht. Sie hatte keine
-// Koordinaten in der gebackenen Lack-Textur und zeigte deshalb nur den berechneten Grundlack (+ alter Seitenbogen); alles, was nur in der Textur steckt
-// (Sponsoren von oben, Muster), fehlte. Jetzt bekommt jeder Punkt der Schale die Textur-Koordinate (uvB) des nächsten Lack-Dreiecks der Karosserie (Stufe 0),
-// gesucht an der Lackierposition aLP und nur unter Dreiecken mit ähnlicher Ausrichtung. Damit an Nähten der Abwicklung keine verschmierten Streifen entstehen
-// (ein Dreieck, dessen Ecken in verschiedenen Stücken der Textur liegen), bekommt die Schale eigene Eckpunkte je Dreieck, und alle drei Ecken werden im selben
-// Stück gesucht (dem des Dreiecks unter der Mitte). Ergebnis je Klasse zwischengespeichert (alle Teams einer Klasse teilen Modell und Abwicklung).
-const CK_UV = new WeakMap();
-function ckShellUV(g, B, k) {
-  const BU = B && B.attributes.uvB, BK = B && B.attributes.aCls; if (!BU || !BK || !B.index) return g;
-  const gs = g.toNonIndexed(), n = gs.attributes.position.count, C = CK_UV.get(BU) || {}; let uv = C[k];   // je Modell (uvB) und Klasse
-  if (!uv || uv.length !== n * 2) { try { uv = ckShellUVCalc(gs, B); } catch (e) { uv = null; } if (!uv) return g; C[k] = uv; CK_UV.set(BU, C); }
-  gs.setAttribute('uvB', new THREE.BufferAttribute(uv, 2)); return gs; }
-function ckShellUVCalc(gs, B) {
-  const BP = B.attributes.position.array, U = B.attributes.uvB.array, K = B.attributes.aCls.array, BI = B.index.array, nV = BP.length / 3, nT = BI.length / 3;
-  const par = new Int32Array(nV); for (let i = 0; i < nV; i++) par[i] = i; const fd = i => { while (par[i] !== i) i = par[i] = par[par[i]]; return i; };
-  for (let t = 0; t < nT; t++) { const a = fd(BI[t * 3]); par[fd(BI[t * 3 + 1])] = a; par[fd(BI[t * 3 + 2])] = a; }   // Stücke der Abwicklung: über gemeinsame Punkte verbundene Dreiecke
-  const LP = gs.attributes.aLP.array, NN = gs.attributes.normal.array, n = LP.length / 3; let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9, y0 = 1e9, y1 = -1e9;
-  for (let i = 0; i < n; i++) { x0 = Math.min(x0, LP[i * 3]); x1 = Math.max(x1, LP[i * 3]); y0 = Math.min(y0, LP[i * 3 + 1]); y1 = Math.max(y1, LP[i * 3 + 1]); z0 = Math.min(z0, LP[i * 3 + 2]); z1 = Math.max(z1, LP[i * 3 + 2]); }
-  const M = 0.15, C = 0.06, cell = new Map(), key = (ix, iz) => ix * 4096 + iz, TN = [], ch = new Int32Array(nT);
-  for (let t = 0; t < nT; t++) { const a = BI[t * 3], b = BI[t * 3 + 1], c = BI[t * 3 + 2]; ch[t] = fd(a); if (K[a] > 2.5 || K[b] > 2.5 || K[c] > 2.5) continue;   // nur Lackflächen, die aus der Textur lesen
-    let lx = 1e9, hx = -1e9, lz = 1e9, hz = -1e9, ly = 1e9, hy = -1e9; for (const v of [a, b, c]) { lx = Math.min(lx, BP[v * 3]); hx = Math.max(hx, BP[v * 3]); ly = Math.min(ly, BP[v * 3 + 1]); hy = Math.max(hy, BP[v * 3 + 1]); lz = Math.min(lz, BP[v * 3 + 2]); hz = Math.max(hz, BP[v * 3 + 2]); }
-    if (hx < x0 - M || lx > x1 + M || hz < z0 - M || lz > z1 + M || hy < y0 - M || ly > y1 + M) continue;
-    const ux = BP[b * 3] - BP[a * 3], uy = BP[b * 3 + 1] - BP[a * 3 + 1], uz = BP[b * 3 + 2] - BP[a * 3 + 2], vx = BP[c * 3] - BP[a * 3], vy = BP[c * 3 + 1] - BP[a * 3 + 1], vz = BP[c * 3 + 2] - BP[a * 3 + 2];
-    let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; const l = Math.hypot(nx, ny, nz); if (l < 1e-12) continue; TN[t] = [nx / l, ny / l, nz / l];
-    for (let ix = Math.floor((lx + 4) / C); ix <= Math.floor((hx + 4) / C); ix++) for (let iz = Math.floor((lz + 4) / C); iz <= Math.floor((hz + 4) / C); iz++) { const k = key(ix, iz); let L = cell.get(k); if (!L) cell.set(k, L = []); L.push(t); } }
-  const P = new THREE.Vector3(), A = new THREE.Vector3(), Bv = new THREE.Vector3(), Cv = new THREE.Vector3(), Q = new THREE.Vector3(), T3 = new THREE.Triangle(), BC = new THREE.Vector3();
-  const near = (px, py, pz, nx, ny, nz, chart) => { P.set(px, py, pz); let best = -1, bd = 1e9; const cx = Math.floor((px + 4) / C), cz = Math.floor((pz + 4) / C);
-    for (let r = 1; r <= 3 && best < 0; r++) { const seen = new Set();
-      for (let ix = cx - r; ix <= cx + r; ix++) for (let iz = cz - r; iz <= cz + r; iz++) { const L = cell.get(key(ix, iz)); if (!L) continue;
-        for (const t of L) { if (seen.has(t)) continue; seen.add(t); if (chart >= 0 && ch[t] !== chart) continue; const tn = TN[t]; if (Math.abs(tn[0] * nx + tn[1] * ny + tn[2] * nz) < 0.35) continue;
-          const a = BI[t * 3], b = BI[t * 3 + 1], c = BI[t * 3 + 2]; T3.set(A.fromArray(BP, a * 3), Bv.fromArray(BP, b * 3), Cv.fromArray(BP, c * 3)); T3.closestPointToPoint(P, Q); const d = Q.distanceToSquared(P); if (d < bd) { bd = d; best = t; } } } }
-    return best; };
-  const uvAt = (t, px, py, pz, out, o) => { const a = BI[t * 3], b = BI[t * 3 + 1], c = BI[t * 3 + 2]; P.set(px, py, pz); T3.set(A.fromArray(BP, a * 3), Bv.fromArray(BP, b * 3), Cv.fromArray(BP, c * 3)); T3.closestPointToPoint(P, Q); T3.getBarycoord(Q, BC);
-    out[o] = BC.x * U[a * 2] + BC.y * U[b * 2] + BC.z * U[c * 2]; out[o + 1] = BC.x * U[a * 2 + 1] + BC.y * U[b * 2 + 1] + BC.z * U[c * 2 + 1]; };
-  const out = new Float32Array(n * 2); let hit = 0;
-  for (let f = 0; f < n; f += 3) { let mx = 0, my = 0, mz = 0, qx = 0, qy = 0, qz = 0; for (let j = 0; j < 3; j++) { const i = (f + j) * 3; mx += LP[i] / 3; my += LP[i + 1] / 3; mz += LP[i + 2] / 3; qx += NN[i]; qy += NN[i + 1]; qz += NN[i + 2]; }
-    const ql = Math.hypot(qx, qy, qz) || 1, t0 = near(mx, my, mz, qx / ql, qy / ql, qz / ql, -1); if (t0 < 0) { for (let j = 0; j < 3; j++) out[(f + j) * 2] = out[(f + j) * 2 + 1] = -1; continue; } hit++;   // nichts gefunden: Koordinate außerhalb der Textur → Shader rechnet den Lack (siehe cockNew)
-    for (let j = 0; j < 3; j++) { const i = (f + j) * 3, t = near(LP[i], LP[i + 1], LP[i + 2], NN[i], NN[i + 1], NN[i + 2], ch[t0]); uvAt(t >= 0 ? t : t0, LP[i], LP[i + 1], LP[i + 2], out, (f + j) * 2); } }
-  return hit > n / 6 ? out : null; }   // kaum Treffer: Modell passt nicht – alte Darstellung behalten
+// v3.05 (Rückmeldung 26.11.2026: „Man sieht die Sponsoren, Nummern und andere Lackierungen aus Helm- und TV-Ansicht nicht, nur die Farbe“): Die Schale ersetzt in
+// diesen Kameras die Karosserie ums Cockpit (Vorderdeck, Schultern, Flanken) – genau die Fläche, die man von dort sieht – und las die gebackene Lack-Textur nicht.
+// v3.06 (Bildschirmfoto Ferrari/Singapur: „Die Texturen buggen jetzt“ – gezackte rot-weiße Flecken auf den Schultern): v3.05 gab jedem Punkt der Schale die
+// Textur-Koordinate des NÄCHSTEN Karosserie-Dreiecks. Die Schale hat eine eigene Form (höhere Schultern, andere Breite) – die Zuordnung sprang zwischen Flächen
+// und Stücken der Abwicklung. Jetzt eine Projektion von oben: Die Karosserie (Stufe 0; Lack aus der gebackenen Textur, sonst Eckpunktfarbe; Carbon-Teile in
+// Carbonfarbe) wird einmal je Team senkrecht von oben in ein Bild gezeichnet, über dem Bereich der Schale (ckTopArea). Die Schale liest an ihrer Lackierposition
+// (x, z) genau das, was man von oben auf der Karosserie sieht – lückenlos, ohne Sprünge. Teile höher als die Schale (Spiegelgehäuse) bleiben dabei weg.
+// Wo von oben nichts liegt (Bild leer), rechnet der Shader den Lack wie bisher. Gezeichnet wird, sobald die Lack-Textur geladen ist (ckTopDraw).
+const CK_TOP_W = 512, CK_TOP_H = 1024;   // 0,88 m × 2,45 m → ~580 bzw. ~420 Bildpunkte je Meter (gebackene Textur: ~270/m)
+function ckTopArea(k) { const G = CK[k]; return { x: 0.44, z0: G.zB - 0.05, zl: G.zF - G.zB + 0.1, yMax: Math.max(...G.hC.map(h => h[1])) + 0.05 }; }
+function ckTop(tp, k, B, Bm) { if (tp.ckTop !== undefined) return tp.ckTop; tp.ckTop = null; if (!B || !B.attributes.uvB || !B.attributes.aCls || !baked(tp.tk)) return null;
+  const A = ckTopArea(k), U = decalUniforms(tp.tk), rt = new THREE.WebGLRenderTarget(CK_TOP_W, CK_TOP_H, { minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter, generateMipmaps: true });
+  rt.texture.anisotropy = 8; const uA = { value: new THREE.Vector4(A.x, A.z0, A.zl, A.yMax) };
+  const vs = 'attribute vec2 uvB; attribute float aCls; uniform vec4 uA; varying vec2 vUV; varying float vC; varying float vY; varying vec3 vCol;\nvoid main() { vUV = uvB; vC = aCls; vY = position.y; vCol = vec3(1.0);\n#ifdef USE_COLOR\n vCol = color;\n#endif\n'
+    + ' gl_Position = vec4(position.x / uA.x, (position.z - uA.y) / uA.z * 2.0 - 1.0, -(position.y - 0.5) * 0.5, 1.0); }';   // senkrecht von oben: höher = näher
+  const fs = 'uniform sampler2D uBake; uniform float uBakeOn; uniform vec4 uA; uniform vec3 uCarb; uniform float uMatte; varying vec2 vUV; varying float vC; varying float vY; varying vec3 vCol;\n'
+    + 'void main() { if (vY > uA.w) discard; vec3 c = uMatte > 0.5 ? uCarb : (vC < 2.5 && uBakeOn > 0.5 ? texture2D(uBake, vUV).rgb : vCol); gl_FragColor = vec4(pow(max(c, vec3(0.0)), vec3(1.0 / 2.2)), 1.0); }';   // sRGB-ähnlich ablegen (8 Bit, dunkle Töne ohne Stufen)
+  const mk = matte => new THREE.ShaderMaterial({ vertexShader: vs, fragmentShader: fs, vertexColors: !matte, side: THREE.DoubleSide, uniforms: { uBake: U.uBake, uBakeOn: U.uBakeOn, uA, uCarb: { value: MATTE.color }, uMatte: { value: matte ? 1 : 0 } } });
+  const scene = new THREE.Scene(), add = (g, m) => { if (!g) return; const o = new THREE.Mesh(g, m); o.frustumCulled = false; scene.add(o); }; add(B, mk(false)); add(Bm, mk(true));
+  return (tp.ckTop = { rt, scene, cam: new THREE.Camera(), U, uA, on: { value: 0 }, done: false }); }
+function ckTopDraw(T) { if (!T || T.done || !T.U.uBakeOn.value) return; const r = renderer, rt0 = r.getRenderTarget(), cc = r.getClearColor(new THREE.Color()), ca = r.getClearAlpha(), ac = r.autoClear;
+  try { r.setRenderTarget(T.rt); r.setClearColor(0x000000, 0); r.autoClear = true; r.render(T.scene, T.cam); T.done = true; T.on.value = 1; } catch (e) {} finally { r.setRenderTarget(rt0); r.setClearColor(cc, ca); r.autoClear = ac; } }
 // Cockpit-Materialien je Grundmaterial: das eigene Auto trägt ein Material MIT Startnummer (numMat). Bis v3.04 hingen Cockpit-Fassung und Schale am Team-Material
 // ohne Nummer, und beim Zurückschalten wurde dieses gesetzt – Nummer fehlte in Helm/TV und danach auch in der Verfolgerkamera.
 function cockEnt(tp, base, k) { const M = tp.ckM || (tp.ckM = new Map()); let e = M.get(base); if (!e) M.set(base, e = { cut: cockCut(base, k) }); return e; }
-function cockNew(tp, k, bodyCol, base = tp.glossMat, bodyGeo = null) {
+function cockNew(tp, k, bodyCol, base = tp.glossMat, bodyGeo = null, bodyMatte = null) {
   const G = CK[k], S = t => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); }, hC1 = ckTab(G.hC, G.z1), yBk = G.fl - 0.06;
   const zs = []; for (let i = 0; i < 26; i++) zs.push(lerp(G.zB, G.z1 - G.rc, i / 26)); for (let i = 0; i <= 14; i++) zs.push(G.z1 - G.rc * Math.cos(i / 14 * Math.PI / 2)); const nTub = zs.length;
   zs.push(G.z1 + 0.0005); for (let i = 1; i <= 30; i++) zs.push(lerp(G.z1, G.zF, i / 30));
@@ -4283,12 +4265,13 @@ function cockNew(tp, k, bodyCol, base = tp.glossMat, bodyGeo = null) {
     g.setAttribute('color', new THREE.BufferAttribute(cc, 3)); g.setAttribute('aCls', new THREE.BufferAttribute(new Float32Array(n), 1));
     const lp = new Float32Array(n * 3); for (let i = 0; i < n; i++) { const z = pp.getZ(i), y = pp.getY(i); lp[i * 3] = pp.getX(i); lp[i * 3 + 1] = z < G.z1 ? Math.min(y, G.yR + 0.012) : y; lp[i * 3 + 2] = z; } g.setAttribute('aLP', new THREE.BufferAttribute(lp, 3)); }   /* aLP: Position, an der die Lackierung berechnet wird – die erhöhten Schultern bekommen die Farbe des Decks auf Randhöhe (wie das Fahrzeug von außen), nicht die Farbfelder weiter oben */
   const gc = g.clone(); gc.setIndex(ICb); g.setIndex(I);
-  const gs = ckShellUV(g, bodyGeo, k), uvOn = gs !== g, ent = cockEnt(tp, base, k);   // v3.05: Schale mit Koordinaten in der gebackenen Lack-Textur (Sponsoren, Muster) – siehe ckShellUV
-  if (!ent.shell) { const gm = base, sm = gm.clone(), ob = gm.onBeforeCompile; sm.onBeforeCompile = (sh, r) => { if (ob) ob.call(gm, sh, r); if (sh.vertexShader.includes('vLP = position;')) sh.vertexShader = 'attribute vec3 aLP;\n' + sh.vertexShader.replace('vLP = position;', 'vLP = aLP;');
+  const T = ckTop(tp, k, bodyGeo, bodyMatte), topOn = !!T, ent = cockEnt(tp, base, k);   // v3.06: Lack der Schale per Projektion von oben (ckTop)
+  if (!ent.shell) { const gm = base, sm = gm.clone(), ob = gm.onBeforeCompile; sm.onBeforeCompile = (sh, r) => { if (ob) ob.call(gm, sh, r); if (sh.vertexShader.includes('vLP = position;')) sh.vertexShader = 'attribute vec3 aLP;\n' + (topOn ? 'uniform vec4 uTopA; varying vec2 vTUV;\n' : '') + sh.vertexShader.replace('vLP = position;', 'vLP = aLP;' + (topOn ? ' vTUV = vec2(aLP.x / uTopA.x * 0.5 + 0.5, (aLP.z - uTopA.y) / uTopA.z);' : ''));
       const bt = 'vCls < 2.5 && uBakeOn > 0.5 ? texture2D(uBake, vBUV).rgb : ', tk = tp.tk;   /* v2.99: Die Schale hat keine UV der gebackenen Lack-Textur (seit v2.73) – sie las immer denselben Bildpunkt (Fläche vor dem Cockpit einfarbig hellgrau statt lackiert). Hier wieder: Lack berechnen, Bogen und Logo projizieren */
-      if (uvOn) sh.fragmentShader = sh.fragmentShader.replace('vCls < 2.5 && uBakeOn > 0.5 ?', 'vCls < 2.5 && uBakeOn > 0.5 && vBUV.x >= 0.0 ?');   // v3.05: Dreiecke ohne Gegenstück auf der Karosserie (uvB = -1): Lack berechnen
-      if (tk && !uvOn && sh.fragmentShader.includes(bt)) { sh.fragmentShader = sh.fragmentShader.replace(bt, '').replace('livery(vLP, vCls);', 'livery(vLP, vCls);' + (hasDecal(tk) ? ' if (vCls < 2.5) {' + decalGLSL(tk, true) + ' }' : '')); Object.assign(sh.uniforms, decalProj(tk)); } }; const ck = gm.customProgramCacheKey(); sm.customProgramCacheKey = () => ck + (uvOn ? '|ckLPuv' : '|ckLP'); ent.shell = sm; }   // Lack wie die Karosserie, Farbe an der Lackierposition aLP berechnet
-  const grp = new THREE.Group(); grp.add(new THREE.Mesh(gs, ent.shell)); grp.add(new THREE.Mesh(gc, COCK_MAT));
+      if (topOn && sh.fragmentShader.includes(bt)) { sh.fragmentShader = 'uniform sampler2D uTop; uniform float uTopOn; varying vec2 vTUV;\n' + sh.fragmentShader.replace('#include <color_fragment>', 'vec4 ckT = texture2D(uTop, vTUV);\n#include <color_fragment>').replace(bt, 'vCls < 2.5 && uTopOn > 0.5 && ckT.a > 0.5 ? pow(ckT.rgb, vec3(2.2)) : ');
+        Object.assign(sh.uniforms, { uTop: { value: T.rt.texture }, uTopOn: T.on, uTopA: T.uA }); }   // Bild von oben (leer → Lack berechnen)
+      else if (tk && sh.fragmentShader.includes(bt)) { sh.fragmentShader = sh.fragmentShader.replace(bt, '').replace('livery(vLP, vCls);', 'livery(vLP, vCls);' + (hasDecal(tk) ? ' if (vCls < 2.5) {' + decalGLSL(tk, true) + ' }' : '')); Object.assign(sh.uniforms, decalProj(tk)); } }; const ck = gm.customProgramCacheKey(); sm.customProgramCacheKey = () => ck + (topOn ? '|ckLPtop' : '|ckLP'); ent.shell = sm; }   // Lack wie die Karosserie, Farbe an der Lackierposition aLP berechnet
+  const grp = new THREE.Group(); grp.add(new THREE.Mesh(g, ent.shell)); grp.add(new THREE.Mesh(gc, COCK_MAT));
   { const w = 0.062, y0 = G.fl, y1 = hC1 - 0.003, zp = G.z1 - 0.002, pg = new THREE.BufferGeometry();   // Armaturenwand: ebene Carbonplatte in der Mitte der Vorderwand (dort laufen die Punktreihen beider Hälften zusammen – ohne Platte eine dunkle Naht)
     pg.setAttribute('position', new THREE.Float32BufferAttribute([-w, y0, zp, w, y0, zp, w, y1, zp, -w, y0, zp, w, y1, zp, -w, y1, zp], 3)); pg.setAttribute('uv', new THREE.Float32BufferAttribute([-w * 30, y0 * 30, w * 30, y0 * 30, w * 30, y1 * 30, -w * 30, y0 * 30, w * 30, y1 * 30, -w * 30, y1 * 30], 2)); pg.computeVertexNormals(); grp.add(new THREE.Mesh(pg, COCK_MAT)); }
   // Kopfstütze/Rückwand hinter dem Fahrer: geschlossene, oben runde Polsterwand über die ganze Breite – beim Umschauen nach hinten sieht man darauf statt hinter das Ende des Cockpit-Modells
@@ -4342,7 +4325,7 @@ const decalLoad = (url, tx, on, full) => { const t0 = tx.value = new THREE.Textu
 function ownLivFull() { if (!DECAL_SMALL) return; for (const tk in DECAL_TEX) { if (!ownLiv(tk)) continue; const U = DECAL_TEX[tk];
   for (const k of ['uBake', 'uDecal', 'uSheet']) { const old = U[k].value; if (!old || old.userData.full) continue; old.userData.full = true; if (!old.userData.half) continue;   // noch nicht geladen: kommt jetzt gleich voll an
     new THREE.TextureLoader().load(old.userData.url, t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.userData = { url: old.userData.url, full: true }; t.needsUpdate = true;
-      if (U[k].value === old) { U[k].value = t; old.dispose(); } try { renderer.initTexture(t); } catch (e) {} }, undefined, () => {}); } } }
+      if (U[k].value === old) { U[k].value = t; old.dispose(); if (typeof TPL !== 'undefined' && TPL[tk] && TPL[tk].ckTop) TPL[tk].ckTop.done = false; }   /* Bild von oben (Cockpit-Schale) mit der vollen Textur neu zeichnen */ try { renderer.initTexture(t); } catch (e) {} }, undefined, () => {}); } } }
 // Cockpit-Schale (cockNew, Helm- und TV-Kamera): Sie hat keine UV der gebackenen Lack-Textur – dort wird der Lack wie vor v2.73 berechnet und der Aufkleberbogen
 // samt Teamlogo von der Seite/von oben aufgetragen. Bei Teams mit gebackener Textur sind Bogen und Logo sonst gar nicht geladen: hier bei Bedarf nachholen (nur das eigene Team).
 const DECAL_PROJ = new Set();
@@ -12935,7 +12918,7 @@ function cockLast(o, on) { if (!o) return; o.traverse(x => { if (!x.isMesh || x.
 // Baut (einmal je Auto) alles, was nur die Cockpitansicht braucht: aufgeschnittene Karosserie-Materialien, Wanne und – beim F1 – die einheitliche Schale. EINE Stelle für Vorladen und Umschalten.
 function cockBuild(m) { const tp = m.tp, k = tp.M === MODELS.f2 ? 'f2' : 'f1', base = m.bodyMat0 || (m.bodyMat0 = m.body.material), e = cockEnt(tp, base, k);   /* v3.05: Grundmaterial des Autos (mit Startnummer), nicht tp.glossMat */
   m.ckCut = e.cut; tp.cutMatte ||= cockCut(MATTE, k); e.cut.transparent = tp.cutMatte.transparent = true; ckFill(e.cut); ckFill(tp.cutMatte); ckFillAll(SW.g); if (ARMS.f1) ckFillAll(ARMS.f1.g); ckSatin(e.cut); if (m.tub) { return; }
-  m.tub = cockNew(tp, k, cockBodyCol(), base, tp.lods && tp.lods[0] && tp.lods[0].gloss); ckSatin(e.shell); ckFillAll(m.tub); cockLast(m.tub, true);   /* Reihenfolge und Durchsicht-Flag schon beim Bau: beim ersten Umschalten muss kein Shader neu übersetzt werden */ m.tub.visible = false; m.g.add(m.tub); }
+  m.tub = cockNew(tp, k, cockBodyCol(), base, tp.lods && tp.lods[0] && tp.lods[0].gloss, tp.lods && tp.lods[0] && tp.lods[0].matte); ckSatin(e.shell); ckTopDraw(tp.ckTop); ckFillAll(m.tub); cockLast(m.tub, true);   /* Reihenfolge und Durchsicht-Flag schon beim Bau: beim ersten Umschalten muss kein Shader neu übersetzt werden */ m.tub.visible = false; m.g.add(m.tub); }
 function cockpitInterior(on) {
   const m = pl && pl.mesh; if (cockOn && (!on || cockOn !== m)) { cockOn.body.material = cockOn.bodyMat0 || cockOn.tp.glossMat; cockOn.matte.material = MATTE; cockOn.body.renderOrder = cockOn.matte.renderOrder = 0; if (cockOn.tub) cockOn.tub.visible = false; cockOn = null; }
   if (!on || cockOn === m) return; const tp = m.tp, k = tp.M === MODELS.f2 ? 'f2' : 'f1';
@@ -12943,6 +12926,7 @@ function cockpitInterior(on) {
   m.body.material = m.ckCut; m.matte.material = tp.cutMatte; m.tub.visible = true; cockOn = m;
   m.ckCut.transparent = tp.cutMatte.transparent = true; m.body.renderOrder = m.matte.renderOrder = COCK_RO; cockLast(m.tub, true); cockLast(SW.g, true); if (ARMS.f1) cockLast(ARMS.f1.g, true); }
 function drawWheel(dt) {
+  if (cockOn && cockOn.tp.ckTop && !cockOn.tp.ckTop.done) ckTopDraw(cockOn.tp.ckTop);   // v3.06: Bild von oben, sobald die Lack-Textur da ist
   CKFILL.value = TH && TH.night ? CKFILL_NIGHT : 0;   /* Cockpit bei Nacht leicht aufgehellt (ckFill) */
   SW.g.visible = running && (S.cam === 2 || S.cam === 3) && !pl.mesh.road && !pl.mesh.kart && !pl.mesh.hist;   /* auch in der TV-Kamera: Blick von oben ins modellierte Cockpit mit Lenkrad und Händen */   // Roadster und Kart haben ihr eigenes rundes Lenkrad am Auto
   if (pl.mesh.tp) { SW.g.position.set(...(pl.mesh.tp.M.swPos || [0, 0.605, 0.98])); SW.g.scale.setScalar(pl.mesh.tp.M.swS || 1); }   // Lenkradposition je Modell (F2 sitzt weiter hinten und tiefer)
@@ -13994,7 +13978,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '3.05'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '3.06'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;

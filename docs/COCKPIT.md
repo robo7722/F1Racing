@@ -74,7 +74,7 @@ einfarbige Schale, siehe oben und `tools/textur/ANLEITUNG.md`).
 Rückmeldung 26.11.2026 (nach v3.04): „Man sieht die Sponsoren und Nummern und andere Lackierungen nicht aus der Helm- und TV-Ansicht, nur die Farbe.“
 Die Unschärfe aus v3.04 war also nicht das Hauptproblem. Zwei Ursachen:
 
-1. **Schale ohne Lack-Textur.** Die Schale (`cockNew`: Vorderdeck, Schultern, Flanken) ersetzt in Helm/TV die Karosserie ums Cockpit – genau die Fläche, die man
+1. **Schale ohne Lack-Textur.** *(Lösung in v3.06 ersetzt, siehe nächster Abschnitt.)* Die Schale (`cockNew`: Vorderdeck, Schultern, Flanken) ersetzt in Helm/TV die Karosserie ums Cockpit – genau die Fläche, die man
    von dort sieht. Seit v2.99 rechnet sie den Grundlack (`livery()`) und projiziert den alten Seitenbogen; alles, was nur in der gebackenen Textur steckt
    (Sponsoren von oben, Muster), fehlte. Nachweis: Shader der Schale enthielt kein `texture2D(uBake…)`, die Cockpit-Fassung der Karosserie schon.
    **Behebung:** `ckShellUV`/`ckShellUVCalc` geben der Schale Textur-Koordinaten (`uvB`) – je Punkt die des nächsten Lack-Dreiecks der Karosserie (Stufe 0,
@@ -91,3 +91,20 @@ Prüfen: `node tools/menue/cockpit_nase.js <Ordner> RUS` (feste Kamera über dem
 `node tools/wetter/regen_bilder.js Spa dry <Ordner> 2150,3 2150,2 --nohud --pre "S.driver = 'RUS'; MENU.team = byCode('RUS').team"`.
 Bild: `docs/bilder/cockpit_textur_v305.png` (links vorher, rechts nachher: Mercedes, Deck vor dem Cockpit).
 **Lehre:** Bei „Texturen nicht richtig“ zuerst fragen bzw. vergleichen, WAS fehlt (Schrift? Farbe? Schärfe?) – v3.04 hat eine echte, aber kleinere Ursache behoben.
+
+## Zacken auf den Schultern nach v3.05 → Projektion von oben (v3.06)
+Rückmeldung 26.11.2026 mit Bildschirmfoto (Ferrari, Singapur, Nacht, Regen, Helmkamera): „Die Texturen buggen jetzt, gibt es keine bessere oder saubere Lösung?“
+Gezackte rot-weiße Flecken auf beiden Schultern, PERONI verzerrt.
+
+- **Ursache:** v3.05 suchte je Punkt der Schale das nächste Karosserie-Dreieck und übernahm dessen Textur-Koordinate. Die Schale hat aber eine eigene Form
+  (höhere Schultern, andere Breite als die Karosserie darunter) – die Zuordnung sprang zwischen Flächen und Stücken der Abwicklung. Nachgestellt:
+  `node tools/wetter/regen_bilder.js Singapur heavy <Ordner> 600,2 600,3 --nohud --pre "S.driver = 'LEC'; MENU.team = byCode('LEC').team"`.
+- **Lösung:** `ckTop`/`ckTopDraw`: Die Karosserie (Stufe 0, Lack aus der gebackenen Textur, sonst Eckpunktfarbe; Carbon-Teile in Carbonfarbe) wird einmal je Team
+  **senkrecht von oben** in ein Bild gezeichnet (512 × 1024, Bereich |x| ≤ 0,44, z von `zB` − 0,05 bis `zF` + 0,05; Teile höher als die Schale + 5 cm – Spiegel –
+  bleiben weg). Die Schale liest an ihrer Lackierposition (x, z) dieses Bild: Sie sieht dort genau so aus wie die Karosserie von oben, lückenlos.
+  Wo das Bild leer ist, rechnet der Shader den Lack wie bisher. Gezeichnet wird, sobald die Lack-Textur geladen ist (beim Cockpitbau oder im ersten Cockpit-Bild);
+  nach dem Nachladen in voller Auflösung (`ownLivFull`) neu. Die Punktsuche (`ckShellUV`) ist entfernt.
+- Speicher: ein Bild 512 × 1024 je Team, für das der Cockpitbau lief (praktisch nur das eigene), ~2,8 MB mit Mipmaps. Kein Rechenaufwand mehr beim Bau.
+- Flanken der Schale (steil) bekommen die Farbe der Kante von oben – dort gestreckt, aus Helm/TV kaum zu sehen.
+- Geprüft: Ferrari Singapur Regen (Helm, TV), Red Bull Spa (TV). Bild: `docs/bilder/cockpit_textur_v306.png` (oben v3.05 mit Zacken, unten v3.06).
+- **Lehre:** Eine Zuordnung „nächster Punkt“ zwischen zwei verschieden geformten Flächen springt. Wenn man aus einer Richtung schaut, aus dieser Richtung projizieren.
