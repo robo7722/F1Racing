@@ -37,3 +37,12 @@ WebGL ein paar Eigenheiten, die genau dieses Spiel treffen:
    Grenze für Aufrufe auf iOS niedriger ansetzen.
 
 Siehe auch [[LEISTUNG-ANLEITUNG]], [[LEISTUNG-VERGLEICH-2026-11-18]].
+
+## Nachtrag: Würde Chrome auf dem iPhone helfen? (26.11.2026)
+
+Nein, nach aktuellem Stand nicht. Chrome auf dem iPhone ist nur eine andere Oberfläche um dieselbe WebKit-Engine wie Safari.
+Seit iOS 17.4 dürfen Browser in der EU eine eigene Engine mitbringen, laut MacRumors (17.06.2026) hat das aber noch kein Hersteller
+ausgeliefert – Googles Blink für iOS gilt als Prototyp (Microsoft maß damit bis zu ~28 % mehr im Speedometer-Test, also allgemeine
+Webseiten, nicht WebGL-Spiele). Eine einzelne Quelle behauptet eine EU-Auslieferung, das ist unbestätigt.
+Quelle: https://macrumors.com/2026/06/17/webkit-rule-costs-ios-users-browser-performance
+Einziger kleiner Unterschied: Als Home-Bildschirm-App (aus Safari, „Zum Home-Bildschirm“) läuft das Spiel ohne Adressleiste im Vollbild – schneller wird es dadurch nicht spürbar.
