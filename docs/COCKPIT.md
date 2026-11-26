@@ -54,3 +54,18 @@ immer richtig“.
 - **Irrweg (v3.00):** Zuerst hatte ich eine ungültige Rechnung auf Handy-Grafikchips vermutet (`pow()` mit Basis 0) – nicht nachgestellt, nur geschlossen. Falsch.
   **Lehre:** Ein Fehler, der „manchmal“ auftritt, wird erst nachgestellt (Reihenfolge der Schritte wie beim Spieler: mehrere Rennen, Wetter wechseln), dann behoben.
 
+
+## Lack in Helm-/TV-Kamera auf dem Handy unscharf (behoben in v3.04)
+Rückmeldung 26.11.2026: „In Cockpit- und TV-Ansicht werden die Texturen nicht richtig von dem F1-Auto außen geladen.“ (gleiche Worte wie am 24.11., damals die
+einfarbige Schale, siehe oben und `tools/textur/ANLEITUNG.md`).
+
+- **Am Rechner nicht nachstellbar** – Helm und TV zeigen die Lackierung richtig. Der Unterschied liegt beim Handy/Tablet (`DECAL_SMALL`, Zeiger „coarse“).
+- **Ursache:** Das Vorbereiten im Ladebildschirm (`showroomPreload`, seit v2.99) baut jedes Team einmal und lädt dabei die Lack-Texturen **aller** Teams
+  (`decalUniforms`). Auf Touch-Geräten wird dabei jede Textur auf halbe Auflösung verkleinert – außer für den Fahrer, der **in diesem Moment** gewählt ist (`ownLiv`).
+  Wählt man danach ein anderes Team, bleibt dessen Lackierung halb aufgelöst (`DECAL_TEX` merkt sich die Textur). In der Verfolgerkamera fällt das kaum auf,
+  in Helm- und TV-Kamera liegt die Nase direkt vor dem Auge → verwaschen. Die Werkzeuge im Testbrowser liefen mit `?nopre` und ohne Touch – deshalb nie gesehen.
+- **Nachgestellt** mit einem Testlauf (Touch nachgebildet, `?mitpre`, gespeicherter Fahrer Russell, dann Verstappen gewählt): Red-Bull-Textur 1018 × 1020 statt 2037 × 2041. Nach der Behebung 2037 × 2041, keine Seitenfehler. Bild: `docs/bilder/cockpit_lack_handy_v304.png` (oben vorher, unten nachher; auf der einfarbigen Nase ist der Unterschied klein, deutlicher bei Schriftzügen und Kanten).
+- **Behebung:** `ownLivFull()` (aufgerufen in `placeOnGrid`, also bei Fahrerwahl und Rennstart) lädt die Texturen des eigenen Teams in voller Auflösung nach;
+  eine noch ladende Textur wird gleich voll übernommen (`userData.full`). Die halbe Textur bleibt sichtbar, bis die volle fertig ist (kein schwarzes Aufblitzen),
+  danach wird sie freigegeben. Bogen und Logo der Cockpit-Schale (`decalProj`, nur eigenes Team) werden jetzt immer voll geladen.
+- **Offen:** Ob das genau das Bild beim Nutzer war, ist ohne Bildschirmfoto nicht sicher – falls es anders aussieht (falsche Farben, graue/schwarze Flächen), Foto anfordern.

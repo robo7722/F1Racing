@@ -4287,14 +4287,22 @@ for (const k in LIVMAN) { const m = LIVMAN[k]; if (!m || !SHEET_BOX[m.kind]) con
 const LIVTEX = new Set(/[?&]nobake/.test(location.search) ? [] : LIVMAN._tex || []);
 const baked = tk => LIVTEX.has(tk) && !!LIVMAN[tk] && !!(MODELS[LIVMAN[tk].kind] && MODELS[LIVMAN[tk].kind].C.tex);
 const DECAL_TEX = {}, DECAL_SMALL = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
-const decalLoad = (url, tx, on, full) => { tx.value = new THREE.TextureLoader().load(url, t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
-    if (DECAL_SMALL && !full && t.image && t.image.width > 1024) { const c = document.createElement('canvas'); c.width = t.image.width >> 1; c.height = t.image.height >> 1; c.getContext('2d').drawImage(t.image, 0, 0, c.width, c.height); t.image = c; }   // Handy/Tablet: halbe Auflösung spart drei Viertel des Grafikspeichers (ein Feld hat bis zu 16 Bögen)
-    t.needsUpdate = true; on.value = 1; try { if (typeof renderer !== 'undefined' && renderer.initTexture) renderer.initTexture(t); } catch (e) {} }, undefined, () => {}); };
+const decalLoad = (url, tx, on, full) => { const t0 = tx.value = new THREE.TextureLoader().load(url, t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+    if (DECAL_SMALL && !t.userData.full && t.image && t.image.width > 1024) { const c = document.createElement('canvas'); c.width = t.image.width >> 1; c.height = t.image.height >> 1; c.getContext('2d').drawImage(t.image, 0, 0, c.width, c.height); t.image = c; t.userData.half = true; }   // Handy/Tablet: halbe Auflösung spart drei Viertel des Grafikspeichers (ein Feld hat bis zu 16 Bögen)
+    t.needsUpdate = true; on.value = 1; try { if (typeof renderer !== 'undefined' && renderer.initTexture) renderer.initTexture(t); } catch (e) {} }, undefined, () => {}); t0.userData.url = url; t0.userData.full = !!full; };
+// v3.04 (Rückmeldung 26.11.2026: „In Cockpit- und TV-Ansicht werden die Texturen des F1-Autos außen nicht richtig geladen“): Auf Handy/Tablet lädt das Vorbereiten im
+// Ladebildschirm die Lack-Texturen ALLER Teams – in halber Auflösung, außer für den Fahrer, der in diesem Moment gewählt war (ownLiv). Wählte man danach ein anderes Team,
+// blieb dessen Lackierung halb aufgelöst; in Helm- und TV-Kamera liegt sie direkt vor dem Auge (Nase, Seitenkästen) und war verwaschen. Jetzt: die Texturen des eigenen
+// Teams werden bei Bedarf in voller Auflösung nachgeladen (aus placeOnGrid: Fahrerwahl und Rennstart). Die halbe Textur bleibt, bis die volle fertig ist – kein schwarzes Aufblitzen.
+function ownLivFull() { if (!DECAL_SMALL) return; for (const tk in DECAL_TEX) { if (!ownLiv(tk)) continue; const U = DECAL_TEX[tk];
+  for (const k of ['uBake', 'uDecal', 'uSheet']) { const old = U[k].value; if (!old || old.userData.full) continue; old.userData.full = true; if (!old.userData.half) continue;   // noch nicht geladen: kommt jetzt gleich voll an
+    new THREE.TextureLoader().load(old.userData.url, t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.userData = { url: old.userData.url, full: true }; t.needsUpdate = true;
+      if (U[k].value === old) { U[k].value = t; old.dispose(); } try { renderer.initTexture(t); } catch (e) {} }, undefined, () => {}); } } }
 // Cockpit-Schale (cockNew, Helm- und TV-Kamera): Sie hat keine UV der gebackenen Lack-Textur – dort wird der Lack wie vor v2.73 berechnet und der Aufkleberbogen
 // samt Teamlogo von der Seite/von oben aufgetragen. Bei Teams mit gebackener Textur sind Bogen und Logo sonst gar nicht geladen: hier bei Bedarf nachholen (nur das eigene Team).
 const DECAL_PROJ = new Set();
 function decalProj(tk) { const U = decalUniforms(tk); if (DECAL_PROJ.has(tk) || !baked(tk)) return U; DECAL_PROJ.add(tk);
-  if (DECALS[tk] && !U.uDecal.value) decalLoad('logos/' + DECALS[tk].file + '.png', U.uDecal, U.uDecalOn); if (SHEETS[tk] && !U.uSheet.value) decalLoad('liveries/' + tk + '.png', U.uSheet, U.uSheetOn); return U; }
+  if (DECALS[tk] && !U.uDecal.value) decalLoad('logos/' + DECALS[tk].file + '.png', U.uDecal, U.uDecalOn, true); if (SHEETS[tk] && !U.uSheet.value) decalLoad('liveries/' + tk + '.png', U.uSheet, U.uSheetOn, true); return U; }   /* v3.04: nur das eigene Team, liegt in der Cockpitansicht direkt vor dem Auge – volle Auflösung */
 function decalUniforms(tk) { if (DECAL_TEX[tk]) return DECAL_TEX[tk];
   const U = DECAL_TEX[tk] = { uBake: { value: null }, uBakeOn: { value: 0 }, uDecal: { value: null }, uDecalOn: { value: 0 }, uSheet: { value: null }, uSheetOn: { value: 0 }, uNum: { value: null }, uNumOn: { value: 0 }, uNumCol: { value: new THREE.Color(1, 1, 1) } };
   const ld = decalLoad;
@@ -12119,7 +12127,7 @@ function gridOrder() {
   return ai;
 }
 function placeOnGrid() {
-  pl = byCode(S.driver) || ALL[0];
+  pl = byCode(S.driver) || ALL[0]; ownLivFull();   // v3.04: Lackierung des eigenen Teams in voller Auflösung (Handy)
   cars.length = 0; ALL.forEach(c => { c.mesh.g.visible = false; });
   if (!TRK) return;   // im Menü vor der ersten Streckenwahl gibt es noch keine Strecke (seit 1.82) – aufgestellt wird nach dem Bau
   const TT = (S.mode === 'tt' && !CHP) || QL;   // Zeitfahren: allein auf der Strecke, von der Pole
@@ -13940,7 +13948,7 @@ addEventListener('appinstalled', () => $('#install').classList.add('hidden'));
 if (isIOS && !standalone) $('#sub').textContent = 'iPhone: Teilen → „Zum Home-Bildschirm“ für die App';
 // Updates: Der Service Worker sucht beim Start und beim Zurückkehren in die App nach einer neuen Version.
 // Ist eine da, wird sie geladen und das Spiel im Menü einmal neu gestartet (nie mitten im Rennen); danach kurzer Hinweis.
-const VERSION = '3.03'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
+const VERSION = '3.04'; { const el = document.getElementById('verNo'); if (el) el.textContent = VERSION; }   /* Anzeige unten rechts folgt immer der Versionskonstante */
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.classList.add('on'), 30); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 500); }, 3400); }
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const had = !!navigator.serviceWorker.controller; let reloaded = false;
