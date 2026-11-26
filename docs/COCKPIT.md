@@ -69,3 +69,25 @@ einfarbige Schale, siehe oben und `tools/textur/ANLEITUNG.md`).
   eine noch ladende Textur wird gleich voll übernommen (`userData.full`). Die halbe Textur bleibt sichtbar, bis die volle fertig ist (kein schwarzes Aufblitzen),
   danach wird sie freigegeben. Bogen und Logo der Cockpit-Schale (`decalProj`, nur eigenes Team) werden jetzt immer voll geladen.
 - **Offen:** Ob das genau das Bild beim Nutzer war, ist ohne Bildschirmfoto nicht sicher – falls es anders aussieht (falsche Farben, graue/schwarze Flächen), Foto anfordern.
+
+## Sponsoren, Muster und Startnummer fehlen in Helm-/TV-Kamera (behoben in v3.05)
+Rückmeldung 26.11.2026 (nach v3.04): „Man sieht die Sponsoren und Nummern und andere Lackierungen nicht aus der Helm- und TV-Ansicht, nur die Farbe.“
+Die Unschärfe aus v3.04 war also nicht das Hauptproblem. Zwei Ursachen:
+
+1. **Schale ohne Lack-Textur.** Die Schale (`cockNew`: Vorderdeck, Schultern, Flanken) ersetzt in Helm/TV die Karosserie ums Cockpit – genau die Fläche, die man
+   von dort sieht. Seit v2.99 rechnet sie den Grundlack (`livery()`) und projiziert den alten Seitenbogen; alles, was nur in der gebackenen Textur steckt
+   (Sponsoren von oben, Muster), fehlte. Nachweis: Shader der Schale enthielt kein `texture2D(uBake…)`, die Cockpit-Fassung der Karosserie schon.
+   **Behebung:** `ckShellUV`/`ckShellUVCalc` geben der Schale Textur-Koordinaten (`uvB`) – je Punkt die des nächsten Lack-Dreiecks der Karosserie (Stufe 0,
+   gesucht an `aLP`, nur Dreiecke mit ähnlicher Ausrichtung, |cos| ≥ 0,35). Gegen verschmierte Streifen an den Nähten der Abwicklung: eigene Eckpunkte je
+   Dreieck, alle drei Ecken im selben Stück der Abwicklung (Stücke = über gemeinsame Punkte verbundene Dreiecke). Dreiecke ohne Gegenstück bekommen
+   `uvB = −1` → dort rechnet der Shader weiter den Lack. Ergebnis je Klasse zwischengespeichert (`CK_UV`, Schlüssel = `uvB`-Attribut des Modells).
+   Teams ohne gebackene Textur: unverändert (Lack-Programm + Bogen-Projektion).
+2. **Startnummer.** Cockpit-Fassung (`cockCut`) und Schale wurden aus `tp.glossMat` gebaut – dem Team-Material **ohne** Nummer; das eigene Auto trägt
+   `numMat` (mit Nummer). Beim Zurückschalten wurde außerdem `tp.glossMat` gesetzt → Nummer fehlte danach auch in der Verfolgerkamera.
+   **Behebung:** `cockEnt(tp, base, k)` baut Cockpit-Fassung und Schale je Grundmaterial; `m.bodyMat0` merkt sich das Material des Autos und wird beim
+   Zurückschalten wieder gesetzt. (Vorher: `tp.cutGloss`, `tp.shellMat` – gibt es nicht mehr.)
+
+Prüfen: `node tools/menue/cockpit_nase.js <Ordner> RUS` (feste Kamera über dem Cockpit, Verfolger → TV → Verfolger; Material muss durchgehend das mit Nummer sein) und
+`node tools/wetter/regen_bilder.js Spa dry <Ordner> 2150,3 2150,2 --nohud --pre "S.driver = 'RUS'; MENU.team = byCode('RUS').team"`.
+Bild: `docs/bilder/cockpit_textur_v305.png` (links vorher, rechts nachher: Mercedes, Deck vor dem Cockpit).
+**Lehre:** Bei „Texturen nicht richtig“ zuerst fragen bzw. vergleichen, WAS fehlt (Schrift? Farbe? Schärfe?) – v3.04 hat eine echte, aber kleinere Ursache behoben.
